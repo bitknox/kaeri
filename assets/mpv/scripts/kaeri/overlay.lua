@@ -316,11 +316,16 @@ function M.render()
     local out = {}
     zones = {}
 
-    local ctx = setmetatable({ out = out, s = s, w = w, h = h, hover = hover_id }, Ctx)
     local edge = 16 * s
     local corner_right = w - (insets.align_right or math.max(insets.right, edge))
     local corner_bottom = h - insets.bottom - 12 * s
     local top_y = insets.top + edge
+    -- `placed` holds where this frame put each placed region so far, with its fade: an element
+    -- drawn on the canvas after them (the chat column, a reaction moment) stacks clear of them.
+    local ctx = setmetatable({
+        out = out, s = s, w = w, h = h, hover = hover_id, insets = insets,
+        corner_right = corner_right, corner_bottom = corner_bottom, placed = {},
+    }, Ctx)
     local animating = false
 
     for _, el in ipairs(elements) do
@@ -336,6 +341,15 @@ function M.render()
                 el.draw(ctx, 0, 0, w, h)
             else
                 local ew, eh = el.measure(ctx)
+                local at = { x = edge, y = top_y, w = ew, h = eh, alpha = alpha }
+                if el.region == "corner" then
+                    at.x, at.y = corner_right - ew, corner_bottom - eh
+                elseif el.region == "top-center" then
+                    at.x = (w - ew) / 2
+                elseif el.region == "center" then
+                    at.x, at.y = (w - ew) / 2, (h - eh) / 2
+                end
+                ctx.placed[el.region] = at
                 if el.region == "corner" then
                     el.draw(ctx, corner_right - ew, corner_bottom - eh, ew, eh)
                 elseif el.region == "top-left" then

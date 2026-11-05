@@ -174,6 +174,9 @@ notice-reason = [{ $reason }~]
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = [Ñö šöüŕçéš àŕé šéţ üþ. Åðð öñé öñ ţĥé Šöüŕçéš šçŕééñ.~~~~~~~~~~~~~~~~]
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = [Ñö çöññéçţîöñ. Ţŕý àĝàîñ ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé.~~~~~~~~~~~~~~~]
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = [Éþîšöðé { $episode } àîŕš { $when }.~~~~~~~]
 
@@ -242,6 +245,27 @@ status-looking-up-title = [Ļööķîñĝ üþ ţĥé ţîţļé…~~~~~~~]
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = [Ļöàðîñĝ šöüŕçéš…~~~~~]
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = [Ļööķîñĝ üþ ţĥé ţîţļé~~~~~~]
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = [Ĝéţţîñĝ ýöüŕ šöüŕçéš ŕéàðý~~~~~~~~]
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = [Åšķîñĝ { $name }~~~]
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = [Öþéñîñĝ ţĥé šţŕéàɱ~~~~~~]
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = [Ţŕýîñĝ àñöţĥéŕ šţŕéàɱ~~~~~~~]
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = [Ƒîñðîñĝ þééŕš~~~~]
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = [Ɓüƒƒéŕîñĝ~~~]
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = [Šéàŕçĥîñĝ šöüŕçéš ƒöŕ éþîšöðé { $episode }…~~~~~~~~~~~]
@@ -714,6 +738,9 @@ sources-demo-removed = [Ðéɱö ŕéɱöṽéð~~~~]
 # Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.
 stores-ready-demo-stays = [{ $store } îš ŕéàðý. Ţĥé ðéɱö šţàýš ļàšţ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]
 
+# The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
 
@@ -908,6 +935,18 @@ crash-notice = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ.~~~~~~~~~]
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ. Ýöü çàñ ŕéþöŕţ îţ ƒŕöɱ Šéţţîñĝš, Åƀöüţ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = [Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = [Þļàññîñĝ îš éɱþţý.~~~~~~]
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = [Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = [Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = [Éðîţ þŕöẋý~~~]
@@ -1241,6 +1280,9 @@ shortcuts-group-lists = [Ļîšţš~~]
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = [Ĝö ţö à šéçţîöñ~~~~~]
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = [Þŕéṽîöüš öŕ ñéẋţ ŕàñĝé öƒ éþîšöðéš~~~~~~~~~~~]
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = [Ķéýƀöàŕð šĥöŕţçüţš~~~~~~]
 
@@ -1333,9 +1375,6 @@ tv-episode = [Éþîšöðé { $episode }~~~~]
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = [Éþîšöðé { $episode } · { $title }~~~~~~]
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = [Å ŢṼ ļîšţš ţĥîš ðéṽîçé ŵîţĥ ţĥé çöðé { $code }. Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = [{ $paired } · šééñ ĵüšţ ñöŵ~~~~~~]
 
@@ -1423,6 +1462,27 @@ stores-published-state = [Þüƀļîšĥéð~~~]
 
 # Accessible name of a row's Publish button.
 stores-publish-label = [Þüƀļîšĥ { $name } { $version }~~~~~]
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ ýöüŕ àççöüñţ þàššŵöŕð.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = [Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = [Þŕöƒîļéš~~~]
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = [Åðð~]
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = [Çĥööšé à ƒöļðéŕ~~~~~]
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = [Šàṽé àš à ƒîļé~~~~~]
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = [Ðöñé~~]
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2147,6 +2207,9 @@ keys-action-filter = [Ƒîļţéŕ~~]
 keys-action-filter-search = [Šéàŕçĥ ƒîļţéŕš~~~~~]
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = [Šüŕþŕîšé ɱé~~~~]
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = [Þļàý öŕ þàüšé~~~~]
 
 # Action label in the help overlay and the command palette.
@@ -2217,6 +2280,18 @@ keys-hint-mark-previous = [Ṁàŕķ þŕéṽîöüš~~~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = [Ƒîļţéŕš~~~]
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = [Šüŕþŕîšé ɱé~~~~]
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = [Ĝö ţö~~]
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = [Çļéàŕ~~]
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = [Åñöţĥéŕ~~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = [Ŕéšýñç~~]
@@ -2386,6 +2461,9 @@ keys-where-episodes = [îñ ţĥé éþîšöðé ţàƀļé~~~~~~]
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = [öñ àñöţĥéŕ šçŕééñ~~~~~~]
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = [öñ Šéàŕçĥ'š ƀŕöŵšé àñð öñ Þļàññîñĝ~~~~~~~~~~~]
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = [“{ $action }” îñ ţĥé þàļéţţé~~~~~~]
 
@@ -2517,6 +2595,21 @@ keys-hint-copy-link = [Çöþý ļîñķ~~~]
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = [Ļéàṽé~~]
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = [Šàý~]
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = [Ṁüţé~~]
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = [Ûñɱüţé~~]
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = [Ĥîðé çĥàţ~~~]
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = [Šĥöŵ çĥàţ~~~]
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = [Ñééðš à ļàŕĝéŕ ţéŕɱîñàļ~~~~~~~]
@@ -2822,6 +2915,33 @@ lists-episode-dubbed = [É{ $episode } · Ðüƀƀéð~~~~]
 
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = [{ $score }%~~]
+
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = [{ $out }/{ $total }~~~]
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = [{ $out }/?~~]
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = [ɱöṽîé~~]
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = [šööñ~~]
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = [{ $day } { $month }~~~]
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = [ðüƀ~]
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = [ð{ $through }~~]
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = [Éþš~]
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = [Ðüƀ~]
 
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = [{ $episode } · { $percent }%~~~]
@@ -3998,6 +4118,102 @@ stores-toast-nothing-to-publish = [Ţĥéŕé àŕé ñö þļüĝîñš îñ ý
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = [Ţĥàţ îš ýöü. Å šţöŕé àļŵàýš ķééþš îţš öŵñéŕ.~~~~~~~~~~~~~~]
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = [çöɱþüţéŕ~~~]
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = [Éñţéŕ à çöðé~~~~]
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = [Ñö çļöüð ƒöļðéŕ~~~~~]
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = [Ñöţ šýñçéð ýéţ~~~~~]
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = [Îñ üšé~~]
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = [Öŕ ĝö ţö ţĥîš àððŕéšš ýöüŕšéļƒ:~~~~~~~~~~]
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = [Šîĝñîñĝ îñ~~~]
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = [ŴéƀÐÅṼ àððŕéšš~~~~~]
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = [Ţĥé àððŕéšš öƒ ţĥé ƒöļðéŕ öñ ýöüŕ šéŕṽéŕ, šţàŕţîñĝ ŵîţĥ ĥţţþš://.~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = [Ƒöļðéŕ~~]
+
+# Under the folder path field.
+sync-tui-folder-path-note = [Ţĥé ƒüļļ þàţĥ öƒ à ƒöļðéŕ àñöţĥéŕ àþþ ķééþš îñ šţéþ, šüçĥ àš à šýñçéð ðŕîṽé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = [Ûšéŕ ñàɱé~~~]
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = [Ţĥé ñàɱé ýöü šîĝñ îñ ţö Ñéẋţçļöüð ŵîţĥ.~~~~~~~~~~~~]
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = [Þàššŵöŕð~~~]
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = [Åþþ þàššŵöŕð~~~~]
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = [Çöðé~~]
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = [Åððŕéšš~~~]
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = [Ṁàķîñĝ à çöðé~~~~]
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = [Åððŕéšš öƒ ţĥé öţĥéŕ ðéṽîçé~~~~~~~~~]
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = [Ţĥé àððŕéšš ţĥé öţĥéŕ ðéṽîçé šĥöŵš üñðéŕ îţš çöðé, šüçĥ àš 192.168.1.20:47811.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = [Þàîŕîñĝ~~~]
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš.~~~~~~~~~~~~~]
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = [Åðð àš à ķîðš þŕöƒîļé~~~~~~~]
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = [Šţàŕţ Ķàéŕî àĝàîñ ţö üšé { $name }’š þŕöƒîļé.~~~~~~~~~~~~]
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = [Ţĥîš ƒöļðéŕ ĥöļðš ñö ĥîšţöŕý ţö ĵöîñ. Çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~]
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = [{ $service } îšñ’ţ àṽàîļàƀļé öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = [Ŕéɱöṽé~~]
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = [Šĥöŵ~~]
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = [Ţüŕñ öƒƒ~~~]
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = [Çöþý~~]
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = [Ṁàķé ţĥé ŵîñðöŵ ţàļļéŕ ţö šéé ţĥé ǪŔ çöðé.~~~~~~~~~~~~~]
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = [Þŕéšš { $key } ţö šţöþ þļàýƀàçķ.~~~~~~~~~]
 
@@ -4025,8 +4241,8 @@ tui-together-section = [Ţöĝéţĥéŕ~~~]
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = [ļîñķ öŕ çöðé~~~~]
 
-# Hint line of the keys in the Together section.
-tui-together-keys = [ŕ ŕéàðý · ç çöþý ļîñķ · š šţàŕţ ñöŵ · ẋ ļéàṽé~~~~~~~~~~~~~~]
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = [Ļîñéš àñð ŕéàçţîöñš šţàý öƒƒ ţĥé þļàýéŕ îñ éṽéŕý þàŕţý.~~~~~~~~~~~~~~~~~]
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çöðé.~~~~~~~~~~]
@@ -4339,6 +4555,9 @@ action-try-again = [Ţŕý àĝàîñ~~~]
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = [Çàñçéļ~~]
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = [Ĝö~]
 
 # Button that puts a question off until later.
 action-not-now = [Ñöţ ñöŵ~~~]
@@ -4812,6 +5031,12 @@ tv-problem-unpaired = [Ţĥé ŢṼ ðöéšñ'ţ ķñöŵ ţĥîš ðéṽîç�
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = [{ $position } öƒ { $duration }~~~]
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = [{ $first } àñð { $last }~~~~]
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = [{ $list }, { $next }~~~]
 
 # Menu item that opens an episode's discussion.
 discussion-open = [Ðîšçüššîöñ~~~]
@@ -6666,6 +6891,128 @@ together-recent-note = [Ţĥé ļàšţ ţéñ, ķéþţ öñ ţĥîš ðéṽî
 # The start sheet's button after a title is picked.
 party-pick-continue = [Çöñţîñüé~~~]
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = [Šàý šöɱéţĥîñĝ~~~~]
+
+# Button that sends a chat line.
+party-chat-send = [Šéñð~~]
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = [Çĥàţ~~]
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = [Ŵàîţ { $seconds } š~~~]
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] [Ŵàîţ öñé šéçöñð~~~~~]
+       *[other] [Ŵàîţ { $seconds } šéçöñðš~~~~~]
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = [{ $count } ɱöŕé îñ çĥàţ~~~~~]
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = [Ţĥîš ŕööɱ'š šéŕṽéŕ ĥàš çĥàţ ţüŕñéð öƒƒ~~~~~~~~~~~~]
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = [Ṁéššàĝéš ĝö ţĥŕöüĝĥ ţĥé ŕööɱ'š šéŕṽéŕ. Ķàéŕî ķééþš ñöñé.~~~~~~~~~~~~~~~~~]
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = [Çĥàţ îš ĥîððéñ~~~~~]
+
+# Line under it.
+party-chat-hidden-line = [Ĥîðé çĥàţ îš öñ îñ Šéţţîñĝš, üñðéŕ Þļàýƀàçķ.~~~~~~~~~~~~~~]
+
+# Button that turns Hide chat off.
+party-chat-show = [Šĥöŵ çĥàţ~~~]
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = [Ĥîðé çĥàţ îñ ŵàţçĥ þàŕţîéš~~~~~~~~]
+
+# Line under that switch.
+settings-hide-chat-line = [Ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = [Ṁüţé { $name }~~~]
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = [Ûñɱüţé { $name }~~~]
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = [Ûñɱüţé~~]
+
+# State on a muted member's row.
+party-member-muted = [Ṁüţéð~~]
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = [{ $name } îš ɱüţéð~~~~]
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = [Çöüļðñ'ţ šéñð~~~~]
+
+# Button after it, which sends the same text again.
+party-chat-retry = [Ţŕý àĝàîñ~~~]
+
+# Button on the TV's controls that opens the four reactions.
+party-react = [Ŕéàçţ~~]
+
+# Label of the laugh reaction button.
+party-react-laugh = [Ļàüĝĥ~~]
+
+# Label of the gasp reaction button.
+party-react-gasp = [Ĝàšþ~~]
+
+# Label of the clap reaction button.
+party-react-clap = [Çļàþ~~]
+
+# Label of the cry reaction button.
+party-react-cry = [Çŕý~]
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = [{ $name } ļàüĝĥéð~~~~]
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = [{ $name } ĝàšþéð~~~]
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = [{ $name } çļàþþéð~~~~]
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = [{ $name } çŕîéð~~~]
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = [{ $line } àţ { $time }~~~]
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = [{ $first } àñð { $second }~~~~]
+
+# Three members named together.
+party-names-three = [{ $first }, { $second } àñð { $third }~~~~~]
+
+# More than three members named together: two names and how many others.
+party-names-others = [{ $first }, { $second } àñð { $count } öţĥéŕš~~~~~~~]
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = [Ýöü~]
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = [Šéñðš àš { $device }~~~~]
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = [{ $time } · { $names }~~~]
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = [{ $name } šàýš { $message }~~~~]
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] [{ $count } çĥàŕàçţéŕ ļéƒţ~~~~~~]
+       *[other] [{ $count } çĥàŕàçţéŕš ļéƒţ~~~~~~]
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = [Ûþ ñéẋţ~~~]
 
@@ -6701,6 +7048,127 @@ player-add-plugin-store = [Åðð à þļüĝîñ šţöŕé~~~~~~]
 
 # Short word while the video buffers.
 player-buffering = [Ɓüƒƒéŕîñĝ~~~]
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = [{ $place } öƒ { $total } šöüŕçéš~~~~~~]
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = [Ýöüŕ þîçķ ƒöŕ ţĥîš šĥöŵ~~~~~~~]
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = [{ $name } ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~~]
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = [{ $name } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~~]
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = [{ $name } ðîðñ'ţ àñšŵéŕ~~~~~~]
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = [{ $name } ţööķ ţöö ļöñĝ~~~~~~]
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = [Ýöü šķîþþéð { $name }~~~~~]
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = [Šķîþþéð àƒţéŕ ŕéçéñţ ƒàîļüŕéš~~~~~~~~~]
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = [Ƒŕöɱ { $name }~~~]
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = [Ţĥé ƒîŕšţ öñé šĥöŵéð ñö ṽîðéö~~~~~~~~~]
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = [{ $next } öƒ { $total } šţŕéàɱš~~~~~~]
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] [Öñé þééŕ~~~]
+       *[other] [{ $count } þééŕš~~~]
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = [{ $speed }/š~~]
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = [Ɓüƒƒéŕîñĝ · { $percent }~~~~~]
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = [Ŕéšüɱîñĝ àţ { $clock }~~~~~]
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = [Þļàý ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~]
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = [Ðéţàîļš~~~]
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = [Šķîþ { $name }~~~]
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = [Šķîþ ţĥîš šţŕéàɱ~~~~~]
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = [Šţîļļ ŵàîţîñĝ ƒöŕ { $name }~~~~~~~]
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = [Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ~~~~~~~~]
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = [Ýöü'ŕé öƒƒļîñé. Éþîšöðé { $episode } šţàŕţš ŵĥéñ ýöü'ŕé ƀàçķ.~~~~~~~~~~~~~~~~]
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = [Ƒîẋ ɱàţçĥ~~~]
+
+# Details row label for the translation of the episode.
+player-start-translation = [Åüðîö àñð šüƀţîţļéš~~~~~~]
+
+# Details row once the title has been looked up.
+player-start-looked-up = [Ļööķéð üþ ţĥé ţîţļé~~~~~~]
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = [{ $seconds } š~~]
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = [Šţîļļ šţàŕţîñĝ. Ýöü çàñ çĥööšé à šöüŕçé ñöŵ.~~~~~~~~~~~~~~]
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = [Šţàŕţîñĝ éþîšöðé { $episode }, { $title }~~~~~~~~]
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = [{ $title }. { $reason }~~~]
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = [{ $step }, { $detail }~~~]
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = [Šţàŕţîñĝ ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~~~]
+
+# Details row while a source is being asked.
+player-start-row-asking = [Åšķîñĝ~~]
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = [Ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~]
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = [Ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~]
+
+# Details row outcome when a source failed.
+player-start-row-failed = [Ðîðñ'ţ àñšŵéŕ~~~~]
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = [Ţööķ ţöö ļöñĝ~~~~]
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = [Šķîþþéð~~~]
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = [{ $names } ŵéŕé àšķéð.~~~~~]
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = [Šüƀţîţļéð~~~]
 
 # Title of the stall card. The seconds count up.
 player-stall-title = [Šöüŕçé îš ƀüƒƒéŕîñĝ · { $seconds } š~~~~~~~~~]
@@ -6803,6 +7271,9 @@ player-mark-watch-edges = [Ŵàţçĥ ţĥé éðĝéš~~~~~]
 # Line in the review with sharing on.
 player-mark-shares = [Šàṽîñĝ šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ.~~~~~~~~~~~~]
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = [Ķàéŕî ƒöüñð ţĥéšé ţîɱéš ƒŕöɱ ţĥé àüðîö.~~~~~~~~~~~~]
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = [Ŕéþļàçéš ÅñîŠķîþ'š { $start } ţö { $end }, ŵĥîçĥ îš ŕéþöŕţéð àš ŵŕöñĝ.~~~~~~~~~~~~~~~~~~]
 
@@ -6852,11 +7323,33 @@ player-mark-it = [Ṁàŕķ îţ~~~]
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = [Ðöñ'ţ àšķ àĝàîñ~~~~~]
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = [Ķàéŕî ƒöüñð ţĥîš öþéñîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~~]
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = [Ķàéŕî ƒöüñð ţĥîš éñðîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~]
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = [Ýéš šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ ƒöŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~~]
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = [Ýéš~]
+
+player-found-adjust = [Åðĵüšţ~~]
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = [Šàṽéð. ÅñîŠķîþ ĝéţš ţĥéšé ţîɱéš ƒöŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~]
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = [Ķàéŕî ŵöñ'ţ àšķ àƀöüţ šķîþ ţîɱéš àĝàîñ.~~~~~~~~~~~~]
+
+player-found-never-how = [Ýöü çàñ ţüŕñ îţ ƀàçķ öñ îñ Šéţţîñĝš.~~~~~~~~~~~]
+
 # Title of the sheet shown on the first Save.
 player-share-title = [Šĥàŕé ýöüŕ šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ?~~~~~~~~~~~]
 
 # Body of the sheet.
-player-share-body = [ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ŵĥàţ ýöü ɱàŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+player-share-body = [ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # What is sent, as a line under the body.
 player-share-sent = [Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ɱàðé ƒöŕ ţĥîš îñšţàļļ. Ñöţ ýöüŕ ñàɱé, ýöüŕ àççöüñţš öŕ ţĥé šöüŕçé ýöü ŵàţçĥ ƒŕöɱ. ÅñîŠķîþ šééš ýöüŕ ÎÞ àððŕéšš ţö ļîɱîţ šþàɱ, àñð îţš ţéŕɱš àšķ ţĥàţ ýöü àŕé 13 öŕ öļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -6872,6 +7365,22 @@ player-skip-from-file = [Ƒŕöɱ ţĥé ƒîļé~~~~]
 player-skip-yours = [Ýöüŕš~~]
 
 player-skip-from-aniskip = [Ƒŕöɱ ÅñîŠķîþ~~~~]
+
+player-skip-found = [Ƒöüñð ƀý Ķàéŕî~~~~~]
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = [Þàüšéð ŵĥîļé Ļöŵ Þöŵéŕ Ṁöðé îš öñ.~~~~~~~~~~~]
+
+player-skip-paused-battery-saver = [Þàüšéð ŵĥîļé ƀàţţéŕý šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-energy-saver = [Þàüšéð ŵĥîļé éñéŕĝý šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-power-saver = [Þàüšéð ŵĥîļé þöŵéŕ šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-storage = [Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = [Ñöţ àṽàîļàƀļé îñ ţĥîš ƀüîļð öƒ Ķàéŕî.~~~~~~~~~~~~]
 
 player-skip-none = [Ñöñé ýéţ~~~]
 
@@ -7374,6 +7883,199 @@ search-available-services = [Öñ ýöüŕ šéŕṽîçéš~~~~~]
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = [Öñ { $service }~~]
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+        [one] [Öñé éþîšöðé~~~~]
+       *[other] [{ $count } éþîšöðéš~~~~]
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = [{ $count } éþ~~]
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = [{ $out } öƒ { $total } öüţ~~~~~]
+
+# The same, short.
+count-out-of-short = [{ $out } öƒ { $total }~~~]
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+        [one] [Öñé éþîšöðé öüţ~~~~~]
+       *[other] [{ $count } éþîšöðéš öüţ~~~~~]
+    }
+
+# The same, short.
+count-out-short = [{ $count } öüţ~~~]
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = [Šţàŕţš { $date }~~~]
+
+# The count line of a show that has not started and has no date.
+count-not-out = [Ñöţ öüţ ýéţ~~~~]
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = [Éþ { $episode } öƒ { $total }~~~~]
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = [Ðüƀ~]
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = [Ðüƀ { $through }~~~]
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+        [one] [Öñé éþîšöðé~~~~]
+       *[other] [{ $count } éþîšöðéš~~~~]
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = [{ $out } öƒ { $total } éþîšöðéš öüţ~~~~~~~]
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+        [one] [Öñé éþîšöðé öüţ~~~~~]
+       *[other] [{ $count } éþîšöðéš öüţ~~~~~]
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = [Šţàŕţš { $date }~~~]
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = [Éþîšöðé { $episode } öƒ { $total }~~~~~~]
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = [ðüƀƀéð ţö éþîšöðé { $through }~~~~~~~]
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = [ĥàš à ðüƀ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = [Ĵàñ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = [Ĵàñüàŕý~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = [Ƒéƀ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = [Ƒéƀŕüàŕý~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = [Ṁàŕ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = [Ṁàŕçĥ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = [Åþŕ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = [Åþŕîļ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = [Ṁàý~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = [Ṁàý~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = [Ĵüñ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = [Ĵüñé~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = [Ĵüļ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = [Ĵüļý~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = [Åüĝ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = [Åüĝüšţ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = [Šéþ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = [Šéþţéɱƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = [Öçţ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = [Öçţöƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = [Ñöṽ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = [Ñöṽéɱƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = [Ðéç~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = [Ðéçéɱƀéŕ~~~]
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = [Ţŕéñðîñĝ ţöðàý~~~~~]
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = [Ţŕéñðîñĝ ţĥîš ŵééķ~~~~~~]
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = [Ţŕéñðîñĝ ţĥîš ɱöñţĥ~~~~~~]
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = [Ţöðàý~~]
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = [Ţĥîš ŵééķ~~~]
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = [Ţĥîš ɱöñţĥ~~~]
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = [Çöüļðñ'ţ ļöàð { $period }'š ţŕéñðîñĝ.~~~~~~~~~]
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = [Ûþðàţéð { $age }~~~~]
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = [Šüŕþŕîšé ɱé~~~~]
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = [Šüŕþŕîšé Ṁé~~~~]
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = [Åñöţĥéŕ~~~]
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = [Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ Þļàññîñĝ~~~~~~~~~~~]
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = [Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~]
+
+# Hint of the Another button.
+surprise-another-hint = [Öþéñš àñöţĥéŕ ŕàñðöɱ ţîţļé îñ þļàçé öƒ ţĥîš öñé~~~~~~~~~~~~~~~]
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = [Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = [Þļàññîñĝ îš éɱþţý.~~~~~~]
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = [Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]
+
 # Title of the dialog that adds a media server.
 servers-add-title = [Åðð à ɱéðîà šéŕṽéŕ~~~~~~]
 
@@ -7617,6 +8319,9 @@ settings-group-titles = [Ţîţļéš~~]
 # Group heading.
 settings-group-playback = [Þļàýƀàçķ~~~]
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = [Ŵàţçĥ þàŕţîéš~~~~]
+
 # Group heading.
 settings-group-watching = [Ŵàţçĥîñĝ~~~]
 
@@ -7698,23 +8403,35 @@ settings-skip-opening = [Šķîþ öþéñîñĝ àüţöɱàţîçàļļý~~~~~
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = [Šķîþ ŕéçàþš àüţöɱàţîçàļļý~~~~~~~~]
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = [Åšķ àƒţéŕ šķîþþîñĝ àñ öþéñîñĝ ƀý ĥàñð~~~~~~~~~~~~]
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = [Ƒîñð šķîþ ţîɱéš ƒŕöɱ ţĥé àüðîö~~~~~~~~~]
 
 # Line under it.
-settings-ask-was-opening-detail = [Öƒƒéŕš ţö ɱàŕķ îţ, šö îţ îš šķîþþéð ñéẋţ ţîɱé~~~~~~~~~~~~~~]
+settings-find-skips-detail = [Ŵĥéñ ÅñîŠķîþ ĥàš ñö ţîɱéš, Ķàéŕî çöɱþàŕéš ţĥé àüðîö àçŕöšš à šĥöŵ'š éþîšöðéš, öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = [Åšķ àƀöüţ šķîþ ţîɱéš~~~~~~]
+
+# Line under it.
+settings-ask-was-opening-detail = [Åƒţéŕ ýöü šķîþ àñ öþéñîñĝ ƀý ĥàñð, àñð àƒţéŕ à šķîþ Ķàéŕî ƒöüñð~~~~~~~~~~~~~~~~~~~]
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = [Šĥàŕé šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ~~~~~~~~~]
 
 # Line under it.
-settings-share-skips-detail = [ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-share-skips-detail = [ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = [Çļéàŕ šķîþ ţîɱéš ýöü ɱàŕķéð…~~~~~~~~~]
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = [Šķîþ ţîɱéš ýöü ɱàŕķéð öŕ Ķàéŕî ƒöüñð~~~~~~~~~~~]
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = [Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~]
+# Question that asks before clearing them.
+settings-clear-skips-confirm = [Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = [Çļéàŕ šķîþ ţîɱéš~~~~~]
+
+# Line under it.
+settings-clear-skips-android-detail = [Ţĥé öñéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð~~~~~~~~~~~~~~]
 
 # Row: skip filler.
 settings-skip-filler = [Šķîþ ƒîļļéŕ àüţöɱàţîçàļļý~~~~~~~~]
@@ -7738,7 +8455,7 @@ settings-counts-watched-detail = [Öŕ ŵĥéñ ţĥé éñðîñĝ šţàŕţš
 settings-spoiler = [Šþöîļéŕ þŕöţéçţîöñ~~~~~~]
 
 # Line under it.
-settings-spoiler-detail = [Ɓļüŕš šţîļļš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~]
+settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the audio row.
 settings-audio-detail = [Éàçĥ šĥöŵ ŕéɱéɱƀéŕš îţš öŵñ àüðîö àñð šüƀţîţļéš.~~~~~~~~~~~~~~~]
@@ -7886,7 +8603,7 @@ show-settings-blur-ahead = [Ɓļüŕ šţîļļš àĥéàð~~~~~~]
 show-settings-show-everything = [Šĥöŵ éṽéŕýţĥîñĝ~~~~~]
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = [Ɓļüŕš šţîļļš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~]
+show-settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~~~~~]
 
 # Option: always.
 show-settings-always = [Åļŵàýš~~]
@@ -9093,6 +9810,671 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 # Button that opens the system share sheet for the invite link.
 stores-share = [Šĥàŕé…~~]
 
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = [çöɱþüţéŕ~~~]
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = [Éñţéŕ à çöðé~~~~]
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = [Šĥöŵ~~]
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = [Ţüŕñ öƒƒ~~~]
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = [Åððŕéšš~~~]
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = [Þàîŕ ƀý àððŕéšš~~~~~]
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = [000 000~~~]
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = [Ŕéçöṽéŕý ķéý~~~~]
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = [Ûšéŕ ñàɱé~~~]
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = [Þàššŵöŕð~~~]
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = [Šéŕṽéŕ àððŕéšš~~~~~]
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = [Þàîŕîñĝ~~~]
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = [{ $line } · Ŕéɱöţé~~~~]
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = [Éðîţ~~]
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = [Ñàɱé~~]
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = [Ṁöŕé ƒöŕ { $name }~~~~]
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = [Çöüļðñ'ţ ŕéàçĥ { $store } öŕ { $device }. Ţŕý àĝàîñ ŵĥéñ ƀöţĥ àŕé öñļîñé.~~~~~~~~~~~~~~~~~~]
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = [{ $store } ðîðñ'ţ àççéþţ ţĥé îñṽîţé. Åšķ îţš öŵñéŕ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~]
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = [{ $device } çàñ'ţ îñṽîţé öţĥéŕ ðéṽîçéš ţö { $store }. Åšķ ţĥé þļüĝîñ šţöŕé'š öŵñéŕ ƒöŕ àñ îñṽîţé.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings row and page title, every platform.
+devices-title = [Ðéṽîçéš~~~]
+
+# Devices row value while sync is off.
+devices-row-off = [Šýñç öƒƒ~~~]
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = [Šýñçéð { $ago }~~~]
+
+# Devices row value with the error glyph.
+devices-row-error = [Çöüļðñ’ţ šýñç~~~~]
+
+# Group heading over the name.
+devices-this-device = [Ţĥîš ðéṽîçé~~~~]
+
+# Row for this device’s name.
+devices-name = [Ñàɱé~~]
+
+# Group heading while off.
+sync-group = [Šýñç~~]
+
+# Off state.
+sync-off-title = [Šýñç îš öƒƒ~~~~]
+
+# Off state.
+sync-off-line = [Ţüŕñ îţ öñ ţö ķééþ ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ţĥé šàɱé öñ ýöüŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = [Ţüŕñ öñ šýñç~~~~]
+
+# Road sheet title.
+sync-road-title = [Ĥöŵ šĥöüļð ýöüŕ ðéṽîçéš šĥàŕé?~~~~~~~~~]
+
+# Road sheet row.
+sync-road-nearby = [Ŵîţĥ à ðéṽîçé ñéàŕƀý~~~~~~]
+
+# Road sheet row line.
+sync-road-nearby-line = [Þàîŕ ŵîţĥ àñöţĥéŕ ðéṽîçé öñ ţĥé šàɱé Ŵî-Ƒî. Ñöţĥîñĝ îš šţöŕéð àñýŵĥéŕé éļšé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Road sheet row.
+sync-road-cloud = [Ţĥŕöüĝĥ à çļöüð ƒöļðéŕ~~~~~~~]
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = [Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Road sheet footer.
+sync-road-later = [Ýöü çàñ àðð ţĥé öţĥéŕ ŵàý ļàţéŕ. Ṁöšţ þéöþļé üšé ƀöţĥ.~~~~~~~~~~~~~~~~~]
+
+# Group heading.
+devices-yours = [Ýöüŕ ðéṽîçéš~~~~]
+
+# Empty Your devices.
+devices-only-this = [Öñļý ţĥîš ðéṽîçé~~~~~]
+
+# Empty Your devices.
+devices-only-this-line = [Þàîŕ àñöţĥéŕ ðéṽîçé ţö šĥàŕé ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row and sheet title.
+devices-add = [Åðð à ðéṽîçé~~~~]
+
+# Device row line past 30 days.
+devices-not-seen = [Ñöţ šééñ ƒöŕ { $days } ðàýš~~~~~~~]
+
+# A device paired only for Play on TV.
+devices-remote-only = [Ŕéɱöţé öñļý~~~~]
+
+# Button on a remote-only TV row.
+devices-also-sync = [Åļšö šýñç ŵîţĥ { $device }~~~~~~]
+
+# Footer while sync is off.
+devices-paired-tvs-foot = [Þàîŕéð ƒöŕ Þļàý öñ ŢṼ. Å ŢṼ þàîŕéð àš à ŕéɱöţé ñéṽéŕ ĝéţš ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Switch on a device.
+devices-sync-switch = [Šýñç~~]
+
+# Switch on a TV.
+devices-remote-switch = [Ŕéɱöţé~~]
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš { $kind } ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Device page, destructive.
+devices-remove = [Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]
+
+# Alert title.
+devices-remove-alert = [Ŕéɱöṽé { $device }?~~~~]
+
+# Alert message.
+devices-remove-alert-line = [{ $device } ķééþš ŵĥàţ îţ ĥàš, ƀüţ ĝéţš ñöţĥîñĝ ñéŵ ƒŕöɱ ýöüŕ öţĥéŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = [Ţüŕñ öƒƒ šýñç öñ ţĥîš { $kind }~~~~~~~~]
+
+# Alert title.
+sync-turn-off-alert = [Ţüŕñ öƒƒ šýñç öñ { $device }?~~~~~~~]
+
+# Alert message.
+sync-turn-off-alert-line = [Ţĥîš { $kind } šţöþš šĥàŕîñĝ ŵîţĥ ýöüŕ öţĥéŕ ðéṽîçéš. Éṽéŕýţĥîñĝ îţ ĥàš šţàýš ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Group heading.
+cloud-group = [Çļöüð ƒöļðéŕ~~~~]
+
+# Group footer.
+cloud-foot = [Ƒîļļš îñ ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row when only the nearby road is set.
+cloud-add = [Åðð à çļöüð ƒöļðéŕ~~~~~~]
+
+# Picker title.
+cloud-pick-title = [Çĥööšé à çļöüð ƒöļðéŕ~~~~~~~]
+
+# Picker row line.
+cloud-google-line = [Å ĥîððéñ Ķàéŕî ƒöļðéŕ îñ ýöüŕ Ðŕîṽé~~~~~~~~~~~]
+
+# Picker row line.
+cloud-nextcloud-line = [Ýöüŕ öŵñ öŕ à ĥöšţéð Ñéẋţçļöüð šéŕṽéŕ~~~~~~~~~~~~]
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = [Å ƒöļðéŕ ýöü çĥööšé îñ îÇļöüð Ðŕîṽé~~~~~~~~~~~]
+
+# Picker group heading.
+cloud-other = [Öţĥéŕ~~]
+
+# Picker row.
+cloud-webdav = [ŴéƀÐÅṼ šéŕṽéŕ~~~~]
+
+# Picker row line.
+cloud-webdav-line = [Åñý šéŕṽéŕ ţĥàţ šþéàķš ŴéƀÐÅṼ~~~~~~~~~]
+
+# Picker row line.
+cloud-folder-line = [Ƒöŕ à ƒöļðéŕ àñöţĥéŕ àþþ ķééþš îñ šţéþ~~~~~~~~~~~~]
+
+# Picker footer.
+cloud-pick-foot = [Ýöüŕ ðéṽîçéš ķééþ à šéàļéð çöþý öƒ ţĥéîŕ çĥàñĝéš îñ ţĥîš ƒöļðéŕ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ, àñð Ķàéŕî ŕüñš ñö šéŕṽéŕ öƒ îţš öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row line while the first write runs.
+cloud-setting-up = [Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~]
+
+# Field label.
+cloud-nextcloud-address = [Šéŕṽéŕ àððŕéšš~~~~~]
+
+# Field note.
+cloud-nextcloud-address-note = [Ţĥé àððŕéšš ýöü öþéñ Ñéẋţçļöüð àţ îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~]
+
+# Login flow wait.
+cloud-nextcloud-wait-title = [Ƒîñîšĥ šîĝñîñĝ îñ öñ { $host }~~~~~~~~]
+
+# Login flow wait.
+cloud-nextcloud-wait-line = [Ýöüŕ Ñéẋţçļöüð þàĝé îš öþéñ îñ ţĥé ƀŕöŵšéŕ. Åļļöŵ àççéšš ţĥéŕé, àñð ţĥîš šĥééţ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Wait row.
+cloud-waiting = [Ŵàîţîñĝ ƒöŕ { $service }~~~~~]
+
+# Button.
+cloud-open-again = [Öþéñ ţĥé þàĝé àĝàîñ~~~~~~]
+
+# Text button.
+cloud-app-password = [Ûšé àñ àþþ þàššŵöŕð îñšţéàð~~~~~~~~~]
+
+# Button.
+cloud-connect = [Çöññéçţ~~~]
+
+# Error.
+cloud-err-offline = [Çöüļðñ’ţ ŕéàçĥ { $service }. Çĥéçķ ýöüŕ çöññéçţîöñ.~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-no-server = [Çöüļðñ’ţ ƒîñð à Ñéẋţçļöüð šéŕṽéŕ àţ { $host }. Çĥéçķ ţĥé àððŕéšš.~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-app-password = [Ñéẋţçļöüð ðîðñ’ţ àççéþţ ţĥàţ àþþ þàššŵöŕð. Ṁàķé à ñéŵ öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-webdav = [Ţĥé šéŕṽéŕ ŕéƒüšéð ţĥàţ üšéŕ ñàɱé öŕ þàššŵöŕð.~~~~~~~~~~~~~~]
+
+# Error, with Open the page again.
+cloud-err-timeout = [Ţĥé šîĝñ-îñ þàĝé çļöšéð ƀéƒöŕé àççéšš ŵàš àļļöŵéð.~~~~~~~~~~~~~~~]
+
+# Error.
+cloud-err-other-group = [Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, öŕ çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status error, with Sign in again.
+cloud-err-signed-out = [{ $service } šîĝñéð Ķàéŕî öüţ. Ýöüŕ çĥàñĝéš ŵàîţ öñ ţĥîš { $kind } üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status error.
+cloud-err-full = [{ $service } îš ƒüļļ. Ƒŕéé šöɱé šþàçé ţĥéŕé, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = [Ķàéŕî çàñ’ţ öþéñ ţĥé ƒöļðéŕ àñý ɱöŕé. Çĥööšé îţ àĝàîñ.~~~~~~~~~~~~~~~~~]
+
+# Status error title.
+cloud-err-title = [Çöüļðñ’ţ šýñç ŵîţĥ { $service }~~~~~~~]
+
+# Picker row line.
+cloud-dropbox-line = [Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ Ðŕöþƀöẋ, Åþþš/Ķàéŕî~~~~~~~~~~~~~~]
+
+# Picker row line.
+cloud-onedrive-line = [Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ ÖñéÐŕîṽé, Åþþš/Ķàéŕî~~~~~~~~~~~~~~~]
+
+# Cloud group button.
+cloud-sync-now = [Šýñç ñöŵ~~~]
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = [Šîĝñ öüţ~~~]
+
+# Cloud group button after signing out.
+cloud-sign-in = [Šîĝñ îñ~~~]
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = [Šîĝñéð öüţ. Çĥàñĝéš ŵàîţ öñ ţĥîš { $kind } üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~]
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = [{ $service } ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš. Çĥööšé îţ àĝàîñ ţö ŕéţŕý.~~~~~~~~~~~~~~~~~]
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = [Çĥööšé ţĥé öñé ýöüŕ öţĥéŕ ðéṽîçéš üšé. Å ñéŵ çļöüð ƒöļðéŕ îš àððéð öñ à þĥöñé öŕ çöɱþüţéŕ, ŵĥéŕé îţš ŕéçöṽéŕý ķéý çàñ ƀé šàṽéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = [Šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~]
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = [Ðŕöþƀöẋ šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~~~]
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = [{ $device } îš šîĝñéð îñ ţö Ðŕöþƀöẋ. Ţĥîš ŢṼ çàñ üšé ţĥàţ šîĝñ-îñ öṽéŕ ýöüŕ þàîŕéð ļîñķ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = [Ûšé { $device }’š šîĝñ-îñ~~~~~~]
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = [Ðŕöþƀöẋ ĥàš ñö šîĝñ-îñ à ŢṼ çàñ ðö. Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Çļöüð ƒöļðéŕ, àñð šîĝñ îñ ţö Ðŕöþƀöẋ ţĥéŕé. Ţĥéñ çĥööšé Ðŕöþƀöẋ ĥéŕé àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = [Šîĝñéð îñ. Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~~~~]
+
+# TV cloud row.
+tv-cloud-revoked-line = [{ $service } šîĝñéð Ķàéŕî öüţ. Šéļéçţ ţö šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~]
+
+# TV cloud row.
+tv-cloud-signed-out-line = [Šîĝñéð öüţ. Šéļéçţ ţö šîĝñ îñ.~~~~~~~~~]
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = [Šîĝñ öüţ öƒ { $service }?~~~~~]
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = [Ţĥîš ŢṼ šţöþš šýñçîñĝ ţĥŕöüĝĥ { $service }. Çĥàñĝéš ŵàîţ ĥéŕé üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line while offline.
+cloud-offline = [Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ. Çĥàñĝéš àŕé ķéþţ öñ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~]
+
+# TV device flow.
+tv-google-title = [Šîĝñ îñ ţö Ĝööĝļé Ðŕîṽé~~~~~~~]
+
+# TV device flow.
+tv-qr-open-page = [Öŕ šçàñ ţö öþéñ ţĥé þàĝé~~~~~~~~]
+
+# TV Nextcloud.
+tv-nextcloud-line = [Šçàñ ţĥîš ŵîţĥ ýöüŕ þĥöñé àñð àļļöŵ àççéšš öñ ýöüŕ Ñéẋţçļöüð þàĝé. Ţĥé ŢṼ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sheet title.
+rkey-title = [Ýöüŕ ŕéçöṽéŕý ķéý~~~~~~]
+
+# Sheet line.
+rkey-line = [Ķééþ ţĥîš šöɱéŵĥéŕé šàƒé. Îţ ŕéšţöŕéš ýöüŕ ĥîšţöŕý îƒ ýöü ļöšé éṽéŕý ðéṽîçé, àñð ļéţš à ñéŵ ðéṽîçé ĵöîñ ƒŕöɱ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button.
+rkey-copy = [Çöþý~~]
+
+# Text button.
+rkey-qr = [Šĥöŵ àš ǪŔ çöðé~~~~~]
+
+# Sheet footnote.
+rkey-again = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ üñļöçķîñĝ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~]
+
+# Devices row.
+rkey-row = [Ŕéçöṽéŕý ķéý~~~~]
+
+# Devices row value.
+rkey-made = [Ṁàðé { $date }~~~]
+
+# Row.
+rkey-new = [Ṁàķé à ñéŵ ķéý~~~~~]
+
+# Footer.
+rkey-new-foot = [Ţĥé öļð ķéý šţöþš ŵöŕķîñĝ, àñð ýöüŕ ðéṽîçéš šŵîţçĥ ţö ţĥé ñéŵ öñé ţĥé ñéẋţ ţîɱé ţĥéý šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Restore.
+rkey-enter-title = [Éñţéŕ ýöüŕ ŕéçöṽéŕý ķéý~~~~~~~]
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+        [one] [{ $service } ĥöļðš ĥîšţöŕý ƒŕöɱ { $count } ðéṽîçé. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $service } ĥöļðš ĥîšţöŕý ƒŕöɱ { $count } ðéṽîçéš. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Field note.
+rkey-enter-note = [24 ļéţţéŕš àñð ðîĝîţš, îñ ĝŕöüþš öƒ ƒöüŕ. Šþàçéš àñð çàšé ðöñ’ţ ɱàţţéŕ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+rkey-wrong = [Ţĥàţ ķéý ðöéšñ’ţ öþéñ ţĥîš ƒöļðéŕ. Çĥéçķ éàçĥ ĝŕöüþ öƒ ƒöüŕ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button.
+rkey-restore = [Ŕéšţöŕé~~~]
+
+# Add a device.
+pair-enter-line = [Öñ ţĥé öţĥéŕ ðéṽîçé, öþéñ Ķàéŕî àñð çĥööšé Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé, öŕ Šéţţîñĝš, Ðéṽîçéš, Šĥöŵ à çöðé. Ţĥéñ éñţéŕ ţĥé çöðé ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button, phones.
+pair-scan = [Šçàñ ţĥé çöðé~~~~]
+
+# Note.
+pair-same-wifi = [Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~]
+
+# Button.
+pair-button = [Þàîŕ~~]
+
+# Text button.
+pair-show-instead = [Šĥöŵ à çöðé ĥéŕé îñšţéàð~~~~~~~~]
+
+# Code screen.
+pair-show-title = [Éñţéŕ ţĥîš çöðé öñ ýöüŕ öţĥéŕ ðéṽîçé~~~~~~~~~~~]
+
+# Code screen.
+pair-show-scan = [Öŕ šçàñ îţ ƒŕöɱ Ķàéŕî öñ ýöüŕ þĥöñé.~~~~~~~~~~~]
+
+# Code screen.
+pair-good-for = [Ĝööð ƒöŕ 2 ɱîñüţéš · { $left }~~~~~~~~]
+
+# TV code screen.
+pair-tv-line = [Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð šçàñ ţĥîš çöðé öŕ éñţéŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Success.
+pair-ok = [Þàîŕéð ŵîţĥ { $device }~~~~~]
+
+# Success.
+pair-ok-line = [Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý. Ýöü çàñ ķééþ üšîñĝ Ķàéŕî ɱéàñŵĥîļé.~~~~~~~~~~~~~~~~~~~]
+
+# Success switch.
+pair-copy-signins = [Çöþý šîĝñ-îñš ƒŕöɱ { $device }~~~~~~~]
+
+# Success switch line.
+pair-copy-signins-line = [{ $trackers }. Éàçĥ ðéṽîçé ĝéţš îţš öŵñ çöþý öṽéŕ ţĥîš ļîñķ.~~~~~~~~~~~~~~~]
+
+# Error.
+pair-err-code = [Ţĥàţ çöðé ðîðñ’ţ ɱàţçĥ. Çĥéçķ ţĥé çöðé öñ { $device } àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~]
+
+# Error.
+pair-err-not-found = [Çöüļðñ’ţ ƒîñð ţĥé ðéṽîçé šĥöŵîñĝ ţĥîš çöðé. Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Error on the showing side.
+pair-err-expired = [Ţĥîš çöðé ŕàñ öüţ. Šĥöŵ à ñéŵ öñé.~~~~~~~~~~~]
+
+# Profile question.
+pair-which-profile = [Ŵĥîçĥ þŕöƒîļé öñ { $device } îš ýöüŕš?~~~~~~~~~]
+
+# Profile question.
+pair-which-profile-line = [Ţĥîš { $kind } šýñçš ŵîţĥ ţĥàţ þŕöƒîļé öñļý. Ţĥé öţĥéŕš šţàý öñ { $device }.~~~~~~~~~~~~~~~~~~~]
+
+# Footer.
+pair-also-sync-foot = [{ $device } àļŕéàðý ķñöŵš ţĥîš þĥöñé ƒŕöɱ Þļàý öñ ŢṼ, šö šýñçîñĝ ŵîţĥ îţ ñééðš ñö ñéŵ çöðé.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Continue, for a day.
+continue-from-device = [Éþîšöðé { $n } · šţöþþéð àţ { $time } öñ { $device }~~~~~~~~~~~]
+
+# Player, 6 s, with Start over.
+player-resumed-from = [Ŕéšüɱéð àţ { $time } ƒŕöɱ { $device }~~~~~~~]
+
+# Row line, Mac toolbar status.
+sync-syncing = [Šýñçîñĝ~~~]
+
+# Mac jobs popover.
+sync-syncing-with = [Šýñçîñĝ ŵîţĥ { $device }~~~~~]
+
+# Device page group.
+sync-notes = [Šýñç ñöţéš~~~]
+
+# Sync note.
+sync-note-kept-watched = [Éþîšöðé { $n } öƒ { $title } šţàýš ŵàţçĥéð. { $other } ɱàŕķéð îţ üñŵàţçĥéð ŵîţĥöüţ ķñöŵîñĝ { $device } ĥàð ƒîñîšĥéð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sync note action.
+sync-note-undo = [Ṁàŕķ üñŵàţçĥéð~~~~~]
+
+# Footer.
+sync-notes-foot = [Ñöţéš šţàý ƒöŕ 7 ðàýš.~~~~~~~]
+
+# Settings row and page.
+profiles-title = [Þŕöƒîļéš~~~]
+
+# Profiles row value with one profile.
+profiles-only-you = [Öñļý ýöü~~~]
+
+# Profiles page with one.
+profiles-one-foot = [Þŕöƒîļéš ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš ƒöŕ þéöþļé ŵĥö šĥàŕé ţĥîš ðéṽîçé. Ŵîţĥ öñé þŕöƒîļé, Ķàéŕî ĥàš ñö þîçķéŕ àñð ñö ñàɱéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row, sheet title, picker tile.
+profiles-add = [Åðð à þŕöƒîļé~~~~]
+
+# Sheet line.
+profiles-add-line = [Éàçĥ þŕöƒîļé ķééþš îţš öŵñ ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš. Šöüŕçéš àñð ðöŵñļöàðš šţàý šĥàŕéð öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Field label.
+profiles-new = [Ñéŵ þŕöƒîļé~~~~]
+
+# Field label.
+profiles-yours = [Ýöüŕ þŕöƒîļé~~~~]
+
+# Field note when signed in.
+profiles-yours-note = [Ƒîļļéð îñ ƒŕöɱ ÅñîĻîšţ. Ûñţîļ ñöŵ ţĥîš ðéṽîçé ĥàð öñé þŕöƒîļé ŵîţĥ ñö ñàɱé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Switch.
+profiles-kids = [Ķîðš þŕöƒîļé~~~~]
+
+# Switch footer.
+profiles-kids-line = [Åðüļţ ţîţļéš šţàý öƒƒ, àñð šöüŕçéš, ðéṽîçéš àñð ţöŕŕéñţ šéţţîñĝš àŕé ĥîððéñ îñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = [Šöüŕçéš àñð Ðéṽîçéš àŕé ĥîððéñ îñ à ķîðš þŕöƒîļé, àñð àðüļţ ţîţļéš šţàý öƒƒ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under a kids profile.
+profiles-kids-tag = [Ķîðš~~]
+
+# Button.
+profiles-add-button = [Åðð þŕöƒîļé~~~~]
+
+# Profiles page footer.
+profiles-shared-foot = [Šöüŕçéš, ðöŵñļöàðš àñð ţĥîš ðéṽîçé’š šéţţîñĝš àŕé šĥàŕéð ƀý éṽéŕý þŕöƒîļé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Profile page row.
+profiles-syncs-with = [Šýñçš ŵîţĥ~~~]
+
+# Profile page, destructive.
+profiles-delete = [Ðéļéţé þŕöƒîļé~~~~~]
+
+# Alert title.
+profiles-delete-alert = [Ðéļéţé { $name }’š þŕöƒîļé?~~~~~~~]
+
+# Alert message.
+profiles-delete-alert-line = [{ $name }’š ĥîšţöŕý àñð šîĝñ-îñš öñ ţĥîš ðéṽîçé àŕé ŕéɱöṽéð. Ðéṽîçéš ţĥàţ šýñç ŵîţĥ { $name } ķééþ ţĥéîŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV, and iPad when asked.
+profiles-picker = [Ŵĥö’š ŵàţçĥîñĝ?~~~~~]
+
+# iPad switch.
+profiles-ask-at-launch = [Åšķ ŵĥö’š ŵàţçĥîñĝ àţ ļàüñçĥ~~~~~~~~~]
+
+# iPad footer.
+profiles-ask-foot = [Öƒƒ ƀý ðéƒàüļţ. Ƒöŕ àñ îÞàð ţĥé ĥöüšéĥöļð šĥàŕéš. Ţĥé àççöüñţ ŕöŵ šŵîţçĥéš þŕöƒîļéš àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Settings.
+profiles-switch = [Šŵîţçĥ þŕöƒîļé~~~~~]
+
+# Account sheet and menus.
+profiles-manage = [Ṁàñàĝé þŕöƒîļéš~~~~~]
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = [Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé~~~~~~~~]
+
+# Code screen from first launch.
+first-setup-line = [Öñ à ðéṽîçé ţĥàţ àļŕéàðý ĥàš Ķàéŕî, öþéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð éñţéŕ ţĥîš çöðé öŕ šçàñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Text button.
+first-restore = [Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ îñšţéàð~~~~~~~~~~~]
+
+# Success from first launch.
+first-ok-line = [Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý, šéţţîñĝš àñð þļüĝîñ šţöŕéš. Ýöü çàñ šţàŕţ üšîñĝ Ķàéŕî ñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Success switch.
+first-join-store = [Ĵöîñ ţĥé þļüĝîñ šţöŕé { $store }~~~~~~~~]
+
+# Success switch line.
+first-join-store-line = [{ $device } ɱàķéš ţĥîš { $kind } îţš öŵñ îñṽîţé~~~~~~~~~~]
+
+# Picker row on a phone or computer.
+cloud-folder = [Å ƒöļðéŕ öñ ţĥîš { $kind }~~~~~~]
+
+# Field note under the app password, on Android.
+cloud-app-password-note = [Ṁàķé öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý. Îţ îš ķéþţ öñ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+        [one] [Öñé ŢṼ ƒöŕ Þļàý öñ ŢṼ~~~~~~~]
+       *[other] [{ $count } ŢṼš ƒöŕ Þļàý öñ ŢṼ~~~~~~~]
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = [Þàîŕéð ţöðàý~~~~]
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = [Šĥöŵš à çöðé ţö éñţéŕ öñ ýöüŕ þĥöñé~~~~~~~~~~~]
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = [Öñļý ýöü. Åðð à þŕöƒîļé ţö ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš öñ ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = [Öþéñš Ŵĥö’š ŵàţçĥîñĝ?~~~~~~~]
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = [Þŕöƒîļéš öñ ţĥîš ŢṼ~~~~~~]
+
+# Android recovery key sheet, third button.
+rkey-save-file = [Šàṽé àš à ƒîļé~~~~~]
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = [ǪŔ çöðé~~~]
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = [Šĥöŵ à çöðé~~~~]
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = [Šîĝñ îñ àĝàîñ~~~~]
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = [Çĥööšé ƒöļðéŕ~~~~]
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = [{ $name }, šŵîţçĥ þŕöƒîļé~~~~~~]
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = [Þàîŕîñĝ çöðé~~~~]
+
+device-kind-phone = [þĥöñé~~]
+
+device-kind-tablet = [ţàƀļéţ~~]
+
+device-kind-tv = [ŢṼ~]
+
+# TV welcome, text button.
+first-setup-phone = [Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]
+
+# Error naming a device that is not known by name.
+devices-other-device = [ţĥé öţĥéŕ ðéṽîçé~~~~~]
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = [{ $service }’š þàĝé îš öþéñ. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = [Çöññéçţîñĝ ţö { $service }~~~~~~]
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = [Åççéšš àļļöŵéð. Ƒîñîšĥîñĝ ţĥé šîĝñ-îñ.~~~~~~~~~~~~]
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = [Ṁàķîñĝ Ķàéŕî’š ƒöļðéŕ îñ { $service } àñð šéàļîñĝ à ƒîŕšţ çöþý öƒ ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~]
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = [Çöüļðñ’ţ šîĝñ îñ ţö { $service }~~~~~~~]
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = [Çöüļðñ’ţ šéţ üþ ţĥé ƒöļðéŕ~~~~~~~~]
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = [{ $service } ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš.~~~~~~~~~]
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = [{ $service } ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = [Ķàéŕî çöüļðñ’ţ ɱàķé îţš ƒöļðéŕ îñ { $service }. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = [Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = [Ŕéɱöṽé çļöüð ƒöļðéŕ~~~~~~]
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = [Ŕéɱöṽé { $service } ƒŕöɱ šýñç?~~~~~~~]
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = [Éṽéŕýţĥîñĝ öñ ţĥîš { $kind } šţàýš ĥéŕé, àñð þàîŕéð ðéṽîçéš ñéàŕƀý ķééþ šýñçîñĝ. Ţĥé ƒöļðéŕ šţàýš îñ { $service } ŵîţĥ îţš šéàļéð çöþý, àñð ýöüŕ öţĥéŕ ðéṽîçéš üšé îţ üñţîļ ýöü ŕéɱöṽé îţ öñ ţĥéɱ ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = [Ŕéɱöṽé~~]
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = [Ṁöŕé ƒöŕ { $service }~~~~]
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = [Îñ üšé~~]
+
+# Picker line under Use another service.
+cloud-switch-foot = [{ $service } šţàýš îñ üšé üñţîļ ţĥé ñéŵ ƒöļðéŕ îš ŕéàðý.~~~~~~~~~~~~~~~]
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = [Éîţĥéŕ öñé ţüŕñš šýñç öñ, àñð ýöü çàñ üšé ƀöţĥ.~~~~~~~~~~~~~~~]
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = [Šýñç çàŕŕîéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ƀéţŵééñ ýöüŕ öŵñ ðéṽîçéš, ñéàŕƀý öŕ ţĥŕöüĝĥ à çļöüð ƒöļðéŕ ýöü çĥööšé. Îţ îš šéàļéð ƀéƒöŕé îţ ļéàṽéš ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = [Þàîŕîñĝ ŵîţĥ ýöüŕ þĥöñé ţüŕñš šýñç öñ. Ţĥéñ ţĥîš ŢṼ çàñ ĵöîñ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Title of the state when a title page could not load.
 title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]
 
@@ -9203,6 +10585,70 @@ episode-row-airs = [Åîŕš { $when }~~~]
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = [Ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~]
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = [Šýñöþšîš ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~~~~]
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = [Šĥöŵ šýñöþšîš~~~~]
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = [Šĥöŵš ţĥîš éþîšöðé'š šţîļļ àñð šýñöþšîš~~~~~~~~~~~~]
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = [{ $minutes } ɱîñ · Åîŕéð { $date }~~~~~~]
+
+# Facts line of an episode with a length only.
+episode-facts-length = [{ $minutes } ɱîñ~~~]
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = [{ $minutes } ɱîñ ļéƒţ~~~~]
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = [Šþöîļéŕ þŕöţéçţîöñ ĥîðéš ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~~~]
+
+# The same line on phones.
+episode-protection-line-short = [Ĥîððéñ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = [Éþîšöðéš { $from } ţö { $to }~~~~~~]
+
+# Label of the control that picks an episode range.
+episode-range-label = [Éþîšöðé ŕàñĝé~~~~]
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] [Öñé ŵàţçĥéð éþîšöðé~~~~~~]
+       *[other] [{ $count } ŵàţçĥéð éþîšöðéš~~~~~~]
+    }
+
+# An episode's number in a facts line on phones and in narrow desktop windows.
+episode-short = [É{ $episode }~~]
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = [Åîŕéð { $date }~~~]
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = [{ $first } · { $second }~~~]
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = [Šĥöŵ~~]
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = [Ĥîðé~~]
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = [Šĥöŵîñĝ ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~]
+
+# The same line on phones.
+episode-protection-shown-short = [Šĥöŵîñĝ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = [{ $from }–{ $to }~~~]
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = [{ $range } · { $state }~~~]
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = [Éþîšöðé öþţîöñš~~~~~]
@@ -9324,6 +10770,27 @@ title-fact-tba = [Ţö ƀé àññöüñçéð~~~~~]
 
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = [{ $status } · { $score }/10~~~~]
+
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = [Ĝö ţö éþîšöðé…~~~~~]
+
+# Title of the Go to episode field.
+episode-go-to-title = [Ĝö ţö éþîšöðé~~~~]
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = [Ĝö~]
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = [{ $first } ţö { $last }~~~]
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = [Éþîšöðé, { $first } ţö { $last }~~~~~~]
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = [Ñö éþîšöðé { $number }. Ţĥîš šĥöŵ ĥàš { $last }.~~~~~~~~~~~]
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = [Éþîšöðé { $number } îšñ'ţ öüţ ýéţ. Ţĥé ļàţéšţ îš { $latest }.~~~~~~~~~~~~~~]
 
 # Title of the settings group and the screen.
 torrents-title = [Ţöŕŕéñţš~~~]
@@ -9925,6 +11392,9 @@ tv-cast-volume-on-tv = [Šéţ öñ ţĥé ŢṼ~~~~]
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = [Ûþ ñéẋţ · þļàýš îñ { $seconds } š~~~~~~~~]
+
+# Line under the paired TVs.
+tv-forget-note = [Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~]
 
 # Heading of the update row in settings and about.
 updates-title = [Ûþðàţéš~~~]

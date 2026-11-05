@@ -69,14 +69,88 @@ struct SkipMarkingTests {
         #expect(!rig.model.canMarkSkips)
     }
 
-    @Test func aPromptSitsInTheCornerAndLapsesAfterEightSeconds() async throws {
+    @Test func aPromptSitsInTheCornerAndLapsesAfterTwelveSeconds() async throws {
         let rig = Rig()
         try await rig.opened()
         rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .wrongTimes(kind: .ending)))
         #expect(rig.model.corner == .prompt)
         rig.step(.seconds(9))
+        #expect(rig.model.skipPrompt != nil)
+        rig.step(.seconds(4))
         #expect(rig.model.skipPrompt == nil)
         #expect(rig.controls == [.dismissSkipPrompt])
+    }
+
+    /// The order a real session had, through the store as the app hands the engine's events on:
+    /// Up Next from the start, the found opening's Skip pressed, then its card. The card takes
+    /// the corner, waits through a pause and goes after its 12 s of playback.
+    @Test func theFoundTimesCardReachesThePlayerThroughTheStore() async throws {
+        let rig = Rig()
+        let store = AppStore()
+        store.onPlayback = { [weak model = rig.model] event in model?.apply(event) }
+        try await rig.opened(8)
+        store.apply([
+            .playerUi(playback: 8, ui: .upNext(
+                next: NextEpisode(number: "5", title: nil, thumbnail: nil), auto: true, endingAt: nil, countdown: 10,
+                stillWatchingAfter: 3)),
+            .playerUi(playback: 8, ui: .skip(kind: .opening, to: 151)),
+        ])
+        #expect(rig.model.corner == .skip)
+        rig.model.takeSkip()
+        store.apply([
+            .playerUi(playback: 8, ui: .skipCleared),
+            .playerSkipPrompt(playback: 8, prompt: .foundEdges(kind: .opening, episode: 4)),
+        ])
+        #expect(rig.model.skipPrompt?.prompt == .foundEdges(kind: .opening, episode: 4))
+        #expect(rig.model.corner == .prompt)
+        rig.mpv.emit(.property(name: "pause", value: .flag(true)))
+        try await until("paused") { rig.model.paused }
+        rig.step(.seconds(40))
+        #expect(rig.model.corner == .prompt, "a pause waits")
+        rig.mpv.emit(.property(name: "pause", value: .flag(false)))
+        try await until("playing") { !rig.model.paused }
+        rig.step(.seconds(13))
+        #expect(rig.model.skipPrompt == nil)
+        #expect(rig.controls.last == .dismissSkipPrompt)
+    }
+
+    @Test func theFoundTimesCardWaitsWhilePausedAndAnswersAreSent() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 3)))
+        rig.mpv.emit(.property(name: "pause", value: .flag(true)))
+        try await until("paused") { rig.model.paused }
+        rig.step(.seconds(30))
+        #expect(rig.model.skipPrompt != nil, "a pause waits")
+        rig.mpv.emit(.property(name: "pause", value: .flag(false)))
+        try await until("playing") { !rig.model.paused }
+        rig.step(.seconds(11))
+        #expect(rig.model.skipPrompt != nil)
+        rig.step(.seconds(2))
+        #expect(rig.model.skipPrompt == nil, "12 s of playback, then it goes unanswered")
+        #expect(rig.controls.last == .dismissSkipPrompt)
+    }
+
+    @Test func theFoundTimesCardsAnswersAreCommandsAndTheAnswerLinesLastFourSeconds() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 3)))
+        rig.model.confirmFoundSkip(.opening)
+        #expect(rig.model.skipPrompt != nil, "the card answers in place when the engine says so")
+        rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundSaved(kind: .opening, episode: 3)))
+        rig.step(.seconds(3))
+        #expect(rig.model.skipPrompt != nil)
+        rig.step(.seconds(2))
+        #expect(rig.model.skipPrompt == nil)
+        rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .ending, episode: 3)))
+        rig.model.adjustFoundSkip(.ending)
+        #expect(rig.model.skipPrompt == nil)
+        rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 3)))
+        rig.model.neverAskWasOpening()
+        #expect(rig.model.skipPrompt != nil, "kept for the engine's FoundNever, so the card never goes empty")
+        #expect(rig.controls.filter { $0 != .dismissSkipPrompt } == [
+            .confirmFoundSkip(kind: .opening), .adjustFoundSkip(kind: .ending), .neverAskWasOpening,
+        ])
     }
 
     @Test func theSharingQuestionIsASheetAndItsAnswerIsSent() async throws {
@@ -127,5 +201,19 @@ struct SkipMarkingTests {
         #expect(rows.map(\.origin) == [L.playerSkipYours, L.playerSkipFromAniskip, L.playerSkipNone])
         #expect(rows.map(\.canClear) == [true, false, false])
         #expect(rows.map(\.canReport) == [false, true, false])
+    }
+
+    @Test func foundTimesShowTheirOriginAnAdjustAndWhyNoneWereFoundWhenPaused() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        rig.model.apply(.playerTimeline(playback: 1, marks: [
+            TimelineMark(kind: .opening, start: 91, end: 180, origin: .found),
+        ]))
+        rig.model.skipFindPause = { .lowPower }
+        let rows = rig.model.skipTimeRows
+        #expect(rows.map(\.origin) == [L.playerSkipFound, L.playerSkipNone, L.playerSkipNone])
+        #expect(rows.map(\.canAdjust) == [true, false, false])
+        #expect(rows.map { rig.model.skipFindPauseWords(for: $0) } == [nil, L.playerSkipPausedLowPower, nil])
+        #expect(SkipWords.lines(view(notes: [.found, .shares])) == [L.playerMarkFound, L.playerMarkShares])
     }
 }

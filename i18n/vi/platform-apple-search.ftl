@@ -13,6 +13,7 @@ search-statuses-count = { $count ->
 search-leave-out = Loại trừ
 search-include = Bao gồm
 search-filters-help = Thẻ, độ dài, điểm, xuất xứ và nơi xem
+search-all-filters = Tất cả bộ lọc
 search-filters-set = { $count } đã đặt
 search-sort-by = Sắp xếp theo
 search-clear-all = Xóa tất cả

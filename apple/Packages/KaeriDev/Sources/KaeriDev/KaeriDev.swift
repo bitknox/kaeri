@@ -60,6 +60,14 @@ final class Delegate: NSObject, NSApplicationDelegate {
     let navigator = Navigator()
     lazy var player: PlayerModel = {
         let player = PlayerModel(send: { [weak store] command in store?.send(command) })
+        player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
+        #if FIXTURES
+        // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-KaeriSkipPause"), arguments.indices.contains(at + 1) {
+            store.settings.pausedOverride = arguments[at + 1] == "storage" ? .storage : .lowPower
+        }
+        #endif
         store.onPlayback = { [weak player] event in player?.apply(event) }
         player.discussionHost = DiscussionHost(
             enabled: { [weak store] in store?.discussionsOn ?? false },
@@ -69,6 +77,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         store.tv.handedOff = { [weak player] in player?.viewerClosed() }
         store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
+        player.alertFilter = { [weak store] text in
+            guard let store, store.party.inParty else { return false }
+            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
+        }
         return player
     }()
     private var temporary: URL?
@@ -124,6 +136,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         var settled = await store.settle()
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
+        if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is
         // there: wait for the sheet to be taken, and for it to slide in.
@@ -170,10 +183,19 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if let scene = PartyScene.named() {
             let there = await player.stage(scene, store: store)
             print(there ? "KaeriDev: the party is at \(scene.rawValue)" : "KaeriDev: the party did not reach \(scene.rawValue)")
+            // A recording's scene (chatloop, reactloop): frames from the moment it is up.
+            if !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+                await frames(of: nil, in: window, to: url)
+            }
         }
         if let scene = TogetherScene.named() {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
+        }
+        // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
+        if TooltipProbe.asked, let window = Snapshot.window {
+            try? await Task.sleep(for: .milliseconds(600))
+            TooltipProbe.run(window: window, playerUp: player.inMainWindow)
         }
         guard let url = options.snapshot else { return }
         // The art's and the preview's fade-ins, and KAERI_SHOT_WAIT seconds more for a trailer.
@@ -189,6 +211,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         if options.fullScreenCycles > 0, let window = Snapshot.window {
             await fullScreenCycles(window: window, url: url)
+        }
+        if let point = options.openMenu, let window = Snapshot.window {
+            await Snapshot.withMenu(at: point, open: window, to: url)
+            exitAfterSnapshot()
+            return
         }
         do {
             guard let window = Snapshot.window else { throw Snapshot.Problem.noWindow }

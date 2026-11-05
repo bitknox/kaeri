@@ -35,6 +35,8 @@ public sealed partial class SettingsPage : Page
             "notifications" => T.SettingsGroupNotifications,
             "sources" => T.SourcesTitle,
             "accounts" => T.NavAccounts,
+            "devices" => T.DevicesTitle,
+            "profiles" => T.ProfilesTitle,
             "library" => T.NavLibrary,
             "integrations" => T.SettingsGroupIntegrations,
             "advanced" => T.SettingsGroupAdvanced,
@@ -50,7 +52,7 @@ public sealed partial class SettingsPage : Page
             // head the pane on their own.
             ("language", [K.Titles, K.Trailers]),
             ("watching", [K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
-            ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
+            ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
             ("subtitles", [K.SubtitleSize]),
@@ -68,6 +70,8 @@ public sealed partial class SettingsPage : Page
             ("seeding", [K.KeepSeeding, K.SeedRatio, K.SeedHours, K.UploadLimit]),
         ]),
         new("accounts", "", []),
+        new("devices", "\uE772", []),
+        new("profiles", "\uE716", []),
         new("library", "\uE8F1", []),
         new("integrations", "",
         [
@@ -113,6 +117,7 @@ public sealed partial class SettingsPage : Page
         K.SkipOpening => T.SettingsSkipOpening,
         K.SkipFiller => T.SettingsSkipFiller,
         K.SkipRecap => T.SettingsSkipRecap,
+        K.FindSkipTimes => T.SettingsFindSkips,
         K.AskWasOpening => T.SettingsAskWasOpening,
         K.ShareSkipTimes => T.SettingsShareSkips,
         K.MarkChapters => T.SettingsMarkOpening,
@@ -190,9 +195,11 @@ public sealed partial class SettingsPage : Page
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
         // Heard from the start: what arrives before the page is loaded is not missed.
         ctx.Tv.Changed += TvChanged;
+        Sync.SyncDialogs.Changed += SyncChanged;
         ctx.Hear(this, Heard, () =>
         {
             ctx.Tv.Changed -= TvChanged;
+            Sync.SyncDialogs.Changed -= SyncChanged;
             guardClock.Stop();
             savedClock.Stop();
         });
@@ -208,7 +215,9 @@ public sealed partial class SettingsPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"))
+        if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"
+            || e is Event.Profiles && pane.Name == "profiles"
+            || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
         else if (batch.Any(e => e is Event.TorrentProxy))
             ShowProxyCheck();
@@ -307,6 +316,7 @@ public sealed partial class SettingsPage : Page
         Cards.Children.Clear();
         guardCard = null;
         protectCard = null;
+        tvGroup = null;
         guardClock.Stop();
         if (narrow)
             Layout();
@@ -314,6 +324,12 @@ public sealed partial class SettingsPage : Page
         {
             case "accounts":
                 ShowAccounts();
+                break;
+            case "devices":
+                ShowDevices();
+                break;
+            case "profiles":
+                ShowProfiles();
                 break;
             case "about":
                 ShowAbout();
@@ -330,15 +346,11 @@ public sealed partial class SettingsPage : Page
                 tvGroup = null;
                 foreach (var (group, keys) in pane.Groups)
                 {
-                    // Play on TV's paired TVs, between Discord and Updates.
-                    if (pane.Name == "integrations" && group == "updates" && ctx.Tv.Available)
+                    // Play on TV's setting, between Discord and Updates; the paired TVs are on Devices.
+                    if (pane.Name == "integrations" && group == "updates" && ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is { } castTvs)
                     {
                         Cards.Children.Add(Heading(T.TvPlayOn));
-                        tvGroup = new StackPanel { Spacing = 4 };
-                        ShowTvs(tvGroup);
-                        Cards.Children.Add(tvGroup);
-                        if (ctx.Known.Setting(K.CastTvs) is { } castTvs)
-                            Cards.Children.Add(castCard = Card(castTvs));
+                        Cards.Children.Add(castCard = Card(castTvs));
                     }
                     // Only where the engine was built with a presence to publish.
                     if (keys.Contains(K.Presence) && ctx.Known.Settings is { PresenceAvailable: false })
@@ -370,13 +382,19 @@ public sealed partial class SettingsPage : Page
                     if (group == "language")
                         Cards.Children.Add(LanguageCard());
                     foreach (var row in rows)
-                        Cards.Children.Add(Card(row));
+                    {
+                        var made = Card(row);
+                        if (row.Key == K.FindSkipTimes)
+                            findCard = made;
+                        Cards.Children.Add(made);
+                    }
                     // The engine answers with a toast of how many skip times it forgot.
                     if (pane.Name == "playback" && group == "player")
                     {
                         var clear = new Button { Content = T.PlayerSkipClear };
                         clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
+                        Cards.Children.Add(HideChatCard());
                     }
                     if (pane.Name == "downloads" && group == "files")
                         Cards.Children.Add(WhenClosingCard());
@@ -485,12 +503,9 @@ public sealed partial class SettingsPage : Page
         var pair = new Button { Content = T.TvPairMenu };
         pair.Click += (_, _) => tv.OpenPicker();
         group.Children.Add(CardFrame(tv.Paired.Length == 0 ? T.TvNonePaired : T.SettingsAnotherTv, TvWords.PairNote, pair, tv.Paired.Length == 0 ? "\uE7F4" : "\uE710"));
-        if (tv.ShortFingerprint.Length > 0)
-        {
-            var foot = Ui.Text(TvWords.Footnote(tv.ShortFingerprint), "HazeCaptionStyle");
-            foot.Margin = new Thickness(2, 4, 0, 0);
-            group.Children.Add(foot);
-        }
+        var foot = Ui.Text(TvWords.Footnote, "HazeCaptionStyle");
+        foot.Margin = new Thickness(2, 4, 0, 0);
+        group.Children.Add(foot);
     }
 
     static TextBlock Heading(string text) => new()
@@ -501,6 +516,29 @@ public sealed partial class SettingsPage : Page
     };
 
     /// <summary>A row as Windows 11 Settings draws one: the Toolkit's SettingsCard.</summary>
+    /// <summary>Hide chat in watch parties: the app's own setting, kept on this device.</summary>
+    static SettingsCard HideChatCard()
+    {
+        var toggle = new ToggleSwitch { IsOn = ChatSetting.Hidden, OnContent = "", OffContent = "", MinWidth = 0 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsHideChat);
+        toggle.Toggled += (_, _) => ChatSetting.Set(toggle.IsOn);
+        return CardFrame(T.SettingsHideChat, T.SettingsHideChatLine, toggle);
+    }
+
+    /// <summary>A card's description with the reason a feature is paused under it, in the text colour.</summary>
+    static StackPanel PausedLine(string detail, string reason)
+    {
+        var lines = new StackPanel { Spacing = 2 };
+        lines.Children.Add(new TextBlock { Text = detail, TextWrapping = TextWrapping.WrapWholeWords });
+        var why = new TextBlock
+        {
+            Text = reason, TextWrapping = TextWrapping.WrapWholeWords, Name = "PausedLine",
+            Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"],
+        };
+        lines.Children.Add(why);
+        return lines;
+    }
+
     static SettingsCard CardFrame(string title, string? description, FrameworkElement? control, string? glyph = null)
     {
         var card = new SettingsCard { Header = title, Description = description, Content = control };
@@ -723,6 +761,7 @@ public sealed partial class SettingsPage : Page
 
     // The Chromecast switch under Play on TV, for the testing build to scroll to.
     FrameworkElement? castCard;
+    FrameworkElement? findCard;
 
 #if KAERI_TESTING
     bool demoed;
@@ -744,6 +783,14 @@ public sealed partial class SettingsPage : Page
             demoed = true;
             await Task.Delay(800);
             cast.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.6, AnimationDesired = false });
+            return;
+        }
+        // --show=found-set-*: Playback scrolled to Find skip times, for a screenshot.
+        if (!demoed && pane.Name == "playback" && ctx.Options.Show?.StartsWith("found-set-", StringComparison.Ordinal) == true && findCard is { } find)
+        {
+            demoed = true;
+            await Task.Delay(800);
+            find.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.5, AnimationDesired = false });
             return;
         }
         if (demoed || pane.Name != "sources" || ctx.Options.Show is not { } show || !show.StartsWith("torrent", StringComparison.Ordinal))
@@ -828,6 +875,15 @@ public sealed partial class SettingsPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(guardCard, T.SettingsCardCheck(T.TorrentsLastCheck, word, note ?? ""));
     }
 
+    /// <summary>Why finding skip times is paused, by Windows' name for power saving, or null while it runs. Unavailable says it can't run in this build.</summary>
+    internal static string? FindSkipsPause(SkipFindPause? paused) => paused switch
+    {
+        SkipFindPause.LowPower => T.PlayerSkipPausedEnergySaver,
+        SkipFindPause.Storage => T.PlayerSkipPausedStorage,
+        SkipFindPause.Unavailable => T.PlayerSkipUnavailable,
+        _ => null,
+    };
+
     FrameworkElement Card(SettingRow row)
     {
         var title = Title(row.Key);
@@ -839,6 +895,8 @@ public sealed partial class SettingsPage : Page
             description = T.SettingsPresenceRichDetail(KaeriFfiMethods.TrackerName("anilist"));
         if (row.Key == K.UpdateBeta)
             description = T.UpdatesBetaDetail;
+        if (row.Key == K.FindSkipTimes)
+            description = ctx.Known.SkipFindPaused == SkipFindPause.Unavailable ? T.PlayerSkipUnavailable : T.SettingsFindSkipsDetail;
         if (row.Key == K.AskWasOpening)
             description = T.SettingsAskWasOpeningDetail;
         if (row.Key == K.ShareSkipTimes)
@@ -905,6 +963,10 @@ public sealed partial class SettingsPage : Page
                 break;
         }
         var card = CardFrame(title, description, control);
+        // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
+        if (row.Key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
+            && FindSkipsPause(ctx.Known.SkipFindPaused) is { } why)
+            card.Description = PausedLine(description ?? "", why);
         // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
         card.IsEnabled = SettingsCatalog.Needs(row.Key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
         return card;

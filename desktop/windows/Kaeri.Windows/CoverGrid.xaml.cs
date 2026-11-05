@@ -13,6 +13,16 @@ public sealed partial class CoverGrid : UserControl
         InitializeComponent();
     }
 
+    /// <summary>A single row that scrolls sideways, for a rail; the grid wraps.</summary>
+    internal bool Rail
+    {
+        set
+        {
+            if (value)
+                Items.Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 };
+        }
+    }
+
     /// <summary>The covers, replaced whole.</summary>
     internal IReadOnlyList<CoverItem> Covers
     {

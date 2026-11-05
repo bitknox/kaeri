@@ -145,7 +145,7 @@ class TitleCache {
         val table = _episodes.value[id] ?: return
         val marked = rows.associateBy { it.number }
         _episodes.value = _episodes.value + (id to table.map { row ->
-            marked[row.number]?.let { row.copy(watched = it.watched, completed = it.completed) } ?: row
+            marked[row.number]?.let { row.copy(watched = it.watched, completed = it.completed, spoilerAhead = it.spoilerAhead) } ?: row
         })
     }
 

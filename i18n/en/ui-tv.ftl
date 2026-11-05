@@ -252,3 +252,6 @@ tv-cast-volume-on-tv = Set on the TV
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 # @arg seconds: int
 tv-cast-up-next-in = { -up-next-cap } · plays in { $seconds } s
+
+# Line under the paired TVs.
+tv-forget-note = Forget a TV here and it forgets this { -device } too.

@@ -188,3 +188,51 @@ party-in-the-room = W pokoju
 party-here-count = { $count } tu
 together-recent-note = Ostatnie dziesięć, zapisane na tym urządzeniu
 party-pick-continue = { -proceed-cap }
+party-chat-field = Napisz coś
+party-chat-send = Wyślij
+party-chat-title = Czat
+party-chat-wait = Czekaj { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Poczekaj jedną sekundę
+    [few] Poczekaj { $seconds } sekundy
+    [many] Poczekaj { $seconds } sekund
+   *[other] Poczekaj { $seconds } sekundy
+ }
+party-chat-more = Jeszcze { $count } na czacie
+party-chat-off = Serwer tego pokoju ma wyłączony czat
+party-chat-privacy = Wiadomości przechodzą przez serwer pokoju. { -app-name } żadnych nie przechowuje.
+party-chat-hidden = Czat jest ukryty
+party-chat-hidden-line = Ukrywanie czatu jest włączone w Ustawieniach, w sekcji Odtwarzanie.
+party-chat-show = Pokaż czat
+settings-hide-chat = Ukryj czat we wspólnych oglądaniach
+settings-hide-chat-line = Wiadomości, reakcje i ich znaczniki na pasku przewijania nie pojawiają się na wideo, a pole do pisania znika. Lista osób nadal pokazuje, kto jest w pokoju.
+party-mute = Wycisz: { $name }
+party-unmute = Włącz ponownie: { $name }
+party-unmute-short = Włącz
+party-member-muted = Wyciszony
+party-muted-line = { $name } jest wyciszony
+party-chat-not-sent = Nie wysłano
+party-chat-retry = Spróbuj ponownie
+party-react = Reaguj
+party-react-laugh = Śmiech
+party-react-gasp = Zdziwienie
+party-react-clap = Brawa
+party-react-cry = Płacz
+party-reacted-laugh = { $name }: śmiech
+party-reacted-gasp = { $name }: zdziwienie
+party-reacted-clap = { $name }: brawa
+party-reacted-cry = { $name }: płacz
+party-reacted-at = { $line } o { $time }
+party-names-two = { $first } i { $second }
+party-names-three = { $first }, { $second } i { $third }
+party-names-others = { $first }, { $second } i { $count } innych
+party-chat-you = Ty
+party-sends-as = Piszesz jako { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } pisze: { $message }
+party-chat-left = { $count ->
+    [one] Został { $count } znak
+    [few] Zostały { $count } znaki
+    [many] Zostało { $count } znaków
+   *[other] Zostało { $count } znaku
+ }

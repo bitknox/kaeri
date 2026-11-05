@@ -101,6 +101,9 @@ pub struct Engine {
     /// Casting's devices and the cast running now, which the TV picker and the cast's card read.
     #[cfg(feature = "cast")]
     casts: Arc<crate::cast::CastHub>,
+    /// What the app tells sync about this device beside the commands: see
+    /// [`crate::syncing::ThisDevice`].
+    this_device: crate::syncing::ThisDevice,
 }
 
 /// [`Engine::send`] for the remote, held apart from the engine so the remote's server can keep
@@ -208,16 +211,20 @@ impl Engine {
             store,
             player_theme,
             hosted_player,
+            audio_tap,
             every_play_a_party,
             app_clients,
             device_label,
             handheld,
+            device_kind,
             language,
             sources: given,
             background,
             set_aside,
             #[cfg(feature = "testing")]
             parts,
+            #[cfg(feature = "testing")]
+            cloud_test,
             #[cfg(feature = "testing")]
             free_space,
         } = options;
@@ -281,6 +288,8 @@ impl Engine {
                 );
                 let local = crate::local::Local::new(store.clone());
                 Services {
+                    tokens: kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
+                    syncing: Default::default(),
                     servers,
                     local,
                     power,
@@ -296,6 +305,7 @@ impl Engine {
                     stores: parts.stores,
                     slot: Default::default(),
                     offline: Default::default(),
+                    connection: Arc::new(tokio::sync::watch::channel(false).0),
                     prefetch: Default::default(),
                     artwork: Default::default(),
                     player_theme,
@@ -304,6 +314,7 @@ impl Engine {
                     clock: parts.clock,
                     fixture_route: parts.fixture_route,
                     party: Default::default(),
+                    skip_find: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
@@ -320,8 +331,27 @@ impl Engine {
         // own sign-in clients, where signing in will read them (E6).
         // And what a store joined with an invite calls this device unless told otherwise.
         let stores = services.stores.labelled(&device_label);
-        let services =
-            Services { hosted_player, every_play_a_party, app_clients, stores, ..services };
+        #[cfg(feature = "testing")]
+        let room_for_prints = free_space;
+        #[cfg(not(feature = "testing"))]
+        let room_for_prints = None;
+        let skip_find = Arc::new(crate::skip_find::SkipFind::new(
+            audio_tap && hosted_player,
+            services.paths.data_dir.clone(),
+            room_for_prints,
+        ));
+        let services = Services {
+            hosted_player,
+            every_play_a_party,
+            app_clients,
+            stores,
+            skip_find,
+            ..services
+        };
+        #[cfg(feature = "testing")]
+        if let Some(test) = cloud_test {
+            services.syncing.cloud.use_test(test);
+        }
         services.servers.join_chain(&services.registry, &config);
         services.local.put_source(&services.registry, &config.providers.order);
         let hosted = Arc::clone(&services.hosted);
@@ -332,8 +362,14 @@ impl Engine {
         let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
         // The engine side's own state, on the config the app was launched with.
         let mut state = EngineState::new(config, saved, &services.paths, arrivals_tx);
+        if let Some(overlay) = crate::profile::overlay_of(&services.store, &services.paths) {
+            state.config.use_overlay(Some(overlay), &services.paths);
+        }
+        state.config.set_sync(services.store.clone());
+        crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
+        services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]
         {
             casts.set_language(language);
@@ -350,6 +386,7 @@ impl Engine {
         state.ahead = crate::downloads::ahead::Ahead::new(background.keep_next, room);
         let mut launch = VecDeque::new();
         // The settings first: everything after is drawn under the config they say.
+        state.config.set_skip_find_paused(services.skip_find.paused(state.config.effective()));
         launch.push_back(Event::Settings(state.config.view()));
         // Whether trailers may start, on that config, before the front end says anything.
         launch.push_back(crate::autoplay::at_launch(&mut state));
@@ -418,6 +455,7 @@ impl Engine {
             let _ = inbox.sender().internal(Internal::LetGo);
         }
 
+        crate::syncing::keep_syncing(&services, &inbox.sender());
         for tracker in services.sync.initial_states() {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }
@@ -482,6 +520,16 @@ impl Engine {
         let (stops_tx, stops) = mpsc::unbounded_channel();
         let (out, live) = mpsc::unbounded_channel();
         let jobs = Jobs::default();
+        // Commands sync's handle sends itself, while the engine runs: not one that keeps it up.
+        let weak = commands_tx.downgrade();
+        let this_device = crate::syncing::ThisDevice::of(&services, move |command| {
+            if let Some(commands) = weak.upgrade() {
+                let _ = commands.send(Message::Command { job: None, command });
+            }
+        });
+        if let Some(kind) = device_kind {
+            this_device.set_kind(kind);
+        }
         let actor = Actor {
             state,
             services,
@@ -507,6 +555,7 @@ impl Engine {
             hosted,
             #[cfg(feature = "cast")]
             casts,
+            this_device,
             #[cfg(feature = "testing")]
             sent: AtomicU64::new(0),
         };
@@ -543,6 +592,12 @@ impl Engine {
     #[cfg(feature = "cast")]
     pub fn casts(&self) -> Arc<crate::cast::CastHub> {
         Arc::clone(&self.casts)
+    }
+
+    /// What sync needs to hear about this device from the app rather than by command: its kind,
+    /// its remote's key, the network's DNS-SD, and whether a phone may drive this TV.
+    pub fn this_device(&self) -> crate::syncing::ThisDevice {
+        self.this_device.clone()
     }
 
     #[cfg(feature = "remote")]
@@ -2408,5 +2463,673 @@ mod tests {
             .await
             .expect("no wait for a player that is not there");
         assert!(events.recv().await.is_none(), "the engine has stopped");
+    }
+
+    /// The cloud drives' sign-in, on a fake service on loopback.
+    #[cfg(feature = "testing")]
+    mod cloud {
+        use std::sync::Mutex;
+
+        use kaeri_model::{
+            group::{
+                CloudUnavailable, SyncCloudWay, SyncCommand, SyncFolderKind, SyncFolderSpec,
+                SyncProblem, SyncSignInStep, SyncStatus,
+            },
+            stores::Secret,
+        };
+        use kaeri_sync::google::{DeviceStep as Step, FakeGoogle};
+
+        use super::*;
+        use crate::{cloud::CloudTest, options::CloudClient};
+
+        /// A host that says what it was asked to open and, when it `browses`, goes there like a
+        /// person who says yes at once.
+        struct Browsing {
+            kept: Arc<Kept>,
+            opened: Arc<Mutex<Vec<String>>>,
+            browses: bool,
+        }
+
+        impl Host for Browsing {
+            fn open_url(&self, url: &str) -> Result<(), String> {
+                self.opened.lock().unwrap().push(url.to_owned());
+                if self.browses {
+                    let url = url.to_owned();
+                    tokio::spawn(async move {
+                        let _ = reqwest::Client::new().get(url).send().await;
+                    });
+                }
+                Ok(())
+            }
+
+            fn notify(&self, _: &str, _: &str) {}
+
+            fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
+                Some(self.kept.clone())
+            }
+        }
+
+        struct Rig {
+            engine: Engine,
+            watch: Watch,
+            fake: FakeGoogle,
+            kept: Arc<Kept>,
+            opened: Arc<Mutex<Vec<String>>>,
+            dir: tempfile::TempDir,
+        }
+
+        async fn rig(kind: CloudClient, browses: bool, ids: bool) -> Rig {
+            let dir = tempfile::tempdir().unwrap();
+            let fake = FakeGoogle::start().await;
+            let kept = Arc::new(Kept::default());
+            let opened = Arc::new(Mutex::new(Vec::new()));
+            let host =
+                Arc::new(Browsing { kept: kept.clone(), opened: opened.clone(), browses });
+            let ep = fake.endpoints();
+            let test = CloudTest {
+                google: ep.clone(),
+                dropbox: ep.clone(),
+                dropbox_content: ep.api_base.clone(),
+                onedrive: ep,
+                poll_every: Some(Duration::from_millis(20)),
+            };
+            let clients = if ids {
+                crate::options::AppClients {
+                    google: Some("123.apps.example".into()),
+                    google_secret: Some("shh-secret".into()),
+                    dropbox: Some("a-dropbox-key".into()),
+                    onedrive: Some("an-onedrive-id".into()),
+                    cloud_kind: Some(kind),
+                    ..Default::default()
+                }
+            } else {
+                crate::options::AppClients {
+                    cloud_kind: Some(kind),
+                    no_built_in_clients: true,
+                    ..Default::default()
+                }
+            };
+            let (engine, mut events) = engine_with(dir.path(), host, |options| {
+                options.app_clients = clients;
+                options.cloud_test = Some(test);
+            })
+            .await;
+            events.launch().await;
+            Rig { engine, watch: Watch { events, held: Vec::new() }, fake, kept, opened, dir }
+        }
+
+        /// The engine's events, held so that what one wait read past is there for the next.
+        struct Watch {
+            events: EventStream,
+            held: Vec<Event>,
+        }
+
+        impl Watch {
+            /// Everything up to the first event `done` accepts, which is the last of them.
+            async fn until(&mut self, done: impl Fn(&Event) -> bool) -> Vec<Event> {
+                loop {
+                    if let Some(at) = self.held.iter().position(&done) {
+                        return self.held.drain(..=at).collect();
+                    }
+                    match tokio::time::timeout(
+                        Duration::from_secs(20),
+                        self.events.next_events(),
+                    )
+                    .await
+                    {
+                        Ok(batch) if !batch.is_empty() => self.held.extend(batch),
+                        _ => panic!("nothing more, having seen {:?}", self.held),
+                    }
+                }
+            }
+        }
+
+        fn google() -> SyncFolderKind {
+            SyncFolderKind::GoogleDrive
+        }
+
+        fn folder(kind: SyncFolderKind) -> SyncFolderSpec {
+            SyncFolderSpec { kind, address: None, user: None, password: None }
+        }
+
+        fn ended(kind: SyncFolderKind) -> impl Fn(&Event) -> bool {
+            move |e| matches!(e, Event::SyncSignIn { service, step: None } if *service == kind)
+        }
+
+        fn status_of(seen: &[Event]) -> SyncStatus {
+            seen.iter()
+                .rev()
+                .find_map(|e| if let Event::SyncStatus(s) = e { Some(s.clone()) } else { None })
+                .expect("a status")
+        }
+
+        fn problems(seen: &[Event]) -> Vec<SyncProblem> {
+            seen.iter()
+                .filter_map(
+                    |e| if let Event::SyncProblem(p) = e { Some(p.clone()) } else { None },
+                )
+                .collect()
+        }
+
+        fn has_token(rig: &Rig, id: &str) -> bool {
+            rig.kept.get(id).unwrap().is_some_and(|t| !t.is_empty())
+        }
+
+        #[tokio::test]
+        async fn a_desktop_signs_in_to_google_through_the_browser_and_sets_the_folder_up() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            let steps: Vec<_> = seen
+                .iter()
+                .filter_map(|e| match e {
+                    Event::SyncSignIn { step: Some(step), .. } => Some(step.clone()),
+                    _ => None,
+                })
+                .collect();
+            // The browser step carries the page, for "Open the page again".
+            let url = rig.opened.lock().unwrap()[0].clone();
+            // Connecting once the browser comes back, before the code is exchanged.
+            assert_eq!(
+                steps,
+                [
+                    SyncSignInStep::Browser { url: url.clone() },
+                    SyncSignInStep::Connecting,
+                    SyncSignInStep::Finishing
+                ]
+            );
+            assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            // The browser was sent to Google's page for the app's client, with PKCE and a
+            // loopback redirect, and the desktop client's secret went in the exchange only.
+            assert!(url.contains("client_id=123.apps.example"), "{url}");
+            assert!(url.contains("code_challenge_method=S256"), "{url}");
+            assert!(url.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A"), "{url}");
+            assert!(!url.contains("shh-secret"));
+            let exchange = &rig.fake.token_requests()[0];
+            assert_eq!(exchange.get("client_secret").map(String::as_str), Some("shh-secret"));
+            // The refresh token is in the token store, and in no file of ours.
+            assert!(has_token(&rig, "cloud-google"));
+            let token = rig.kept.get("cloud-google").unwrap().unwrap();
+            let config =
+                std::fs::read_to_string(rig.dir.path().join("config.toml")).unwrap_or_default();
+            assert!(!config.contains(&token));
+
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let status = status_of(&seen);
+            assert_eq!(status.folder.as_ref().map(|f| f.kind.clone()), Some(google()));
+            let row = status.clouds.iter().find(|c| c.service == google()).unwrap();
+            assert!(row.signed_in);
+            assert_eq!(row.way, SyncCloudWay::Browser);
+            // The account Drive names, on the picker's row and the folder's.
+            assert_eq!(row.account.as_deref(), Some("kim@mail.example"));
+            let folder = status.folder.clone().unwrap();
+            assert_eq!(folder.account.as_deref(), Some("kim@mail.example"));
+            assert_eq!(status.group_folder, Some(google()));
+            assert!(status.recovery_key);
+            assert!(status.recovery_key_made.is_some_and(|at| at > 0));
+
+            // Signing out forgets the account with the sign-in.
+            rig.engine.send(Command::SyncSignOut { service: google() });
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let row = status_of(&seen).clouds.into_iter().find(|c| c.service == google());
+            assert_eq!(row.unwrap().account, None);
+        }
+
+        #[tokio::test]
+        async fn removing_a_cloud_folder_signs_out_of_its_service() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            rig.watch.until(ended(google())).await;
+            assert!(has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::SyncGroup(SyncCommand::ChangeSyncFolder { folder: None }));
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let status = status_of(&seen);
+            assert!(status.enabled && status.folder.is_none(), "{status:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+            let row = status.clouds.into_iter().find(|c| c.service == google()).unwrap();
+            assert!(!row.signed_in && row.account.is_none());
+        }
+
+        #[tokio::test]
+        async fn a_first_set_up_that_fails_leaves_no_folder_and_no_sign_in() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.fake.fail_drive(1000, 500, None);
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(!problems(&seen).is_empty(), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let status = status_of(&seen);
+            assert!(status.folder.is_none(), "{status:?}");
+            assert!(status.clouds.iter().all(|c| !c.signed_in), "{status:?}");
+        }
+
+        #[tokio::test]
+        async fn a_tv_never_sets_a_groups_first_folder_up() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            rig.fake.script_device(&[Step::Done]);
+            rig.engine.send(Command::StartSync {
+                device_name: "Living room TV".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&SyncProblem::NoGroup), "{seen:?}");
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            // Signed in all the same: the folder can be joined once a phone has set it up.
+            assert!(has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            assert!(!status_of(&seen).enabled);
+        }
+
+        #[tokio::test]
+        async fn a_revoked_sign_in_is_a_problem_to_sign_in_again_from_and_leaving_forgets_it() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            rig.watch.until(ended(google())).await;
+
+            rig.fake.revoke_refresh_tokens();
+            rig.fake.expire_access_tokens();
+            rig.engine.send(Command::SyncFolderNow);
+            let seen = rig
+                .watch
+                .until(
+                    |e| matches!(e, Event::SyncStatus(s) if !s.syncing && s.problem.is_some()),
+                )
+                .await;
+            let needed = SyncProblem::SignInNeeded { service: google() };
+            assert!(problems(&seen).contains(&needed), "{seen:?}");
+            assert_eq!(status_of(&seen).problem, Some(needed));
+
+            // "Sign in again": a new sign-in, and the road works without a restart.
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(|e| {
+                matches!(e, Event::SyncStatus(s) if !s.syncing && s.problem.is_none() && s.last_synced.is_some())
+            })
+            .await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+
+            // Signing out says the same problem; leaving forgets every sign-in.
+            rig.engine.send(Command::SyncSignOut { service: google() });
+            rig.watch.until(|e| matches!(e, Event::SyncStatus(s) if s.problem.is_some())).await;
+            assert!(!has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            rig.watch.until(|e| {
+                matches!(e, Event::SyncStatus(s) if s.problem.is_none() && s.last_synced.is_some())
+            })
+            .await;
+            assert!(has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::LeaveSync);
+            rig.watch.until(|e| matches!(e, Event::SyncStatus(s) if !s.enabled)).await;
+            assert!(!has_token(&rig, "cloud-google"), "the sign-in goes with the group");
+        }
+
+        #[tokio::test]
+        async fn a_tv_shows_a_code_and_polls_until_it_is_approved() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            rig.fake.script_device(&[Step::Pending, Step::SlowDown, Step::Done]);
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(ended(google())).await;
+            let Some(SyncSignInStep::Code {
+                user_code,
+                verification_url,
+                expires_at,
+                interval,
+            }) = seen.iter().find_map(|e| match e {
+                Event::SyncSignIn {
+                    step: Some(step @ SyncSignInStep::Code { .. }), ..
+                } => Some(step.clone()),
+                _ => None,
+            })
+            else {
+                panic!("a code: {seen:?}")
+            };
+            assert_eq!(user_code, "ABCD-EFGH");
+            assert_eq!(verification_url, "https://www.google.example/device");
+            assert_eq!(interval, 5);
+            assert!(expires_at > kaeri_store::now());
+            assert!(has_token(&rig, "cloud-google"));
+            assert!(rig.opened.lock().unwrap().is_empty(), "no browser on a TV");
+        }
+
+        #[tokio::test]
+        async fn a_device_code_that_is_declined_or_expires_is_a_typed_problem() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            for (step, want) in [
+                (Step::Denied, SyncProblem::SignInDenied { service: google() }),
+                (Step::Expired, SyncProblem::SignInExpired { service: google() }),
+            ] {
+                rig.fake.script_device(&[step]);
+                rig.engine.send(Command::SyncSignIn { service: google() });
+                let seen = rig.watch.until(ended(google())).await;
+                assert!(problems(&seen).contains(&want), "{seen:?}");
+                assert!(!has_token(&rig, "cloud-google"));
+            }
+        }
+
+        #[tokio::test]
+        async fn cancelling_stops_the_code_screen_and_the_sheet_quietly() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            rig.watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Code { .. }), .. }
+                    )
+                })
+                .await;
+            rig.engine.send(Command::CancelSyncSignIn);
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+
+            let mut rig = self::rig(CloudClient::Android, false, true).await;
+            rig.engine.send(Command::SyncSignIn { service: SyncFolderKind::Dropbox });
+            rig.watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            rig.engine.send(Command::CancelSyncSignIn);
+            let seen = rig.watch.until(ended(SyncFolderKind::Dropbox)).await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+        }
+
+        #[tokio::test]
+        async fn a_phone_signs_in_through_the_sheet_and_only_this_requests_state_counts() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            rig.engine.send(Command::SyncSignIn { service: SyncFolderKind::OneDrive });
+            let seen = rig
+                .watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            let Some(Event::SyncSignIn {
+                step: Some(SyncSignInStep::Sheet { url, callback_scheme }),
+                ..
+            }) = seen.last()
+            else {
+                panic!("the sheet")
+            };
+            assert_eq!(callback_scheme, "kaeri");
+            assert!(url.contains("redirect_uri=kaeri%3A%2F%2Fauth%2Fonedrive"), "{url}");
+
+            // A redirect for a page this engine never opened is refused, and said.
+            let wrong = Secret("kaeri://auth/onedrive?code=fake-code&state=other".into());
+            rig.engine.send(Command::FinishSyncSignIn {
+                service: SyncFolderKind::OneDrive,
+                callback: wrong,
+            });
+            let seen = rig.watch.until(ended(SyncFolderKind::OneDrive)).await;
+            let denied = SyncProblem::SignInDenied { service: SyncFolderKind::OneDrive };
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-onedrive"));
+
+            rig.engine.send(Command::SyncSignIn { service: SyncFolderKind::OneDrive });
+            let state = query(&sheet_url(&mut rig).await, "state");
+            let callback =
+                Secret(format!("kaeri://auth/onedrive?code=fake-code&state={state}"));
+            rig.engine.send(Command::FinishSyncSignIn {
+                service: SyncFolderKind::OneDrive,
+                callback,
+            });
+            rig.watch.until(ended(SyncFolderKind::OneDrive)).await;
+            assert!(has_token(&rig, "cloud-onedrive"));
+            // The Microsoft client is public: no secret went with it.
+            assert!(rig.fake.token_requests().iter().all(|r| !r.contains_key("client_secret")));
+        }
+
+        /// The next sheet step's page.
+        async fn sheet_url(rig: &mut Rig) -> String {
+            let seen = rig
+                .watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            match seen.last() {
+                Some(Event::SyncSignIn {
+                    step: Some(SyncSignInStep::Sheet { url, .. }),
+                    ..
+                }) => url.clone(),
+                _ => panic!("the sheet"),
+            }
+        }
+
+        /// A query value of `url`, as sent (the states and challenges need no decoding).
+        fn query(url: &str, name: &str) -> String {
+            let query = url.split_once('?').map_or("", |(_, q)| q);
+            query
+                .split('&')
+                .find_map(|pair| pair.strip_prefix(&format!("{name}=")))
+                .unwrap_or_else(|| panic!("no {name} in {url}"))
+                .to_owned()
+        }
+
+        // The Mac's Google sign-in that never finished: a second sign-in began over the first
+        // while its page was still open (a second click on the picker's row, the row showing no
+        // wait). The first page's redirect then reached the second sign-in, which refused it as
+        // another request's and waited ten minutes with no page open, while the first sign-in's
+        // end closed the picker: nothing on screen, and nothing said.
+        #[tokio::test]
+        async fn a_second_sign_in_over_an_open_page_takes_that_pages_redirect() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            for _ in 0..2 {
+                rig.engine.send(Command::StartSync {
+                    device_name: "Mac".into(),
+                    folder: folder(google()),
+                });
+            }
+            let first = sheet_url(&mut rig).await;
+            let second = sheet_url(&mut rig).await;
+            assert_ne!(query(&first, "state"), query(&second, "state"));
+            // The first sign-in's end does not close the second's sheet.
+            tokio::time::sleep(Duration::from_millis(200)).await;
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            assert!(!seen.iter().any(ended(google())), "{seen:?}");
+
+            // The person finishes the first page.
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?state={}&code=fake-code&scope=x",
+                query(&first, "state")
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).is_empty(), "{seen:?}");
+            assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            assert!(has_token(&rig, "cloud-google"));
+            // Exchanged with the first page's own verifier, as its code was asked for.
+            let sent = rig.fake.token_requests();
+            let verifier =
+                sent.iter().find_map(|r| r.get("code_verifier")).expect("an exchange");
+            assert_eq!(
+                kaeri_sync::google::challenge_for(verifier),
+                query(&first, "code_challenge")
+            );
+        }
+
+        #[tokio::test]
+        async fn a_refused_late_or_declined_redirect_is_said() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            let denied = SyncProblem::SignInDenied { service: google() };
+
+            // Declined on the service's page.
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let state = query(&sheet_url(&mut rig).await, "state");
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?error=access_denied&state={state}"
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+
+            // A code the service does not take.
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let state = query(&sheet_url(&mut rig).await, "state");
+            let callback =
+                Secret(format!("example.apps.123:/oauth2redirect?state={state}&code=stale"));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+
+            // A page that comes back with no sign-in waiting.
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?state={state}&code=fake-code"
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncProblem(_))).await;
+            let expired = SyncProblem::SignInExpired { service: google() };
+            assert_eq!(problems(&seen), [expired]);
+            assert!(!has_token(&rig, "cloud-google"));
+        }
+
+        #[tokio::test]
+        async fn a_google_sheet_on_ios_comes_back_on_the_reversed_client_id() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig
+                .watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            let Some(Event::SyncSignIn {
+                step: Some(SyncSignInStep::Sheet { callback_scheme, url }),
+                ..
+            }) = seen.last()
+            else {
+                panic!("the sheet")
+            };
+            assert_eq!(callback_scheme, "example.apps.123");
+            assert!(url.contains("redirect_uri=example.apps.123%3A%2Foauth2redirect"), "{url}");
+            // No secret on iOS.
+            assert!(!url.contains("shh-secret"));
+        }
+
+        #[tokio::test]
+        async fn a_service_with_no_client_says_why_and_does_not_start() {
+            let mut rig = rig(CloudClient::Ios, false, false).await;
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let unavailable =
+                SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId };
+            let clouds = status_of(&seen).clouds;
+            assert_eq!(clouds.len(), 3);
+            assert!(clouds.iter().all(|c| c.way == unavailable && !c.signed_in), "{clouds:?}");
+
+            rig.engine.send(Command::StartSync {
+                device_name: "Phone".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            let want = SyncProblem::CloudUnavailable {
+                service: google(),
+                reason: CloudUnavailable::NoClientId,
+            };
+            assert!(problems(&seen).contains(&want), "{seen:?}");
+            assert!(rig.opened.lock().unwrap().is_empty());
+        }
+
+        #[tokio::test]
+        async fn an_app_with_no_clients_of_its_own_signs_in_with_kaeris() {
+            for (kind, way) in [
+                (CloudClient::Ios, SyncCloudWay::Sheet),
+                (CloudClient::Android, SyncCloudWay::Sheet),
+                (CloudClient::Desktop, SyncCloudWay::Browser),
+                (CloudClient::Tv, SyncCloudWay::DeviceCode),
+            ] {
+                let dir = tempfile::tempdir().unwrap();
+                let clients =
+                    crate::options::AppClients { cloud_kind: Some(kind), ..Default::default() };
+                let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+                let (engine, mut events) =
+                    engine_with(dir.path(), host, |o| o.app_clients = clients).await;
+                events.launch().await;
+                let mut watch = Watch { events, held: Vec::new() };
+                engine.send(Command::LoadSync);
+                let seen = watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+                for cloud in status_of(&seen).clouds {
+                    let want = if kind == CloudClient::Tv
+                        && cloud.service == SyncFolderKind::Dropbox
+                    {
+                        SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone }
+                    } else if cloud.service == SyncFolderKind::GoogleDrive
+                        && !crate::cloud::has_own_google(kind)
+                    {
+                        SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId }
+                    } else {
+                        way.clone()
+                    };
+                    assert_eq!(cloud.way, want, "{kind:?} {:?}", cloud.service);
+                }
+            }
+        }
+
+        #[tokio::test]
+        async fn a_tv_cannot_sign_in_to_dropbox_and_a_desktop_needs_its_secret() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let clouds = status_of(&seen).clouds;
+            let way = |kind: SyncFolderKind| {
+                clouds.iter().find(|c| c.service == kind).unwrap().way.clone()
+            };
+            assert_eq!(
+                way(SyncFolderKind::Dropbox),
+                SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone }
+            );
+            assert_eq!(way(google()), SyncCloudWay::DeviceCode);
+            assert_eq!(way(SyncFolderKind::OneDrive), SyncCloudWay::DeviceCode);
+
+            let dir = tempfile::tempdir().unwrap();
+            let clients = crate::options::AppClients {
+                google: Some("123.apps.example".into()),
+                cloud_kind: Some(CloudClient::Desktop),
+                ..Default::default()
+            };
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let (engine, mut events) =
+                engine_with(dir.path(), host, |o| o.app_clients = clients).await;
+            events.launch().await;
+            let mut watch = Watch { events, held: Vec::new() };
+            engine.send(Command::LoadSync);
+            let seen = watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let row = status_of(&seen).clouds.into_iter().find(|c| c.service == google());
+            assert_eq!(
+                row.unwrap().way,
+                SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId },
+                "Google's desktop client is no use without its secret"
+            );
+        }
     }
 }

@@ -73,6 +73,11 @@ public final class PartyModel {
     /// Leave party was pressed, and the engine has not said it left yet.
     public private(set) var leaving = false
 
+    // MARK: Chat
+
+    /// The party's conversation, the field's draft and what the column over the video holds.
+    public let chat = PartyChat()
+
     // MARK: The form
 
     /// The form that starts a party or answers an invite, while it is up.
@@ -281,6 +286,8 @@ public final class PartyModel {
 
     func apply(_ event: Event) {
         switch event {
+        case .partyChat, .partyChatState, .partyReaction:
+            chat.apply(event)
         case .partyForm(let form):
             self.form = form
             if !filled {
@@ -324,6 +331,7 @@ public final class PartyModel {
             let was = party != nil
             party = nil
             members = nil
+            chat.left()
             leaving = false
             noSource = nil
             choice = nil

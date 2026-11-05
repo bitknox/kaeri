@@ -4,6 +4,8 @@
 
 package app.kaeri.tv.player
 
+import app.kaeri.tv.ui.TvTab
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
@@ -58,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -92,6 +95,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
@@ -142,7 +146,7 @@ enum class PlayerPanel { Episodes, Tracks, Sources, Info, SkipTimes }
 val LocalAddStore = compositionLocalOf<(() -> Unit)?> { null }
 
 /** What the chrome puts focus on as it comes up. */
-private enum class ChromeFocus { Play, SeekBar, Episodes }
+private enum class ChromeFocus { Play, SeekBar, Episodes, React }
 
 /** Previous goes to the episode before within its first 3 s; after, to this one's start. */
 private const val PREVIOUS_WITHIN = 3.0
@@ -167,6 +171,12 @@ fun TvPlayerScreen(
     val playFocus = remember { FocusRequester() }
     val barFocus = remember { FocusRequester() }
     val episodesFocus = remember { FocusRequester() }
+    val reactFocus = remember { FocusRequester() }
+    val store = LocalAppStore.current
+    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
+    val chatOn = inParty && rememberTvChatOn()
+    val partyMarks = store.party.conversation.collectAsStateWithLifecycle().value.marks
+    var tray by remember { mutableStateOf(false) }
     var panel by remember { mutableStateOf<PlayerPanel?>(null) }
     var wanted by remember { mutableStateOf<ChromeFocus?>(null) }
     val run = remember { SeekRun() }
@@ -196,6 +206,12 @@ fun TvPlayerScreen(
         model.hold("panel", true)
     }
 
+    fun closeTray() {
+        tray = false
+        model.hold("tray", false) // i18n-skip
+        wanted = ChromeFocus.React
+    }
+
     fun closePanel() {
         panel = null
         model.hold("panel", false)
@@ -222,6 +238,7 @@ fun TvPlayerScreen(
             model.choosingSource -> model.cancelChoosingSource()
             model.asksToShare -> model.answerShare(false)
             model.marking != null -> model.cancelMark()
+            tray -> closeTray()
             panel != null -> closePanel()
             model.corner == PlayerModel.Corner.Prompt -> model.dismissSkipPrompt()
             model.corner == PlayerModel.Corner.Stall -> model.keepWaiting()
@@ -251,9 +268,8 @@ fun TvPlayerScreen(
 
     // The starting screen's own buttons (another source, Back) keep the focus they take: the root
     // taking it back would leave them unreachable.
-    val layerButtons = starting && (
-        model.failure != null && !model.choosingSource || model.starting?.offersChoice(model.clock) == true
-        )
+    val startFocus = remember { StartFocus() }
+    val layerButtons = starting && (model.failure != null && !model.choosingSource || startFocus.held)
     // A corner card up: the chrome going hands focus to it, not to the root behind it.
     val cardUp = !starting && panel == null && model.marking == null && (
         model.corner == PlayerModel.Corner.Prompt && model.skipPrompt != null ||
@@ -277,6 +293,7 @@ fun TvPlayerScreen(
             ChromeFocus.Play -> playFocus
             ChromeFocus.SeekBar -> barFocus
             ChromeFocus.Episodes -> episodesFocus
+            ChromeFocus.React -> reactFocus
         }
         repeat(5) {
             androidx.compose.runtime.withFrameNanos { }
@@ -301,7 +318,8 @@ fun TvPlayerScreen(
                 }
                 true
             }
-            Key.DirectionLeft, Key.DirectionRight -> {
+            // A card up: Left and Right walk its buttons, not the playhead.
+            Key.DirectionLeft, Key.DirectionRight -> if (cardUp) false else {
                 run.press(forward = event.key == Key.DirectionRight)
                 presses = run.presses
                 runShown = true
@@ -352,6 +370,13 @@ fun TvPlayerScreen(
                     return@onPreviewKeyEvent true
                 }
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                // While a start runs nothing holds focus; the first direction press lands on Choose source.
+                if (starting && model.failure == null && !startFocus.held && startFocus.ready &&
+                    event.key in setOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight)
+                ) {
+                    startFocus.target.tryFocus()
+                    return@onPreviewKeyEvent true
+                }
                 // Any key, the TV's remote's or a phone's: somebody is there.
                 model.viewerThere()
                 when (event.key) {
@@ -376,7 +401,7 @@ fun TvPlayerScreen(
             .focusable(),
     ) {
         video(Modifier.fillMaxSize())
-        StartingLayer(model, starting, onClose = { model.viewerClosed() })
+        StartingLayer(model, starting, startFocus, onClose = { model.viewerClosed() })
         AnimatedVisibility(
             visible = chrome,
             // A panel over it is all a screen reader reaches.
@@ -390,6 +415,12 @@ fun TvPlayerScreen(
                 playFocus = playFocus,
                 barFocus = barFocus,
                 episodesFocus = episodesFocus,
+                reactFocus = reactFocus,
+                ticks = if (chatOn) remember(partyMarks) { partyMarks.map { it.at }.distinct().sorted() } else emptyList(),
+                onReact = if (chatOn) ({
+                    tray = true
+                    model.hold("tray", true) // i18n-skip
+                }) else null,
                 onPanel = ::openPanel,
                 onNext = ::nextEpisode,
                 hasNext = model.menus?.episodes?.let { list -> list.indexOfFirst { it.current }.let { it >= 0 && it < list.lastIndex } } == true,
@@ -420,6 +451,20 @@ fun TvPlayerScreen(
                         else -> false
                     }
                 },
+            )
+        }
+        // Party notices and chat lines at the trailing edge under the clock; a reaction's moment above the controls.
+        if (inParty && !starting) {
+            TvPartyColumn(model, Modifier.align(Alignment.TopEnd).padding(end = 48.dp, top = 104.dp))
+            if (chatOn) TvReactionMoments(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 150.dp))
+        }
+        if (tray && chrome && chatOn) {
+            TvReactTray(
+                onReact = { reaction ->
+                    store.partyReact(reaction)
+                    closeTray()
+                },
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 92.dp, bottom = 148.dp),
             )
         }
         if (!chrome && runShown) SeekCount(model, run.label(context))
@@ -504,76 +549,6 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier) {
     }
 }
 
-/**
- * The starting screen: the ground, the banner at the top, the show title, "Starting episode 7"
- * and what the wait is on, and the 32 dp indicator. After 20 s, another source or Back.
- */
-@Composable
-private fun StartingLayer(model: PlayerModel, up: Boolean, onClose: () -> Unit) {
-    val shown by animateFloatAsState(if (up) 1f else 0f, if (LocalReducedMotion.current) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
-    if (shown == 0f) return
-    val starting = model.starting
-    Column(Modifier.fillMaxSize().alpha(shown).background(ObiSilk.Ground), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.fillMaxWidth().height(200.dp)) {
-            val banner = starting?.bannerUrl ?: model.bannerUrl
-            if (banner != null) ArtImage(banner, plate = ObiSilk.Ground, maxPixelSize = 1920, modifier = Modifier.fillMaxSize())
-        }
-        Spacer(Modifier.height(40.dp))
-        Text(model.showTitle, style = TvTitle.player, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(8.dp))
-        val failure = model.failure
-        if (failure != null && !model.choosingSource) {
-            // It never played: say so, and the one way on, focused.
-            // Why, as the engine said it; with no source at all, the way to one instead.
-            val addStore = LocalAddStore.current
-            val first = remember { FocusRequester() }
-            Text(stringResource(R.string.player_failed_title, failure.episode.toInt()), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                when {
-                    addStore != null -> stringResource(R.string.player_failed_no_sources)
-                    failure.reasonText(LocalContext.current) != null -> "${failure.reasonText(LocalContext.current)}." // i18n-skip
-                    else -> stringResource(R.string.player_failed_detail)
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = ObiSilk.Haze,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 640.dp),
-            )
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                if (addStore != null) {
-                    AmberButton(onClick = addStore, icon = null, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_add_plugin_store)) }
-                } else {
-                    TonalButton(onClick = { model.chooseSource() }, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_choose_another_source)) }
-                }
-                TonalButton(onClick = onClose) { ButtonLabel(stringResource(R.string.action_back)) }
-            }
-            LaunchedEffect(failure) { first.focusSoon() }
-            return@Column
-        }
-        Text(
-            model.startingLine(LocalContext.current) ?: model.startingEpisode?.let { stringResource(R.string.player_starting, it.toInt()) }.orEmpty(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = ObiSilk.Haze,
-        )
-        if (model.startingDemo) {
-            Text(stringResource(R.string.player_demo_credit), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
-        }
-        Spacer(Modifier.height(24.dp))
-        Spinner()
-        if (starting != null && starting.offersChoice(model.clock)) {
-            val first = remember { FocusRequester() }
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                TonalButton(onClick = { model.chooseSource() }, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_choose_another_source)) }
-                TonalButton(onClick = onClose) { ButtonLabel(stringResource(R.string.action_back)) }
-            }
-            LaunchedEffect(Unit) { first.focusSoon() }
-        }
-    }
-}
-
 /** The 32 dp circular indicator, an amber arc turning. */
 @Composable
 internal fun Spinner() {
@@ -596,6 +571,9 @@ private fun Chrome(
     playFocus: FocusRequester,
     barFocus: FocusRequester,
     episodesFocus: FocusRequester,
+    reactFocus: FocusRequester,
+    ticks: List<Double>,
+    onReact: (() -> Unit)?,
     onPanel: (PlayerPanel) -> Unit,
     onNext: () -> Unit,
     hasNext: Boolean,
@@ -630,24 +608,37 @@ private fun Chrome(
             Spacer(Modifier.height(6.dp))
             SeekBar(
                 position, duration, headAt, model.segments, model.buffered, Modifier.focusRequester(barFocus), onBarKey,
-                onSeekTo = model::seekTo, onSeekBy = model::seekBy, provisional = model.provisional,
+                onSeekTo = model::seekTo, onSeekBy = model::seekBy, provisional = model.provisional, ticks = ticks,
             )
             Spacer(Modifier.height(20.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TonalButton(
-                    onClick = { model.togglePause() },
-                    icon = if (model.paused) TvIcons.Play else TvIcons.Pause,
-                    modifier = Modifier.focusRequester(playFocus),
-                ) { ButtonLabel(stringResource(if (model.paused) R.string.action_play else R.string.action_pause)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Episodes) }, icon = TvIcons.Episodes, modifier = Modifier.focusRequester(episodesFocus)) {
+            // In a party the row also holds React, so it goes as the board draws it: Play is the
+            // glyph alone in a 48 dp circle (the button's own minimum width set aside), React keeps its glyph and the rest are words, closer
+            // together, so the row still fits the safe area.
+            val party = onReact != null
+            val pad = if (party) 16.dp else 20.dp
+            fun icon(glyph: ImageVector) = glyph.takeUnless { party }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (party) 8.dp else 12.dp)) {
+                val playLabel = stringResource(if (model.paused) R.string.action_play else R.string.action_pause)
+                val playIcon = if (model.paused) TvIcons.Play else TvIcons.Pause
+                if (party) {
+                    TonalButton(onClick = { model.togglePause() }, padding = 12.dp, modifier = Modifier.size(48.dp).focusRequester(playFocus)) {
+                        androidx.tv.material3.Icon(playIcon, contentDescription = playLabel, modifier = Modifier.size(24.dp))
+                    }
+                } else {
+                    TonalButton(onClick = { model.togglePause() }, icon = playIcon, modifier = Modifier.focusRequester(playFocus)) { ButtonLabel(playLabel) }
+                }
+                if (onReact != null) TonalButton(onClick = onReact, icon = app.kaeri.design.ChatGlyphs.Laugh, padding = pad, modifier = Modifier.focusRequester(reactFocus)) {
+                    ButtonLabel(Strings.partyReact(LocalContext.current))
+                }
+                TonalButton(onClick = { onPanel(PlayerPanel.Episodes) }, icon = icon(TvIcons.Episodes), padding = pad, modifier = Modifier.focusRequester(episodesFocus)) {
                     ButtonLabel(stringResource(R.string.player_episodes))
                 }
-                TonalButton(onClick = { onPanel(PlayerPanel.Tracks) }, icon = TvIcons.Subtitles) { ButtonLabel(stringResource(R.string.player_subtitles_and_audio)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = TvIcons.Source) { ButtonLabel(stringResource(R.string.show_settings_source)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = TvIcons.Info) { ButtonLabel(stringResource(R.string.player_info)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_skip_times)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Tracks) }, icon = icon(TvIcons.Subtitles), padding = pad) { ButtonLabel(stringResource(R.string.player_subtitles_and_audio)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = icon(TvIcons.Source), padding = pad) { ButtonLabel(stringResource(R.string.show_settings_source)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = icon(TvIcons.Info), padding = pad) { ButtonLabel(stringResource(R.string.player_info)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = icon(TvIcons.SkipNext), padding = pad) { ButtonLabel(stringResource(R.string.player_skip_times)) }
                 Spacer(Modifier.weight(1f))
-                if (hasNext) TonalButton(onClick = onNext, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_next_episode)) }
+                if (hasNext) TonalButton(onClick = onNext, icon = icon(TvIcons.SkipNext), padding = pad) { ButtonLabel(stringResource(R.string.player_next_episode)) }
             }
         }
     }
@@ -708,6 +699,7 @@ private fun SeekBar(
     onSeekTo: (Double) -> Unit,
     onSeekBy: (Double) -> Unit,
     provisional: Pair<Double, Double>? = null,
+    ticks: List<Double> = emptyList(),
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -733,6 +725,19 @@ private fun SeekBar(
                 val from = (provisional.first / duration).toFloat().coerceIn(0f, 1f) * size.width
                 val to = (provisional.second / duration).toFloat().coerceIn(0f, 1f) * size.width
                 if (to > from) drawRect(ObiSilk.Water.copy(alpha = 0.5f), Offset(from, top), Size(to - from, bar))
+            }
+            // Where somebody in the party reacted: 2 dp ticks in haze, 4 dp above the line; those
+            // within 4 dp share one, and none stands at the playhead.
+            if (duration > 0 && ticks.isNotEmpty()) {
+                val head = ((headAt ?: position) / duration).toFloat().coerceIn(0f, 1f) * size.width
+                var last = -100f
+                for (at in ticks) {
+                    val x = (at / duration).toFloat().coerceIn(0f, 1f) * size.width
+                    if (x - last < 4.dp.toPx() || kotlin.math.abs(x - head) < 8.dp.toPx()) continue
+                    last = x
+                    val tall = 6.dp.toPx()
+                    drawRoundRect(ObiSilk.Haze, Offset(x - 1.dp.toPx(), top - 4.dp.toPx() - tall), Size(2.dp.toPx(), tall), CornerRadius(1.dp.toPx()))
+                }
             }
         }
         if (duration > 0 && (focused || headAt != null)) {
@@ -826,9 +831,47 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
             .padding(start = 16.dp, end = PANEL_END, top = 27.dp, bottom = 27.dp),
     ) {
         Text(title, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 12.dp).semantics { heading() })
-        LazyColumn(Modifier.focusRequester(list).focusGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // The episode under focus, for the footer under the list.
+        var pointed by remember { mutableStateOf<String?>(null) }
+        // The episode list opens with the playing episode laid out, one row below the top, so
+        // focus can start on it with the footer taking room under the list.
+        // A long series is one range of 100 at a time, opening on the one holding the episode playing.
+        val all = model.menus?.episodes.orEmpty()
+        val ranged = panel == PlayerPanel.Episodes && all.size > 100
+        var range by remember(ranged) { mutableIntStateOf(if (ranged) all.indexOfFirst { it.current }.coerceAtLeast(0) / 100 else 0) }
+        val shownEpisodes = if (ranged) all.chunked(100).getOrElse(range) { emptyList() } else all
+        if (ranged) {
+            val context = LocalContext.current
+            val chunks = remember(all) { all.chunked(100) }
+            androidx.compose.foundation.lazy.LazyRow(
+                Modifier.padding(bottom = 12.dp).focusGroup(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(chunks.size, key = { "range/$it" }) { index ->
+                    val chunk = chunks[index]
+                    TvTab(
+                        Strings.episodeRange(context, chunk.first().number.toDoubleOrNull()?.toInt() ?: 0, chunk.last().number.toDoubleOrNull()?.toInt() ?: 0),
+                        selected = index == range,
+                        onSelect = { range = index },
+                        settle = null,
+                        chip = true,
+                        count = if (chunk.all { it.watched }) stringResource(R.string.episode_watched) else null,
+                    )
+                }
+            }
+        }
+        val state = remember(panel, range) {
+            val at = if (panel == PlayerPanel.Episodes) shownEpisodes.indexOfFirst { it.current } else -1
+            androidx.compose.foundation.lazy.LazyListState((at - 1).coerceAtLeast(0))
+        }
+        LazyColumn(
+            state = state,
+            modifier = Modifier.focusRequester(list).focusGroup().then(if (panel == PlayerPanel.Episodes) Modifier.weight(1f) else Modifier),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             when (panel) {
-                PlayerPanel.Episodes -> items(model.menus?.episodes.orEmpty(), key = { it.number }) { episode ->
+                PlayerPanel.Episodes -> items(shownEpisodes, key = { it.number }) { episode ->
                     TvListRow(
                         episode.title?.let { stringResource(R.string.tv_player_episode_row, episode.number, it) } ?: episode.label,
                         onClick = {
@@ -841,7 +884,8 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                             else -> null
                         },
                         selected = episode.current,
-                        modifier = if (episode.current) Modifier.focusRequester(current) else Modifier,
+                        modifier = (if (episode.current) Modifier.focusRequester(current) else Modifier)
+                            .onFocusChanged { if (it.hasFocus) pointed = episode.number },
                     )
                 }
                 PlayerPanel.Tracks -> {
@@ -881,6 +925,14 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                         modifier = if (source.current) Modifier.focusRequester(current) else Modifier,
                     )
                 }
+            }
+        }
+        if (panel == PlayerPanel.Episodes) {
+            val episodes = model.menus?.episodes.orEmpty()
+            val shown = episodes.firstOrNull { it.number == pointed } ?: episodes.firstOrNull { it.current }
+            if (shown != null) {
+                val heading = shown.title?.let { stringResource(R.string.tv_player_episode_row, shown.number, it) } ?: shown.label
+                EpisodesFooter(model.titleOnScreen, shown.number, heading)
             }
         }
     }
@@ -1050,4 +1102,36 @@ private fun wallMinute(): java.time.Instant {
         }
     }
     return now
+}
+
+/**
+ * A footer under the Episodes list: the focused episode's name, then three lines of its synopsis,
+ * when the title's table is cached (it never fetches). Spoiler protection follows the show's own
+ * setting, as the title page does: a protected episode shows its name and no text. The room is
+ * kept only where text can land, text that arrives later fades in, and TalkBack reads the footer
+ * as one: the name, then the synopsis.
+ */
+@Composable
+private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String, heading: String) {
+    val store = LocalAppStore.current
+    val tables by store.titles.episodes.collectAsStateWithLifecycle()
+    val title = id ?: return
+    val rows = tables[title] ?: return
+    val outlook = remember(title, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
+    val row = rows.firstOrNull { it.number == number }
+    val protect = app.kaeri.tv.ui.spoilerProtected(title)
+    val hidden = protect && row?.spoilerAhead == true
+    val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
+    val room = with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() }
+    Column(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().semantics(mergeDescendants = true) {}) {
+        Text(heading, style = MaterialTheme.typography.titleSmall, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(room)) {
+            androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episodes-footer") { shown -> // i18n-skip
+                if (shown != null) {
+                    Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
 }

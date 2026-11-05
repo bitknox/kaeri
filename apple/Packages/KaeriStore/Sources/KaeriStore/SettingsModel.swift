@@ -58,6 +58,20 @@ public final class SettingsModel {
         view?.presenceAvailable ?? false
     }
 
+    /// Why finding skip times from the audio is paused, in words, for the line under its row. Nil
+    /// while it runs. `pausedOverride` stands in for the engine's word in the Fixtures app's shots.
+    public var skipFindPausedWords: String? {
+        switch pausedOverride ?? view?.skipFindPaused {
+        case .lowPower: L.playerSkipPausedLowPower
+        case .storage: L.playerSkipPausedStorage
+        case .unavailable: L.playerSkipUnavailable
+        case nil: nil
+        }
+    }
+
+    /// The pause a screenshot shows, whatever the device says.
+    public var pausedOverride: SkipFindPause?
+
     /// Whether a switch is on.
     public func isOn(_ key: SettingKey) -> Bool {
         row(key)?.isOn ?? false

@@ -118,6 +118,8 @@
     <string name="notice_reason">%1$s</string>
     <!-- Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast. -->
     <string name="cause_no_sources">No sources are set up. Add one on the Sources screen.</string>
+    <!-- Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen. -->
+    <string name="cause_no_connection">No connection. Try again when you\'re back online.</string>
     <!-- A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date. -->
     <string name="notice_not_aired">Episode %1$d airs %2$s.</string>
     <!-- A play's explanation: the episode is after the next one to air. The "when" says when that one airs. -->
@@ -165,6 +167,20 @@
     <string name="status_looking_up_title">Looking up the title…</string>
     <!-- Job note while a play waits for the sources to arrive. -->
     <string name="status_loading_sources">Loading sources…</string>
+    <!-- Starting screen, step line while the title is looked up. -->
+    <string name="start_looking_up_title">Looking up the title</string>
+    <!-- Starting screen, step line while sources still being set up are waited for. -->
+    <string name="start_getting_sources_ready">Getting your sources ready</string>
+    <!-- Starting screen, step line while one source is asked for the episode. The name is the source's own. -->
+    <string name="start_asking_source">Asking %1$s</string>
+    <!-- Starting screen, step line once a stream is found and the player opens it. -->
+    <string name="start_opening_stream">Opening the stream</string>
+    <!-- Starting screen, step line when a stream showed no video and the next stream of the same source is opened. -->
+    <string name="start_trying_another_stream">Trying another stream</string>
+    <!-- Starting screen, step line while a torrent looks for peers that can send it. Never says torrent. -->
+    <string name="start_finding_peers">Finding peers</string>
+    <!-- Starting screen, step line while the player waits for data to fill its buffer. -->
+    <string name="start_buffering">Buffering</string>
     <!-- Job note while the sources are asked for an episode. The episode is its label, often a number. -->
     <string name="status_searching_sources">Searching sources for episode %1$s…</string>
     <!-- Toast when the player cannot be started. The reason comes from the system. -->
@@ -482,6 +498,8 @@
     <string name="sources_demo_removed">Demo removed</string>
     <!-- Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds. -->
     <string name="stores_ready_demo_stays">%1$s is ready. The demo stays last in Your sources.</string>
+    <!-- The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves. -->
+    <string name="cloud_loopback_done">You can close this tab and go back to Kaeri.</string>
     <!-- Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList. -->
     <string name="notice_signed_in">Signed in to %1$s.</string>
     <!-- Toast after a sign-in succeeded and the token went into the system keychain. -->
@@ -613,6 +631,14 @@
     <string name="crash_notice">Kaeri closed after a problem.</string>
     <!-- The same notice on the TV, which has no button. -->
     <string name="crash_notice_tv">Kaeri closed after a problem. You can report it from Settings, About.</string>
+    <!-- Toast: Surprise me on a search found no title matching the filters. -->
+    <string name="notice_surprise_empty_filters">No titles match these filters.</string>
+    <!-- Toast: Surprise me on the Planning list, which has nothing on it to pick. -->
+    <string name="notice_surprise_empty_planning">Planning is empty.</string>
+    <!-- Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked. -->
+    <string name="notice_surprise_offline">Offline. Search picks need AniList.</string>
+    <!-- Toast: Surprise me on the filters, and AniList could not be asked. -->
+    <string name="notice_surprise_failed">Couldn\'t pick a title right now. Try again in a moment.</string>
     <!-- Accessibility label of the account button in the top bar when someone is signed in. -->
     <string name="account_button_named">%1$s, accounts and settings</string>
     <!-- Line under Today in the calendar when My list is chosen and nothing on it airs in the next four weeks. -->
@@ -1295,8 +1321,6 @@
     <string name="tv_sheet_request_titled">%1$s, episode %2$s</string>
     <!-- TV sheet, picker: the episode a play request is for, with no show. -->
     <string name="tv_sheet_request_plain">Episode %1$s</string>
-    <!-- Settings, Play on TV: the note under the paired TVs. -->
-    <string name="tv_sheet_footer">A TV lists this device with the code %1$s. Forget a TV here and it forgets this device too.</string>
     <!-- TV sheet, remote: the sheet's title when the TV has no name yet. -->
     <string name="tv_sheet_title_fallback">TV</string>
     <!-- Episode row, second line: the episode's number, then a detail such as its length or air time. -->
@@ -1603,6 +1627,8 @@
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->
     <string name="action_cancel">Cancel</string>
+    <!-- Button that confirms a small question, such as the episode number to go to. -->
+    <string name="action_go">Go</string>
     <!-- Button that puts a question off until later. -->
     <string name="action_not_now">Not now</string>
     <!-- A span of time in whole days. The unit letter belongs to the language. -->
@@ -1919,6 +1945,10 @@
     <string name="tv_problem_unpaired">The TV doesn\'t know this device any more. Pair again.</string>
     <!-- What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds". -->
     <string name="player_position_spoken">%1$s of %2$s</string>
+    <!-- Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook". -->
+    <string name="names_pair">%1$s and %2$s</string>
+    <!-- A list of names up to the last two, joined one by one: "Alpha, Brook". -->
+    <string name="names_list">%1$s, %2$s</string>
     <!-- Menu item that opens an episode's discussion. -->
     <string name="discussion_open">Discussion</string>
     <!-- Title of the discussion window or sheet when the thread has no title yet. -->
@@ -3160,6 +3190,88 @@
     <string name="together_recent_note">The last ten, kept on this device</string>
     <!-- The start sheet's button after a title is picked. -->
     <string name="party_pick_continue">Continue</string>
+    <!-- Placeholder of every chat field, and the label of the button that opens it. -->
+    <string name="party_chat_field">Say something</string>
+    <!-- Button that sends a chat line. -->
+    <string name="party_chat_send">Send</string>
+    <!-- Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat. -->
+    <string name="party_chat_title">Chat</string>
+    <!-- End of the chat field while sending waits, after three messages in five seconds. -->
+    <string name="party_chat_wait">Wait %1$d s</string>
+    <!-- Spoken once when sending waits, for screen readers. -->
+    <plurals name="party_chat_wait_spoken">
+        <item quantity="one">Wait one second</item>
+        <item quantity="other">Wait %1$d seconds</item>
+    </plurals>
+    <!-- Line after the three newest chat lines on the video, which opens the conversation. -->
+    <string name="party_chat_more">%1$d more in chat</string>
+    <!-- Notice when the room's server has chat turned off, and the line that replaces the field. -->
+    <string name="party_chat_off">This room\'s server has chat turned off</string>
+    <!-- Line under the chat field in the lobby, shown once. -->
+    <string name="party_chat_privacy">Messages go through the room\'s server. Kaeri keeps none.</string>
+    <!-- Heading in the conversation when Hide chat is on. -->
+    <string name="party_chat_hidden">Chat is hidden</string>
+    <!-- Line under it. -->
+    <string name="party_chat_hidden_line">Hide chat is on in Settings, under Playback.</string>
+    <!-- Button that turns Hide chat off. -->
+    <string name="party_chat_show">Show chat</string>
+    <!-- Settings switch that hides chat in every watch party on this device. -->
+    <string name="settings_hide_chat">Hide chat in watch parties</string>
+    <!-- Line under that switch. -->
+    <string name="settings_hide_chat_line">Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.</string>
+    <!-- Member menu item and accessibility action that hides a member's lines and reactions for this party. -->
+    <string name="party_mute">Mute %1$s</string>
+    <!-- Member menu item and accessibility action that shows a muted member's lines again. -->
+    <string name="party_unmute">Unmute %1$s</string>
+    <!-- Button in the conversation on the line that says a member is muted. -->
+    <string name="party_unmute_short">Unmute</string>
+    <!-- State on a muted member's row. -->
+    <string name="party_member_muted">Muted</string>
+    <!-- Line in the conversation where a muted member's lines were. -->
+    <string name="party_muted_line">%1$s is muted</string>
+    <!-- Line in the conversation when a message never came back from the server, five seconds after it was sent. -->
+    <string name="party_chat_not_sent">Couldn\'t send</string>
+    <!-- Button after it, which sends the same text again. -->
+    <string name="party_chat_retry">Try again</string>
+    <!-- Button on the TV's controls that opens the four reactions. -->
+    <string name="party_react">React</string>
+    <!-- Label of the laugh reaction button. -->
+    <string name="party_react_laugh">Laugh</string>
+    <!-- Label of the gasp reaction button. -->
+    <string name="party_react_gasp">Gasp</string>
+    <!-- Label of the clap reaction button. -->
+    <string name="party_react_clap">Clap</string>
+    <!-- Label of the cry reaction button. -->
+    <string name="party_react_cry">Cry</string>
+    <!-- Line in the conversation and in the terminal: a member laughed. -->
+    <string name="party_reacted_laugh">%1$s laughed</string>
+    <!-- Line in the conversation and in the terminal: a member gasped. -->
+    <string name="party_reacted_gasp">%1$s gasped</string>
+    <!-- Line in the conversation and in the terminal: a member clapped. -->
+    <string name="party_reacted_clap">%1$s clapped</string>
+    <!-- Line in the conversation and in the terminal: a member cried. -->
+    <string name="party_reacted_cry">%1$s cried</string>
+    <!-- A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds. -->
+    <string name="party_reacted_at">%1$s at %2$s</string>
+    <!-- Two members named together, for a reaction made by both: "Ren and Mika". -->
+    <string name="party_names_two">%1$s and %2$s</string>
+    <!-- Three members named together. -->
+    <string name="party_names_three">%1$s, %2$s and %3$s</string>
+    <!-- More than three members named together: two names and how many others. -->
+    <string name="party_names_others">%1$s, %2$s and %3$d others</string>
+    <!-- Name of this device's own member in the conversation and on its reactions. -->
+    <string name="party_chat_you">You</string>
+    <!-- Line on a phone's remote screen under the chat field: which device the line is said as. -->
+    <string name="party_sends_as">Sends as %1$s</string>
+    <!-- Label on the seek bar when pointing near a reaction tick: the moment and who reacted. -->
+    <string name="party_tick_label">%1$s · %2$s</string>
+    <!-- Spoken by a screen reader when a chat line arrives. -->
+    <string name="party_chat_announce">%1$s says %2$s</string>
+    <!-- Spoken by a screen reader once, when 20 characters are left in the chat field. -->
+    <plurals name="party_chat_left">
+        <item quantity="one">%1$d character left</item>
+        <item quantity="other">%1$d characters left</item>
+    </plurals>
     <!-- Label on the card for the episode that plays after this one. -->
     <string name="player_up_next">Up next</string>
     <!-- Label before the name of the work a show is based on. -->
@@ -3184,6 +3296,87 @@
     <string name="player_add_plugin_store">Add a plugin store</string>
     <!-- Short word while the video buffers. -->
     <string name="player_buffering">Buffering</string>
+    <!-- Detail line while a source is asked and more than one is in the viewer's order. -->
+    <string name="player_start_place">%1$d of %2$d sources</string>
+    <!-- Detail line while the source asked is the one the show is pinned to. -->
+    <string name="player_start_pinned">Your pick for this show</string>
+    <!-- Detail line when a source has no match for the show. -->
+    <string name="player_start_miss_no_match">%1$s doesn\'t have this show</string>
+    <!-- Detail line when a source has the show and not the episode. The episode is its label. -->
+    <string name="player_start_miss_no_episode">%1$s doesn\'t have episode %2$s</string>
+    <!-- Detail line when a source failed and the next is asked. -->
+    <string name="player_start_miss_failed">%1$s didn\'t answer</string>
+    <!-- Detail line when a source took too long and the next is asked. -->
+    <string name="player_start_miss_timed_out">%1$s took too long</string>
+    <!-- Detail line after the viewer skipped the source being asked. -->
+    <string name="player_start_miss_skipped">You skipped %1$s</string>
+    <!-- Details row for sources passed over because they failed lately. The name goes before it. -->
+    <string name="player_start_resting">Skipped after recent failures</string>
+    <!-- Detail line once the streams are found and the player opens one. The name is the source's. -->
+    <string name="player_start_from">From %1$s</string>
+    <!-- Detail line when a stream showed no video and another opens. -->
+    <string name="player_start_no_video">The first one showed no video</string>
+    <!-- Detail line with the place of the stream being opened. -->
+    <string name="player_start_stream_place">%1$d of %2$d streams</string>
+    <!-- Detail line while a torrent has peers. -->
+    <plurals name="player_start_peers">
+        <item quantity="one">One peer</item>
+        <item quantity="other">%1$d peers</item>
+    </plurals>
+    <!-- Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB". -->
+    <string name="player_start_speed">%1$s/s</string>
+    <!-- Step line while the player fills its buffer and gives a number. -->
+    <string name="player_start_buffering_percent">Buffering · %1$s</string>
+    <!-- Step line while the episode resumes where it was left. -->
+    <string name="player_start_resuming">Resuming at %1$s</string>
+    <!-- Button on the starting screen that plays the episode from its beginning. -->
+    <string name="player_start_from_beginning">Play from the beginning</string>
+    <!-- Button on the starting screen that opens the list of steps. -->
+    <string name="player_start_details">Details</string>
+    <!-- Button that skips the source being asked. The name is the source's. -->
+    <string name="player_start_skip_source">Skip %1$s</string>
+    <!-- Button that opens the next stream of the same source. -->
+    <string name="player_start_skip_stream">Skip this stream</string>
+    <!-- Step line when a start is slow: still waiting for the source. The name is the source's. -->
+    <string name="player_start_still_waiting">Still waiting for %1$s</string>
+    <!-- Step line while the device is offline and the episode will start when it is back. -->
+    <string name="player_start_offline">Waiting for a connection</string>
+    <!-- Detail line while offline. The episode is its label. -->
+    <string name="player_start_offline_detail">You\'re offline. Episode %1$s starts when you\'re back.</string>
+    <!-- Button on the failure screen that opens the fix for a title that matched the wrong show. -->
+    <string name="player_start_fix_match">Fix match</string>
+    <!-- Details row label for the translation of the episode. -->
+    <string name="player_start_translation">Audio and subtitles</string>
+    <!-- Details row once the title has been looked up. -->
+    <string name="player_start_looked_up">Looked up the title</string>
+    <!-- Seconds on the starting screen's detail line and Details rows. -->
+    <string name="player_start_seconds">%1$d s</string>
+    <!-- Spoken once, when a start has taken more than a few seconds. -->
+    <string name="player_start_still_starting">Still starting. You can choose a source now.</string>
+    <!-- Spoken when a start begins. The episode is its label. -->
+    <string name="player_start_announce">Starting episode %1$s, %2$s</string>
+    <!-- Spoken when a start fails: the title, then the reason. -->
+    <string name="player_start_failed_announce">%1$s. %2$s</string>
+    <!-- Accessibility value of the starting screen: the step line, then the detail line. -->
+    <string name="player_start_status">%1$s, %2$s</string>
+    <!-- Detail line on the starting screen after the viewer chose to play from the beginning. -->
+    <string name="player_start_beginning">Starting from the beginning</string>
+    <!-- Details row while a source is being asked. -->
+    <string name="player_start_row_asking">Asking</string>
+    <!-- Details row outcome when a source has no match for the show. -->
+    <string name="player_start_row_no_match">Doesn\'t have this show</string>
+    <!-- Details row outcome when a source has the show and not the episode. The episode is its label. -->
+    <string name="player_start_row_no_episode">Doesn\'t have episode %1$s</string>
+    <!-- Details row outcome when a source failed. -->
+    <string name="player_start_row_failed">Didn\'t answer</string>
+    <!-- Details row outcome when a source took too long. -->
+    <string name="player_start_row_timed_out">Took too long</string>
+    <!-- Details row outcome when the viewer skipped a source. -->
+    <string name="player_start_row_skipped">Skipped</string>
+    <!-- Second clause of a failure: the sources that were asked, joined as a list by the app. -->
+    <string name="player_start_asked">%1$s were asked.</string>
+    <!-- Label of the switch in the Details list that plays the episode with its subtitles. -->
+    <string name="player_start_subtitled">Subtitled</string>
     <!-- Title of the stall card. The seconds count up. -->
     <string name="player_stall_title">Source is buffering · %1$d s</string>
     <!-- Line under the stall title. -->
@@ -3248,6 +3441,8 @@
     <string name="player_mark_watch_edges">Watch the edges</string>
     <!-- Line in the review with sharing on. -->
     <string name="player_mark_shares">Saving shares these times with AniSkip.</string>
+    <!-- Review line when the stretch under review was found from the audio, not marked by hand. -->
+    <string name="player_mark_found">Kaeri found these times from the audio.</string>
     <!-- Line in the review when the mark replaces AniSkip's times. -->
     <string name="player_mark_replaces">Replaces AniSkip\'s %1$s to %2$s, which is reported as wrong.</string>
     <!-- Line in the review when the show has no MyAnimeList entry. -->
@@ -3280,10 +3475,24 @@
     <string name="player_mark_it">Mark it</string>
     <!-- Button of that prompt that turns it off. Settings can turn it on again. -->
     <string name="player_dont_ask_again">Don\'t ask again</string>
+    <!-- Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again. -->
+    <string name="player_found_ask_opening">Kaeri found this opening. Were the edges right?</string>
+    <!-- The same prompt after a skip over an ending found from the audio. -->
+    <string name="player_found_ask_ending">Kaeri found this ending. Were the edges right?</string>
+    <!-- Line under that prompt, in a quieter colour. $episode is the episode's number. -->
+    <string name="player_found_ask_share">Yes shares these times with AniSkip for episode %1$d.</string>
+    <!-- Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge. -->
+    <string name="player_found_yes">Yes</string>
+    <string name="player_found_adjust">Adjust</string>
+    <!-- What the prompt says after Yes. $episode is the episode's number. -->
+    <string name="player_found_saved">Saved. AniSkip gets these times for episode %1$d.</string>
+    <!-- What the prompt says after Don't ask again, with the line below it. -->
+    <string name="player_found_never">Kaeri won\'t ask about skip times again.</string>
+    <string name="player_found_never_how">You can turn it back on in Settings.</string>
     <!-- Title of the sheet shown on the first Save. -->
     <string name="player_share_title">Share your skip times with AniSkip?</string>
     <!-- Body of the sheet. -->
-    <string name="player_share_body">AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people\'s players skip what you mark.</string>
+    <string name="player_share_body">AniSkip is a shared list of openings and endings, run by its own volunteers. Other people\'s players skip the times you mark and the found times you confirm.</string>
     <!-- What is sent, as a line under the body. -->
     <string name="player_share_sent">It gets the times, the show\'s MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.</string>
     <!-- Buttons of the sheet. -->
@@ -3293,6 +3502,15 @@
     <string name="player_skip_from_file">From the file</string>
     <string name="player_skip_yours">Yours</string>
     <string name="player_skip_from_aniskip">From AniSkip</string>
+    <string name="player_skip_found">Found by Kaeri</string>
+    <!-- Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage. -->
+    <string name="player_skip_paused_low_power">Paused while Low Power Mode is on.</string>
+    <string name="player_skip_paused_battery_saver">Paused while battery saver is on.</string>
+    <string name="player_skip_paused_energy_saver">Paused while energy saver is on.</string>
+    <string name="player_skip_paused_power_saver">Paused while power saver is on.</string>
+    <string name="player_skip_paused_storage">Paused until 2 GB of storage is free.</string>
+    <!-- Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library. -->
+    <string name="player_skip_unavailable">Not available in this build of Kaeri.</string>
     <string name="player_skip_none">None yet</string>
     <!-- Skip times panel: removes your own mark. -->
     <string name="player_skip_clear">Clear</string>
@@ -3627,6 +3845,136 @@
     <string name="search_available_services">On your services</string>
     <!-- End of a search result's line: one of the person's licensed services has it. -->
     <string name="search_line_service">On %1$s</string>
+    <!-- The count line under a title in a list or on a card: how many episodes a finished show has. -->
+    <plurals name="count_episodes">
+        <item quantity="one">One episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <!-- The same, short, for a cell too narrow for the long form. -->
+    <string name="count_episodes_short">%1$d ep</string>
+    <!-- The count line of a show that is airing and has a known total: episodes out so far, then the total. -->
+    <string name="count_out_of">%1$d of %2$d out</string>
+    <!-- The same, short. -->
+    <string name="count_out_of_short">%1$d of %2$d</string>
+    <!-- The count line of a show that is airing and has no known total: episodes out so far. -->
+    <plurals name="count_out">
+        <item quantity="one">One episode out</item>
+        <item quantity="other">%1$d episodes out</item>
+    </plurals>
+    <!-- The same, short. -->
+    <string name="count_out_short">%1$d out</string>
+    <!-- The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. -->
+    <string name="count_starts">Starts %1$s</string>
+    <!-- The count line of a show that has not started and has no date. -->
+    <string name="count_not_out">Not out yet</string>
+    <!-- The count line of a show the viewer is part way through, in the library: the next episode and the total. -->
+    <string name="count_next_of">Ep %1$d of %2$d</string>
+    <!-- The dub part of a count line when a source has a dub and does not say how far it goes. -->
+    <string name="count_dub">Dub</string>
+    <!-- The dub part of a count line: the last episode the dub has. -->
+    <string name="count_dub_through">Dub %1$d</string>
+    <!-- What a screen reader says for a count line: the long form of a finished show. -->
+    <plurals name="count_spoken_episodes">
+        <item quantity="one">One episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <!-- What a screen reader says for a show that is airing, with a known total. -->
+    <string name="count_spoken_out_of">%1$d of %2$d episodes out</string>
+    <!-- What a screen reader says for a show that is airing with no known total. -->
+    <plurals name="count_spoken_out">
+        <item quantity="one">One episode out</item>
+        <item quantity="other">%1$d episodes out</item>
+    </plurals>
+    <!-- What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. -->
+    <string name="count_spoken_starts">Starts %1$s</string>
+    <!-- What a screen reader says for a show the viewer is part way through. -->
+    <string name="count_spoken_next_of">Episode %1$d of %2$d</string>
+    <!-- What a screen reader says after the count when the dub goes to an episode. -->
+    <string name="count_spoken_dub_through">dubbed to episode %1$d</string>
+    <!-- What a screen reader says after the count when a source has a dub and does not say how far it goes. -->
+    <string name="count_spoken_dub">has a dub</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jan_short">Jan</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jan_long">January</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_feb_short">Feb</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_feb_long">February</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_mar_short">Mar</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_mar_long">March</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_apr_short">Apr</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_apr_long">April</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_may_short">May</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_may_long">May</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jun_short">Jun</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jun_long">June</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jul_short">Jul</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jul_long">July</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_aug_short">Aug</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_aug_long">August</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_sep_short">Sep</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_sep_long">September</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_oct_short">Oct</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_oct_long">October</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_nov_short">Nov</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_nov_long">November</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_dec_short">Dec</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_dec_long">December</string>
+    <!-- Search's Trending heading and sort, for AniList's live trending. -->
+    <string name="trending_today">Trending today</string>
+    <!-- Search's Trending heading and sort, for the last seven days. -->
+    <string name="trending_week">Trending this week</string>
+    <!-- Search's Trending heading and sort, for the last thirty days. -->
+    <string name="trending_month">Trending this month</string>
+    <!-- One choice of the Trending period menu, where the heading already says Trending. -->
+    <string name="trending_choice_today">Today</string>
+    <!-- One choice of the Trending period menu: the last seven days. -->
+    <string name="trending_choice_week">This week</string>
+    <!-- One choice of the Trending period menu: the last thirty days. -->
+    <string name="trending_choice_month">This month</string>
+    <!-- Shown in the Trending rail when a period could not load. The period is already worded, such as "this week". -->
+    <string name="trending_failed">Couldn\'t load %1$s\'s trending.</string>
+    <!-- Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday". -->
+    <string name="trending_updated">Updated %1$s</string>
+    <!-- Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library. -->
+    <string name="surprise_me">Surprise me</string>
+    <!-- The same as a menu bar item, in title case. -->
+    <string name="surprise_me_menu">Surprise Me</string>
+    <!-- Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit. -->
+    <string name="surprise_another">Another</string>
+    <!-- Hint of the Surprise me button on the library's Planning list. -->
+    <string name="surprise_hint_planning">Opens a random title from Planning</string>
+    <!-- Hint of the Surprise me button in Search. -->
+    <string name="surprise_hint_filters">Opens a random title from these filters</string>
+    <!-- Hint of the Another button. -->
+    <string name="surprise_another_hint">Opens another random title in place of this one</string>
+    <!-- Notice when Search's filters match no title to pick from. -->
+    <string name="surprise_empty_filters">No titles match these filters.</string>
+    <!-- Notice when the Planning list is empty. -->
+    <string name="surprise_empty_planning">Planning is empty.</string>
+    <!-- Notice when a pick from Search needs AniList and the device is offline. -->
+    <string name="surprise_offline">Offline. Search picks need AniList.</string>
     <!-- Title of the dialog that adds a media server. -->
     <string name="servers_add_title">Add a media server</string>
     <!-- Heading of the servers found on the network. -->
@@ -3790,6 +4138,8 @@
     <string name="settings_group_titles">Titles</string>
     <!-- Group heading. -->
     <string name="settings_group_playback">Playback</string>
+    <!-- Group heading in Playback settings, above the switch that hides chat. -->
+    <string name="settings_group_watch_parties">Watch parties</string>
     <!-- Group heading. -->
     <string name="settings_group_watching">Watching</string>
     <!-- Group heading. -->
@@ -3844,18 +4194,26 @@
     <string name="settings_skip_opening">Skip opening automatically</string>
     <!-- Settings, Playback: whether recaps are skipped without asking. -->
     <string name="settings_skip_recap">Skip recaps automatically</string>
-    <!-- Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand. -->
-    <string name="settings_ask_was_opening">Ask after skipping an opening by hand</string>
+    <!-- Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default. -->
+    <string name="settings_find_skips">Find skip times from the audio</string>
     <!-- Line under it. -->
-    <string name="settings_ask_was_opening_detail">Offers to mark it, so it is skipped next time</string>
+    <string name="settings_find_skips_detail">When AniSkip has no times, Kaeri compares the audio across a show\'s episodes, on this device.</string>
+    <!-- Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found. -->
+    <string name="settings_ask_was_opening">Ask about skip times</string>
+    <!-- Line under it. -->
+    <string name="settings_ask_was_opening_detail">After you skip an opening by hand, and after a skip Kaeri found</string>
     <!-- Settings, Playback: whether marked skip times go to AniSkip. -->
     <string name="settings_share_skips">Share skip times with AniSkip</string>
     <!-- Line under it. -->
-    <string name="settings_share_skips_detail">AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show\'s MyAnimeList number, the episode and a random id for this install.</string>
-    <!-- Settings, Playback: removes every skip time you marked. -->
-    <string name="settings_clear_skips">Clear skip times you marked…</string>
-    <!-- Question that asks before clearing every skip time you marked. -->
-    <string name="settings_clear_skips_confirm">Clear the skip times you marked? AniSkip keeps the ones you shared.</string>
+    <string name="settings_share_skips_detail">AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show\'s MyAnimeList number, the episode and a random id for this install.</string>
+    <!-- Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear. -->
+    <string name="settings_clear_skips">Skip times you marked or Kaeri found</string>
+    <!-- Question that asks before clearing them. -->
+    <string name="settings_clear_skips_confirm">Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.</string>
+    <!-- Android's Settings: the title of that row, with the line below. -->
+    <string name="settings_clear_skips_android">Clear skip times</string>
+    <!-- Line under it. -->
+    <string name="settings_clear_skips_android_detail">The ones you marked and the ones Kaeri found</string>
     <!-- Row: skip filler. -->
     <string name="settings_skip_filler">Skip filler automatically</string>
     <!-- Row: mark the opening and ending. -->
@@ -3871,7 +4229,7 @@
     <!-- Row: spoiler protection. -->
     <string name="settings_spoiler">Spoiler protection</string>
     <!-- Line under it. -->
-    <string name="settings_spoiler_detail">Blurs stills of unwatched episodes after the next one</string>
+    <string name="settings_spoiler_detail">Hides stills and synopses of unwatched episodes after the next one</string>
     <!-- Line under the audio row. -->
     <string name="settings_audio_detail">Each show remembers its own audio and subtitles.</string>
     <!-- Row: follow the system's caption style. -->
@@ -3970,7 +4328,7 @@
     <!-- Option: show everything. -->
     <string name="show_settings_show_everything">Show everything</string>
     <!-- Line under spoiler protection. -->
-    <string name="show_settings_spoiler_detail">Blurs stills after the next episode.</string>
+    <string name="show_settings_spoiler_detail">Hides stills and synopses after the next episode.</string>
     <!-- Option: always. -->
     <string name="show_settings_always">Always</string>
     <!-- Option: never. -->
@@ -4778,6 +5136,449 @@
     <string name="stores_qr_warning_device">Scan this with the device you want to link. It works once and lasts seven days.</string>
     <!-- Button that opens the system share sheet for the invite link. -->
     <string name="stores_share">Share…</string>
+    <!-- Windows and Linux dialog line while the browser is open for a cloud sign-in. -->
+    <string name="cloud_browser_line">Your browser opened %1$s’s page. Allow access there, and Kaeri carries on by itself.</string>
+    <!-- Windows and Linux dialog title while the browser is open for a cloud sign-in. -->
+    <string name="cloud_browser_title">Sign in to %1$s in your browser</string>
+    <!-- Word for this device in sentences such as “Turn off sync on this computer”. -->
+    <string name="device_kind_computer">computer</string>
+    <!-- Button on the Devices page that opens the box for a code another device shows. -->
+    <string name="devices_enter_code">Enter a code</string>
+    <!-- Button on the Devices page that shows the recovery key behind the computer’s own lock. -->
+    <string name="devices_show_key">Show</string>
+    <!-- Button in the alert that turns sync off on this computer. -->
+    <string name="devices_turn_off_action">Turn off</string>
+    <!-- Label of the field for the other device’s address in the Enter a code dialog. -->
+    <string name="pair_address_label">Address</string>
+    <!-- Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself. -->
+    <string name="pair_by_address">Pair by address</string>
+    <!-- Placeholder of the pairing code field. -->
+    <string name="pair_code_placeholder">000 000</string>
+    <!-- Label of the field for a recovery key in the restore dialog. -->
+    <string name="rkey_field_label">Recovery key</string>
+    <!-- Label of the user name field for WebDAV and a Nextcloud app password. -->
+    <string name="cloud_user_label">User name</string>
+    <!-- Label of the password field for WebDAV and a Nextcloud app password. -->
+    <string name="cloud_password_label">Password</string>
+    <!-- Label of the WebDAV server address field. -->
+    <string name="cloud_webdav_address_label">Server address</string>
+    <!-- Line under the pairing code while a device is being paired. -->
+    <string name="pair_working_line">Pairing</string>
+    <!-- Name for the device whose pairing code did not match, when no name is known yet. -->
+    <string name="pair_other_device">your other device</string>
+    <!-- Note under the Enter a code dialog's fields: the address can be left empty. -->
+    <string name="pair_address_optional">Leave the address empty and Kaeri looks for the device on this network.</string>
+    <!-- Device page footer when the device has no Remote switch. -->
+    <string name="devices_sync_foot">Sync shares where you stopped, your history and your settings.</string>
+    <!-- A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. -->
+    <string name="devices_line_remote">%1$s · Remote</string>
+    <!-- Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux. -->
+    <string name="profiles_edit_action">Edit</string>
+    <!-- Label of the name field in the add and edit profile dialogs. -->
+    <string name="profiles_name_field">Name</string>
+    <!-- Accessible name and tooltip of the menu button on a profile's row. -->
+    <string name="profiles_more_for">More for %1$s</string>
+    <!-- Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later. -->
+    <string name="sync_store_err_offline">Couldn\'t reach %1$s or %2$s. Try again when both are online.</string>
+    <!-- Line on a store row when the store turned the invite down, for example because it was cancelled or used up. -->
+    <string name="sync_store_err_refused">%1$s didn\'t accept the invite. Ask its owner for a new one.</string>
+    <!-- Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link. -->
+    <string name="sync_store_err_not_allowed">%2$s can\'t invite other devices to %1$s. Ask the plugin store\'s owner for an invite.</string>
+    <!-- Settings row and page title, every platform. -->
+    <string name="devices_title">Devices</string>
+    <!-- Devices row value while sync is off. -->
+    <string name="devices_row_off">Sync off</string>
+    <!-- Devices row value; “Synced 2 min ago”, “Synced just now”. -->
+    <string name="devices_row_synced">Synced %1$s</string>
+    <!-- Devices row value with the error glyph. -->
+    <string name="devices_row_error">Couldn’t sync</string>
+    <!-- Group heading over the name. -->
+    <string name="devices_this_device">This device</string>
+    <!-- Row for this device’s name. -->
+    <string name="devices_name">Name</string>
+    <!-- Group heading while off. -->
+    <string name="sync_group">Sync</string>
+    <!-- Off state. -->
+    <string name="sync_off_title">Sync is off</string>
+    <!-- Off state. -->
+    <string name="sync_off_line">Turn it on to keep where you stopped, your history and your settings the same on your devices.</string>
+    <!-- Button; the Mac adds an ellipsis. -->
+    <string name="sync_turn_on">Turn on sync</string>
+    <!-- Road sheet title. -->
+    <string name="sync_road_title">How should your devices share?</string>
+    <!-- Road sheet row. -->
+    <string name="sync_road_nearby">With a device nearby</string>
+    <!-- Road sheet row line. -->
+    <string name="sync_road_nearby_line">Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.</string>
+    <!-- Road sheet row. -->
+    <string name="sync_road_cloud">Through a cloud folder</string>
+    <!-- Road sheet row line. Names no service, since a build may hide some (decision 14). -->
+    <string name="sync_road_cloud_line">A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.</string>
+    <!-- Road sheet footer. -->
+    <string name="sync_road_later">You can add the other way later. Most people use both.</string>
+    <!-- Group heading. -->
+    <string name="devices_yours">Your devices</string>
+    <!-- Empty Your devices. -->
+    <string name="devices_only_this">Only this device</string>
+    <!-- Empty Your devices. -->
+    <string name="devices_only_this_line">Pair another device to share where you stopped, your history and your settings.</string>
+    <!-- Row and sheet title. -->
+    <string name="devices_add">Add a device</string>
+    <!-- Device row line past 30 days. -->
+    <string name="devices_not_seen">Not seen for %1$d days</string>
+    <!-- A device paired only for Play on TV. -->
+    <string name="devices_remote_only">Remote only</string>
+    <!-- Button on a remote-only TV row. -->
+    <string name="devices_also_sync">Also sync with %1$s</string>
+    <!-- Footer while sync is off. -->
+    <string name="devices_paired_tvs_foot">Paired for Play on TV. A TV paired as a remote never gets your history.</string>
+    <!-- Switch on a device. -->
+    <string name="devices_sync_switch">Sync</string>
+    <!-- Switch on a TV. -->
+    <string name="devices_remote_switch">Remote</string>
+    <!-- Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. -->
+    <string name="devices_switches_foot">Sync shares where you stopped, your history and your settings. Remote lets this %1$s drive %2$s.</string>
+    <!-- Device page, destructive. -->
+    <string name="devices_remove">Remove this device</string>
+    <!-- Alert title. -->
+    <string name="devices_remove_alert">Remove %1$s?</string>
+    <!-- Alert message. -->
+    <string name="devices_remove_alert_line">%1$s keeps what it has, but gets nothing new from your other devices.</string>
+    <!-- Last row; “this phone”, “this Mac”. -->
+    <string name="sync_turn_off">Turn off sync on this %1$s</string>
+    <!-- Alert title. -->
+    <string name="sync_turn_off_alert">Turn off sync on %1$s?</string>
+    <!-- Alert message. -->
+    <string name="sync_turn_off_alert_line">This %1$s stops sharing with your other devices. Everything it has stays here.</string>
+    <!-- Group heading. -->
+    <string name="cloud_group">Cloud folder</string>
+    <!-- Group footer. -->
+    <string name="cloud_foot">Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.</string>
+    <!-- Row when only the nearby road is set. -->
+    <string name="cloud_add">Add a cloud folder</string>
+    <!-- Picker title. -->
+    <string name="cloud_pick_title">Choose a cloud folder</string>
+    <!-- Picker row line. -->
+    <string name="cloud_google_line">A hidden Kaeri folder in your Drive</string>
+    <!-- Picker row line. -->
+    <string name="cloud_nextcloud_line">Your own or a hosted Nextcloud server</string>
+    <!-- Picker row line, Apple and Windows. -->
+    <string name="cloud_icloud_line">A folder you choose in iCloud Drive</string>
+    <!-- Picker group heading. -->
+    <string name="cloud_other">Other</string>
+    <!-- Picker row. -->
+    <string name="cloud_webdav">WebDAV server</string>
+    <!-- Picker row line. -->
+    <string name="cloud_webdav_line">Any server that speaks WebDAV</string>
+    <!-- Picker row line. -->
+    <string name="cloud_folder_line">For a folder another app keeps in step</string>
+    <!-- Picker footer. -->
+    <string name="cloud_pick_foot">Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.</string>
+    <!-- Row line while the first write runs. -->
+    <string name="cloud_setting_up">Setting up the folder</string>
+    <!-- Field label. -->
+    <string name="cloud_nextcloud_address">Server address</string>
+    <!-- Field note. -->
+    <string name="cloud_nextcloud_address_note">The address you open Nextcloud at in a browser.</string>
+    <!-- Login flow wait. -->
+    <string name="cloud_nextcloud_wait_title">Finish signing in on %1$s</string>
+    <!-- Login flow wait. -->
+    <string name="cloud_nextcloud_wait_line">Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.</string>
+    <!-- Wait row. -->
+    <string name="cloud_waiting">Waiting for %1$s</string>
+    <!-- Button. -->
+    <string name="cloud_open_again">Open the page again</string>
+    <!-- Text button. -->
+    <string name="cloud_app_password">Use an app password instead</string>
+    <!-- Button. -->
+    <string name="cloud_connect">Connect</string>
+    <!-- Error. -->
+    <string name="cloud_err_offline">Couldn’t reach %1$s. Check your connection.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_no_server">Couldn’t find a Nextcloud server at %1$s. Check the address.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_app_password">Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_webdav">The server refused that user name or password.</string>
+    <!-- Error, with Open the page again. -->
+    <string name="cloud_err_timeout">The sign-in page closed before access was allowed.</string>
+    <!-- Error. -->
+    <string name="cloud_err_other_group">This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.</string>
+    <!-- Status error, with Sign in again. -->
+    <string name="cloud_err_signed_out">%1$s signed Kaeri out. Your changes wait on this %2$s until you sign in again.</string>
+    <!-- Status error. -->
+    <string name="cloud_err_full">%1$s is full. Free some space there, then try again.</string>
+    <!-- Status error, with Choose folder. -->
+    <string name="cloud_err_folder_gone">Kaeri can’t open the folder any more. Choose it again.</string>
+    <!-- Status error title. -->
+    <string name="cloud_err_title">Couldn’t sync with %1$s</string>
+    <!-- Picker row line. -->
+    <string name="cloud_dropbox_line">Kaeri’s own folder in your Dropbox, Apps/Kaeri</string>
+    <!-- Picker row line. -->
+    <string name="cloud_onedrive_line">Kaeri’s own folder in your OneDrive, Apps/Kaeri</string>
+    <!-- Cloud group button. -->
+    <string name="cloud_sync_now">Sync now</string>
+    <!-- Cloud group button; at once, no question, except on the TV. -->
+    <string name="cloud_sign_out">Sign out</string>
+    <!-- Cloud group button after signing out. -->
+    <string name="cloud_sign_in">Sign in</string>
+    <!-- Cloud row after Sign out; hollow haze dot. -->
+    <string name="cloud_signed_out_line">Signed out. Changes wait on this %1$s until you sign in again.</string>
+    <!-- Picker row line after `SignInDenied`. -->
+    <string name="cloud_err_denied">%1$s didn’t give Kaeri access. Choose it again to retry.</string>
+    <!-- TV picker footer (decision 17). -->
+    <string name="tv_cloud_pick_foot">Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.</string>
+    <!-- TV picker row line for Dropbox. -->
+    <string name="tv_cloud_dropbox_line">Signs in on your phone</string>
+    <!-- TV, Dropbox. -->
+    <string name="tv_cloud_needs_phone_title">Dropbox signs in on your phone</string>
+    <!-- TV, Dropbox, a paired phone has it. -->
+    <string name="tv_cloud_needs_phone_has">%1$s is signed in to Dropbox. This TV can use that sign-in over your paired link.</string>
+    <!-- TV amber button; also for Nextcloud and WebDAV. -->
+    <string name="tv_use_phone_signin">Use %1$s’s sign-in</string>
+    <!-- TV, Dropbox, no phone has it. -->
+    <string name="tv_cloud_needs_phone_none">Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.</string>
+    <!-- TV code screen after the poll succeeds. -->
+    <string name="tv_cloud_finishing">Signed in. Setting up the folder</string>
+    <!-- TV cloud row. -->
+    <string name="tv_cloud_revoked_line">%1$s signed Kaeri out. Select to sign in again.</string>
+    <!-- TV cloud row. -->
+    <string name="tv_cloud_signed_out_line">Signed out. Select to sign in.</string>
+    <!-- TV ConfirmDialog. -->
+    <string name="tv_cloud_sign_out_title">Sign out of %1$s?</string>
+    <!-- TV ConfirmDialog, with Cancel focused and Sign out. -->
+    <string name="tv_cloud_sign_out_line">This TV stops syncing through %1$s. Changes wait here until you sign in again.</string>
+    <!-- Status line while offline. -->
+    <string name="cloud_offline">Waiting for a connection. Changes are kept on this %1$s.</string>
+    <!-- TV device flow. -->
+    <string name="tv_google_title">Sign in to Google Drive</string>
+    <!-- TV device flow. -->
+    <string name="tv_qr_open_page">Or scan to open the page</string>
+    <!-- TV Nextcloud. -->
+    <string name="tv_nextcloud_line">Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.</string>
+    <!-- Sheet title. -->
+    <string name="rkey_title">Your recovery key</string>
+    <!-- Sheet line. -->
+    <string name="rkey_line">Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.</string>
+    <!-- Button. -->
+    <string name="rkey_copy">Copy</string>
+    <!-- Text button. -->
+    <string name="rkey_qr">Show as QR code</string>
+    <!-- Sheet footnote. -->
+    <string name="rkey_again">You can see it again in Settings, Devices, after unlocking this %1$s.</string>
+    <!-- Devices row. -->
+    <string name="rkey_row">Recovery key</string>
+    <!-- Devices row value. -->
+    <string name="rkey_made">Made %1$s</string>
+    <!-- Row. -->
+    <string name="rkey_new">Make a new key</string>
+    <!-- Footer. -->
+    <string name="rkey_new_foot">The old key stops working, and your devices switch to the new one the next time they sync.</string>
+    <!-- Restore. -->
+    <string name="rkey_enter_title">Enter your recovery key</string>
+    <!-- Restore. -->
+    <plurals name="rkey_enter_line">
+        <item quantity="one">%1$s holds history from %2$d device. The key you saved when sync was turned on opens it.</item>
+        <item quantity="other">%1$s holds history from %2$d devices. The key you saved when sync was turned on opens it.</item>
+    </plurals>
+    <!-- Field note. -->
+    <string name="rkey_enter_note">24 letters and digits, in groups of four. Spaces and case don’t matter.</string>
+    <!-- Inline error. -->
+    <string name="rkey_wrong">That key doesn’t open this folder. Check each group of four and try again.</string>
+    <!-- Button. -->
+    <string name="rkey_restore">Restore</string>
+    <!-- Add a device. -->
+    <string name="pair_enter_line">On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.</string>
+    <!-- Button, phones. -->
+    <string name="pair_scan">Scan the code</string>
+    <!-- Note. -->
+    <string name="pair_same_wifi">Both devices need to be on the same Wi-Fi.</string>
+    <!-- Button. -->
+    <string name="pair_button">Pair</string>
+    <!-- Text button. -->
+    <string name="pair_show_instead">Show a code here instead</string>
+    <!-- Code screen. -->
+    <string name="pair_show_title">Enter this code on your other device</string>
+    <!-- Code screen. -->
+    <string name="pair_show_scan">Or scan it from Kaeri on your phone.</string>
+    <!-- Code screen. -->
+    <string name="pair_good_for">Good for 2 minutes · %1$s</string>
+    <!-- TV code screen. -->
+    <string name="pair_tv_line">On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.</string>
+    <!-- Success. -->
+    <string name="pair_ok">Paired with %1$s</string>
+    <!-- Success. -->
+    <string name="pair_ok_line">Bringing over your history. You can keep using Kaeri meanwhile.</string>
+    <!-- Success switch. -->
+    <string name="pair_copy_signins">Copy sign-ins from %1$s</string>
+    <!-- Success switch line. -->
+    <string name="pair_copy_signins_line">%1$s. Each device gets its own copy over this link.</string>
+    <!-- Error. -->
+    <string name="pair_err_code">That code didn’t match. Check the code on %1$s and try again.</string>
+    <!-- Error. -->
+    <string name="pair_err_not_found">Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.</string>
+    <!-- Error on the showing side. -->
+    <string name="pair_err_expired">This code ran out. Show a new one.</string>
+    <!-- Profile question. -->
+    <string name="pair_which_profile">Which profile on %1$s is yours?</string>
+    <!-- Profile question. -->
+    <string name="pair_which_profile_line">This %1$s syncs with that profile only. The others stay on %2$s.</string>
+    <!-- Footer. -->
+    <string name="pair_also_sync_foot">%1$s already knows this phone from Play on TV, so syncing with it needs no new code.</string>
+    <!-- Continue, for a day. -->
+    <string name="continue_from_device">Episode %1$d · stopped at %2$s on %3$s</string>
+    <!-- Player, 6 s, with Start over. -->
+    <string name="player_resumed_from">Resumed at %1$s from %2$s</string>
+    <!-- Row line, Mac toolbar status. -->
+    <string name="sync_syncing">Syncing</string>
+    <!-- Mac jobs popover. -->
+    <string name="sync_syncing_with">Syncing with %1$s</string>
+    <!-- Device page group. -->
+    <string name="sync_notes">Sync notes</string>
+    <!-- Sync note. -->
+    <string name="sync_note_kept_watched">Episode %1$d of %2$s stays watched. %3$s marked it unwatched without knowing %4$s had finished it.</string>
+    <!-- Sync note action. -->
+    <string name="sync_note_undo">Mark unwatched</string>
+    <!-- Footer. -->
+    <string name="sync_notes_foot">Notes stay for 7 days.</string>
+    <!-- Settings row and page. -->
+    <string name="profiles_title">Profiles</string>
+    <!-- Profiles row value with one profile. -->
+    <string name="profiles_only_you">Only you</string>
+    <!-- Profiles page with one. -->
+    <string name="profiles_one_foot">Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.</string>
+    <!-- Row, sheet title, picker tile. -->
+    <string name="profiles_add">Add a profile</string>
+    <!-- Sheet line. -->
+    <string name="profiles_add_line">Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.</string>
+    <!-- Field label. -->
+    <string name="profiles_new">New profile</string>
+    <!-- Field label. -->
+    <string name="profiles_yours">Your profile</string>
+    <!-- Field note when signed in. -->
+    <string name="profiles_yours_note">Filled in from AniList. Until now this device had one profile with no name.</string>
+    <!-- Switch. -->
+    <string name="profiles_kids">Kids profile</string>
+    <!-- Switch footer. -->
+    <string name="profiles_kids_line">Adult titles stay off, and sources, devices and torrent settings are hidden in it.</string>
+    <!-- Settings foot in a kids profile. -->
+    <string name="profiles_kids_hidden">Sources and Devices are hidden in a kids profile, and adult titles stay off.</string>
+    <!-- Line under a kids profile. -->
+    <string name="profiles_kids_tag">Kids</string>
+    <!-- Button. -->
+    <string name="profiles_add_button">Add profile</string>
+    <!-- Profiles page footer. -->
+    <string name="profiles_shared_foot">Sources, downloads and this device’s settings are shared by every profile.</string>
+    <!-- Profile page row. -->
+    <string name="profiles_syncs_with">Syncs with</string>
+    <!-- Profile page, destructive. -->
+    <string name="profiles_delete">Delete profile</string>
+    <!-- Alert title. -->
+    <string name="profiles_delete_alert">Delete %1$s’s profile?</string>
+    <!-- Alert message. -->
+    <string name="profiles_delete_alert_line">%1$s’s history and sign-ins on this device are removed. Devices that sync with %1$s keep theirs.</string>
+    <!-- TV, and iPad when asked. -->
+    <string name="profiles_picker">Who’s watching?</string>
+    <!-- iPad switch. -->
+    <string name="profiles_ask_at_launch">Ask who’s watching at launch</string>
+    <!-- iPad footer. -->
+    <string name="profiles_ask_foot">Off by default. For an iPad the household shares. The account row switches profiles at any time.</string>
+    <!-- TV Settings. -->
+    <string name="profiles_switch">Switch profile</string>
+    <!-- Account sheet and menus. -->
+    <string name="profiles_manage">Manage profiles</string>
+    <!-- Welcome, text button; TV says “Set up from your phone”. -->
+    <string name="first_setup_other">Set up from another device</string>
+    <!-- Code screen from first launch. -->
+    <string name="first_setup_line">On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.</string>
+    <!-- Text button. -->
+    <string name="first_restore">Restore from a cloud folder instead</string>
+    <!-- Success from first launch. -->
+    <string name="first_ok_line">Bringing over your history, settings and plugin stores. You can start using Kaeri now.</string>
+    <!-- Success switch. -->
+    <string name="first_join_store">Join the plugin store %1$s</string>
+    <!-- Success switch line. -->
+    <string name="first_join_store_line">%1$s makes this %2$s its own invite</string>
+    <!-- Picker row on a phone or computer. -->
+    <string name="cloud_folder">A folder on this %1$s</string>
+    <!-- Field note under the app password, on Android. -->
+    <string name="cloud_app_password_note">Make one in Nextcloud under Settings, Security. It is kept on this %1$s.</string>
+    <!-- Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this. -->
+    <plurals name="devices_tvs_for_play">
+        <item quantity="one">One TV for Play on TV</item>
+        <item quantity="other">%1$d TVs for Play on TV</item>
+    </plurals>
+    <!-- Line under a TV paired for Play on TV today. -->
+    <string name="devices_paired_today">Paired today</string>
+    <!-- Line under Add a device on the TV's Devices page. -->
+    <string name="tv_devices_add_line">Shows a code to enter on your phone</string>
+    <!-- TV Profiles page with one profile. -->
+    <string name="tv_profiles_only_you">Only you. Add a profile to keep separate history, Continue and accounts on this TV.</string>
+    <!-- TV Settings, Profiles: the row that opens the picker. -->
+    <string name="tv_profiles_opens_picker">Opens Who’s watching?</string>
+    <!-- TV Profiles page heading over the profiles. -->
+    <string name="tv_profiles_on_this_tv">Profiles on this TV</string>
+    <!-- Android recovery key sheet, third button. -->
+    <string name="rkey_save_file">Save as a file</string>
+    <!-- Android recovery key sheet, button that shows the key as a code. -->
+    <string name="rkey_qr_short">QR code</string>
+    <!-- Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one. -->
+    <string name="pair_show_code">Show a code</string>
+    <!-- Cloud row button when the service signed Kaeri out. -->
+    <string name="cloud_sign_in_again">Sign in again</string>
+    <!-- Cloud row button when the folder can't be opened. -->
+    <string name="cloud_choose_folder">Choose folder</string>
+    <!-- Spoken label of a profile's avatar on Home. -->
+    <string name="profiles_avatar_desc">%1$s, switch profile</string>
+    <!-- Heading over the pairing code the other device shows, over the field. -->
+    <string name="pair_code_field">Pairing code</string>
+    <string name="device_kind_phone">phone</string>
+    <string name="device_kind_tablet">tablet</string>
+    <string name="device_kind_tv">TV</string>
+    <!-- TV welcome, text button. -->
+    <string name="first_setup_phone">Set up from your phone</string>
+    <!-- Error naming a device that is not known by name. -->
+    <string name="devices_other_device">the other device</string>
+    <!-- Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser. -->
+    <string name="cloud_sheet_line">%1$s’s page is open. Allow access there, and Kaeri carries on by itself.</string>
+    <!-- Sheet or dialog title after the browser came back with access allowed. -->
+    <string name="cloud_connecting">Connecting to %1$s</string>
+    <!-- Status line beside the indicator while connecting. -->
+    <string name="cloud_connecting_line">Access allowed. Finishing the sign-in.</string>
+    <!-- Status line under Setting up the folder, whose title is cloud-setting-up. -->
+    <string name="cloud_setting_up_line">Making Kaeri’s folder in %1$s and sealing a first copy of your history.</string>
+    <!-- Error title in the sign-in sheet or dialog. -->
+    <string name="cloud_err_signin_title">Couldn’t sign in to %1$s</string>
+    <!-- Error title when the sign-in worked and the folder could not be set up. -->
+    <string name="cloud_err_setup_title">Couldn’t set up the folder</string>
+    <!-- Error line beside Try again, after access was refused on the service's page. -->
+    <string name="cloud_err_denied_short">%1$s didn’t give Kaeri access.</string>
+    <!-- Error line for any other failure during the sign-in; the details go to Messages. -->
+    <string name="cloud_err_signin_other">%1$s didn’t finish the sign-in. Try again in a moment.</string>
+    <!-- Error line for any other failure while making the folder after the sign-in; the details go to Messages. -->
+    <string name="cloud_err_setup_other">Kaeri couldn’t make its folder in %1$s. Try again in a moment.</string>
+    <!-- More menu item, and a row on phones; the Mac adds an ellipsis. -->
+    <string name="cloud_use_another">Use another service</string>
+    <!-- More menu item in red, and a button in the TV's dialog. -->
+    <string name="cloud_remove">Remove cloud folder</string>
+    <!-- Confirmation title before removing the cloud folder. -->
+    <string name="cloud_remove_title">Remove %1$s from sync?</string>
+    <!-- Confirmation line before removing the cloud folder. -->
+    <string name="cloud_remove_line">Everything on this %1$s stays here, and paired devices nearby keep syncing. The folder stays in %2$s with its sealed copy, and your other devices use it until you remove it on them too.</string>
+    <!-- Destructive button in the remove confirmation. -->
+    <string name="cloud_remove_action">Remove</string>
+    <!-- Accessibility label of the More button on the cloud folder row. -->
+    <string name="cloud_more">More for %1$s</string>
+    <!-- Picker row line for the service in use, under Use another service. -->
+    <string name="cloud_in_use">In use</string>
+    <!-- Picker line under Use another service. -->
+    <string name="cloud_switch_foot">%1$s stays in use until the new folder is ready.</string>
+    <!-- Footer under the two ways in while sync is off. -->
+    <string name="sync_start_foot">Either one turns sync on, and you can use both.</string>
+    <!-- Aside on the Devices page on the Mac and iPad. -->
+    <string name="devices_aside">Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this %1$s.</string>
+    <!-- TV Devices footer while sync is off, after devices-sync-foot. -->
+    <string name="tv_sync_start_foot">Pairing with your phone turns sync on. Then this TV can join your cloud folder.</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->
@@ -4852,6 +5653,49 @@
     <string name="episode_row_airs">Airs %1$s</string>
     <!-- Accessibility label of an episode's still while spoiler protection hides it. -->
     <string name="episode_spoiler_hidden">Hidden by spoiler protection</string>
+    <!-- Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden. -->
+    <string name="episode_synopsis_hidden">Synopsis hidden by spoiler protection</string>
+    <!-- Menu item, button and screen reader action that reveals one protected episode's still and synopsis. -->
+    <string name="episode_synopsis_show">Show synopsis</string>
+    <!-- Screen reader hint of that action. -->
+    <string name="episode_synopsis_show_hint">Shows this episode\'s still and synopsis</string>
+    <!-- Facts line of an episode with a length and an air date. The date is already formatted. -->
+    <string name="episode_facts">%1$d min · Aired %2$s</string>
+    <!-- Facts line of an episode with a length only. -->
+    <string name="episode_facts_length">%1$d min</string>
+    <!-- Facts line of an episode that is part-watched. -->
+    <string name="episode_facts_left">%1$d min left</string>
+    <!-- One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. -->
+    <string name="episode_protection_line">Spoiler protection hides what comes after episode %1$d.</string>
+    <!-- The same line on phones. -->
+    <string name="episode_protection_line_short">Hidden after episode %1$d</string>
+    <!-- Label of an episode range of a long series, in the range menu. -->
+    <string name="episode_range">Episodes %1$d to %2$d</string>
+    <!-- Label of the control that picks an episode range. -->
+    <string name="episode_range_label">Episode range</string>
+    <!-- One line that stands for the watched episodes at the top of a range. Opening it shows them. -->
+    <plurals name="episode_fold">
+        <item quantity="one">One watched episode</item>
+        <item quantity="other">%1$d watched episodes</item>
+    </plurals>
+    <!-- An episode's number in a facts line on phones and in narrow desktop windows. -->
+    <string name="episode_short">E%1$d</string>
+    <!-- Part of an episode's facts line: when it aired. The date is already formatted. -->
+    <string name="episode_aired">Aired %1$s</string>
+    <!-- Two parts of an episode's facts line, set one after the other. -->
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <!-- Button in the line where spoiler protection starts: shows what comes after. -->
+    <string name="episode_protection_show">Show</string>
+    <!-- Button in that line once the rows after it are shown: hides them again. -->
+    <string name="episode_protection_hide">Hide</string>
+    <!-- The line where spoiler protection starts, once the rows after it are shown. -->
+    <string name="episode_protection_shown">Showing what comes after episode %1$d.</string>
+    <!-- The same line on phones. -->
+    <string name="episode_protection_shown_short">Showing after episode %1$d</string>
+    <!-- An episode range in the range menu: the first and the last episode. -->
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <!-- An item of the range menu: the range, then Watched or Not out yet. -->
+    <string name="episode_range_item">%1$s · %2$s</string>
     <!-- Accessibility label of the button that opens an episode's menu. -->
     <string name="episode_options">Episode options</string>
     <!-- Menu item that marks an episode as watched. -->
@@ -4933,6 +5777,20 @@
     <string name="title_fact_tba">To be announced</string>
     <!-- A followed person's status and score, such as "Completed · 9/10". The status is already worded. -->
     <string name="more_following_line">%1$s · %2$d/10</string>
+    <!-- Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. -->
+    <string name="episode_go_to">Go to episode…</string>
+    <!-- Title of the Go to episode field. -->
+    <string name="episode_go_to_title">Go to episode</string>
+    <!-- Button of the Go to episode field that goes to the number typed. -->
+    <string name="episode_go_to_go">Go</string>
+    <!-- Placeholder of the Go to episode field: the first and last episode of the show. -->
+    <string name="episode_go_to_hint">%1$d to %2$d</string>
+    <!-- Accessibility label of the Go to episode field. -->
+    <string name="episode_go_to_label">Episode, %1$d to %2$d</string>
+    <!-- Shown when the number typed is not an episode of the show. -->
+    <string name="episode_go_to_none">No episode %1$d. This show has %2$d.</string>
+    <!-- Shown when the number typed is an episode with no date that has not come out. -->
+    <string name="episode_go_to_not_out">Episode %1$d isn\'t out yet. The latest is %2$d.</string>
     <!-- Title of the settings group and the screen. -->
     <string name="torrents_title">Torrents</string>
     <!-- Label and short value for the switch. -->
@@ -5334,6 +6192,8 @@
     <string name="tv_cast_volume_on_tv">Set on the TV</string>
     <!-- Line over the next episode on the casting card while its count runs. At 0 the TV plays it. -->
     <string name="tv_cast_up_next_in">Up next · plays in %1$d s</string>
+    <!-- Line under the paired TVs. -->
+    <string name="tv_forget_note">Forget a TV here and it forgets this device too.</string>
     <!-- Heading of the update row in settings and about. -->
     <string name="updates_title">Updates</string>
     <!-- Line while the app checks. -->

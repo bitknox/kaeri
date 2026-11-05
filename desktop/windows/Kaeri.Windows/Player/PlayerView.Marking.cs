@@ -266,7 +266,9 @@ public sealed partial class PlayerView
         body.Children.Add(Edge(T.PlayerMarkStarts, T.PlayerMarkEdgeStart, SkipEdge.Start, view.Start ?? 0));
         body.Children.Add(Edge(T.PlayerMarkEnds, T.PlayerMarkEdgeEnd, SkipEdge.End, view.End ?? 0));
         var haze = (Style)Application.Current.Resources["HazeCaptionStyle"];
-        void Note(string text) => body.Children.Add(new TextBlock { Text = text, Style = haze, TextWrapping = TextWrapping.WrapWholeWords });
+        // The notes sit to the left of the buttons, at the bottom of the row, as the board draws them.
+        var notes = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left };
+        void Note(string text) => notes.Children.Add(new TextBlock { Text = text, Style = haze, TextWrapping = TextWrapping.WrapWholeWords });
         if (view.Check is SkipMarkCheck.TooShort)
             Note(T.PlayerMarkTooShort);
         else if (view.Check is SkipMarkCheck.TooLong tooLong)
@@ -274,6 +276,9 @@ public sealed partial class PlayerView
         foreach (var note in view.Notes ?? [])
             switch (note)
             {
+                case SkipMarkNote.Found:
+                    Note(T.PlayerMarkFound);
+                    break;
                 case SkipMarkNote.Shares:
                     Note(T.PlayerMarkShares);
                     break;
@@ -287,15 +292,18 @@ public sealed partial class PlayerView
         var actions = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 4, 0, 0) };
         actions.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var watch = new Button { Content = T.PlayerMarkWatchEdges, MinHeight = 32, CornerRadius = new CornerRadius(4), HorizontalAlignment = HorizontalAlignment.Left, IsEnabled = !view.Previewing };
+        actions.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var watch = new Button { Content = T.PlayerMarkWatchEdges, MinHeight = 32, CornerRadius = new CornerRadius(4), VerticalAlignment = VerticalAlignment.Bottom, IsEnabled = !view.Previewing };
         watch.Click += (_, _) => Send(new PlayerCommand.PreviewSkipEdges());
         var save = new Button
         {
             Content = T.PlayerMarkSave, Style = (Style)Application.Current.Resources["AccentButtonStyle"], IsEnabled = view.CanSave,
-            MinHeight = 32, MinWidth = 96, CornerRadius = new CornerRadius(4),
+            MinHeight = 32, MinWidth = 96, CornerRadius = new CornerRadius(4), VerticalAlignment = VerticalAlignment.Bottom,
         };
         save.Click += (_, _) => Send(new PlayerCommand.SaveSkipMark());
-        Grid.SetColumn(save, 1);
+        Grid.SetColumn(watch, 1);
+        Grid.SetColumn(save, 2);
+        actions.Children.Add(notes);
         actions.Children.Add(watch);
         actions.Children.Add(save);
         body.Children.Add(actions);
@@ -339,11 +347,17 @@ public sealed partial class PlayerView
         };
     }
 
-    // The prompts: Was that the opening, Wrong times, and the one-time sharing question.
+    // The prompts: Was that the opening, Wrong times, the found times' card, and the one-time sharing question.
 
     void ShowPrompt(SkipPrompt? prompt)
     {
         promptTimer?.Stop();
+        var before = skipPrompt;
+        // Said in the log, so a card that never showed can be told from one never sent.
+        if (prompt is not null)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card shown: {LogName(prompt)}");
+        else if (before is not null)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card gone: {LogName(before)}");
         skipPrompt = prompt;
         if (prompt is SkipPrompt.Share)
         {
@@ -356,14 +370,27 @@ public sealed partial class PlayerView
             HidePrompt();
             return;
         }
-        BuildPrompt(prompt);
+        // The found card's answer takes the question's place in the same card.
+        var answer = before is SkipPrompt.FoundEdges && prompt is SkipPrompt.FoundSaved or SkipPrompt.FoundNever
+            && cornerCard == promptCard && promptCard is { Visibility: Visibility.Visible };
+        BuildPrompt(prompt, answer);
         UpdateCorner();
         if (promptHeld)
             return;
-        // Wrong times is up for 8 s; Was that the opening for as long as the corner's other notes.
+        // The found card waits as long as it takes while a screen reader is on.
+        if (prompt is SkipPrompt.FoundEdges && DeviceWatch.ScreenReaderRunning())
+            return;
+        // Wrong times is up for 8 s, the found times' answers for 4 s, and Was that the opening
+        // and the found times' question for 12 s (the engine's skip_prompt_hold_secs), as long as the corner's other notes.
+        var seconds = prompt switch
+        {
+            SkipPrompt.WrongTimes => 8,
+            SkipPrompt.FoundSaved or SkipPrompt.FoundNever => 4,
+            _ => 12,
+        };
         promptTimer ??= DispatcherQueue.GetForCurrentThread().CreateTimer();
         promptTimer.IsRepeating = false;
-        promptTimer.Interval = TimeSpan.FromSeconds(prompt is SkipPrompt.WrongTimes ? 8 : 12);
+        promptTimer.Interval = TimeSpan.FromSeconds(seconds);
         promptTimer.Tick -= PromptTimedOut;
         promptTimer.Tick += PromptTimedOut;
         promptTimer.Start();
@@ -374,10 +401,29 @@ public sealed partial class PlayerView
         s.Stop();
         if (skipPrompt is null)
             return;
+        NoteAnswer("timed out");
         skipPrompt = null;
         HidePrompt();
         SendQuietly(new PlayerCommand.DismissSkipPrompt());
     }
+
+    /// <summary>The card's answer, or its time running out, in the log.</summary>
+    void NoteAnswer(string answer)
+    {
+        if (skipPrompt is { } prompt)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card answered: {answer}, on {LogName(prompt)}");
+    }
+
+    /// <summary>What the log calls a skip card.</summary>
+    static string LogName(SkipPrompt prompt) => prompt switch
+    {
+        SkipPrompt.WasOpening => "was that the opening",
+        SkipPrompt.WrongTimes w => $"wrong {w.Kind.ToString().ToLowerInvariant()} times",
+        SkipPrompt.FoundEdges f => $"found {f.Kind.ToString().ToLowerInvariant()}, episode {f.Episode}",
+        SkipPrompt.FoundSaved f => $"found {f.Kind.ToString().ToLowerInvariant()} saved, episode {f.Episode}",
+        SkipPrompt.FoundNever => "found, never ask",
+        _ => "share skip times",
+    };
 
     void HidePrompt()
     {
@@ -385,7 +431,7 @@ public sealed partial class PlayerView
         UpdateCorner();
     }
 
-    void BuildPrompt(SkipPrompt prompt)
+    void BuildPrompt(SkipPrompt prompt, bool answer = false)
     {
         if (promptCard is null)
         {
@@ -397,33 +443,92 @@ public sealed partial class PlayerView
             AutomationProperties.SetLiveSetting(promptCard, AutomationLiveSetting.Polite);
             Corner.Children.Add(promptCard);
         }
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         string line;
-        var buttons = new List<(string Text, Action Act, bool Accent)>();
+        string? detail = null;
+        var buttons = new List<(string Text, Action Act, PromptButton Look, string Answer)>();
+        var found = false;
         switch (prompt)
         {
             case SkipPrompt.WasOpening:
                 line = T.PlayerWasOpening;
-                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), false));
-                buttons.Add((T.PlayerMarkIt, () => BeginMarking(SkipKind.Opening), true));
+                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Plain, "don't ask again"));
+                buttons.Add((T.PlayerMarkIt, () => BeginMarking(SkipKind.Opening), PromptButton.Accent, "mark"));
                 break;
             case SkipPrompt.WrongTimes wrong:
                 line = T.PlayerSkipWrong(KindInline(wrong.Kind));
                 var kind = wrong.Kind;
-                buttons.Add((T.PlayerSkipReport, () => Send(new PlayerCommand.ReportSkip(kind)), false));
-                buttons.Add((T.PlayerSkipMark, () => BeginMarking(kind), true));
+                buttons.Add((T.PlayerSkipReport, () => Send(new PlayerCommand.ReportSkip(kind)), PromptButton.Plain, "report"));
+                buttons.Add((T.PlayerSkipMark, () => BeginMarking(kind), PromptButton.Accent, "mark"));
+                break;
+            case SkipPrompt.FoundEdges edges:
+                found = true;
+                line = edges.Kind == SkipKind.Ending ? T.PlayerFoundAskEnding : T.PlayerFoundAskOpening;
+                detail = T.PlayerFoundAskShare(edges.Episode);
+                var foundKind = edges.Kind;
+                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Quiet, "don't ask again"));
+                buttons.Add((T.PlayerFoundAdjust, () => Send(new PlayerCommand.AdjustFoundSkip(foundKind)), PromptButton.Plain, "adjust"));
+                buttons.Add((T.PlayerFoundYes, () => Send(new PlayerCommand.ConfirmFoundSkip(foundKind)), PromptButton.Accent, "yes"));
+                break;
+            case SkipPrompt.FoundSaved saved:
+                found = true;
+                line = T.PlayerFoundSaved(saved.Episode);
+                break;
+            case SkipPrompt.FoundNever:
+                found = true;
+                line = T.PlayerFoundNever;
+                detail = T.PlayerFoundNeverHow;
                 break;
             default:
                 return;
         }
-        row.Children.Add(new TextBlock { Text = line, VerticalAlignment = VerticalAlignment.Center });
-        foreach (var (text, act, accent) in buttons)
+        // The found times' card is two rows, the words and then the buttons, since three buttons and the question do not fit one.
+        var layer = new StackPanel { Spacing = found ? 8 : 0 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = found ? HorizontalAlignment.Right : HorizontalAlignment.Stretch };
+        var words = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(0, found ? 4 : 0, 8, 0) };
+        words.Children.Add(new TextBlock
+        {
+            Text = line, TextWrapping = TextWrapping.WrapWholeWords, VerticalAlignment = VerticalAlignment.Center,
+            FontWeight = prompt is SkipPrompt.FoundEdges ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal,
+        });
+        if (detail is not null)
+            words.Children.Add(new TextBlock { Text = detail, Style = (Style)Application.Current.Resources["HazeCaptionStyle"], TextWrapping = TextWrapping.WrapWholeWords, TextTrimming = TextTrimming.None });
+        if (found)
+        {
+            layer.Width = 356;
+            layer.Children.Add(words);
+        }
+        else
+            row.Children.Add(words);
+        // The found times' card is answered as it stands: the engine reads which card it was.
+        var answered = prompt is SkipPrompt.FoundEdges;
+        foreach (var (text, act, look, said) in buttons)
         {
             var b = new Button { Content = text, MinHeight = 32 };
-            if (accent)
+            if (look == PromptButton.Accent)
                 b.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
+            else if (look == PromptButton.Quiet)
+            {
+                b.Style = (Style)Application.Current.Resources["SubtleButtonStyle"];
+                b.Foreground = (Brush)Application.Current.Resources["HazeBrush"];
+            }
+            if (found && look == PromptButton.Accent)
+                b.MinWidth = 64;
             b.Click += (_, _) =>
             {
+                NoteAnswer(said);
+                if (answered)
+                {
+                    // Yes and Don't ask again are answered by the card's next words; Adjust closes it for the review.
+                    foreach (var other in row.Children.OfType<Button>())
+                        other.IsEnabled = false;
+                    if (text == T.PlayerFoundAdjust)
+                    {
+                        skipPrompt = null;
+                        HidePrompt();
+                    }
+                    act();
+                    return;
+                }
                 skipPrompt = null;
                 HidePrompt();
                 Send(new PlayerCommand.DismissSkipPrompt());
@@ -431,8 +536,52 @@ public sealed partial class PlayerView
             };
             row.Children.Add(b);
         }
-        promptCard.Child = row;
+        if (found)
+        {
+            if (row.Children.Count > 0)
+                layer.Children.Add(row);
+        }
+        else
+            layer = row;
+        UIElement shown = layer;
+        if (answer && promptCard.Child is UIElement old)
+        {
+            // The question and its answer overlap while the card follows their height: never an empty card.
+            var from = old.RenderSize.Height;
+            promptCard.Child = null;
+            layer.Measure(new global::Windows.Foundation.Size(380, double.PositiveInfinity));
+            var to = layer.DesiredSize.Height;
+            var both = new Grid();
+            both.Children.Add(old);
+            both.Children.Add(layer);
+            layer.VerticalAlignment = VerticalAlignment.Top;
+            if (old is FrameworkElement oldFrame)
+                oldFrame.VerticalAlignment = VerticalAlignment.Top;
+            promptCard.Child = both;
+            Motion.Fade(old, 0);
+            Motion.FadeIn(layer, Motion.Standard);
+            Motion.Height(both, from, to);
+            var swap = DispatcherQueue.GetForCurrentThread().CreateTimer();
+            swap.Interval = Motion.Standard + TimeSpan.FromMilliseconds(80);
+            swap.IsRepeating = false;
+            swap.Tick += (t, _) =>
+            {
+                t.Stop();
+                if (promptCard.Child == both)
+                {
+                    both.Children.Clear();
+                    both.Height = double.NaN;
+                    layer.VerticalAlignment = VerticalAlignment.Stretch;
+                    promptCard.Child = layer;
+                }
+            };
+            swap.Start();
+            return;
+        }
+        promptCard.Child = shown;
     }
+
+    enum PromptButton { Plain, Accent, Quiet }
 
     /// <summary>The first Save asks once: share the times with AniSkip, or keep them on the viewer's devices.</summary>
     async void AskToShare()
@@ -454,7 +603,9 @@ public sealed partial class PlayerView
                 PrimaryButtonText = T.PlayerShareYes, CloseButtonText = T.PlayerShareNo, DefaultButton = ContentDialogButton.Primary,
             };
             var answer = await dialog.ShowAsync();
-            Send(new PlayerCommand.AnswerShareSkipTimes(answer == ContentDialogResult.Primary));
+            var share = answer == ContentDialogResult.Primary;
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card answered: {(share ? "share" : "don't share")}, on share skip times");
+            Send(new PlayerCommand.AnswerShareSkipTimes(share));
         }
         finally
         {
@@ -506,8 +657,13 @@ public sealed partial class PlayerView
             {
                 SkipOrigin.Yours => T.PlayerSkipYours,
                 SkipOrigin.AniSkip => T.PlayerSkipFromAniskip,
+                SkipOrigin.Found => T.PlayerSkipFound,
                 _ => T.PlayerSkipFromFile,
             };
+            // Why nothing was found, when finding is paused: openings and endings only.
+            if (!found && kind != SkipKind.Recap && ctx?.Known.SkipFindPaused is { } pause
+                && Pages.SettingsPage.FindSkipsPause(pause) is { } why && pause != SkipFindPause.Unavailable)
+                origin = $"{origin} · {why}";
             words.Children.Add(Tabular(new TextBlock
             {
                 Text = found ? $"{Wording.Clock(mark.Start)}\u2013{Wording.Clock(mark.End)} · {origin}" : origin,
@@ -527,7 +683,10 @@ public sealed partial class PlayerView
                 actions.Children.Add(b);
                 return b;
             }
-            Action(T.PlayerSkipMark, () => BeginMarking(picked));
+            if (found && mark.Origin == SkipOrigin.Found)
+                Action(T.PlayerFoundAdjust, () => Send(new PlayerCommand.AdjustFoundSkip(picked)));
+            else
+                Action(T.PlayerSkipMark, () => BeginMarking(picked));
             if (found && mark.Origin == SkipOrigin.AniSkip)
                 Action(T.PlayerSkipReport, () => Send(new PlayerCommand.ReportSkip(picked)));
             if (found && mark.Origin == SkipOrigin.Yours)

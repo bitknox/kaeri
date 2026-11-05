@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, серия { $episode }
 episode-label = Серия { $episode }
 episode-label-of = Серия { $episode }, { $title }
 tv-connecting-to-tv = Подключение к телевизору
-tv-device-code = Телевизор показывает это { -device } под кодом { $code }. Если удалить здесь телевизор, он забудет и это { -device }.
 tv-unnamed = Телевизор
 tv-another-short = Другой ТВ…
 tv-volume-label = Громкость телевизора

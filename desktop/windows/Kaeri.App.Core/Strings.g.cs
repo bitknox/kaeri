@@ -189,6 +189,9 @@ public static partial class T
     /// <summary>Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.</summary>
     public static string CauseNoSources => Get("CauseNoSources");
 
+    /// <summary>Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.</summary>
+    public static string CauseNoConnection => Get("CauseNoConnection");
+
     /// <summary>A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.</summary>
     public static string NoticeNotAired(long episode, string when) => Fill(Get("NoticeNotAired"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("when", when));
 
@@ -245,6 +248,27 @@ public static partial class T
 
     /// <summary>Job note while a play waits for the sources to arrive.</summary>
     public static string StatusLoadingSources => Get("StatusLoadingSources");
+
+    /// <summary>Starting screen, step line while the title is looked up.</summary>
+    public static string StartLookingUpTitle => Get("StartLookingUpTitle");
+
+    /// <summary>Starting screen, step line while sources still being set up are waited for.</summary>
+    public static string StartGettingSourcesReady => Get("StartGettingSourcesReady");
+
+    /// <summary>Starting screen, step line while one source is asked for the episode. The name is the source's own.</summary>
+    public static string StartAskingSource(string name) => Fill(Get("StartAskingSource"), ("name", name));
+
+    /// <summary>Starting screen, step line once a stream is found and the player opens it.</summary>
+    public static string StartOpeningStream => Get("StartOpeningStream");
+
+    /// <summary>Starting screen, step line when a stream showed no video and the next stream of the same source is opened.</summary>
+    public static string StartTryingAnotherStream => Get("StartTryingAnotherStream");
+
+    /// <summary>Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.</summary>
+    public static string StartFindingPeers => Get("StartFindingPeers");
+
+    /// <summary>Starting screen, step line while the player waits for data to fill its buffer.</summary>
+    public static string StartBuffering => Get("StartBuffering");
 
     /// <summary>Job note while the sources are asked for an episode. The episode is its label, often a number.</summary>
     public static string StatusSearchingSources(string episode) => Fill(Get("StatusSearchingSources"), ("episode", episode));
@@ -681,6 +705,9 @@ public static partial class T
     /// <summary>Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.</summary>
     public static string StoresReadyDemoStays(string store) => Fill(Get("StoresReadyDemoStays"), ("store", store));
 
+    /// <summary>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</summary>
+    public static string CloudLoopbackDone => Get("CloudLoopbackDone");
+
     /// <summary>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</summary>
     public static string NoticeSignedIn(string tracker) => Fill(Get("NoticeSignedIn"), ("tracker", tracker));
 
@@ -863,6 +890,18 @@ public static partial class T
 
     /// <summary>The same notice on the TV, which has no button.</summary>
     public static string CrashNoticeTv => Get("CrashNoticeTv");
+
+    /// <summary>Toast: Surprise me on a search found no title matching the filters.</summary>
+    public static string NoticeSurpriseEmptyFilters => Get("NoticeSurpriseEmptyFilters");
+
+    /// <summary>Toast: Surprise me on the Planning list, which has nothing on it to pick.</summary>
+    public static string NoticeSurpriseEmptyPlanning => Get("NoticeSurpriseEmptyPlanning");
+
+    /// <summary>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</summary>
+    public static string NoticeSurpriseOffline => Get("NoticeSurpriseOffline");
+
+    /// <summary>Toast: Surprise me on the filters, and AniList could not be asked.</summary>
+    public static string NoticeSurpriseFailed => Get("NoticeSurpriseFailed");
 
     /// <summary>Context menu item on a Continue row: plays the episode from where it stopped.</summary>
     public static string ContinueMenuResume => Get("ContinueMenuResume");
@@ -1326,9 +1365,6 @@ public static partial class T
     /// <summary>Title of the pairing sheet while it connects to a TV whose name it does not know yet.</summary>
     public static string TvConnectingToTv => Get("TvConnectingToTv");
 
-    /// <summary>Under the paired TVs in Settings. The code is a few letters and digits the TV shows beside this { -device }.</summary>
-    public static string TvDeviceCode(string code) => Fill(Get("TvDeviceCode"), ("code", code));
-
     /// <summary>What the remote calls a TV that has not said its name yet. Title of the remote.</summary>
     public static string TvUnnamed => Get("TvUnnamed");
 
@@ -1442,6 +1478,21 @@ public static partial class T
 
     /// <summary>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</summary>
     public static string TvCastFirewallAhead => Get("TvCastFirewallAhead");
+
+    /// <summary>Footnote on the recovery key dialog; the lock is Windows Hello.</summary>
+    public static string RkeyLockWindows => Get("RkeyLockWindows");
+
+    /// <summary>What Windows Hello says it is asking for before the recovery key shows again.</summary>
+    public static string RkeyHelloReason => Get("RkeyHelloReason");
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this PC”.</summary>
+    public static string DeviceKindPc => Get("DeviceKindPc");
+
+    /// <summary>Accessible name of the Sync switch on a device's card, with the device's name.</summary>
+    public static string DevicesSyncSwitchName(string device) => Fill(Get("DevicesSyncSwitchName"), ("device", device));
+
+    /// <summary>Accessible name of the button that opens a device's page from its card.</summary>
+    public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
 
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
     public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -1757,6 +1808,9 @@ public static partial class T
 
     /// <summary>Button that closes a dialog without doing what it offered.</summary>
     public static string ActionCancel => Get("ActionCancel");
+
+    /// <summary>Button that confirms a small question, such as the episode number to go to.</summary>
+    public static string ActionGo => Get("ActionGo");
 
     /// <summary>Button that puts a question off until later.</summary>
     public static string ActionNotNow => Get("ActionNotNow");
@@ -2222,6 +2276,12 @@ public static partial class T
 
     /// <summary>What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".</summary>
     public static string PlayerPositionSpoken(string position, string duration) => Fill(Get("PlayerPositionSpoken"), ("position", position), ("duration", duration));
+
+    /// <summary>Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".</summary>
+    public static string NamesPair(string first, string last) => Fill(Get("NamesPair"), ("first", first), ("last", last));
+
+    /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
+    public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
 
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
@@ -4005,6 +4065,120 @@ public static partial class T
     /// <summary>The start sheet's button after a title is picked.</summary>
     public static string PartyPickContinue => Get("PartyPickContinue");
 
+    /// <summary>Placeholder of every chat field, and the label of the button that opens it.</summary>
+    public static string PartyChatField => Get("PartyChatField");
+
+    /// <summary>Button that sends a chat line.</summary>
+    public static string PartyChatSend => Get("PartyChatSend");
+
+    /// <summary>Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.</summary>
+    public static string PartyChatTitle => Get("PartyChatTitle");
+
+    /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
+    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once when sending waits, for screen readers.</summary>
+    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line after the three newest chat lines on the video, which opens the conversation.</summary>
+    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when the room's server has chat turned off, and the line that replaces the field.</summary>
+    public static string PartyChatOff => Get("PartyChatOff");
+
+    /// <summary>Line under the chat field in the lobby, shown once.</summary>
+    public static string PartyChatPrivacy => Get("PartyChatPrivacy");
+
+    /// <summary>Heading in the conversation when Hide chat is on.</summary>
+    public static string PartyChatHidden => Get("PartyChatHidden");
+
+    /// <summary>Line under it.</summary>
+    public static string PartyChatHiddenLine => Get("PartyChatHiddenLine");
+
+    /// <summary>Button that turns Hide chat off.</summary>
+    public static string PartyChatShow => Get("PartyChatShow");
+
+    /// <summary>Settings switch that hides chat in every watch party on this device.</summary>
+    public static string SettingsHideChat => Get("SettingsHideChat");
+
+    /// <summary>Line under that switch.</summary>
+    public static string SettingsHideChatLine => Get("SettingsHideChatLine");
+
+    /// <summary>Member menu item and accessibility action that hides a member's lines and reactions for this party.</summary>
+    public static string PartyMute(string name) => Fill(Get("PartyMute"), ("name", name));
+
+    /// <summary>Member menu item and accessibility action that shows a muted member's lines again.</summary>
+    public static string PartyUnmute(string name) => Fill(Get("PartyUnmute"), ("name", name));
+
+    /// <summary>Button in the conversation on the line that says a member is muted.</summary>
+    public static string PartyUnmuteShort => Get("PartyUnmuteShort");
+
+    /// <summary>State on a muted member's row.</summary>
+    public static string PartyMemberMuted => Get("PartyMemberMuted");
+
+    /// <summary>Line in the conversation where a muted member's lines were.</summary>
+    public static string PartyMutedLine(string name) => Fill(Get("PartyMutedLine"), ("name", name));
+
+    /// <summary>Line in the conversation when a message never came back from the server, five seconds after it was sent.</summary>
+    public static string PartyChatNotSent => Get("PartyChatNotSent");
+
+    /// <summary>Button after it, which sends the same text again.</summary>
+    public static string PartyChatRetry => Get("PartyChatRetry");
+
+    /// <summary>Button on the TV's controls that opens the four reactions.</summary>
+    public static string PartyReact => Get("PartyReact");
+
+    /// <summary>Label of the laugh reaction button.</summary>
+    public static string PartyReactLaugh => Get("PartyReactLaugh");
+
+    /// <summary>Label of the gasp reaction button.</summary>
+    public static string PartyReactGasp => Get("PartyReactGasp");
+
+    /// <summary>Label of the clap reaction button.</summary>
+    public static string PartyReactClap => Get("PartyReactClap");
+
+    /// <summary>Label of the cry reaction button.</summary>
+    public static string PartyReactCry => Get("PartyReactCry");
+
+    /// <summary>Line in the conversation and in the terminal: a member laughed.</summary>
+    public static string PartyReactedLaugh(string name) => Fill(Get("PartyReactedLaugh"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member gasped.</summary>
+    public static string PartyReactedGasp(string name) => Fill(Get("PartyReactedGasp"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member clapped.</summary>
+    public static string PartyReactedClap(string name) => Fill(Get("PartyReactedClap"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member cried.</summary>
+    public static string PartyReactedCry(string name) => Fill(Get("PartyReactedCry"), ("name", name));
+
+    /// <summary>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.</summary>
+    public static string PartyReactedAt(string line, string time) => Fill(Get("PartyReactedAt"), ("line", line), ("time", time));
+
+    /// <summary>Two members named together, for a reaction made by both: "Ren and Mika".</summary>
+    public static string PartyNamesTwo(string first, string second) => Fill(Get("PartyNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>Three members named together.</summary>
+    public static string PartyNamesThree(string first, string second, string third) => Fill(Get("PartyNamesThree"), ("first", first), ("second", second), ("third", third));
+
+    /// <summary>More than three members named together: two names and how many others.</summary>
+    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of this device's own member in the conversation and on its reactions.</summary>
+    public static string PartyChatYou => Get("PartyChatYou");
+
+    /// <summary>Line on a phone's remote screen under the chat field: which device the line is said as.</summary>
+    public static string PartySendsAs(string device) => Fill(Get("PartySendsAs"), ("device", device));
+
+    /// <summary>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</summary>
+    public static string PartyTickLabel(string time, string names) => Fill(Get("PartyTickLabel"), ("time", time), ("names", names));
+
+    /// <summary>Spoken by a screen reader when a chat line arrives.</summary>
+    public static string PartyChatAnnounce(string name, string message) => Fill(Get("PartyChatAnnounce"), ("name", name), ("message", message));
+
+    /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
+    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Label on the card for the episode that plays after this one.</summary>
     public static string PlayerUpNext => Get("PlayerUpNext");
 
@@ -4040,6 +4214,123 @@ public static partial class T
 
     /// <summary>Short word while the video buffers.</summary>
     public static string PlayerBuffering => Get("PlayerBuffering");
+
+    /// <summary>Detail line while a source is asked and more than one is in the viewer's order.</summary>
+    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line while the source asked is the one the show is pinned to.</summary>
+    public static string PlayerStartPinned => Get("PlayerStartPinned");
+
+    /// <summary>Detail line when a source has no match for the show.</summary>
+    public static string PlayerStartMissNoMatch(string name) => Fill(Get("PlayerStartMissNoMatch"), ("name", name));
+
+    /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
+    public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
+
+    /// <summary>Detail line when a source failed and the next is asked.</summary>
+    public static string PlayerStartMissFailed(string name) => Fill(Get("PlayerStartMissFailed"), ("name", name));
+
+    /// <summary>Detail line when a source took too long and the next is asked.</summary>
+    public static string PlayerStartMissTimedOut(string name) => Fill(Get("PlayerStartMissTimedOut"), ("name", name));
+
+    /// <summary>Detail line after the viewer skipped the source being asked.</summary>
+    public static string PlayerStartMissSkipped(string name) => Fill(Get("PlayerStartMissSkipped"), ("name", name));
+
+    /// <summary>Details row for sources passed over because they failed lately. The name goes before it.</summary>
+    public static string PlayerStartResting => Get("PlayerStartResting");
+
+    /// <summary>Detail line once the streams are found and the player opens one. The name is the source's.</summary>
+    public static string PlayerStartFrom(string name) => Fill(Get("PlayerStartFrom"), ("name", name));
+
+    /// <summary>Detail line when a stream showed no video and another opens.</summary>
+    public static string PlayerStartNoVideo => Get("PlayerStartNoVideo");
+
+    /// <summary>Detail line with the place of the stream being opened.</summary>
+    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line while a torrent has peers.</summary>
+    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</summary>
+    public static string PlayerStartSpeed(string speed) => Fill(Get("PlayerStartSpeed"), ("speed", speed));
+
+    /// <summary>Step line while the player fills its buffer and gives a number.</summary>
+    public static string PlayerStartBufferingPercent(string percent) => Fill(Get("PlayerStartBufferingPercent"), ("percent", percent));
+
+    /// <summary>Step line while the episode resumes where it was left.</summary>
+    public static string PlayerStartResuming(string clock) => Fill(Get("PlayerStartResuming"), ("clock", clock));
+
+    /// <summary>Button on the starting screen that plays the episode from its beginning.</summary>
+    public static string PlayerStartFromBeginning => Get("PlayerStartFromBeginning");
+
+    /// <summary>Button on the starting screen that opens the list of steps.</summary>
+    public static string PlayerStartDetails => Get("PlayerStartDetails");
+
+    /// <summary>Button that skips the source being asked. The name is the source's.</summary>
+    public static string PlayerStartSkipSource(string name) => Fill(Get("PlayerStartSkipSource"), ("name", name));
+
+    /// <summary>Button that opens the next stream of the same source.</summary>
+    public static string PlayerStartSkipStream => Get("PlayerStartSkipStream");
+
+    /// <summary>Step line when a start is slow: still waiting for the source. The name is the source's.</summary>
+    public static string PlayerStartStillWaiting(string name) => Fill(Get("PlayerStartStillWaiting"), ("name", name));
+
+    /// <summary>Step line while the device is offline and the episode will start when it is back.</summary>
+    public static string PlayerStartOffline => Get("PlayerStartOffline");
+
+    /// <summary>Detail line while offline. The episode is its label.</summary>
+    public static string PlayerStartOfflineDetail(string episode) => Fill(Get("PlayerStartOfflineDetail"), ("episode", episode));
+
+    /// <summary>Button on the failure screen that opens the fix for a title that matched the wrong show.</summary>
+    public static string PlayerStartFixMatch => Get("PlayerStartFixMatch");
+
+    /// <summary>Details row label for the translation of the episode.</summary>
+    public static string PlayerStartTranslation => Get("PlayerStartTranslation");
+
+    /// <summary>Details row once the title has been looked up.</summary>
+    public static string PlayerStartLookedUp => Get("PlayerStartLookedUp");
+
+    /// <summary>Seconds on the starting screen's detail line and Details rows.</summary>
+    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once, when a start has taken more than a few seconds.</summary>
+    public static string PlayerStartStillStarting => Get("PlayerStartStillStarting");
+
+    /// <summary>Spoken when a start begins. The episode is its label.</summary>
+    public static string PlayerStartAnnounce(string episode, string title) => Fill(Get("PlayerStartAnnounce"), ("episode", episode), ("title", title));
+
+    /// <summary>Spoken when a start fails: the title, then the reason.</summary>
+    public static string PlayerStartFailedAnnounce(string title, string reason) => Fill(Get("PlayerStartFailedAnnounce"), ("title", title), ("reason", reason));
+
+    /// <summary>Accessibility value of the starting screen: the step line, then the detail line.</summary>
+    public static string PlayerStartStatus(string step, string detail) => Fill(Get("PlayerStartStatus"), ("step", step), ("detail", detail));
+
+    /// <summary>Detail line on the starting screen after the viewer chose to play from the beginning.</summary>
+    public static string PlayerStartBeginning => Get("PlayerStartBeginning");
+
+    /// <summary>Details row while a source is being asked.</summary>
+    public static string PlayerStartRowAsking => Get("PlayerStartRowAsking");
+
+    /// <summary>Details row outcome when a source has no match for the show.</summary>
+    public static string PlayerStartRowNoMatch => Get("PlayerStartRowNoMatch");
+
+    /// <summary>Details row outcome when a source has the show and not the episode. The episode is its label.</summary>
+    public static string PlayerStartRowNoEpisode(string episode) => Fill(Get("PlayerStartRowNoEpisode"), ("episode", episode));
+
+    /// <summary>Details row outcome when a source failed.</summary>
+    public static string PlayerStartRowFailed => Get("PlayerStartRowFailed");
+
+    /// <summary>Details row outcome when a source took too long.</summary>
+    public static string PlayerStartRowTimedOut => Get("PlayerStartRowTimedOut");
+
+    /// <summary>Details row outcome when the viewer skipped a source.</summary>
+    public static string PlayerStartRowSkipped => Get("PlayerStartRowSkipped");
+
+    /// <summary>Second clause of a failure: the sources that were asked, joined as a list by the app.</summary>
+    public static string PlayerStartAsked(string names) => Fill(Get("PlayerStartAsked"), ("names", names));
+
+    /// <summary>Label of the switch in the Details list that plays the episode with its subtitles.</summary>
+    public static string PlayerStartSubtitled => Get("PlayerStartSubtitled");
 
     /// <summary>Title of the stall card. The seconds count up.</summary>
     public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -4142,6 +4433,9 @@ public static partial class T
     /// <summary>Line in the review with sharing on.</summary>
     public static string PlayerMarkShares => Get("PlayerMarkShares");
 
+    /// <summary>Review line when the stretch under review was found from the audio, not marked by hand.</summary>
+    public static string PlayerMarkFound => Get("PlayerMarkFound");
+
     /// <summary>Line in the review when the mark replaces AniSkip's times.</summary>
     public static string PlayerMarkReplaces(string start, string end) => Fill(Get("PlayerMarkReplaces"), ("start", start), ("end", end));
 
@@ -4191,6 +4485,28 @@ public static partial class T
     /// <summary>Button of that prompt that turns it off. Settings can turn it on again.</summary>
     public static string PlayerDontAskAgain => Get("PlayerDontAskAgain");
 
+    /// <summary>Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.</summary>
+    public static string PlayerFoundAskOpening => Get("PlayerFoundAskOpening");
+
+    /// <summary>The same prompt after a skip over an ending found from the audio.</summary>
+    public static string PlayerFoundAskEnding => Get("PlayerFoundAskEnding");
+
+    /// <summary>Line under that prompt, in a quieter colour. $episode is the episode's number.</summary>
+    public static string PlayerFoundAskShare(long episode) => Fill(Get("PlayerFoundAskShare"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.</summary>
+    public static string PlayerFoundYes => Get("PlayerFoundYes");
+
+    public static string PlayerFoundAdjust => Get("PlayerFoundAdjust");
+
+    /// <summary>What the prompt says after Yes. $episode is the episode's number.</summary>
+    public static string PlayerFoundSaved(long episode) => Fill(Get("PlayerFoundSaved"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What the prompt says after Don't ask again, with the line below it.</summary>
+    public static string PlayerFoundNever => Get("PlayerFoundNever");
+
+    public static string PlayerFoundNeverHow => Get("PlayerFoundNeverHow");
+
     /// <summary>Title of the sheet shown on the first Save.</summary>
     public static string PlayerShareTitle => Get("PlayerShareTitle");
 
@@ -4211,6 +4527,22 @@ public static partial class T
     public static string PlayerSkipYours => Get("PlayerSkipYours");
 
     public static string PlayerSkipFromAniskip => Get("PlayerSkipFromAniskip");
+
+    public static string PlayerSkipFound => Get("PlayerSkipFound");
+
+    /// <summary>Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.</summary>
+    public static string PlayerSkipPausedLowPower => Get("PlayerSkipPausedLowPower");
+
+    public static string PlayerSkipPausedBatterySaver => Get("PlayerSkipPausedBatterySaver");
+
+    public static string PlayerSkipPausedEnergySaver => Get("PlayerSkipPausedEnergySaver");
+
+    public static string PlayerSkipPausedPowerSaver => Get("PlayerSkipPausedPowerSaver");
+
+    public static string PlayerSkipPausedStorage => Get("PlayerSkipPausedStorage");
+
+    /// <summary>Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.</summary>
+    public static string PlayerSkipUnavailable => Get("PlayerSkipUnavailable");
 
     public static string PlayerSkipNone => Get("PlayerSkipNone");
 
@@ -4709,6 +5041,183 @@ public static partial class T
     /// <summary>End of a search result's line: one of the person's licensed services has it.</summary>
     public static string SearchLineService(string service) => Fill(Get("SearchLineService"), ("service", service));
 
+    /// <summary>The count line under a title in a list or on a card: how many episodes a finished show has.</summary>
+    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short, for a cell too narrow for the long form.</summary>
+    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that is airing and has a known total: episodes out so far, then the total.</summary>
+    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short.</summary>
+    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that is airing and has no known total: episodes out so far.</summary>
+    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short.</summary>
+    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
+    public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
+
+    /// <summary>The count line of a show that has not started and has no date.</summary>
+    public static string CountNotOut => Get("CountNotOut");
+
+    /// <summary>The count line of a show the viewer is part way through, in the library: the next episode and the total.</summary>
+    public static string CountNextOf(long episode, long total) => Fill(Get("CountNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The dub part of a count line when a source has a dub and does not say how far it goes.</summary>
+    public static string CountDub => Get("CountDub");
+
+    /// <summary>The dub part of a count line: the last episode the dub has.</summary>
+    public static string CountDubThrough(long through) => Fill(Get("CountDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a count line: the long form of a finished show.</summary>
+    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show that is airing, with a known total.</summary>
+    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
+    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
+    public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
+
+    /// <summary>What a screen reader says for a show the viewer is part way through.</summary>
+    public static string CountSpokenNextOf(long episode, long total) => Fill(Get("CountSpokenNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says after the count when the dub goes to an episode.</summary>
+    public static string CountSpokenDubThrough(long through) => Fill(Get("CountSpokenDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says after the count when a source has a dub and does not say how far it goes.</summary>
+    public static string CountSpokenDub => Get("CountSpokenDub");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJanShort => Get("DateMonthJanShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJanLong => Get("DateMonthJanLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthFebShort => Get("DateMonthFebShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthFebLong => Get("DateMonthFebLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthMarShort => Get("DateMonthMarShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthMarLong => Get("DateMonthMarLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthAprShort => Get("DateMonthAprShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthAprLong => Get("DateMonthAprLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthMayShort => Get("DateMonthMayShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthMayLong => Get("DateMonthMayLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJunShort => Get("DateMonthJunShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJunLong => Get("DateMonthJunLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJulShort => Get("DateMonthJulShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJulLong => Get("DateMonthJulLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthAugShort => Get("DateMonthAugShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthAugLong => Get("DateMonthAugLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthSepShort => Get("DateMonthSepShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthSepLong => Get("DateMonthSepLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthOctShort => Get("DateMonthOctShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthOctLong => Get("DateMonthOctLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthNovShort => Get("DateMonthNovShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthNovLong => Get("DateMonthNovLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthDecShort => Get("DateMonthDecShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthDecLong => Get("DateMonthDecLong");
+
+    /// <summary>Search's Trending heading and sort, for AniList's live trending.</summary>
+    public static string TrendingToday => Get("TrendingToday");
+
+    /// <summary>Search's Trending heading and sort, for the last seven days.</summary>
+    public static string TrendingWeek => Get("TrendingWeek");
+
+    /// <summary>Search's Trending heading and sort, for the last thirty days.</summary>
+    public static string TrendingMonth => Get("TrendingMonth");
+
+    /// <summary>One choice of the Trending period menu, where the heading already says Trending.</summary>
+    public static string TrendingChoiceToday => Get("TrendingChoiceToday");
+
+    /// <summary>One choice of the Trending period menu: the last seven days.</summary>
+    public static string TrendingChoiceWeek => Get("TrendingChoiceWeek");
+
+    /// <summary>One choice of the Trending period menu: the last thirty days.</summary>
+    public static string TrendingChoiceMonth => Get("TrendingChoiceMonth");
+
+    /// <summary>Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".</summary>
+    public static string TrendingFailed(string period) => Fill(Get("TrendingFailed"), ("period", period));
+
+    /// <summary>Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".</summary>
+    public static string TrendingUpdated(string age) => Fill(Get("TrendingUpdated"), ("age", age));
+
+    /// <summary>Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.</summary>
+    public static string SurpriseMe => Get("SurpriseMe");
+
+    /// <summary>The same as a menu bar item, in title case.</summary>
+    public static string SurpriseMeMenu => Get("SurpriseMeMenu");
+
+    /// <summary>Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.</summary>
+    public static string SurpriseAnother => Get("SurpriseAnother");
+
+    /// <summary>Hint of the Surprise me button on the library's Planning list.</summary>
+    public static string SurpriseHintPlanning => Get("SurpriseHintPlanning");
+
+    /// <summary>Hint of the Surprise me button in Search.</summary>
+    public static string SurpriseHintFilters => Get("SurpriseHintFilters");
+
+    /// <summary>Hint of the Another button.</summary>
+    public static string SurpriseAnotherHint => Get("SurpriseAnotherHint");
+
+    /// <summary>Notice when Search's filters match no title to pick from.</summary>
+    public static string SurpriseEmptyFilters => Get("SurpriseEmptyFilters");
+
+    /// <summary>Notice when the Planning list is empty.</summary>
+    public static string SurpriseEmptyPlanning => Get("SurpriseEmptyPlanning");
+
+    /// <summary>Notice when a pick from Search needs AniList and the device is offline.</summary>
+    public static string SurpriseOffline => Get("SurpriseOffline");
+
     /// <summary>Title of the dialog that adds a media server.</summary>
     public static string ServersAddTitle => Get("ServersAddTitle");
 
@@ -4940,6 +5449,9 @@ public static partial class T
     /// <summary>Group heading.</summary>
     public static string SettingsGroupPlayback => Get("SettingsGroupPlayback");
 
+    /// <summary>Group heading in Playback settings, above the switch that hides chat.</summary>
+    public static string SettingsGroupWatchParties => Get("SettingsGroupWatchParties");
+
     /// <summary>Group heading.</summary>
     public static string SettingsGroupWatching => Get("SettingsGroupWatching");
 
@@ -5021,7 +5533,13 @@ public static partial class T
     /// <summary>Settings, Playback: whether recaps are skipped without asking.</summary>
     public static string SettingsSkipRecap => Get("SettingsSkipRecap");
 
-    /// <summary>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.</summary>
+    /// <summary>Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.</summary>
+    public static string SettingsFindSkips => Get("SettingsFindSkips");
+
+    /// <summary>Line under it.</summary>
+    public static string SettingsFindSkipsDetail => Get("SettingsFindSkipsDetail");
+
+    /// <summary>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.</summary>
     public static string SettingsAskWasOpening => Get("SettingsAskWasOpening");
 
     /// <summary>Line under it.</summary>
@@ -5033,11 +5551,17 @@ public static partial class T
     /// <summary>Line under it.</summary>
     public static string SettingsShareSkipsDetail => Get("SettingsShareSkipsDetail");
 
-    /// <summary>Settings, Playback: removes every skip time you marked.</summary>
+    /// <summary>Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.</summary>
     public static string SettingsClearSkips => Get("SettingsClearSkips");
 
-    /// <summary>Question that asks before clearing every skip time you marked.</summary>
+    /// <summary>Question that asks before clearing them.</summary>
     public static string SettingsClearSkipsConfirm => Get("SettingsClearSkipsConfirm");
+
+    /// <summary>Android's Settings: the title of that row, with the line below.</summary>
+    public static string SettingsClearSkipsAndroid => Get("SettingsClearSkipsAndroid");
+
+    /// <summary>Line under it.</summary>
+    public static string SettingsClearSkipsAndroidDetail => Get("SettingsClearSkipsAndroidDetail");
 
     /// <summary>Row: skip filler.</summary>
     public static string SettingsSkipFiller => Get("SettingsSkipFiller");
@@ -6372,6 +6896,663 @@ public static partial class T
     /// <summary>Button that opens the system share sheet for the invite link.</summary>
     public static string StoresShare => Get("StoresShare");
 
+    /// <summary>Windows and Linux dialog line while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserLine(string service) => Fill(Get("CloudBrowserLine"), ("service", service));
+
+    /// <summary>Windows and Linux dialog title while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserTitle(string service) => Fill(Get("CloudBrowserTitle"), ("service", service));
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this computer”.</summary>
+    public static string DeviceKindComputer => Get("DeviceKindComputer");
+
+    /// <summary>Button on the Devices page that opens the box for a code another device shows.</summary>
+    public static string DevicesEnterCode => Get("DevicesEnterCode");
+
+    /// <summary>Button on the Devices page that shows the recovery key behind the computer’s own lock.</summary>
+    public static string DevicesShowKey => Get("DevicesShowKey");
+
+    /// <summary>Button in the alert that turns sync off on this computer.</summary>
+    public static string DevicesTurnOffAction => Get("DevicesTurnOffAction");
+
+    /// <summary>Label of the field for the other device’s address in the Enter a code dialog.</summary>
+    public static string PairAddressLabel => Get("PairAddressLabel");
+
+    /// <summary>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</summary>
+    public static string PairByAddress => Get("PairByAddress");
+
+    /// <summary>Placeholder of the pairing code field.</summary>
+    public static string PairCodePlaceholder => Get("PairCodePlaceholder");
+
+    /// <summary>Label of the field for a recovery key in the restore dialog.</summary>
+    public static string RkeyFieldLabel => Get("RkeyFieldLabel");
+
+    /// <summary>Label of the user name field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudUserLabel => Get("CloudUserLabel");
+
+    /// <summary>Label of the password field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudPasswordLabel => Get("CloudPasswordLabel");
+
+    /// <summary>Label of the WebDAV server address field.</summary>
+    public static string CloudWebdavAddressLabel => Get("CloudWebdavAddressLabel");
+
+    /// <summary>Line under the pairing code while a device is being paired.</summary>
+    public static string PairWorkingLine => Get("PairWorkingLine");
+
+    /// <summary>Name for the device whose pairing code did not match, when no name is known yet.</summary>
+    public static string PairOtherDevice => Get("PairOtherDevice");
+
+    /// <summary>Note under the Enter a code dialog's fields: the address can be left empty.</summary>
+    public static string PairAddressOptional => Get("PairAddressOptional");
+
+    /// <summary>Device page footer when the device has no Remote switch.</summary>
+    public static string DevicesSyncFoot => Get("DevicesSyncFoot");
+
+    /// <summary>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</summary>
+    public static string DevicesLineRemote(string line) => Fill(Get("DevicesLineRemote"), ("line", line));
+
+    /// <summary>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</summary>
+    public static string ProfilesEditAction => Get("ProfilesEditAction");
+
+    /// <summary>Label of the name field in the add and edit profile dialogs.</summary>
+    public static string ProfilesNameField => Get("ProfilesNameField");
+
+    /// <summary>Accessible name and tooltip of the menu button on a profile's row.</summary>
+    public static string ProfilesMoreFor(string name) => Fill(Get("ProfilesMoreFor"), ("name", name));
+
+    /// <summary>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</summary>
+    public static string SyncStoreErrOffline(string store, string device) => Fill(Get("SyncStoreErrOffline"), ("store", store), ("device", device));
+
+    /// <summary>Line on a store row when the store turned the invite down, for example because it was cancelled or used up.</summary>
+    public static string SyncStoreErrRefused(string store) => Fill(Get("SyncStoreErrRefused"), ("store", store));
+
+    /// <summary>Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.</summary>
+    public static string SyncStoreErrNotAllowed(string store, string device) => Fill(Get("SyncStoreErrNotAllowed"), ("store", store), ("device", device));
+
+    /// <summary>Settings row and page title, every platform.</summary>
+    public static string DevicesTitle => Get("DevicesTitle");
+
+    /// <summary>Devices row value while sync is off.</summary>
+    public static string DevicesRowOff => Get("DevicesRowOff");
+
+    /// <summary>Devices row value; “Synced 2 min ago”, “Synced just now”.</summary>
+    public static string DevicesRowSynced(string ago) => Fill(Get("DevicesRowSynced"), ("ago", ago));
+
+    /// <summary>Devices row value with the error glyph.</summary>
+    public static string DevicesRowError => Get("DevicesRowError");
+
+    /// <summary>Group heading over the name.</summary>
+    public static string DevicesThisDevice => Get("DevicesThisDevice");
+
+    /// <summary>Row for this device’s name.</summary>
+    public static string DevicesName => Get("DevicesName");
+
+    /// <summary>Group heading while off.</summary>
+    public static string SyncGroup => Get("SyncGroup");
+
+    /// <summary>Off state.</summary>
+    public static string SyncOffTitle => Get("SyncOffTitle");
+
+    /// <summary>Off state.</summary>
+    public static string SyncOffLine => Get("SyncOffLine");
+
+    /// <summary>Button; the Mac adds an ellipsis.</summary>
+    public static string SyncTurnOn => Get("SyncTurnOn");
+
+    /// <summary>Road sheet title.</summary>
+    public static string SyncRoadTitle => Get("SyncRoadTitle");
+
+    /// <summary>Road sheet row.</summary>
+    public static string SyncRoadNearby => Get("SyncRoadNearby");
+
+    /// <summary>Road sheet row line.</summary>
+    public static string SyncRoadNearbyLine => Get("SyncRoadNearbyLine");
+
+    /// <summary>Road sheet row.</summary>
+    public static string SyncRoadCloud => Get("SyncRoadCloud");
+
+    /// <summary>Road sheet row line. Names no service, since a build may hide some (decision 14).</summary>
+    public static string SyncRoadCloudLine => Get("SyncRoadCloudLine");
+
+    /// <summary>Road sheet footer.</summary>
+    public static string SyncRoadLater => Get("SyncRoadLater");
+
+    /// <summary>Group heading.</summary>
+    public static string DevicesYours => Get("DevicesYours");
+
+    /// <summary>Empty Your devices.</summary>
+    public static string DevicesOnlyThis => Get("DevicesOnlyThis");
+
+    /// <summary>Empty Your devices.</summary>
+    public static string DevicesOnlyThisLine => Get("DevicesOnlyThisLine");
+
+    /// <summary>Row and sheet title.</summary>
+    public static string DevicesAdd => Get("DevicesAdd");
+
+    /// <summary>Device row line past 30 days.</summary>
+    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A device paired only for Play on TV.</summary>
+    public static string DevicesRemoteOnly => Get("DevicesRemoteOnly");
+
+    /// <summary>Button on a remote-only TV row.</summary>
+    public static string DevicesAlsoSync(string device) => Fill(Get("DevicesAlsoSync"), ("device", device));
+
+    /// <summary>Footer while sync is off.</summary>
+    public static string DevicesPairedTvsFoot => Get("DevicesPairedTvsFoot");
+
+    /// <summary>Switch on a device.</summary>
+    public static string DevicesSyncSwitch => Get("DevicesSyncSwitch");
+
+    /// <summary>Switch on a TV.</summary>
+    public static string DevicesRemoteSwitch => Get("DevicesRemoteSwitch");
+
+    /// <summary>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</summary>
+    public static string DevicesSwitchesFoot(string kind, string device) => Fill(Get("DevicesSwitchesFoot"), ("kind", kind), ("device", device));
+
+    /// <summary>Device page, destructive.</summary>
+    public static string DevicesRemove => Get("DevicesRemove");
+
+    /// <summary>Alert title.</summary>
+    public static string DevicesRemoveAlert(string device) => Fill(Get("DevicesRemoveAlert"), ("device", device));
+
+    /// <summary>Alert message.</summary>
+    public static string DevicesRemoveAlertLine(string device) => Fill(Get("DevicesRemoveAlertLine"), ("device", device));
+
+    /// <summary>Last row; “this phone”, “this Mac”.</summary>
+    public static string SyncTurnOff(string kind) => Fill(Get("SyncTurnOff"), ("kind", kind));
+
+    /// <summary>Alert title.</summary>
+    public static string SyncTurnOffAlert(string device) => Fill(Get("SyncTurnOffAlert"), ("device", device));
+
+    /// <summary>Alert message.</summary>
+    public static string SyncTurnOffAlertLine(string kind) => Fill(Get("SyncTurnOffAlertLine"), ("kind", kind));
+
+    /// <summary>Group heading.</summary>
+    public static string CloudGroup => Get("CloudGroup");
+
+    /// <summary>Group footer.</summary>
+    public static string CloudFoot => Get("CloudFoot");
+
+    /// <summary>Row when only the nearby road is set.</summary>
+    public static string CloudAdd => Get("CloudAdd");
+
+    /// <summary>Picker title.</summary>
+    public static string CloudPickTitle => Get("CloudPickTitle");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudGoogleLine => Get("CloudGoogleLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudNextcloudLine => Get("CloudNextcloudLine");
+
+    /// <summary>Picker row line, Apple and Windows.</summary>
+    public static string CloudIcloudLine => Get("CloudIcloudLine");
+
+    /// <summary>Picker group heading.</summary>
+    public static string CloudOther => Get("CloudOther");
+
+    /// <summary>Picker row.</summary>
+    public static string CloudWebdav => Get("CloudWebdav");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudWebdavLine => Get("CloudWebdavLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudFolderLine => Get("CloudFolderLine");
+
+    /// <summary>Picker footer.</summary>
+    public static string CloudPickFoot => Get("CloudPickFoot");
+
+    /// <summary>Row line while the first write runs.</summary>
+    public static string CloudSettingUp => Get("CloudSettingUp");
+
+    /// <summary>Field label.</summary>
+    public static string CloudNextcloudAddress => Get("CloudNextcloudAddress");
+
+    /// <summary>Field note.</summary>
+    public static string CloudNextcloudAddressNote => Get("CloudNextcloudAddressNote");
+
+    /// <summary>Login flow wait.</summary>
+    public static string CloudNextcloudWaitTitle(string host) => Fill(Get("CloudNextcloudWaitTitle"), ("host", host));
+
+    /// <summary>Login flow wait.</summary>
+    public static string CloudNextcloudWaitLine => Get("CloudNextcloudWaitLine");
+
+    /// <summary>Wait row.</summary>
+    public static string CloudWaiting(string service) => Fill(Get("CloudWaiting"), ("service", service));
+
+    /// <summary>Button.</summary>
+    public static string CloudOpenAgain => Get("CloudOpenAgain");
+
+    /// <summary>Text button.</summary>
+    public static string CloudAppPassword => Get("CloudAppPassword");
+
+    /// <summary>Button.</summary>
+    public static string CloudConnect => Get("CloudConnect");
+
+    /// <summary>Error.</summary>
+    public static string CloudErrOffline(string service) => Fill(Get("CloudErrOffline"), ("service", service));
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrNoServer(string host) => Fill(Get("CloudErrNoServer"), ("host", host));
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrAppPassword => Get("CloudErrAppPassword");
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrWebdav => Get("CloudErrWebdav");
+
+    /// <summary>Error, with Open the page again.</summary>
+    public static string CloudErrTimeout => Get("CloudErrTimeout");
+
+    /// <summary>Error.</summary>
+    public static string CloudErrOtherGroup => Get("CloudErrOtherGroup");
+
+    /// <summary>Status error, with Sign in again.</summary>
+    public static string CloudErrSignedOut(string service, string kind) => Fill(Get("CloudErrSignedOut"), ("service", service), ("kind", kind));
+
+    /// <summary>Status error.</summary>
+    public static string CloudErrFull(string service) => Fill(Get("CloudErrFull"), ("service", service));
+
+    /// <summary>Status error, with Choose folder.</summary>
+    public static string CloudErrFolderGone => Get("CloudErrFolderGone");
+
+    /// <summary>Status error title.</summary>
+    public static string CloudErrTitle(string service) => Fill(Get("CloudErrTitle"), ("service", service));
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudDropboxLine => Get("CloudDropboxLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudOnedriveLine => Get("CloudOnedriveLine");
+
+    /// <summary>Cloud group button.</summary>
+    public static string CloudSyncNow => Get("CloudSyncNow");
+
+    /// <summary>Cloud group button; at once, no question, except on the TV.</summary>
+    public static string CloudSignOut => Get("CloudSignOut");
+
+    /// <summary>Cloud group button after signing out.</summary>
+    public static string CloudSignIn => Get("CloudSignIn");
+
+    /// <summary>Cloud row after Sign out; hollow haze dot.</summary>
+    public static string CloudSignedOutLine(string kind) => Fill(Get("CloudSignedOutLine"), ("kind", kind));
+
+    /// <summary>Picker row line after `SignInDenied`.</summary>
+    public static string CloudErrDenied(string service) => Fill(Get("CloudErrDenied"), ("service", service));
+
+    /// <summary>TV picker footer (decision 17).</summary>
+    public static string TvCloudPickFoot => Get("TvCloudPickFoot");
+
+    /// <summary>TV picker row line for Dropbox.</summary>
+    public static string TvCloudDropboxLine => Get("TvCloudDropboxLine");
+
+    /// <summary>TV, Dropbox.</summary>
+    public static string TvCloudNeedsPhoneTitle => Get("TvCloudNeedsPhoneTitle");
+
+    /// <summary>TV, Dropbox, a paired phone has it.</summary>
+    public static string TvCloudNeedsPhoneHas(string device) => Fill(Get("TvCloudNeedsPhoneHas"), ("device", device));
+
+    /// <summary>TV amber button; also for Nextcloud and WebDAV.</summary>
+    public static string TvUsePhoneSignin(string device) => Fill(Get("TvUsePhoneSignin"), ("device", device));
+
+    /// <summary>TV, Dropbox, no phone has it.</summary>
+    public static string TvCloudNeedsPhoneNone => Get("TvCloudNeedsPhoneNone");
+
+    /// <summary>TV code screen after the poll succeeds.</summary>
+    public static string TvCloudFinishing => Get("TvCloudFinishing");
+
+    /// <summary>TV cloud row.</summary>
+    public static string TvCloudRevokedLine(string service) => Fill(Get("TvCloudRevokedLine"), ("service", service));
+
+    /// <summary>TV cloud row.</summary>
+    public static string TvCloudSignedOutLine => Get("TvCloudSignedOutLine");
+
+    /// <summary>TV ConfirmDialog.</summary>
+    public static string TvCloudSignOutTitle(string service) => Fill(Get("TvCloudSignOutTitle"), ("service", service));
+
+    /// <summary>TV ConfirmDialog, with Cancel focused and Sign out.</summary>
+    public static string TvCloudSignOutLine(string service) => Fill(Get("TvCloudSignOutLine"), ("service", service));
+
+    /// <summary>Status line while offline.</summary>
+    public static string CloudOffline(string kind) => Fill(Get("CloudOffline"), ("kind", kind));
+
+    /// <summary>TV device flow.</summary>
+    public static string TvGoogleTitle => Get("TvGoogleTitle");
+
+    /// <summary>TV device flow.</summary>
+    public static string TvQrOpenPage => Get("TvQrOpenPage");
+
+    /// <summary>TV Nextcloud.</summary>
+    public static string TvNextcloudLine => Get("TvNextcloudLine");
+
+    /// <summary>Sheet title.</summary>
+    public static string RkeyTitle => Get("RkeyTitle");
+
+    /// <summary>Sheet line.</summary>
+    public static string RkeyLine => Get("RkeyLine");
+
+    /// <summary>Button.</summary>
+    public static string RkeyCopy => Get("RkeyCopy");
+
+    /// <summary>Text button.</summary>
+    public static string RkeyQr => Get("RkeyQr");
+
+    /// <summary>Sheet footnote.</summary>
+    public static string RkeyAgain(string kind) => Fill(Get("RkeyAgain"), ("kind", kind));
+
+    /// <summary>Devices row.</summary>
+    public static string RkeyRow => Get("RkeyRow");
+
+    /// <summary>Devices row value.</summary>
+    public static string RkeyMade(string date) => Fill(Get("RkeyMade"), ("date", date));
+
+    /// <summary>Row.</summary>
+    public static string RkeyNew => Get("RkeyNew");
+
+    /// <summary>Footer.</summary>
+    public static string RkeyNewFoot => Get("RkeyNewFoot");
+
+    /// <summary>Restore.</summary>
+    public static string RkeyEnterTitle => Get("RkeyEnterTitle");
+
+    /// <summary>Restore.</summary>
+    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Field note.</summary>
+    public static string RkeyEnterNote => Get("RkeyEnterNote");
+
+    /// <summary>Inline error.</summary>
+    public static string RkeyWrong => Get("RkeyWrong");
+
+    /// <summary>Button.</summary>
+    public static string RkeyRestore => Get("RkeyRestore");
+
+    /// <summary>Add a device.</summary>
+    public static string PairEnterLine => Get("PairEnterLine");
+
+    /// <summary>Button, phones.</summary>
+    public static string PairScan => Get("PairScan");
+
+    /// <summary>Note.</summary>
+    public static string PairSameWifi => Get("PairSameWifi");
+
+    /// <summary>Button.</summary>
+    public static string PairButton => Get("PairButton");
+
+    /// <summary>Text button.</summary>
+    public static string PairShowInstead => Get("PairShowInstead");
+
+    /// <summary>Code screen.</summary>
+    public static string PairShowTitle => Get("PairShowTitle");
+
+    /// <summary>Code screen.</summary>
+    public static string PairShowScan => Get("PairShowScan");
+
+    /// <summary>Code screen.</summary>
+    public static string PairGoodFor(string left) => Fill(Get("PairGoodFor"), ("left", left));
+
+    /// <summary>TV code screen.</summary>
+    public static string PairTvLine => Get("PairTvLine");
+
+    /// <summary>Success.</summary>
+    public static string PairOk(string device) => Fill(Get("PairOk"), ("device", device));
+
+    /// <summary>Success.</summary>
+    public static string PairOkLine => Get("PairOkLine");
+
+    /// <summary>Success switch.</summary>
+    public static string PairCopySignins(string device) => Fill(Get("PairCopySignins"), ("device", device));
+
+    /// <summary>Success switch line.</summary>
+    public static string PairCopySigninsLine(string trackers) => Fill(Get("PairCopySigninsLine"), ("trackers", trackers));
+
+    /// <summary>Error.</summary>
+    public static string PairErrCode(string device) => Fill(Get("PairErrCode"), ("device", device));
+
+    /// <summary>Error.</summary>
+    public static string PairErrNotFound => Get("PairErrNotFound");
+
+    /// <summary>Error on the showing side.</summary>
+    public static string PairErrExpired => Get("PairErrExpired");
+
+    /// <summary>Profile question.</summary>
+    public static string PairWhichProfile(string device) => Fill(Get("PairWhichProfile"), ("device", device));
+
+    /// <summary>Profile question.</summary>
+    public static string PairWhichProfileLine(string kind, string device) => Fill(Get("PairWhichProfileLine"), ("kind", kind), ("device", device));
+
+    /// <summary>Footer.</summary>
+    public static string PairAlsoSyncFoot(string device) => Fill(Get("PairAlsoSyncFoot"), ("device", device));
+
+    /// <summary>Continue, for a day.</summary>
+    public static string ContinueFromDevice(long n, string time, string device) => Fill(Get("ContinueFromDevice"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("time", time), ("device", device));
+
+    /// <summary>Player, 6 s, with Start over.</summary>
+    public static string PlayerResumedFrom(string time, string device) => Fill(Get("PlayerResumedFrom"), ("time", time), ("device", device));
+
+    /// <summary>Row line, Mac toolbar status.</summary>
+    public static string SyncSyncing => Get("SyncSyncing");
+
+    /// <summary>Mac jobs popover.</summary>
+    public static string SyncSyncingWith(string device) => Fill(Get("SyncSyncingWith"), ("device", device));
+
+    /// <summary>Device page group.</summary>
+    public static string SyncNotes => Get("SyncNotes");
+
+    /// <summary>Sync note.</summary>
+    public static string SyncNoteKeptWatched(long n, string title, string other, string device) => Fill(Get("SyncNoteKeptWatched"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title), ("other", other), ("device", device));
+
+    /// <summary>Sync note action.</summary>
+    public static string SyncNoteUndo => Get("SyncNoteUndo");
+
+    /// <summary>Footer.</summary>
+    public static string SyncNotesFoot => Get("SyncNotesFoot");
+
+    /// <summary>Settings row and page.</summary>
+    public static string ProfilesTitle => Get("ProfilesTitle");
+
+    /// <summary>Profiles row value with one profile.</summary>
+    public static string ProfilesOnlyYou => Get("ProfilesOnlyYou");
+
+    /// <summary>Profiles page with one.</summary>
+    public static string ProfilesOneFoot => Get("ProfilesOneFoot");
+
+    /// <summary>Row, sheet title, picker tile.</summary>
+    public static string ProfilesAdd => Get("ProfilesAdd");
+
+    /// <summary>Sheet line.</summary>
+    public static string ProfilesAddLine => Get("ProfilesAddLine");
+
+    /// <summary>Field label.</summary>
+    public static string ProfilesNew => Get("ProfilesNew");
+
+    /// <summary>Field label.</summary>
+    public static string ProfilesYours => Get("ProfilesYours");
+
+    /// <summary>Field note when signed in.</summary>
+    public static string ProfilesYoursNote => Get("ProfilesYoursNote");
+
+    /// <summary>Switch.</summary>
+    public static string ProfilesKids => Get("ProfilesKids");
+
+    /// <summary>Switch footer.</summary>
+    public static string ProfilesKidsLine => Get("ProfilesKidsLine");
+
+    /// <summary>Settings foot in a kids profile.</summary>
+    public static string ProfilesKidsHidden => Get("ProfilesKidsHidden");
+
+    /// <summary>Line under a kids profile.</summary>
+    public static string ProfilesKidsTag => Get("ProfilesKidsTag");
+
+    /// <summary>Button.</summary>
+    public static string ProfilesAddButton => Get("ProfilesAddButton");
+
+    /// <summary>Profiles page footer.</summary>
+    public static string ProfilesSharedFoot => Get("ProfilesSharedFoot");
+
+    /// <summary>Profile page row.</summary>
+    public static string ProfilesSyncsWith => Get("ProfilesSyncsWith");
+
+    /// <summary>Profile page, destructive.</summary>
+    public static string ProfilesDelete => Get("ProfilesDelete");
+
+    /// <summary>Alert title.</summary>
+    public static string ProfilesDeleteAlert(string name) => Fill(Get("ProfilesDeleteAlert"), ("name", name));
+
+    /// <summary>Alert message.</summary>
+    public static string ProfilesDeleteAlertLine(string name) => Fill(Get("ProfilesDeleteAlertLine"), ("name", name));
+
+    /// <summary>TV, and iPad when asked.</summary>
+    public static string ProfilesPicker => Get("ProfilesPicker");
+
+    /// <summary>iPad switch.</summary>
+    public static string ProfilesAskAtLaunch => Get("ProfilesAskAtLaunch");
+
+    /// <summary>iPad footer.</summary>
+    public static string ProfilesAskFoot => Get("ProfilesAskFoot");
+
+    /// <summary>TV Settings.</summary>
+    public static string ProfilesSwitch => Get("ProfilesSwitch");
+
+    /// <summary>Account sheet and menus.</summary>
+    public static string ProfilesManage => Get("ProfilesManage");
+
+    /// <summary>Welcome, text button; TV says “Set up from your phone”.</summary>
+    public static string FirstSetupOther => Get("FirstSetupOther");
+
+    /// <summary>Code screen from first launch.</summary>
+    public static string FirstSetupLine => Get("FirstSetupLine");
+
+    /// <summary>Text button.</summary>
+    public static string FirstRestore => Get("FirstRestore");
+
+    /// <summary>Success from first launch.</summary>
+    public static string FirstOkLine => Get("FirstOkLine");
+
+    /// <summary>Success switch.</summary>
+    public static string FirstJoinStore(string store) => Fill(Get("FirstJoinStore"), ("store", store));
+
+    /// <summary>Success switch line.</summary>
+    public static string FirstJoinStoreLine(string device, string kind) => Fill(Get("FirstJoinStoreLine"), ("device", device), ("kind", kind));
+
+    /// <summary>Picker row on a phone or computer.</summary>
+    public static string CloudFolder(string kind) => Fill(Get("CloudFolder"), ("kind", kind));
+
+    /// <summary>Field note under the app password, on Android.</summary>
+    public static string CloudAppPasswordNote(string kind) => Fill(Get("CloudAppPasswordNote"), ("kind", kind));
+
+    /// <summary>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</summary>
+    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under a TV paired for Play on TV today.</summary>
+    public static string DevicesPairedToday => Get("DevicesPairedToday");
+
+    /// <summary>Line under Add a device on the TV's Devices page.</summary>
+    public static string TvDevicesAddLine => Get("TvDevicesAddLine");
+
+    /// <summary>TV Profiles page with one profile.</summary>
+    public static string TvProfilesOnlyYou => Get("TvProfilesOnlyYou");
+
+    /// <summary>TV Settings, Profiles: the row that opens the picker.</summary>
+    public static string TvProfilesOpensPicker => Get("TvProfilesOpensPicker");
+
+    /// <summary>TV Profiles page heading over the profiles.</summary>
+    public static string TvProfilesOnThisTv => Get("TvProfilesOnThisTv");
+
+    /// <summary>Android recovery key sheet, third button.</summary>
+    public static string RkeySaveFile => Get("RkeySaveFile");
+
+    /// <summary>Android recovery key sheet, button that shows the key as a code.</summary>
+    public static string RkeyQrShort => Get("RkeyQrShort");
+
+    /// <summary>Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.</summary>
+    public static string PairShowCode => Get("PairShowCode");
+
+    /// <summary>Cloud row button when the service signed Kaeri out.</summary>
+    public static string CloudSignInAgain => Get("CloudSignInAgain");
+
+    /// <summary>Cloud row button when the folder can't be opened.</summary>
+    public static string CloudChooseFolder => Get("CloudChooseFolder");
+
+    /// <summary>Spoken label of a profile's avatar on Home.</summary>
+    public static string ProfilesAvatarDesc(string name) => Fill(Get("ProfilesAvatarDesc"), ("name", name));
+
+    /// <summary>Heading over the pairing code the other device shows, over the field.</summary>
+    public static string PairCodeField => Get("PairCodeField");
+
+    public static string DeviceKindPhone => Get("DeviceKindPhone");
+
+    public static string DeviceKindTablet => Get("DeviceKindTablet");
+
+    public static string DeviceKindTv => Get("DeviceKindTv");
+
+    /// <summary>TV welcome, text button.</summary>
+    public static string FirstSetupPhone => Get("FirstSetupPhone");
+
+    /// <summary>Error naming a device that is not known by name.</summary>
+    public static string DevicesOtherDevice => Get("DevicesOtherDevice");
+
+    /// <summary>Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.</summary>
+    public static string CloudSheetLine(string service) => Fill(Get("CloudSheetLine"), ("service", service));
+
+    /// <summary>Sheet or dialog title after the browser came back with access allowed.</summary>
+    public static string CloudConnecting(string service) => Fill(Get("CloudConnecting"), ("service", service));
+
+    /// <summary>Status line beside the indicator while connecting.</summary>
+    public static string CloudConnectingLine => Get("CloudConnectingLine");
+
+    /// <summary>Status line under Setting up the folder, whose title is cloud-setting-up.</summary>
+    public static string CloudSettingUpLine(string service) => Fill(Get("CloudSettingUpLine"), ("service", service));
+
+    /// <summary>Error title in the sign-in sheet or dialog.</summary>
+    public static string CloudErrSigninTitle(string service) => Fill(Get("CloudErrSigninTitle"), ("service", service));
+
+    /// <summary>Error title when the sign-in worked and the folder could not be set up.</summary>
+    public static string CloudErrSetupTitle => Get("CloudErrSetupTitle");
+
+    /// <summary>Error line beside Try again, after access was refused on the service's page.</summary>
+    public static string CloudErrDeniedShort(string service) => Fill(Get("CloudErrDeniedShort"), ("service", service));
+
+    /// <summary>Error line for any other failure during the sign-in; the details go to Messages.</summary>
+    public static string CloudErrSigninOther(string service) => Fill(Get("CloudErrSigninOther"), ("service", service));
+
+    /// <summary>Error line for any other failure while making the folder after the sign-in; the details go to Messages.</summary>
+    public static string CloudErrSetupOther(string service) => Fill(Get("CloudErrSetupOther"), ("service", service));
+
+    /// <summary>More menu item, and a row on phones; the Mac adds an ellipsis.</summary>
+    public static string CloudUseAnother => Get("CloudUseAnother");
+
+    /// <summary>More menu item in red, and a button in the TV's dialog.</summary>
+    public static string CloudRemove => Get("CloudRemove");
+
+    /// <summary>Confirmation title before removing the cloud folder.</summary>
+    public static string CloudRemoveTitle(string service) => Fill(Get("CloudRemoveTitle"), ("service", service));
+
+    /// <summary>Confirmation line before removing the cloud folder.</summary>
+    public static string CloudRemoveLine(string kind, string service) => Fill(Get("CloudRemoveLine"), ("kind", kind), ("service", service));
+
+    /// <summary>Destructive button in the remove confirmation.</summary>
+    public static string CloudRemoveAction => Get("CloudRemoveAction");
+
+    /// <summary>Accessibility label of the More button on the cloud folder row.</summary>
+    public static string CloudMore(string service) => Fill(Get("CloudMore"), ("service", service));
+
+    /// <summary>Picker row line for the service in use, under Use another service.</summary>
+    public static string CloudInUse => Get("CloudInUse");
+
+    /// <summary>Picker line under Use another service.</summary>
+    public static string CloudSwitchFoot(string service) => Fill(Get("CloudSwitchFoot"), ("service", service));
+
+    /// <summary>Footer under the two ways in while sync is off.</summary>
+    public static string SyncStartFoot => Get("SyncStartFoot");
+
+    /// <summary>Aside on the Devices page on the Mac and iPad.</summary>
+    public static string DevicesAside(string kind) => Fill(Get("DevicesAside"), ("kind", kind));
+
+    /// <summary>TV Devices footer while sync is off, after devices-sync-foot.</summary>
+    public static string TvSyncStartFoot => Get("TvSyncStartFoot");
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -6482,6 +7663,66 @@ public static partial class T
 
     /// <summary>Accessibility label of an episode's still while spoiler protection hides it.</summary>
     public static string EpisodeSpoilerHidden => Get("EpisodeSpoilerHidden");
+
+    /// <summary>Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.</summary>
+    public static string EpisodeSynopsisHidden => Get("EpisodeSynopsisHidden");
+
+    /// <summary>Menu item, button and screen reader action that reveals one protected episode's still and synopsis.</summary>
+    public static string EpisodeSynopsisShow => Get("EpisodeSynopsisShow");
+
+    /// <summary>Screen reader hint of that action.</summary>
+    public static string EpisodeSynopsisShowHint => Get("EpisodeSynopsisShowHint");
+
+    /// <summary>Facts line of an episode with a length and an air date. The date is already formatted.</summary>
+    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+
+    /// <summary>Facts line of an episode with a length only.</summary>
+    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Facts line of an episode that is part-watched.</summary>
+    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</summary>
+    public static string EpisodeProtectionLine(long episode) => Fill(Get("EpisodeProtectionLine"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same line on phones.</summary>
+    public static string EpisodeProtectionLineShort(long episode) => Fill(Get("EpisodeProtectionLineShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Label of an episode range of a long series, in the range menu.</summary>
+    public static string EpisodeRange(long from, long to) => Fill(Get("EpisodeRange"), ("from", from.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("to", to.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Label of the control that picks an episode range.</summary>
+    public static string EpisodeRangeLabel => Get("EpisodeRangeLabel");
+
+    /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
+    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>An episode's number in a facts line on phones and in narrow desktop windows.</summary>
+    public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Part of an episode's facts line: when it aired. The date is already formatted.</summary>
+    public static string EpisodeAired(string date) => Fill(Get("EpisodeAired"), ("date", date));
+
+    /// <summary>Two parts of an episode's facts line, set one after the other.</summary>
+    public static string EpisodeFactsJoin(string first, string second) => Fill(Get("EpisodeFactsJoin"), ("first", first), ("second", second));
+
+    /// <summary>Button in the line where spoiler protection starts: shows what comes after.</summary>
+    public static string EpisodeProtectionShow => Get("EpisodeProtectionShow");
+
+    /// <summary>Button in that line once the rows after it are shown: hides them again.</summary>
+    public static string EpisodeProtectionHide => Get("EpisodeProtectionHide");
+
+    /// <summary>The line where spoiler protection starts, once the rows after it are shown.</summary>
+    public static string EpisodeProtectionShown(long episode) => Fill(Get("EpisodeProtectionShown"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same line on phones.</summary>
+    public static string EpisodeProtectionShownShort(long episode) => Fill(Get("EpisodeProtectionShownShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>An episode range in the range menu: the first and the last episode.</summary>
+    public static string EpisodeRangeShort(string from, string to) => Fill(Get("EpisodeRangeShort"), ("from", from), ("to", to));
+
+    /// <summary>An item of the range menu: the range, then Watched or Not out yet.</summary>
+    public static string EpisodeRangeItem(string range, string state) => Fill(Get("EpisodeRangeItem"), ("range", range), ("state", state));
 
     /// <summary>Accessibility label of the button that opens an episode's menu.</summary>
     public static string EpisodeOptions => Get("EpisodeOptions");
@@ -6599,6 +7840,27 @@ public static partial class T
 
     /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
     public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
+    public static string EpisodeGoTo => Get("EpisodeGoTo");
+
+    /// <summary>Title of the Go to episode field.</summary>
+    public static string EpisodeGoToTitle => Get("EpisodeGoToTitle");
+
+    /// <summary>Button of the Go to episode field that goes to the number typed.</summary>
+    public static string EpisodeGoToGo => Get("EpisodeGoToGo");
+
+    /// <summary>Placeholder of the Go to episode field: the first and last episode of the show.</summary>
+    public static string EpisodeGoToHint(long first, long last) => Fill(Get("EpisodeGoToHint"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Accessibility label of the Go to episode field.</summary>
+    public static string EpisodeGoToLabel(long first, long last) => Fill(Get("EpisodeGoToLabel"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Shown when the number typed is not an episode of the show.</summary>
+    public static string EpisodeGoToNone(long number, long last) => Fill(Get("EpisodeGoToNone"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Shown when the number typed is an episode with no date that has not come out.</summary>
+    public static string EpisodeGoToNotOut(long number, long latest) => Fill(Get("EpisodeGoToNotOut"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("latest", latest.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the settings group and the screen.</summary>
     public static string TorrentsTitle => Get("TorrentsTitle");
@@ -7197,6 +8459,9 @@ public static partial class T
     /// <summary>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</summary>
     public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Line under the paired TVs.</summary>
+    public static string TvForgetNote => Get("TvForgetNote");
+
     /// <summary>Heading of the update row in settings and about.</summary>
     public static string UpdatesTitle => Get("UpdatesTitle");
 
@@ -7479,6 +8744,7 @@ public static partial class T
         ["LicensedMarked"] = "Episode {episode} marked as watched.",
         ["NoticeReason"] = "{reason}",
         ["CauseNoSources"] = "No sources are set up. Add one on the Sources screen.",
+        ["CauseNoConnection"] = "No connection. Try again when you're back online.",
         ["NoticeNotAired"] = "Episode {episode} airs {when}.",
         ["NoticeNotAiredYet"] = "Episode {episode} hasn't aired yet. Episode {next} airs {when}.",
         ["CauseAirsToday"] = "today at {time}",
@@ -7501,6 +8767,13 @@ public static partial class T
         ["CauseAlreadyInDownloads_other"] = "{count} episodes are already in downloads.",
         ["StatusLookingUpTitle"] = "Looking up the title…",
         ["StatusLoadingSources"] = "Loading sources…",
+        ["StartLookingUpTitle"] = "Looking up the title",
+        ["StartGettingSourcesReady"] = "Getting your sources ready",
+        ["StartAskingSource"] = "Asking {name}",
+        ["StartOpeningStream"] = "Opening the stream",
+        ["StartTryingAnotherStream"] = "Trying another stream",
+        ["StartFindingPeers"] = "Finding peers",
+        ["StartBuffering"] = "Buffering",
         ["StatusSearchingSources"] = "Searching sources for episode {episode}…",
         ["NoticePlayerFailedToStart"] = "Couldn't start mpv. Check that it runs on its own. ({reason})",
         ["NoticeStreamNoVideo"] = "No video from that stream. Trying {next} of {total}.",
@@ -7655,6 +8928,7 @@ public static partial class T
         ["NoticePartyNotBuilt"] = "Watch parties aren't built into this app.",
         ["SourcesDemoRemoved"] = "Demo removed",
         ["StoresReadyDemoStays"] = "{store} is ready. The demo stays last in Your sources.",
+        ["CloudLoopbackDone"] = "You can close this tab and go back to Kaeri.",
         ["NoticeSignedIn"] = "Signed in to {tracker}.",
         ["NoticeSignedInKeychain"] = "Signed in to {tracker}. The token is in the OS keychain.",
         ["NoticeSignedInFile"] = "Signed in to {tracker}. No keychain is available, so the token is in a private file on this device.",
@@ -7719,6 +8993,10 @@ public static partial class T
         ["SettingsSubsResetDone"] = "Subtitle style reset",
         ["CrashNotice"] = "Kaeri closed after a problem.",
         ["CrashNoticeTv"] = "Kaeri closed after a problem. You can report it from Settings, About.",
+        ["NoticeSurpriseEmptyFilters"] = "No titles match these filters.",
+        ["NoticeSurpriseEmptyPlanning"] = "Planning is empty.",
+        ["NoticeSurpriseOffline"] = "Offline. Search picks need AniList.",
+        ["NoticeSurpriseFailed"] = "Couldn't pick a title right now. Try again in a moment.",
         ["ContinueMenuResume"] = "Continue",
         ["ContinueSyncWaiting_one"] = "One change waiting to sync",
         ["ContinueSyncWaiting_other"] = "{count} changes waiting to sync",
@@ -7881,7 +9159,6 @@ public static partial class T
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
         ["TvConnectingToTv"] = "Connecting to the TV",
-        ["TvDeviceCode"] = "A TV lists this device with the code {code}. Forget a TV here and it forgets this device too.",
         ["TvUnnamed"] = "TV",
         ["TvAnotherShort"] = "Another TV…",
         ["TvVolumeLabel"] = "TV volume",
@@ -7921,6 +9198,11 @@ public static partial class T
         ["TvProblemNoCode"] = "That code has expired. Ask the TV for a new one.",
         ["TvCastThroughPc"] = "Plays through this PC",
         ["TvCastFirewallAhead"] = "Windows will ask to let Kaeri reach your TV.",
+        ["RkeyLockWindows"] = "You can see it again in Settings, Devices, with Windows Hello.",
+        ["RkeyHelloReason"] = "Show the Kaeri recovery key",
+        ["DeviceKindPc"] = "PC",
+        ["DevicesSyncSwitchName"] = "Sync with {device}",
+        ["DevicesOpenName"] = "Open {device}",
         ["SourcePickerSeeders_one"] = "One seeder",
         ["SourcePickerSeeders_other"] = "{count} seeders",
         ["RatePerSecond"] = "{size}/s",
@@ -8027,6 +9309,7 @@ public static partial class T
         ["CastVolumeFixed"] = "Set on the TV",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
+        ["ActionGo"] = "Go",
         ["ActionNotNow"] = "Not now",
         ["DurationDays"] = "{days} d",
         ["DurationHoursMinutes"] = "{hours} h {minutes} min",
@@ -8184,6 +9467,8 @@ public static partial class T
         ["TvProblemFull"] = "This TV has as many devices paired as it can keep. Remove one in the TV's settings, under Remotes.",
         ["TvProblemUnpaired"] = "The TV doesn't know this device any more. Pair again.",
         ["PlayerPositionSpoken"] = "{position} of {duration}",
+        ["NamesPair"] = "{first} and {last}",
+        ["NamesList"] = "{list}, {next}",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",
@@ -8795,6 +10080,46 @@ public static partial class T
         ["PartyHereCount"] = "{count} here",
         ["TogetherRecentNote"] = "The last ten, kept on this device",
         ["PartyPickContinue"] = "Continue",
+        ["PartyChatField"] = "Say something",
+        ["PartyChatSend"] = "Send",
+        ["PartyChatTitle"] = "Chat",
+        ["PartyChatWait"] = "Wait {seconds} s",
+        ["PartyChatWaitSpoken_one"] = "Wait one second",
+        ["PartyChatWaitSpoken_other"] = "Wait {seconds} seconds",
+        ["PartyChatMore"] = "{count} more in chat",
+        ["PartyChatOff"] = "This room's server has chat turned off",
+        ["PartyChatPrivacy"] = "Messages go through the room's server. Kaeri keeps none.",
+        ["PartyChatHidden"] = "Chat is hidden",
+        ["PartyChatHiddenLine"] = "Hide chat is on in Settings, under Playback.",
+        ["PartyChatShow"] = "Show chat",
+        ["SettingsHideChat"] = "Hide chat in watch parties",
+        ["SettingsHideChatLine"] = "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.",
+        ["PartyMute"] = "Mute {name}",
+        ["PartyUnmute"] = "Unmute {name}",
+        ["PartyUnmuteShort"] = "Unmute",
+        ["PartyMemberMuted"] = "Muted",
+        ["PartyMutedLine"] = "{name} is muted",
+        ["PartyChatNotSent"] = "Couldn't send",
+        ["PartyChatRetry"] = "Try again",
+        ["PartyReact"] = "React",
+        ["PartyReactLaugh"] = "Laugh",
+        ["PartyReactGasp"] = "Gasp",
+        ["PartyReactClap"] = "Clap",
+        ["PartyReactCry"] = "Cry",
+        ["PartyReactedLaugh"] = "{name} laughed",
+        ["PartyReactedGasp"] = "{name} gasped",
+        ["PartyReactedClap"] = "{name} clapped",
+        ["PartyReactedCry"] = "{name} cried",
+        ["PartyReactedAt"] = "{line} at {time}",
+        ["PartyNamesTwo"] = "{first} and {second}",
+        ["PartyNamesThree"] = "{first}, {second} and {third}",
+        ["PartyNamesOthers"] = "{first}, {second} and {count} others",
+        ["PartyChatYou"] = "You",
+        ["PartySendsAs"] = "Sends as {device}",
+        ["PartyTickLabel"] = "{time} · {names}",
+        ["PartyChatAnnounce"] = "{name} says {message}",
+        ["PartyChatLeft_one"] = "{count} character left",
+        ["PartyChatLeft_other"] = "{count} characters left",
         ["PlayerUpNext"] = "Up next",
         ["TitleBasedOn"] = "Based on",
         ["PlayerStarting"] = "Starting episode {episode}",
@@ -8807,6 +10132,46 @@ public static partial class T
         ["PlayerChooseAnotherSource"] = "Choose another source",
         ["PlayerAddPluginStore"] = "Add a plugin store",
         ["PlayerBuffering"] = "Buffering",
+        ["PlayerStartPlace"] = "{place} of {total} sources",
+        ["PlayerStartPinned"] = "Your pick for this show",
+        ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
+        ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
+        ["PlayerStartMissFailed"] = "{name} didn't answer",
+        ["PlayerStartMissTimedOut"] = "{name} took too long",
+        ["PlayerStartMissSkipped"] = "You skipped {name}",
+        ["PlayerStartResting"] = "Skipped after recent failures",
+        ["PlayerStartFrom"] = "From {name}",
+        ["PlayerStartNoVideo"] = "The first one showed no video",
+        ["PlayerStartStreamPlace"] = "{next} of {total} streams",
+        ["PlayerStartPeers_one"] = "One peer",
+        ["PlayerStartPeers_other"] = "{count} peers",
+        ["PlayerStartSpeed"] = "{speed}/s",
+        ["PlayerStartBufferingPercent"] = "Buffering · {percent}",
+        ["PlayerStartResuming"] = "Resuming at {clock}",
+        ["PlayerStartFromBeginning"] = "Play from the beginning",
+        ["PlayerStartDetails"] = "Details",
+        ["PlayerStartSkipSource"] = "Skip {name}",
+        ["PlayerStartSkipStream"] = "Skip this stream",
+        ["PlayerStartStillWaiting"] = "Still waiting for {name}",
+        ["PlayerStartOffline"] = "Waiting for a connection",
+        ["PlayerStartOfflineDetail"] = "You're offline. Episode {episode} starts when you're back.",
+        ["PlayerStartFixMatch"] = "Fix match",
+        ["PlayerStartTranslation"] = "Audio and subtitles",
+        ["PlayerStartLookedUp"] = "Looked up the title",
+        ["PlayerStartSeconds"] = "{seconds} s",
+        ["PlayerStartStillStarting"] = "Still starting. You can choose a source now.",
+        ["PlayerStartAnnounce"] = "Starting episode {episode}, {title}",
+        ["PlayerStartFailedAnnounce"] = "{title}. {reason}",
+        ["PlayerStartStatus"] = "{step}, {detail}",
+        ["PlayerStartBeginning"] = "Starting from the beginning",
+        ["PlayerStartRowAsking"] = "Asking",
+        ["PlayerStartRowNoMatch"] = "Doesn't have this show",
+        ["PlayerStartRowNoEpisode"] = "Doesn't have episode {episode}",
+        ["PlayerStartRowFailed"] = "Didn't answer",
+        ["PlayerStartRowTimedOut"] = "Took too long",
+        ["PlayerStartRowSkipped"] = "Skipped",
+        ["PlayerStartAsked"] = "{names} were asked.",
+        ["PlayerStartSubtitled"] = "Subtitled",
         ["PlayerStallTitle"] = "Source is buffering · {seconds} s",
         ["PlayerStallDetail"] = "Another stream may play without waiting.",
         ["PlayerSwitchSource"] = "Switch source",
@@ -8844,6 +10209,7 @@ public static partial class T
         ["PlayerMarkForward1Label"] = "Move the {edge} forward one second",
         ["PlayerMarkWatchEdges"] = "Watch the edges",
         ["PlayerMarkShares"] = "Saving shares these times with AniSkip.",
+        ["PlayerMarkFound"] = "Kaeri found these times from the audio.",
         ["PlayerMarkReplaces"] = "Replaces AniSkip's {start} to {end}, which is reported as wrong.",
         ["PlayerMarkNoMal"] = "AniSkip has no entry for this show, so this stays on your devices.",
         ["PlayerMarkTooShort"] = "That is under 5 seconds. Mark where it ends.",
@@ -8861,14 +10227,29 @@ public static partial class T
         ["PlayerWasOpening"] = "Was that the opening?",
         ["PlayerMarkIt"] = "Mark it",
         ["PlayerDontAskAgain"] = "Don't ask again",
+        ["PlayerFoundAskOpening"] = "Kaeri found this opening. Were the edges right?",
+        ["PlayerFoundAskEnding"] = "Kaeri found this ending. Were the edges right?",
+        ["PlayerFoundAskShare"] = "Yes shares these times with AniSkip for episode {episode}.",
+        ["PlayerFoundYes"] = "Yes",
+        ["PlayerFoundAdjust"] = "Adjust",
+        ["PlayerFoundSaved"] = "Saved. AniSkip gets these times for episode {episode}.",
+        ["PlayerFoundNever"] = "Kaeri won't ask about skip times again.",
+        ["PlayerFoundNeverHow"] = "You can turn it back on in Settings.",
         ["PlayerShareTitle"] = "Share your skip times with AniSkip?",
-        ["PlayerShareBody"] = "AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.",
+        ["PlayerShareBody"] = "AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.",
         ["PlayerShareSent"] = "It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.",
         ["PlayerShareYes"] = "Share",
         ["PlayerShareNo"] = "Don't share",
         ["PlayerSkipFromFile"] = "From the file",
         ["PlayerSkipYours"] = "Yours",
         ["PlayerSkipFromAniskip"] = "From AniSkip",
+        ["PlayerSkipFound"] = "Found by Kaeri",
+        ["PlayerSkipPausedLowPower"] = "Paused while Low Power Mode is on.",
+        ["PlayerSkipPausedBatterySaver"] = "Paused while battery saver is on.",
+        ["PlayerSkipPausedEnergySaver"] = "Paused while energy saver is on.",
+        ["PlayerSkipPausedPowerSaver"] = "Paused while power saver is on.",
+        ["PlayerSkipPausedStorage"] = "Paused until 2 GB of storage is free.",
+        ["PlayerSkipUnavailable"] = "Not available in this build of Kaeri.",
         ["PlayerSkipNone"] = "None yet",
         ["PlayerSkipClear"] = "Clear",
         ["PlayerResumedAt"] = "Resumed at {clock}",
@@ -9036,6 +10417,69 @@ public static partial class T
         ["SearchAvailableHere"] = "Plays here",
         ["SearchAvailableServices"] = "On your services",
         ["SearchLineService"] = "On {service}",
+        ["CountEpisodes_one"] = "One episode",
+        ["CountEpisodes_other"] = "{count} episodes",
+        ["CountEpisodesShort"] = "{count} ep",
+        ["CountOutOf"] = "{out} of {total} out",
+        ["CountOutOfShort"] = "{out} of {total}",
+        ["CountOut_one"] = "One episode out",
+        ["CountOut_other"] = "{count} episodes out",
+        ["CountOutShort"] = "{count} out",
+        ["CountStarts"] = "Starts {date}",
+        ["CountNotOut"] = "Not out yet",
+        ["CountNextOf"] = "Ep {episode} of {total}",
+        ["CountDub"] = "Dub",
+        ["CountDubThrough"] = "Dub {through}",
+        ["CountSpokenEpisodes_one"] = "One episode",
+        ["CountSpokenEpisodes_other"] = "{count} episodes",
+        ["CountSpokenOutOf"] = "{out} of {total} episodes out",
+        ["CountSpokenOut_one"] = "One episode out",
+        ["CountSpokenOut_other"] = "{count} episodes out",
+        ["CountSpokenStarts"] = "Starts {date}",
+        ["CountSpokenNextOf"] = "Episode {episode} of {total}",
+        ["CountSpokenDubThrough"] = "dubbed to episode {through}",
+        ["CountSpokenDub"] = "has a dub",
+        ["DateMonthJanShort"] = "Jan",
+        ["DateMonthJanLong"] = "January",
+        ["DateMonthFebShort"] = "Feb",
+        ["DateMonthFebLong"] = "February",
+        ["DateMonthMarShort"] = "Mar",
+        ["DateMonthMarLong"] = "March",
+        ["DateMonthAprShort"] = "Apr",
+        ["DateMonthAprLong"] = "April",
+        ["DateMonthMayShort"] = "May",
+        ["DateMonthMayLong"] = "May",
+        ["DateMonthJunShort"] = "Jun",
+        ["DateMonthJunLong"] = "June",
+        ["DateMonthJulShort"] = "Jul",
+        ["DateMonthJulLong"] = "July",
+        ["DateMonthAugShort"] = "Aug",
+        ["DateMonthAugLong"] = "August",
+        ["DateMonthSepShort"] = "Sep",
+        ["DateMonthSepLong"] = "September",
+        ["DateMonthOctShort"] = "Oct",
+        ["DateMonthOctLong"] = "October",
+        ["DateMonthNovShort"] = "Nov",
+        ["DateMonthNovLong"] = "November",
+        ["DateMonthDecShort"] = "Dec",
+        ["DateMonthDecLong"] = "December",
+        ["TrendingToday"] = "Trending today",
+        ["TrendingWeek"] = "Trending this week",
+        ["TrendingMonth"] = "Trending this month",
+        ["TrendingChoiceToday"] = "Today",
+        ["TrendingChoiceWeek"] = "This week",
+        ["TrendingChoiceMonth"] = "This month",
+        ["TrendingFailed"] = "Couldn't load {period}'s trending.",
+        ["TrendingUpdated"] = "Updated {age}",
+        ["SurpriseMe"] = "Surprise me",
+        ["SurpriseMeMenu"] = "Surprise Me",
+        ["SurpriseAnother"] = "Another",
+        ["SurpriseHintPlanning"] = "Opens a random title from Planning",
+        ["SurpriseHintFilters"] = "Opens a random title from these filters",
+        ["SurpriseAnotherHint"] = "Opens another random title in place of this one",
+        ["SurpriseEmptyFilters"] = "No titles match these filters.",
+        ["SurpriseEmptyPlanning"] = "Planning is empty.",
+        ["SurpriseOffline"] = "Offline. Search picks need AniList.",
         ["ServersAddTitle"] = "Add a media server",
         ["ServersOnNetwork"] = "On your network",
         ["ServersLooking"] = "Looking for servers…",
@@ -9116,6 +10560,7 @@ public static partial class T
         ["SettingsGroupGeneral"] = "General",
         ["SettingsGroupTitles"] = "Titles",
         ["SettingsGroupPlayback"] = "Playback",
+        ["SettingsGroupWatchParties"] = "Watch parties",
         ["SettingsGroupWatching"] = "Watching",
         ["SettingsGroupPlayer"] = "Player",
         ["SettingsGroupPicture"] = "Picture",
@@ -9143,12 +10588,16 @@ public static partial class T
         ["SettingsUpNextCountdown"] = "Up next countdown",
         ["SettingsSkipOpening"] = "Skip opening automatically",
         ["SettingsSkipRecap"] = "Skip recaps automatically",
-        ["SettingsAskWasOpening"] = "Ask after skipping an opening by hand",
-        ["SettingsAskWasOpeningDetail"] = "Offers to mark it, so it is skipped next time",
+        ["SettingsFindSkips"] = "Find skip times from the audio",
+        ["SettingsFindSkipsDetail"] = "When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.",
+        ["SettingsAskWasOpening"] = "Ask about skip times",
+        ["SettingsAskWasOpeningDetail"] = "After you skip an opening by hand, and after a skip Kaeri found",
         ["SettingsShareSkips"] = "Share skip times with AniSkip",
-        ["SettingsShareSkipsDetail"] = "AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.",
-        ["SettingsClearSkips"] = "Clear skip times you marked…",
-        ["SettingsClearSkipsConfirm"] = "Clear the skip times you marked? AniSkip keeps the ones you shared.",
+        ["SettingsShareSkipsDetail"] = "AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.",
+        ["SettingsClearSkips"] = "Skip times you marked or Kaeri found",
+        ["SettingsClearSkipsConfirm"] = "Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.",
+        ["SettingsClearSkipsAndroid"] = "Clear skip times",
+        ["SettingsClearSkipsAndroidDetail"] = "The ones you marked and the ones Kaeri found",
         ["SettingsSkipFiller"] = "Skip filler automatically",
         ["SettingsMarkOpening"] = "Mark opening and ending",
         ["SettingsSkipButton"] = "Show skip button",
@@ -9156,7 +10605,7 @@ public static partial class T
         ["SettingsCountsWatched"] = "Counts as watched at",
         ["SettingsCountsWatchedDetail"] = "Or when the ending starts, if it is marked",
         ["SettingsSpoiler"] = "Spoiler protection",
-        ["SettingsSpoilerDetail"] = "Blurs stills of unwatched episodes after the next one",
+        ["SettingsSpoilerDetail"] = "Hides stills and synopses of unwatched episodes after the next one",
         ["SettingsAudioDetail"] = "Each show remembers its own audio and subtitles.",
         ["SettingsSystemCaptions"] = "Follow system caption style",
         ["SettingsSystemCaptionsDetail"] = "Plain subtitles use your caption preferences from Accessibility. Styled subtitles keep their own look.",
@@ -9205,7 +10654,7 @@ public static partial class T
         ["ShowSettingsSkipFiller"] = "Skip filler",
         ["ShowSettingsBlurAhead"] = "Blur stills ahead",
         ["ShowSettingsShowEverything"] = "Show everything",
-        ["ShowSettingsSpoilerDetail"] = "Blurs stills after the next episode.",
+        ["ShowSettingsSpoilerDetail"] = "Hides stills and synopses after the next episode.",
         ["ShowSettingsAlways"] = "Always",
         ["ShowSettingsNever"] = "Never",
         ["ShowSettingsSubsRemembered"] = "Remembered from your last episode.",
@@ -9606,6 +11055,228 @@ public static partial class T
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
+        ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
+        ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
+        ["DeviceKindComputer"] = "computer",
+        ["DevicesEnterCode"] = "Enter a code",
+        ["DevicesShowKey"] = "Show",
+        ["DevicesTurnOffAction"] = "Turn off",
+        ["PairAddressLabel"] = "Address",
+        ["PairByAddress"] = "Pair by address",
+        ["PairCodePlaceholder"] = "000 000",
+        ["RkeyFieldLabel"] = "Recovery key",
+        ["CloudUserLabel"] = "User name",
+        ["CloudPasswordLabel"] = "Password",
+        ["CloudWebdavAddressLabel"] = "Server address",
+        ["PairWorkingLine"] = "Pairing",
+        ["PairOtherDevice"] = "your other device",
+        ["PairAddressOptional"] = "Leave the address empty and Kaeri looks for the device on this network.",
+        ["DevicesSyncFoot"] = "Sync shares where you stopped, your history and your settings.",
+        ["DevicesLineRemote"] = "{line} · Remote",
+        ["ProfilesEditAction"] = "Edit",
+        ["ProfilesNameField"] = "Name",
+        ["ProfilesMoreFor"] = "More for {name}",
+        ["SyncStoreErrOffline"] = "Couldn't reach {store} or {device}. Try again when both are online.",
+        ["SyncStoreErrRefused"] = "{store} didn't accept the invite. Ask its owner for a new one.",
+        ["SyncStoreErrNotAllowed"] = "{device} can't invite other devices to {store}. Ask the plugin store's owner for an invite.",
+        ["DevicesTitle"] = "Devices",
+        ["DevicesRowOff"] = "Sync off",
+        ["DevicesRowSynced"] = "Synced {ago}",
+        ["DevicesRowError"] = "Couldn’t sync",
+        ["DevicesThisDevice"] = "This device",
+        ["DevicesName"] = "Name",
+        ["SyncGroup"] = "Sync",
+        ["SyncOffTitle"] = "Sync is off",
+        ["SyncOffLine"] = "Turn it on to keep where you stopped, your history and your settings the same on your devices.",
+        ["SyncTurnOn"] = "Turn on sync",
+        ["SyncRoadTitle"] = "How should your devices share?",
+        ["SyncRoadNearby"] = "With a device nearby",
+        ["SyncRoadNearbyLine"] = "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.",
+        ["SyncRoadCloud"] = "Through a cloud folder",
+        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.",
+        ["SyncRoadLater"] = "You can add the other way later. Most people use both.",
+        ["DevicesYours"] = "Your devices",
+        ["DevicesOnlyThis"] = "Only this device",
+        ["DevicesOnlyThisLine"] = "Pair another device to share where you stopped, your history and your settings.",
+        ["DevicesAdd"] = "Add a device",
+        ["DevicesNotSeen"] = "Not seen for {days} days",
+        ["DevicesRemoteOnly"] = "Remote only",
+        ["DevicesAlsoSync"] = "Also sync with {device}",
+        ["DevicesPairedTvsFoot"] = "Paired for Play on TV. A TV paired as a remote never gets your history.",
+        ["DevicesSyncSwitch"] = "Sync",
+        ["DevicesRemoteSwitch"] = "Remote",
+        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this {kind} drive {device}.",
+        ["DevicesRemove"] = "Remove this device",
+        ["DevicesRemoveAlert"] = "Remove {device}?",
+        ["DevicesRemoveAlertLine"] = "{device} keeps what it has, but gets nothing new from your other devices.",
+        ["SyncTurnOff"] = "Turn off sync on this {kind}",
+        ["SyncTurnOffAlert"] = "Turn off sync on {device}?",
+        ["SyncTurnOffAlertLine"] = "This {kind} stops sharing with your other devices. Everything it has stays here.",
+        ["CloudGroup"] = "Cloud folder",
+        ["CloudFoot"] = "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.",
+        ["CloudAdd"] = "Add a cloud folder",
+        ["CloudPickTitle"] = "Choose a cloud folder",
+        ["CloudGoogleLine"] = "A hidden Kaeri folder in your Drive",
+        ["CloudNextcloudLine"] = "Your own or a hosted Nextcloud server",
+        ["CloudIcloudLine"] = "A folder you choose in iCloud Drive",
+        ["CloudOther"] = "Other",
+        ["CloudWebdav"] = "WebDAV server",
+        ["CloudWebdavLine"] = "Any server that speaks WebDAV",
+        ["CloudFolderLine"] = "For a folder another app keeps in step",
+        ["CloudPickFoot"] = "Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.",
+        ["CloudSettingUp"] = "Setting up the folder",
+        ["CloudNextcloudAddress"] = "Server address",
+        ["CloudNextcloudAddressNote"] = "The address you open Nextcloud at in a browser.",
+        ["CloudNextcloudWaitTitle"] = "Finish signing in on {host}",
+        ["CloudNextcloudWaitLine"] = "Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.",
+        ["CloudWaiting"] = "Waiting for {service}",
+        ["CloudOpenAgain"] = "Open the page again",
+        ["CloudAppPassword"] = "Use an app password instead",
+        ["CloudConnect"] = "Connect",
+        ["CloudErrOffline"] = "Couldn’t reach {service}. Check your connection.",
+        ["CloudErrNoServer"] = "Couldn’t find a Nextcloud server at {host}. Check the address.",
+        ["CloudErrAppPassword"] = "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.",
+        ["CloudErrWebdav"] = "The server refused that user name or password.",
+        ["CloudErrTimeout"] = "The sign-in page closed before access was allowed.",
+        ["CloudErrOtherGroup"] = "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.",
+        ["CloudErrSignedOut"] = "{service} signed Kaeri out. Your changes wait on this {kind} until you sign in again.",
+        ["CloudErrFull"] = "{service} is full. Free some space there, then try again.",
+        ["CloudErrFolderGone"] = "Kaeri can’t open the folder any more. Choose it again.",
+        ["CloudErrTitle"] = "Couldn’t sync with {service}",
+        ["CloudDropboxLine"] = "Kaeri’s own folder in your Dropbox, Apps/Kaeri",
+        ["CloudOnedriveLine"] = "Kaeri’s own folder in your OneDrive, Apps/Kaeri",
+        ["CloudSyncNow"] = "Sync now",
+        ["CloudSignOut"] = "Sign out",
+        ["CloudSignIn"] = "Sign in",
+        ["CloudSignedOutLine"] = "Signed out. Changes wait on this {kind} until you sign in again.",
+        ["CloudErrDenied"] = "{service} didn’t give Kaeri access. Choose it again to retry.",
+        ["TvCloudPickFoot"] = "Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.",
+        ["TvCloudDropboxLine"] = "Signs in on your phone",
+        ["TvCloudNeedsPhoneTitle"] = "Dropbox signs in on your phone",
+        ["TvCloudNeedsPhoneHas"] = "{device} is signed in to Dropbox. This TV can use that sign-in over your paired link.",
+        ["TvUsePhoneSignin"] = "Use {device}’s sign-in",
+        ["TvCloudNeedsPhoneNone"] = "Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.",
+        ["TvCloudFinishing"] = "Signed in. Setting up the folder",
+        ["TvCloudRevokedLine"] = "{service} signed Kaeri out. Select to sign in again.",
+        ["TvCloudSignedOutLine"] = "Signed out. Select to sign in.",
+        ["TvCloudSignOutTitle"] = "Sign out of {service}?",
+        ["TvCloudSignOutLine"] = "This TV stops syncing through {service}. Changes wait here until you sign in again.",
+        ["CloudOffline"] = "Waiting for a connection. Changes are kept on this {kind}.",
+        ["TvGoogleTitle"] = "Sign in to Google Drive",
+        ["TvQrOpenPage"] = "Or scan to open the page",
+        ["TvNextcloudLine"] = "Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.",
+        ["RkeyTitle"] = "Your recovery key",
+        ["RkeyLine"] = "Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.",
+        ["RkeyCopy"] = "Copy",
+        ["RkeyQr"] = "Show as QR code",
+        ["RkeyAgain"] = "You can see it again in Settings, Devices, after unlocking this {kind}.",
+        ["RkeyRow"] = "Recovery key",
+        ["RkeyMade"] = "Made {date}",
+        ["RkeyNew"] = "Make a new key",
+        ["RkeyNewFoot"] = "The old key stops working, and your devices switch to the new one the next time they sync.",
+        ["RkeyEnterTitle"] = "Enter your recovery key",
+        ["RkeyEnterLine_one"] = "{service} holds history from {count} device. The key you saved when sync was turned on opens it.",
+        ["RkeyEnterLine_other"] = "{service} holds history from {count} devices. The key you saved when sync was turned on opens it.",
+        ["RkeyEnterNote"] = "24 letters and digits, in groups of four. Spaces and case don’t matter.",
+        ["RkeyWrong"] = "That key doesn’t open this folder. Check each group of four and try again.",
+        ["RkeyRestore"] = "Restore",
+        ["PairEnterLine"] = "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.",
+        ["PairScan"] = "Scan the code",
+        ["PairSameWifi"] = "Both devices need to be on the same Wi-Fi.",
+        ["PairButton"] = "Pair",
+        ["PairShowInstead"] = "Show a code here instead",
+        ["PairShowTitle"] = "Enter this code on your other device",
+        ["PairShowScan"] = "Or scan it from Kaeri on your phone.",
+        ["PairGoodFor"] = "Good for 2 minutes · {left}",
+        ["PairTvLine"] = "On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.",
+        ["PairOk"] = "Paired with {device}",
+        ["PairOkLine"] = "Bringing over your history. You can keep using Kaeri meanwhile.",
+        ["PairCopySignins"] = "Copy sign-ins from {device}",
+        ["PairCopySigninsLine"] = "{trackers}. Each device gets its own copy over this link.",
+        ["PairErrCode"] = "That code didn’t match. Check the code on {device} and try again.",
+        ["PairErrNotFound"] = "Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.",
+        ["PairErrExpired"] = "This code ran out. Show a new one.",
+        ["PairWhichProfile"] = "Which profile on {device} is yours?",
+        ["PairWhichProfileLine"] = "This {kind} syncs with that profile only. The others stay on {device}.",
+        ["PairAlsoSyncFoot"] = "{device} already knows this phone from Play on TV, so syncing with it needs no new code.",
+        ["ContinueFromDevice"] = "Episode {n} · stopped at {time} on {device}",
+        ["PlayerResumedFrom"] = "Resumed at {time} from {device}",
+        ["SyncSyncing"] = "Syncing",
+        ["SyncSyncingWith"] = "Syncing with {device}",
+        ["SyncNotes"] = "Sync notes",
+        ["SyncNoteKeptWatched"] = "Episode {n} of {title} stays watched. {other} marked it unwatched without knowing {device} had finished it.",
+        ["SyncNoteUndo"] = "Mark unwatched",
+        ["SyncNotesFoot"] = "Notes stay for 7 days.",
+        ["ProfilesTitle"] = "Profiles",
+        ["ProfilesOnlyYou"] = "Only you",
+        ["ProfilesOneFoot"] = "Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.",
+        ["ProfilesAdd"] = "Add a profile",
+        ["ProfilesAddLine"] = "Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.",
+        ["ProfilesNew"] = "New profile",
+        ["ProfilesYours"] = "Your profile",
+        ["ProfilesYoursNote"] = "Filled in from AniList. Until now this device had one profile with no name.",
+        ["ProfilesKids"] = "Kids profile",
+        ["ProfilesKidsLine"] = "Adult titles stay off, and sources, devices and torrent settings are hidden in it.",
+        ["ProfilesKidsHidden"] = "Sources and Devices are hidden in a kids profile, and adult titles stay off.",
+        ["ProfilesKidsTag"] = "Kids",
+        ["ProfilesAddButton"] = "Add profile",
+        ["ProfilesSharedFoot"] = "Sources, downloads and this device’s settings are shared by every profile.",
+        ["ProfilesSyncsWith"] = "Syncs with",
+        ["ProfilesDelete"] = "Delete profile",
+        ["ProfilesDeleteAlert"] = "Delete {name}’s profile?",
+        ["ProfilesDeleteAlertLine"] = "{name}’s history and sign-ins on this device are removed. Devices that sync with {name} keep theirs.",
+        ["ProfilesPicker"] = "Who’s watching?",
+        ["ProfilesAskAtLaunch"] = "Ask who’s watching at launch",
+        ["ProfilesAskFoot"] = "Off by default. For an iPad the household shares. The account row switches profiles at any time.",
+        ["ProfilesSwitch"] = "Switch profile",
+        ["ProfilesManage"] = "Manage profiles",
+        ["FirstSetupOther"] = "Set up from another device",
+        ["FirstSetupLine"] = "On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.",
+        ["FirstRestore"] = "Restore from a cloud folder instead",
+        ["FirstOkLine"] = "Bringing over your history, settings and plugin stores. You can start using Kaeri now.",
+        ["FirstJoinStore"] = "Join the plugin store {store}",
+        ["FirstJoinStoreLine"] = "{device} makes this {kind} its own invite",
+        ["CloudFolder"] = "A folder on this {kind}",
+        ["CloudAppPasswordNote"] = "Make one in Nextcloud under Settings, Security. It is kept on this {kind}.",
+        ["DevicesTvsForPlay_one"] = "One TV for Play on TV",
+        ["DevicesTvsForPlay_other"] = "{count} TVs for Play on TV",
+        ["DevicesPairedToday"] = "Paired today",
+        ["TvDevicesAddLine"] = "Shows a code to enter on your phone",
+        ["TvProfilesOnlyYou"] = "Only you. Add a profile to keep separate history, Continue and accounts on this TV.",
+        ["TvProfilesOpensPicker"] = "Opens Who’s watching?",
+        ["TvProfilesOnThisTv"] = "Profiles on this TV",
+        ["RkeySaveFile"] = "Save as a file",
+        ["RkeyQrShort"] = "QR code",
+        ["PairShowCode"] = "Show a code",
+        ["CloudSignInAgain"] = "Sign in again",
+        ["CloudChooseFolder"] = "Choose folder",
+        ["ProfilesAvatarDesc"] = "{name}, switch profile",
+        ["PairCodeField"] = "Pairing code",
+        ["DeviceKindPhone"] = "phone",
+        ["DeviceKindTablet"] = "tablet",
+        ["DeviceKindTv"] = "TV",
+        ["FirstSetupPhone"] = "Set up from your phone",
+        ["DevicesOtherDevice"] = "the other device",
+        ["CloudSheetLine"] = "{service}’s page is open. Allow access there, and Kaeri carries on by itself.",
+        ["CloudConnecting"] = "Connecting to {service}",
+        ["CloudConnectingLine"] = "Access allowed. Finishing the sign-in.",
+        ["CloudSettingUpLine"] = "Making Kaeri’s folder in {service} and sealing a first copy of your history.",
+        ["CloudErrSigninTitle"] = "Couldn’t sign in to {service}",
+        ["CloudErrSetupTitle"] = "Couldn’t set up the folder",
+        ["CloudErrDeniedShort"] = "{service} didn’t give Kaeri access.",
+        ["CloudErrSigninOther"] = "{service} didn’t finish the sign-in. Try again in a moment.",
+        ["CloudErrSetupOther"] = "Kaeri couldn’t make its folder in {service}. Try again in a moment.",
+        ["CloudUseAnother"] = "Use another service",
+        ["CloudRemove"] = "Remove cloud folder",
+        ["CloudRemoveTitle"] = "Remove {service} from sync?",
+        ["CloudRemoveLine"] = "Everything on this {kind} stays here, and paired devices nearby keep syncing. The folder stays in {service} with its sealed copy, and your other devices use it until you remove it on them too.",
+        ["CloudRemoveAction"] = "Remove",
+        ["CloudMore"] = "More for {service}",
+        ["CloudInUse"] = "In use",
+        ["CloudSwitchFoot"] = "{service} stays in use until the new folder is ready.",
+        ["SyncStartFoot"] = "Either one turns sync on, and you can use both.",
+        ["DevicesAside"] = "Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this {kind}.",
+        ["TvSyncStartFoot"] = "Pairing with your phone turns sync on. Then this TV can join your cloud folder.",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",
@@ -9643,6 +11314,27 @@ public static partial class T
         ["EpisodeRowNotOut"] = "Not out yet",
         ["EpisodeRowAirs"] = "Airs {when}",
         ["EpisodeSpoilerHidden"] = "Hidden by spoiler protection",
+        ["EpisodeSynopsisHidden"] = "Synopsis hidden by spoiler protection",
+        ["EpisodeSynopsisShow"] = "Show synopsis",
+        ["EpisodeSynopsisShowHint"] = "Shows this episode's still and synopsis",
+        ["EpisodeFacts"] = "{minutes} min · Aired {date}",
+        ["EpisodeFactsLength"] = "{minutes} min",
+        ["EpisodeFactsLeft"] = "{minutes} min left",
+        ["EpisodeProtectionLine"] = "Spoiler protection hides what comes after episode {episode}.",
+        ["EpisodeProtectionLineShort"] = "Hidden after episode {episode}",
+        ["EpisodeRange"] = "Episodes {from} to {to}",
+        ["EpisodeRangeLabel"] = "Episode range",
+        ["EpisodeFold_one"] = "One watched episode",
+        ["EpisodeFold_other"] = "{count} watched episodes",
+        ["EpisodeShort"] = "E{episode}",
+        ["EpisodeAired"] = "Aired {date}",
+        ["EpisodeFactsJoin"] = "{first} · {second}",
+        ["EpisodeProtectionShow"] = "Show",
+        ["EpisodeProtectionHide"] = "Hide",
+        ["EpisodeProtectionShown"] = "Showing what comes after episode {episode}.",
+        ["EpisodeProtectionShownShort"] = "Showing after episode {episode}",
+        ["EpisodeRangeShort"] = "{from}–{to}",
+        ["EpisodeRangeItem"] = "{range} · {state}",
         ["EpisodeOptions"] = "Episode options",
         ["EpisodeMarkWatched"] = "Mark watched",
         ["EpisodeMarkUnwatched"] = "Mark unwatched",
@@ -9683,6 +11375,13 @@ public static partial class T
         ["TitleFactNow"] = "Now",
         ["TitleFactTba"] = "To be announced",
         ["MoreFollowingLine"] = "{status} · {score}/10",
+        ["EpisodeGoTo"] = "Go to episode…",
+        ["EpisodeGoToTitle"] = "Go to episode",
+        ["EpisodeGoToGo"] = "Go",
+        ["EpisodeGoToHint"] = "{first} to {last}",
+        ["EpisodeGoToLabel"] = "Episode, {first} to {last}",
+        ["EpisodeGoToNone"] = "No episode {number}. This show has {last}.",
+        ["EpisodeGoToNotOut"] = "Episode {number} isn't out yet. The latest is {latest}.",
         ["TorrentsTitle"] = "Torrents",
         ["TorrentsOn"] = "Torrents are on",
         ["TorrentsOffDetail"] = "Off by default. Torrents connect directly unless you route them through a proxy.",
@@ -9883,6 +11582,7 @@ public static partial class T
         ["TvCastUnmute"] = "Unmute",
         ["TvCastVolumeOnTv"] = "Set on the TV",
         ["TvCastUpNextIn"] = "Up next · plays in {seconds} s",
+        ["TvForgetNote"] = "Forget a TV here and it forgets this device too.",
         ["UpdatesTitle"] = "Updates",
         ["UpdatesChecking"] = "Checking for a newer version…",
         ["UpdatesUpToDate"] = "Up to date",

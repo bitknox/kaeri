@@ -1,5 +1,6 @@
 package app.kaeri.store
 
+import app.kaeri.engine.model.TrendPeriod
 import java.io.File
 import java.nio.file.Files
 import java.time.Instant
@@ -80,6 +81,7 @@ class SceneRecorder {
             // the searches the shots run, and each fixture title's page, episodes and settings
             // sheet.
             store.loadHome()
+            store.loadSync()
             // The lawful sources' pages: the Sources rows, the servers and the licensed services.
             store.loadServers()
             store.checkProviders()
@@ -89,6 +91,10 @@ class SceneRecorder {
             store.loadCalendar()
             store.loadDownloads()
             store.loadSearchStart()
+            // Trending's other periods, which the rail asks for when its menu is used.
+            store.loadTrending(TrendPeriod.WEEK)
+            store.loadTrending(TrendPeriod.MONTH)
+            store.loadTrending(TrendPeriod.TODAY)
             // Watch together's place: the rooms kept and Start a party's servers.
             store.loadPartyRooms()
             store.loadPartyForm()
@@ -145,7 +151,8 @@ class SceneRecorder {
             FixtureScene.FRESH, FixtureScene.WATCHING, FixtureScene.LINK_OPENED, FixtureScene.LICENSED, FixtureScene.SERVERS,
             FixtureScene.SOURCES_BUSY, FixtureScene.AVAILABLE, FixtureScene.DEMO_ONLY, FixtureScene.DEMO_PLAYED, FixtureScene.DEMO_AND_STORE,
             FixtureScene.DEMO_REMOVED, FixtureScene.SUBTITLE_STYLED, FixtureScene.CRASH_OFF, FixtureScene.CRASH_SAVED, FixtureScene.CRASH_HELD,
-            FixtureScene.TOGETHER,
+            FixtureScene.TOGETHER, FixtureScene.SYNC_ON, FixtureScene.SYNC_NEARBY, FixtureScene.SYNC_CLOUD, FixtureScene.SYNC_TV_PHONE_SIGN_IN,
+            FixtureScene.PROFILES, FixtureScene.BROWSING,
         )
 
         /** The test kit's titles, 900001 to 900006. */

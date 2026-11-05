@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = ソースが設定されていません。ソースの画面で追加してください。
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = 接続がありません。オンラインに戻ったらもう一度お試しください。
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = 第{ $episode }話は{ $when }に放送予定です。
 
@@ -239,6 +242,27 @@ status-looking-up-title = タイトルを検索しています…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = ソースを読み込んでいます…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = タイトルを検索中
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = ソースを準備中
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = { $name }に問い合わせ中
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = ストリームを開いています
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = 別のストリームを試しています
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = ピアを探しています
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = バッファリング中
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = ソースでエピソード{ $episode }を検索しています…
@@ -648,6 +672,12 @@ release-pinned = このタイトルには{ $name }を使います。
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = その選択を保存できませんでした。{ $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = プロキシの確認に通ると、トレントが開始されます。
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = マグネットリンクでもトレントファイルでもありません。
 
@@ -662,6 +692,12 @@ torrent-interface-closed = トレントが開始される前にKaeriが終了し
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = トレントのセッションを開始できませんでした。{ $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = このプロキシ設定は使えません。{ $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = ソースを再読み込みしました。プロキシの確認に通ると、トレントが開始されます。
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = トレントはオフです。セッションを停止しました。
@@ -689,6 +725,9 @@ sources-demo-removed = デモを削除しました
 
 # Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.
 stores-ready-demo-stays = { $store }の準備ができました。デモは「あなたのソース」の最後に残ります。
+
+# The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+cloud-loopback-done = このタブを閉じて Kaeri に戻ってください。
 
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = { $tracker }にサインインしました。
@@ -773,6 +812,15 @@ notice-sign-out-failed = { $tracker }からサインアウトできませんで�
 
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = その設定を保存できませんでした。{ $cause }
+
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = トレントの通信がプロキシ経由になりました。
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = トレントはプロキシを使わず、直接接続します。
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = プロキシを確認できませんでした。{ $cause }
 
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = プロキシのパスワードを保存できませんでした。もう一度入力して、保存をお試しください。{ $reason }
@@ -872,6 +920,18 @@ crash-notice = 問題が発生したため、Kaeriを終了しました。
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = 問題が発生したため、Kaeriを終了しました。設定の「情報」から報告できます。
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = この条件に合う作品がありません。
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = 「計画中」リストが空です。
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = オフラインです。検索からのおまかせにはAniListが必要です。
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = いまは作品を選べませんでした。しばらくしてからもう一度お試しください。
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = プロキシを編集
@@ -1197,6 +1257,9 @@ shortcuts-group-lists = リスト
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = セクションに移動
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = 前後のエピソード範囲に移動
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = キーボードショートカット
 
@@ -1287,9 +1350,6 @@ tv-episode = 第{ $episode }話
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = 第{ $episode }話 · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = テレビにはこのデバイスがコード { $code } で表示されます。ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · たった今確認済み
 
@@ -1376,6 +1436,27 @@ stores-published-state = 公開済み
 
 # Accessible name of a row's Publish button.
 stores-publish-label = { $name } { $version }を公開
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = あとで確認するには、設定のデバイスを開き、アカウントのパスワードを入力します。
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Kaeriの復元キーを表示します
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = プロファイル
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = 追加
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = フォルダを選択
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = ファイルとして保存
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = 完了
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2092,6 +2173,9 @@ keys-action-filter = 絞り込み
 keys-action-filter-search = 検索の絞り込み
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = おまかせ
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = 再生または一時停止
 
 # Action label in the help overlay and the command palette.
@@ -2162,6 +2246,18 @@ keys-hint-mark-previous = 前を視聴済みに
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = 絞り込み
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = おまかせ
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = 移動
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = 解除
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = 別の作品
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = 再同期
@@ -2331,6 +2427,9 @@ keys-where-episodes = エピソードの一覧で
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = 別の画面で
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = 検索のブラウズと計画中リスト
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = パレットの“{ $action }”
 
@@ -2462,6 +2561,21 @@ keys-hint-copy-link = リンクをコピー
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = 退出
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = 送信
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = ミュート
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = 解除
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = チャット非表示
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = チャット表示
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = より大きい端末が必要です
@@ -2766,6 +2880,33 @@ lists-episode-dubbed = E{ $episode } · 吹替版
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score }%
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = 映画
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = 近日
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $month }{ $day }日
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = 吹替
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = 吹{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = 話数
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = 吹替
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · { $percent }%
 
@@ -2977,6 +3118,9 @@ sources-too-small = 表示するには、ターミナルをより広くしてく
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = 利用できるソースはありません
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = { $setting }をオンにするまで、トレントはオフです。
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = ソース
 
@@ -3028,6 +3172,9 @@ sources-state-held-back = 保留中
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = プラグインストア
 
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = 知り合いに共有してもらうプラグイン。招待リンクで参加できます。
+
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } 件参加中
 
@@ -3078,6 +3225,18 @@ sources-meta-skipped-until = { $time } まで見送っています（{ $cause }�
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = 次の要求で再試行します（{ $cause }）
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = プロキシ { $mark } 確認中
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = プロキシ { $mark } 合格
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = プロキシ { $mark } 確認失敗
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = 変更していません。設定を解除するには、config.tomlの該当行を削除してください。
@@ -3280,6 +3439,9 @@ settings-label-seed-hours = シードの上限時間
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = アップロード上限
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = トレントのプロキシ
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = トークンの保存先
 
@@ -3355,6 +3517,9 @@ settings-note-download-dir = Enterキーを押すとパスを入力できます�
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = 完了する次のダウンロードから適用されます。
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = 初期設定ではオフ（アップロードを節約）。オンにすると、スウォームにお返しできます。
+
 # Note under the after each download row.
 settings-note-download-hook = Enterキーを押すとコマンドを入力できます。ダウンロードが完了するたびに実行されます。
 
@@ -3381,6 +3546,12 @@ settings-note-presence-title = オフにすると、作品名を出さずに「�
 
 # Note under the rich presence row.
 settings-note-presence-rich = カバー画像、進行バー、AniListへのリンクを追加します。タイトルの表示が必要です。
+
+# Note under the torrent playback row.
+settings-note-torrents = 初期設定ではオフです。すぐに反映されます。
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = 任意です。config.toml を編集すると、トレントの通信をSOCKS5プロキシ経由にできます。
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Kaeriを開いている間、視聴済みのエピソードをシードし続けます。
@@ -3898,6 +4069,102 @@ stores-toast-nothing-to-publish = 公開できるプラグインがプラグイ�
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = これはあなた自身です。ストアには必ずオーナーがいます。
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = コンピュータ
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = コードを入力
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = クラウドフォルダなし
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = まだ同期していません
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = 使用中
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = ブラウザで{ $service }のページが開きました。そこでアクセスを許可すると、Kaeriは自動で先に進みます。
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = または、次のアドレスを自分で開いてください:
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = サインイン中
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = WebDAVのアドレス
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = サーバー上のフォルダのアドレスです。https:// で始めてください。
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = フォルダ
+
+# Under the folder path field.
+sync-tui-folder-path-note = 同期ドライブなど、ほかのアプリが同期しているフォルダのフルパスです。
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = ユーザー名
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Nextcloudへのサインインに使う名前です。
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = パスワード
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = アプリパスワード
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = コード
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = アドレス
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = コードを作成中
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = 相手のデバイスのアドレス
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = 相手のデバイスがコードの下に表示するアドレスです（例: 192.168.1.20:47811）。
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = ペアリング中
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = あとで確認するには、設定のデバイスを開いてください。
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = 子ども用プロファイルとして追加
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = { $name }のプロファイルを使うには、Kaeriを起動し直してください。
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = このフォルダには、参加できる履歴がありません。別のフォルダを選んでください。
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = このデバイスでは{ $service }を利用できません。
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = 削除
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = 表示
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = オフ
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = コピー
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = QRコードを表示するには、ウィンドウを縦に広げてください。
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = { $key }キーで再生を停止してください。
 
@@ -3925,8 +4192,8 @@ tui-together-section = 一緒に見る
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = リンクまたはコード
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r 準備完了 · c リンクをコピー · s 今すぐ開始 · x 退出
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = すべてのパーティで、チャットとリアクションはプレーヤーに表示されません。
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = 同時視聴のリンクまたはコードではありません。
@@ -4239,6 +4506,9 @@ action-try-again = 再試行
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = キャンセル
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = 移動
 
 # Button that puts a question off until later.
 action-not-now = 後で
@@ -4710,6 +4980,12 @@ tv-problem-unpaired = このテレビはこのデバイスをもう認識して�
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } / { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first }と{ $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }、{ $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = ディスカッション
@@ -5992,6 +6268,9 @@ onboarding-own-heading = 自分のメディアがありますか?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = 招待リンクをお持ちですか?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = 今すぐ試す
 
@@ -6544,6 +6823,126 @@ together-recent-note = 直近10件をこのデバイスに保存
 # The start sheet's button after a title is picked.
 party-pick-continue = 続ける
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = ひとこと送る
+
+# Button that sends a chat line.
+party-chat-send = 送信
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = チャット
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = { $seconds }秒待機
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+       *[other] { $seconds }秒お待ちください
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = チャットにあと{ $count }件
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = このルームのサーバーでは、チャットがオフです
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = メッセージはルームのサーバーを経由します。Kaeriには残りません。
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = チャットは非表示です
+
+# Line under it.
+party-chat-hidden-line = 設定の「再生」で、チャットの非表示がオンになっています。
+
+# Button that turns Hide chat off.
+party-chat-show = チャットを表示
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = 同時視聴でチャットを非表示
+
+# Line under that switch.
+settings-hide-chat-line = メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = { $name }をミュート
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = { $name }のミュートを解除
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = 解除
+
+# State on a muted member's row.
+party-member-muted = ミュート中
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name }はミュート中です
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = 送信できませんでした
+
+# Button after it, which sends the same text again.
+party-chat-retry = 再試行
+
+# Button on the TV's controls that opens the four reactions.
+party-react = リアクション
+
+# Label of the laugh reaction button.
+party-react-laugh = 笑う
+
+# Label of the gasp reaction button.
+party-react-gasp = 驚く
+
+# Label of the clap reaction button.
+party-react-clap = 拍手
+
+# Label of the cry reaction button.
+party-react-cry = 泣く
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name }が笑いました
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name }が驚きました
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name }が拍手しました
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name }が泣きました
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $time }に{ $line }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first }さんと{ $second }さん
+
+# Three members named together.
+party-names-three = { $first }さん、{ $second }さん、{ $third }さん
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }さん、{ $second }さんほか{ $count }人
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = あなた
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = { $device }として送信
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name }：{ $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+       *[other] あと{ $count }文字
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = 次のエピソード
 
@@ -6579,6 +6978,126 @@ player-add-plugin-store = プラグインストアを追加
 
 # Short word while the video buffers.
 player-buffering = バッファリング中
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = ソース { $total } 件中 { $place } 件目
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = この作品で選んだもの
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name }にはこの作品がありません
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name }にはエピソード { $episode } がありません
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name }から応答がありませんでした
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name }の応答に時間がかかりすぎました
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = { $name }をスキップしました
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = 最近の失敗によりスキップ
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = { $name }から
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = 最初のストリームは映像が表示されませんでした
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = ストリーム { $total } 件中 { $next } 件目
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+       *[other] ピア { $count } 件
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = バッファリング中 · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = { $clock } から再開中
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = 最初から再生
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = 詳細
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = { $name }をスキップ
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = このストリームをスキップ
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = { $name }を待っています
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = 接続を待っています
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = オフラインです。エピソード { $episode } はオンラインに戻ると開始します。
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = 一致を修正
+
+# Details row label for the translation of the episode.
+player-start-translation = 音声と字幕
+
+# Details row once the title has been looked up.
+player-start-looked-up = タイトルを検索しました
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } 秒
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = まだ開始中です。ソースを選ぶこともできます。
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = エピソード { $episode } { $title } を開始します
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }。{ $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }、{ $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = 最初から開始します
+
+# Details row while a source is being asked.
+player-start-row-asking = 問い合わせ中
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = この作品はありません
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = エピソード { $episode } はありません
+
+# Details row outcome when a source failed.
+player-start-row-failed = 応答なし
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = 時間切れ
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = スキップ済み
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = { $names }に問い合わせました。
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = 字幕あり
 
 # Title of the stall card. The seconds count up.
 player-stall-title = ソースがバッファリング中 · { $seconds }秒
@@ -6681,6 +7200,9 @@ player-mark-watch-edges = 前後を確認
 # Line in the review with sharing on.
 player-mark-shares = 保存すると、この位置がAniSkipと共有されます。
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeriが音声からこれらの位置を見つけました。
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = 誤りと報告されているAniSkipの{ $start }から{ $end }を置き換えます。
 
@@ -6730,11 +7252,33 @@ player-mark-it = マークする
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = 今後は確認しない
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeriがこのオープニングを見つけました。範囲は合っていましたか?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeriがこのエンディングを見つけました。範囲は合っていましたか?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = 「はい」を選ぶと、エピソード{ $episode }のこの位置がAniSkipに共有されます。
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = はい
+
+player-found-adjust = 調整
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = 保存しました。エピソード{ $episode }のこの位置をAniSkipに送信します。
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeriは、スキップ位置について今後たずねません。
+
+player-found-never-how = 設定からいつでもオンに戻せます。
+
 # Title of the sheet shown on the first Save.
 player-share-title = スキップ位置をAniSkipと共有しますか?
 
 # Body of the sheet.
-player-share-body = AniSkipは、ボランティアが運営する、オープニングとエンディングの無料の共有リストです。あなたがマークした位置は、他の人のプレーヤーでもスキップされます。
+player-share-body = AniSkipは、ボランティアが運営する、オープニングとエンディングの共有リストです。あなたがマークした位置と、確認した検出済みの位置は、ほかの人のプレーヤーでもスキップされます。
 
 # What is sent, as a line under the body.
 player-share-sent = 送信されるのは、スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用に作られたランダムなIDです。あなたの名前、アカウント、視聴中のソースは送信されません。AniSkipはスパム対策のためIPアドレスを確認し、利用規約は13歳以上であることを求めています。
@@ -6750,6 +7294,22 @@ player-skip-from-file = ファイルから
 player-skip-yours = あなたの設定
 
 player-skip-from-aniskip = AniSkipから
+
+player-skip-found = Kaeriが検出
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = 低電力モードがオンの間は一時停止します。
+
+player-skip-paused-battery-saver = バッテリーセーバーがオンの間は一時停止します。
+
+player-skip-paused-energy-saver = 省エネモードがオンの間は一時停止します。
+
+player-skip-paused-power-saver = 省電力モードがオンの間は一時停止します。
+
+player-skip-paused-storage = ストレージの空きが2 GBになるまで一時停止します。
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = このKaeriのビルドでは利用できません。
 
 player-skip-none = まだありません
 
@@ -7251,6 +7811,195 @@ search-available-services = 登録サービス内
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = { $service }にあります
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+       *[other] { $count }話
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count }話
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = { $out }/{ $total }話 配信済み
+
+# The same, short.
+count-out-of-short = { $out }/{ $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+       *[other] { $count }話 配信済み
+    }
+
+# The same, short.
+count-out-short = { $count }話
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = { $date }開始
+
+# The count line of a show that has not started and has no date.
+count-not-out = 未配信
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = 第{ $episode }話/全{ $total }話
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = 吹替
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = 吹替 { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+       *[other] { $count }話
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = 全{ $total }話のうち{ $out }話が配信済み
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+       *[other] { $count }話が配信済み
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = { $date }開始
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = 全{ $total }話のうち第{ $episode }話
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = 第{ $through }話まで吹替版
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = 吹替あり
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = 1月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = 1月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = 2月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = 2月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = 3月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = 3月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = 4月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = 4月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = 5月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = 5月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = 6月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = 6月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = 7月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = 7月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = 8月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = 8月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = 9月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = 9月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = 10月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = 10月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = 11月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = 11月
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = 12月
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = 12月
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = 今日のトレンド
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = 今週のトレンド
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = 今月のトレンド
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = 今日
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = 今週
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = 今月
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = { $period }のトレンドを読み込めませんでした。
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = { $age }に更新
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = おまかせ
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = おまかせ
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = 別の作品
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = 「計画中」からランダムに作品を開きます
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = この条件からランダムに作品を開きます
+
+# Hint of the Another button.
+surprise-another-hint = この作品の代わりに、別のランダムな作品を開きます
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = この条件に合う作品がありません。
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = 「計画中」リストが空です。
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = オフラインです。検索からのおまかせにはAniListが必要です。
+
 # Title of the dialog that adds a media server.
 servers-add-title = メディアサーバーを追加
 
@@ -7491,6 +8240,9 @@ settings-group-titles = タイトル
 # Group heading.
 settings-group-playback = 再生
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = 同時視聴
+
 # Group heading.
 settings-group-watching = 視聴
 
@@ -7572,23 +8324,35 @@ settings-skip-opening = オープニングを自動でスキップ
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = 前回のあらすじを自動でスキップ
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = 手動でオープニングをスキップした後に確認する
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = 音声からスキップ位置を検出
 
 # Line under it.
-settings-ask-was-opening-detail = マークを提案し、次回からスキップされるようにします
+settings-find-skips-detail = AniSkipに位置がない場合、Kaeriはこのデバイス上で、作品のエピソード間の音声を比較します。
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = スキップ位置について確認する
+
+# Line under it.
+settings-ask-was-opening-detail = オープニングを手動でスキップしたあと、およびKaeriが検出した位置をスキップしたあと
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = スキップ位置をAniSkipと共有
 
 # Line under it.
-settings-share-skips-detail = AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの無料の共有リストです。スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。
+settings-share-skips-detail = AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの共有リストです。あなたがマークした位置と、確認した検出済みの位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = マークしたスキップ位置を消去…
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = マークした、またはKaeriが検出したスキップ位置
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = マークしたスキップ位置を消去しますか?共有済みの位置はAniSkipに残ります。
+# Question that asks before clearing them.
+settings-clear-skips-confirm = マークしたスキップ位置と、Kaeriが検出した位置を消去しますか?共有済みの位置はAniSkipに残ります。
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = スキップ位置を消去
+
+# Line under it.
+settings-clear-skips-android-detail = マークした位置と、Kaeriが検出した位置
 
 # Row: skip filler.
 settings-skip-filler = フィラーを自動でスキップ
@@ -7612,7 +8376,7 @@ settings-counts-watched-detail = エンディングに印が付いていれば�
 settings-spoiler = ネタバレ防止
 
 # Line under it.
-settings-spoiler-detail = 次のエピソードより後の未視聴エピソードの静止画をぼかします。
+settings-spoiler-detail = 次のエピソードより後の未視聴エピソードの静止画とあらすじをぼかします
 
 # Line under the audio row.
 settings-audio-detail = 作品ごとに、音声と字幕の設定を記憶します。
@@ -7759,7 +8523,7 @@ show-settings-blur-ahead = 先の静止画をぼかす
 show-settings-show-everything = すべて表示
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = 次のエピソードより後の静止画をぼかします。
+show-settings-spoiler-detail = 次のエピソードより後の静止画とあらすじをぼかします。
 
 # Option: always.
 show-settings-always = 常に
@@ -7907,6 +8671,9 @@ settings-reset = 設定をリセット
 
 # Title of the confirmation for resetting the settings.
 settings-reset-title = 設定をリセットしますか?
+
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = トレントのプロキシを含め、すべての設定が初期値に戻ります。視聴履歴は残り、古い設定ファイルも保管されます。
 
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = 設定を初期値に戻しました。古いファイルは{ $file }として保管されています。
@@ -8076,6 +8843,9 @@ source-note-gone = 未インストール
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = この作品と一致させられませんでした
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = プロキシの確認待ち
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = リリース
 
@@ -8154,6 +8924,9 @@ sources-detail-not-answering = 応答がありません。{ $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = 応答がありません。
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = プロキシの確認に通るまで待機します。
+
 # Status line: disabled.
 sources-detail-disabled = オフです。順番は保持されますが、試されません。
 
@@ -8225,6 +8998,9 @@ sources-torrent-source = トレント再生
 
 # Row: where the plugin's page stands.
 sources-source-order-row = ソースの順番
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = トレントはプラグインではなく、Kaeriに含まれています。プロキシとシーディングは、設定のソースで設定します。
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = ソースを設定し直しています
@@ -8418,6 +9194,9 @@ sources-your-intro = エピソードは、この順番で最初に見つかっ�
 # Heading of the section that lists the plugins.
 sources-section-plugins = プラグイン
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = 公開カタログ
+
 # Link in the empty state.
 sources-add-demo = デモを追加
 
@@ -8429,6 +9208,9 @@ stores-joined = 参加済み
 
 # Title of the empty list.
 stores-empty-title = まだプラグインストアがありません
+
+# Line under the empty title.
+stores-empty-detail = プラグインストアは署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行します。運営者から届いた招待リンクで参加できます。
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。
@@ -8917,6 +9699,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = プラグインストアを開く
 
+# Explainer on the empty plugin stores page.
+stores-what-is = プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = プラグインストアとは?
 
@@ -8934,6 +9719,669 @@ stores-qr-warning-device = 連携したいデバイスでこれをスキャン�
 
 # Button that opens the system share sheet for the invite link.
 stores-share = 共有…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = ブラウザで{ $service }のページが開きました。そこでアクセスを許可すると、Kaeriは自動で先に進みます。
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = ブラウザで{ $service }にサインイン
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = コンピュータ
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = コードを入力
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = 表示
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = オフにする
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = アドレス
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = アドレスでペアリング
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = 復元キー
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = ユーザー名
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = パスワード
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = サーバーのアドレス
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = ペアリング中
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = ほかのデバイス
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = アドレスを空にすると、Kaeriはこのネットワーク上でデバイスを探します。
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = 同期では、続きの位置、履歴、設定が共有されます。
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · リモコン
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = 編集
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = 名前
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = { $name }のその他の操作
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = { $store }または{ $device }に接続できません。両方がオンラインのときにもう一度お試しください。
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store }が招待を受け付けませんでした。運営者に新しい招待を依頼してください。
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device }は、{ $store }に他のデバイスを招待できません。プラグインストアの運営者に招待を依頼してください。
+
+# Settings row and page title, every platform.
+devices-title = デバイス
+
+# Devices row value while sync is off.
+devices-row-off = 同期オフ
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = { $ago }に同期
+
+# Devices row value with the error glyph.
+devices-row-error = 同期できませんでした
+
+# Group heading over the name.
+devices-this-device = このデバイス
+
+# Row for this device’s name.
+devices-name = 名前
+
+# Group heading while off.
+sync-group = 同期
+
+# Off state.
+sync-off-title = 同期はオフです
+
+# Off state.
+sync-off-line = オンにすると、続きの位置、履歴、設定をデバイスの間で同じに保てます。
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = 同期をオンにする
+
+# Road sheet title.
+sync-road-title = デバイスをどうやって共有しますか?
+
+# Road sheet row.
+sync-road-nearby = 近くのデバイスと
+
+# Road sheet row line.
+sync-road-nearby-line = 同じWi-Fi上の別のデバイスとペアリングします。ほかの場所には何も保存されません。
+
+# Road sheet row.
+sync-road-cloud = クラウドフォルダ経由
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。
+
+# Road sheet footer.
+sync-road-later = もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。
+
+# Group heading.
+devices-yours = あなたのデバイス
+
+# Empty Your devices.
+devices-only-this = このデバイスのみ
+
+# Empty Your devices.
+devices-only-this-line = 別のデバイスをペアリングすると、続きの位置、履歴、設定を共有できます。
+
+# Row and sheet title.
+devices-add = デバイスを追加
+
+# Device row line past 30 days.
+devices-not-seen = { $days }日間確認されていません
+
+# A device paired only for Play on TV.
+devices-remote-only = リモコン専用
+
+# Button on a remote-only TV row.
+devices-also-sync = { $device }とも同期
+
+# Footer while sync is off.
+devices-paired-tvs-foot = テレビで再生のためにペアリング済みです。リモコンとしてペアリングしたテレビには、履歴は送られません。
+
+# Switch on a device.
+devices-sync-switch = 同期
+
+# Switch on a TV.
+devices-remote-switch = リモコン
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = 同期では、続きの位置、履歴、設定が共有されます。リモコンをオンにすると、この{ $kind }から{ $device }を操作できます。
+
+# Device page, destructive.
+devices-remove = このデバイスを削除
+
+# Alert title.
+devices-remove-alert = { $device }を削除しますか?
+
+# Alert message.
+devices-remove-alert-line = { $device }は保存済みの内容を保持しますが、ほかのデバイスからは何も受け取らなくなります。
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = この{ $kind }の同期をオフにする
+
+# Alert title.
+sync-turn-off-alert = { $device }の同期をオフにしますか?
+
+# Alert message.
+sync-turn-off-alert-line = この{ $kind }は、ほかのデバイスとの共有をやめます。保存済みの内容はここに残ります。
+
+# Group heading.
+cloud-group = クラウドフォルダ
+
+# Group footer.
+cloud-foot = デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。
+
+# Row when only the nearby road is set.
+cloud-add = クラウドフォルダを追加
+
+# Picker title.
+cloud-pick-title = クラウドフォルダを選択
+
+# Picker row line.
+cloud-google-line = Googleドライブ内のKaeriの非表示フォルダ
+
+# Picker row line.
+cloud-nextcloud-line = 自分のNextcloudサーバー、またはホスティング版
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = iCloud Driveで選んだフォルダ
+
+# Picker group heading.
+cloud-other = その他
+
+# Picker row.
+cloud-webdav = WebDAVサーバー
+
+# Picker row line.
+cloud-webdav-line = WebDAVに対応した任意のサーバー
+
+# Picker row line.
+cloud-folder-line = ほかのアプリが同期しているフォルダ用
+
+# Picker footer.
+cloud-pick-foot = デバイスは、このフォルダに変更内容の封印したコピーを保管します。読み取れるのは、あなたのデバイスだけです。Kaeriは独自のサーバーを運営していません。
+
+# Row line while the first write runs.
+cloud-setting-up = フォルダを設定中
+
+# Field label.
+cloud-nextcloud-address = サーバーのアドレス
+
+# Field note.
+cloud-nextcloud-address-note = ブラウザでNextcloudを開くときのアドレスです。
+
+# Login flow wait.
+cloud-nextcloud-wait-title = { $host }でサインインを完了してください
+
+# Login flow wait.
+cloud-nextcloud-wait-line = ブラウザでNextcloudのページが開いています。そこでアクセスを許可すると、このシートは自動で先に進みます。
+
+# Wait row.
+cloud-waiting = { $service }を待っています
+
+# Button.
+cloud-open-again = ページをもう一度開く
+
+# Text button.
+cloud-app-password = 代わりにアプリパスワードを使う
+
+# Button.
+cloud-connect = 接続
+
+# Error.
+cloud-err-offline = { $service }に接続できません。接続を確認してください。
+
+# Inline error.
+cloud-err-no-server = { $host }でNextcloudサーバーが見つかりません。アドレスを確認してください。
+
+# Inline error.
+cloud-err-app-password = Nextcloudがそのアプリパスワードを受け付けませんでした。Nextcloudの「設定」の「セキュリティ」で新しく作成してください。
+
+# Inline error.
+cloud-err-webdav = サーバーがそのユーザー名またはパスワードを受け付けませんでした。
+
+# Error, with Open the page again.
+cloud-err-timeout = アクセスが許可される前に、サインインページが閉じました。
+
+# Error.
+cloud-err-other-group = このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service }がKaeriをサインアウトさせました。再びサインインするまで、変更はこの{ $kind }で待機します。
+
+# Status error.
+cloud-err-full = { $service }の空き容量がありません。空きを作ってから、もう一度お試しください。
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeriはこのフォルダを開けなくなりました。もう一度選んでください。
+
+# Status error title.
+cloud-err-title = { $service }と同期できませんでした
+
+# Picker row line.
+cloud-dropbox-line = Dropbox内のKaeri専用フォルダ、Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = OneDrive内のKaeri専用フォルダ、Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = 今すぐ同期
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = サインアウト
+
+# Cloud group button after signing out.
+cloud-sign-in = サインイン
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = サインアウトしました。再びサインインするまで、変更はこの{ $kind }で待機します。
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service }がKaeriにアクセスを許可しませんでした。もう一度選んで再試行してください。
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = ほかのデバイスで使っているものを選んでください。新しいクラウドフォルダは、復元キーを保存できるスマートフォンかコンピュータで追加します。
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = スマートフォンでサインイン
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropboxはスマートフォンでサインインします
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device }はDropboxにサインイン済みです。このテレビは、ペアリング済みの接続を通じて、そのサインインを使えます。
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = { $device }のサインインを使う
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = テレビでできるDropboxのサインインはありません。スマートフォンでKaeriを開き、設定、デバイス、クラウドフォルダの順に進んで、そこでDropboxにサインインしてください。そのあと、ここでもう一度Dropboxを選んでください。
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = サインインしました。フォルダを設定しています
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service }がKaeriをサインアウトさせました。選択すると、再びサインインできます。
+
+# TV cloud row.
+tv-cloud-signed-out-line = サインアウトしました。選択すると、サインインできます。
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = { $service }からサインアウトしますか?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = このテレビは、{ $service }経由の同期をやめます。再びサインインするまで、変更はここで待機します。
+
+# Status line while offline.
+cloud-offline = 接続を待っています。変更はこの{ $kind }に保管されます。
+
+# TV device flow.
+tv-google-title = Googleドライブにサインイン
+
+# TV device flow.
+tv-qr-open-page = またはスキャンしてページを開く
+
+# TV Nextcloud.
+tv-nextcloud-line = スマートフォンでこれをスキャンし、Nextcloudのページでアクセスを許可してください。テレビは自動で先に進みます。
+
+# Sheet title.
+rkey-title = 復元キー
+
+# Sheet line.
+rkey-line = 安全な場所に保管してください。すべてのデバイスをなくしても履歴を復元でき、新しいデバイスがクラウドフォルダから参加するときにも使います。
+
+# Button.
+rkey-copy = コピー
+
+# Text button.
+rkey-qr = QRコードで表示
+
+# Sheet footnote.
+rkey-again = あとで確認するには、この{ $kind }のロックを解除して、設定のデバイスを開いてください。
+
+# Devices row.
+rkey-row = 復元キー
+
+# Devices row value.
+rkey-made = { $date }に作成
+
+# Row.
+rkey-new = 新しいキーを作成
+
+# Footer.
+rkey-new-foot = 古いキーは使えなくなり、デバイスは次回の同期で新しいキーに切り替わります。
+
+# Restore.
+rkey-enter-title = 復元キーを入力
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+       *[other] { $service }には、{ $count }台のデバイスの履歴が保存されています。同期をオンにしたときに保存したキーで開けます。
+    }
+
+# Field note.
+rkey-enter-note = 英数字24文字を、4文字ずつに区切ったものです。スペースと大文字小文字は区別しません。
+
+# Inline error.
+rkey-wrong = このキーではこのフォルダを開けません。4文字ずつ確認して、もう一度お試しください。
+
+# Button.
+rkey-restore = 復元
+
+# Add a device.
+pair-enter-line = 相手のデバイスでKaeriを開き、「別のデバイスから設定」か、設定のデバイスの「コードを表示」を選びます。そのあと、ここにコードを入力してください。
+
+# Button, phones.
+pair-scan = コードをスキャン
+
+# Note.
+pair-same-wifi = 両方のデバイスが同じWi-Fiに接続している必要があります。
+
+# Button.
+pair-button = ペアリング
+
+# Text button.
+pair-show-instead = 代わりにここにコードを表示
+
+# Code screen.
+pair-show-title = このコードを相手のデバイスに入力してください
+
+# Code screen.
+pair-show-scan = または、スマートフォンのKaeriでスキャンしてください。
+
+# Code screen.
+pair-good-for = 有効期間は2分 · { $left }
+
+# TV code screen.
+pair-tv-line = スマートフォンでKaeriを開き、設定、デバイス、デバイスを追加の順に進んで、このコードをスキャンするか入力してください。
+
+# Success.
+pair-ok = { $device }とペアリングしました
+
+# Success.
+pair-ok-line = 履歴を取り込んでいます。その間もKaeriを使えます。
+
+# Success switch.
+pair-copy-signins = { $device }のサインインをコピー
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }。この接続を通じて、デバイスごとに専用のコピーが作られます。
+
+# Error.
+pair-err-code = コードが一致しませんでした。{ $device }のコードを確認して、もう一度お試しください。
+
+# Error.
+pair-err-not-found = このコードを表示しているデバイスが見つかりません。両方のデバイスが同じWi-Fiに接続している必要があります。
+
+# Error on the showing side.
+pair-err-expired = このコードは期限切れです。新しいコードを表示してください。
+
+# Profile question.
+pair-which-profile = { $device }のどのプロファイルがあなたのものですか?
+
+# Profile question.
+pair-which-profile-line = この{ $kind }は、そのプロファイルとだけ同期します。ほかのプロファイルは{ $device }に残ります。
+
+# Footer.
+pair-also-sync-foot = { $device }は「テレビで再生」ですでにこのスマートフォンを知っているため、新しいコードなしで同期できます。
+
+# Continue, for a day.
+continue-from-device = エピソード{ $n } · { $device }の{ $time }で停止
+
+# Player, 6 s, with Start over.
+player-resumed-from = { $device }の{ $time }から再開しました
+
+# Row line, Mac toolbar status.
+sync-syncing = 同期中
+
+# Mac jobs popover.
+sync-syncing-with = { $device }と同期中
+
+# Device page group.
+sync-notes = 同期のメモ
+
+# Sync note.
+sync-note-kept-watched = { $title }のエピソード{ $n }は視聴済みのままです。{ $other }は、{ $device }が視聴を終えたことを知らずに未視聴に戻しました。
+
+# Sync note action.
+sync-note-undo = 未視聴にする
+
+# Footer.
+sync-notes-foot = メモは7日間残ります。
+
+# Settings row and page.
+profiles-title = プロファイル
+
+# Profiles row value with one profile.
+profiles-only-you = あなただけ
+
+# Profiles page with one.
+profiles-one-foot = プロファイルを使うと、このデバイスを共有する人ごとに、履歴、続きを見る、アカウントを分けられます。プロファイルが1つのときは、選択画面も名前も表示されません。
+
+# Row, sheet title, picker tile.
+profiles-add = プロファイルを追加
+
+# Sheet line.
+profiles-add-line = プロファイルごとに、履歴、続きを見る、アカウントが別々になります。このデバイスでは、ソースとダウンロードは共有されたままです。
+
+# Field label.
+profiles-new = 新しいプロファイル
+
+# Field label.
+profiles-yours = あなたのプロファイル
+
+# Field note when signed in.
+profiles-yours-note = AniListから入力されました。これまで、このデバイスには名前のないプロファイルが1つありました。
+
+# Switch.
+profiles-kids = 子ども用プロファイル
+
+# Switch footer.
+profiles-kids-line = アダルト向けの作品は表示されず、ソース、デバイス、トレントの設定は非表示になります。
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = 子ども用プロファイルでは、ソースとデバイスは非表示で、アダルト向けの作品も表示されません。
+
+# Line under a kids profile.
+profiles-kids-tag = 子ども用
+
+# Button.
+profiles-add-button = プロファイルを追加
+
+# Profiles page footer.
+profiles-shared-foot = ソース、ダウンロード、このデバイスの設定は、すべてのプロファイルで共有されます。
+
+# Profile page row.
+profiles-syncs-with = 同期先
+
+# Profile page, destructive.
+profiles-delete = プロファイルを削除
+
+# Alert title.
+profiles-delete-alert = { $name }のプロファイルを削除しますか?
+
+# Alert message.
+profiles-delete-alert-line = このデバイスにある{ $name }の履歴とサインインは削除されます。{ $name }と同期しているデバイスには、そのまま残ります。
+
+# TV, and iPad when asked.
+profiles-picker = 誰が見ますか?
+
+# iPad switch.
+profiles-ask-at-launch = 起動時に「誰が見ますか?」を表示
+
+# iPad footer.
+profiles-ask-foot = 初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。
+
+# TV Settings.
+profiles-switch = プロファイルを切り替え
+
+# Account sheet and menus.
+profiles-manage = プロファイルを管理
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = 別のデバイスから設定
+
+# Code screen from first launch.
+first-setup-line = Kaeriがすでに入っているデバイスで、設定、デバイス、デバイスを追加の順に開き、このコードを入力するかスキャンしてください。
+
+# Text button.
+first-restore = 代わりにクラウドフォルダから復元
+
+# Success from first launch.
+first-ok-line = 履歴、設定、プラグインストアを取り込んでいます。すぐにKaeriを使い始められます。
+
+# Success switch.
+first-join-store = プラグインストア「{ $store }」に参加
+
+# Success switch line.
+first-join-store-line = { $device }が、この{ $kind }専用の招待を作成します
+
+# Picker row on a phone or computer.
+cloud-folder = この{ $kind }内のフォルダ
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Nextcloudの「設定」の「セキュリティ」で作成してください。この{ $kind }に保存されます。
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+       *[other] 「テレビで再生」用に{ $count }台のテレビ
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = 今日ペアリング
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = スマートフォンに入力するコードを表示します
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = あなただけです。プロファイルを追加すると、このテレビで履歴、続きを見る、アカウントを分けられます。
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = 「誰が見ますか?」を開きます
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = このテレビのプロファイル
+
+# Android recovery key sheet, third button.
+rkey-save-file = ファイルとして保存
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = QRコード
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = コードを表示
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = もう一度サインイン
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = フォルダを選択
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }、プロファイルを切り替え
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = ペアリングコード
+
+device-kind-phone = スマートフォン
+
+device-kind-tablet = タブレット
+
+device-kind-tv = テレビ
+
+# TV welcome, text button.
+first-setup-phone = スマートフォンから設定
+
+# Error naming a device that is not known by name.
+devices-other-device = 相手のデバイス
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = { $service }のページが開いています。そこでアクセスを許可すると、Kaeriは自動で先に進みます。
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = { $service }に接続中
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = アクセスが許可されました。サインインを完了しています。
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = { $service }にKaeriのフォルダを作成し、履歴の最初のコピーを封印しています。
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = { $service }にサインインできませんでした
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = フォルダを設定できませんでした
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service }がKaeriにアクセスを許可しませんでした。
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service }でサインインが完了しませんでした。しばらくしてからもう一度お試しください。
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeriは{ $service }にフォルダを作成できませんでした。しばらくしてからもう一度お試しください。
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = 別のサービスを使う
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = クラウドフォルダを削除
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = 同期から{ $service }を削除しますか?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = この{ $kind }の内容はここに残り、近くのペアリング済みデバイスとは同期を続けます。フォルダは封印したコピーとともに{ $service }に残り、ほかのデバイスでも削除するまで使われます。
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = 削除
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = { $service }のその他の操作
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = 使用中
+
+# Picker line under Use another service.
+cloud-switch-foot = 新しいフォルダの準備ができるまで、{ $service }を使い続けます。
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = どちらでも同期をオンにでき、両方使うこともできます。
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = 同期では、続きの位置、履歴、設定を、近くまたは選んだクラウドフォルダ経由で、自分のデバイスの間で受け渡します。内容はこの{ $kind }を出る前に封印されます。
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = スマートフォンとペアリングすると、同期がオンになります。そのあと、このテレビもクラウドフォルダに参加できます。
 
 # Title of the state when a title page could not load.
 title-load-failed = この作品を読み込めませんでした
@@ -9045,6 +10493,69 @@ episode-row-airs = { $when }放送予定
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = ネタバレ防止により非表示
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = ネタバレ防止のためあらすじを非表示
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = あらすじを表示
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = このエピソードの静止画とあらすじを表示します
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes }分 · 放送日 { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes }分
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = 残り{ $minutes }分
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = ネタバレ防止により、第{ $episode }話より後は非表示です。
+
+# The same line on phones.
+episode-protection-line-short = 第{ $episode }話より後は非表示
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = 第{ $from }話〜第{ $to }話
+
+# Label of the control that picks an episode range.
+episode-range-label = エピソード範囲
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+       *[other] 視聴済み{ $count }エピソード
+    }
+
+# An episode's number in a facts line on phones and in narrow desktop windows.
+episode-short = 第{ $episode }話
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = 放送日 { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = 表示
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = 非表示
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = 第{ $episode }話より後を表示中です。
+
+# The same line on phones.
+episode-protection-shown-short = 第{ $episode }話より後を表示中
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = エピソードのオプション
@@ -9166,11 +10677,56 @@ title-fact-tba = 未定
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = エピソードへ移動…
+
+# Title of the Go to episode field.
+episode-go-to-title = エピソードへ移動
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = 移動
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first }～{ $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = エピソード、{ $first }～{ $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = エピソード{ $number }はありません。この作品は全{ $last }話です。
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = エピソード{ $number }はまだ公開されていません。最新は{ $latest }です。
+
 # Title of the settings group and the screen.
 torrents-title = トレント
 
 # Label and short value for the switch.
 torrents-on = トレント：オン
+
+# Line under the switch while torrents are off.
+torrents-off-detail = 初期設定ではオフです。プロキシを経由させない限り、トレントは直接接続します。
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = トレントの参加者は、あなたのIPアドレスを見ることができます。非公開にするには、トレントの通信をプロキシ経由にしてください。
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = トレントはプラグインではなく、Kaeriの機能です。プロキシとシーディングは、設定のソースで設定します。
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = トレントの通信をプロキシ経由にする
+
+# Line under the switch.
+torrents-proxy-route-detail = トレントの通信が、自分で運用または契約しているSOCKS5プロキシを経由します。オフの間、トレントは直接接続します。
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = SOCKS5プロキシ（{ $host }:{ $port }）経由です。
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = SOCKS5プロキシ経由です。
+
+# Summary: no proxy is set.
+torrents-summary-direct = プロキシを使わず、直接接続しています。
 
 # Label of the proxy host field.
 torrents-proxy-host = プロキシのホスト
@@ -9187,6 +10743,9 @@ torrents-proxy-password = パスワード
 # Line under the password field.
 torrents-password-keep = 保存済みのパスワードを使う場合は、空欄のままにしてください。
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = 新しいプロキシが確認に通るまで、トレントは保存済みのプロキシを使い続けます。
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = プロキシには、ホストと、1から65535までのポート番号が必要です。
 
@@ -9196,17 +10755,29 @@ torrents-checking-proxy = プロキシを確認しています…
 # Notice after the proxy was saved.
 torrents-proxy-saved = プロキシを保存しました
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = プロキシの確認に失敗した
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = 保存されませんでした。{ $why }ため、保存済みのプロキシはそのまま残ります。
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = { $why }ため、トレントはまだオフです。
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeriは、トレントの開始前に、プロキシに接続できるかを確認します。確認に失敗している間、トレントは待機します。
+
+# Label of the proxy check's result.
+torrents-last-check = プロキシの確認
+
 # Check passed.
 torrents-check-passed = 合格
 
 # Check running: the short word.
 torrents-check-running = 確認中
+
+# Check failed: the line.
+torrents-check-failed-line = プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。
 
 # Short word: the check failed.
 torrents-check-failed = 失敗
@@ -9726,6 +11297,9 @@ tv-cast-volume-on-tv = テレビ側で設定
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = 次のエピソード · { $seconds }秒後に再生
+
+# Line under the paired TVs.
+tv-forget-note = ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。
 
 # Heading of the update row in settings and about.
 updates-title = アップデート

@@ -5,6 +5,7 @@
 
 package app.kaeri.ui
 
+import app.kaeri.design.SyncIcons
 import app.kaeri.store.plainReason
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -66,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import app.kaeri.i18n.R
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
+import app.kaeri.store.loadSync
 import android.content.Context
 
 /** The panes of Settings, in the list's order. */
@@ -76,6 +78,8 @@ enum class SettingsPane(val route: String, val titleRes: Int) {
     Downloads("downloads", R.string.downloads_title),
     Sources("sources", R.string.sources_title),
     Accounts("accounts", R.string.accounts_title),
+    Devices("devices", R.string.devices_title),
+    Profiles("profiles", R.string.profiles_title),
     Hidden("hidden", R.string.settings_hidden_titles),
     About("about", R.string.about_title);
 
@@ -173,6 +177,9 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     val providers by store.providers.rows.collectAsStateWithLifecycle()
     val providersLoaded by store.providers.loaded.collectAsStateWithLifecycle()
     val update by store.updates.state.collectAsStateWithLifecycle()
+    val syncStatus by store.sync.status.collectAsStateWithLifecycle()
+    val profileList by store.sync.profiles.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(Unit) { store.loadSync() }
     AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
     val panes = listOf(
         SettingsPane.General to generalSummary(LocalContext.current, view),
@@ -181,6 +188,8 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
         SettingsPane.Downloads to storageLine(LocalContext.current, store.downloads.bytes(downloads)),
         SettingsPane.Sources to sourcesSummary(LocalContext.current, view, providers.size.takeIf { providersLoaded }),
         SettingsPane.Accounts to AccountWords.connected(LocalContext.current, trackers),
+        SettingsPane.Devices to devicesSummary(LocalContext.current, syncStatus),
+        SettingsPane.Profiles to profilesSummary(LocalContext.current, profileList.profiles),
         SettingsPane.Hidden to null,
     )
     SettingsGroup(
@@ -206,6 +215,8 @@ private val SettingsPane.icon
         SettingsPane.Downloads -> Icons.DownloadsPage
         SettingsPane.Sources -> Icons.SourcesPage
         SettingsPane.Accounts -> Icons.AccountsPage
+        SettingsPane.Devices -> SyncIcons.Devices
+        SettingsPane.Profiles -> SyncIcons.People
         SettingsPane.Hidden -> Icons.Hidden
         SettingsPane.About -> Icons.About
     }
@@ -393,6 +404,8 @@ internal fun PaneContent(pane: SettingsPane, actions: AppActions) {
         SettingsPane.Downloads -> DownloadsPane(actions)
         SettingsPane.Sources -> SourcesPane(actions)
         SettingsPane.Accounts -> AccountsPane(actions)
+        SettingsPane.Devices -> DevicesPane(actions)
+        SettingsPane.Profiles -> ProfilesPane(actions)
         SettingsPane.Hidden -> HiddenPane()
         SettingsPane.About -> AboutPane()
     }

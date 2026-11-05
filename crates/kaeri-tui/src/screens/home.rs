@@ -160,8 +160,14 @@ fn spotlight_row(spotlight: &Spotlight, room: usize) -> ObiRow {
         reason_text(reason, spotlight.because.as_deref(), spotlight.starts, room)
     });
     // The line already names the episode and the time left; the action only stands in for it.
-    let parts: Vec<String> = match &spotlight.line {
-        Some(line) if spotlight.playable != Playable::NotFound => vec![say(line)],
+    let from_device = continue_from(
+        spotlight.last_device.as_deref(),
+        Some(spotlight.episode),
+        spotlight.resume,
+    );
+    let parts: Vec<String> = match (&spotlight.line, from_device) {
+        (_, Some(from)) if spotlight.playable != Playable::NotFound => vec![from],
+        (Some(line), _) if spotlight.playable != Playable::NotFound => vec![say(line)],
         _ => action.into_iter().chain(why).collect(),
     };
     let row = ObiRow::new(spotlight.entry.title.clone());
@@ -190,7 +196,9 @@ fn item_row(
         return row;
     }
     let mut row = ObiRow::new(item.entry.title.clone());
+    let from_device = continue_from(item.last_device.as_deref(), item.episode, item.resume);
     let said = match (&item.line, item.reason) {
+        _ if from_device.is_some() => from_device,
         (_, Some(reason)) if item.starts.is_some() || item.line.is_none() => {
             Some(reason_text(reason, item.because.as_deref(), item.starts, room))
         }
@@ -212,4 +220,33 @@ fn item_row(
         };
     }
     row
+}
+
+/// "Episode 7 · stopped at 12:04 on Study Mac": a Continue title that another device in the sync
+/// group played last, in place of the engine's line.
+fn continue_from(
+    device: Option<&str>,
+    episode: Option<u32>,
+    resume: Option<kaeri_model::catalog::ResumePoint>,
+) -> Option<String> {
+    Some(t::continue_from_device(i64::from(episode?), &resume?.clock(), device?))
+}
+
+#[cfg(test)]
+mod tests {
+    use kaeri_model::catalog::ResumePoint;
+
+    use super::continue_from;
+
+    #[test]
+    fn a_continue_line_names_the_device_that_played_last() {
+        let resume = Some(ResumePoint { position: 604.0, fraction: None });
+        assert_eq!(
+            continue_from(Some("Study Mac"), Some(7), resume).as_deref(),
+            Some("Episode 7 · stopped at 10:04 on Study Mac")
+        );
+        assert_eq!(continue_from(None, Some(7), resume), None);
+        assert_eq!(continue_from(Some("Study Mac"), None, resume), None);
+        assert_eq!(continue_from(Some("Study Mac"), Some(7), None), None);
+    }
 }

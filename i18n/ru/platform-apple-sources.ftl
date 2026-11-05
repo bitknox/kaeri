@@ -57,7 +57,6 @@ tv-bar-cant-reach = Нет связи с { $name }
 tv-bar-not-found = Не найден: { $name }
 tv-paired-tvs = Подключённые телевизоры
 tv-title-list = Телевизоры
-tv-settings-footnote = Телевизор видит это { -device } под кодом { $code }. Если забыть телевизор здесь, он забудет и это { -device }.
 tv-seen-just-now = только что
 stores-link-send-once = Отправьте эту ссылку для { $who }. Она работает один раз, до { $until }.
 stores-link-send-once-anyone = Отправьте эту ссылку тому, для кого она. Она работает один раз, до { $until }.

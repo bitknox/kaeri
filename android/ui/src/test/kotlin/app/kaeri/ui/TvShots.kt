@@ -3,6 +3,10 @@ package app.kaeri.ui
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getAllSemanticsNodes
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
@@ -94,6 +98,44 @@ class TvShots {
 
     @Test
     @Config(qualifiers = PHONE)
+    fun phone_tv_party_chat() = shoot("phone-tv-party-chat", TvScene.PARTY, scrollTo = "Chat")
+
+    /** The remote's Chat heading with its one menu open: Mute or Unmute for each member. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_tv_party_chat_menu() = shoot("phone-tv-party-chat-menu", TvScene.PARTY, scrollTo = "Chat", after = {
+        // Only a recording draws a menu's window, which its semantics need.
+        org.junit.Assume.assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
+        pressWindow(lowest = true) { SemanticsProperties.ContentDescription in it.config && "More" in it.config[SemanticsProperties.ContentDescription] }
+        compose.mainClock.advanceTimeBy(600)
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        compose.mainClock.advanceTimeBy(300)
+    })
+
+    /** A member muted from that menu: "Name is muted · Unmute" stands as a line of the conversation. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_tv_party_chat_muted() = shoot("phone-tv-party-chat-muted", TvScene.PARTY, scrollTo = "Chat", after = {
+        // Only a recording draws a menu's window, which its semantics need.
+        org.junit.Assume.assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
+        pressWindow(lowest = true) { SemanticsProperties.ContentDescription in it.config && "More" in it.config[SemanticsProperties.ContentDescription] }
+        compose.mainClock.advanceTimeBy(600)
+        // Robolectric lays a popup out as it draws one, so the menu is drawn once to be read.
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        compose.mainClock.advanceTimeBy(300)
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        pressWindow { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text.startsWith("Mute ") } == true && SemanticsActions.OnClick in node.config }
+        repeat(100) {
+            ShadowLooper.idleMainLooper()
+            compose.waitForIdle()
+            Thread.sleep(20)
+        }
+        compose.mainClock.advanceTimeBy(600)
+        compose.onNodeWithText("Unmute", substring = true).performScrollTo()
+    })
+
+    @Test
+    @Config(qualifiers = PHONE)
     fun phone_tv_picker() = shoot("phone-tv-picker", TvScene.PICKER)
 
     @Test
@@ -115,7 +157,7 @@ class TvShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_settings_accounts_tv() =
-        shoot("phone-settings-accounts-tv", TvScene.PAIRED, page = settingsRoute(SettingsPane.Accounts), screen = false, scrollTo = "Pair a TV")
+        shoot("phone-settings-accounts-tv", TvScene.PAIRED, page = settingsRoute(SettingsPane.Devices), screen = false, scrollTo = "Pair a TV")
 
     @Test
     @Config(qualifiers = TABLET)
@@ -133,6 +175,7 @@ class TvShots {
         page: String? = null,
         screen: Boolean = true,
         scrollTo: String? = null,
+        after: () -> Unit = {},
         then: (TvRemoteModel) -> Unit = {},
     ) {
         val recorded = Scene.named("watching")
@@ -180,9 +223,28 @@ class TvShots {
         awaitArt(store)
         scrollTo?.let { compose.onNodeWithText(it).performScrollTo() }
         compose.waitForIdle()
+        after()
         val file = "${roborazziSystemPropertyOutputDirectory()}/$name.png"
         if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
         compose.runOnUiThread { store.tv.disconnect() }
+    }
+
+    /** Every window's semantics (the sheet, a menu), read without the test's idle wait; [match] is pressed on the UI thread. */
+    @OptIn(androidx.compose.ui.InternalComposeUiApi::class)
+    private fun pressWindow(lowest: Boolean = false, match: (androidx.compose.ui.semantics.SemanticsNode) -> Boolean) {
+        fun find(view: android.view.View): androidx.compose.ui.node.RootForTest? =
+            (view as? androidx.compose.ui.node.RootForTest)
+                ?: (view as? android.view.ViewGroup)?.let { group -> (0 until group.childCount).firstNotNullOfOrNull { find(group.getChildAt(it)) } }
+        val global = Class.forName("android.view.WindowManagerGlobal")
+        val manager = global.getMethod("getInstance").invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val names = global.getMethod("getViewRootNames").invoke(manager) as Array<String>
+        val getRoot = global.getMethod("getRootView", String::class.java)
+        val nodes = names.mapNotNull { find(getRoot.invoke(manager, it) as android.view.View) }
+            .flatMap { root -> runCatching { root.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }.getOrDefault(emptyList()) }
+        val found = nodes.filter { SemanticsActions.OnClick in it.config && match(it) }
+        val node = if (lowest) found.maxBy { it.boundsInRoot.top } else found.first()
+        compose.runOnUiThread { node.config[SemanticsActions.OnClick].action?.invoke() }
     }
 
     private fun awaitArt(store: AppStore) {

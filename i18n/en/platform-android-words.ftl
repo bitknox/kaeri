@@ -794,11 +794,6 @@ tv-sheet-request-titled = { $title }, episode { $episode }
 # @arg episode: text
 tv-sheet-request-plain = Episode { $episode }
 
-# Settings, Play on TV: the note under the paired TVs.
-# @only android
-# @arg code: text
-tv-sheet-footer = A TV lists this { -device } with the code { $code }. Forget a TV here and it forgets this { -device } too.
-
 # TV sheet, remote: the sheet's title when the TV has no name yet.
 # @only android
 # @max 12

@@ -1,6 +1,6 @@
 stores-joined = Đã tham gia
 stores-empty-title = Chưa có { -plugin-store-pl }
-stores-empty-detail = { -plugin-store-cap-pl } do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.
+stores-empty-detail = { -plugin-store-cap-pl } giữ các { -plugin-pl } đã ký và cấp cho mỗi { -device } một token riêng. Hãy tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.
 stores-intro = { -plugin-cap-pl } thêm { -source-pl }. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.
 stores-not-from-app = { -plugin-cap-pl } đến từ chủ của { -plugin-store }, không phải từ { -app-name }. Bạn có thể rời { -plugin-store } bất cứ lúc nào.
 stores-join-owner-responsible = { $owner } vận hành { -plugin-store } này và chọn các { -plugin-pl } của nó. { -app-name } không tạo, xét duyệt hay chấp thuận chúng.
@@ -170,7 +170,7 @@ stores-offers-plugins = { $count ->
    *[other] Cung cấp { $count } { -plugin }
  }
 notice-open-stores = Mở { -plugin-store-pl }
-stores-what-is = { -plugin-store-cap } là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp { -source-pl } dưới dạng { -plugin-pl }. { -app-name } không vận hành và không liệt kê { -plugin-store-pl } nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.
+stores-what-is = { -plugin-store-cap } là một máy chủ nhỏ giữ các { -plugin-pl } đã ký và cấp cho mỗi { -device } một token riêng. Nó cung cấp { -source-pl } dưới dạng { -plugin-pl }. { -app-name } không vận hành { -plugin-store-pl } nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.
 stores-what-is-link = { -plugin-store-cap } là gì?
 stores-invite-rules = Liên kết mời dùng được một lần, cho một người, và có hiệu lực bảy ngày. Hãy xin chủ sở hữu { -plugin-store } liên kết mới nếu liên kết của bạn đã hết hạn.
 stores-qr-label = Mã QR cho liên kết mời

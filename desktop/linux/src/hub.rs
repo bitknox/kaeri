@@ -88,6 +88,11 @@ pub struct Known {
     pub party: Option<PartyView>,
     /// The party's members, this device's first, once the room has listed them.
     pub party_members: Option<Vec<PartyMember>>,
+    /// The party's conversation as the engine last said it, in memory for the party only.
+    pub party_chat: kaeri_model::party::PartyConversation,
+    /// What this device may do in the conversation: chat on or off, the length, who is muted
+    /// and how long Send waits.
+    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
     /// What the form that starts a party opens with, once the engine has said.
     pub party_form: Option<PartyForm>,
     /// The last ten rooms, newest first.
@@ -97,6 +102,19 @@ pub struct Known {
         std::collections::HashMap<(String, String), kaeri_model::party::PartyGlimpse>,
     /// The room finished the last episode that is out: the episode, and when the next airs.
     pub party_last_out: Option<(String, Option<kaeri_model::Msg>)>,
+    /// How sync stands, as the engine last said it.
+    pub sync_group: Option<kaeri_model::group::SyncStatus>,
+    /// The profiles, empty for one person.
+    pub profiles: Vec<kaeri_model::profiles::ProfileView>,
+    /// A cloud sign-in for sync under way: the service and the engine's last step.
+    pub sync_signin:
+        Option<(kaeri_model::group::SyncFolderKind, kaeri_model::group::SyncSignInStep)>,
+    /// What went wrong with the last set-up, join or sign-in.
+    pub sync_problem: Option<kaeri_model::group::SyncProblem>,
+    /// The recovery key the engine said, kept only until its dialog is done.
+    pub recovery_key: Option<String>,
+    /// The pairing code this device shows: the code, the port and when it stops working.
+    pub invite: Option<(String, u16, i64)>,
     /// What each source has of a title, as the engine last listed them for the source picker, in
     /// the order they are tried.
     pub source_options: HashMap<u32, Vec<SourceOption>>,
@@ -259,6 +277,37 @@ impl Known {
                 }
             }
             Event::Settings(view) => self.settings = Some(view.clone()),
+            Event::SyncStatus(status) => {
+                if status.problem.is_none()
+                    && self.sync_problem.as_ref().is_some_and(|p| {
+                        !matches!(
+                            p,
+                            kaeri_model::group::SyncProblem::WrongRecoveryKey
+                                | kaeri_model::group::SyncProblem::GroupExists
+                                | kaeri_model::group::SyncProblem::NoGroup
+                        )
+                    })
+                {
+                    self.sync_problem = None;
+                }
+                self.sync_group = Some(status.clone());
+            }
+            Event::Profiles(view) => self.profiles = view.profiles.clone(),
+            Event::SyncInvite { code, port, seconds } => {
+                let now = glib::real_time() / 1_000_000;
+                self.invite = Some((code.clone(), *port, now + i64::from(*seconds)));
+            }
+            Event::SyncRecoveryKey(key) => {
+                self.recovery_key = Some(key.clone());
+                self.sync_signin = None;
+            }
+            Event::SyncSignIn { service, step } => {
+                self.sync_signin = step.clone().map(|step| (service.clone(), step));
+            }
+            Event::SyncProblem(problem) => {
+                self.sync_problem = Some(problem.clone());
+                self.sync_signin = None;
+            }
             Event::Sync(state) => {
                 if state.connected {
                     self.signing.remove(&state.tracker);
@@ -327,10 +376,14 @@ impl Known {
             }
             Event::PartyState(view) => self.party = Some(view.clone()),
             Event::PartyMembers(members) => self.party_members = Some(members.clone()),
+            Event::PartyChat(conversation) => self.party_chat = conversation.clone(),
+            Event::PartyChatState(state) => self.party_chat_state = Some(state.clone()),
             Event::PartyLeft { .. } => {
                 self.party_last_out = None;
                 self.party = None;
                 self.party_members = None;
+                self.party_chat = Default::default();
+                self.party_chat_state = None;
             }
             Event::JobDone(job) => {
                 self.jobs.remove(job);
@@ -684,6 +737,8 @@ fn decode(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
 fn showcase_kind(event: &Event) -> Option<&'static str> {
     Some(match event {
         Event::Providers(_) => "providers",
+        Event::SyncStatus(_) => "sync",
+        Event::Profiles(_) => "profiles",
         Event::Stores(_) => "stores",
         Event::Seeding(_) => "seeding",
         Event::Local(_) => "local",

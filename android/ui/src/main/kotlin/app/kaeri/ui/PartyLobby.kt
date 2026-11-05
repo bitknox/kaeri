@@ -15,6 +15,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -197,6 +200,10 @@ internal fun PartyLobbyScreen() {
                 }
                 Members(facts.members, inRoom = facts.inRoom)
                 if (room != null) CodeRow(room, facts.title, facts.episode)
+                if (room != null) {
+                    PartyHeading(Strings.partyChatTitle(context), Modifier.padding(top = 28.dp, bottom = 8.dp))
+                    ChatBlock(privacy = true)
+                }
             }
         }
         LobbyFoot(
@@ -387,17 +394,28 @@ private fun Problem(text: String) {
 private fun Members(members: List<PartyMember>, inRoom: Boolean) {
     val context = LocalContext.current
     if (members.isEmpty()) return
+    val store = LocalAppStore.current
+    val chat by store.party.chat.collectAsStateWithLifecycle()
+    val muted = chat?.muted.orEmpty()
     val (ready, count) = PartyModel.counts(members)
     val heading = if (inRoom) Strings.partyLobbyCount(context, ready, count) else Strings.togetherSomeoneHere(context, Wording.list(members.map { it.name }), count)
     PartyHeading(heading, Modifier.padding(top = 28.dp, bottom = 4.dp))
-    for (member in members) MemberRow(member, inRoom)
+    for (member in members) {
+        MemberRow(member, inRoom, muted = member.name in muted, onMute = if (inRoom && !member.you) { on -> store.partyMute(member.name, on) } else null)
+    }
 }
 
 @Composable
-private fun MemberRow(member: PartyMember, inRoom: Boolean) {
+private fun MemberRow(member: PartyMember, inRoom: Boolean, muted: Boolean = false, onMute: ((Boolean) -> Unit)? = null) {
     val context = LocalContext.current
+    var menu by remember { mutableStateOf(false) }
+    val muteWords = if (muted) Strings.partyUnmute(context, member.name) else Strings.partyMute(context, member.name)
     Row(
-        Modifier.fillMaxWidth().height(56.dp).semantics(mergeDescendants = true) {},
+        Modifier.fillMaxWidth().height(56.dp)
+            .let { if (onMute != null) it.combinedClickable(onClick = {}, onLongClick = { menu = true }, onLongClickLabel = muteWords) else it }
+            .semantics(mergeDescendants = true) {
+                if (onMute != null) customActions = listOf(CustomAccessibilityAction(muteWords) { onMute(!muted); true })
+            },
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -413,6 +431,10 @@ private fun MemberRow(member: PartyMember, inRoom: Boolean) {
                 else -> null
             }
             if (line != null) PartyHaze(line, maxLines = 1)
+        }
+        if (muted) PartyHaze(Strings.partyMemberMuted(context))
+        if (onMute != null) Menu(expanded = menu, onDismissRequest = { menu = false }) {
+            androidx.compose.material3.DropdownMenuItem(text = { Text(muteWords) }, onClick = { menu = false; onMute(!muted) })
         }
         // Ready reads in silk, by its mark and word: the amber stays on the main action.
         AnimatedVisibility(inRoom && member.ready == true, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
@@ -531,10 +553,12 @@ fun PartyPeopleContent(onDone: () -> Unit) {
     val view by store.party.view.collectAsStateWithLifecycle()
     val members by store.party.members.collectAsStateWithLifecycle()
     val room = view ?: return
-    Column(Modifier.padding(horizontal = 24.dp)) {
-        Text(Strings.togetherInParty(context), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk)
-        PartyHaze(PartyModel.waitLine(context, members), Modifier.padding(top = 4.dp))
-        Members(members, inRoom = true)
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    // Held sideways, the sheet is wide: members on the left, the conversation and field on the right.
+    val wide = configuration.screenWidthDp > configuration.screenHeightDp
+    // The column over the video rests while this is open: what it holds is in the list.
+    LaunchedEffect(Unit) { store.party.seenThrough(store.party.conversation.value.lines.lastOrNull()?.id ?: 0uL) }
+    val actions: @Composable () -> Unit = {
         Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val link = room.invite ?: room.link
             if (link != null) {
@@ -548,6 +572,23 @@ fun PartyPeopleContent(onDone: () -> Unit) {
                 store.leaveParty()
                 onDone()
             }) { Text(Strings.partyLeave(context)) }
+        }
+    }
+    Column(Modifier.padding(horizontal = 24.dp)) {
+        Text(Strings.togetherInParty(context), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk)
+        PartyHaze(PartyModel.waitLine(context, members), Modifier.padding(top = 4.dp))
+        if (wide) {
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Members(members, inRoom = true)
+                    actions()
+                }
+                ChatBlock(Modifier.weight(1f).padding(top = 28.dp), maxHeight = 132.dp)
+            }
+        } else {
+            Members(members, inRoom = true)
+            ChatBlock(Modifier.padding(top = 20.dp), maxHeight = 200.dp)
+            actions()
         }
     }
 }

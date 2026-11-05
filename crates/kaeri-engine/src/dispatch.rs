@@ -18,6 +18,7 @@ use kaeri_providers::ProviderRegistry;
 use kaeri_store::Store;
 
 use crate::playback::start::{control_playback, control_player, play, play_local, play_source};
+use crate::syncing::Ctx;
 use crate::{
     artwork,
     catalog::{
@@ -68,6 +69,7 @@ use crate::{
 
 /// What a task run by [`spawn`] is lent: its own clones of the handles it reads, and of the
 /// outbox it answers on.
+#[derive(Clone)]
 pub struct Lent {
     pub meta: Meta,
     pub store: Store,
@@ -223,7 +225,29 @@ fn home_ask(engine: &EngineState, services: &Services, refresh: bool) -> HomeAsk
         offline: engine.network.offline,
         refresh,
         sources: !services.registry.usable_ids().is_empty(),
+        usable: probe::Usable::of(&services.registry),
         demo: crate::demo::state(engine, services),
+    }
+}
+
+/// The sources changed, so a miss kept from the ones before may no longer hold. A title the
+/// apps were told is not found this session is told what it is now, and asked again when
+/// interest is shown in it, and a Home open goes out again with its marks as they now stand.
+pub(crate) fn home_after_sources(engine: &mut EngineState, services: &Services, tx: &Outbox) {
+    let usable = probe::Usable::of(&services.registry);
+    let now = services.clock.now();
+    let probed: Vec<_> = engine.probed.keys().copied().collect();
+    for id in probed {
+        if let Some(playable) = probe::lapsed(&services.store, id, &usable, now) {
+            engine.probed.remove(&id);
+            let _ = tx.send(Event::TitlePlayable { id, playable });
+        }
+    }
+    if engine.home.asked() {
+        let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
+        spawn(None, services, tx, move |lent| async move {
+            home::changed(&lent.meta, &lent.store, &lent.tx, &ask, &memory);
+        });
     }
 }
 
@@ -370,7 +394,40 @@ pub(crate) fn dispatch(
         }
         Command::LoadBrowse => {
             let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
-            spawn(job, services, tx, move |lent| browse::load_browse(lent, adult, now))
+            // The period chosen for the Trending rail, shown from what is kept: never asked
+            // for at launch, and asked again behind the screen once old.
+            let offline = engine.network.offline;
+            spawn(job, services, tx, move |lent| async move {
+                let more = lent.clone();
+                tokio::join!(
+                    browse::load_browse(lent, adult, now),
+                    crate::catalog::trending::load_remembered(more, adult, now, offline),
+                );
+            })
+        }
+        Command::Surprise(pool) => {
+            let adult = engine.config.effective().meta.adult;
+            let (offline, now) = (engine.network.offline, services.clock.now());
+            let picks = engine.picks.clone();
+            spawn(job, services, tx, move |lent| async move {
+                crate::catalog::surprise::pick(
+                    lent,
+                    picks,
+                    pool,
+                    adult,
+                    offline,
+                    now,
+                    &crate::catalog::surprise::random,
+                )
+                .await;
+            })
+        }
+        Command::LoadTrending(period) => {
+            let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
+            let offline = engine.network.offline;
+            spawn(job, services, tx, move |lent| {
+                crate::catalog::trending::load(lent, period, adult, now, offline)
+            })
         }
         Command::LoadSearchFacets => {
             let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
@@ -441,12 +498,12 @@ pub(crate) fn dispatch(
         }
         // A title matched afresh may be another title on the source, so its dub is too.
         Command::ClearMatch { id } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             spawn(job, services, tx, move |lent| clear_match(lent, id))
         }
         Command::FixMatch { id, provider_id, key, title } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             spawn(job, services, tx, move |lent| fix_match(lent, id, provider_id, key, title))
         }
@@ -454,7 +511,7 @@ pub(crate) fn dispatch(
             manual_search(id, query, provider_id, job, engine, services, tx)
         }
         Command::SetProviderPreference { id, provider } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             set_provider_preference(id, provider, engine, services, tx);
             // The pin applies to what is on screen now, not the next time it opens.
@@ -572,6 +629,7 @@ pub(crate) fn dispatch(
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
+            services.connection.send_replace(offline);
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
@@ -599,6 +657,9 @@ pub(crate) fn dispatch(
                 low_memory,
             };
             crate::autoplay::device_state(device, engine, tx);
+            // Finding skip times pauses in a power saving mode, which Settings says.
+            services.skip_find.set_low_power(low_power);
+            crate::skip_find::refresh(&services.skip_find, engine, tx);
         }
         // Taken in as it is sent by `Engine::send`; one routed here all the same lands.
         Command::PlayerReport { playback, report } => services.hosted.report(playback, report),
@@ -623,8 +684,228 @@ pub(crate) fn dispatch(
         Command::ConnectKitsu { username, password } => {
             connect_kitsu(username, password, job, services, tx)
         }
+        Command::LoadProfiles => {
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::AddProfile { name, kids, first_name } => {
+            let first = first_name.unwrap_or_else(|| "Me".to_owned());
+            if let Err(e) =
+                crate::profile::add(&services.store, &services.paths, &name, kids, &first)
+            {
+                tracing::warn!(error = %e, "could not add a profile");
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::EditProfile { id, name, kids } => {
+            if let Err(e) = crate::profile::edit(&services.paths, &id, &name, kids) {
+                tracing::warn!(error = %e, "could not edit a profile");
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::SwitchProfile { id } => {
+            match crate::profile::choose(&services.paths, &id) {
+                Ok(()) => {
+                    let _ = tx.send(Event::ProfileSwitch { id });
+                }
+                Err(e) => tracing::warn!(error = %e, "could not switch profile"),
+            }
+            drop(job);
+        }
+        Command::DeleteProfile { id } => {
+            let promoted_to = services.store.active_profile();
+            let primary_goes =
+                kaeri_store::profile::ProfileList::load(&services.paths.data_dir)
+                    .ok()
+                    .flatten()
+                    .is_some_and(|list| list.primary == id);
+            match crate::profile::delete(
+                &services.store,
+                &services.paths,
+                &services.tokens,
+                &id,
+            ) {
+                // The one in use took the first profile's place: its tokens and settings are the
+                // bare ones now, which a restart on it reads.
+                Ok(()) if primary_goes => {
+                    if let Some(id) = promoted_to {
+                        let _ = tx.send(Event::ProfileSwitch { id });
+                    }
+                }
+                Ok(()) => {}
+                Err(e) => tracing::warn!(error = %e, "could not delete a profile"),
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::LoadSync => {
+            let _ = tx.send(Event::SyncStatus(crate::syncing::status(&Ctx::of(services))));
+            drop(job);
+        }
+        Command::StartSync { device_name, folder } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::start(&ctx, &tx, device_name, folder).await;
+            });
+        }
+        Command::JoinSync { device_name, folder, recovery_key } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::join(&ctx, &tx, device_name, folder, &recovery_key.0).await;
+            });
+        }
+        Command::SyncSignIn { service } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::sign_in_again(&ctx, &tx, service).await;
+            });
+        }
+        Command::FinishSyncSignIn { service, callback } => {
+            if let Some(cloud) = crate::cloud::Service::of(&service)
+                && !services.syncing.cloud.deliver(cloud, callback.0)
+            {
+                // A page that came back after its sign-in ended: said, never dropped quietly.
+                let expired = kaeri_model::group::SyncProblem::SignInExpired { service };
+                let _ = tx.send(Event::SyncProblem(expired));
+            }
+            drop(job);
+        }
+        Command::CancelSyncSignIn => {
+            services.syncing.cloud.cancel();
+            drop(job);
+        }
+        Command::SyncSignOut { service } => {
+            crate::syncing::sign_out(&Ctx::of(services), tx, &service);
+            drop(job);
+        }
+        Command::SyncFolderNow => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pass(&ctx, &tx).await;
+            });
+        }
+        Command::LeaveSync => {
+            crate::syncing::leave(&Ctx::of(services), tx);
+            drop(job);
+        }
+        Command::RemoveSyncDevice { device } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::remove_device(&ctx, &tx, &device).await;
+            });
+        }
+        Command::NewRecoveryKey => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::new_recovery_key(&ctx, &tx).await;
+            });
+        }
+        Command::PairInvite { device_name } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::invite(&ctx, &tx, device_name).await;
+            });
+        }
+        Command::PairStop => {
+            crate::syncing::stop_inviting(&Ctx::of(services));
+            drop(job);
+        }
+        Command::PairJoin { device_name, address, code } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pair(&ctx, &tx, device_name, &address, &code).await;
+            });
+        }
+        Command::SyncWithDevice { device, address } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::sync_with(&ctx, &tx, &device, &address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::CopySignIns {
+            device,
+            copy,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::handoff::copy_sign_ins(&ctx, &tx, device, &copy, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::JoinStoresFrom {
+            device,
+            stores,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::store_join::join_from(&ctx, &tx, device, stores, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::change_folder(&ctx, &tx, folder).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::PairWithCode {
+            device_name,
+            code,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pair_with_code(&ctx, &tx, device_name, &code).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::RenameDevice { name }) => {
+            crate::syncing::rename(&Ctx::of(services), tx, &name);
+            drop(job);
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::SetDeviceSync { device, on }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::set_device_sync(&ctx, &tx, &device, on).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::SetDeviceRemote { device, on }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::set_device_remote(&ctx, &tx, &device, on).await;
+            });
+        }
+        Command::ShowRecoveryKey => {
+            crate::syncing::reveal_recovery_key(&Ctx::of(services), tx);
+            drop(job);
+        }
+        Command::DismissSyncNote { id } => {
+            let _ = services.store.dismiss_sync_note(id);
+            let _ = tx.send(Event::SyncStatus(crate::syncing::status(&Ctx::of(services))));
+            drop(job);
+        }
         Command::Disconnect { tracker } => {
             tracking::disconnect(&services.sync, &tracker, tx);
+            tracking::commands::announce_signed_in(&services.store, &services.sync);
             if tracker == "anilist" {
                 crate::title_language::signed_out(services, tx);
             }
@@ -858,6 +1139,10 @@ pub(crate) async fn handle_internal(
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
         Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::SyncEffects => {
+            let effects = services.syncing.take_effects();
+            crate::sync::apply_effects(effects, engine, services, tx);
+        }
         // Only the order changed: the chain as it stands is put in it, with no rebuild.
         Internal::SourcesReordered => {
             sources::arrange(&services.registry, engine.config.effective());

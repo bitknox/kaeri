@@ -15,7 +15,9 @@ use kaeri_model::{
 
 use crate::window::{Ctx, Shell};
 
+pub mod chat;
 pub mod form;
+pub mod glyph;
 pub mod panel;
 pub mod source;
 

@@ -228,6 +228,8 @@ becomes one engine `Command` or one request to the TV front end (`RemoteCommand:
 | Ready in the party | `{"name":"party_ready","ready":true}` | `Command::PartyReady` |
 | Start the party anyway | `{"name":"party_start"}` | `PartyCommand::StartAnyway` |
 | Leave the party | `{"name":"party_leave"}` | `Command::PartyLeave` |
+| Say something in the party's chat as the TV | `{"name":"party_chat","text":"back in 2"}` | `PartyCommand::Say` |
+| Mute or unmute a member on the TV | `{"name":"party_mute","member":"Ren","muted":true}` | `PartyCommand::Mute` |
 
 The model's own enums are not put on the wire for three reasons. The model has no serde, and its
 shape follows the engine, while the wire has to stay readable by a TV a release older than the
@@ -285,8 +287,16 @@ loses nothing:
 ```
 
 When the TV is in a watch party the state has a `party` object: `room`, and when known `code`,
-`link` (the https invite a phone can share), `title`, `episode`, `ready` and `playing`. The
-phone reads the invite itself (`parse_party_target`) and sends the server and room; party
+`link` (the https invite a phone can share), `title`, `episode`, `ready` and `playing`. It also
+has, each left out when empty, `messages` (the last 20 lines of the conversation without the
+muted members', the newest last), `members` (the other members' names, for Mute), `muted`,
+`chat_off` (the room's server has chat turned off) and `chat_max` (the longest message, 0 for
+150). A line has `from`, `you` when the TV said it, and either `text`, or `reaction` (`laughs`,
+`gasps`, `claps` or `cries`) with `at` seconds and `with`, the others who reacted at the same
+moment. The TV's engine keeps the conversation in memory for the party only. A TV from before
+chat answers the two chat commands with `rejected: unsupported`.
+
+The phone reads the invite itself (`parse_party_target`) and sends the server and room; party
 commands need nothing playing.
 
 `screen` is one of `home`, `search` (with its `query`), `title` (with its `id`), `player`,

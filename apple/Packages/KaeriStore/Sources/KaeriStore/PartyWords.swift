@@ -148,7 +148,7 @@ public enum PartyWords {
             return (said, L.partyNosourceUnairedPlain)
         case .noSources:
             return (L.partyNosourceNoneTitle, L.partyNosourceNoneDetail(what: what))
-        case .notFound:
+        case .notFound, .noConnection:
             return (L.partyNosourceMissingTitle, L.partyNosourceMissingDetail(why: said, what: what))
         }
     }

@@ -96,9 +96,10 @@ pub fn prefetch(id: AnilistId, episode: String, engine: &EngineState, services: 
     tokio::spawn(async move {
         // Quiet: the steps of a search nobody is waiting on must not take the status
         // line from the episode playing. Nothing reads this channel.
-        let found =
-            resolve_for_playback(&meta, &store, &registry, id, &episode, None, &playback, None)
-                .await;
+        let found = resolve_for_playback(
+            &meta, &store, &registry, id, &episode, None, &playback, None, None,
+        )
+        .await;
         match found {
             Ok(resolved) => prefetch.keep(id, &episode, playback.translation, resolved),
             Err(reason) => {

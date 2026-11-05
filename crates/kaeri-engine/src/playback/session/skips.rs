@@ -240,6 +240,7 @@ pub const fn origin(origin: SkipOrigin) -> kaeri_model::playback::SkipOrigin {
         SkipOrigin::File => kaeri_model::playback::SkipOrigin::File,
         SkipOrigin::Yours => kaeri_model::playback::SkipOrigin::Yours,
         SkipOrigin::AniSkip => kaeri_model::playback::SkipOrigin::AniSkip,
+        SkipOrigin::Found => kaeri_model::playback::SkipOrigin::Found,
     }
 }
 

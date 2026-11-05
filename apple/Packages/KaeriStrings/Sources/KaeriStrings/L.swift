@@ -243,6 +243,9 @@ public enum L {
     /// Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
     public static var causeNoSources: String { string("cause-no-sources", fallback: "No sources are set up. Add one on the Sources screen.") }
 
+    /// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+    public static var causeNoConnection: String { string("cause-no-connection", fallback: "No connection. Try again when you're back online.") }
+
     /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
     public static func noticeNotAired(episode: Int, when: String) -> String {
         Self.format("notice-not-aired", fallback: "Episode %1$lld airs %2$@.", episode, when)
@@ -325,6 +328,29 @@ public enum L {
 
     /// Job note while a play waits for the sources to arrive.
     public static var statusLoadingSources: String { string("status-loading-sources", fallback: "Loading sources…") }
+
+    /// Starting screen, step line while the title is looked up.
+    public static var startLookingUpTitle: String { string("start-looking-up-title", fallback: "Looking up the title") }
+
+    /// Starting screen, step line while sources still being set up are waited for.
+    public static var startGettingSourcesReady: String { string("start-getting-sources-ready", fallback: "Getting your sources ready") }
+
+    /// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+    public static func startAskingSource(name: String) -> String {
+        Self.format("start-asking-source", fallback: "Asking %1$@", name)
+    }
+
+    /// Starting screen, step line once a stream is found and the player opens it.
+    public static var startOpeningStream: String { string("start-opening-stream", fallback: "Opening the stream") }
+
+    /// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+    public static var startTryingAnotherStream: String { string("start-trying-another-stream", fallback: "Trying another stream") }
+
+    /// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+    public static var startFindingPeers: String { string("start-finding-peers", fallback: "Finding peers") }
+
+    /// Starting screen, step line while the player waits for data to fill its buffer.
+    public static var startBuffering: String { string("start-buffering", fallback: "Buffering") }
 
     /// Job note while the sources are asked for an episode. The episode is its label, often a number.
     public static func statusSearchingSources(episode: String) -> String {
@@ -941,6 +967,9 @@ public enum L {
         Self.format("stores-ready-demo-stays", fallback: "%1$@ is ready. The demo stays last in Your sources.", store)
     }
 
+    /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+    public static var cloudLoopbackDone: String { string("cloud-loopback-done", fallback: "You can close this tab and go back to Kaeri.") }
+
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     public static func noticeSignedIn(tracker: String) -> String {
         Self.format("notice-signed-in", fallback: "Signed in to %1$@.", tracker)
@@ -1209,6 +1238,18 @@ public enum L {
 
     /// The same notice on the TV, which has no button.
     public static var crashNoticeTv: String { string("crash-notice-tv", fallback: "Kaeri closed after a problem. You can report it from Settings, About.") }
+
+    /// Toast: Surprise me on a search found no title matching the filters.
+    public static var noticeSurpriseEmptyFilters: String { string("notice-surprise-empty-filters", fallback: "No titles match these filters.") }
+
+    /// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+    public static var noticeSurpriseEmptyPlanning: String { string("notice-surprise-empty-planning", fallback: "Planning is empty.") }
+
+    /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "Offline. Search picks need AniList.") }
+
+    /// Toast: Surprise me on the filters, and AniList could not be asked.
+    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't pick a title right now. Try again in a moment.") }
 
     /// VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
     public static func accessCaughtUpAirs(episode: Int, when: String) -> String {
@@ -1755,6 +1796,9 @@ public enum L {
     /// Spoken by VoiceOver on the loading indicator before the video shows.
     public static var playerLoadingAnnounce: String { string("player-loading-announce", fallback: "Starting") }
 
+    /// Playback menu item that opens the chat field in a watch party. Key C.
+    public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
+
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
 
@@ -2250,6 +2294,12 @@ public enum L {
     /// Mac and iPad View menu item that shows the calendar's week after.
     public static var menuNextWeek: String { string("menu-next-week", fallback: "Next Week") }
 
+    /// Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time, and this shows the hundred before the ones on screen.
+    public static var menuPreviousEpisodes: String { string("menu-previous-episodes", fallback: "Previous Episodes") }
+
+    /// Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time, and this shows the hundred after the ones on screen.
+    public static var menuNextEpisodes: String { string("menu-next-episodes", fallback: "Next Episodes") }
+
     /// Mac menu bar item that syncs with the tracker accounts now.
     public static var menuSyncNow: String { string("menu-sync-now", fallback: "Sync Now") }
 
@@ -2574,11 +2624,6 @@ public enum L {
     /// Title of the page of paired TVs on a phone.
     public static var tvTitleList: String { string("tv-title-list", fallback: "TVs") }
 
-    /// Line under the settings group of paired TVs. The code is a short fingerprint.
-    public static func tvSettingsFootnote(code: String) -> String {
-        Self.format("tv-settings-footnote", fallback: "A TV lists this device with the code %1$@. Forget a TV here and it forgets this device too.", code)
-    }
-
     /// Time of the last sighting of a paired TV, within the last minute.
     public static var tvSeenJustNow: String { string("tv-seen-just-now", fallback: "just now") }
 
@@ -2606,6 +2651,71 @@ public enum L {
     /// Line of a server's row once matching is done.
     public static func serversRowSummaryApple(series: Int) -> String {
         Self.format("servers-row-summary-apple", fallback: "%1$lld series", series)
+    }
+
+    /// Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.
+    public static var rkeySaveFiles: String { string("rkey-save-files", fallback: "Save to Files") }
+
+    /// Button on the recovery key sheet on the Mac. The app adds the ellipsis, since it opens the save panel.
+    public static var rkeySaveMac: String { string("rkey-save-mac", fallback: "Save") }
+
+    /// Button while a pairing code is being tried.
+    public static var pairPairing: String { string("pair-pairing", fallback: "Pairing") }
+
+    /// Capsule on a remote-only row on iPhone.
+    public static var devicesAlsoSyncShort: String { string("devices-also-sync-short", fallback: "Also sync") }
+
+    /// Row on the Devices page that opens the road sheet's cloud choice.
+    public static var cloudAddRow: String { string("cloud-add-row", fallback: "Add a cloud folder") }
+
+    /// Title of the iPad and Mac launch picker's explanation.
+    public static var profilesPickerLine: String { string("profiles-picker-line", fallback: "Choose a profile to continue. You can turn this question off in Settings, Profiles.") }
+
+    /// Menu item on the Mac menu bar, the Profile menu's title.
+    public static var profilesMenu: String { string("profiles-menu", fallback: "Profile") }
+
+    /// Accessibility value of a device's sync switch.
+    public static var devicesA11ySynced: String { string("devices-a11y-synced", fallback: "Syncing") }
+
+    /// Line under the pairing code field on Mac and iPad.
+    public static var pairCodeHint: String { string("pair-code-hint", fallback: "Six digits") }
+
+    /// Sheet title while a cloud service is being signed in to on Apple.
+    public static var cloudSheetWait: String { string("cloud-sheet-wait", fallback: "Finish signing in") }
+
+    /// Line on a profile row that says it syncs with a device's profile.
+    public static var profilesSyncsNothing: String { string("profiles-syncs-nothing", fallback: "Not synced") }
+
+    /// Heading over the profile strip on iPhone.
+    public static var profilesStrip: String { string("profiles-strip", fallback: "Profiles") }
+
+    /// Title of the "Syncs with" picker for a profile.
+    public static var profilesSyncsWithTitle: String { string("profiles-syncs-with-title", fallback: "Syncs with") }
+
+    /// Line shown in the Mac toolbar capsule's popover when sync is running with a device.
+    public static var syncPopoverTitle: String { string("sync-popover-title", fallback: "Sync") }
+
+    /// Row in the sync popover that opens Devices.
+    public static var syncPopoverOpen: String { string("sync-popover-open", fallback: "Open Devices") }
+
+    /// Button that shows something kept out of sight, such as the recovery key.
+    public static var actionShow: String { string("action-show", fallback: "Show") }
+
+    /// Button that adds something, such as a cloud folder.
+    public static var actionAdd: String { string("action-add", fallback: "Add") }
+
+    /// Button on the Devices page that opens the sheet for a code from another device.
+    public static var pairEnterCode: String { string("pair-enter-code", fallback: "Enter a code") }
+
+    /// Line under the recovery key row on the Devices page.
+    public static var rkeyRestores: String { string("rkey-restores", fallback: "Restores everything if you lose every device.") }
+
+    /// Button on the Devices page that asks before turning sync off on this device.
+    public static var syncTurnOffButton: String { string("sync-turn-off-button", fallback: "Turn off") }
+
+    /// Restore sheet line when the folder's device count is not known.
+    public static func rkeyEnterLineGeneric(service: String) -> String {
+        Self.format("rkey-enter-line-generic", fallback: "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it.", service)
     }
 
     /// Name of the fact on the title page that lists where else a show can be watched.
@@ -3371,6 +3481,9 @@ public enum L {
     /// Button that closes a dialog without doing what it offered.
     public static var actionCancel: String { string("action-cancel", fallback: "Cancel") }
 
+    /// Button that confirms a small question, such as the episode number to go to.
+    public static var actionGo: String { string("action-go", fallback: "Go") }
+
     /// Button that puts a question off until later.
     public static var actionNotNow: String { string("action-not-now", fallback: "Not now") }
 
@@ -3886,6 +3999,16 @@ public enum L {
     /// What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
     public static func playerPositionSpoken(position: String, duration: String) -> String {
         Self.format("player-position-spoken", fallback: "%1$@ of %2$@", position, duration)
+    }
+
+    /// Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+    public static func namesPair(first: String, last: String) -> String {
+        Self.format("names-pair", fallback: "%1$@ and %2$@", first, last)
+    }
+
+    /// A list of names up to the last two, joined one by one: "Alpha, Brook".
+    public static func namesList(list: String, next: String) -> String {
+        Self.format("names-list", fallback: "%1$@, %2$@", list, next)
     }
 
     /// Menu item that opens an episode's discussion.
@@ -6004,6 +6127,156 @@ public enum L {
     /// The start sheet's button after a title is picked.
     public static var partyPickContinue: String { string("party-pick-continue", fallback: "Continue") }
 
+    /// Placeholder of every chat field, and the label of the button that opens it.
+    public static var partyChatField: String { string("party-chat-field", fallback: "Say something") }
+
+    /// Button that sends a chat line.
+    public static var partyChatSend: String { string("party-chat-send", fallback: "Send") }
+
+    /// Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+    public static var partyChatTitle: String { string("party-chat-title", fallback: "Chat") }
+
+    /// End of the chat field while sending waits, after three messages in five seconds.
+    public static func partyChatWait(seconds: Int) -> String {
+        Self.format("party-chat-wait", fallback: "Wait %1$lld s", seconds)
+    }
+
+    /// Spoken once when sending waits, for screen readers.
+    public static func partyChatWaitSpoken(seconds: Int) -> String {
+        Self.format("party-chat-wait-spoken", fallback: "Wait %1$lld seconds", seconds)
+    }
+
+    /// Line after the three newest chat lines on the video, which opens the conversation.
+    public static func partyChatMore(count: Int) -> String {
+        Self.format("party-chat-more", fallback: "%1$lld more in chat", count)
+    }
+
+    /// Notice when the room's server has chat turned off, and the line that replaces the field.
+    public static var partyChatOff: String { string("party-chat-off", fallback: "This room's server has chat turned off") }
+
+    /// Line under the chat field in the lobby, shown once.
+    public static var partyChatPrivacy: String { string("party-chat-privacy", fallback: "Messages go through the room's server. Kaeri keeps none.") }
+
+    /// Heading in the conversation when Hide chat is on.
+    public static var partyChatHidden: String { string("party-chat-hidden", fallback: "Chat is hidden") }
+
+    /// Line under it.
+    public static var partyChatHiddenLine: String { string("party-chat-hidden-line", fallback: "Hide chat is on in Settings, under Playback.") }
+
+    /// Button that turns Hide chat off.
+    public static var partyChatShow: String { string("party-chat-show", fallback: "Show chat") }
+
+    /// Settings switch that hides chat in every watch party on this device.
+    public static var settingsHideChat: String { string("settings-hide-chat", fallback: "Hide chat in watch parties") }
+
+    /// Line under that switch.
+    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.") }
+
+    /// Member menu item and accessibility action that hides a member's lines and reactions for this party.
+    public static func partyMute(name: String) -> String {
+        Self.format("party-mute", fallback: "Mute %1$@", name)
+    }
+
+    /// Member menu item and accessibility action that shows a muted member's lines again.
+    public static func partyUnmute(name: String) -> String {
+        Self.format("party-unmute", fallback: "Unmute %1$@", name)
+    }
+
+    /// Button in the conversation on the line that says a member is muted.
+    public static var partyUnmuteShort: String { string("party-unmute-short", fallback: "Unmute") }
+
+    /// State on a muted member's row.
+    public static var partyMemberMuted: String { string("party-member-muted", fallback: "Muted") }
+
+    /// Line in the conversation where a muted member's lines were.
+    public static func partyMutedLine(name: String) -> String {
+        Self.format("party-muted-line", fallback: "%1$@ is muted", name)
+    }
+
+    /// Line in the conversation when a message never came back from the server, five seconds after it was sent.
+    public static var partyChatNotSent: String { string("party-chat-not-sent", fallback: "Couldn't send") }
+
+    /// Button after it, which sends the same text again.
+    public static var partyChatRetry: String { string("party-chat-retry", fallback: "Try again") }
+
+    /// Button on the TV's controls that opens the four reactions.
+    public static var partyReact: String { string("party-react", fallback: "React") }
+
+    /// Label of the laugh reaction button.
+    public static var partyReactLaugh: String { string("party-react-laugh", fallback: "Laugh") }
+
+    /// Label of the gasp reaction button.
+    public static var partyReactGasp: String { string("party-react-gasp", fallback: "Gasp") }
+
+    /// Label of the clap reaction button.
+    public static var partyReactClap: String { string("party-react-clap", fallback: "Clap") }
+
+    /// Label of the cry reaction button.
+    public static var partyReactCry: String { string("party-react-cry", fallback: "Cry") }
+
+    /// Line in the conversation and in the terminal: a member laughed.
+    public static func partyReactedLaugh(name: String) -> String {
+        Self.format("party-reacted-laugh", fallback: "%1$@ laughed", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member gasped.
+    public static func partyReactedGasp(name: String) -> String {
+        Self.format("party-reacted-gasp", fallback: "%1$@ gasped", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member clapped.
+    public static func partyReactedClap(name: String) -> String {
+        Self.format("party-reacted-clap", fallback: "%1$@ clapped", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member cried.
+    public static func partyReactedCry(name: String) -> String {
+        Self.format("party-reacted-cry", fallback: "%1$@ cried", name)
+    }
+
+    /// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+    public static func partyReactedAt(line: String, time: String) -> String {
+        Self.format("party-reacted-at", fallback: "%1$@ at %2$@", line, time)
+    }
+
+    /// Two members named together, for a reaction made by both: "Ren and Mika".
+    public static func partyNamesTwo(first: String, second: String) -> String {
+        Self.format("party-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// Three members named together.
+    public static func partyNamesThree(first: String, second: String, third: String) -> String {
+        Self.format("party-names-three", fallback: "%1$@, %2$@ and %3$@", first, second, third)
+    }
+
+    /// More than three members named together: two names and how many others.
+    public static func partyNamesOthers(first: String, second: String, count: Int) -> String {
+        Self.format("party-names-others", fallback: "%1$@, %2$@ and %3$lld others", first, second, count)
+    }
+
+    /// Name of this device's own member in the conversation and on its reactions.
+    public static var partyChatYou: String { string("party-chat-you", fallback: "You") }
+
+    /// Line on a phone's remote screen under the chat field: which device the line is said as.
+    public static func partySendsAs(device: String) -> String {
+        Self.format("party-sends-as", fallback: "Sends as %1$@", device)
+    }
+
+    /// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+    public static func partyTickLabel(time: String, names: String) -> String {
+        Self.format("party-tick-label", fallback: "%1$@ · %2$@", time, names)
+    }
+
+    /// Spoken by a screen reader when a chat line arrives.
+    public static func partyChatAnnounce(name: String, message: String) -> String {
+        Self.format("party-chat-announce", fallback: "%1$@ says %2$@", name, message)
+    }
+
+    /// Spoken by a screen reader once, when 20 characters are left in the chat field.
+    public static func partyChatLeft(count: Int) -> String {
+        Self.format("party-chat-left", fallback: "%1$lld characters left", count)
+    }
+
     /// Label on the card for the episode that plays after this one.
     public static var playerUpNext: String { string("player-up-next", fallback: "Up next") }
 
@@ -6045,6 +6318,165 @@ public enum L {
 
     /// Short word while the video buffers.
     public static var playerBuffering: String { string("player-buffering", fallback: "Buffering") }
+
+    /// Detail line while a source is asked and more than one is in the viewer's order.
+    public static func playerStartPlace(place: Int, total: Int) -> String {
+        Self.format("player-start-place", fallback: "%1$lld of %2$lld sources", place, total)
+    }
+
+    /// Detail line while the source asked is the one the show is pinned to.
+    public static var playerStartPinned: String { string("player-start-pinned", fallback: "Your pick for this show") }
+
+    /// Detail line when a source has no match for the show.
+    public static func playerStartMissNoMatch(name: String) -> String {
+        Self.format("player-start-miss-no-match", fallback: "%1$@ doesn't have this show", name)
+    }
+
+    /// Detail line when a source has the show and not the episode. The episode is its label.
+    public static func playerStartMissNoEpisode(name: String, episode: String) -> String {
+        Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
+    }
+
+    /// Detail line when a source failed and the next is asked.
+    public static func playerStartMissFailed(name: String) -> String {
+        Self.format("player-start-miss-failed", fallback: "%1$@ didn't answer", name)
+    }
+
+    /// Detail line when a source took too long and the next is asked.
+    public static func playerStartMissTimedOut(name: String) -> String {
+        Self.format("player-start-miss-timed-out", fallback: "%1$@ took too long", name)
+    }
+
+    /// Detail line after the viewer skipped the source being asked.
+    public static func playerStartMissSkipped(name: String) -> String {
+        Self.format("player-start-miss-skipped", fallback: "You skipped %1$@", name)
+    }
+
+    /// Details row for sources passed over because they failed lately. The name goes before it.
+    public static var playerStartResting: String { string("player-start-resting", fallback: "Skipped after recent failures") }
+
+    /// Detail line once the streams are found and the player opens one. The name is the source's.
+    public static func playerStartFrom(name: String) -> String {
+        Self.format("player-start-from", fallback: "From %1$@", name)
+    }
+
+    /// Detail line when a stream showed no video and another opens.
+    public static var playerStartNoVideo: String { string("player-start-no-video", fallback: "The first one showed no video") }
+
+    /// Detail line with the place of the stream being opened.
+    public static func playerStartStreamPlace(next: Int, total: Int) -> String {
+        Self.format("player-start-stream-place", fallback: "%1$lld of %2$lld streams", next, total)
+    }
+
+    /// Detail line while a torrent has peers.
+    public static func playerStartPeers(count: Int) -> String {
+        Self.format("player-start-peers", fallback: "%1$lld peers", count)
+    }
+
+    /// Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+    public static func playerStartSpeed(speed: String) -> String {
+        Self.format("player-start-speed", fallback: "%1$@/s", speed)
+    }
+
+    /// Step line while the player fills its buffer and gives a number.
+    public static func playerStartBufferingPercent(percent: String) -> String {
+        Self.format("player-start-buffering-percent", fallback: "Buffering · %1$@", percent)
+    }
+
+    /// Step line while the episode resumes where it was left.
+    public static func playerStartResuming(clock: String) -> String {
+        Self.format("player-start-resuming", fallback: "Resuming at %1$@", clock)
+    }
+
+    /// Button on the starting screen that plays the episode from its beginning.
+    public static var playerStartFromBeginning: String { string("player-start-from-beginning", fallback: "Play from the beginning") }
+
+    /// Button on the starting screen that opens the list of steps.
+    public static var playerStartDetails: String { string("player-start-details", fallback: "Details") }
+
+    /// Button that skips the source being asked. The name is the source's.
+    public static func playerStartSkipSource(name: String) -> String {
+        Self.format("player-start-skip-source", fallback: "Skip %1$@", name)
+    }
+
+    /// Button that opens the next stream of the same source.
+    public static var playerStartSkipStream: String { string("player-start-skip-stream", fallback: "Skip this stream") }
+
+    /// Step line when a start is slow: still waiting for the source. The name is the source's.
+    public static func playerStartStillWaiting(name: String) -> String {
+        Self.format("player-start-still-waiting", fallback: "Still waiting for %1$@", name)
+    }
+
+    /// Step line while the device is offline and the episode will start when it is back.
+    public static var playerStartOffline: String { string("player-start-offline", fallback: "Waiting for a connection") }
+
+    /// Detail line while offline. The episode is its label.
+    public static func playerStartOfflineDetail(episode: String) -> String {
+        Self.format("player-start-offline-detail", fallback: "You're offline. Episode %1$@ starts when you're back.", episode)
+    }
+
+    /// Button on the failure screen that opens the fix for a title that matched the wrong show.
+    public static var playerStartFixMatch: String { string("player-start-fix-match", fallback: "Fix match") }
+
+    /// Details row label for the translation of the episode.
+    public static var playerStartTranslation: String { string("player-start-translation", fallback: "Audio and subtitles") }
+
+    /// Details row once the title has been looked up.
+    public static var playerStartLookedUp: String { string("player-start-looked-up", fallback: "Looked up the title") }
+
+    /// Seconds on the starting screen's detail line and Details rows.
+    public static func playerStartSeconds(seconds: Int) -> String {
+        Self.format("player-start-seconds", fallback: "%1$lld s", seconds)
+    }
+
+    /// Spoken once, when a start has taken more than a few seconds.
+    public static var playerStartStillStarting: String { string("player-start-still-starting", fallback: "Still starting. You can choose a source now.") }
+
+    /// Spoken when a start begins. The episode is its label.
+    public static func playerStartAnnounce(episode: String, title: String) -> String {
+        Self.format("player-start-announce", fallback: "Starting episode %1$@, %2$@", episode, title)
+    }
+
+    /// Spoken when a start fails: the title, then the reason.
+    public static func playerStartFailedAnnounce(title: String, reason: String) -> String {
+        Self.format("player-start-failed-announce", fallback: "%1$@. %2$@", title, reason)
+    }
+
+    /// Accessibility value of the starting screen: the step line, then the detail line.
+    public static func playerStartStatus(step: String, detail: String) -> String {
+        Self.format("player-start-status", fallback: "%1$@, %2$@", step, detail)
+    }
+
+    /// Detail line on the starting screen after the viewer chose to play from the beginning.
+    public static var playerStartBeginning: String { string("player-start-beginning", fallback: "Starting from the beginning") }
+
+    /// Details row while a source is being asked.
+    public static var playerStartRowAsking: String { string("player-start-row-asking", fallback: "Asking") }
+
+    /// Details row outcome when a source has no match for the show.
+    public static var playerStartRowNoMatch: String { string("player-start-row-no-match", fallback: "Doesn't have this show") }
+
+    /// Details row outcome when a source has the show and not the episode. The episode is its label.
+    public static func playerStartRowNoEpisode(episode: String) -> String {
+        Self.format("player-start-row-no-episode", fallback: "Doesn't have episode %1$@", episode)
+    }
+
+    /// Details row outcome when a source failed.
+    public static var playerStartRowFailed: String { string("player-start-row-failed", fallback: "Didn't answer") }
+
+    /// Details row outcome when a source took too long.
+    public static var playerStartRowTimedOut: String { string("player-start-row-timed-out", fallback: "Took too long") }
+
+    /// Details row outcome when the viewer skipped a source.
+    public static var playerStartRowSkipped: String { string("player-start-row-skipped", fallback: "Skipped") }
+
+    /// Second clause of a failure: the sources that were asked, joined as a list by the app.
+    public static func playerStartAsked(names: String) -> String {
+        Self.format("player-start-asked", fallback: "%1$@ were asked.", names)
+    }
+
+    /// Label of the switch in the Details list that plays the episode with its subtitles.
+    public static var playerStartSubtitled: String { string("player-start-subtitled", fallback: "Subtitled") }
 
     /// Title of the stall card. The seconds count up.
     public static func playerStallTitle(seconds: Int) -> String {
@@ -6161,6 +6593,9 @@ public enum L {
     /// Line in the review with sharing on.
     public static var playerMarkShares: String { string("player-mark-shares", fallback: "Saving shares these times with AniSkip.") }
 
+    /// Review line when the stretch under review was found from the audio, not marked by hand.
+    public static var playerMarkFound: String { string("player-mark-found", fallback: "Kaeri found these times from the audio.") }
+
     /// Line in the review when the mark replaces AniSkip's times.
     public static func playerMarkReplaces(start: String, end: String) -> String {
         Self.format("player-mark-replaces", fallback: "Replaces AniSkip's %1$@ to %2$@, which is reported as wrong.", start, end)
@@ -6218,11 +6653,37 @@ public enum L {
     /// Button of that prompt that turns it off. Settings can turn it on again.
     public static var playerDontAskAgain: String { string("player-dont-ask-again", fallback: "Don't ask again") }
 
+    /// Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+    public static var playerFoundAskOpening: String { string("player-found-ask-opening", fallback: "Kaeri found this opening. Were the edges right?") }
+
+    /// The same prompt after a skip over an ending found from the audio.
+    public static var playerFoundAskEnding: String { string("player-found-ask-ending", fallback: "Kaeri found this ending. Were the edges right?") }
+
+    /// Line under that prompt, in a quieter colour. $episode is the episode's number.
+    public static func playerFoundAskShare(episode: Int) -> String {
+        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$lld.", episode)
+    }
+
+    /// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+    public static var playerFoundYes: String { string("player-found-yes", fallback: "Yes") }
+
+    public static var playerFoundAdjust: String { string("player-found-adjust", fallback: "Adjust") }
+
+    /// What the prompt says after Yes. $episode is the episode's number.
+    public static func playerFoundSaved(episode: Int) -> String {
+        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$lld.", episode)
+    }
+
+    /// What the prompt says after Don't ask again, with the line below it.
+    public static var playerFoundNever: String { string("player-found-never", fallback: "Kaeri won't ask about skip times again.") }
+
+    public static var playerFoundNeverHow: String { string("player-found-never-how", fallback: "You can turn it back on in Settings.") }
+
     /// Title of the sheet shown on the first Save.
     public static var playerShareTitle: String { string("player-share-title", fallback: "Share your skip times with AniSkip?") }
 
     /// Body of the sheet.
-    public static var playerShareBody: String { string("player-share-body", fallback: "AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.") }
+    public static var playerShareBody: String { string("player-share-body", fallback: "AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.") }
 
     /// What is sent, as a line under the body.
     public static var playerShareSent: String { string("player-share-sent", fallback: "It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.") }
@@ -6238,6 +6699,22 @@ public enum L {
     public static var playerSkipYours: String { string("player-skip-yours", fallback: "Yours") }
 
     public static var playerSkipFromAniskip: String { string("player-skip-from-aniskip", fallback: "From AniSkip") }
+
+    public static var playerSkipFound: String { string("player-skip-found", fallback: "Found by Kaeri") }
+
+    /// Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+    public static var playerSkipPausedLowPower: String { string("player-skip-paused-low-power", fallback: "Paused while Low Power Mode is on.") }
+
+    public static var playerSkipPausedBatterySaver: String { string("player-skip-paused-battery-saver", fallback: "Paused while battery saver is on.") }
+
+    public static var playerSkipPausedEnergySaver: String { string("player-skip-paused-energy-saver", fallback: "Paused while energy saver is on.") }
+
+    public static var playerSkipPausedPowerSaver: String { string("player-skip-paused-power-saver", fallback: "Paused while power saver is on.") }
+
+    public static var playerSkipPausedStorage: String { string("player-skip-paused-storage", fallback: "Paused until 2 GB of storage is free.") }
+
+    /// Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+    public static var playerSkipUnavailable: String { string("player-skip-unavailable", fallback: "Not available in this build of Kaeri.") }
 
     public static var playerSkipNone: String { string("player-skip-none", fallback: "None yet") }
 
@@ -6786,6 +7263,217 @@ public enum L {
         Self.format("search-line-service", fallback: "On %1$@", service)
     }
 
+    /// The count line under a title in a list or on a card: how many episodes a finished show has.
+    public static func countEpisodes(count: Int) -> String {
+        Self.format("count-episodes", fallback: "%1$lld episodes", count)
+    }
+
+    /// The same, short, for a cell too narrow for the long form.
+    public static func countEpisodesShort(count: Int) -> String {
+        Self.format("count-episodes-short", fallback: "%1$lld ep", count)
+    }
+
+    /// The count line of a show that is airing and has a known total: episodes out so far, then the total.
+    public static func countOutOf(out: Int, total: Int) -> String {
+        Self.format("count-out-of", fallback: "%1$lld of %2$lld out", out, total)
+    }
+
+    /// The same, short.
+    public static func countOutOfShort(out: Int, total: Int) -> String {
+        Self.format("count-out-of-short", fallback: "%1$lld of %2$lld", out, total)
+    }
+
+    /// The count line of a show that is airing and has no known total: episodes out so far.
+    public static func countOut(count: Int) -> String {
+        Self.format("count-out", fallback: "%1$lld episodes out", count)
+    }
+
+    /// The same, short.
+    public static func countOutShort(count: Int) -> String {
+        Self.format("count-out-short", fallback: "%1$lld out", count)
+    }
+
+    /// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+    public static func countStarts(date: String) -> String {
+        Self.format("count-starts", fallback: "Starts %1$@", date)
+    }
+
+    /// The count line of a show that has not started and has no date.
+    public static var countNotOut: String { string("count-not-out", fallback: "Not out yet") }
+
+    /// The count line of a show the viewer is part way through, in the library: the next episode and the total.
+    public static func countNextOf(episode: Int, total: Int) -> String {
+        Self.format("count-next-of", fallback: "Ep %1$lld of %2$lld", episode, total)
+    }
+
+    /// The dub part of a count line when a source has a dub and does not say how far it goes.
+    public static var countDub: String { string("count-dub", fallback: "Dub") }
+
+    /// The dub part of a count line: the last episode the dub has.
+    public static func countDubThrough(through: Int) -> String {
+        Self.format("count-dub-through", fallback: "Dub %1$lld", through)
+    }
+
+    /// What a screen reader says for a count line: the long form of a finished show.
+    public static func countSpokenEpisodes(count: Int) -> String {
+        Self.format("count-spoken-episodes", fallback: "%1$lld episodes", count)
+    }
+
+    /// What a screen reader says for a show that is airing, with a known total.
+    public static func countSpokenOutOf(out: Int, total: Int) -> String {
+        Self.format("count-spoken-out-of", fallback: "%1$lld of %2$lld episodes out", out, total)
+    }
+
+    /// What a screen reader says for a show that is airing with no known total.
+    public static func countSpokenOut(count: Int) -> String {
+        Self.format("count-spoken-out", fallback: "%1$lld episodes out", count)
+    }
+
+    /// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+    public static func countSpokenStarts(date: String) -> String {
+        Self.format("count-spoken-starts", fallback: "Starts %1$@", date)
+    }
+
+    /// What a screen reader says for a show the viewer is part way through.
+    public static func countSpokenNextOf(episode: Int, total: Int) -> String {
+        Self.format("count-spoken-next-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+    }
+
+    /// What a screen reader says after the count when the dub goes to an episode.
+    public static func countSpokenDubThrough(through: Int) -> String {
+        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$lld", through)
+    }
+
+    /// What a screen reader says after the count when a source has a dub and does not say how far it goes.
+    public static var countSpokenDub: String { string("count-spoken-dub", fallback: "has a dub") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJanShort: String { string("date-month-jan-short", fallback: "Jan") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJanLong: String { string("date-month-jan-long", fallback: "January") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthFebShort: String { string("date-month-feb-short", fallback: "Feb") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthFebLong: String { string("date-month-feb-long", fallback: "February") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthMarShort: String { string("date-month-mar-short", fallback: "Mar") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthMarLong: String { string("date-month-mar-long", fallback: "March") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthAprShort: String { string("date-month-apr-short", fallback: "Apr") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthAprLong: String { string("date-month-apr-long", fallback: "April") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthMayShort: String { string("date-month-may-short", fallback: "May") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthMayLong: String { string("date-month-may-long", fallback: "May") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJunShort: String { string("date-month-jun-short", fallback: "Jun") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJunLong: String { string("date-month-jun-long", fallback: "June") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJulShort: String { string("date-month-jul-short", fallback: "Jul") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJulLong: String { string("date-month-jul-long", fallback: "July") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthAugShort: String { string("date-month-aug-short", fallback: "Aug") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthAugLong: String { string("date-month-aug-long", fallback: "August") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthSepShort: String { string("date-month-sep-short", fallback: "Sep") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthSepLong: String { string("date-month-sep-long", fallback: "September") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthOctShort: String { string("date-month-oct-short", fallback: "Oct") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthOctLong: String { string("date-month-oct-long", fallback: "October") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthNovShort: String { string("date-month-nov-short", fallback: "Nov") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthNovLong: String { string("date-month-nov-long", fallback: "November") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthDecShort: String { string("date-month-dec-short", fallback: "Dec") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthDecLong: String { string("date-month-dec-long", fallback: "December") }
+
+    /// Search's Trending heading and sort, for AniList's live trending.
+    public static var trendingToday: String { string("trending-today", fallback: "Trending today") }
+
+    /// Search's Trending heading and sort, for the last seven days.
+    public static var trendingWeek: String { string("trending-week", fallback: "Trending this week") }
+
+    /// Search's Trending heading and sort, for the last thirty days.
+    public static var trendingMonth: String { string("trending-month", fallback: "Trending this month") }
+
+    /// One choice of the Trending period menu, where the heading already says Trending.
+    public static var trendingChoiceToday: String { string("trending-choice-today", fallback: "Today") }
+
+    /// One choice of the Trending period menu: the last seven days.
+    public static var trendingChoiceWeek: String { string("trending-choice-week", fallback: "This week") }
+
+    /// One choice of the Trending period menu: the last thirty days.
+    public static var trendingChoiceMonth: String { string("trending-choice-month", fallback: "This month") }
+
+    /// Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+    public static func trendingFailed(period: String) -> String {
+        Self.format("trending-failed", fallback: "Couldn't load %1$@'s trending.", period)
+    }
+
+    /// Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+    public static func trendingUpdated(age: String) -> String {
+        Self.format("trending-updated", fallback: "Updated %1$@", age)
+    }
+
+    /// Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+    public static var surpriseMe: String { string("surprise-me", fallback: "Surprise me") }
+
+    /// The same as a menu bar item, in title case.
+    public static var surpriseMeMenu: String { string("surprise-me-menu", fallback: "Surprise Me") }
+
+    /// Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+    public static var surpriseAnother: String { string("surprise-another", fallback: "Another") }
+
+    /// Hint of the Surprise me button on the library's Planning list.
+    public static var surpriseHintPlanning: String { string("surprise-hint-planning", fallback: "Opens a random title from Planning") }
+
+    /// Hint of the Surprise me button in Search.
+    public static var surpriseHintFilters: String { string("surprise-hint-filters", fallback: "Opens a random title from these filters") }
+
+    /// Hint of the Another button.
+    public static var surpriseAnotherHint: String { string("surprise-another-hint", fallback: "Opens another random title in place of this one") }
+
+    /// Notice when Search's filters match no title to pick from.
+    public static var surpriseEmptyFilters: String { string("surprise-empty-filters", fallback: "No titles match these filters.") }
+
+    /// Notice when the Planning list is empty.
+    public static var surpriseEmptyPlanning: String { string("surprise-empty-planning", fallback: "Planning is empty.") }
+
+    /// Notice when a pick from Search needs AniList and the device is offline.
+    public static var surpriseOffline: String { string("surprise-offline", fallback: "Offline. Search picks need AniList.") }
+
     /// Title of the dialog that adds a media server.
     public static var serversAddTitle: String { string("servers-add-title", fallback: "Add a media server") }
 
@@ -7051,6 +7739,9 @@ public enum L {
     /// Group heading.
     public static var settingsGroupPlayback: String { string("settings-group-playback", fallback: "Playback") }
 
+    /// Group heading in Playback settings, above the switch that hides chat.
+    public static var settingsGroupWatchParties: String { string("settings-group-watch-parties", fallback: "Watch parties") }
+
     /// Group heading.
     public static var settingsGroupWatching: String { string("settings-group-watching", fallback: "Watching") }
 
@@ -7136,23 +7827,35 @@ public enum L {
     /// Settings, Playback: whether recaps are skipped without asking.
     public static var settingsSkipRecap: String { string("settings-skip-recap", fallback: "Skip recaps automatically") }
 
-    /// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-    public static var settingsAskWasOpening: String { string("settings-ask-was-opening", fallback: "Ask after skipping an opening by hand") }
+    /// Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+    public static var settingsFindSkips: String { string("settings-find-skips", fallback: "Find skip times from the audio") }
 
     /// Line under it.
-    public static var settingsAskWasOpeningDetail: String { string("settings-ask-was-opening-detail", fallback: "Offers to mark it, so it is skipped next time") }
+    public static var settingsFindSkipsDetail: String { string("settings-find-skips-detail", fallback: "When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.") }
+
+    /// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+    public static var settingsAskWasOpening: String { string("settings-ask-was-opening", fallback: "Ask about skip times") }
+
+    /// Line under it.
+    public static var settingsAskWasOpeningDetail: String { string("settings-ask-was-opening-detail", fallback: "After you skip an opening by hand, and after a skip Kaeri found") }
 
     /// Settings, Playback: whether marked skip times go to AniSkip.
     public static var settingsShareSkips: String { string("settings-share-skips", fallback: "Share skip times with AniSkip") }
 
     /// Line under it.
-    public static var settingsShareSkipsDetail: String { string("settings-share-skips-detail", fallback: "AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.") }
+    public static var settingsShareSkipsDetail: String { string("settings-share-skips-detail", fallback: "AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.") }
 
-    /// Settings, Playback: removes every skip time you marked.
-    public static var settingsClearSkips: String { string("settings-clear-skips", fallback: "Clear skip times you marked…") }
+    /// Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+    public static var settingsClearSkips: String { string("settings-clear-skips", fallback: "Skip times you marked or Kaeri found") }
 
-    /// Question that asks before clearing every skip time you marked.
-    public static var settingsClearSkipsConfirm: String { string("settings-clear-skips-confirm", fallback: "Clear the skip times you marked? AniSkip keeps the ones you shared.") }
+    /// Question that asks before clearing them.
+    public static var settingsClearSkipsConfirm: String { string("settings-clear-skips-confirm", fallback: "Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.") }
+
+    /// Android's Settings: the title of that row, with the line below.
+    public static var settingsClearSkipsAndroid: String { string("settings-clear-skips-android", fallback: "Clear skip times") }
+
+    /// Line under it.
+    public static var settingsClearSkipsAndroidDetail: String { string("settings-clear-skips-android-detail", fallback: "The ones you marked and the ones Kaeri found") }
 
     /// Row: skip filler.
     public static var settingsSkipFiller: String { string("settings-skip-filler", fallback: "Skip filler automatically") }
@@ -7176,7 +7879,7 @@ public enum L {
     public static var settingsSpoiler: String { string("settings-spoiler", fallback: "Spoiler protection") }
 
     /// Line under it.
-    public static var settingsSpoilerDetail: String { string("settings-spoiler-detail", fallback: "Blurs stills of unwatched episodes after the next one") }
+    public static var settingsSpoilerDetail: String { string("settings-spoiler-detail", fallback: "Hides stills and synopses of unwatched episodes after the next one") }
 
     /// Line under the audio row.
     public static var settingsAudioDetail: String { string("settings-audio-detail", fallback: "Each show remembers its own audio and subtitles.") }
@@ -7322,7 +8025,7 @@ public enum L {
     public static var showSettingsShowEverything: String { string("show-settings-show-everything", fallback: "Show everything") }
 
     /// Line under spoiler protection.
-    public static var showSettingsSpoilerDetail: String { string("show-settings-spoiler-detail", fallback: "Blurs stills after the next episode.") }
+    public static var showSettingsSpoilerDetail: String { string("show-settings-spoiler-detail", fallback: "Hides stills and synopses after the next episode.") }
 
     /// Option: always.
     public static var showSettingsAlways: String { string("show-settings-always", fallback: "Always") }
@@ -8663,6 +9366,795 @@ public enum L {
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
 
+    /// Windows and Linux dialog line while the browser is open for a cloud sign-in.
+    public static func cloudBrowserLine(service: String) -> String {
+        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@’s page. Allow access there, and Kaeri carries on by itself.", service)
+    }
+
+    /// Windows and Linux dialog title while the browser is open for a cloud sign-in.
+    public static func cloudBrowserTitle(service: String) -> String {
+        Self.format("cloud-browser-title", fallback: "Sign in to %1$@ in your browser", service)
+    }
+
+    /// Word for this device in sentences such as “Turn off sync on this computer”.
+    public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }
+
+    /// Button on the Devices page that opens the box for a code another device shows.
+    public static var devicesEnterCode: String { string("devices-enter-code", fallback: "Enter a code") }
+
+    /// Button on the Devices page that shows the recovery key behind the computer’s own lock.
+    public static var devicesShowKey: String { string("devices-show-key", fallback: "Show") }
+
+    /// Button in the alert that turns sync off on this computer.
+    public static var devicesTurnOffAction: String { string("devices-turn-off-action", fallback: "Turn off") }
+
+    /// Label of the field for the other device’s address in the Enter a code dialog.
+    public static var pairAddressLabel: String { string("pair-address-label", fallback: "Address") }
+
+    /// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+    public static var pairByAddress: String { string("pair-by-address", fallback: "Pair by address") }
+
+    /// Placeholder of the pairing code field.
+    public static var pairCodePlaceholder: String { string("pair-code-placeholder", fallback: "000 000") }
+
+    /// Label of the field for a recovery key in the restore dialog.
+    public static var rkeyFieldLabel: String { string("rkey-field-label", fallback: "Recovery key") }
+
+    /// Label of the user name field for WebDAV and a Nextcloud app password.
+    public static var cloudUserLabel: String { string("cloud-user-label", fallback: "User name") }
+
+    /// Label of the password field for WebDAV and a Nextcloud app password.
+    public static var cloudPasswordLabel: String { string("cloud-password-label", fallback: "Password") }
+
+    /// Label of the WebDAV server address field.
+    public static var cloudWebdavAddressLabel: String { string("cloud-webdav-address-label", fallback: "Server address") }
+
+    /// Line under the pairing code while a device is being paired.
+    public static var pairWorkingLine: String { string("pair-working-line", fallback: "Pairing") }
+
+    /// Name for the device whose pairing code did not match, when no name is known yet.
+    public static var pairOtherDevice: String { string("pair-other-device", fallback: "your other device") }
+
+    /// Note under the Enter a code dialog's fields: the address can be left empty.
+    public static var pairAddressOptional: String { string("pair-address-optional", fallback: "Leave the address empty and Kaeri looks for the device on this network.") }
+
+    /// Device page footer when the device has no Remote switch.
+    public static var devicesSyncFoot: String { string("devices-sync-foot", fallback: "Sync shares where you stopped, your history and your settings.") }
+
+    /// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+    public static func devicesLineRemote(line: String) -> String {
+        Self.format("devices-line-remote", fallback: "%1$@ · Remote", line)
+    }
+
+    /// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+    public static var profilesEditAction: String { string("profiles-edit-action", fallback: "Edit") }
+
+    /// Label of the name field in the add and edit profile dialogs.
+    public static var profilesNameField: String { string("profiles-name-field", fallback: "Name") }
+
+    /// Accessible name and tooltip of the menu button on a profile's row.
+    public static func profilesMoreFor(name: String) -> String {
+        Self.format("profiles-more-for", fallback: "More for %1$@", name)
+    }
+
+    /// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+    public static func syncStoreErrOffline(store: String, device: String) -> String {
+        Self.format("sync-store-err-offline", fallback: "Couldn't reach %1$@ or %2$@. Try again when both are online.", store, device)
+    }
+
+    /// Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+    public static func syncStoreErrRefused(store: String) -> String {
+        Self.format("sync-store-err-refused", fallback: "%1$@ didn't accept the invite. Ask its owner for a new one.", store)
+    }
+
+    /// Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+    public static func syncStoreErrNotAllowed(store: String, device: String) -> String {
+        Self.format("sync-store-err-not-allowed", fallback: "%2$@ can't invite other devices to %1$@. Ask the plugin store's owner for an invite.", store, device)
+    }
+
+    /// Settings row and page title, every platform.
+    public static var devicesTitle: String { string("devices-title", fallback: "Devices") }
+
+    /// Devices row value while sync is off.
+    public static var devicesRowOff: String { string("devices-row-off", fallback: "Sync off") }
+
+    /// Devices row value; “Synced 2 min ago”, “Synced just now”.
+    public static func devicesRowSynced(ago: String) -> String {
+        Self.format("devices-row-synced", fallback: "Synced %1$@", ago)
+    }
+
+    /// Devices row value with the error glyph.
+    public static var devicesRowError: String { string("devices-row-error", fallback: "Couldn’t sync") }
+
+    /// Group heading over the name.
+    public static var devicesThisDevice: String { string("devices-this-device", fallback: "This device") }
+
+    /// Row for this device’s name.
+    public static var devicesName: String { string("devices-name", fallback: "Name") }
+
+    /// Group heading while off.
+    public static var syncGroup: String { string("sync-group", fallback: "Sync") }
+
+    /// Off state.
+    public static var syncOffTitle: String { string("sync-off-title", fallback: "Sync is off") }
+
+    /// Off state.
+    public static var syncOffLine: String { string("sync-off-line", fallback: "Turn it on to keep where you stopped, your history and your settings the same on your devices.") }
+
+    /// Button; the Mac adds an ellipsis.
+    public static var syncTurnOn: String { string("sync-turn-on", fallback: "Turn on sync") }
+
+    /// Road sheet title.
+    public static var syncRoadTitle: String { string("sync-road-title", fallback: "How should your devices share?") }
+
+    /// Road sheet row.
+    public static var syncRoadNearby: String { string("sync-road-nearby", fallback: "With a device nearby") }
+
+    /// Road sheet row line.
+    public static var syncRoadNearbyLine: String { string("sync-road-nearby-line", fallback: "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.") }
+
+    /// Road sheet row.
+    public static var syncRoadCloud: String { string("sync-road-cloud", fallback: "Through a cloud folder") }
+
+    /// Road sheet row line. Names no service, since a build may hide some (decision 14).
+    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.") }
+
+    /// Road sheet footer.
+    public static var syncRoadLater: String { string("sync-road-later", fallback: "You can add the other way later. Most people use both.") }
+
+    /// Group heading.
+    public static var devicesYours: String { string("devices-yours", fallback: "Your devices") }
+
+    /// Empty Your devices.
+    public static var devicesOnlyThis: String { string("devices-only-this", fallback: "Only this device") }
+
+    /// Empty Your devices.
+    public static var devicesOnlyThisLine: String { string("devices-only-this-line", fallback: "Pair another device to share where you stopped, your history and your settings.") }
+
+    /// Row and sheet title.
+    public static var devicesAdd: String { string("devices-add", fallback: "Add a device") }
+
+    /// Device row line past 30 days.
+    public static func devicesNotSeen(days: Int) -> String {
+        Self.format("devices-not-seen", fallback: "Not seen for %1$lld days", days)
+    }
+
+    /// A device paired only for Play on TV.
+    public static var devicesRemoteOnly: String { string("devices-remote-only", fallback: "Remote only") }
+
+    /// Button on a remote-only TV row.
+    public static func devicesAlsoSync(device: String) -> String {
+        Self.format("devices-also-sync", fallback: "Also sync with %1$@", device)
+    }
+
+    /// Footer while sync is off.
+    public static var devicesPairedTvsFoot: String { string("devices-paired-tvs-foot", fallback: "Paired for Play on TV. A TV paired as a remote never gets your history.") }
+
+    /// Switch on a device.
+    public static var devicesSyncSwitch: String { string("devices-sync-switch", fallback: "Sync") }
+
+    /// Switch on a TV.
+    public static var devicesRemoteSwitch: String { string("devices-remote-switch", fallback: "Remote") }
+
+    /// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+    public static func devicesSwitchesFoot(kind: String, device: String) -> String {
+        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this %1$@ drive %2$@.", kind, device)
+    }
+
+    /// Device page, destructive.
+    public static var devicesRemove: String { string("devices-remove", fallback: "Remove this device") }
+
+    /// Alert title.
+    public static func devicesRemoveAlert(device: String) -> String {
+        Self.format("devices-remove-alert", fallback: "Remove %1$@?", device)
+    }
+
+    /// Alert message.
+    public static func devicesRemoveAlertLine(device: String) -> String {
+        Self.format("devices-remove-alert-line", fallback: "%1$@ keeps what it has, but gets nothing new from your other devices.", device)
+    }
+
+    /// Last row; “this phone”, “this Mac”.
+    public static func syncTurnOff(kind: String) -> String {
+        Self.format("sync-turn-off", fallback: "Turn off sync on this %1$@", kind)
+    }
+
+    /// Alert title.
+    public static func syncTurnOffAlert(device: String) -> String {
+        Self.format("sync-turn-off-alert", fallback: "Turn off sync on %1$@?", device)
+    }
+
+    /// Alert message.
+    public static func syncTurnOffAlertLine(kind: String) -> String {
+        Self.format("sync-turn-off-alert-line", fallback: "This %1$@ stops sharing with your other devices. Everything it has stays here.", kind)
+    }
+
+    /// Group heading.
+    public static var cloudGroup: String { string("cloud-group", fallback: "Cloud folder") }
+
+    /// Group footer.
+    public static var cloudFoot: String { string("cloud-foot", fallback: "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.") }
+
+    /// Row when only the nearby road is set.
+    public static var cloudAdd: String { string("cloud-add", fallback: "Add a cloud folder") }
+
+    /// Picker title.
+    public static var cloudPickTitle: String { string("cloud-pick-title", fallback: "Choose a cloud folder") }
+
+    /// Picker row line.
+    public static var cloudGoogleLine: String { string("cloud-google-line", fallback: "A hidden Kaeri folder in your Drive") }
+
+    /// Picker row line.
+    public static var cloudNextcloudLine: String { string("cloud-nextcloud-line", fallback: "Your own or a hosted Nextcloud server") }
+
+    /// Picker row line, Apple and Windows.
+    public static var cloudIcloudLine: String { string("cloud-icloud-line", fallback: "A folder you choose in iCloud Drive") }
+
+    /// Picker group heading.
+    public static var cloudOther: String { string("cloud-other", fallback: "Other") }
+
+    /// Picker row.
+    public static var cloudWebdav: String { string("cloud-webdav", fallback: "WebDAV server") }
+
+    /// Picker row line.
+    public static var cloudWebdavLine: String { string("cloud-webdav-line", fallback: "Any server that speaks WebDAV") }
+
+    /// Picker row line.
+    public static var cloudFolderLine: String { string("cloud-folder-line", fallback: "For a folder another app keeps in step") }
+
+    /// Picker footer.
+    public static var cloudPickFoot: String { string("cloud-pick-foot", fallback: "Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.") }
+
+    /// Row line while the first write runs.
+    public static var cloudSettingUp: String { string("cloud-setting-up", fallback: "Setting up the folder") }
+
+    /// Field label.
+    public static var cloudNextcloudAddress: String { string("cloud-nextcloud-address", fallback: "Server address") }
+
+    /// Field note.
+    public static var cloudNextcloudAddressNote: String { string("cloud-nextcloud-address-note", fallback: "The address you open Nextcloud at in a browser.") }
+
+    /// Login flow wait.
+    public static func cloudNextcloudWaitTitle(host: String) -> String {
+        Self.format("cloud-nextcloud-wait-title", fallback: "Finish signing in on %1$@", host)
+    }
+
+    /// Login flow wait.
+    public static var cloudNextcloudWaitLine: String { string("cloud-nextcloud-wait-line", fallback: "Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.") }
+
+    /// Wait row.
+    public static func cloudWaiting(service: String) -> String {
+        Self.format("cloud-waiting", fallback: "Waiting for %1$@", service)
+    }
+
+    /// Button.
+    public static var cloudOpenAgain: String { string("cloud-open-again", fallback: "Open the page again") }
+
+    /// Text button.
+    public static var cloudAppPassword: String { string("cloud-app-password", fallback: "Use an app password instead") }
+
+    /// Button.
+    public static var cloudConnect: String { string("cloud-connect", fallback: "Connect") }
+
+    /// Error.
+    public static func cloudErrOffline(service: String) -> String {
+        Self.format("cloud-err-offline", fallback: "Couldn’t reach %1$@. Check your connection.", service)
+    }
+
+    /// Inline error.
+    public static func cloudErrNoServer(host: String) -> String {
+        Self.format("cloud-err-no-server", fallback: "Couldn’t find a Nextcloud server at %1$@. Check the address.", host)
+    }
+
+    /// Inline error.
+    public static var cloudErrAppPassword: String { string("cloud-err-app-password", fallback: "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.") }
+
+    /// Inline error.
+    public static var cloudErrWebdav: String { string("cloud-err-webdav", fallback: "The server refused that user name or password.") }
+
+    /// Error, with Open the page again.
+    public static var cloudErrTimeout: String { string("cloud-err-timeout", fallback: "The sign-in page closed before access was allowed.") }
+
+    /// Error.
+    public static var cloudErrOtherGroup: String { string("cloud-err-other-group", fallback: "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.") }
+
+    /// Status error, with Sign in again.
+    public static func cloudErrSignedOut(service: String, kind: String) -> String {
+        Self.format("cloud-err-signed-out", fallback: "%1$@ signed Kaeri out. Your changes wait on this %2$@ until you sign in again.", service, kind)
+    }
+
+    /// Status error.
+    public static func cloudErrFull(service: String) -> String {
+        Self.format("cloud-err-full", fallback: "%1$@ is full. Free some space there, then try again.", service)
+    }
+
+    /// Status error, with Choose folder.
+    public static var cloudErrFolderGone: String { string("cloud-err-folder-gone", fallback: "Kaeri can’t open the folder any more. Choose it again.") }
+
+    /// Status error title.
+    public static func cloudErrTitle(service: String) -> String {
+        Self.format("cloud-err-title", fallback: "Couldn’t sync with %1$@", service)
+    }
+
+    /// Picker row line.
+    public static var cloudDropboxLine: String { string("cloud-dropbox-line", fallback: "Kaeri’s own folder in your Dropbox, Apps/Kaeri") }
+
+    /// Picker row line.
+    public static var cloudOnedriveLine: String { string("cloud-onedrive-line", fallback: "Kaeri’s own folder in your OneDrive, Apps/Kaeri") }
+
+    /// Cloud group button.
+    public static var cloudSyncNow: String { string("cloud-sync-now", fallback: "Sync now") }
+
+    /// Cloud group button; at once, no question, except on the TV.
+    public static var cloudSignOut: String { string("cloud-sign-out", fallback: "Sign out") }
+
+    /// Cloud group button after signing out.
+    public static var cloudSignIn: String { string("cloud-sign-in", fallback: "Sign in") }
+
+    /// Cloud row after Sign out; hollow haze dot.
+    public static func cloudSignedOutLine(kind: String) -> String {
+        Self.format("cloud-signed-out-line", fallback: "Signed out. Changes wait on this %1$@ until you sign in again.", kind)
+    }
+
+    /// Picker row line after `SignInDenied`.
+    public static func cloudErrDenied(service: String) -> String {
+        Self.format("cloud-err-denied", fallback: "%1$@ didn’t give Kaeri access. Choose it again to retry.", service)
+    }
+
+    /// TV picker footer (decision 17).
+    public static var tvCloudPickFoot: String { string("tv-cloud-pick-foot", fallback: "Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.") }
+
+    /// TV picker row line for Dropbox.
+    public static var tvCloudDropboxLine: String { string("tv-cloud-dropbox-line", fallback: "Signs in on your phone") }
+
+    /// TV, Dropbox.
+    public static var tvCloudNeedsPhoneTitle: String { string("tv-cloud-needs-phone-title", fallback: "Dropbox signs in on your phone") }
+
+    /// TV, Dropbox, a paired phone has it.
+    public static func tvCloudNeedsPhoneHas(device: String) -> String {
+        Self.format("tv-cloud-needs-phone-has", fallback: "%1$@ is signed in to Dropbox. This TV can use that sign-in over your paired link.", device)
+    }
+
+    /// TV amber button; also for Nextcloud and WebDAV.
+    public static func tvUsePhoneSignin(device: String) -> String {
+        Self.format("tv-use-phone-signin", fallback: "Use %1$@’s sign-in", device)
+    }
+
+    /// TV, Dropbox, no phone has it.
+    public static var tvCloudNeedsPhoneNone: String { string("tv-cloud-needs-phone-none", fallback: "Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.") }
+
+    /// TV code screen after the poll succeeds.
+    public static var tvCloudFinishing: String { string("tv-cloud-finishing", fallback: "Signed in. Setting up the folder") }
+
+    /// TV cloud row.
+    public static func tvCloudRevokedLine(service: String) -> String {
+        Self.format("tv-cloud-revoked-line", fallback: "%1$@ signed Kaeri out. Select to sign in again.", service)
+    }
+
+    /// TV cloud row.
+    public static var tvCloudSignedOutLine: String { string("tv-cloud-signed-out-line", fallback: "Signed out. Select to sign in.") }
+
+    /// TV ConfirmDialog.
+    public static func tvCloudSignOutTitle(service: String) -> String {
+        Self.format("tv-cloud-sign-out-title", fallback: "Sign out of %1$@?", service)
+    }
+
+    /// TV ConfirmDialog, with Cancel focused and Sign out.
+    public static func tvCloudSignOutLine(service: String) -> String {
+        Self.format("tv-cloud-sign-out-line", fallback: "This TV stops syncing through %1$@. Changes wait here until you sign in again.", service)
+    }
+
+    /// Status line while offline.
+    public static func cloudOffline(kind: String) -> String {
+        Self.format("cloud-offline", fallback: "Waiting for a connection. Changes are kept on this %1$@.", kind)
+    }
+
+    /// TV device flow.
+    public static var tvGoogleTitle: String { string("tv-google-title", fallback: "Sign in to Google Drive") }
+
+    /// TV device flow.
+    public static var tvQrOpenPage: String { string("tv-qr-open-page", fallback: "Or scan to open the page") }
+
+    /// TV Nextcloud.
+    public static var tvNextcloudLine: String { string("tv-nextcloud-line", fallback: "Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.") }
+
+    /// Sheet title.
+    public static var rkeyTitle: String { string("rkey-title", fallback: "Your recovery key") }
+
+    /// Sheet line.
+    public static var rkeyLine: String { string("rkey-line", fallback: "Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.") }
+
+    /// Button.
+    public static var rkeyCopy: String { string("rkey-copy", fallback: "Copy") }
+
+    /// Text button.
+    public static var rkeyQr: String { string("rkey-qr", fallback: "Show as QR code") }
+
+    /// Sheet footnote.
+    public static func rkeyAgain(kind: String) -> String {
+        Self.format("rkey-again", fallback: "You can see it again in Settings, Devices, after unlocking this %1$@.", kind)
+    }
+
+    /// Devices row.
+    public static var rkeyRow: String { string("rkey-row", fallback: "Recovery key") }
+
+    /// Devices row value.
+    public static func rkeyMade(date: String) -> String {
+        Self.format("rkey-made", fallback: "Made %1$@", date)
+    }
+
+    /// Row.
+    public static var rkeyNew: String { string("rkey-new", fallback: "Make a new key") }
+
+    /// Footer.
+    public static var rkeyNewFoot: String { string("rkey-new-foot", fallback: "The old key stops working, and your devices switch to the new one the next time they sync.") }
+
+    /// Restore.
+    public static var rkeyEnterTitle: String { string("rkey-enter-title", fallback: "Enter your recovery key") }
+
+    /// Restore.
+    public static func rkeyEnterLine(service: String, count: Int) -> String {
+        Self.format("rkey-enter-line", fallback: "%1$@ holds history from %2$lld devices. The key you saved when sync was turned on opens it.", service, count)
+    }
+
+    /// Field note.
+    public static var rkeyEnterNote: String { string("rkey-enter-note", fallback: "24 letters and digits, in groups of four. Spaces and case don’t matter.") }
+
+    /// Inline error.
+    public static var rkeyWrong: String { string("rkey-wrong", fallback: "That key doesn’t open this folder. Check each group of four and try again.") }
+
+    /// Button.
+    public static var rkeyRestore: String { string("rkey-restore", fallback: "Restore") }
+
+    /// Add a device.
+    public static var pairEnterLine: String { string("pair-enter-line", fallback: "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.") }
+
+    /// Button, phones.
+    public static var pairScan: String { string("pair-scan", fallback: "Scan the code") }
+
+    /// Note.
+    public static var pairSameWifi: String { string("pair-same-wifi", fallback: "Both devices need to be on the same Wi-Fi.") }
+
+    /// Button.
+    public static var pairButton: String { string("pair-button", fallback: "Pair") }
+
+    /// Text button.
+    public static var pairShowInstead: String { string("pair-show-instead", fallback: "Show a code here instead") }
+
+    /// Code screen.
+    public static var pairShowTitle: String { string("pair-show-title", fallback: "Enter this code on your other device") }
+
+    /// Code screen.
+    public static var pairShowScan: String { string("pair-show-scan", fallback: "Or scan it from Kaeri on your phone.") }
+
+    /// Code screen.
+    public static func pairGoodFor(left: String) -> String {
+        Self.format("pair-good-for", fallback: "Good for 2 minutes · %1$@", left)
+    }
+
+    /// TV code screen.
+    public static var pairTvLine: String { string("pair-tv-line", fallback: "On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.") }
+
+    /// Success.
+    public static func pairOk(device: String) -> String {
+        Self.format("pair-ok", fallback: "Paired with %1$@", device)
+    }
+
+    /// Success.
+    public static var pairOkLine: String { string("pair-ok-line", fallback: "Bringing over your history. You can keep using Kaeri meanwhile.") }
+
+    /// Success switch.
+    public static func pairCopySignins(device: String) -> String {
+        Self.format("pair-copy-signins", fallback: "Copy sign-ins from %1$@", device)
+    }
+
+    /// Success switch line.
+    public static func pairCopySigninsLine(trackers: String) -> String {
+        Self.format("pair-copy-signins-line", fallback: "%1$@. Each device gets its own copy over this link.", trackers)
+    }
+
+    /// Error.
+    public static func pairErrCode(device: String) -> String {
+        Self.format("pair-err-code", fallback: "That code didn’t match. Check the code on %1$@ and try again.", device)
+    }
+
+    /// Error.
+    public static var pairErrNotFound: String { string("pair-err-not-found", fallback: "Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.") }
+
+    /// Error on the showing side.
+    public static var pairErrExpired: String { string("pair-err-expired", fallback: "This code ran out. Show a new one.") }
+
+    /// Profile question.
+    public static func pairWhichProfile(device: String) -> String {
+        Self.format("pair-which-profile", fallback: "Which profile on %1$@ is yours?", device)
+    }
+
+    /// Profile question.
+    public static func pairWhichProfileLine(kind: String, device: String) -> String {
+        Self.format("pair-which-profile-line", fallback: "This %1$@ syncs with that profile only. The others stay on %2$@.", kind, device)
+    }
+
+    /// Footer.
+    public static func pairAlsoSyncFoot(device: String) -> String {
+        Self.format("pair-also-sync-foot", fallback: "%1$@ already knows this phone from Play on TV, so syncing with it needs no new code.", device)
+    }
+
+    /// Continue, for a day.
+    public static func continueFromDevice(n: Int, time: String, device: String) -> String {
+        Self.format("continue-from-device", fallback: "Episode %1$lld · stopped at %2$@ on %3$@", n, time, device)
+    }
+
+    /// Player, 6 s, with Start over.
+    public static func playerResumedFrom(time: String, device: String) -> String {
+        Self.format("player-resumed-from", fallback: "Resumed at %1$@ from %2$@", time, device)
+    }
+
+    /// Row line, Mac toolbar status.
+    public static var syncSyncing: String { string("sync-syncing", fallback: "Syncing") }
+
+    /// Mac jobs popover.
+    public static func syncSyncingWith(device: String) -> String {
+        Self.format("sync-syncing-with", fallback: "Syncing with %1$@", device)
+    }
+
+    /// Device page group.
+    public static var syncNotes: String { string("sync-notes", fallback: "Sync notes") }
+
+    /// Sync note.
+    public static func syncNoteKeptWatched(n: Int, title: String, other: String, device: String) -> String {
+        Self.format("sync-note-kept-watched", fallback: "Episode %1$lld of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", n, title, other, device)
+    }
+
+    /// Sync note action.
+    public static var syncNoteUndo: String { string("sync-note-undo", fallback: "Mark unwatched") }
+
+    /// Footer.
+    public static var syncNotesFoot: String { string("sync-notes-foot", fallback: "Notes stay for 7 days.") }
+
+    /// Settings row and page.
+    public static var profilesTitle: String { string("profiles-title", fallback: "Profiles") }
+
+    /// Profiles row value with one profile.
+    public static var profilesOnlyYou: String { string("profiles-only-you", fallback: "Only you") }
+
+    /// Profiles page with one.
+    public static var profilesOneFoot: String { string("profiles-one-foot", fallback: "Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.") }
+
+    /// Row, sheet title, picker tile.
+    public static var profilesAdd: String { string("profiles-add", fallback: "Add a profile") }
+
+    /// Sheet line.
+    public static var profilesAddLine: String { string("profiles-add-line", fallback: "Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.") }
+
+    /// Field label.
+    public static var profilesNew: String { string("profiles-new", fallback: "New profile") }
+
+    /// Field label.
+    public static var profilesYours: String { string("profiles-yours", fallback: "Your profile") }
+
+    /// Field note when signed in.
+    public static var profilesYoursNote: String { string("profiles-yours-note", fallback: "Filled in from AniList. Until now this device had one profile with no name.") }
+
+    /// Switch.
+    public static var profilesKids: String { string("profiles-kids", fallback: "Kids profile") }
+
+    /// Switch footer.
+    public static var profilesKidsLine: String { string("profiles-kids-line", fallback: "Adult titles stay off, and sources, devices and torrent settings are hidden in it.") }
+
+    /// Settings foot in a kids profile.
+    public static var profilesKidsHidden: String { string("profiles-kids-hidden", fallback: "Sources and Devices are hidden in a kids profile, and adult titles stay off.") }
+
+    /// Line under a kids profile.
+    public static var profilesKidsTag: String { string("profiles-kids-tag", fallback: "Kids") }
+
+    /// Button.
+    public static var profilesAddButton: String { string("profiles-add-button", fallback: "Add profile") }
+
+    /// Profiles page footer.
+    public static var profilesSharedFoot: String { string("profiles-shared-foot", fallback: "Sources, downloads and this device’s settings are shared by every profile.") }
+
+    /// Profile page row.
+    public static var profilesSyncsWith: String { string("profiles-syncs-with", fallback: "Syncs with") }
+
+    /// Profile page, destructive.
+    public static var profilesDelete: String { string("profiles-delete", fallback: "Delete profile") }
+
+    /// Alert title.
+    public static func profilesDeleteAlert(name: String) -> String {
+        Self.format("profiles-delete-alert", fallback: "Delete %1$@’s profile?", name)
+    }
+
+    /// Alert message.
+    public static func profilesDeleteAlertLine(name: String) -> String {
+        Self.format("profiles-delete-alert-line", fallback: "%1$@’s history and sign-ins on this device are removed. Devices that sync with %1$@ keep theirs.", name)
+    }
+
+    /// TV, and iPad when asked.
+    public static var profilesPicker: String { string("profiles-picker", fallback: "Who’s watching?") }
+
+    /// iPad switch.
+    public static var profilesAskAtLaunch: String { string("profiles-ask-at-launch", fallback: "Ask who’s watching at launch") }
+
+    /// iPad footer.
+    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. For an iPad the household shares. The account row switches profiles at any time.") }
+
+    /// TV Settings.
+    public static var profilesSwitch: String { string("profiles-switch", fallback: "Switch profile") }
+
+    /// Account sheet and menus.
+    public static var profilesManage: String { string("profiles-manage", fallback: "Manage profiles") }
+
+    /// Welcome, text button; TV says “Set up from your phone”.
+    public static var firstSetupOther: String { string("first-setup-other", fallback: "Set up from another device") }
+
+    /// Code screen from first launch.
+    public static var firstSetupLine: String { string("first-setup-line", fallback: "On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.") }
+
+    /// Text button.
+    public static var firstRestore: String { string("first-restore", fallback: "Restore from a cloud folder instead") }
+
+    /// Success from first launch.
+    public static var firstOkLine: String { string("first-ok-line", fallback: "Bringing over your history, settings and plugin stores. You can start using Kaeri now.") }
+
+    /// Success switch.
+    public static func firstJoinStore(store: String) -> String {
+        Self.format("first-join-store", fallback: "Join the plugin store %1$@", store)
+    }
+
+    /// Success switch line.
+    public static func firstJoinStoreLine(device: String, kind: String) -> String {
+        Self.format("first-join-store-line", fallback: "%1$@ makes this %2$@ its own invite", device, kind)
+    }
+
+    /// Picker row on a phone or computer.
+    public static func cloudFolder(kind: String) -> String {
+        Self.format("cloud-folder", fallback: "A folder on this %1$@", kind)
+    }
+
+    /// Field note under the app password, on Android.
+    public static func cloudAppPasswordNote(kind: String) -> String {
+        Self.format("cloud-app-password-note", fallback: "Make one in Nextcloud under Settings, Security. It is kept on this %1$@.", kind)
+    }
+
+    /// Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+    public static func devicesTvsForPlay(count: Int) -> String {
+        Self.format("devices-tvs-for-play", fallback: "%1$lld TVs for Play on TV", count)
+    }
+
+    /// Line under a TV paired for Play on TV today.
+    public static var devicesPairedToday: String { string("devices-paired-today", fallback: "Paired today") }
+
+    /// Line under Add a device on the TV's Devices page.
+    public static var tvDevicesAddLine: String { string("tv-devices-add-line", fallback: "Shows a code to enter on your phone") }
+
+    /// TV Profiles page with one profile.
+    public static var tvProfilesOnlyYou: String { string("tv-profiles-only-you", fallback: "Only you. Add a profile to keep separate history, Continue and accounts on this TV.") }
+
+    /// TV Settings, Profiles: the row that opens the picker.
+    public static var tvProfilesOpensPicker: String { string("tv-profiles-opens-picker", fallback: "Opens Who’s watching?") }
+
+    /// TV Profiles page heading over the profiles.
+    public static var tvProfilesOnThisTv: String { string("tv-profiles-on-this-tv", fallback: "Profiles on this TV") }
+
+    /// Android recovery key sheet, third button.
+    public static var rkeySaveFile: String { string("rkey-save-file", fallback: "Save as a file") }
+
+    /// Android recovery key sheet, button that shows the key as a code.
+    public static var rkeyQrShort: String { string("rkey-qr-short", fallback: "QR code") }
+
+    /// Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+    public static var pairShowCode: String { string("pair-show-code", fallback: "Show a code") }
+
+    /// Cloud row button when the service signed Kaeri out.
+    public static var cloudSignInAgain: String { string("cloud-sign-in-again", fallback: "Sign in again") }
+
+    /// Cloud row button when the folder can't be opened.
+    public static var cloudChooseFolder: String { string("cloud-choose-folder", fallback: "Choose folder") }
+
+    /// Spoken label of a profile's avatar on Home.
+    public static func profilesAvatarDesc(name: String) -> String {
+        Self.format("profiles-avatar-desc", fallback: "%1$@, switch profile", name)
+    }
+
+    /// Heading over the pairing code the other device shows, over the field.
+    public static var pairCodeField: String { string("pair-code-field", fallback: "Pairing code") }
+
+    public static var deviceKindPhone: String { string("device-kind-phone", fallback: "phone") }
+
+    public static var deviceKindTablet: String { string("device-kind-tablet", fallback: "tablet") }
+
+    public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
+
+    /// TV welcome, text button.
+    public static var firstSetupPhone: String { string("first-setup-phone", fallback: "Set up from your phone") }
+
+    /// Error naming a device that is not known by name.
+    public static var devicesOtherDevice: String { string("devices-other-device", fallback: "the other device") }
+
+    /// Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+    public static func cloudSheetLine(service: String) -> String {
+        Self.format("cloud-sheet-line", fallback: "%1$@’s page is open. Allow access there, and Kaeri carries on by itself.", service)
+    }
+
+    /// Sheet or dialog title after the browser came back with access allowed.
+    public static func cloudConnecting(service: String) -> String {
+        Self.format("cloud-connecting", fallback: "Connecting to %1$@", service)
+    }
+
+    /// Status line beside the indicator while connecting.
+    public static var cloudConnectingLine: String { string("cloud-connecting-line", fallback: "Access allowed. Finishing the sign-in.") }
+
+    /// Status line under Setting up the folder, whose title is cloud-setting-up.
+    public static func cloudSettingUpLine(service: String) -> String {
+        Self.format("cloud-setting-up-line", fallback: "Making Kaeri’s folder in %1$@ and sealing a first copy of your history.", service)
+    }
+
+    /// Error title in the sign-in sheet or dialog.
+    public static func cloudErrSigninTitle(service: String) -> String {
+        Self.format("cloud-err-signin-title", fallback: "Couldn’t sign in to %1$@", service)
+    }
+
+    /// Error title when the sign-in worked and the folder could not be set up.
+    public static var cloudErrSetupTitle: String { string("cloud-err-setup-title", fallback: "Couldn’t set up the folder") }
+
+    /// Error line beside Try again, after access was refused on the service's page.
+    public static func cloudErrDeniedShort(service: String) -> String {
+        Self.format("cloud-err-denied-short", fallback: "%1$@ didn’t give Kaeri access.", service)
+    }
+
+    /// Error line for any other failure during the sign-in; the details go to Messages.
+    public static func cloudErrSigninOther(service: String) -> String {
+        Self.format("cloud-err-signin-other", fallback: "%1$@ didn’t finish the sign-in. Try again in a moment.", service)
+    }
+
+    /// Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+    public static func cloudErrSetupOther(service: String) -> String {
+        Self.format("cloud-err-setup-other", fallback: "Kaeri couldn’t make its folder in %1$@. Try again in a moment.", service)
+    }
+
+    /// More menu item, and a row on phones; the Mac adds an ellipsis.
+    public static var cloudUseAnother: String { string("cloud-use-another", fallback: "Use another service") }
+
+    /// More menu item in red, and a button in the TV's dialog.
+    public static var cloudRemove: String { string("cloud-remove", fallback: "Remove cloud folder") }
+
+    /// Confirmation title before removing the cloud folder.
+    public static func cloudRemoveTitle(service: String) -> String {
+        Self.format("cloud-remove-title", fallback: "Remove %1$@ from sync?", service)
+    }
+
+    /// Confirmation line before removing the cloud folder.
+    public static func cloudRemoveLine(kind: String, service: String) -> String {
+        Self.format("cloud-remove-line", fallback: "Everything on this %1$@ stays here, and paired devices nearby keep syncing. The folder stays in %2$@ with its sealed copy, and your other devices use it until you remove it on them too.", kind, service)
+    }
+
+    /// Destructive button in the remove confirmation.
+    public static var cloudRemoveAction: String { string("cloud-remove-action", fallback: "Remove") }
+
+    /// Accessibility label of the More button on the cloud folder row.
+    public static func cloudMore(service: String) -> String {
+        Self.format("cloud-more", fallback: "More for %1$@", service)
+    }
+
+    /// Picker row line for the service in use, under Use another service.
+    public static var cloudInUse: String { string("cloud-in-use", fallback: "In use") }
+
+    /// Picker line under Use another service.
+    public static func cloudSwitchFoot(service: String) -> String {
+        Self.format("cloud-switch-foot", fallback: "%1$@ stays in use until the new folder is ready.", service)
+    }
+
+    /// Footer under the two ways in while sync is off.
+    public static var syncStartFoot: String { string("sync-start-foot", fallback: "Either one turns sync on, and you can use both.") }
+
+    /// Aside on the Devices page on the Mac and iPad.
+    public static func devicesAside(kind: String) -> String {
+        Self.format("devices-aside", fallback: "Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this %1$@.", kind)
+    }
+
+    /// TV Devices footer while sync is off, after devices-sync-foot.
+    public static var tvSyncStartFoot: String { string("tv-sync-start-foot", fallback: "Pairing with your phone turns sync on. Then this TV can join your cloud folder.") }
+
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }
 
@@ -8789,6 +10281,94 @@ public enum L {
 
     /// Accessibility label of an episode's still while spoiler protection hides it.
     public static var episodeSpoilerHidden: String { string("episode-spoiler-hidden", fallback: "Hidden by spoiler protection") }
+
+    /// Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+    public static var episodeSynopsisHidden: String { string("episode-synopsis-hidden", fallback: "Synopsis hidden by spoiler protection") }
+
+    /// Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+    public static var episodeSynopsisShow: String { string("episode-synopsis-show", fallback: "Show synopsis") }
+
+    /// Screen reader hint of that action.
+    public static var episodeSynopsisShowHint: String { string("episode-synopsis-show-hint", fallback: "Shows this episode's still and synopsis") }
+
+    /// Facts line of an episode with a length and an air date. The date is already formatted.
+    public static func episodeFacts(minutes: Int, date: String) -> String {
+        Self.format("episode-facts", fallback: "%1$lld min · Aired %2$@", minutes, date)
+    }
+
+    /// Facts line of an episode with a length only.
+    public static func episodeFactsLength(minutes: Int) -> String {
+        Self.format("episode-facts-length", fallback: "%1$lld min", minutes)
+    }
+
+    /// Facts line of an episode that is part-watched.
+    public static func episodeFactsLeft(minutes: Int) -> String {
+        Self.format("episode-facts-left", fallback: "%1$lld min left", minutes)
+    }
+
+    /// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+    public static func episodeProtectionLine(episode: Int) -> String {
+        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$lld.", episode)
+    }
+
+    /// The same line on phones.
+    public static func episodeProtectionLineShort(episode: Int) -> String {
+        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$lld", episode)
+    }
+
+    /// Label of an episode range of a long series, in the range menu.
+    public static func episodeRange(from: Int, to: Int) -> String {
+        Self.format("episode-range", fallback: "Episodes %1$lld to %2$lld", from, to)
+    }
+
+    /// Label of the control that picks an episode range.
+    public static var episodeRangeLabel: String { string("episode-range-label", fallback: "Episode range") }
+
+    /// One line that stands for the watched episodes at the top of a range. Opening it shows them.
+    public static func episodeFold(count: Int) -> String {
+        Self.format("episode-fold", fallback: "%1$lld watched episodes", count)
+    }
+
+    /// An episode's number in a facts line on phones and in narrow desktop windows.
+    public static func episodeShort(episode: Int) -> String {
+        Self.format("episode-short", fallback: "E%1$lld", episode)
+    }
+
+    /// Part of an episode's facts line: when it aired. The date is already formatted.
+    public static func episodeAired(date: String) -> String {
+        Self.format("episode-aired", fallback: "Aired %1$@", date)
+    }
+
+    /// Two parts of an episode's facts line, set one after the other.
+    public static func episodeFactsJoin(first: String, second: String) -> String {
+        Self.format("episode-facts-join", fallback: "%1$@ · %2$@", first, second)
+    }
+
+    /// Button in the line where spoiler protection starts: shows what comes after.
+    public static var episodeProtectionShow: String { string("episode-protection-show", fallback: "Show") }
+
+    /// Button in that line once the rows after it are shown: hides them again.
+    public static var episodeProtectionHide: String { string("episode-protection-hide", fallback: "Hide") }
+
+    /// The line where spoiler protection starts, once the rows after it are shown.
+    public static func episodeProtectionShown(episode: Int) -> String {
+        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
+    }
+
+    /// The same line on phones.
+    public static func episodeProtectionShownShort(episode: Int) -> String {
+        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$lld", episode)
+    }
+
+    /// An episode range in the range menu: the first and the last episode.
+    public static func episodeRangeShort(from: String, to: String) -> String {
+        Self.format("episode-range-short", fallback: "%1$@–%2$@", from, to)
+    }
+
+    /// An item of the range menu: the range, then Watched or Not out yet.
+    public static func episodeRangeItem(range: String, state: String) -> String {
+        Self.format("episode-range-item", fallback: "%1$@ · %2$@", range, state)
+    }
 
     /// Accessibility label of the button that opens an episode's menu.
     public static var episodeOptions: String { string("episode-options", fallback: "Episode options") }
@@ -8933,6 +10513,35 @@ public enum L {
     /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
     public static func moreFollowingLine(status: String, score: Int) -> String {
         Self.format("more-following-line", fallback: "%1$@ · %2$lld/10", status, score)
+    }
+
+    /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+    public static var episodeGoTo: String { string("episode-go-to", fallback: "Go to episode…") }
+
+    /// Title of the Go to episode field.
+    public static var episodeGoToTitle: String { string("episode-go-to-title", fallback: "Go to episode") }
+
+    /// Button of the Go to episode field that goes to the number typed.
+    public static var episodeGoToGo: String { string("episode-go-to-go", fallback: "Go") }
+
+    /// Placeholder of the Go to episode field: the first and last episode of the show.
+    public static func episodeGoToHint(first: Int, last: Int) -> String {
+        Self.format("episode-go-to-hint", fallback: "%1$lld to %2$lld", first, last)
+    }
+
+    /// Accessibility label of the Go to episode field.
+    public static func episodeGoToLabel(first: Int, last: Int) -> String {
+        Self.format("episode-go-to-label", fallback: "Episode, %1$lld to %2$lld", first, last)
+    }
+
+    /// Shown when the number typed is not an episode of the show.
+    public static func episodeGoToNone(number: Int, last: Int) -> String {
+        Self.format("episode-go-to-none", fallback: "No episode %1$lld. This show has %2$lld.", number, last)
+    }
+
+    /// Shown when the number typed is an episode with no date that has not come out.
+    public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
+        Self.format("episode-go-to-not-out", fallback: "Episode %1$lld isn't out yet. The latest is %2$lld.", number, latest)
     }
 
     /// Title of the settings group and the screen.
@@ -9663,6 +11272,9 @@ public enum L {
     public static func tvCastUpNextIn(seconds: Int) -> String {
         Self.format("tv-cast-up-next-in", fallback: "Up next · plays in %1$lld s", seconds)
     }
+
+    /// Line under the paired TVs.
+    public static var tvForgetNote: String { string("tv-forget-note", fallback: "Forget a TV here and it forgets this device too.") }
 
     /// Heading of the update row in settings and about.
     public static var updatesTitle: String { string("updates-title", fallback: "Updates") }

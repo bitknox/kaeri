@@ -25,12 +25,15 @@ import app.kaeri.player.SystemCaptions
 import kotlinx.coroutines.flow.map
 import app.kaeri.player.CaptionStyleWatch
 import app.kaeri.player.Device
+import app.kaeri.player.DeviceWatch
 import app.kaeri.player.MpvBackend
 import app.kaeri.player.PlayerConnection
 import app.kaeri.player.PlayerHost
 import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppHost
 import app.kaeri.store.AppPhases
+import app.kaeri.store.setSyncNetwork
+import kotlinx.coroutines.flow.first
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.KeystoreKey
@@ -52,7 +55,10 @@ class TvApp : Application(), PlayerHost {
     // The TV updates from the release's TV APK, never the phone's: the one built for the ABI this
     // system runs the app as, 32-bit on most TV boxes and 64-bit on the rest.
     val store: AppStore by lazy {
-        AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, updateAsset = ::tvUpdateAsset).also { it.collectCrashes(this, scope) }
+        AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, updateAsset = ::tvUpdateAsset).also {
+            it.collectCrashes(this, scope)
+            DeviceWatch(this, it::send, hasSaver = false).start()
+        }
     }
 
     /** The TV's own update, where the flavour has one: the release build's, or a staged fixture. */
@@ -89,6 +95,14 @@ class TvApp : Application(), PlayerHost {
     }
 
     /** The remote phones drive this TV with, listening while the app is on screen. */
+    /** Typed-code pairing: the engine finds a device showing the code by DNS-SD, once it runs. */
+    private fun startSyncNetwork() {
+        scope.launch {
+            store.phase.first { it == AppStore.Phase.Running }
+            store.setSyncNetwork(app.kaeri.store.NsdSyncNetwork(this@TvApp))
+        }
+    }
+
     val remote: TvRemoteHost by lazy { TvRemoteHost(this, store, scope) }
 
     /** The launcher's Watch Next row, written from the Continue queue. */
@@ -118,6 +132,7 @@ class TvApp : Application(), PlayerHost {
         store.start(launch, host(), prepare)
         watchNetwork()
         ProcessLifecycleOwner.get().lifecycle.addObserver(remote)
+        startSyncNetwork()
         ProcessLifecycleOwner.get().lifecycle.addObserver(phases())
         watchNext.start()
     }

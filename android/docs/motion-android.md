@@ -63,6 +63,7 @@ object Motion {
 | quick | `spring(dampingRatio = 1f, stiffness = 1000f)` | `240ms` with the spring `linear()` below | Selection, toggles, row dim after marking watched, the divider handle, the fade-through between destinations (T6) |
 | standard | `spring(dampingRatio = 1f, stiffness = 440f)` | `360ms` with the spring `linear()` below | Content changes inside a screen, the spring back after a cancelled gesture |
 | fade-in | `tween(200, easing = LinearOutSlowInEasing)` | `200ms cubic-bezier(0, 0, 0.2, 1)` | Controls appearing, artwork, the first frame, page and detail content |
+| reveal | `tween(300, easing = LinearOutSlowInEasing)` | `300ms cubic-bezier(0, 0, 0.2, 1)` | A blurred still coming out sharp after Show synopsis, the protection line changing its words |
 | fade-out | `tween(300, easing = FastOutLinearInEasing)` | `300ms cubic-bezier(0.4, 0, 1, 1)` | Controls hiding, page content leaving |
 | linear | `tween(n, easing = LinearEasing)` | `ns linear` | Countdowns only: Up Next, 10 s |
 | system | the platform's own | shared bounds: `spring(1f, 400f)`, about 0.31 s, drawn as `380ms` with the spring `linear()` | Shared bounds and elements, NavHost seeking, sheets, menus, indicator, rail, panes, snackbar, PiP, rotation |
@@ -1304,17 +1305,23 @@ unfold, the outer off 8800–9000, the inner on 9600–9850; 9650 the panes go f
 
 ## Remove animations
 
-Android's Remove animations sets `ANIMATOR_DURATION_SCALE` to 0. We never override the scale.
+Android's Remove animations sets `ANIMATOR_DURATION_SCALE` to 0. We never write the scale. Where a
+fade or a swap carries meaning, it stays a crossfade, as `docs/native-ux.md` asks.
 
-- Timed motion lands at once. Compose and the platform scale every timed animation by the setting,
-  ours and the system's alike, so no code of ours reads it or swaps one animation for another.
+- Movement lands at once. Compose and the platform scale every timed animation by the setting, so
+  springs, slides, grows and the closing up of a list land at once.
+- Fades that swap content stay explicit crossfades at full speed, on the fade-in and fade-out
+  tokens: both sides are drawn and no frame is empty. They run through `SwapFade` and `StillFade`
+  in `design/Swap.kt`, which read the scale and run the fade on a clock of their own. The chat
+  column's line fades and its fold crossfade, and a long Go to jump, are these.
 - Gesture-driven motion (predictive back, the T3 drag, the sheet drag) follows the finger, and its
   settle snaps: a commit, a close or a spring back lands at once at release.
 - The Up Next countdown runs on the playback clock, so it still counts.
 
 | Motion | Normally | With Remove animations |
 |---|---|---|
-| Timed motion: shared transitions (T1, T2), fades, springs, the check (T9), menus, sheets opening, the rail, panes (T6, T7, AT1 to AT3) | As specified | Lands at once |
+| Timed motion: shared transitions (T1, T2), springs, the check (T9), menus, sheets opening, the rail, panes (T6, T7, AT1 to AT3) | As specified | Lands at once |
+| Fades that swap content: the chat column's lines and fold, a long Go to jump, range and shelf swaps | As specified | Crossfade at full speed through `SwapFade` or `StillFade` |
 | Predictive back, the T3 drag, the sheet drag (T1, T3, T7) | Follows the finger | Follows the finger; the settle snaps |
 | The pane divider (AT2), the banner parallax (T1) | Follows the finger, or the scroll | The same; the divider snaps to its anchor |
 | The Up Next countdown (T5) | 10 s, linear | Still counts, on the playback clock |

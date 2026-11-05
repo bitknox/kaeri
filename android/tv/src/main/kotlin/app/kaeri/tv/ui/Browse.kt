@@ -120,6 +120,8 @@ fun BrowseRow(
     state: LazyListState = rememberLazyListState(),
     subtitle: String? = null,
     fallback: FocusRequester = FocusRequester.Default,
+    /** Drawn between the heading and the cards, as the episode ranges' chips are. */
+    belowHeader: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val keyline = with(LocalDensity.current) { Canvas.Keyline.toPx() }
@@ -135,6 +137,10 @@ fun BrowseRow(
                 }
             }
         }
+        if (belowHeader != null) {
+            Spacer(Modifier.height(Canvas.HeaderGap - Canvas.FocusRoom))
+            belowHeader()
+        }
         Spacer(Modifier.height(Canvas.HeaderGap - Canvas.FocusRoom))
         ScrollRule(spec) {
             LazyRow(
@@ -142,9 +148,15 @@ fun BrowseRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     // Cards scrolled past end before the keyline, so the rail's icons stay on the
-                    // ground and no sliver of the card before shows; the focused card's ring and
-                    // scale still fit.
-                    .drawWithContent { clipRect(left = (Canvas.Keyline - Canvas.CardGap + 4.dp).toPx()) { this@drawWithContent.drawContent() } }
+                    // ground; the focused card's ring and scale still fit. A scrolled row lands
+                    // the focused card's scaled edge on the keyline, so its unscaled box sits 6 dp
+                    // in and the card before ends 10 dp short of the keyline: the clip moves to 8
+                    // dp, between that card's end and the ring's outer edge (6 dp out, scaled),
+                    // and no sliver of the card before shows.
+                    .drawWithContent {
+                        val left = if (state.canScrollBackward) Canvas.Keyline - 8.dp else Canvas.Keyline - Canvas.CardGap + 4.dp
+                        clipRect(left = left.toPx()) { this@drawWithContent.drawContent() }
+                    }
                     .focusRestorer(fallback)
                     .focusGroup(),
                 contentPadding = PaddingValues(start = Canvas.Keyline, end = Canvas.SafeX, top = Canvas.FocusRoom, bottom = Canvas.FocusRoom),
@@ -246,6 +258,8 @@ fun WideCard(
     spoiler: Boolean = false,
     title: String = entry.title,
     sheet: (() -> ActionSheet)? = null,
+    /** Lines the card's line may take: more where it says which device played last, rather than being cut. */
+    lineLines: Int = 1,
 ) {
     Column(Modifier.width(Canvas.CardWidth)) {
         ArtCard(onClick, Canvas.CardWidth, Canvas.CardHeight, modifier, sheet, cardLabel(LocalContext.current, title, line, progress)) {
@@ -263,7 +277,7 @@ fun WideCard(
             }
             if (progress != null) ProgressEdge(progress, Modifier.align(Alignment.BottomStart))
         }
-        CardText(title, line, dot = if (newDot) ObiSilk.Water else null)
+        CardText(title, line, dot = if (newDot) ObiSilk.Water else null, lineLines = lineLines)
     }
 }
 
@@ -289,7 +303,7 @@ fun ActionSheet.accessibilityActions(host: ActionsHost): List<CustomAccessibilit
  * both to TalkBack, so they are not said twice.
  */
 @Composable
-fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color = ObiSilk.Silk) {
+fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color = ObiSilk.Silk, lineLines: Int = 1) {
     Spacer(Modifier.height(8.dp))
     Text(title, style = TvTitle.card, color = titleColor, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.clearAndSetSemantics {})
     if (line != null) {
@@ -298,7 +312,7 @@ fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color
                 Box(Modifier.size(6.dp).background(dot, CircleShape))
                 Spacer(Modifier.width(6.dp))
             }
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = lineLines, overflow = TextOverflow.Ellipsis)
         }
     }
 }

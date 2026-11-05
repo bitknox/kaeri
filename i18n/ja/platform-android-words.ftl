@@ -179,7 +179,6 @@ tv-sheet-position = テレビでの再生位置
 tv-sheet-position-state = { $at } / { $total }
 tv-sheet-request-titled = { $title }、エピソード { $episode }
 tv-sheet-request-plain = エピソード { $episode }
-tv-sheet-footer = テレビには、この{ -device }がコード { $code } で表示されます。ここでテレビの登録を解除すると、テレビ側でもこの{ -device }の登録が解除されます。
 tv-sheet-title-fallback = テレビ
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

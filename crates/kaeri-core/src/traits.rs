@@ -12,7 +12,7 @@ use async_trait::async_trait;
 use crate::{
     error::ProviderError,
     ids::{AnilistId, ExternalIds, ProviderKey},
-    media::{Episode, SearchHit, Translation},
+    media::{Episode, SearchHit, TitleHints, Translation},
     stream::Stream,
 };
 
@@ -142,12 +142,14 @@ pub trait Provider: Send + Sync {
         &self,
         query: &str,
         translation: Translation,
+        hints: &TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError>;
 
     async fn episodes(
         &self,
         key: &ProviderKey,
         translation: Translation,
+        hints: &TitleHints,
     ) -> Result<Vec<Episode>, ProviderError>;
 
     /// Resolve playable streams, best-first where the provider has an opinion.
@@ -156,6 +158,7 @@ pub trait Provider: Send + Sync {
         key: &ProviderKey,
         episode: &str,
         translation: Translation,
+        hints: &TitleHints,
     ) -> Result<Vec<Stream>, ProviderError>;
 
     /// Find a title by the ids other services know it by, with no fuzzy matching. A source with
@@ -204,7 +207,7 @@ pub trait Provider: Send + Sync {
     /// Cheap liveness probe for the Providers screen. Default implementation runs a
     /// throwaway search, which is a fair proxy for "is this source answering".
     async fn health_check(&self) -> Result<(), ProviderError> {
-        self.search("a", Translation::Sub).await.map(|_| ())
+        self.search("a", Translation::Sub, &Default::default()).await.map(|_| ())
     }
 
     /// Whether this provider is currently willing to serve.

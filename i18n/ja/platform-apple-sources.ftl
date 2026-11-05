@@ -48,7 +48,6 @@ tv-bar-cant-reach = { $name }に接続できません
 tv-bar-not-found = { $name }が見つかりません
 tv-paired-tvs = ペア設定済みのテレビ
 tv-title-list = テレビ
-tv-settings-footnote = テレビには、この{ -device }がコード{ $code }で表示されます。ここでテレビを削除すると、この{ -device }の記録も消えます。
 tv-seen-just-now = たった今
 stores-link-send-once = このリンクを{ $who }に送ってください。一度だけ使え、{ $until }まで有効です。
 stores-link-send-once-anyone = このリンクを対象の人に送ってください。一度だけ使え、{ $until }まで有効です。

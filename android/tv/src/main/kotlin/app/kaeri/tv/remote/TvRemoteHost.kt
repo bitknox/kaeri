@@ -219,7 +219,7 @@ class TvRemoteHost(
         starting = true
         scope.launch {
             store.phase.first { it == AppStore.Phase.Running }
-            val started = withContext(Dispatchers.IO) { store.startRemote(name, DEFAULT_PORT) }
+            val started = withContext(Dispatchers.IO) { store.startRemote(store.sync.name.value ?: name, DEFAULT_PORT) }
             starting = false
             if (started == null) return@launch
             // Switched off, or gone to the background for good, while it started.

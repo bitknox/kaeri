@@ -67,7 +67,7 @@ object FixtureTvs {
                     model.openPicker()
                     model.begin(model.rows.value.firstOrNull { it.name == "Living room" }?.key ?: living.pairLink(null))
                 }
-                TvScene.REMOTE, TvScene.LOST -> {
+                TvScene.REMOTE, TvScene.LOST, TvScene.PARTY -> {
                     val tv = sender.pair(living.pairLink(living.openCode())).pair(null)
                     model.refresh()
                     model.offer(play)
@@ -80,6 +80,8 @@ object FixtureTvs {
                         }
                         living.stop()
                     }
+                    // In a room of four with the chat board's conversation so far.
+                    if (scene == TvScene.PARTY) living.joinParty(FixtureParty.ROOM, play.title, play.episode)
                 }
             }
         } catch (e: FfiTvException) {

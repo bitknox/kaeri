@@ -19,3 +19,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Gaya subtitle direset
 crash-notice = { -app-name } tertutup karena masalah.
 crash-notice-tv = { -app-name } tertutup karena masalah. Anda bisa melaporkannya di Pengaturan, Tentang.
+notice-surprise-empty-filters = Tidak ada judul yang cocok dengan filter ini.
+notice-surprise-empty-planning = Daftar rencana kosong.
+notice-surprise-offline = Sedang offline. Pilihan dari pencarian memerlukan AniList.
+notice-surprise-failed = Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.

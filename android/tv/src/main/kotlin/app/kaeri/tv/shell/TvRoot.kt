@@ -7,8 +7,6 @@ package app.kaeri.tv.shell
 import app.kaeri.store.text
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -41,6 +39,7 @@ import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.ModalNavigationDrawer
 import androidx.tv.material3.rememberDrawerState
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.ffi.FfiScreen
@@ -67,6 +66,7 @@ import app.kaeri.tv.screens.SettingsSection
 import app.kaeri.tv.screens.TitleScreen
 import app.kaeri.tv.screens.UpdateScreen
 import app.kaeri.tv.signin.AddServerScreen
+import app.kaeri.tv.sync.TvSyncHost
 import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.LicensedScreen
 import app.kaeri.tv.signin.ServerScreen
@@ -149,6 +149,7 @@ fun TvRoot(
                 states.SaveableStateProvider("browse") { Browse(nav, play, playFromStart) }
             }
             if (firstLaunch && !player.isPresented) FirstLaunch(onCover = { covered = it })
+            TvSyncHost()
             if (remote != null) RemoteOverlays(remote, playing = player.isPresented, nav = nav)
             Notices(store, player, remote, notices, onUpdatePage = nav.top is Page.Update)
             EngineDown()
@@ -179,6 +180,19 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
         notices.say(app.kaeri.i18n.Strings.sourcePinUnavailable(context, said.name))
         store.sourceChoices.told(said)
     }
+    // Plugin stores that could not be joined through a paired device, each said with why, a few seconds apart.
+    val joins by store.sync.storeJoins.collectAsStateWithLifecycle()
+    val syncStatus by store.sync.status.collectAsStateWithLifecycle()
+    LaunchedEffect(joins) {
+        if (joins.isEmpty()) return@LaunchedEffect
+        val failed = joins.filterIsInstance<app.kaeri.store.StoreJoin.Failed>()
+        store.sync.storeJoinsSeen()
+        failed.forEachIndexed { index, join ->
+            if (index > 0) kotlinx.coroutines.delay(4_000)
+            val device = syncStatus?.devices?.firstOrNull { it.id == join.device }?.name ?: join.device
+            notices.say(join.text(context, device))
+        }
+    }
     // The notice after a crash, only while saving and asking are on: the engine gives none otherwise.
     val settings by store.settings.view.collectAsStateWithLifecycle()
     val saving = settings != null && store.settings.isOn(app.kaeri.engine.model.SettingKey.SAVE_CRASH_REPORTS, settings)
@@ -187,8 +201,10 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
         kotlinx.coroutines.delay(1_000)
         if (store.crashes.pendingNotice() != null) notices.say(context.getString(app.kaeri.i18n.R.string.crash_notice_tv))
     }
+    // In a party the column on the video says the player's alerts, chat lines among them.
+    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
     val alert = player.alert
-    LaunchedEffect(alert?.since) { alert?.let { notices.say(it.text) } }
+    LaunchedEffect(alert?.since) { alert?.takeUnless { inParty && player.hasPicture }?.let { notices.say(it.text) } }
     // A newer release, when the engine says to tell of it: the update's page is in Settings › About.
     // Held while something plays, as a phone asking to pair is, and said once it stops.
     val update by store.updates.notice.collectAsStateWithLifecycle()
@@ -243,6 +259,12 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
     val partyView by store.party.view.collectAsStateWithLifecycle()
     val inParty = partyView != null
     LaunchedEffect(inParty) { if (inParty && partyView?.playing != true) nav.openLobby() }
+    // A pick opens its title page, or takes the open one's place for Another.
+    LaunchedEffect(store) {
+        store.surprise.picks.collect { pick ->
+            if (pick.inPlace) nav.replaceTitle(pick.id) else nav.openTitle(pick.id)
+        }
+    }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val rail = remember { RailFocus() }
     val screens = rememberSaveableStateHolder()
@@ -286,13 +308,7 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
         CompositionLocalProvider(LocalActions provides actions) {
             Box(Modifier.fillMaxSize()) {
                 val reduced = LocalReducedMotion.current
-                AnimatedContent(
-                    targetState = shown,
-                    transitionSpec = {
-                        if (reduced) EnterTransition.None togetherWith ExitTransition.None else fadeIn(Motion.quick()) togetherWith fadeOut(Motion.quick())
-                    },
-                    label = "screen", // i18n-skip
-                ) { target ->
+                val screen: @Composable (Any) -> Unit = { target ->
                     val key = (target as? Page)?.key ?: (target as Destination).name
                     screens.SaveableStateProvider(key) {
                         Box(Modifier.fillMaxSize()) {
@@ -333,6 +349,16 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
                             }
                         }
                     }
+                }
+                // Remove animations keeps the crossfade: both screens drawn, the new one fading in.
+                if (reduced) {
+                    SwapFade(shown, label = "screen") { screen(it) } // i18n-skip
+                } else {
+                    AnimatedContent(
+                        targetState = shown,
+                        transitionSpec = { fadeIn(Motion.quick()) togetherWith fadeOut(Motion.quick()) },
+                        label = "screen", // i18n-skip
+                    ) { screen(it) }
                 }
                 ActionsPanel(actions, Modifier.align(Alignment.CenterEnd))
             }

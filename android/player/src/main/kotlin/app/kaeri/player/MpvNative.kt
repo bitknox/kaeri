@@ -43,6 +43,12 @@ object MpvNative {
 
     @JvmStatic external fun create(listener: Listener): Long
 
+    /**
+     * Gives this mpv the engine's audio tap, [callback] being `audioTapCallback()`'s address, so
+     * the audio of a file the engine asks to tap comes back to it. Before [initialize]; 0 clears it.
+     */
+    @JvmStatic external fun setAudioTap(handle: Long, callback: Long): Int
+
     @JvmStatic external fun setOption(handle: Long, name: String, value: String): Int
 
     /** Asks for mpv's log at [logLevel] (to logcat, tag "mpv"), then mpv_initialize. */

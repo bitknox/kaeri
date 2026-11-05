@@ -82,6 +82,8 @@ on:
       - android/mpv/**
       - desktop/windows/scripts/package.sh
       - desktop/windows/scripts/libmpv.ps1
+      - desktop/windows/scripts/libmpv-build.sh
+      - desktop/windows/libmpv/**
       - desktop/windows/scripts/bindings.sh
       - desktop/windows/Kaeri.Windows/Kaeri.Windows.csproj
       - packaging/windows/kaeri-app.iss
@@ -457,7 +459,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: apple/.mpv/${{ env.MPV_PIN }}
-          key: apps-apple-mpv-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**') }}
+          key: apps-apple-mpv-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**', 'android/mpv/patches/mpv/**') }}
       - name: libmpv
         run: apple/scripts/mpv.sh macos ios
       - name: Keep libmpv

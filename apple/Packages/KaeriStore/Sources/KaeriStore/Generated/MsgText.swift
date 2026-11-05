@@ -70,6 +70,13 @@ extension Msg {
         case .noticeNotAiredYet(let episode, let next, let when): L.noticeNotAiredYet(episode: Int(episode), next: Int(next), when: when.text)
         case .statusLookingUpTitle: L.statusLookingUpTitle
         case .statusLoadingSources: L.statusLoadingSources
+        case .startLookingUpTitle: L.startLookingUpTitle
+        case .startGettingSourcesReady: L.startGettingSourcesReady
+        case .startAskingSource(let name): L.startAskingSource(name: name)
+        case .startOpeningStream: L.startOpeningStream
+        case .startTryingAnotherStream: L.startTryingAnotherStream
+        case .startFindingPeers: L.startFindingPeers
+        case .startBuffering: L.startBuffering
         case .statusSearchingSources(let episode): L.statusSearchingSources(episode: episode)
         case .noticePlayerFailedToStart(let reason): L.noticePlayerFailedToStart(reason: reason)
         case .noticeStreamNoVideo(let next, let total): L.noticeStreamNoVideo(next: Int(next), total: Int(total))
@@ -139,6 +146,7 @@ extension Msg {
         case .partyRejoined: L.partyRejoined
         case .partyLeft: L.partyLeft
         case .partyServerUnreachable(let server): L.partyServerUnreachable(server: server)
+        case .cloudLoopbackDone: L.cloudLoopbackDone
         case .noticeSignedIn(let tracker): L.noticeSignedIn(tracker: tracker)
         case .noticeSignedInKeychain(let tracker): L.noticeSignedInKeychain(tracker: tracker)
         case .noticeSignedInFile(let tracker): L.noticeSignedInFile(tracker: tracker)
@@ -197,6 +205,10 @@ extension Msg {
         case .settingsSubsResetDone: L.settingsSubsResetDone
         case .crashNotice: L.crashNotice
         case .crashNoticeTv: L.crashNoticeTv
+        case .noticeSurpriseEmptyFilters: L.noticeSurpriseEmptyFilters
+        case .noticeSurpriseEmptyPlanning: L.noticeSurpriseEmptyPlanning
+        case .noticeSurpriseOffline: L.noticeSurpriseOffline
+        case .noticeSurpriseFailed: L.noticeSurpriseFailed
         case let .store(msg): msg.text
         case let .verbatim(text): text
         }
@@ -291,6 +303,7 @@ extension Cause {
     public var text: String {
         switch self {
         case .noSources: L.causeNoSources
+        case .noConnection: L.causeNoConnection
         case .airsToday(let time): L.causeAirsToday(time: time)
         case .airsTomorrow(let time): L.causeAirsTomorrow(time: time)
         case .airsInDays(let days, let time): L.causeAirsInDays(days: Int(days), time: time)

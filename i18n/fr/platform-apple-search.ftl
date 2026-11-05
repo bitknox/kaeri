@@ -19,6 +19,7 @@ search-statuses-count = { $count ->
 search-leave-out = Exclure
 search-include = Inclure
 search-filters-help = Étiquettes, durée, score, origine et où regarder
+search-all-filters = Tous les filtres
 search-filters-set = { $count } actifs
 search-sort-by = Trier par
 search-clear-all = Tout effacer

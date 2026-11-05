@@ -35,6 +35,31 @@ episode-filler = Filler
 episode-row-not-out = Jeszcze nie wyemitowany
 episode-row-airs = Emisja { $when }
 episode-spoiler-hidden = Ukryte przez ochronę przed spoilerami
+episode-synopsis-hidden = Opis ukryty przez ochronę przed spoilerami
+episode-synopsis-show = Pokaż opis
+episode-synopsis-show-hint = Pokazuje kadr i opis tego odcinka
+episode-facts = { $minutes } min · Emisja: { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = Zostało { $minutes } min
+episode-protection-line = Ochrona przed spoilerami ukrywa to, co następuje po odcinku { $episode }.
+episode-protection-line-short = Ukryte po odcinku { $episode }
+episode-range = Odcinki od { $from } do { $to }
+episode-range-label = Zakres odcinków
+episode-fold = { $count ->
+    [one] Jeden obejrzany odcinek
+    [few] { $count } obejrzane odcinki
+    [many] { $count } obejrzanych odcinków
+   *[other] { $count } obejrzanego odcinka
+ }
+episode-short = Odc. { $episode }
+episode-aired = Emisja: { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Pokaż
+episode-protection-hide = Ukryj
+episode-protection-shown = Widoczne jest to, co następuje po odcinku { $episode }.
+episode-protection-shown-short = Widoczne po odcinku { $episode }
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Opcje odcinka
 episode-mark-watched = Oznacz jako obejrzany
 episode-mark-unwatched = Oznacz jako nieobejrzany
@@ -79,3 +104,10 @@ title-fact-after = Po odcinku { $episode }
 title-fact-now = Trwa
 title-fact-tba = Do ogłoszenia
 more-following-line = { $status } · { $score }/10
+episode-go-to = Przejdź do odcinka…
+episode-go-to-title = Przejdź do odcinka
+episode-go-to-go = Idź
+episode-go-to-hint = { $first } do { $last }
+episode-go-to-label = Odcinek, od { $first } do { $last }
+episode-go-to-none = Nie ma odcinka { $number }. Ten serial ma ich { $last }.
+episode-go-to-not-out = Odcinek { $number } jeszcze nie wyszedł. Najnowszy to { $latest }.

@@ -20,7 +20,9 @@ public final class Navigator {
     }
     /// The title page open over the section on the Mac. On iPhone and iPad a page is pushed on
     /// the tab's own stack, `paths`.
-    public internal(set) var titleOnMac: AnilistId?
+    public internal(set) var titleOnMac: AnilistId? {
+        didSet { if titleOnMac != oldValue { endClosedEpisodeVisits() } }
+    }
     /// The element the Mac's title page was opened from, which its art flies back to on Back.
     public internal(set) var openedFrom: TitleSource?
     /// The art on its way between that element and the page, on the Mac (M3).
@@ -41,7 +43,9 @@ public final class Navigator {
     /// where it has wide art.
     @ObservationIgnored var shownLandings: [TitleLandingID: Int] = [:]
     /// Each tab's pushed title pages, on iPhone and iPad, each with the element it zooms from.
-    public var paths: [AppSection: [TitleRoute]] = [:]
+    public var paths: [AppSection: [TitleRoute]] = [:] {
+        didSet { if paths != oldValue { endClosedEpisodeVisits() } }
+    }
     /// The title the menus' Episode items and the palette's commands act on: the one selected
     /// in a list, or the page that is open.
     public var focusedTitle: AnilistId?
@@ -118,6 +122,37 @@ public final class Navigator {
     var trailerRequest: TrailerRequest?
     /// The titles whose watched episodes are open in their episode lists, for the session.
     var watchedOpen: Set<AnilistId> = []
+    /// The episodes whose still and synopsis the viewer asked to see past spoiler protection, per
+    /// title, for the visit to its page.
+    var synopsisShown: [AnilistId: Set<String>] = [:]
+    /// The titles whose rows after spoiler protection's line are all shown, for the visit.
+    var synopsisAllShown: Set<AnilistId> = []
+    /// The range of a long series' episodes the viewer picked, per title, for the visit.
+    var episodeRange: [AnilistId: Int] = [:]
+    /// The pick the title page on screen was opened by, while it is: Another asks the same pool
+    /// again. Gone once the page is, or another title is opened from it.
+    var pickVisit: SearchModel.Pick?
+    /// Another was asked, so the pick that comes replaces the page rather than pushing one.
+    var anotherAsked = false
+    /// On iPad and iPhone, the title a pushed page now shows in place of the one it was pushed
+    /// for, after Another: Back still leaves the stack where the pick started from.
+    var shownInPlace: [AnilistId: AnilistId] = [:]
+    /// The range, and the number typed into Go to episode, set when Go to asks for a row: the
+    /// list shows the range and lands the row at its top with the selection fill.
+    var goToRow: [AnilistId: GoToLanding] = [:]
+    /// Go to episode asked for from the View menu (⌘L) on the title page on screen.
+    var goToAsked = 0
+    /// The title whose episode list is on screen, which Go to episode (⌘L) acts on.
+    var goToShown: AnilistId?
+    /// The digits typed into the focused episode list, shown in a capsule until the jump.
+    var typedEpisode: TypedEpisode?
+    /// The pause after a typed digit, before the jump, and the capsule's second after it.
+    @ObservationIgnored var typingPause: Task<Void, Never>?
+    /// The ranges of the episode list on screen, which the View menu steps through.
+    var episodeRangesShown: EpisodeRangesShown?
+    /// Counts the asks to scroll the episode list on screen to its last row, for the motion
+    /// audit's range switch with the pickers off screen.
+    var episodeListToEnd = 0
     /// An episode handed over from another device, which its title's page offers to resume.
     public var handedOff: HandedOff?
 
@@ -212,6 +247,7 @@ public final class Navigator {
     /// cover or banner the page grows out of. With none it comes in on its own.
     public func openTitle(_ id: AnilistId, from source: TitleSource? = nil) {
         focusedTitle = id
+        pickVisit = nil
         #if os(macOS)
         // A second click on the title that is opening, or open, changes nothing: its art flies
         // on, and Back still takes one press. Only a page going back opens again.
@@ -225,6 +261,9 @@ public final class Navigator {
 
     /// Back from the title page, as its back button, ⌘[ and Escape do.
     public func back() {
+        pickVisit = nil
+        anotherAsked = false
+        if let last = paths[section]?.last { shownInPlace[last.id] = nil }
         #if os(macOS)
         backOnMac()
         #else

@@ -26,6 +26,9 @@ import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.SubtitleStyle
+import app.kaeri.engine.model.SyncSignInStep
+import app.kaeri.engine.model.SurprisePool
+import app.kaeri.engine.model.TrendPeriod
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.ffi.FfiEngine
 import app.kaeri.engine.ffi.resetConfig
@@ -58,6 +61,7 @@ import app.kaeri.engine.model.InviteUses
 import app.kaeri.engine.model.JobId
 import app.kaeri.engine.model.LibrarySegment
 import app.kaeri.engine.model.NoticeKind
+import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.Release
 import app.kaeri.engine.model.ReleaseAsset
 import app.kaeri.engine.model.SearchQuery
@@ -131,12 +135,16 @@ class AppStore(
     val calendar = CalendarModel()
     val discussion = DiscussionModel()
     val search = SearchModel()
+    val surprise = SurpriseModel()
     val library = LibraryModel()
     val accounts = AccountsModel()
     val stores = StoresModel()
     val opened = OpenedModel()
     val downloads = DownloadsModel()
     val settings = SettingsModel()
+
+    /** Sync between devices, the cloud folder's sign-in, and the profiles. */
+    val sync = SyncModel()
 
     /** Saved crash reports, the system's records offered, and the crash to mention. */
     val crashes = CrashReports()
@@ -222,6 +230,9 @@ class AppStore(
 
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
+
+    /** The engine named another profile to run: the app starts it again as that one. */
+    var onProfileSwitch: ((String) -> Unit)? = null
 
     /** A play was asked of the engine here, for the player to know one is on its way. */
     var onPlayAsked: (() -> Unit)? = null
@@ -539,12 +550,33 @@ class AppStore(
         send(Command.SearchMore(query, page))
     }
 
+    /** Show the Trending rail for [period], asking for it: kept answers show at once. */
+    /** Ask for a Trending period's rail without choosing it. */
+    fun loadTrending(period: TrendPeriod) {
+        send(Command.LoadTrending(period))
+    }
+
+    fun chooseTrending(period: TrendPeriod) {
+        search.choose(period)
+        send(Command.LoadTrending(period))
+    }
+
+    /** Surprise me from [pool], or Another when [inPlace]: the pick arrives as [SurpriseModel.picks]. */
+    fun surprise(pool: SurprisePool, inPlace: Boolean = false) {
+        if (surprise.ask(pool, inPlace)) send(Command.Surprise(pool))
+    }
+
     /** Search's start: the rails, the recent searches and what the filters choose from. */
     fun loadSearchStart() {
         val now = search.status.value
         if (now.rails == null) send(Command.LoadBrowse)
         if (now.facets == null) send(Command.LoadSearchFacets)
         send(Command.LoadRecentSearches)
+    }
+
+    /** The browse rails, Trending among them, as the TV's Search asks; the filters' choices come with [loadSearchFacets]. */
+    fun loadBrowse() {
+        if (search.status.value.rails == null) send(Command.LoadBrowse)
     }
 
     /** Only what the filters choose from, as the TV's Search asks: no rails, no recent searches. */
@@ -902,14 +934,21 @@ class AppStore(
         accounts.leftForTab = false
         val request = accounts.signIn.value?.takeIf { it.answeredBy(tracker, callback) }
         if (request != null) accounts.signInEnded(request)
-        accounts.started(tracker, send(Command.FinishSignIn(tracker, callback)))
+        val service = SYNC_SERVICES[tracker]
+        if (service != null && (request != null || sync.signIn.value?.service == service)) {
+            // The page is done with: what shows next is the engine's exchange, said at once.
+            sync.signIn(service, SyncSignInStep.Connecting)
+            send(Command.FinishSyncSignIn(service, callback))
+        } else {
+            accounts.started(tracker, send(Command.FinishSignIn(tracker, callback)))
+        }
         return request != null
     }
 
     /** The browser for [request] was closed without signing in. */
     fun cancelSignIn(request: SignInRequest) {
         accounts.signInEnded(request)
-        send(Command.CancelSignIn(request.tracker))
+        if (request.tracker in SYNC_SERVICES) send(Command.CancelSyncSignIn) else send(Command.CancelSignIn(request.tracker))
     }
 
     /** Kitsu's sign-in: its email or user name and password, exchanged for a token by the engine. */
@@ -1294,6 +1333,8 @@ class AppStore(
             is Event.LastAired -> titles.lastAired(event.v1)
             is Event.Episodes -> titles.episodes(event.id, event.rows, event.failed)
             is Event.TitleDub -> titles.dub(event.id, event.dub)
+            is Event.Trending -> search.trending(event.period, TrendAnswer(event.entries, event.updatedAt, event.failed, event.waiting), titles)
+            is Event.Surprise -> surprise.answer(event.pool, event.outcome)
 
             is Event.Connectivity -> _offline.value = event.offline
             // A failed sign-in the open sheet says in its place: the snackbar would draw under it.
@@ -1310,6 +1351,22 @@ class AppStore(
             is Event.MatchChoices, is Event.MatchSearchFailed, is Event.MatchFixFailed, is Event.TitleMatch -> applyMatch(event)
 
             is Event.Sync -> accounts.apply(event.v1)
+            is Event.SyncStatus -> sync.status(event.v1)
+            is Event.SyncInvite -> sync.invite(event.code, event.port.toInt(), event.seconds.toInt())
+            is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
+            is Event.SyncSignIn -> syncSignIn(event.service, event.step)
+            is Event.SyncProblem -> {
+                sync.problem(event.v1)
+                // After the sign-in worked, the sheet says a fixed line; the engine's own words go to Messages.
+                val other = event.v1 as? SyncProblem.Other
+                if (other != null && sync.passedSignIn) notices.log(EngineNotice(kind = NoticeKind.ALERT, text = other.v1, hint = null))
+            }
+            is Event.SyncPairFailed -> sync.pairFailed(event.problem, event.device)
+            is Event.SyncSignInsCopied -> sync.copied(SignInsCopied(event.device, event.trackers, event.clouds, event.lacking))
+            is Event.SyncStoreJoined -> sync.storeJoin(StoreJoin.Joined(event.device, event.name))
+            is Event.SyncStoreJoinFailed -> sync.storeJoin(StoreJoin.Failed(event.device, event.name, event.problem))
+            is Event.Profiles -> sync.profiles(event.v1)
+            is Event.ProfileSwitch -> onProfileSwitch?.invoke(event.id)
             is Event.ViewerTitleLanguage -> accounts.viewerTitleLanguage(event.v1)
             is Event.Authorize -> accounts.authorize(SignInRequest(event.tracker, event.url, event.callbackScheme))
             is Event.DeviceCode -> accounts.deviceCode(event.v1)
@@ -1439,6 +1496,21 @@ class AppStore(
     fun leaveParty() {
         party.closedLobby()
         send(Command.PartyLeave)
+    }
+
+    /** Say something to the room; it shows when the server sends it back. */
+    fun partySay(text: String) {
+        send(Command.Party(PartyCommand.Say(text)))
+    }
+
+    /** React at the playhead. */
+    fun partyReact(reaction: app.kaeri.engine.model.Reaction) {
+        send(Command.Party(PartyCommand.React(reaction)))
+    }
+
+    /** Hide a member's lines and reactions for this party, on this device, or show them again. */
+    fun partyMute(name: String, muted: Boolean) {
+        send(Command.Party(PartyCommand.Mute(name, muted)))
     }
 
     fun startPartyAnyway() {

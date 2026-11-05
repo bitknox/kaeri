@@ -249,7 +249,8 @@ struct HomeContinueCard: View {
                 HStack(spacing: 6) {
                     if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
                     Text(HomeCardLine.text(item, store: store))
-                        .lineLimit(1)
+                        .lineLimit(HomeCardLine.lines(item))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.cardLine.size))
                 .fixedLineHeight(layout.cardLine.line, relativeTo: .footnote)
@@ -302,7 +303,9 @@ struct HomePosterCard: View {
                     .padding(.top, 8)
                 HStack(spacing: 6) {
                     if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
-                    Text(HomeCardLine.text(item, store: store)).lineLimit(1)
+                    Text(HomeCardLine.text(item, store: store))
+                        .lineLimit(HomeCardLine.lines(item))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.posterLine.size))
                 .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
@@ -322,9 +325,17 @@ struct HomePosterCard: View {
 
 /// The words under a card, and what VoiceOver says for it.
 enum HomeCardLine {
+    /// The device line may not fit a narrow card: it takes a second row rather than being cut.
+    static func lines(_ item: HomeItem) -> Int {
+        item.lastDevice != nil && item.resume != nil && item.episode != nil ? 2 : 1
+    }
+
     @MainActor
     static func text(_ item: HomeItem, store: AppStore) -> String {
         if store.discovery.playable(item.entry.id, sent: item.playable) == .notFound { return L.homeNotFound }
+        if let device = item.lastDevice, let resume = item.resume, let episode = item.episode {
+            return HomeWords.continueFrom(episode: episode, resume: resume, device: device)
+        }
         if let line = item.line { return line.text }
         if let reason = item.reason { return reasonText(reason) }
         if let airs = item.airsAt { return AirTime.clock(Date(timeIntervalSince1970: TimeInterval(airs))) }
@@ -511,7 +522,8 @@ private struct HomeWeekCell: View {
                     HStack(spacing: 4) {
                         if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
                         Text(HomeCardLine.text(item, store: store))
-                            .lineLimit(1)
+                            .lineLimit(HomeCardLine.lines(item))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .font(.ui(12, weight: .semibold))
                     .monospacedDigit()
@@ -553,6 +565,9 @@ struct HomeHover {
     let notFound: Bool
     let unaired: Bool
     let suggestion: Bool
+    /// The next episode's synopsis, for a title in Continue whose episode table is already here:
+    /// the card shows it in place of the show's. Never fetched for the card.
+    let episodeSynopsis: String?
 
     @MainActor
     init?(_ store: AppStore, _ id: AnilistId) {
@@ -577,12 +592,25 @@ struct HomeHover {
         episode = found.episode
         unaired = found.starts != nil
         suggestion = found.kind != .continue && found.kind != .thisWeek
+        // The next episode named and told, from the table as it is cached.
+        let next = continuing && !notFound
+            ? found.episode.flatMap { number in
+                store.titles.episodes[id]?.first { UInt32($0.number) == number }
+            }
+            : nil
+        let told = next?.description.flatMap { $0.isEmpty ? nil : $0 }
+        episodeSynopsis = told
         if notFound {
             line = L.homeNotFound
         } else if let because = found.because {
             line = L.homeSpotlightBecause(title: because)
+        } else if let reason = found.reason.map(HomeCardLine.reasonText) {
+            line = reason
+        } else if let next, told != nil {
+            line = next.title.map { L.episodeTitledText(number: next.number, title: $0) }
+                ?? L.episodeNumberString(number: next.number)
         } else {
-            line = found.reason.map(HomeCardLine.reasonText)
+            line = nil
         }
     }
 }

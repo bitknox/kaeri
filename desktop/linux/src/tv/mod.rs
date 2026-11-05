@@ -8,7 +8,7 @@
 //! - the picker's rows, a pairing under way, and the link's card while a TV is driven;
 //! - the paired TVs, for Settings.
 
-mod avahi;
+pub(crate) mod avahi;
 pub mod cast;
 #[cfg(feature = "fixtures")]
 pub mod fixture;
@@ -104,7 +104,6 @@ pub struct Tv {
     taken: RefCell<Option<(AnilistId, String)>>,
     on_taken_over: RefCell<Option<Notice>>,
     paired: RefCell<Vec<KnownTv>>,
-    short: String,
     browsers: Cell<u32>,
     request: RefCell<Option<Request>>,
     pairing: RefCell<Option<Step>>,
@@ -135,8 +134,13 @@ pub struct Tv {
 impl Tv {
     /// The sender over the paired TVs under `data`, browsing with Avahi. With no sender (its key
     /// or its list could not be read) Play on TV is not offered.
-    pub fn new(handle: Handle, data: &Path, casting: Option<cast::Casting>) -> Rc<Self> {
-        let sender = open_sender(&handle, data, casting)
+    pub fn new(
+        handle: Handle,
+        data: &Path,
+        casting: Option<cast::Casting>,
+        name: Option<String>,
+    ) -> Rc<Self> {
+        let sender = open_sender(&handle, data, casting, name)
             .inspect_err(|e| tracing::warn!(error = %e, "no Play on TV"))
             .ok()
             .map(Arc::new);
@@ -151,7 +155,6 @@ impl Tv {
         browser: Arc<dyn Browser>,
         cast_browser: Arc<dyn CastBrowser>,
     ) -> Rc<Self> {
-        let short = sender.as_ref().map(|s| s.short_fingerprint()).unwrap_or_default();
         let tv = Rc::new_cyclic(|me| Self {
             me: me.clone(),
             handle,
@@ -165,7 +168,6 @@ impl Tv {
             taken: RefCell::default(),
             on_taken_over: RefCell::default(),
             paired: RefCell::default(),
-            short,
             browsers: Cell::new(0),
             request: RefCell::default(),
             pairing: RefCell::default(),
@@ -276,11 +278,6 @@ impl Tv {
 
     pub fn paired(&self) -> Vec<KnownTv> {
         self.paired.borrow().clone()
-    }
-
-    /// This computer's key, as a TV's settings list it.
-    pub fn short_fingerprint(&self) -> &str {
-        &self.short
     }
 
     pub fn sheet(&self) -> Option<Sheet> {
@@ -839,18 +836,22 @@ fn open_sender(
     handle: &Handle,
     data: &Path,
     casting: Option<cast::Casting>,
+    name: Option<String>,
 ) -> Result<TvSender, String> {
     let dir = data.join("remote");
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let identity = identity_in(&dir)?;
+    let key = identity.fingerprint().to_hex();
     let known = KnownTvs::open(&dir).map_err(|e| e.to_string())?;
     let hello = Hello {
-        name: DEVICE.to_owned(),
+        name: name.filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEVICE.to_owned()),
         app: format!("kaeri-linux/{}", kaeri_engine::updates::CURRENT),
     };
     let _entered = handle.enter();
     let sender = TvSender::new(identity, hello, known);
     if let Some(casting) = casting {
+        // The others in sync match it against the TVs they serve, for the Remote switch.
+        casting.this_device.set_remote_key(kaeri_engine::syncing::RemoteRole::Phone, &key);
         sender.attach_casting(casting.hub, casting.engine);
     }
     Ok(sender)

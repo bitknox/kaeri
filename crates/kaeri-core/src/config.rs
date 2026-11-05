@@ -476,6 +476,9 @@ pub struct SyncplayConfig {
     pub name: String,
     /// Servers used for a party before, the last first: what the form offers.
     pub recent_servers: Vec<String>,
+    /// Hide chat in every party on this device: lines, reactions and the moments they make stay
+    /// off the video. The terminal's `i` in Together turns it over; the apps keep their own.
+    pub hide_chat: bool,
     /// Reserved. Accepted so existing configs keep parsing, but has no effect since the engine
     /// speaks Syncplay itself and no longer starts the Syncplay program.
     pub binary: String,
@@ -489,6 +492,7 @@ impl Default for SyncplayConfig {
             room: None,
             name: "kaeri".into(),
             recent_servers: Vec::new(),
+            hide_chat: false,
             binary: "syncplay".into(),
         }
     }
@@ -772,6 +776,9 @@ pub struct MetaConfig {
     /// Calendar shows only the shows on the person's list. Off, it opens on everything airing;
     /// the choice is remembered.
     pub calendar_mine: bool,
+    /// Fill episode synopses the source left out from a public episode service, one request
+    /// per title you open (`api.ani.zip`, asked the title's AniList id). On unless switched off.
+    pub episode_text: bool,
 }
 
 impl Default for MetaConfig {
@@ -783,6 +790,7 @@ impl Default for MetaConfig {
             discussions: true,
             discussion_images: false,
             calendar_mine: false,
+            episode_text: true,
         }
     }
 }
@@ -957,6 +965,11 @@ pub struct PlaybackConfig {
     /// start of an episode with no opening known, to mark it. On by default; the prompt's
     /// Don't ask again turns it off.
     pub ask_was_opening: bool,
+    /// Find openings and endings from the audio when nothing else has them: the player hands
+    /// over the first six and last four minutes, and they are compared across a show's
+    /// episodes, on this device. On by default; paused in a power saving mode and when storage
+    /// is low. Only players that can hand the audio over take part.
+    pub find_skip_times: bool,
     /// Share the skip times the viewer marks with AniSkip, a free shared list many players use:
     /// the times, the show's MyAnimeList number, the episode, the app's name and a random id for
     /// this install. `None` until the first Save asks, which shares nothing.
@@ -1035,6 +1048,7 @@ impl Default for PlaybackConfig {
             skip_button: true,
             skip_recap_auto: false,
             ask_was_opening: true,
+            find_skip_times: true,
             share_skip_times: None,
             skip_filler: false,
             up_next_countdown: 10,

@@ -155,6 +155,20 @@ pub struct FfiStart {
     /// The Trakt client's secret, for a client that has one; `None` signs in without.
     #[uniffi(default = None)]
     pub trakt_client_secret: Option<String>,
+    /// The Google Drive client for this platform: iOS, Android, desktop or TV, whichever the app
+    /// registered. Used for sync only. `None` for Kaeri's own client of the platform.
+    #[uniffi(default = None)]
+    pub google_client_id: Option<String>,
+    /// The secret of the desktop or TV Google client, which Google asks for in the token
+    /// exchange. `None` for iOS and Android.
+    #[uniffi(default = None)]
+    pub google_client_secret: Option<String>,
+    /// The Dropbox app key, `None` for Kaeri's own.
+    #[uniffi(default = None)]
+    pub dropbox_app_key: Option<String>,
+    /// The Microsoft application (client) id for OneDrive, `None` for Kaeri's own.
+    #[uniffi(default = None)]
+    pub onedrive_client_id: Option<String>,
     /// Where the trackers' and the plugin stores' tokens are kept. `None` for
     /// [`SecretsMode::Host`].
     #[uniffi(default = None)]
@@ -164,6 +178,23 @@ pub struct FfiStart {
     /// for English.
     #[uniffi(default = None)]
     pub language: Option<String>,
+    /// The profile to start in, when the install has profiles: the picker's choice, or what
+    /// `Event::ProfileSwitch` named. `None` for the one used last. Ignored for a single user.
+    #[uniffi(default = None)]
+    pub profile: Option<String>,
+    /// Whether the player the app hosts hands its audio over for finding skip times: its libmpv
+    /// carries the demuxer tap and the app has given it [`audio_tap_callback`]. `false` finds
+    /// none.
+    #[uniffi(default = false)]
+    pub audio_tap: bool,
+}
+
+/// The address of the engine's audio tap callback, for the app to give its libmpv's
+/// `mpv_set_audio_tap` before it starts the player: the audio for finding skip times comes back
+/// through it, tagged by each file's load. Then [`FfiStart::audio_tap`] tells the engine.
+#[uniffi::export]
+pub fn audio_tap_callback() -> u64 {
+    kaeri_audio_tap::callback_address() as u64
 }
 
 impl FfiStart {
@@ -182,6 +213,12 @@ impl FfiStart {
             simkl: self.simkl_client_id.clone(),
             trakt: self.trakt_client_id.clone(),
             trakt_secret: self.trakt_client_secret.clone(),
+            google: self.google_client_id.clone(),
+            google_secret: self.google_client_secret.clone(),
+            dropbox: self.dropbox_app_key.clone(),
+            onedrive: self.onedrive_client_id.clone(),
+            cloud_kind: self.platform.and_then(FfiPlatform::cloud_kind),
+            no_built_in_clients: false,
         }
     }
 }
@@ -202,6 +239,29 @@ pub enum FfiPlatform {
 }
 
 impl FfiPlatform {
+    /// Which of the cloud sign-in clients this system uses: the iOS client for Apple's, the
+    /// Android client for a phone or tablet, the TV's device flow, the desktop's loopback.
+    pub fn cloud_kind(self) -> Option<kaeri_engine::options::CloudClient> {
+        use kaeri_engine::options::CloudClient as ClientKind;
+        Some(match self {
+            Self::MacOs | Self::Ios | Self::IpadOs => ClientKind::Ios,
+            Self::Android | Self::AndroidTablet => ClientKind::Android,
+            Self::AndroidTv => ClientKind::Tv,
+            Self::Windows => ClientKind::Desktop,
+        })
+    }
+
+    /// What kind of device sync lists this as, on the others' Devices.
+    pub fn sync_kind(self) -> kaeri_model::group::SyncDeviceKind {
+        use kaeri_model::group::SyncDeviceKind as Kind;
+        match self {
+            Self::MacOs | Self::Windows => Kind::Computer,
+            Self::Ios | Self::Android => Kind::Phone,
+            Self::IpadOs | Self::AndroidTablet => Kind::Tablet,
+            Self::AndroidTv => Kind::Tv,
+        }
+    }
+
     /// A phone or a tablet, which a cast's torrent would keep busy for a whole episode.
     pub fn handheld(self) -> bool {
         matches!(self, Self::Ios | Self::IpadOs | Self::Android | Self::AndroidTablet)
@@ -318,12 +378,21 @@ mod tests {
         let mac = FfiStart {
             secrets: Some(SecretsMode::FollowConfig),
             anilist_client_id: Some("4242".into()),
+            google_client_id: Some("g.example".into()),
+            dropbox_app_key: Some("d-key".into()),
+            onedrive_client_id: Some("o-id".into()),
             ..FfiStart::default()
         };
         assert_eq!(mac.secrets_mode(), SecretsMode::FollowConfig);
         assert_eq!(
             mac.app_clients(),
-            AppClients { anilist: Some("4242".into()), ..AppClients::default() }
+            AppClients {
+                anilist: Some("4242".into()),
+                google: Some("g.example".into()),
+                dropbox: Some("d-key".into()),
+                onedrive: Some("o-id".into()),
+                ..AppClients::default()
+            }
         );
     }
 

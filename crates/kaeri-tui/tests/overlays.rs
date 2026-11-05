@@ -114,6 +114,8 @@ fn at_episodes() -> App {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         })
@@ -284,20 +286,20 @@ fn an_overlay_over_now_playing_takes_q_as_close_not_detach() {
 
 #[test]
 fn esc_cancels_the_palette_whatever_back_is_rebound_to() {
-    // `back = "z"` used to leave the palette with no way out: Esc no longer closed it, and z
+    // `back = "W"` used to leave the palette with no way out: Esc no longer closed it, and W
     // was typed into the query.
     let mut keymap = Keymap::new();
-    assert!(keymap.apply_overrides(&BTreeMap::from([("back".into(), "z".into())])).is_empty());
+    assert!(keymap.apply_overrides(&BTreeMap::from([("back".into(), "W".into())])).is_empty());
     kaeri_i18n::set_language("en");
     let mut a = App::new(SettingsView::default(), Palette::dark(), keymap);
-    press(&mut a, &[":", "z"]);
-    assert_eq!(a.text(Field::Palette), "z", "a letter is typed into the palette");
+    press(&mut a, &[":", "W"]);
+    assert_eq!(a.text(Field::Palette), "W", "a letter is typed into the palette");
     press(&mut a, &["esc"]);
     assert_eq!(a.nav.overlay(), None, "esc must still close the palette");
 
     // The same in a prompt.
     let mut a = at_episodes();
-    a.keymap.apply_overrides(&BTreeMap::from([("back".into(), "z".into())]));
+    a.keymap.apply_overrides(&BTreeMap::from([("back".into(), "W".into())]));
     press(&mut a, &["D", "esc"]);
     assert_eq!(a.nav.overlay(), None);
 }
@@ -479,6 +481,7 @@ fn enter_is_named_for_what_it_does() {
         starts: None,
         playable: Playable::Unknown,
         because: None,
+        last_device: None,
     };
     let section = HomeSection {
         kind: SectionKind::Continue,

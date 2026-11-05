@@ -185,3 +185,49 @@ party-in-the-room = Nella stanza
 party-here-count = { $count } qui
 together-recent-note = Le ultime dieci, conservate su questo { -device }
 party-pick-continue = { -proceed-cap }
+party-chat-field = Scrivi qualcosa
+party-chat-send = Invia
+party-chat-title = Chat
+party-chat-wait = Attendi { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Attendi un secondo
+    [many] Attendi { $seconds } secondi
+   *[other] Attendi { $seconds } secondi
+ }
+party-chat-more = Altri { $count } nella chat
+party-chat-off = La chat è disattivata sul server di questa stanza
+party-chat-privacy = I messaggi passano dal server della stanza. { -app-name } non ne conserva nessuno.
+party-chat-hidden = La chat è nascosta
+party-chat-hidden-line = Nascondi chat è attivo in Impostazioni, sotto Riproduzione.
+party-chat-show = Mostra chat
+settings-hide-chat = Nascondi la chat nei { -watch-party-pl }
+settings-hide-chat-line = Messaggi, reazioni e i loro segni sulla barra di avanzamento restano fuori dal video e il campo sparisce. L'elenco delle persone mostra comunque chi è nella stanza.
+party-mute = Silenzia { $name }
+party-unmute = Riattiva { $name }
+party-unmute-short = Riattiva
+party-member-muted = Silenziato
+party-muted-line = { $name } è silenziato
+party-chat-not-sent = Invio non riuscito
+party-chat-retry = Riprova
+party-react = Reagisci
+party-react-laugh = Ridi
+party-react-gasp = Stupore
+party-react-clap = Applaudi
+party-react-cry = Piangi
+party-reacted-laugh = { $name } ha riso
+party-reacted-gasp = { $name } è rimasto sorpreso
+party-reacted-clap = { $name } ha applaudito
+party-reacted-cry = { $name } ha pianto
+party-reacted-at = { $line } a { $time }
+party-names-two = { $first } e { $second }
+party-names-three = { $first }, { $second } e { $third }
+party-names-others = { $first }, { $second } e altri { $count }
+party-chat-you = Tu
+party-sends-as = Invii come { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } dice { $message }
+party-chat-left = { $count ->
+    [one] Resta { $count } carattere
+    [many] Restano { $count } caratteri
+   *[other] Restano { $count } caratteri
+ }

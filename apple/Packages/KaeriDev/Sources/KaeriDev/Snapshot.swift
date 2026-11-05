@@ -168,3 +168,77 @@ enum Snapshot {
         return bitmap.cgImage
     }
 }
+
+extension Snapshot {
+    /// Click `window` at `point`, in points from its top left, and write the window with the menu
+    /// that opens over it to `url`. The click is an event handed to the window itself, so the
+    /// pointer stays where it is. A menu is a window of its own that a capture of one window
+    /// leaves out, and it runs a tracking loop of its own, so the picture is taken from a timer
+    /// that fires in that loop, and Escape closes the menu after.
+    @MainActor
+    static func withMenu(at point: CGPoint, open window: NSWindow, to url: URL) async {
+        let location = NSPoint(x: point.x, y: window.frame.height - point.y)
+        func click(_ type: NSEvent.EventType) -> NSEvent? {
+            NSEvent.mouseEvent(
+                with: type, location: location, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)
+        }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            let timer = Timer(timeInterval: 0.8, repeats: false) { _ in
+                MainActor.assumeIsolated {
+                    if let image = composedWithMenus(window), let png = NSBitmapImageRep(cgImage: image)
+                        .representation(using: .png, properties: [:]) {
+                        try? png.write(to: url)
+                        print("KaeriDev: wrote \(url.path)")
+                    }
+                    if let escape = NSEvent.keyEvent(
+                        with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                        windowNumber: window.windowNumber, context: nil, characters: "\u{1b}",
+                        charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53
+                    ) { NSApp.postEvent(escape, atStart: true) }
+                    done.resume()
+                }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            if let down = click(.leftMouseDown) { window.sendEvent(down) }
+            if let up = click(.leftMouseUp) { window.sendEvent(up) }
+        }
+    }
+
+    /// `window` and this process's menus on screen over it, in the window server's coordinates,
+    /// top left first.
+    @MainActor
+    private static func composedWithMenus(_ window: NSWindow) -> CGImage? {
+        guard let base = composited(window),
+              let list = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]]
+        else { return nil }
+        let own = list.filter { ($0[kCGWindowOwnerPID as String] as? Int32) == getpid() }
+        func bounds(_ info: [String: Any]) -> CGRect? {
+            (info[kCGWindowBounds as String] as? NSDictionary).flatMap { CGRect(dictionaryRepresentation: $0 as CFDictionary) }
+        }
+        guard let frame = own.first(where: { ($0[kCGWindowNumber as String] as? Int) == window.windowNumber })
+            .flatMap(bounds) else { return base }
+        let menus: [(CGRect, CGImage)] = own.compactMap { info in
+            guard (info[kCGWindowLayer as String] as? Int ?? 0) > 0,
+                  let number = info[kCGWindowNumber as String] as? Int, let rect = bounds(info),
+                  let image = createImage?(.null, 1 << 3, UInt32(number), (1 << 0) | (1 << 3))?.takeRetainedValue()
+            else { return nil }
+            return (rect, image)
+        }
+        let canvas = menus.reduce(frame) { $0.union($1.0) }
+        let scale = window.backingScaleFactor
+        guard let context = CGContext(
+            data: nil, width: Int(canvas.width * scale), height: Int(canvas.height * scale), bitsPerComponent: 8,
+            bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return base }
+        func place(_ image: CGImage, at rect: CGRect) {
+            context.draw(image, in: CGRect(
+                x: (rect.minX - canvas.minX) * scale, y: (canvas.maxY - rect.maxY) * scale,
+                width: rect.width * scale, height: rect.height * scale))
+        }
+        place(base, at: frame)
+        for (rect, image) in menus { place(image, at: rect) }
+        return context.makeImage()
+    }
+}

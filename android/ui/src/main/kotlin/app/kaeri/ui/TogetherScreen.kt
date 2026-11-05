@@ -366,7 +366,23 @@ internal fun PartyBar(hidden: Boolean) {
         val (ready, count) = PartyModel.counts(members)
         val title = entry?.showTitle ?: episode?.title
         val heading = if (title != null && episode != null) Strings.partyBarTitle(context, title, episode.episode) else Strings.togetherInParty(context)
-        val line = if (party.playing && party.episode == null) Strings.partyBarIdle(context) else Strings.partyBarLine(context, count, ready)
+        val counted = if (party.playing && party.episode == null) Strings.partyBarIdle(context) else Strings.partyBarLine(context, count, ready)
+        // A new line in the room takes the count's place for 4 s, and gives it back.
+        val conversation by store.party.conversation.collectAsStateWithLifecycle()
+        val chatHidden by store.party.hideChat.collectAsStateWithLifecycle()
+        var newest by remember { mutableStateOf<androidx.compose.ui.text.AnnotatedString?>(null) }
+        var barSeen by remember { mutableStateOf(conversation.lines.lastOrNull()?.id ?: 0uL) }
+        LaunchedEffect(conversation.lines.lastOrNull()?.id, chatHidden) {
+            val last = conversation.lines.lastOrNull() ?: return@LaunchedEffect
+            val said = (last.body as? app.kaeri.engine.model.PartyChatBody.Said)?.text
+            if (last.id <= barSeen) return@LaunchedEffect
+            barSeen = last.id
+            if (said == null || last.muted || chatHidden) return@LaunchedEffect
+            newest = saidText(chatName(context, last), said)
+            kotlinx.coroutines.delay(4000)
+            newest = null
+        }
+        val line = newest ?: androidx.compose.ui.text.AnnotatedString(counted)
         Row(
             Modifier
                 .fillMaxWidth()
@@ -384,7 +400,7 @@ internal fun PartyBar(hidden: Boolean) {
             Column(Modifier.weight(1f)) {
                 Text(heading, style = ShowTitle.caption.copy(fontSize = 15.sp, lineHeight = 20.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Crossfade(line, animationSpec = app.kaeri.design.Motion.quick(), label = "bar line") { said -> // i18n-skip
-                    Text(said, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Text(said, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
             IconButton(onClick = { if (party.playing) store.openPartyPlayer() else navigator.open(LOBBY_ROUTE) }) {

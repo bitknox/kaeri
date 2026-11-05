@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = Hiçbir kaynak ayarlanmadı. Kaynaklar ekranını açıp bir kaynak ekleyin.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = Bağlantı yok. Çevrimiçi olunca tekrar dene.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = Bölüm { $episode }, { $when } yayınlanacak.
 
@@ -242,6 +245,27 @@ status-looking-up-title = Başlık aranıyor…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Yükleniyor: kaynaklar…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Başlık aranıyor
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = kaynaklar hazırlanıyor
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = { $name } soruluyor
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Akış açılıyor
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Başka bir akış deneniyor
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Eşler aranıyor
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Arabelleğe alınıyor
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Bölüm { $episode } için kaynaklar aranıyor…
@@ -660,6 +684,12 @@ release-pinned = { $name } bu başlık için kullanılacak.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Bu seçim kaydedilemedi. { $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = Proxy denetimi başarısız oldu. Torrent'ler denetim geçilince başlar.
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Torrent'ler proxy denetimi geçilince başlar.
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Bu bir magnet bağlantısı ya da torrent dosyası değil.
 
@@ -674,6 +704,12 @@ torrent-interface-closed = Kaeri torrentler başlamadan kapandı.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Torrent oturumu başlatılamadı. { $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = Proxy ayarı kullanılamıyor. { $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = Kaynaklar yeniden yüklendi. Torrent'ler proxy denetimi geçilince başlar.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrentler kapalı. Oturum durduruldu.
@@ -701,6 +737,9 @@ sources-demo-removed = Demo kaldırıldı
 
 # Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.
 stores-ready-demo-stays = { $store } hazır. Demo, Kaynaklarınızın sonunda kalır.
+
+# The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+cloud-loopback-done = Bu sekmeyi kapatıp Kaeri'ye dönebilirsiniz.
 
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Oturum açıldı: { $tracker }.
@@ -786,6 +825,15 @@ notice-sign-out-failed = Oturum kapatılamadı: { $tracker }. Yeniden deneyin. {
 
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Bu ayar kaydedilemedi. { $cause }
+
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Torrent trafiği artık proxy üzerinden gidiyor.
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Torrent'ler artık proxy olmadan doğrudan bağlanıyor.
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = Proxy denetlenemedi. { $cause }
 
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Vekil sunucu parolası saklanamadı. Kaydetmeyi denemek için yeniden girin. { $reason }
@@ -887,6 +935,18 @@ crash-notice = Kaeri bir sorun nedeniyle kapandı.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri bir sorun nedeniyle kapandı. Ayarlar, Hakkında bölümünden bildirebilirsiniz.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = Bu filtrelere uyan başlık yok.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = Planlama boş.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Proxy'yi düzenle
@@ -1220,6 +1280,9 @@ shortcuts-group-lists = Listeler
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Bir bölüme git
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Önceki veya sonraki bölüm aralığı
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Klavye kısayolları
 
@@ -1312,9 +1375,6 @@ tv-episode = { $episode }. bölüm
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = { $episode }. bölüm · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = Bir TV, bu cihazı { $code } koduyla listeler. Buradan bir TV'yi unutursanız bu cihaz da unutulur.
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · az önce görüldü
 
@@ -1402,6 +1462,27 @@ stores-published-state = Yayımlandı
 
 # Accessible name of a row's Publish button.
 stores-publish-label = { $name } { $version } yayımla
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = Hesap parolanızdan sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Kaeri kurtarma anahtarını göster
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = Profiller
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = Ekle
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = Klasör seçin
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = Dosya olarak kaydet
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = Bitti
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2126,6 +2207,9 @@ keys-action-filter = Filtrele
 keys-action-filter-search = Filtrelerde ara
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Beni şaşırt
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Oynat ya da duraklat
 
 # Action label in the help overlay and the command palette.
@@ -2196,6 +2280,18 @@ keys-hint-mark-previous = Öncekileri işaretle
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Filtreler
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Şaşırt
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Git
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Temizle
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Başka
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Yeniden eşitle
@@ -2365,6 +2461,9 @@ keys-where-episodes = bölüm tablosunda
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = başka bir ekranda
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = Arama'nın göz atma ekranında ve Planlama'da
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = komut paletindeki “{ $action }”
 
@@ -2496,6 +2595,21 @@ keys-hint-copy-link = Bağlantıyı kopyala
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Ayrıl
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Söyle
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Sustur
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Sesi aç
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Sohbeti gizle
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Sohbeti göster
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Daha büyük bir terminal gerekiyor
@@ -2802,6 +2916,33 @@ lists-episode-dubbed = B{ $episode } · Dublajlı
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = %{ $score }
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = film
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = yakın
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = dub
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = d{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Böl.
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = Dub
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · %{ $percent }
 
@@ -3015,6 +3156,9 @@ sources-too-small = Daha büyük bir terminal gerekiyor.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Kullanılabilir kaynaklar yok
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = Torrent'ler, { $setting } açılana kadar kapalı.
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Kaynak
 
@@ -3065,6 +3209,9 @@ sources-state-held-back = Kısıtlandı
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Eklenti mağazaları
+
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = Kendi cihazlar cihazlarınız için Eklentiler. Davet bağlantısıyla katılın.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } katıldı
@@ -3118,6 +3265,18 @@ sources-meta-skipped-until = Saat { $time } olana kadar atlanıyor ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Bir sonraki istekte yeniden denendi ({ $cause })
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = Proxy { $mark }  Denetleniyor
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = Proxy { $mark }  Geçti
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = Proxy { $mark }  Denetim başarısız
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = Proxy denetimi başarısız oldu. Torrent'ler denetim geçilince başlar.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Değişmedi. Ayarı kaldırmak için config.toml içindeki satırı silin.
@@ -3320,6 +3479,9 @@ settings-label-seed-hours = En fazla paylaşım süresi
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Yükleme sınırı
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Torrent proxy'si
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Belirteç saklama
 
@@ -3395,6 +3557,9 @@ settings-note-download-dir = Bir yol yazmak için Enter tuşuna basın. Bir sonr
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Bir sonraki biten indirmeye uygulanır.
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = Yükleme tasarrufu için varsayılan olarak kapalı; sürüye katkı vermek için açın.
+
 # Note under the after each download row.
 settings-note-download-hook = Bir komut yazmak için Enter tuşuna basın. Her tamamlanan indirmeden sonra çalışır.
 
@@ -3421,6 +3586,12 @@ settings-note-presence-title = Kapalıyken dizinin adı yerine “Anime izleniyo
 
 # Note under the rich presence row.
 settings-note-presence-rich = Kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler. Başlığın gösterilmesi gerekir.
+
+# Note under the torrent playback row.
+settings-note-torrents = Varsayılan olarak kapalı. Hemen uygulanır.
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = İsteğe bağlı. Torrent trafiğini bir SOCKS5 proxy üzerinden yönlendirmek için config.toml dosyasını düzenleyin.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Kaeri açıkken izlenen bölümler paylaşmaya devam eder.
@@ -3947,6 +4118,102 @@ stores-toast-nothing-to-publish = eklenti klasöründe yayımlanacak eklentiler 
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = Bu sizsiniz. Bir mağaza her zaman sahibini korur.
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = bilgisayar
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = Kod gir
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = Bulut klasörü yok
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = Henüz eşitlenmedi
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = Kullanımda
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = Tarayıcınız { $service } sayfasını açtı. Orada erişime izin verin, Kaeri kendiliğinden sürer.
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = Ya da bu adrese kendiniz gidin:
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = Giriş yapılıyor
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = WebDAV adresi
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = Sunucunuzdaki klasörün adresi, https:// ile başlar.
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = Klasör
+
+# Under the folder path field.
+sync-tui-folder-path-note = Eşitlenmiş bir sürücü gibi, başka bir uygulamanın güncel tuttuğu klasörün tam yolu.
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = Kullanıcı adı
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Nextcloud'a girişte kullandığınız ad.
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = Parola
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = Uygulama parolası
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = Kod
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = Adres
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = Kod hazırlanıyor
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = Diğer cihaz adresi
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = Diğer cihaz kodunun altında gösterdiği adres, örneğin 192.168.1.20:47811.
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = Eşleştiriliyor
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = Çocuk profili olarak ekle
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = { $name } profilini kullanmak için Kaeri uygulamasını yeniden başlatın.
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = Bu klasörde katılınacak geçmiş yok. Başka bir klasör seçin.
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = { $service }, bu cihaz cihazda kullanılamıyor.
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = Kaldır
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = Göster
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = Kapat
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = Kopyala
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = QR kodunu görmek için pencereyi uzatın.
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = Oynatmayı durdurmak için { $key } tuşuna basın.
 
@@ -3974,8 +4241,8 @@ tui-together-section = Birlikte
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = bağlantı ya da kod
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r hazır · c bağlantıyı kopyala · s şimdi başlat · x ayrıl
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Satırlar ve tepkiler hiçbir partide oynatıcıda görünmez.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
@@ -4288,6 +4555,9 @@ action-try-again = Yeniden dene
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Vazgeç
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Git
 
 # Button that puts a question off until later.
 action-not-now = Şimdi değil
@@ -4761,6 +5031,12 @@ tv-problem-unpaired = TV bu cihazı artık tanımıyor. Yeniden eşleştirin.
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } / { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first } ve { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }, { $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = Tartışma
@@ -6057,6 +6333,9 @@ onboarding-own-heading = Kendi medyanız var mı?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Davet bağlantınız var mı?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası imzalıdır ve her cihaz için ayrı bir belirteç verir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Şimdi deneyin
 
@@ -6612,6 +6891,128 @@ together-recent-note = Son on oda, bu cihaz üzerinde tutulur
 # The start sheet's button after a title is picked.
 party-pick-continue = Devam
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Bir şey söyle
+
+# Button that sends a chat line.
+party-chat-send = Gönder
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Sohbet
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = { $seconds } sn bekle
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] Bir saniye bekleyin
+       *[other] { $seconds } saniye bekleyin
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = Sohbette { $count } daha
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = Bu odanın sunucusunda sohbet kapalı
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = İletiler odanın sunucusu üzerinden gider. Kaeri hiçbirini tutmaz.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Sohbet gizli
+
+# Line under it.
+party-chat-hidden-line = Ayarlar'da, Oynatma bölümünde Sohbeti gizle açık.
+
+# Button that turns Hide chat off.
+party-chat-show = Sohbeti göster
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Birlikte izlemeler içinde sohbeti gizle
+
+# Line under that switch.
+settings-hide-chat-line = Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = { $name } kişisini sustur
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = { $name } kişisinin sesini aç
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Sesi aç
+
+# State on a muted member's row.
+party-member-muted = Susturuldu
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } susturuldu
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Gönderilemedi
+
+# Button after it, which sends the same text again.
+party-chat-retry = Yeniden dene
+
+# Button on the TV's controls that opens the four reactions.
+party-react = Tepki ver
+
+# Label of the laugh reaction button.
+party-react-laugh = Gül
+
+# Label of the gasp reaction button.
+party-react-gasp = Şaşır
+
+# Label of the clap reaction button.
+party-react-clap = Alkışla
+
+# Label of the cry reaction button.
+party-react-cry = Ağla
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } güldü
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } şaşırdı
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } alkışladı
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } ağladı
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line }, { $time } anında
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } ve { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second } ve { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second } ve { $count } kişi daha
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = Siz
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = { $device } olarak gönderilir
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } diyor ki: { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] { $count } karakter kaldı
+       *[other] { $count } karakter kaldı
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = Sıradaki
 
@@ -6647,6 +7048,127 @@ player-add-plugin-store = Bir eklenti mağazası ekle
 
 # Short word while the video buffers.
 player-buffering = Yükleniyor
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $total } kaynak içinden { $place }
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Bu dizi için seçimin
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } bu diziye sahip değil
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } bölüm { $episode } için yok
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } yanıt vermedi
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } çok uzun sürdü
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = { $name } atlandı
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Son hatalar nedeniyle atlandı
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = Kaynak: { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = İlki görüntü göstermedi
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = { $total } akıştan { $next }.
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] Bir eş
+       *[other] { $count } eş
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/sn
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Arabelleğe alınıyor · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = { $clock } konumundan yeniden başlıyor
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Baştan oynat
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Ayrıntılar
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = { $name } atla
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Bu akışı atla
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = { $name } için hâlâ bekleniyor
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Bağlantı bekleniyor
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = Çevrimdışısın. Bölüm { $episode } tekrar çevrimiçi olunca başlayacak.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Eşleşmeyi düzelt
+
+# Details row label for the translation of the episode.
+player-start-translation = Ses ve altyazı
+
+# Details row once the title has been looked up.
+player-start-looked-up = Başlık arandı
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } sn
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Hâlâ başlıyor. kaynak seçebilirsin.
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = Bölüm { $episode } başlıyor, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Baştan başlıyor
+
+# Details row while a source is being asked.
+player-start-row-asking = Soruluyor
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Bu dizi yok
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = Bölüm { $episode } yok
+
+# Details row outcome when a source failed.
+player-start-row-failed = Yanıt vermedi
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Çok uzun sürdü
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Atlandı
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = Sorulanlar: { $names }.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = Altyazılı
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Kaynak yükleniyor · { $seconds } sn
@@ -6749,6 +7271,9 @@ player-mark-watch-edges = Uçları izle
 # Line in the review with sharing on.
 player-mark-shares = Kaydetmek bu zamanları AniSkip ile paylaşır.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri bu zamanları sesten buldu.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = AniSkip'in yanlış bildirilen { $start } - { $end } aralığının yerine geçer.
 
@@ -6798,11 +7323,33 @@ player-mark-it = İşaretle
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Bir daha sorma
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri bu açılışı buldu. Sınırlar doğru muydu?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri bu kapanışı buldu. Sınırlar doğru muydu?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Evet, bu zamanları { $episode }. bölüm için AniSkip ile paylaşır.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Evet
+
+player-found-adjust = Düzelt
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Kaydedildi. AniSkip { $episode }. bölüm için bu zamanları alıyor.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri atlama zamanlarını bir daha sormayacak.
+
+player-found-never-how = Ayarlar'dan yeniden açabilirsiniz.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Atlama zamanlarınızı AniSkip ile paylaşalım mı?
 
 # Body of the sheet.
-player-share-body = AniSkip, kendi gönüllüleri tarafından işletilen, ücretsiz ve ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları sizin işaretlediğinizi atlar.
+player-share-body = AniSkip, kendi gönüllüleri tarafından işletilen ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları, sizin işaretlediğiniz zamanları ve onayladığınız bulunmuş zamanları atlar.
 
 # What is sent, as a line under the body.
 player-share-sent = Zamanlar, dizinin MyAnimeList numarası, bölüm ve bu kurulum için üretilmiş rastgele bir kimlik gider. Adınız, hesaplarınız ya da izlediğiniz kaynak gitmez. AniSkip, istenmeyen içeriği sınırlamak için IP adresinizi görür ve şartları 13 yaş ve üzerini ister.
@@ -6818,6 +7365,22 @@ player-skip-from-file = Dosyadan
 player-skip-yours = Sizin
 
 player-skip-from-aniskip = AniSkip'ten
+
+player-skip-found = Kaeri buldu
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Düşük Güç Modu açıkken duraklatıldı.
+
+player-skip-paused-battery-saver = Pil tasarrufu açıkken duraklatıldı.
+
+player-skip-paused-energy-saver = Enerji tasarrufu açıkken duraklatıldı.
+
+player-skip-paused-power-saver = Güç tasarrufu açıkken duraklatıldı.
+
+player-skip-paused-storage = 2 GB depolama alanı boşalana kadar duraklatıldı.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = Kaeri uygulamasının bu sürümünde kullanılamıyor.
 
 player-skip-none = Henüz yok
 
@@ -7320,6 +7883,199 @@ search-available-services = Hizmetlerinizde
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = { $service } üzerinde
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+        [one] Bir bölüm
+       *[other] { $count } bölüm
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count } böl.
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = { $out }/{ $total } çıktı
+
+# The same, short.
+count-out-of-short = { $out }/{ $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+        [one] Bir bölüm çıktı
+       *[other] { $count } bölüm çıktı
+    }
+
+# The same, short.
+count-out-short = { $count } çıktı
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = { $date } başlıyor
+
+# The count line of a show that has not started and has no date.
+count-not-out = Henüz çıkmadı
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = Böl. { $episode }/{ $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = Dublaj
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = Dublaj { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+        [one] Bir bölüm
+       *[other] { $count } bölüm
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = { $total } bölümün { $out } tanesi çıktı
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+        [one] Bir bölüm çıktı
+       *[other] { $count } bölüm çıktı
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = { $date } tarihinde başlıyor
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = { $total } bölümün { $episode }. bölümü
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = { $through }. bölüme kadar dublajlı
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = dublajı var
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = Oca
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = Ocak
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = Şub
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = Şubat
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = Mar
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = Mart
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = Nis
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = Nisan
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = May
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = Mayıs
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = Haz
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = Haziran
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = Tem
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = Temmuz
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = Ağu
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = Ağustos
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = Eyl
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = Eylül
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = Eki
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = Ekim
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = Kas
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = Kasım
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = Ara
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = Aralık
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = Bugün öne çıkanlar
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = Bu hafta öne çıkanlar
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = Bu ay öne çıkanlar
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = Bugün
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = Bu hafta
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = Bu ay
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = Öne çıkanlar ({ $period }) yüklenemedi.
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = Güncellendi: { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = Beni şaşırt
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = Beni Şaşırt
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = Başka biri
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Planlama'dan rastgele bir başlık açar
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Bu filtrelerden rastgele bir başlık açar
+
+# Hint of the Another button.
+surprise-another-hint = Bunun yerine rastgele başka bir başlık açar
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = Bu filtrelere uyan başlık yok.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = Planlama boş.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.
+
 # Title of the dialog that adds a media server.
 servers-add-title = Medya sunucusu ekle
 
@@ -7563,6 +8319,9 @@ settings-group-titles = Başlıklar
 # Group heading.
 settings-group-playback = Oynatma
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Birlikte izlemeler
+
 # Group heading.
 settings-group-watching = İzleme
 
@@ -7644,23 +8403,35 @@ settings-skip-opening = Açılışı otomatik atla
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Özetleri otomatik atla
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Elle açılış atladıktan sonra sor
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Atlama zamanlarını sesten bul
 
 # Line under it.
-settings-ask-was-opening-detail = Bir sonraki sefer atlanması için işaretlemeyi önerir
+settings-find-skips-detail = AniSkip'te zaman yoksa Kaeri, bir dizinin bölümlerinin sesini bu cihaz üzerinde karşılaştırır.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Atlama zamanlarını sor
+
+# Line under it.
+settings-ask-was-opening-detail = Açılışı elle atladıktan sonra ve Kaeri bir atlama bulduktan sonra
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Atlama zamanlarını AniSkip ile paylaş
 
 # Line under it.
-settings-share-skips-detail = AniSkip, birçok oynatıcının kullandığı, ücretsiz ve ortak bir açılış ve kapanış listesidir. Zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır.
+settings-share-skips-detail = AniSkip, birçok oynatıcının kullandığı ortak bir açılış ve kapanış listesidir. İşaretlediğiniz zamanları, onayladığınız bulunmuş zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır.
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = İşaretlediğiniz atlama zamanlarını temizle…
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = İşaretlediğiniz veya Kaeri tarafından bulunan atlama zamanları
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = İşaretlediğiniz atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar.
+# Question that asks before clearing them.
+settings-clear-skips-confirm = İşaretlediğiniz ve Kaeri tarafından bulunan atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Atlama zamanlarını temizle
+
+# Line under it.
+settings-clear-skips-android-detail = İşaretlediğiniz ve Kaeri tarafından bulunanlar
 
 # Row: skip filler.
 settings-skip-filler = Dolgu bölümlerini otomatik atla
@@ -7684,7 +8455,7 @@ settings-counts-watched-detail = Ya da bitiş işaretliyse, bitiş başladığı
 settings-spoiler = Spoiler koruması
 
 # Line under it.
-settings-spoiler-detail = Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır
+settings-spoiler-detail = Sıradakinden sonraki izlenmemiş bölümlerin karelerini ve özetlerini bulanıklaştırır
 
 # Line under the audio row.
 settings-audio-detail = Her dizi kendi ses ve altyazı tercihini hatırlar.
@@ -7832,7 +8603,7 @@ show-settings-blur-ahead = İleriki bölümlerin karelerini bulanıklaştır
 show-settings-show-everything = Her şeyi göster
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır.
+show-settings-spoiler-detail = sıradaki bölümden sonrasının kare ve özetlerini bulanıklaştırır.
 
 # Option: always.
 show-settings-always = Her zaman
@@ -7981,6 +8752,9 @@ settings-reset = Ayarları sıfırla
 
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Ayarlar sıfırlansın mı?
+
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = Her ayar varsayılanına döner, torrent proxy'si dahil. İzleme geçmişiniz kalır ve eski ayar dosyası saklanır.
 
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Ayarlar varsayılanlara döndü. Eski dosya { $file } adıyla saklandı.
@@ -8151,6 +8925,9 @@ source-note-gone = Yüklü değil
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Bu başlık eşleştirilemedi
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = Proxy denetimi bekleniyor
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Sürümler
 
@@ -8229,6 +9006,9 @@ sources-detail-not-answering = Yanıt vermiyor. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Yanıt vermiyor.
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Proxy denetimi geçilene kadar bekleniyor.
+
 # Status line: disabled.
 sources-detail-disabled = Kapalı. Yerini korur, denenmez.
 
@@ -8302,6 +9082,9 @@ sources-torrent-source = Torrent oynatma
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Kaynak sırası
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = Torrent'ler Kaeri uygulamasının parçasıdır, bir eklenti değil. Proxy ve paylaşım Ayarlar'da, Kaynaklar altında ayarlanır.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Kaynaklar yeniden hazırlanıyor
@@ -8496,6 +9279,9 @@ sources-your-intro = Bölümler, onlara sahip olan ilk kaynaktan bu sırayla oyn
 # Heading of the section that lists the plugins.
 sources-section-plugins = Eklentiler
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = Açık kataloglar
+
 # Link in the empty state.
 sources-add-demo = Demoyu ekle
 
@@ -8507,6 +9293,9 @@ stores-joined = Katıldı
 
 # Title of the empty list.
 stores-empty-title = Henüz eklenti mağazaları yok
+
+# Line under the empty title.
+stores-empty-detail = Eklenti mağazaları imzalı eklentiler tutar ve her cihaz için ayrı bir belirteç verir. Sahibinin gönderdiği davet bağlantısıyla birine katılın.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.
@@ -9000,6 +9789,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = eklenti mağazalarını aç
 
+# Explainer on the empty plugin stores page.
+stores-what-is = Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaz için ayrı bir belirteç veren küçük bir sunucudur. kaynaklar eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = eklenti mağazası nedir?
 
@@ -9017,6 +9809,671 @@ stores-qr-warning-device = Bunu bağlamak istediğiniz cihaz ile tarayın. Bir k
 
 # Button that opens the system share sheet for the invite link.
 stores-share = Paylaş…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = Tarayıcınız { $service } sayfasını açtı. Orada erişime izin verin, Kaeri kendiliğinden sürer.
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = Tarayıcınızda { $service } hesabına giriş yapın
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = bilgisayar
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = Kod gir
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = Göster
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = Kapat
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Adres
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Adresle eşleştir
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Kurtarma anahtarı
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = Kullanıcı adı
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Parola
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Sunucu adresi
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Eşleştiriliyor
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = diğer cihaz
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Adresi boş bırakırsanız Kaeri bu ağda cihaz cihazını kendisi arar.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Eşitleme, kaldığınız yeri, geçmişinizi ve ayarlarınızı paylaşır.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Uzaktan kumanda
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Düzenle
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Ad
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = { $name } için daha fazlası
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = { $store } veya { $device } cihazına ulaşılamadı. İkisi de çevrimiçi olunca yeniden deneyin.
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store } daveti kabul etmedi. Sahibinden yeni bir davet isteyin.
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device }, { $store } için başka cihazlar davet edemez. eklenti mağazası sahibinden bir davet isteyin.
+
+# Settings row and page title, every platform.
+devices-title = Cihazlar
+
+# Devices row value while sync is off.
+devices-row-off = Eşitleme kapalı
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = Eşitlendi: { $ago }
+
+# Devices row value with the error glyph.
+devices-row-error = Eşitlenemedi
+
+# Group heading over the name.
+devices-this-device = Bu cihaz
+
+# Row for this device’s name.
+devices-name = Ad
+
+# Group heading while off.
+sync-group = Eşitleme
+
+# Off state.
+sync-off-title = Eşitleme kapalı
+
+# Off state.
+sync-off-line = Kaldığınız yerin, geçmişinizin ve ayarlarınızın cihazlar arasında aynı kalması için açın.
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = Eşitlemeyi aç
+
+# Road sheet title.
+sync-road-title = cihazlar nasıl paylaşsın?
+
+# Road sheet row.
+sync-road-nearby = Yakındaki bir cihaz ile
+
+# Road sheet row line.
+sync-road-nearby-line = Aynı Wi-Fi'deki başka bir cihaz ile eşleştirin. Başka hiçbir yerde bir şey saklanmaz.
+
+# Road sheet row.
+sync-road-cloud = Bir bulut klasörü üzerinden
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlar birbirinden uzaktayken de çalışır ve yedek tutar.
+
+# Road sheet footer.
+sync-road-later = Diğer yolu sonradan ekleyebilirsiniz. Çoğu kişi ikisini birden kullanır.
+
+# Group heading.
+devices-yours = Cihazlarınız
+
+# Empty Your devices.
+devices-only-this = Yalnızca bu cihaz
+
+# Empty Your devices.
+devices-only-this-line = Kaldığınız yeri, geçmişinizi ve ayarlarınızı paylaşmak için başka bir cihaz eşleştirin.
+
+# Row and sheet title.
+devices-add = cihaz ekle
+
+# Device row line past 30 days.
+devices-not-seen = { $days } gündür görülmedi
+
+# A device paired only for Play on TV.
+devices-remote-only = Yalnızca uzaktan kumanda
+
+# Button on a remote-only TV row.
+devices-also-sync = { $device } ile de eşitle
+
+# Footer while sync is off.
+devices-paired-tvs-foot = TV'de Oynat için eşleştirildi. Uzaktan kumanda olarak eşleşen bir TV geçmişinizi hiçbir zaman almaz.
+
+# Switch on a device.
+devices-sync-switch = Eşitleme
+
+# Switch on a TV.
+devices-remote-switch = Uzaktan kumanda
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = Eşitleme, kaldığınız yeri, geçmişinizi ve ayarlarınızı paylaşır. Uzaktan kumanda, bu { $kind } cihazın { $device } aygıtını yönetmesini sağlar.
+
+# Device page, destructive.
+devices-remove = Bu cihaz kaldır
+
+# Alert title.
+devices-remove-alert = { $device } kaldırılsın mı?
+
+# Alert message.
+devices-remove-alert-line = { $device } elindekini tutar ama diğer cihazlar artık ona yeni bir şey göndermez.
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = Bu { $kind } üzerinde eşitlemeyi kapat
+
+# Alert title.
+sync-turn-off-alert = { $device } üzerinde eşitleme kapatılsın mı?
+
+# Alert message.
+sync-turn-off-alert-line = Bu { $kind }, diğer cihazlar ile paylaşmayı bırakır. Elindeki her şey burada kalır.
+
+# Group heading.
+cloud-group = Bulut klasörü
+
+# Group footer.
+cloud-foot = cihazlar birbirinden uzaktayken devreye girer ve mühürlü bir yedek tutar. Yalnızca cihazlar okuyabilir.
+
+# Row when only the nearby road is set.
+cloud-add = Bulut klasörü ekle
+
+# Picker title.
+cloud-pick-title = Bir bulut klasörü seçin
+
+# Picker row line.
+cloud-google-line = Drive'ınızda gizli bir Kaeri klasörü
+
+# Picker row line.
+cloud-nextcloud-line = Kendi Nextcloud sunucunuz ya da barındırılan biri
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = iCloud Drive'da seçtiğiniz bir klasör
+
+# Picker group heading.
+cloud-other = Diğer
+
+# Picker row.
+cloud-webdav = WebDAV sunucusu
+
+# Picker row line.
+cloud-webdav-line = WebDAV konuşan herhangi bir sunucu
+
+# Picker row line.
+cloud-folder-line = Başka bir uygulamanın güncel tuttuğu klasör için
+
+# Picker footer.
+cloud-pick-foot = cihazlar, değişikliklerinin mühürlü bir kopyasını bu klasörde tutar. Yalnızca cihazlar okuyabilir ve Kaeri kendi sunucusunu işletmez.
+
+# Row line while the first write runs.
+cloud-setting-up = Klasör hazırlanıyor
+
+# Field label.
+cloud-nextcloud-address = Sunucu adresi
+
+# Field note.
+cloud-nextcloud-address-note = Nextcloud'u tarayıcıda açtığınız adres.
+
+# Login flow wait.
+cloud-nextcloud-wait-title = { $host } üzerinde girişi tamamlayın
+
+# Login flow wait.
+cloud-nextcloud-wait-line = Nextcloud sayfanız tarayıcıda açık. Orada erişime izin verin, bu sayfa kendiliğinden sürer.
+
+# Wait row.
+cloud-waiting = { $service } bekleniyor
+
+# Button.
+cloud-open-again = Sayfayı yeniden aç
+
+# Text button.
+cloud-app-password = Bunun yerine uygulama parolası kullan
+
+# Button.
+cloud-connect = Bağlan
+
+# Error.
+cloud-err-offline = { $service } hizmetine ulaşılamadı. Bağlantınızı denetleyin.
+
+# Inline error.
+cloud-err-no-server = { $host } adresinde bir Nextcloud sunucusu bulunamadı. Adresi denetleyin.
+
+# Inline error.
+cloud-err-app-password = Nextcloud bu uygulama parolasını kabul etmedi. Nextcloud'da Ayarlar, Güvenlik bölümünden yenisini oluşturun.
+
+# Inline error.
+cloud-err-webdav = Sunucu bu kullanıcı adını ya da parolayı reddetti.
+
+# Error, with Open the page again.
+cloud-err-timeout = Giriş sayfası, erişime izin verilmeden kapandı.
+
+# Error.
+cloud-err-other-group = Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin.
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service }, Kaeri hesabının oturumunu kapattı. Yeniden giriş yapana kadar değişiklikleriniz bu { $kind } üzerinde bekler.
+
+# Status error.
+cloud-err-full = { $service } dolu. Orada yer açıp yeniden deneyin.
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeri klasörü artık açamıyor. Yeniden seçin.
+
+# Status error title.
+cloud-err-title = { $service } ile eşitlenemedi
+
+# Picker row line.
+cloud-dropbox-line = Dropbox'ınızda Kaeri'ye ait klasör, Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = OneDrive'ınızda Kaeri'ye ait klasör, Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = Şimdi eşitle
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = Çıkış yap
+
+# Cloud group button after signing out.
+cloud-sign-in = Giriş yap
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = Çıkış yapıldı. Yeniden giriş yapana kadar değişiklikler bu { $kind } üzerinde bekler.
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service }, Kaeri uygulamasına erişim vermedi. Yeniden denemek için tekrar seçin.
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = Diğer cihazlar cihazlarınızın kullandığını seçin. Yeni bir bulut klasörü, kurtarma anahtarının kaydedilebileceği bir telefonda ya da bilgisayarda eklenir.
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = Telefonunuzda giriş yapılır
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropbox'a telefonunuzda giriş yapılır
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device } Dropbox'ta oturum açmış durumda. Bu TV, eşleşmiş bağlantınız üzerinden bu girişi kullanabilir.
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = { $device } girişini kullan
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = Dropbox için bir TV'de yapılabilecek bir giriş yok. Telefonunuzda Kaeri uygulamasını açın, Ayarlar, Cihazlar, Bulut klasörü yolunu izleyin ve orada Dropbox'a giriş yapın. Sonra burada yeniden Dropbox'ı seçin.
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = Giriş yapıldı. Klasör hazırlanıyor
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service }, Kaeri hesabının oturumunu kapattı. Yeniden giriş için seçin.
+
+# TV cloud row.
+tv-cloud-signed-out-line = Çıkış yapıldı. Giriş yapmak için seçin.
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = { $service } hesabından çıkış yapılsın mı?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = Bu TV, { $service } üzerinden eşitlemeyi bırakır. Yeniden giriş yapana kadar değişiklikler burada bekler.
+
+# Status line while offline.
+cloud-offline = Bağlantı bekleniyor. Değişiklikler bu { $kind } üzerinde saklanır.
+
+# TV device flow.
+tv-google-title = Google Drive'a giriş yapın
+
+# TV device flow.
+tv-qr-open-page = Ya da sayfayı açmak için tarayın
+
+# TV Nextcloud.
+tv-nextcloud-line = Bunu telefonunuzla tarayın ve Nextcloud sayfanızda erişime izin verin. TV kendiliğinden sürer.
+
+# Sheet title.
+rkey-title = Kurtarma anahtarınız
+
+# Sheet line.
+rkey-line = Bunu güvenli bir yerde saklayın. Tüm cihazlar kaybolursa geçmişinizi geri getirir ve yeni bir cihaz cihazın bulut klasörünüzden katılmasını sağlar.
+
+# Button.
+rkey-copy = Kopyala
+
+# Text button.
+rkey-qr = QR kodu olarak göster
+
+# Sheet footnote.
+rkey-again = Bu { $kind } kilidini açtıktan sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
+
+# Devices row.
+rkey-row = Kurtarma anahtarı
+
+# Devices row value.
+rkey-made = Oluşturulma: { $date }
+
+# Row.
+rkey-new = Yeni anahtar oluştur
+
+# Footer.
+rkey-new-foot = Eski anahtar çalışmaz olur ve cihazlar bir sonraki eşitlemede yenisine geçer.
+
+# Restore.
+rkey-enter-title = Kurtarma anahtarınızı girin
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+        [one] { $service }, { $count } cihaz cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.
+       *[other] { $service }, { $count } cihazlar cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.
+    }
+
+# Field note.
+rkey-enter-note = 24 harf ve rakam, dörderli gruplar halinde. Boşluk ve büyük küçük harf fark etmez.
+
+# Inline error.
+rkey-wrong = Bu anahtar bu klasörü açmıyor. Her dörtlü grubu denetleyip yeniden deneyin.
+
+# Button.
+rkey-restore = Geri yükle
+
+# Add a device.
+pair-enter-line = Diğer cihaz cihazında Kaeri uygulamasını açın ve Başka bir cihaz cihazdan kur seçeneğini ya da Ayarlar, Cihazlar, Kod göster yolunu seçin. Sonra kodu buraya girin.
+
+# Button, phones.
+pair-scan = Kodu tara
+
+# Note.
+pair-same-wifi = Her iki cihaz aynı Wi-Fi'de olmalı.
+
+# Button.
+pair-button = Eşleştir
+
+# Text button.
+pair-show-instead = Bunun yerine burada kod göster
+
+# Code screen.
+pair-show-title = Bu kodu diğer cihaz cihazına girin
+
+# Code screen.
+pair-show-scan = Ya da telefonunuzdaki Kaeri ile tarayın.
+
+# Code screen.
+pair-good-for = 2 dakika geçerli · { $left }
+
+# TV code screen.
+pair-tv-line = Telefonunuzda Kaeri uygulamasını açın, Ayarlar, Cihazlar, cihaz ekle yolunu izleyin ve bu kodu tarayın ya da girin.
+
+# Success.
+pair-ok = { $device } ile eşleştirildi
+
+# Success.
+pair-ok-line = Geçmişiniz aktarılıyor. Bu sırada Kaeri uygulamasını kullanmayı sürdürebilirsiniz.
+
+# Success switch.
+pair-copy-signins = Girişleri { $device } cihazından kopyala
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }. Her cihaz bu bağlantı üzerinden kendi kopyasını alır.
+
+# Error.
+pair-err-code = Kod eşleşmedi. { $device } üzerindeki kodu denetleyip yeniden deneyin.
+
+# Error.
+pair-err-not-found = Bu kodu gösteren cihaz bulunamadı. Her iki cihaz aynı Wi-Fi'de olmalı.
+
+# Error on the showing side.
+pair-err-expired = Bu kodun süresi doldu. Yeni bir kod gösterin.
+
+# Profile question.
+pair-which-profile = { $device } üzerindeki hangi profil sizin?
+
+# Profile question.
+pair-which-profile-line = Bu { $kind } yalnızca o profille eşitlenir. Diğerleri { $device } üzerinde kalır.
+
+# Footer.
+pair-also-sync-foot = { $device } bu telefonu TV'de Oynat'tan tanıyor, bu yüzden onunla eşitlemek için yeni kod gerekmez.
+
+# Continue, for a day.
+continue-from-device = Bölüm { $n } · { $device } üzerinde { $time } noktasında durdu
+
+# Player, 6 s, with Start over.
+player-resumed-from = { $device } cihazından { $time } noktasında sürdürüldü
+
+# Row line, Mac toolbar status.
+sync-syncing = Eşitleniyor
+
+# Mac jobs popover.
+sync-syncing-with = { $device } ile eşitleniyor
+
+# Device page group.
+sync-notes = Eşitleme notları
+
+# Sync note.
+sync-note-kept-watched = { $title } için { $n }. bölüm izlendi olarak kalıyor. { $other }, { $device } bitirdiğini bilmeden onu izlenmedi olarak işaretledi.
+
+# Sync note action.
+sync-note-undo = İzlenmedi olarak işaretle
+
+# Footer.
+sync-notes-foot = Notlar 7 gün kalır.
+
+# Settings row and page.
+profiles-title = Profiller
+
+# Profiles row value with one profile.
+profiles-only-you = Yalnızca siz
+
+# Profiles page with one.
+profiles-one-foot = Profiller, bu cihaz cihazı paylaşan kişiler için ayrı geçmiş, izlemeye devam et ve hesaplar tutar. Tek profilde Kaeri seçici ve ad göstermez.
+
+# Row, sheet title, picker tile.
+profiles-add = Profil ekle
+
+# Sheet line.
+profiles-add-line = Her profil kendi geçmişini, izlemeye devam et listesini ve hesaplarını tutar. Kaynaklar ve indirmeler bu cihaz cihazda ortak kalır.
+
+# Field label.
+profiles-new = Yeni profil
+
+# Field label.
+profiles-yours = Profiliniz
+
+# Field note when signed in.
+profiles-yours-note = AniList'ten dolduruldu. Şimdiye kadar bu cihaz cihazda adı olmayan tek bir profil vardı.
+
+# Switch.
+profiles-kids = Çocuk profili
+
+# Switch footer.
+profiles-kids-line = Yetişkin başlıkları kapalı kalır; kaynaklar, cihazlar ve torrent ayarları gizlenir.
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = Çocuk profilinde Kaynaklar ve Cihazlar gizlidir, yetişkin başlıkları kapalı kalır.
+
+# Line under a kids profile.
+profiles-kids-tag = Çocuk
+
+# Button.
+profiles-add-button = Profil ekle
+
+# Profiles page footer.
+profiles-shared-foot = Kaynaklar, indirmeler ve bu cihaz cihazın ayarları her profilde ortaktır.
+
+# Profile page row.
+profiles-syncs-with = Eşitlendiği profil
+
+# Profile page, destructive.
+profiles-delete = Profili sil
+
+# Alert title.
+profiles-delete-alert = { $name } profili silinsin mi?
+
+# Alert message.
+profiles-delete-alert-line = { $name } profilinin bu cihaz cihazdaki geçmişi ve girişleri kaldırılır. { $name } ile eşitlenen cihazlar kendi verilerini tutar.
+
+# TV, and iPad when asked.
+profiles-picker = Kim izliyor?
+
+# iPad switch.
+profiles-ask-at-launch = Açılışta kimin izlediğini sor
+
+# iPad footer.
+profiles-ask-foot = Varsayılan olarak kapalı. Evin paylaştığı bir iPad için. Hesap satırı profilleri istediğiniz zaman değiştirir.
+
+# TV Settings.
+profiles-switch = Profil değiştir
+
+# Account sheet and menus.
+profiles-manage = Profilleri yönet
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = Başka bir cihaz cihazdan kur
+
+# Code screen from first launch.
+first-setup-line = Kaeri kurulu bir cihaz cihazda Ayarlar, Cihazlar, cihaz ekle yolunu izleyin ve bu kodu girin ya da tarayın.
+
+# Text button.
+first-restore = Bunun yerine bir bulut klasöründen geri yükle
+
+# Success from first launch.
+first-ok-line = Geçmişiniz, ayarlarınız ve eklenti mağazaları aktarılıyor. Kaeri uygulamasını şimdi kullanmaya başlayabilirsiniz.
+
+# Success switch.
+first-join-store = { $store } eklenti mağazası katıl
+
+# Success switch line.
+first-join-store-line = { $device }, bu { $kind } için kendi davetini oluşturur
+
+# Picker row on a phone or computer.
+cloud-folder = Bu { $kind } üzerinde bir klasör
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Nextcloud'da Ayarlar, Güvenlik bölümünden bir tane oluşturun. Bu { $kind } üzerinde saklanır.
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+        [one] TV'de Oynat için bir TV
+       *[other] TV'de Oynat için { $count } TV
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = Bugün eşleştirildi
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = Telefonunuza girilecek bir kod gösterir
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = Yalnızca siz. Bu TV'de ayrı geçmiş, izlemeye devam et ve hesaplar tutmak için bir profil ekleyin.
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = Kim izliyor? ekranını açar
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = Bu TV'deki profiller
+
+# Android recovery key sheet, third button.
+rkey-save-file = Dosya olarak kaydet
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = QR kodu
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = Kod göster
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = Yeniden giriş yap
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = Klasör seç
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }, profil değiştir
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = Eşleştirme kodu
+
+device-kind-phone = telefon
+
+device-kind-tablet = tablet
+
+device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Telefonunuzdan kurun
+
+# Error naming a device that is not known by name.
+devices-other-device = diğer cihaz
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = { $service } sayfası açık. Orada erişime izin verin, Kaeri kendiliğinden sürer.
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = { $service } hizmetine bağlanılıyor
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Erişime izin verildi. Giriş tamamlanıyor.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = { $service } içinde Kaeri klasörü oluşturuluyor ve geçmişinizin ilk mühürlü kopyası alınıyor.
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = { $service } hesabına giriş yapılamadı
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Klasör hazırlanamadı
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service }, Kaeri uygulamasına erişim vermedi.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service } girişi tamamlamadı. Biraz sonra yeniden deneyin.
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeri, { $service } içinde klasörünü oluşturamadı. Biraz sonra yeniden deneyin.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Başka bir hizmet kullan
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Bulut klasörünü kaldır
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = { $service } eşitlemeden kaldırılsın mı?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = Bu { $kind } üzerindeki her şey burada kalır ve yakındaki eşleşmiş cihazlar eşitlemeyi sürdürür. Klasör mühürlü kopyasıyla { $service } içinde kalır ve diğer cihazlar siz onlarda da kaldırana kadar onu kullanır.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Kaldır
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = { $service } için daha fazlası
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = Kullanımda
+
+# Picker line under Use another service.
+cloud-switch-foot = Yeni klasör hazır olana kadar { $service } kullanımda kalır.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = İkisinden biri eşitlemeyi açar, ikisini de kullanabilirsiniz.
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = Eşitleme; kaldığınız yeri, geçmişinizi ve ayarlarınızı kendi cihazlar arasında, yakından ya da seçtiğiniz bir bulut klasörü üzerinden taşır. Bu { $kind } dışına çıkmadan önce mühürlenir.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = Telefonunuzla eşleşmek eşitlemeyi açar. Sonra bu TV bulut klasörünüze katılabilir.
 
 # Title of the state when a title page could not load.
 title-load-failed = Bu başlık yüklenemedi
@@ -9128,6 +10585,70 @@ episode-row-airs = { $when } yayımlanır
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Spoiler koruması nedeniyle gizli
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Özet, spoiler korumasıyla gizlendi
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Özeti göster
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Bu bölümün karesini ve özetini gösterir
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } dk · Yayın tarihi { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = { $minutes } dk kaldı
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Spoiler koruması, { $episode }. bölümden sonrasını gizler.
+
+# The same line on phones.
+episode-protection-line-short = { $episode }. bölümden sonra gizli
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = { $from }. ile { $to }. bölümler arası
+
+# Label of the control that picks an episode range.
+episode-range-label = Bölüm aralığı
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] İzlenen bir bölüm
+       *[other] { $count } izlenen bölüm
+    }
+
+# An episode's number in a facts line on phones and in narrow desktop windows.
+episode-short = B{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Yayın tarihi { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Göster
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Gizle
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = { $episode }. bölümden sonrası gösteriliyor.
+
+# The same line on phones.
+episode-protection-shown-short = { $episode }. bölümden sonra görünür
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Bölüm seçenekleri
@@ -9250,11 +10771,56 @@ title-fact-tba = Açıklanacak
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = Bölüme git…
+
+# Title of the Go to episode field.
+episode-go-to-title = Bölüme git
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Git
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first } - { $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = Bölüm, { $first } - { $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = { $number }. bölüm yok. Bu dizide { $last } bölüm var.
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = { $number }. bölüm henüz çıkmadı. En son bölüm { $latest }.
+
 # Title of the settings group and the screen.
 torrents-title = Torrentler
 
 # Label and short value for the switch.
 torrents-on = Torrentler açık
+
+# Line under the switch while torrents are off.
+torrents-off-detail = Varsayılan olarak kapalı. Bir proxy üzerinden yönlendirmediğiniz sürece torrent'ler doğrudan bağlanır.
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = Bir torrentteki diğer kişiler IP adresinizi görebilir. Gizli kalması için torrent trafiğini bir proxy üzerinden yönlendirin.
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = Torrent'ler Kaeri uygulamasının parçasıdır, bir eklenti değil. Proxy ve paylaşım Ayarlar'da, Kaynaklar altında ayarlanır.
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Torrent trafiğini bir proxy üzerinden yönlendir
+
+# Line under the switch.
+torrents-proxy-route-detail = Torrent trafiği, işlettiğiniz ya da kiraladığınız bir SOCKS5 proxy üzerinden gider. Bu kapalıyken torrent'ler doğrudan bağlanır.
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = { $host }:{ $port } adresindeki bir SOCKS5 proxy üzerinden.
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Bir SOCKS5 proxy üzerinden.
+
+# Summary: no proxy is set.
+torrents-summary-direct = Proxy olmadan doğrudan bağlanıyor.
 
 # Label of the proxy host field.
 torrents-proxy-host = Proxy sunucusu
@@ -9271,6 +10837,9 @@ torrents-proxy-password = Parola
 # Line under the password field.
 torrents-password-keep = Kayıtlı parolayı korumak için parolayı boş bırakın.
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = Yeni proxy denetimi geçene kadar torrent'ler kayıtlı proxy'yi kullanmaya devam eder.
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proxy için bir sunucu adı ve 1 ile 65535 arasında bir bağlantı noktası gerekir.
 
@@ -9280,17 +10849,29 @@ torrents-checking-proxy = Proxy kontrol ediliyor…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy kaydedildi
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = Proxy denetimi başarısız oldu
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı proxy kalır.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrentler hâlâ kapalı. { $why }.
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeri, torrent'ler başlamadan önce proxy'ye ulaşabildiğini denetler. Denetim başarısız olduğu sürece torrent'ler bekler.
+
+# Label of the proxy check's result.
+torrents-last-check = Proxy denetimi
+
 # Check passed.
 torrents-check-passed = Geçti
 
 # Check running: the short word.
 torrents-check-running = Denetleniyor
+
+# Check failed: the line.
+torrents-check-failed-line = Proxy denetimi başarısız oldu. Torrent'ler denetim geçilince başlar.
 
 # Short word: the check failed.
 torrents-check-failed = Başarısız
@@ -9811,6 +11392,9 @@ tv-cast-volume-on-tv = Ses TV'den ayarlanır
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = Sıradaki · { $seconds } sn içinde oynar
+
+# Line under the paired TVs.
+tv-forget-note = Burada bir TV'yi unutursanız o da bu cihaz cihazı unutur.
 
 # Heading of the update row in settings and about.
 updates-title = Güncellemeler

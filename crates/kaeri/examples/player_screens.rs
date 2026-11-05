@@ -149,6 +149,7 @@ async fn main() -> anyhow::Result<()> {
         auto_skip: false,
         auto_skip_recap: false,
         ask_was_opening: false,
+        find_skip_times: false,
         share_skip_times: Some(false),
         mark_chapters: true,
         skip_button: true,
@@ -167,6 +168,8 @@ async fn main() -> anyhow::Result<()> {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     };
     // Three ways to the same file, as a library server, a folder and a plugin would offer it.
     let streams = [("jellyfin", 1080), ("local files", 1080), ("example-rust", 720)]

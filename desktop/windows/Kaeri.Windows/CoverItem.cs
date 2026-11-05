@@ -19,7 +19,15 @@ public sealed partial class CoverItem : INotifyPropertyChanged
     public CoverItem(Entry entry, string? caption = null)
     {
         Entry = entry;
-        Caption = caption ?? (entry.IsDemo ? T.SearchDemoPlays : Wording.CoverCaption(entry));
+        // A cell with a count line says it first, in amber-free haze, and its caption keeps the format and where it plays.
+        if (caption is null && entry.CountLine is { } line)
+        {
+            Count = Browsing.CountText(line, CellWidth, Measure);
+            Caption = Browsing.CellDetail(entry);
+            Spoken = line.Spoken;
+        }
+        else
+            Caption = caption ?? (entry.IsDemo ? T.SearchDemoPlays : Wording.CoverCaption(entry));
         Placeholder = new SolidColorBrush(Colours.Parse(entry.CoverColor) ?? Colours.Raised);
     }
 
@@ -28,7 +36,33 @@ public sealed partial class CoverItem : INotifyPropertyChanged
     public string Title => Entry.Title;
 
     /// <summary>What a screen reader says: the title, the English title when it differs, then the caption.</summary>
-    public string Name => string.Join(", ", new[] { Entry.Title, Entry.Secondary is { Length: > 0 } s && s != Entry.Title ? s : null, Caption is { Length: > 0 } c ? c : null }.Where(x => x is not null));
+    public string Name => string.Join(", ", new[] { Entry.Title, Entry.Secondary is { Length: > 0 } s && s != Entry.Title ? s : null, Spoken is { Length: > 0 } said ? said : null, Caption is { Length: > 0 } c ? c : null }.Where(x => x is not null));
+
+    /// <summary>A cell is 150 wide.</summary>
+    const double CellWidth = 150;
+
+    /// <summary>The count line as the cell has room for it, or empty when the engine has none.</summary>
+    public string Count { get; } = "";
+
+    /// <summary>Whether the cell has a count line to draw.</summary>
+    public Microsoft.UI.Xaml.Visibility CountShown => Count.Length > 0 ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
+    string Spoken { get; } = "";
+
+    static Microsoft.UI.Xaml.Controls.TextBlock? ruler;
+
+    /// <summary>How wide a line is in the caption's own type, to choose the long count or the short one.</summary>
+    static double Measure(string text)
+    {
+        ruler ??= new Microsoft.UI.Xaml.Controls.TextBlock
+        {
+            Style = (Microsoft.UI.Xaml.Style)Microsoft.UI.Xaml.Application.Current.Resources["HazeCaptionStyle"],
+            TextWrapping = Microsoft.UI.Xaml.TextWrapping.NoWrap,
+        };
+        ruler.Text = text;
+        ruler.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        return ruler.DesiredSize.Width;
+    }
     public string Caption { get; set; }
     public Brush Placeholder { get; }
 

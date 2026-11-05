@@ -9,6 +9,9 @@ import SwiftUI
 struct InviteQR: View {
     let link: String
     let device: Bool
+    /// The invite's warning under the code; the sync sheets say their own words.
+    var caption = true
+    var label = L.storesQrLabel
     @State private var matrix: QrMatrix?
     @State private var late = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -47,12 +50,12 @@ struct InviteQR: View {
             .clipShape(.rect(cornerRadius: 4))
             .animation(reduceMotion ? nil : .fadeIn, value: matrix != nil)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(L.storesQrLabel)
-            Text(device ? L.storesQrWarningDevice : L.storesQrWarning)
+            .accessibilityLabel(label)
+            if caption { Text(device ? L.storesQrWarningDevice : L.storesQrWarning)
                 .font(.plat(mac: 12, touch: 15))
                 .foregroundStyle(.haze)
                 .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+                .fixedSize(horizontal: false, vertical: true) }
         }
         .frame(maxWidth: .infinity)
         .task(id: link) {

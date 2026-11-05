@@ -48,6 +48,14 @@
   </Style>
 
   <!-- Player bar buttons: icon only, 40 square, silk on the dim. -->
+  <!-- A dialog's default button where amber would be a second amber: the selected fill with the edge. -->
+  <Style x:Key="SelectedFillButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <Setter Property="Background" Value="{ThemeResource SelectedFillBrush}" />
+    <Setter Property="BorderBrush" Value="{ThemeResource EdgeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
   <Style x:Key="PlayerButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
     <Setter Property="Width" Value="40" />
     <Setter Property="Height" Value="40" />

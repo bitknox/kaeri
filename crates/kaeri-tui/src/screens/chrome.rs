@@ -188,6 +188,15 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
             .render(geometry.status, buf);
         return;
     }
+    // Why a typed `G` went nowhere, in the alert colour until the next key.
+    if let Some(error) = app.go_error.as_deref() {
+        let hints = status_hints_paged(app, help_pages);
+        StatusLine::new(&app.palette, error)
+            .state_role(Role::Alert)
+            .hints(&hints)
+            .render(geometry.status, buf);
+        return;
+    }
     let state = if app.status.is_empty() {
         let audio = match app.settings.translation {
             kaeri_core::media::Translation::Sub => t::audio_subbed(),

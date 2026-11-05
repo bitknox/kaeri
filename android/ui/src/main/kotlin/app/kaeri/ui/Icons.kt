@@ -148,6 +148,12 @@ internal object Icons {
         "M15.4 17.3 C14.3 17.75 13.2 18 12 18 C7.5 18 4 14.5 2.5 12 C3.3 10.6 4.6 9 6.3 7.8",
         "M9.9 9.9 A3 3 0 0 0 14.1 14.1",
     )
+    /** The open eye: what Show synopsis brings back. */
+    val Shown = stroked(
+        "Shown",
+        "M2.5 12 C4 9.5 7.5 6 12 6 C16.5 6 20 9.5 21.5 12 C20 14.5 16.5 18 12 18 C7.5 18 4 14.5 2.5 12 Z",
+        "M12 9 A3 3 0 1 1 11.99 9 Z",
+    )
     val Settings = stroked(
         "Settings",
         "M12 9 A3 3 0 1 1 11.99 9 Z",
@@ -158,6 +164,13 @@ internal object Icons {
     val Restart = stroked("Restart", "M4 12 A8 8 0 1 0 6.3 6.3", "M4 4 V8 H8")
     val Downloads = stroked("Downloads", "M12 4 V15 M7 10 L12 15 L17 10", "M5 20 H19")
     val Sort = stroked("Sort", "M4 7 H20 M7 12 H17 M10 17 H14")
+
+    /** Surprise me: a die, five pips. */
+    val Dice = stroked(
+        "Dice",
+        "M7 3 H17 A4 4 0 0 1 21 7 V17 A4 4 0 0 1 17 21 H7 A4 4 0 0 1 3 17 V7 A4 4 0 0 1 7 3 Z",
+        "M8.5 8.5 H8.51 M15.5 8.5 H15.51 M12 12 H12.01 M8.5 15.5 H8.51 M15.5 15.5 H15.51",
+    )
     val Clear = stroked("Clear", "M6 6 L18 18 M18 6 L6 18")
     val Menu = stroked("Menu", "M4 7 H20 M4 12 H20 M4 17 H20")
 

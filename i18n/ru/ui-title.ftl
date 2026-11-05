@@ -35,6 +35,31 @@ episode-filler = Филлер
 episode-row-not-out = Ещё не вышла
 episode-row-airs = Выйдет { $when }
 episode-spoiler-hidden = Скрыто защитой от спойлеров
+episode-synopsis-hidden = Описание скрыто защитой от спойлеров
+episode-synopsis-show = Показать описание
+episode-synopsis-show-hint = Показывает кадр и описание этой серии
+episode-facts = { $minutes } мин · Вышла { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = Осталось { $minutes } мин
+episode-protection-line = Защита от спойлеров скрывает всё после серии { $episode }.
+episode-protection-line-short = Скрыто после серии { $episode }
+episode-range = Серии с { $from } по { $to }
+episode-range-label = Диапазон серий
+episode-fold = { $count ->
+    [one] Одна просмотренная серия
+    [few] { $count } просмотренные серии
+    [many] { $count } просмотренных серий
+   *[other] { $count } просмотренной серии
+ }
+episode-short = С{ $episode }
+episode-aired = Вышла { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Показать
+episode-protection-hide = Скрыть
+episode-protection-shown = Показано всё после серии { $episode }.
+episode-protection-shown-short = Видно после серии { $episode }
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Параметры серии
 episode-mark-watched = Отметить как просмотренную
 episode-mark-unwatched = Отметить как непросмотренную
@@ -79,3 +104,10 @@ title-fact-after = После серии { $episode }
 title-fact-now = Сейчас
 title-fact-tba = Дата не объявлена
 more-following-line = { $status } · { $score }/10
+episode-go-to = Перейти к эпизоду…
+episode-go-to-title = Перейти к эпизоду
+episode-go-to-go = Перейти
+episode-go-to-hint = С { $first } по { $last }
+episode-go-to-label = Эпизод, с { $first } по { $last }
+episode-go-to-none = Эпизода { $number } нет. В этом сериале их { $last }.
+episode-go-to-not-out = Эпизод { $number } ещё не вышел. Последний: { $latest }.

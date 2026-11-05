@@ -13,6 +13,7 @@ search-statuses-count = { $count ->
 search-leave-out = Jangan sertakan
 search-include = Sertakan
 search-filters-help = Tag, durasi, skor, asal, dan tempat menonton
+search-all-filters = Semua filter
 search-filters-set = { $count } diatur
 search-sort-by = Urutkan
 search-clear-all = Hapus semua

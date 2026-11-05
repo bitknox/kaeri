@@ -50,6 +50,15 @@ mode, with reduced or removed animations, or with a screen reader running. While
 protection is on, the trailer of a title that follows one you haven't finished doesn't start by
 itself.
 
+## Episode synopses
+
+When a source lists an episode without a synopsis, Kaeri can fill it in from a public episode
+service at `api.ani.zip`. It is asked once for a title when you open the title's episodes, with
+that title's AniList id and nothing else. The service sees your IP address and that id. The answer
+is kept on the device for six hours while the show airs and a week after, so the same title is not
+asked again in that time. If the service refuses or does not answer, the episodes stay as they
+were. To turn this off, set `episode_text = false` under `[meta]` in `config.toml`.
+
 ## Episode discussions
 
 Once an episode counts as watched, the app looks for that episode's discussion thread on AniList's
@@ -248,7 +257,9 @@ The server, and everyone in the room, sees:
 - the name you join with and the room's name;
 - the show and episode you have open, as "Title · Episode 3", and its length;
 - when you play, pause and seek, with the position, and whether you're ready;
-- how long messages take to reach you.
+- how long messages take to reach you;
+- what you type in the room's chat, and your reactions, which are chat lines such as
+  `*laughs* 12:04` with the position in the episode.
 
 They never see the stream's address, your sources or your sign-ins. A party shares no video:
 everyone plays the episode from their own sources.
@@ -265,15 +276,59 @@ this website never receives the invite. The page makes no other request, runs no
 passes the invite only to the Kaeri app on your device. Cloudflare sees that the page was
 opened, as it does for any page here, but not whose room it was.
 
-Messages others send in the room show up on your player. Kaeri doesn't send any.
+Messages others send in the room show up on your player, and you can answer them.
 
 A party doesn't save your position while you watch. When the episode ends, it's marked watched and
 synced to your trackers, as any other play is.
+
+Chat goes through the room's server, to its operator and to everyone in the room, and is never
+end to end encrypted. Kaeri keeps chat in memory for as long as you are in the party and nowhere
+else: not on disk, not in the last ten rooms, not in a bug report and not in the log. Leaving
+drops it, and someone who joins later sees nothing said before. Links in chat are plain text and
+never open from the app. Mute hides a member for that party on your device only, and Hide chat in
+Settings turns chat off on the screen, though the room still has it. A server can turn chat off,
+and then the app says so and sends nothing.
 
 Watch together keeps the last ten rooms you were in on your device, so you can go back to one:
 the server and room, the show and the last episode the room reached, the names of the people who
 were there, and the show's cover address. It keeps no source or stream, and it sends this list
 nowhere.
+
+## Sync between your devices
+
+Sync is off until you turn it on. It keeps your history, resume points, lists, per-show choices
+and a short list of shared settings the same on your devices. Settings that belong to one device,
+such as paths, the VPN and key bindings, stay on it. So do tracker sign-ins, plugin store
+invites and downloaded files.
+
+Two devices on the same network can sync directly. You pair them once with a six-digit code, and
+after that they talk only to each other, over an encrypted connection.
+
+To sync across networks, the devices share a folder in a service you choose:
+
+| Service | Where the files go | What Kaeri can reach |
+|---|---|---|
+| Google Drive | A hidden app folder in your Drive | Only that folder |
+| Dropbox | `Apps/Kaeri` | Only that folder |
+| OneDrive | `Apps/Kaeri` | Only that folder |
+| Nextcloud | `kaeri-sync` in your files | Your files, through an app password named Kaeri |
+| WebDAV | The folder you give | What that account can reach |
+| A folder on the device | The folder you pick, such as one in iCloud Drive or Syncthing | Only that folder |
+
+Every file Kaeri writes there is encrypted on your device first, with a key the service never
+sees. The service sees how many devices sync, how big the files are and when they were written.
+It doesn't see titles, episodes, settings or anything else inside them. While an app is open, it
+reads the folder when it starts, when you come back to it, and every 5 minutes.
+
+The key lives in your device's secret store. When you set up the first folder, Kaeri shows a
+recovery key, which lets a new device join from the folder alone. Keep it somewhere safe: anyone
+with the recovery key and access to the folder can read your sync files. You can see it again or
+replace it in Settings, Devices.
+
+Signing in uses the service's own page, as trackers do. To remove Kaeri's access, turn sync off on
+each device, delete the folder, and remove Kaeri in the service's own settings: Google's "Third-party
+apps and services", Dropbox's "Connected apps", Microsoft's "Apps and services you've given access",
+or Nextcloud's "Devices and sessions".
 
 ## On your device
 

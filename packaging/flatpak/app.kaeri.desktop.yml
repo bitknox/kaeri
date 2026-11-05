@@ -206,6 +206,10 @@ modules:
       - type: archive
         url: https://github.com/mpv-player/mpv/archive/refs/tags/v0.41.0.tar.gz
         sha256: ee21092a5ee427353392360929dc64645c54479aefdb5babc5cfbb5fad626209
+      # The patches every platform that builds mpv carries: the demuxer audio tap for skip
+      # detection (mpv_set_audio_tap).
+      - type: patch
+        path: ../../android/mpv/patches/mpv/0001-demux-audio-tap.patch
 
   # The app. The whole repository is the source, as the app's path dependencies are the engine's
   # crates and its assets, and the settings preview embeds three of the website's pictures. A release build for Flathub would use the release's git tag instead

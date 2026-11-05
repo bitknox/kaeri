@@ -10,6 +10,10 @@ import Foundation
 public enum PlayerShot: String, CaseIterable, Sendable {
     /// The banner under "Starting episode 7" (T2, M4).
     case starting
+    /// The starting screen on the engine's made-up start: `KAERI_START_STATE` (or
+    /// `-KaeriStartState`) names the state, `KAERI_START_AT` the seconds to hold it at,
+    /// `KAERI_START_DETAILS=1` opens Details.
+    case startFixture = "start-fixture"
     /// Playing, with the controls up (MacPlayer, PhonePlayer), round and round Part A.
     case playing
     /// Playing, with the controls left to fade 2 s after the last input, as they do: for the
@@ -81,6 +85,41 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     /// More > Skip times, with one time from each origin.
     case skipTimes = "skip-times"
 
+    /// Found skip times (found-skip-times board): the states of `FoundSkipFixture`, drawn from the
+    /// engine's scenes over the playing episode, with the times moved into the clip.
+    case foundSkip = "found-skip"
+    case foundControls = "found-controls"
+    case foundPrompt = "found-prompt"
+    case foundSaved = "found-saved"
+    case foundNever = "found-never"
+    case foundReview = "found-review"
+    case foundNudged = "found-nudged"
+    case foundUndo = "found-undo"
+    case foundPanel = "found-panel"
+    case foundPanelPaused = "found-panel-paused"
+    /// Scripted motion for recordings (the board's prototypes A to C): the scene plays itself a
+    /// second and a half after it is up, so a recording started before the launch catches it.
+    case foundMotionA = "found-motion-a"
+    case foundMotionB = "found-motion-b"
+    case foundMotionC = "found-motion-c"
+
+    /// The engine's fixture for a found times' shot.
+    var found: FoundSkipFixture? {
+        switch self {
+        case .foundSkip: .skip
+        case .foundControls: .controls
+        case .foundPrompt: .prompt
+        case .foundSaved: .saved
+        case .foundNever: .never
+        case .foundReview: .review
+        case .foundNudged: .nudged
+        case .foundUndo: .undo
+        case .foundPanel: .panel
+        case .foundPanelPaused: .panelPaused
+        default: nil
+        }
+    }
+
     /// Past 85% of the episode, the controls up with the discussion offered.
     case discussion
     /// The same, with the discussion opened beside the video.
@@ -103,6 +142,16 @@ public enum PlayerShot: String, CaseIterable, Sendable {
         return arguments[index + 1]
     }
 
+    /// The launch argument that gives an Episodes row the keyboard's focus, by its episode
+    /// number: `-KaeriPlayerFocus 3`. Rows take focus only with keyboard navigation on, which
+    /// `-AppleKeyboardUIMode 2` turns on for the one process.
+    public static let focusArgument = "-KaeriPlayerFocus"
+
+    static func focusedEpisode(in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: focusArgument), arguments.indices.contains(index + 1) else { return nil }
+        return arguments[index + 1]
+    }
+
     /// The menu a shot opens.
     var menu: PlayerMenu? {
         switch self {
@@ -116,6 +165,44 @@ public enum PlayerShot: String, CaseIterable, Sendable {
 }
 
 extension PlayerModel {
+    /// A launch argument or environment variable of the starting screen's shot.
+    private static func startParameter(_ name: String) -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-KaeriStart" + name.capitalized), arguments.indices.contains(index + 1) {
+            return arguments[index + 1]
+        }
+        return ProcessInfo.processInfo.environment["KAERI_START_" + name.uppercased()]
+    }
+
+    /// The made-up start named by the launch, its events said as the engine says them and held at
+    /// the second asked for.
+    func stageStartFixture(store: AppStore) async -> Bool {
+        let states: [String: StartingFixture] = [
+            "title-lookup": .titleLookup, "sources-loading": .sourcesLoading, "asking-first": .askingFirst,
+            "asking-pinned": .askingPinned, "source-missed": .sourceMissed, "source-failed": .sourceFailed,
+            "sources-resting": .sourcesResting, "slow": .slow, "finding-peers": .findingPeers,
+            "peers-known": .peersKnown, "found": .found, "fetching-subtitles": .fetchingSubtitles,
+            "another-stream": .anotherStream, "buffering-torrent": .bufferingTorrent,
+            "buffering-direct": .bufferingDirect, "offline": .offline, "offline-timed-out": .offlineTimedOut,
+            "failed-no-episode": .failedNoEpisode,
+            "failed-no-match": .failedNoMatch, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
+        ]
+        guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
+        let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
+        if Self.startParameter("details") == "1" { startDetailsOpen = true }
+        let began = ContinuousClock.now
+        for fixture in startingFixture(state: state) {
+            let at = began + .milliseconds(Int(fixture.atMs))
+            guard at <= began + .seconds(hold) else { break }
+            if at > .now { try? await Task.sleep(until: at) }
+            store.apply(fixture.event)
+        }
+        try? await Task.sleep(until: began + .seconds(hold))
+        if Self.startParameter("choose") == "1" { chooseSource() }
+        try? await Task.sleep(for: .milliseconds(400))
+        return isPresented
+    }
+
     /// Play the first Continue row, the Playing scene's episode 7, and bring the player to
     /// `shot`. False when it did not get there in time.
     public func stage(_ shot: PlayerShot, store: AppStore) async -> Bool {
@@ -127,6 +214,7 @@ extension PlayerModel {
             try? await Task.sleep(for: .seconds(1.5))
             return failure != nil
         }
+        if shot == .startFixture { return await stageStartFixture(store: store) }
         holdsCurtain = shot == .starting || shot == .statsWaiting
         store.send(.play(id: item.id, episode: String(item.episode)))
         guard await waited(30, { self.isPresented && self.hasPicture && self.duration != nil }) else { return false }
@@ -135,7 +223,7 @@ extension PlayerModel {
         case .starting:
             // The banner's art.
             try? await Task.sleep(for: .seconds(1))
-        case .couldntPlay:
+        case .couldntPlay, .startFixture:
             break
         case .playing:
             seek(to: 31)
@@ -149,6 +237,11 @@ extension PlayerModel {
             if shot == .tracks, let last = subtitleTracks.last { selectSubtitle(last.id) }
             pinnedControls = true
             pointedRow = PlayerShot.pointed(in: ProcessInfo.processInfo.arguments)
+            // The episode table is cached by the title's page in use; the shot has had none.
+            if shot == .episodes {
+                store.loadEpisodes(item.id)
+                _ = await waited(10) { episodeText(rows: store.titles.episodes[item.id] ?? []) == .present }
+            }
             try? await Task.sleep(for: .seconds(0.5))
             if let menu = shot.menu { requestMenu(menu) }
         case .fading:
@@ -208,6 +301,11 @@ extension PlayerModel {
                 view.length = (view.end ?? 0) - (view.start ?? 0)
                 apply(.playerSkipMark(playback: playback, view: view))
             }
+        case .foundSkip, .foundControls, .foundPrompt, .foundSaved, .foundNever, .foundReview, .foundNudged,
+            .foundUndo, .foundPanel, .foundPanelPaused:
+            there = await stageFound(shot)
+        case .foundMotionA, .foundMotionB, .foundMotionC:
+            there = await stageFoundMotion(shot)
         case .discussion, .discussionOpen:
             seek(to: (duration ?? 46) * 0.86)
             there = await waited(10) { self.discussionOffer != nil && self.paused == false }
@@ -276,6 +374,106 @@ extension PlayerModel {
         }
         // The fades.
         try? await Task.sleep(for: .milliseconds(700))
+        return there
+    }
+
+    /// The board's motion prototypes A to C over the playing episode, with the times in the clip
+    /// (opening 10 to 28 s). A: Skip opening is pressed, playback lands, and 3 s later the card
+    /// arrives. B: Yes, and the answer crossfades in the card. C: Adjust opens the review, which
+    /// plays the edges. The script starts 1.5 s after the scene is up.
+    private func stageFoundMotion(_ shot: PlayerShot) async -> Bool {
+        guard let playback else { return false }
+        holdsPromptsForShot = true
+        let ask = SkipPrompt.foundEdges(kind: .opening, episode: 3)
+        var there = true
+        switch shot {
+        case .foundMotionA:
+            seek(to: 8.5)
+            there = await waited(10) { abs(self.position - 8.5) < 1.5 }
+            apply(.playerTimeline(playback: playback, marks: [TimelineMark(kind: .opening, start: 10, end: 28, origin: .found)]))
+            apply(.playerUi(playback: playback, ui: .skip(kind: .opening, to: 28)))
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 0.6))
+                self.seek(to: 28)
+                self.apply(.playerUi(playback: playback, ui: .skipCleared))
+                try? await Task.sleep(for: .seconds(3))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            }
+        case .foundMotionB:
+            seek(to: 30)
+            there = await waited(10) { abs(self.position - 30) < 1.5 }
+            apply(.playerUi(playback: playback, ui: .skipCleared))
+            apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 1))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: .foundSaved(kind: .opening, episode: 3)))
+                try? await Task.sleep(for: .seconds(4))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: nil))
+            }
+        default:
+            seek(to: 30)
+            there = await waited(10) { abs(self.position - 30) < 1.5 }
+            apply(.playerTimeline(playback: playback, marks: [TimelineMark(kind: .opening, start: 10, end: 28, origin: .found)]))
+            apply(.playerUi(playback: playback, ui: .skipCleared))
+            apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            let review = foundSkipScene(state: .review).mark
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 1))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: nil))
+                if var view = review {
+                    view.start = 10
+                    view.end = 28
+                    view.length = 18
+                    self.apply(.playerSkipMark(playback: playback, view: view))
+                }
+                self.seek(to: 7)
+            }
+        }
+        return there
+    }
+
+    /// A found times' fixture over the playing episode. The scene's 1:31 to 3:00 opening lies
+    /// beyond the clip, so its times are moved into it: the opening to 10 to 28 s, the ending
+    /// to 40 to 52 s, and the playhead with them.
+    private func stageFound(_ shot: PlayerShot) async -> Bool {
+        guard let state = shot.found, let playback else { return false }
+        let scene = foundSkipScene(state: state)
+        func fit(_ t: Double) -> Double {
+            switch t {
+            case ..<91: max(0, 10 - (91 - t) * 0.2)
+            case ..<180: 10 + (t - 91) * 18 / 89
+            case ..<1290: 28 + (t - 180) * 12 / 1110
+            default: 40 + (t - 1290) * 12 / 89
+            }
+        }
+        seek(to: fit(scene.position))
+        var there = await waited(10) { abs(self.position - fit(scene.position)) < 1.5 }
+        holdsPromptsForShot = true
+        // The paused panel is the board's episode with nothing found yet.
+        apply(.playerTimeline(playback: playback, marks: (scene.paused != nil ? [] : scene.marks).map {
+            TimelineMark(kind: $0.kind, start: fit($0.start), end: fit($0.end), origin: $0.origin)
+        }))
+        // The playing episode's own skip offer is not the scene's.
+        if scene.ui.isEmpty { apply(.playerUi(playback: playback, ui: .skipCleared)) }
+        if scene.paused != nil { skipFindPause = { scene.paused } }
+        for ui in scene.ui {
+            switch ui {
+            case .skip(let kind, let to): apply(.playerUi(playback: playback, ui: .skip(kind: kind, to: fit(to))))
+            case .autoSkipped(let kind, let undoTo): apply(.playerUi(playback: playback, ui: .autoSkipped(kind: kind, undoTo: fit(undoTo))))
+            default: apply(.playerUi(playback: playback, ui: ui))
+            }
+        }
+        if var view = scene.mark {
+            view.start = view.start.map(fit)
+            view.end = view.end.map(fit)
+            view.length = (view.end ?? 0) - (view.start ?? 0)
+            apply(.playerSkipMark(playback: playback, view: view))
+        }
+        if let prompt = scene.prompt { apply(.playerSkipPrompt(playback: playback, prompt: prompt)) }
+        if scene.panel { toggleSkipTimes() }
+        if scene.controls { pinnedControls = true } else { hideControls() }
+        if scene.mark != nil || scene.panel || scene.controls { togglePause() }
+        there = await waited(10) { self.paused == (scene.mark != nil || scene.panel || scene.controls) } && there
         return there
     }
 

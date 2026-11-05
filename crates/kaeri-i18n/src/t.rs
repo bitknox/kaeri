@@ -295,6 +295,11 @@ pub fn cause_no_sources() -> String {
     text("cause-no-sources", &[])
 }
 
+/// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+pub fn cause_no_connection() -> String {
+    text("cause-no-connection", &[])
+}
+
 /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 pub fn notice_not_aired(episode: i64, when: &str) -> String {
     text("notice-not-aired", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
@@ -388,6 +393,41 @@ pub fn status_looking_up_title() -> String {
 /// Job note while a play waits for the sources to arrive.
 pub fn status_loading_sources() -> String {
     text("status-loading-sources", &[])
+}
+
+/// Starting screen, step line while the title is looked up.
+pub fn start_looking_up_title() -> String {
+    text("start-looking-up-title", &[])
+}
+
+/// Starting screen, step line while sources still being set up are waited for.
+pub fn start_getting_sources_ready() -> String {
+    text("start-getting-sources-ready", &[])
+}
+
+/// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+pub fn start_asking_source(name: &str) -> String {
+    text("start-asking-source", &[("name", Arg::Text(name))])
+}
+
+/// Starting screen, step line once a stream is found and the player opens it.
+pub fn start_opening_stream() -> String {
+    text("start-opening-stream", &[])
+}
+
+/// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+pub fn start_trying_another_stream() -> String {
+    text("start-trying-another-stream", &[])
+}
+
+/// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+pub fn start_finding_peers() -> String {
+    text("start-finding-peers", &[])
+}
+
+/// Starting screen, step line while the player waits for data to fill its buffer.
+pub fn start_buffering() -> String {
+    text("start-buffering", &[])
 }
 
 /// Job note while the sources are asked for an episode. The episode is its label, often a number.
@@ -1115,6 +1155,11 @@ pub fn stores_ready_demo_stays(store: &str) -> String {
     text("stores-ready-demo-stays", &[("store", Arg::Text(store))])
 }
 
+/// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+pub fn cloud_loopback_done() -> String {
+    text("cloud-loopback-done", &[])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])
@@ -1418,6 +1463,26 @@ pub fn crash_notice() -> String {
 /// The same notice on the TV, which has no button.
 pub fn crash_notice_tv() -> String {
     text("crash-notice-tv", &[])
+}
+
+/// Toast: Surprise me on a search found no title matching the filters.
+pub fn notice_surprise_empty_filters() -> String {
+    text("notice-surprise-empty-filters", &[])
+}
+
+/// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+pub fn notice_surprise_empty_planning() -> String {
+    text("notice-surprise-empty-planning", &[])
+}
+
+/// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+pub fn notice_surprise_offline() -> String {
+    text("notice-surprise-offline", &[])
+}
+
+/// Toast: Surprise me on the filters, and AniList could not be asked.
+pub fn notice_surprise_failed() -> String {
+    text("notice-surprise-failed", &[])
 }
 
 /// Title of the dialog that edits the proxy.
@@ -1920,6 +1985,11 @@ pub fn shortcuts_go_to_section() -> String {
     text("shortcuts-go-to-section", &[])
 }
 
+/// Shortcut: step to the previous or next range of episodes on a title page.
+pub fn shortcuts_episode_ranges() -> String {
+    text("shortcuts-episode-ranges", &[])
+}
+
 /// Shortcut: open the keyboard shortcuts window.
 pub fn shortcuts_show() -> String {
     text("shortcuts-show", &[])
@@ -2060,11 +2130,6 @@ pub fn tv_episode_titled(episode: &str, title: &str) -> String {
     text("tv-episode-titled", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
 }
 
-/// Explains the code a TV lists this computer by, above the paired TVs in the settings.
-pub fn tv_fingerprint_note(code: &str) -> String {
-    text("tv-fingerprint-note", &[("code", Arg::Text(code))])
-}
-
 /// Settings line of a paired TV: paired on a date, reached in the last minute.
 pub fn tv_paired_seen_now(paired: &str) -> String {
     text("tv-paired-seen-now", &[("paired", Arg::Text(paired))])
@@ -2203,6 +2268,41 @@ pub fn stores_published_state() -> String {
 /// Accessible name of a row's Publish button.
 pub fn stores_publish_label(name: &str, version: &str) -> String {
     text("stores-publish-label", &[("name", Arg::Text(name)), ("version", Arg::Text(version))])
+}
+
+/// Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+pub fn rkey_lock_linux() -> String {
+    text("rkey-lock-linux", &[])
+}
+
+/// Reason polkit shows when it asks for the account password before the recovery key.
+pub fn rkey_lock_reason() -> String {
+    text("rkey-lock-reason", &[])
+}
+
+/// Accessible name of the sidebar account row when it opens the profile popover.
+pub fn profiles_popover_name() -> String {
+    text("profiles-popover-name", &[])
+}
+
+/// Button that makes the first profile when none exists; the Profiles pane’s add row.
+pub fn profiles_add_row_action() -> String {
+    text("profiles-add-row-action", &[])
+}
+
+/// Name of the folder picker dialog for a cloud folder on this computer.
+pub fn cloud_folder_chooser() -> String {
+    text("cloud-folder-chooser", &[])
+}
+
+/// Button that saves the recovery key to a file.
+pub fn rkey_save_as_file() -> String {
+    text("rkey-save-as-file", &[])
+}
+
+/// Button that closes the dialog that shows a device paired.
+pub fn pair_done_action() -> String {
+    text("pair-done-action", &[])
 }
 
 /// Under a release in the source picker: how many people share it right now.
@@ -3356,6 +3456,11 @@ pub fn keys_action_filter_search() -> String {
 }
 
 /// Action label in the help overlay and the command palette.
+pub fn keys_action_surprise() -> String {
+    text("keys-action-surprise", &[])
+}
+
+/// Action label in the help overlay and the command palette.
 pub fn keys_action_play_pause() -> String {
     text("keys-action-play-pause", &[])
 }
@@ -3473,6 +3578,26 @@ pub fn keys_hint_mark_previous() -> String {
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 pub fn keys_hint_filters() -> String {
     text("keys-hint-filters", &[])
+}
+
+/// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+pub fn keys_hint_surprise() -> String {
+    text("keys-hint-surprise", &[])
+}
+
+/// Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+pub fn keys_hint_go_to_episode() -> String {
+    text("keys-hint-go-to-episode", &[])
+}
+
+/// Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+pub fn keys_hint_clear() -> String {
+    text("keys-hint-clear", &[])
+}
+
+/// Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+pub fn keys_hint_another() -> String {
+    text("keys-hint-another", &[])
 }
 
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
@@ -3755,6 +3880,11 @@ pub fn keys_where_elsewhere() -> String {
     text("keys-where-elsewhere", &[])
 }
 
+/// Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+pub fn keys_where_surprise() -> String {
+    text("keys-where-surprise", &[])
+}
+
 /// Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 pub fn keys_unbound(action: &str) -> String {
     text("keys-unbound", &[("action", Arg::Text(action))])
@@ -3973,6 +4103,31 @@ pub fn keys_hint_copy_link() -> String {
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 pub fn keys_hint_leave_party() -> String {
     text("keys-hint-leave-party", &[])
+}
+
+/// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+pub fn keys_hint_say() -> String {
+    text("keys-hint-say", &[])
+}
+
+/// Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+pub fn keys_hint_mute() -> String {
+    text("keys-hint-mute", &[])
+}
+
+/// Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+pub fn keys_hint_unmute() -> String {
+    text("keys-hint-unmute", &[])
+}
+
+/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+pub fn keys_hint_hide_chat() -> String {
+    text("keys-hint-hide-chat", &[])
+}
+
+/// Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+pub fn keys_hint_show_chat() -> String {
+    text("keys-hint-show-chat", &[])
 }
 
 /// Shown in place of a screen when the terminal is too small to draw it.
@@ -4468,6 +4623,51 @@ pub fn lists_episode_dubbed(episode: &str) -> String {
 /// A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 pub fn lists_score(score: i64) -> String {
     text("lists-score", &[("score", Arg::Int(score))])
+}
+
+/// A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+pub fn lists_count_out_of(out: i64, total: i64) -> String {
+    text("lists-count-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+pub fn lists_count_out(out: i64) -> String {
+    text("lists-count-out", &[("out", Arg::Int(out))])
+}
+
+/// A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+pub fn lists_count_movie() -> String {
+    text("lists-count-movie", &[])
+}
+
+/// A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+pub fn lists_count_soon() -> String {
+    text("lists-count-soon", &[])
+}
+
+/// A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+pub fn lists_count_starts(day: i64, month: &str) -> String {
+    text("lists-count-starts", &[("day", Arg::Int(day)), ("month", Arg::Text(month))])
+}
+
+/// After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+pub fn lists_count_dub() -> String {
+    text("lists-count-dub", &[])
+}
+
+/// After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+pub fn lists_count_dub_through(through: i64) -> String {
+    text("lists-count-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+pub fn lists_column_episodes() -> String {
+    text("lists-column-episodes", &[])
+}
+
+/// Column heading above how far each search result's dub goes, from 100 columns wide.
+pub fn lists_column_dub() -> String {
+    text("lists-column-dub", &[])
 }
 
 /// A row on the { -continue-cap } list: the episode and how far into it the person stopped.
@@ -6343,6 +6543,166 @@ pub fn stores_toast_that_is_you() -> String {
     text("stores-toast-that-is-you", &[])
 }
 
+/// The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+pub fn sync_tui_kind() -> String {
+    text("sync-tui-kind", &[])
+}
+
+/// A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+pub fn sync_tui_enter_code() -> String {
+    text("sync-tui-enter-code", &[])
+}
+
+/// The Cloud folder row while sync uses no cloud folder.
+pub fn sync_tui_no_cloud() -> String {
+    text("sync-tui-no-cloud", &[])
+}
+
+/// Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+pub fn sync_tui_device_never() -> String {
+    text("sync-tui-device-never", &[])
+}
+
+/// Beside a profile: the one in use now. Column value.
+pub fn sync_tui_profile_in_use() -> String {
+    text("sync-tui-profile-in-use", &[])
+}
+
+/// The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+pub fn sync_tui_browser_line(service: &str) -> String {
+    text("sync-tui-browser-line", &[("service", Arg::Text(service))])
+}
+
+/// Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+pub fn sync_tui_browser_address() -> String {
+    text("sync-tui-browser-address", &[])
+}
+
+/// Title of the waiting dialog while a cloud sign-in runs in the browser.
+pub fn sync_tui_signing_in() -> String {
+    text("sync-tui-signing-in", &[])
+}
+
+/// Title of the field for a WebDAV server's address.
+pub fn sync_tui_webdav_address() -> String {
+    text("sync-tui-webdav-address", &[])
+}
+
+/// Under the WebDAV address field.
+pub fn sync_tui_webdav_address_note() -> String {
+    text("sync-tui-webdav-address-note", &[])
+}
+
+/// Title of the field for a folder's path on this computer.
+pub fn sync_tui_folder_path() -> String {
+    text("sync-tui-folder-path", &[])
+}
+
+/// Under the folder path field.
+pub fn sync_tui_folder_path_note() -> String {
+    text("sync-tui-folder-path-note", &[])
+}
+
+/// Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+pub fn sync_tui_user() -> String {
+    text("sync-tui-user", &[])
+}
+
+/// Under the user name field, for Nextcloud's app password.
+pub fn sync_tui_nextcloud_user_note() -> String {
+    text("sync-tui-nextcloud-user-note", &[])
+}
+
+/// Title of the field for a WebDAV password. It is drawn as dots.
+pub fn sync_tui_password() -> String {
+    text("sync-tui-password", &[])
+}
+
+/// Title of the field for a Nextcloud app password. It is drawn as dots.
+pub fn sync_tui_app_password() -> String {
+    text("sync-tui-app-password", &[])
+}
+
+/// Label before the six-digit pairing code this { -device } shows.
+pub fn sync_tui_code() -> String {
+    text("sync-tui-code", &[])
+}
+
+/// Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+pub fn sync_tui_address() -> String {
+    text("sync-tui-address", &[])
+}
+
+/// While this { -device } is getting a pairing code ready to show.
+pub fn sync_tui_pair_making() -> String {
+    text("sync-tui-pair-making", &[])
+}
+
+/// Title of the field for the other { -device }'s address, the second step of entering a code.
+pub fn sync_tui_pair_address() -> String {
+    text("sync-tui-pair-address", &[])
+}
+
+/// Under the address field when entering a pairing code.
+pub fn sync_tui_pair_address_note() -> String {
+    text("sync-tui-pair-address-note", &[])
+}
+
+/// While this { -device } pairs with the one whose code was entered.
+pub fn sync_tui_pairing() -> String {
+    text("sync-tui-pairing", &[])
+}
+
+/// After a recovery key is shown: where to see it again in the terminal.
+pub fn sync_tui_rkey_again() -> String {
+    text("sync-tui-rkey-again", &[])
+}
+
+/// A choice when adding a profile: add it as a kids profile.
+pub fn sync_tui_add_kids() -> String {
+    text("sync-tui-add-kids", &[])
+}
+
+/// Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+pub fn sync_tui_profile_restart(name: &str) -> String {
+    text("sync-tui-profile-restart", &[("name", Arg::Text(name))])
+}
+
+/// A sync problem: the folder holds nothing to join.
+pub fn sync_tui_err_no_group() -> String {
+    text("sync-tui-err-no-group", &[])
+}
+
+/// A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+pub fn sync_tui_err_unavailable(service: &str) -> String {
+    text("sync-tui-err-unavailable", &[("service", Arg::Text(service))])
+}
+
+/// Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+pub fn sync_tui_hint_remove() -> String {
+    text("sync-tui-hint-remove", &[])
+}
+
+/// Status line hint: Enter shows the recovery key.
+pub fn sync_tui_hint_show() -> String {
+    text("sync-tui-hint-show", &[])
+}
+
+/// Status line hint: Enter turns sync off on this { -device }, after a question.
+pub fn sync_tui_hint_turn_off() -> String {
+    text("sync-tui-hint-turn-off", &[])
+}
+
+/// Status line hint: a key that copies the recovery key.
+pub fn sync_tui_hint_copy() -> String {
+    text("sync-tui-hint-copy", &[])
+}
+
+/// In place of a QR code when the window is too short to draw it whole.
+pub fn sync_tui_qr_no_room() -> String {
+    text("sync-tui-qr-no-room", &[])
+}
+
 /// What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 pub fn hint_stop_playback(key: &str) -> String {
     text("hint-stop-playback", &[("key", Arg::Text(key))])
@@ -6388,9 +6748,9 @@ pub fn tui_together_join_prompt() -> String {
     text("tui-together-join-prompt", &[])
 }
 
-/// Hint line of the keys in the Together section.
-pub fn tui_together_keys() -> String {
-    text("tui-together-keys", &[])
+/// Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+pub fn tui_together_chat_hidden_line() -> String {
+    text("tui-together-chat-hidden-line", &[])
 }
 
 /// Toast when what was typed in the Together section's Join line is neither a link nor a code.
@@ -6911,6 +7271,11 @@ pub fn action_try_again() -> String {
 /// Button that closes a dialog without doing what it offered.
 pub fn action_cancel() -> String {
     text("action-cancel", &[])
+}
+
+/// Button that confirms a small question, such as the episode number to go to.
+pub fn action_go() -> String {
+    text("action-go", &[])
 }
 
 /// Button that puts a question off until later.
@@ -7686,6 +8051,16 @@ pub fn tv_problem_unpaired() -> String {
 /// What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 pub fn player_position_spoken(position: &str, duration: &str) -> String {
     text("player-position-spoken", &[("position", Arg::Text(position)), ("duration", Arg::Text(duration))])
+}
+
+/// Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+pub fn names_pair(first: &str, last: &str) -> String {
+    text("names-pair", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// A list of names up to the last two, joined one by one: "Alpha, Brook".
+pub fn names_list(list: &str, next: &str) -> String {
+    text("names-list", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
 }
 
 /// Menu item that opens an episode's discussion.
@@ -10663,6 +11038,196 @@ pub fn party_pick_continue() -> String {
     text("party-pick-continue", &[])
 }
 
+/// Placeholder of every chat field, and the label of the button that opens it.
+pub fn party_chat_field() -> String {
+    text("party-chat-field", &[])
+}
+
+/// Button that sends a chat line.
+pub fn party_chat_send() -> String {
+    text("party-chat-send", &[])
+}
+
+/// Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+pub fn party_chat_title() -> String {
+    text("party-chat-title", &[])
+}
+
+/// End of the chat field while sending waits, after three messages in five seconds.
+pub fn party_chat_wait(seconds: i64) -> String {
+    text("party-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once when sending waits, for screen readers.
+pub fn party_chat_wait_spoken(seconds: i64) -> String {
+    text("party-chat-wait-spoken", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Line after the three newest chat lines on the video, which opens the conversation.
+pub fn party_chat_more(count: i64) -> String {
+    text("party-chat-more", &[("count", Arg::Int(count))])
+}
+
+/// Notice when the room's server has chat turned off, and the line that replaces the field.
+pub fn party_chat_off() -> String {
+    text("party-chat-off", &[])
+}
+
+/// Line under the chat field in the lobby, shown once.
+pub fn party_chat_privacy() -> String {
+    text("party-chat-privacy", &[])
+}
+
+/// Heading in the conversation when Hide chat is on.
+pub fn party_chat_hidden() -> String {
+    text("party-chat-hidden", &[])
+}
+
+/// Line under it.
+pub fn party_chat_hidden_line() -> String {
+    text("party-chat-hidden-line", &[])
+}
+
+/// Button that turns Hide chat off.
+pub fn party_chat_show() -> String {
+    text("party-chat-show", &[])
+}
+
+/// Settings switch that hides chat in every watch party on this device.
+pub fn settings_hide_chat() -> String {
+    text("settings-hide-chat", &[])
+}
+
+/// Line under that switch.
+pub fn settings_hide_chat_line() -> String {
+    text("settings-hide-chat-line", &[])
+}
+
+/// Member menu item and accessibility action that hides a member's lines and reactions for this party.
+pub fn party_mute(name: &str) -> String {
+    text("party-mute", &[("name", Arg::Text(name))])
+}
+
+/// Member menu item and accessibility action that shows a muted member's lines again.
+pub fn party_unmute(name: &str) -> String {
+    text("party-unmute", &[("name", Arg::Text(name))])
+}
+
+/// Button in the conversation on the line that says a member is muted.
+pub fn party_unmute_short() -> String {
+    text("party-unmute-short", &[])
+}
+
+/// State on a muted member's row.
+pub fn party_member_muted() -> String {
+    text("party-member-muted", &[])
+}
+
+/// Line in the conversation where a muted member's lines were.
+pub fn party_muted_line(name: &str) -> String {
+    text("party-muted-line", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation when a message never came back from the server, five seconds after it was sent.
+pub fn party_chat_not_sent() -> String {
+    text("party-chat-not-sent", &[])
+}
+
+/// Button after it, which sends the same text again.
+pub fn party_chat_retry() -> String {
+    text("party-chat-retry", &[])
+}
+
+/// Button on the TV's controls that opens the four reactions.
+pub fn party_react() -> String {
+    text("party-react", &[])
+}
+
+/// Label of the laugh reaction button.
+pub fn party_react_laugh() -> String {
+    text("party-react-laugh", &[])
+}
+
+/// Label of the gasp reaction button.
+pub fn party_react_gasp() -> String {
+    text("party-react-gasp", &[])
+}
+
+/// Label of the clap reaction button.
+pub fn party_react_clap() -> String {
+    text("party-react-clap", &[])
+}
+
+/// Label of the cry reaction button.
+pub fn party_react_cry() -> String {
+    text("party-react-cry", &[])
+}
+
+/// Line in the conversation and in the terminal: a member laughed.
+pub fn party_reacted_laugh(name: &str) -> String {
+    text("party-reacted-laugh", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member gasped.
+pub fn party_reacted_gasp(name: &str) -> String {
+    text("party-reacted-gasp", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member clapped.
+pub fn party_reacted_clap(name: &str) -> String {
+    text("party-reacted-clap", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member cried.
+pub fn party_reacted_cry(name: &str) -> String {
+    text("party-reacted-cry", &[("name", Arg::Text(name))])
+}
+
+/// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+pub fn party_reacted_at(line: &str, time: &str) -> String {
+    text("party-reacted-at", &[("line", Arg::Text(line)), ("time", Arg::Text(time))])
+}
+
+/// Two members named together, for a reaction made by both: "Ren and Mika".
+pub fn party_names_two(first: &str, second: &str) -> String {
+    text("party-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Three members named together.
+pub fn party_names_three(first: &str, second: &str, third: &str) -> String {
+    text("party-names-three", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("third", Arg::Text(third))])
+}
+
+/// More than three members named together: two names and how many others.
+pub fn party_names_others(first: &str, second: &str, count: i64) -> String {
+    text("party-names-others", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("count", Arg::Int(count))])
+}
+
+/// Name of this device's own member in the conversation and on its reactions.
+pub fn party_chat_you() -> String {
+    text("party-chat-you", &[])
+}
+
+/// Line on a phone's remote screen under the chat field: which device the line is said as.
+pub fn party_sends_as(device: &str) -> String {
+    text("party-sends-as", &[("device", Arg::Text(device))])
+}
+
+/// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+pub fn party_tick_label(time: &str, names: &str) -> String {
+    text("party-tick-label", &[("time", Arg::Text(time)), ("names", Arg::Text(names))])
+}
+
+/// Spoken by a screen reader when a chat line arrives.
+pub fn party_chat_announce(name: &str, message: &str) -> String {
+    text("party-chat-announce", &[("name", Arg::Text(name)), ("message", Arg::Text(message))])
+}
+
+/// Spoken by a screen reader once, when 20 characters are left in the chat field.
+pub fn party_chat_left(count: i64) -> String {
+    text("party-chat-left", &[("count", Arg::Int(count))])
+}
+
 /// Label on the card for the episode that plays after this one.
 pub fn player_up_next() -> String {
     text("player-up-next", &[])
@@ -10721,6 +11286,201 @@ pub fn player_add_plugin_store() -> String {
 /// Short word while the video buffers.
 pub fn player_buffering() -> String {
     text("player-buffering", &[])
+}
+
+/// Detail line while a source is asked and more than one is in the viewer's order.
+pub fn player_start_place(place: i64, total: i64) -> String {
+    text("player-start-place", &[("place", Arg::Int(place)), ("total", Arg::Int(total))])
+}
+
+/// Detail line while the source asked is the one the show is pinned to.
+pub fn player_start_pinned() -> String {
+    text("player-start-pinned", &[])
+}
+
+/// Detail line when a source has no match for the show.
+pub fn player_start_miss_no_match(name: &str) -> String {
+    text("player-start-miss-no-match", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a source has the show and not the episode. The episode is its label.
+pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
+    text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
+/// Detail line when a source failed and the next is asked.
+pub fn player_start_miss_failed(name: &str) -> String {
+    text("player-start-miss-failed", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a source took too long and the next is asked.
+pub fn player_start_miss_timed_out(name: &str) -> String {
+    text("player-start-miss-timed-out", &[("name", Arg::Text(name))])
+}
+
+/// Detail line after the viewer skipped the source being asked.
+pub fn player_start_miss_skipped(name: &str) -> String {
+    text("player-start-miss-skipped", &[("name", Arg::Text(name))])
+}
+
+/// Details row for sources passed over because they failed lately. The name goes before it.
+pub fn player_start_resting() -> String {
+    text("player-start-resting", &[])
+}
+
+/// Detail line once the streams are found and the player opens one. The name is the source's.
+pub fn player_start_from(name: &str) -> String {
+    text("player-start-from", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a stream showed no video and another opens.
+pub fn player_start_no_video() -> String {
+    text("player-start-no-video", &[])
+}
+
+/// Detail line with the place of the stream being opened.
+pub fn player_start_stream_place(next: i64, total: i64) -> String {
+    text("player-start-stream-place", &[("next", Arg::Int(next)), ("total", Arg::Int(total))])
+}
+
+/// Detail line while a torrent has peers.
+pub fn player_start_peers(count: i64) -> String {
+    text("player-start-peers", &[("count", Arg::Int(count))])
+}
+
+/// Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+pub fn player_start_speed(speed: &str) -> String {
+    text("player-start-speed", &[("speed", Arg::Text(speed))])
+}
+
+/// Step line while the player fills its buffer and gives a number.
+pub fn player_start_buffering_percent(percent: &str) -> String {
+    text("player-start-buffering-percent", &[("percent", Arg::Text(percent))])
+}
+
+/// Step line while the episode resumes where it was left.
+pub fn player_start_resuming(clock: &str) -> String {
+    text("player-start-resuming", &[("clock", Arg::Text(clock))])
+}
+
+/// Button on the starting screen that plays the episode from its beginning.
+pub fn player_start_from_beginning() -> String {
+    text("player-start-from-beginning", &[])
+}
+
+/// Button on the starting screen that opens the list of steps.
+pub fn player_start_details() -> String {
+    text("player-start-details", &[])
+}
+
+/// Button that skips the source being asked. The name is the source's.
+pub fn player_start_skip_source(name: &str) -> String {
+    text("player-start-skip-source", &[("name", Arg::Text(name))])
+}
+
+/// Button that opens the next stream of the same source.
+pub fn player_start_skip_stream() -> String {
+    text("player-start-skip-stream", &[])
+}
+
+/// Step line when a start is slow: still waiting for the source. The name is the source's.
+pub fn player_start_still_waiting(name: &str) -> String {
+    text("player-start-still-waiting", &[("name", Arg::Text(name))])
+}
+
+/// Step line while the device is offline and the episode will start when it is back.
+pub fn player_start_offline() -> String {
+    text("player-start-offline", &[])
+}
+
+/// Detail line while offline. The episode is its label.
+pub fn player_start_offline_detail(episode: &str) -> String {
+    text("player-start-offline-detail", &[("episode", Arg::Text(episode))])
+}
+
+/// Button on the failure screen that opens the fix for a title that matched the wrong show.
+pub fn player_start_fix_match() -> String {
+    text("player-start-fix-match", &[])
+}
+
+/// Details row label for the translation of the episode.
+pub fn player_start_translation() -> String {
+    text("player-start-translation", &[])
+}
+
+/// Details row once the title has been looked up.
+pub fn player_start_looked_up() -> String {
+    text("player-start-looked-up", &[])
+}
+
+/// Seconds on the starting screen's detail line and Details rows.
+pub fn player_start_seconds(seconds: i64) -> String {
+    text("player-start-seconds", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once, when a start has taken more than a few seconds.
+pub fn player_start_still_starting() -> String {
+    text("player-start-still-starting", &[])
+}
+
+/// Spoken when a start begins. The episode is its label.
+pub fn player_start_announce(episode: &str, title: &str) -> String {
+    text("player-start-announce", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
+}
+
+/// Spoken when a start fails: the title, then the reason.
+pub fn player_start_failed_announce(title: &str, reason: &str) -> String {
+    text("player-start-failed-announce", &[("title", Arg::Text(title)), ("reason", Arg::Text(reason))])
+}
+
+/// Accessibility value of the starting screen: the step line, then the detail line.
+pub fn player_start_status(step: &str, detail: &str) -> String {
+    text("player-start-status", &[("step", Arg::Text(step)), ("detail", Arg::Text(detail))])
+}
+
+/// Detail line on the starting screen after the viewer chose to play from the beginning.
+pub fn player_start_beginning() -> String {
+    text("player-start-beginning", &[])
+}
+
+/// Details row while a source is being asked.
+pub fn player_start_row_asking() -> String {
+    text("player-start-row-asking", &[])
+}
+
+/// Details row outcome when a source has no match for the show.
+pub fn player_start_row_no_match() -> String {
+    text("player-start-row-no-match", &[])
+}
+
+/// Details row outcome when a source has the show and not the episode. The episode is its label.
+pub fn player_start_row_no_episode(episode: &str) -> String {
+    text("player-start-row-no-episode", &[("episode", Arg::Text(episode))])
+}
+
+/// Details row outcome when a source failed.
+pub fn player_start_row_failed() -> String {
+    text("player-start-row-failed", &[])
+}
+
+/// Details row outcome when a source took too long.
+pub fn player_start_row_timed_out() -> String {
+    text("player-start-row-timed-out", &[])
+}
+
+/// Details row outcome when the viewer skipped a source.
+pub fn player_start_row_skipped() -> String {
+    text("player-start-row-skipped", &[])
+}
+
+/// Second clause of a failure: the sources that were asked, joined as a list by the app.
+pub fn player_start_asked(names: &str) -> String {
+    text("player-start-asked", &[("names", Arg::Text(names))])
+}
+
+/// Label of the switch in the Details list that plays the episode with its subtitles.
+pub fn player_start_subtitled() -> String {
+    text("player-start-subtitled", &[])
 }
 
 /// Title of the stall card. The seconds count up.
@@ -10898,6 +11658,11 @@ pub fn player_mark_shares() -> String {
     text("player-mark-shares", &[])
 }
 
+/// Review line when the stretch under review was found from the audio, not marked by hand.
+pub fn player_mark_found() -> String {
+    text("player-mark-found", &[])
+}
+
 /// Line in the review when the mark replaces AniSkip's times.
 pub fn player_mark_replaces(start: &str, end: &str) -> String {
     text("player-mark-replaces", &[("start", Arg::Text(start)), ("end", Arg::Text(end))])
@@ -10981,6 +11746,44 @@ pub fn player_dont_ask_again() -> String {
     text("player-dont-ask-again", &[])
 }
 
+/// Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+pub fn player_found_ask_opening() -> String {
+    text("player-found-ask-opening", &[])
+}
+
+/// The same prompt after a skip over an ending found from the audio.
+pub fn player_found_ask_ending() -> String {
+    text("player-found-ask-ending", &[])
+}
+
+/// Line under that prompt, in a quieter colour. $episode is the episode's number.
+pub fn player_found_ask_share(episode: i64) -> String {
+    text("player-found-ask-share", &[("episode", Arg::Int(episode))])
+}
+
+/// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+pub fn player_found_yes() -> String {
+    text("player-found-yes", &[])
+}
+
+pub fn player_found_adjust() -> String {
+    text("player-found-adjust", &[])
+}
+
+/// What the prompt says after Yes. $episode is the episode's number.
+pub fn player_found_saved(episode: i64) -> String {
+    text("player-found-saved", &[("episode", Arg::Int(episode))])
+}
+
+/// What the prompt says after Don't ask again, with the line below it.
+pub fn player_found_never() -> String {
+    text("player-found-never", &[])
+}
+
+pub fn player_found_never_how() -> String {
+    text("player-found-never-how", &[])
+}
+
 /// Title of the sheet shown on the first Save.
 pub fn player_share_title() -> String {
     text("player-share-title", &[])
@@ -11016,6 +11819,36 @@ pub fn player_skip_yours() -> String {
 
 pub fn player_skip_from_aniskip() -> String {
     text("player-skip-from-aniskip", &[])
+}
+
+pub fn player_skip_found() -> String {
+    text("player-skip-found", &[])
+}
+
+/// Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+pub fn player_skip_paused_low_power() -> String {
+    text("player-skip-paused-low-power", &[])
+}
+
+pub fn player_skip_paused_battery_saver() -> String {
+    text("player-skip-paused-battery-saver", &[])
+}
+
+pub fn player_skip_paused_energy_saver() -> String {
+    text("player-skip-paused-energy-saver", &[])
+}
+
+pub fn player_skip_paused_power_saver() -> String {
+    text("player-skip-paused-power-saver", &[])
+}
+
+pub fn player_skip_paused_storage() -> String {
+    text("player-skip-paused-storage", &[])
+}
+
+/// Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+pub fn player_skip_unavailable() -> String {
+    text("player-skip-unavailable", &[])
 }
 
 pub fn player_skip_none() -> String {
@@ -11847,6 +12680,301 @@ pub fn search_line_service(service: &str) -> String {
     text("search-line-service", &[("service", Arg::Text(service))])
 }
 
+/// The count line under a title in a list or on a card: how many episodes a finished show has.
+pub fn count_episodes(count: i64) -> String {
+    text("count-episodes", &[("count", Arg::Int(count))])
+}
+
+/// The same, short, for a cell too narrow for the long form.
+pub fn count_episodes_short(count: i64) -> String {
+    text("count-episodes-short", &[("count", Arg::Int(count))])
+}
+
+/// The count line of a show that is airing and has a known total: episodes out so far, then the total.
+pub fn count_out_of(out: i64, total: i64) -> String {
+    text("count-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// The same, short.
+pub fn count_out_of_short(out: i64, total: i64) -> String {
+    text("count-out-of-short", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// The count line of a show that is airing and has no known total: episodes out so far.
+pub fn count_out(count: i64) -> String {
+    text("count-out", &[("count", Arg::Int(count))])
+}
+
+/// The same, short.
+pub fn count_out_short(count: i64) -> String {
+    text("count-out-short", &[("count", Arg::Int(count))])
+}
+
+/// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+pub fn count_starts(date: &str) -> String {
+    text("count-starts", &[("date", Arg::Text(date))])
+}
+
+/// The count line of a show that has not started and has no date.
+pub fn count_not_out() -> String {
+    text("count-not-out", &[])
+}
+
+/// The count line of a show the viewer is part way through, in the library: the next episode and the total.
+pub fn count_next_of(episode: i64, total: i64) -> String {
+    text("count-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+}
+
+/// The dub part of a count line when a source has a dub and does not say how far it goes.
+pub fn count_dub() -> String {
+    text("count-dub", &[])
+}
+
+/// The dub part of a count line: the last episode the dub has.
+pub fn count_dub_through(through: i64) -> String {
+    text("count-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// What a screen reader says for a count line: the long form of a finished show.
+pub fn count_spoken_episodes(count: i64) -> String {
+    text("count-spoken-episodes", &[("count", Arg::Int(count))])
+}
+
+/// What a screen reader says for a show that is airing, with a known total.
+pub fn count_spoken_out_of(out: i64, total: i64) -> String {
+    text("count-spoken-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// What a screen reader says for a show that is airing with no known total.
+pub fn count_spoken_out(count: i64) -> String {
+    text("count-spoken-out", &[("count", Arg::Int(count))])
+}
+
+/// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+pub fn count_spoken_starts(date: &str) -> String {
+    text("count-spoken-starts", &[("date", Arg::Text(date))])
+}
+
+/// What a screen reader says for a show the viewer is part way through.
+pub fn count_spoken_next_of(episode: i64, total: i64) -> String {
+    text("count-spoken-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+}
+
+/// What a screen reader says after the count when the dub goes to an episode.
+pub fn count_spoken_dub_through(through: i64) -> String {
+    text("count-spoken-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// What a screen reader says after the count when a source has a dub and does not say how far it goes.
+pub fn count_spoken_dub() -> String {
+    text("count-spoken-dub", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jan_short() -> String {
+    text("date-month-jan-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jan_long() -> String {
+    text("date-month-jan-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_feb_short() -> String {
+    text("date-month-feb-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_feb_long() -> String {
+    text("date-month-feb-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_mar_short() -> String {
+    text("date-month-mar-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_mar_long() -> String {
+    text("date-month-mar-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_apr_short() -> String {
+    text("date-month-apr-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_apr_long() -> String {
+    text("date-month-apr-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_may_short() -> String {
+    text("date-month-may-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_may_long() -> String {
+    text("date-month-may-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jun_short() -> String {
+    text("date-month-jun-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jun_long() -> String {
+    text("date-month-jun-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jul_short() -> String {
+    text("date-month-jul-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jul_long() -> String {
+    text("date-month-jul-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_aug_short() -> String {
+    text("date-month-aug-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_aug_long() -> String {
+    text("date-month-aug-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_sep_short() -> String {
+    text("date-month-sep-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_sep_long() -> String {
+    text("date-month-sep-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_oct_short() -> String {
+    text("date-month-oct-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_oct_long() -> String {
+    text("date-month-oct-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_nov_short() -> String {
+    text("date-month-nov-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_nov_long() -> String {
+    text("date-month-nov-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_dec_short() -> String {
+    text("date-month-dec-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_dec_long() -> String {
+    text("date-month-dec-long", &[])
+}
+
+/// Search's Trending heading and sort, for AniList's live trending.
+pub fn trending_today() -> String {
+    text("trending-today", &[])
+}
+
+/// Search's Trending heading and sort, for the last seven days.
+pub fn trending_week() -> String {
+    text("trending-week", &[])
+}
+
+/// Search's Trending heading and sort, for the last thirty days.
+pub fn trending_month() -> String {
+    text("trending-month", &[])
+}
+
+/// One choice of the Trending period menu, where the heading already says Trending.
+pub fn trending_choice_today() -> String {
+    text("trending-choice-today", &[])
+}
+
+/// One choice of the Trending period menu: the last seven days.
+pub fn trending_choice_week() -> String {
+    text("trending-choice-week", &[])
+}
+
+/// One choice of the Trending period menu: the last thirty days.
+pub fn trending_choice_month() -> String {
+    text("trending-choice-month", &[])
+}
+
+/// Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+pub fn trending_failed(period: &str) -> String {
+    text("trending-failed", &[("period", Arg::Text(period))])
+}
+
+/// Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+pub fn trending_updated(age: &str) -> String {
+    text("trending-updated", &[("age", Arg::Text(age))])
+}
+
+/// Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+pub fn surprise_me() -> String {
+    text("surprise-me", &[])
+}
+
+/// The same as a menu bar item, in title case.
+pub fn surprise_me_menu() -> String {
+    text("surprise-me-menu", &[])
+}
+
+/// Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+pub fn surprise_another() -> String {
+    text("surprise-another", &[])
+}
+
+/// Hint of the Surprise me button on the library's Planning list.
+pub fn surprise_hint_planning() -> String {
+    text("surprise-hint-planning", &[])
+}
+
+/// Hint of the Surprise me button in Search.
+pub fn surprise_hint_filters() -> String {
+    text("surprise-hint-filters", &[])
+}
+
+/// Hint of the Another button.
+pub fn surprise_another_hint() -> String {
+    text("surprise-another-hint", &[])
+}
+
+/// Notice when Search's filters match no title to pick from.
+pub fn surprise_empty_filters() -> String {
+    text("surprise-empty-filters", &[])
+}
+
+/// Notice when the Planning list is empty.
+pub fn surprise_empty_planning() -> String {
+    text("surprise-empty-planning", &[])
+}
+
+/// Notice when a pick from Search needs AniList and the device is offline.
+pub fn surprise_offline() -> String {
+    text("surprise-offline", &[])
+}
+
 /// Title of the dialog that adds a media server.
 pub fn servers_add_title() -> String {
     text("servers-add-title", &[])
@@ -12232,6 +13360,11 @@ pub fn settings_group_playback() -> String {
     text("settings-group-playback", &[])
 }
 
+/// Group heading in Playback settings, above the switch that hides chat.
+pub fn settings_group_watch_parties() -> String {
+    text("settings-group-watch-parties", &[])
+}
+
 /// Group heading.
 pub fn settings_group_watching() -> String {
     text("settings-group-watching", &[])
@@ -12367,7 +13500,17 @@ pub fn settings_skip_recap() -> String {
     text("settings-skip-recap", &[])
 }
 
-/// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
+/// Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+pub fn settings_find_skips() -> String {
+    text("settings-find-skips", &[])
+}
+
+/// Line under it.
+pub fn settings_find_skips_detail() -> String {
+    text("settings-find-skips-detail", &[])
+}
+
+/// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
 pub fn settings_ask_was_opening() -> String {
     text("settings-ask-was-opening", &[])
 }
@@ -12387,14 +13530,24 @@ pub fn settings_share_skips_detail() -> String {
     text("settings-share-skips-detail", &[])
 }
 
-/// Settings, Playback: removes every skip time you marked.
+/// Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
 pub fn settings_clear_skips() -> String {
     text("settings-clear-skips", &[])
 }
 
-/// Question that asks before clearing every skip time you marked.
+/// Question that asks before clearing them.
 pub fn settings_clear_skips_confirm() -> String {
     text("settings-clear-skips-confirm", &[])
+}
+
+/// Android's Settings: the title of that row, with the line below.
+pub fn settings_clear_skips_android() -> String {
+    text("settings-clear-skips-android", &[])
+}
+
+/// Line under it.
+pub fn settings_clear_skips_android_detail() -> String {
+    text("settings-clear-skips-android-detail", &[])
 }
 
 /// Row: skip filler.
@@ -14622,6 +15775,1103 @@ pub fn stores_share() -> String {
     text("stores-share", &[])
 }
 
+/// Windows and Linux dialog line while the browser is open for a cloud sign-in.
+pub fn cloud_browser_line(service: &str) -> String {
+    text("cloud-browser-line", &[("service", Arg::Text(service))])
+}
+
+/// Windows and Linux dialog title while the browser is open for a cloud sign-in.
+pub fn cloud_browser_title(service: &str) -> String {
+    text("cloud-browser-title", &[("service", Arg::Text(service))])
+}
+
+/// Word for this device in sentences such as “Turn off sync on this computer”.
+pub fn device_kind_computer() -> String {
+    text("device-kind-computer", &[])
+}
+
+/// Button on the Devices page that opens the box for a code another device shows.
+pub fn devices_enter_code() -> String {
+    text("devices-enter-code", &[])
+}
+
+/// Button on the Devices page that shows the recovery key behind the computer’s own lock.
+pub fn devices_show_key() -> String {
+    text("devices-show-key", &[])
+}
+
+/// Button in the alert that turns sync off on this computer.
+pub fn devices_turn_off_action() -> String {
+    text("devices-turn-off-action", &[])
+}
+
+/// Label of the field for the other device’s address in the Enter a code dialog.
+pub fn pair_address_label() -> String {
+    text("pair-address-label", &[])
+}
+
+/// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pub fn pair_by_address() -> String {
+    text("pair-by-address", &[])
+}
+
+/// Placeholder of the pairing code field.
+pub fn pair_code_placeholder() -> String {
+    text("pair-code-placeholder", &[])
+}
+
+/// Label of the field for a recovery key in the restore dialog.
+pub fn rkey_field_label() -> String {
+    text("rkey-field-label", &[])
+}
+
+/// Label of the user name field for WebDAV and a Nextcloud app password.
+pub fn cloud_user_label() -> String {
+    text("cloud-user-label", &[])
+}
+
+/// Label of the password field for WebDAV and a Nextcloud app password.
+pub fn cloud_password_label() -> String {
+    text("cloud-password-label", &[])
+}
+
+/// Label of the WebDAV server address field.
+pub fn cloud_webdav_address_label() -> String {
+    text("cloud-webdav-address-label", &[])
+}
+
+/// Line under the pairing code while a device is being paired.
+pub fn pair_working_line() -> String {
+    text("pair-working-line", &[])
+}
+
+/// Name for the device whose pairing code did not match, when no name is known yet.
+pub fn pair_other_device() -> String {
+    text("pair-other-device", &[])
+}
+
+/// Note under the Enter a code dialog's fields: the address can be left empty.
+pub fn pair_address_optional() -> String {
+    text("pair-address-optional", &[])
+}
+
+/// Device page footer when the device has no Remote switch.
+pub fn devices_sync_foot() -> String {
+    text("devices-sync-foot", &[])
+}
+
+/// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+pub fn devices_line_remote(line: &str) -> String {
+    text("devices-line-remote", &[("line", Arg::Text(line))])
+}
+
+/// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+pub fn profiles_edit_action() -> String {
+    text("profiles-edit-action", &[])
+}
+
+/// Label of the name field in the add and edit profile dialogs.
+pub fn profiles_name_field() -> String {
+    text("profiles-name-field", &[])
+}
+
+/// Accessible name and tooltip of the menu button on a profile's row.
+pub fn profiles_more_for(name: &str) -> String {
+    text("profiles-more-for", &[("name", Arg::Text(name))])
+}
+
+/// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+pub fn sync_store_err_offline(store: &str, device: &str) -> String {
+    text("sync-store-err-offline", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
+}
+
+/// Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+pub fn sync_store_err_refused(store: &str) -> String {
+    text("sync-store-err-refused", &[("store", Arg::Text(store))])
+}
+
+/// Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+pub fn sync_store_err_not_allowed(store: &str, device: &str) -> String {
+    text("sync-store-err-not-allowed", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
+}
+
+/// Settings row and page title, every platform.
+pub fn devices_title() -> String {
+    text("devices-title", &[])
+}
+
+/// Devices row value while sync is off.
+pub fn devices_row_off() -> String {
+    text("devices-row-off", &[])
+}
+
+/// Devices row value; “Synced 2 min ago”, “Synced just now”.
+pub fn devices_row_synced(ago: &str) -> String {
+    text("devices-row-synced", &[("ago", Arg::Text(ago))])
+}
+
+/// Devices row value with the error glyph.
+pub fn devices_row_error() -> String {
+    text("devices-row-error", &[])
+}
+
+/// Group heading over the name.
+pub fn devices_this_device() -> String {
+    text("devices-this-device", &[])
+}
+
+/// Row for this device’s name.
+pub fn devices_name() -> String {
+    text("devices-name", &[])
+}
+
+/// Group heading while off.
+pub fn sync_group() -> String {
+    text("sync-group", &[])
+}
+
+/// Off state.
+pub fn sync_off_title() -> String {
+    text("sync-off-title", &[])
+}
+
+/// Off state.
+pub fn sync_off_line() -> String {
+    text("sync-off-line", &[])
+}
+
+/// Button; the Mac adds an ellipsis.
+pub fn sync_turn_on() -> String {
+    text("sync-turn-on", &[])
+}
+
+/// Road sheet title.
+pub fn sync_road_title() -> String {
+    text("sync-road-title", &[])
+}
+
+/// Road sheet row.
+pub fn sync_road_nearby() -> String {
+    text("sync-road-nearby", &[])
+}
+
+/// Road sheet row line.
+pub fn sync_road_nearby_line() -> String {
+    text("sync-road-nearby-line", &[])
+}
+
+/// Road sheet row.
+pub fn sync_road_cloud() -> String {
+    text("sync-road-cloud", &[])
+}
+
+/// Road sheet row line. Names no service, since a build may hide some (decision 14).
+pub fn sync_road_cloud_line() -> String {
+    text("sync-road-cloud-line", &[])
+}
+
+/// Road sheet footer.
+pub fn sync_road_later() -> String {
+    text("sync-road-later", &[])
+}
+
+/// Group heading.
+pub fn devices_yours() -> String {
+    text("devices-yours", &[])
+}
+
+/// Empty Your devices.
+pub fn devices_only_this() -> String {
+    text("devices-only-this", &[])
+}
+
+/// Empty Your devices.
+pub fn devices_only_this_line() -> String {
+    text("devices-only-this-line", &[])
+}
+
+/// Row and sheet title.
+pub fn devices_add() -> String {
+    text("devices-add", &[])
+}
+
+/// Device row line past 30 days.
+pub fn devices_not_seen(days: i64) -> String {
+    text("devices-not-seen", &[("days", Arg::Int(days))])
+}
+
+/// A device paired only for Play on TV.
+pub fn devices_remote_only() -> String {
+    text("devices-remote-only", &[])
+}
+
+/// Button on a remote-only TV row.
+pub fn devices_also_sync(device: &str) -> String {
+    text("devices-also-sync", &[("device", Arg::Text(device))])
+}
+
+/// Footer while sync is off.
+pub fn devices_paired_tvs_foot() -> String {
+    text("devices-paired-tvs-foot", &[])
+}
+
+/// Switch on a device.
+pub fn devices_sync_switch() -> String {
+    text("devices-sync-switch", &[])
+}
+
+/// Switch on a TV.
+pub fn devices_remote_switch() -> String {
+    text("devices-remote-switch", &[])
+}
+
+/// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+pub fn devices_switches_foot(kind: &str, device: &str) -> String {
+    text("devices-switches-foot", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device))])
+}
+
+/// Device page, destructive.
+pub fn devices_remove() -> String {
+    text("devices-remove", &[])
+}
+
+/// Alert title.
+pub fn devices_remove_alert(device: &str) -> String {
+    text("devices-remove-alert", &[("device", Arg::Text(device))])
+}
+
+/// Alert message.
+pub fn devices_remove_alert_line(device: &str) -> String {
+    text("devices-remove-alert-line", &[("device", Arg::Text(device))])
+}
+
+/// Last row; “this phone”, “this Mac”.
+pub fn sync_turn_off(kind: &str) -> String {
+    text("sync-turn-off", &[("kind", Arg::Text(kind))])
+}
+
+/// Alert title.
+pub fn sync_turn_off_alert(device: &str) -> String {
+    text("sync-turn-off-alert", &[("device", Arg::Text(device))])
+}
+
+/// Alert message.
+pub fn sync_turn_off_alert_line(kind: &str) -> String {
+    text("sync-turn-off-alert-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Group heading.
+pub fn cloud_group() -> String {
+    text("cloud-group", &[])
+}
+
+/// Group footer.
+pub fn cloud_foot() -> String {
+    text("cloud-foot", &[])
+}
+
+/// Row when only the nearby road is set.
+pub fn cloud_add() -> String {
+    text("cloud-add", &[])
+}
+
+/// Picker title.
+pub fn cloud_pick_title() -> String {
+    text("cloud-pick-title", &[])
+}
+
+/// Picker row line.
+pub fn cloud_google_line() -> String {
+    text("cloud-google-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_nextcloud_line() -> String {
+    text("cloud-nextcloud-line", &[])
+}
+
+/// Picker row line, Apple and Windows.
+pub fn cloud_icloud_line() -> String {
+    text("cloud-icloud-line", &[])
+}
+
+/// Picker group heading.
+pub fn cloud_other() -> String {
+    text("cloud-other", &[])
+}
+
+/// Picker row.
+pub fn cloud_webdav() -> String {
+    text("cloud-webdav", &[])
+}
+
+/// Picker row line.
+pub fn cloud_webdav_line() -> String {
+    text("cloud-webdav-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_folder_line() -> String {
+    text("cloud-folder-line", &[])
+}
+
+/// Picker footer.
+pub fn cloud_pick_foot() -> String {
+    text("cloud-pick-foot", &[])
+}
+
+/// Row line while the first write runs.
+pub fn cloud_setting_up() -> String {
+    text("cloud-setting-up", &[])
+}
+
+/// Field label.
+pub fn cloud_nextcloud_address() -> String {
+    text("cloud-nextcloud-address", &[])
+}
+
+/// Field note.
+pub fn cloud_nextcloud_address_note() -> String {
+    text("cloud-nextcloud-address-note", &[])
+}
+
+/// Login flow wait.
+pub fn cloud_nextcloud_wait_title(host: &str) -> String {
+    text("cloud-nextcloud-wait-title", &[("host", Arg::Text(host))])
+}
+
+/// Login flow wait.
+pub fn cloud_nextcloud_wait_line() -> String {
+    text("cloud-nextcloud-wait-line", &[])
+}
+
+/// Wait row.
+pub fn cloud_waiting(service: &str) -> String {
+    text("cloud-waiting", &[("service", Arg::Text(service))])
+}
+
+/// Button.
+pub fn cloud_open_again() -> String {
+    text("cloud-open-again", &[])
+}
+
+/// Text button.
+pub fn cloud_app_password() -> String {
+    text("cloud-app-password", &[])
+}
+
+/// Button.
+pub fn cloud_connect() -> String {
+    text("cloud-connect", &[])
+}
+
+/// Error.
+pub fn cloud_err_offline(service: &str) -> String {
+    text("cloud-err-offline", &[("service", Arg::Text(service))])
+}
+
+/// Inline error.
+pub fn cloud_err_no_server(host: &str) -> String {
+    text("cloud-err-no-server", &[("host", Arg::Text(host))])
+}
+
+/// Inline error.
+pub fn cloud_err_app_password() -> String {
+    text("cloud-err-app-password", &[])
+}
+
+/// Inline error.
+pub fn cloud_err_webdav() -> String {
+    text("cloud-err-webdav", &[])
+}
+
+/// Error, with Open the page again.
+pub fn cloud_err_timeout() -> String {
+    text("cloud-err-timeout", &[])
+}
+
+/// Error.
+pub fn cloud_err_other_group() -> String {
+    text("cloud-err-other-group", &[])
+}
+
+/// Status error, with Sign in again.
+pub fn cloud_err_signed_out(service: &str, kind: &str) -> String {
+    text("cloud-err-signed-out", &[("service", Arg::Text(service)), ("kind", Arg::Text(kind))])
+}
+
+/// Status error.
+pub fn cloud_err_full(service: &str) -> String {
+    text("cloud-err-full", &[("service", Arg::Text(service))])
+}
+
+/// Status error, with Choose folder.
+pub fn cloud_err_folder_gone() -> String {
+    text("cloud-err-folder-gone", &[])
+}
+
+/// Status error title.
+pub fn cloud_err_title(service: &str) -> String {
+    text("cloud-err-title", &[("service", Arg::Text(service))])
+}
+
+/// Picker row line.
+pub fn cloud_dropbox_line() -> String {
+    text("cloud-dropbox-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_onedrive_line() -> String {
+    text("cloud-onedrive-line", &[])
+}
+
+/// Cloud group button.
+pub fn cloud_sync_now() -> String {
+    text("cloud-sync-now", &[])
+}
+
+/// Cloud group button; at once, no question, except on the TV.
+pub fn cloud_sign_out() -> String {
+    text("cloud-sign-out", &[])
+}
+
+/// Cloud group button after signing out.
+pub fn cloud_sign_in() -> String {
+    text("cloud-sign-in", &[])
+}
+
+/// Cloud row after Sign out; hollow haze dot.
+pub fn cloud_signed_out_line(kind: &str) -> String {
+    text("cloud-signed-out-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Picker row line after `SignInDenied`.
+pub fn cloud_err_denied(service: &str) -> String {
+    text("cloud-err-denied", &[("service", Arg::Text(service))])
+}
+
+/// TV picker footer (decision 17).
+pub fn tv_cloud_pick_foot() -> String {
+    text("tv-cloud-pick-foot", &[])
+}
+
+/// TV picker row line for Dropbox.
+pub fn tv_cloud_dropbox_line() -> String {
+    text("tv-cloud-dropbox-line", &[])
+}
+
+/// TV, Dropbox.
+pub fn tv_cloud_needs_phone_title() -> String {
+    text("tv-cloud-needs-phone-title", &[])
+}
+
+/// TV, Dropbox, a paired phone has it.
+pub fn tv_cloud_needs_phone_has(device: &str) -> String {
+    text("tv-cloud-needs-phone-has", &[("device", Arg::Text(device))])
+}
+
+/// TV amber button; also for Nextcloud and WebDAV.
+pub fn tv_use_phone_signin(device: &str) -> String {
+    text("tv-use-phone-signin", &[("device", Arg::Text(device))])
+}
+
+/// TV, Dropbox, no phone has it.
+pub fn tv_cloud_needs_phone_none() -> String {
+    text("tv-cloud-needs-phone-none", &[])
+}
+
+/// TV code screen after the poll succeeds.
+pub fn tv_cloud_finishing() -> String {
+    text("tv-cloud-finishing", &[])
+}
+
+/// TV cloud row.
+pub fn tv_cloud_revoked_line(service: &str) -> String {
+    text("tv-cloud-revoked-line", &[("service", Arg::Text(service))])
+}
+
+/// TV cloud row.
+pub fn tv_cloud_signed_out_line() -> String {
+    text("tv-cloud-signed-out-line", &[])
+}
+
+/// TV ConfirmDialog.
+pub fn tv_cloud_sign_out_title(service: &str) -> String {
+    text("tv-cloud-sign-out-title", &[("service", Arg::Text(service))])
+}
+
+/// TV ConfirmDialog, with Cancel focused and Sign out.
+pub fn tv_cloud_sign_out_line(service: &str) -> String {
+    text("tv-cloud-sign-out-line", &[("service", Arg::Text(service))])
+}
+
+/// Status line while offline.
+pub fn cloud_offline(kind: &str) -> String {
+    text("cloud-offline", &[("kind", Arg::Text(kind))])
+}
+
+/// TV device flow.
+pub fn tv_google_title() -> String {
+    text("tv-google-title", &[])
+}
+
+/// TV device flow.
+pub fn tv_qr_open_page() -> String {
+    text("tv-qr-open-page", &[])
+}
+
+/// TV Nextcloud.
+pub fn tv_nextcloud_line() -> String {
+    text("tv-nextcloud-line", &[])
+}
+
+/// Sheet title.
+pub fn rkey_title() -> String {
+    text("rkey-title", &[])
+}
+
+/// Sheet line.
+pub fn rkey_line() -> String {
+    text("rkey-line", &[])
+}
+
+/// Button.
+pub fn rkey_copy() -> String {
+    text("rkey-copy", &[])
+}
+
+/// Text button.
+pub fn rkey_qr() -> String {
+    text("rkey-qr", &[])
+}
+
+/// Sheet footnote.
+pub fn rkey_again(kind: &str) -> String {
+    text("rkey-again", &[("kind", Arg::Text(kind))])
+}
+
+/// Devices row.
+pub fn rkey_row() -> String {
+    text("rkey-row", &[])
+}
+
+/// Devices row value.
+pub fn rkey_made(date: &str) -> String {
+    text("rkey-made", &[("date", Arg::Text(date))])
+}
+
+/// Row.
+pub fn rkey_new() -> String {
+    text("rkey-new", &[])
+}
+
+/// Footer.
+pub fn rkey_new_foot() -> String {
+    text("rkey-new-foot", &[])
+}
+
+/// Restore.
+pub fn rkey_enter_title() -> String {
+    text("rkey-enter-title", &[])
+}
+
+/// Restore.
+pub fn rkey_enter_line(service: &str, count: i64) -> String {
+    text("rkey-enter-line", &[("service", Arg::Text(service)), ("count", Arg::Int(count))])
+}
+
+/// Field note.
+pub fn rkey_enter_note() -> String {
+    text("rkey-enter-note", &[])
+}
+
+/// Inline error.
+pub fn rkey_wrong() -> String {
+    text("rkey-wrong", &[])
+}
+
+/// Button.
+pub fn rkey_restore() -> String {
+    text("rkey-restore", &[])
+}
+
+/// Add a device.
+pub fn pair_enter_line() -> String {
+    text("pair-enter-line", &[])
+}
+
+/// Button, phones.
+pub fn pair_scan() -> String {
+    text("pair-scan", &[])
+}
+
+/// Note.
+pub fn pair_same_wifi() -> String {
+    text("pair-same-wifi", &[])
+}
+
+/// Button.
+pub fn pair_button() -> String {
+    text("pair-button", &[])
+}
+
+/// Text button.
+pub fn pair_show_instead() -> String {
+    text("pair-show-instead", &[])
+}
+
+/// Code screen.
+pub fn pair_show_title() -> String {
+    text("pair-show-title", &[])
+}
+
+/// Code screen.
+pub fn pair_show_scan() -> String {
+    text("pair-show-scan", &[])
+}
+
+/// Code screen.
+pub fn pair_good_for(left: &str) -> String {
+    text("pair-good-for", &[("left", Arg::Text(left))])
+}
+
+/// TV code screen.
+pub fn pair_tv_line() -> String {
+    text("pair-tv-line", &[])
+}
+
+/// Success.
+pub fn pair_ok(device: &str) -> String {
+    text("pair-ok", &[("device", Arg::Text(device))])
+}
+
+/// Success.
+pub fn pair_ok_line() -> String {
+    text("pair-ok-line", &[])
+}
+
+/// Success switch.
+pub fn pair_copy_signins(device: &str) -> String {
+    text("pair-copy-signins", &[("device", Arg::Text(device))])
+}
+
+/// Success switch line.
+pub fn pair_copy_signins_line(trackers: &str) -> String {
+    text("pair-copy-signins-line", &[("trackers", Arg::Text(trackers))])
+}
+
+/// Error.
+pub fn pair_err_code(device: &str) -> String {
+    text("pair-err-code", &[("device", Arg::Text(device))])
+}
+
+/// Error.
+pub fn pair_err_not_found() -> String {
+    text("pair-err-not-found", &[])
+}
+
+/// Error on the showing side.
+pub fn pair_err_expired() -> String {
+    text("pair-err-expired", &[])
+}
+
+/// Profile question.
+pub fn pair_which_profile(device: &str) -> String {
+    text("pair-which-profile", &[("device", Arg::Text(device))])
+}
+
+/// Profile question.
+pub fn pair_which_profile_line(kind: &str, device: &str) -> String {
+    text("pair-which-profile-line", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device))])
+}
+
+/// Footer.
+pub fn pair_also_sync_foot(device: &str) -> String {
+    text("pair-also-sync-foot", &[("device", Arg::Text(device))])
+}
+
+/// Continue, for a day.
+pub fn continue_from_device(n: i64, time: &str, device: &str) -> String {
+    text("continue-from-device", &[("n", Arg::Int(n)), ("time", Arg::Text(time)), ("device", Arg::Text(device))])
+}
+
+/// Player, 6 s, with Start over.
+pub fn player_resumed_from(time: &str, device: &str) -> String {
+    text("player-resumed-from", &[("time", Arg::Text(time)), ("device", Arg::Text(device))])
+}
+
+/// Row line, Mac toolbar status.
+pub fn sync_syncing() -> String {
+    text("sync-syncing", &[])
+}
+
+/// Mac jobs popover.
+pub fn sync_syncing_with(device: &str) -> String {
+    text("sync-syncing-with", &[("device", Arg::Text(device))])
+}
+
+/// Device page group.
+pub fn sync_notes() -> String {
+    text("sync-notes", &[])
+}
+
+/// Sync note.
+pub fn sync_note_kept_watched(n: i64, title: &str, other: &str, device: &str) -> String {
+    text("sync-note-kept-watched", &[("n", Arg::Int(n)), ("title", Arg::Text(title)), ("other", Arg::Text(other)), ("device", Arg::Text(device))])
+}
+
+/// Sync note action.
+pub fn sync_note_undo() -> String {
+    text("sync-note-undo", &[])
+}
+
+/// Footer.
+pub fn sync_notes_foot() -> String {
+    text("sync-notes-foot", &[])
+}
+
+/// Settings row and page.
+pub fn profiles_title() -> String {
+    text("profiles-title", &[])
+}
+
+/// Profiles row value with one profile.
+pub fn profiles_only_you() -> String {
+    text("profiles-only-you", &[])
+}
+
+/// Profiles page with one.
+pub fn profiles_one_foot() -> String {
+    text("profiles-one-foot", &[])
+}
+
+/// Row, sheet title, picker tile.
+pub fn profiles_add() -> String {
+    text("profiles-add", &[])
+}
+
+/// Sheet line.
+pub fn profiles_add_line() -> String {
+    text("profiles-add-line", &[])
+}
+
+/// Field label.
+pub fn profiles_new() -> String {
+    text("profiles-new", &[])
+}
+
+/// Field label.
+pub fn profiles_yours() -> String {
+    text("profiles-yours", &[])
+}
+
+/// Field note when signed in.
+pub fn profiles_yours_note() -> String {
+    text("profiles-yours-note", &[])
+}
+
+/// Switch.
+pub fn profiles_kids() -> String {
+    text("profiles-kids", &[])
+}
+
+/// Switch footer.
+pub fn profiles_kids_line() -> String {
+    text("profiles-kids-line", &[])
+}
+
+/// Settings foot in a kids profile.
+pub fn profiles_kids_hidden() -> String {
+    text("profiles-kids-hidden", &[])
+}
+
+/// Line under a kids profile.
+pub fn profiles_kids_tag() -> String {
+    text("profiles-kids-tag", &[])
+}
+
+/// Button.
+pub fn profiles_add_button() -> String {
+    text("profiles-add-button", &[])
+}
+
+/// Profiles page footer.
+pub fn profiles_shared_foot() -> String {
+    text("profiles-shared-foot", &[])
+}
+
+/// Profile page row.
+pub fn profiles_syncs_with() -> String {
+    text("profiles-syncs-with", &[])
+}
+
+/// Profile page, destructive.
+pub fn profiles_delete() -> String {
+    text("profiles-delete", &[])
+}
+
+/// Alert title.
+pub fn profiles_delete_alert(name: &str) -> String {
+    text("profiles-delete-alert", &[("name", Arg::Text(name))])
+}
+
+/// Alert message.
+pub fn profiles_delete_alert_line(name: &str) -> String {
+    text("profiles-delete-alert-line", &[("name", Arg::Text(name))])
+}
+
+/// TV, and iPad when asked.
+pub fn profiles_picker() -> String {
+    text("profiles-picker", &[])
+}
+
+/// iPad switch.
+pub fn profiles_ask_at_launch() -> String {
+    text("profiles-ask-at-launch", &[])
+}
+
+/// iPad footer.
+pub fn profiles_ask_foot() -> String {
+    text("profiles-ask-foot", &[])
+}
+
+/// TV Settings.
+pub fn profiles_switch() -> String {
+    text("profiles-switch", &[])
+}
+
+/// Account sheet and menus.
+pub fn profiles_manage() -> String {
+    text("profiles-manage", &[])
+}
+
+/// Welcome, text button; TV says “Set up from your phone”.
+pub fn first_setup_other() -> String {
+    text("first-setup-other", &[])
+}
+
+/// Code screen from first launch.
+pub fn first_setup_line() -> String {
+    text("first-setup-line", &[])
+}
+
+/// Text button.
+pub fn first_restore() -> String {
+    text("first-restore", &[])
+}
+
+/// Success from first launch.
+pub fn first_ok_line() -> String {
+    text("first-ok-line", &[])
+}
+
+/// Success switch.
+pub fn first_join_store(store: &str) -> String {
+    text("first-join-store", &[("store", Arg::Text(store))])
+}
+
+/// Success switch line.
+pub fn first_join_store_line(device: &str, kind: &str) -> String {
+    text("first-join-store-line", &[("device", Arg::Text(device)), ("kind", Arg::Text(kind))])
+}
+
+/// Picker row on a phone or computer.
+pub fn cloud_folder(kind: &str) -> String {
+    text("cloud-folder", &[("kind", Arg::Text(kind))])
+}
+
+/// Field note under the app password, on Android.
+pub fn cloud_app_password_note(kind: &str) -> String {
+    text("cloud-app-password-note", &[("kind", Arg::Text(kind))])
+}
+
+/// Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+pub fn devices_tvs_for_play(count: i64) -> String {
+    text("devices-tvs-for-play", &[("count", Arg::Int(count))])
+}
+
+/// Line under a TV paired for Play on TV today.
+pub fn devices_paired_today() -> String {
+    text("devices-paired-today", &[])
+}
+
+/// Line under Add a device on the TV's Devices page.
+pub fn tv_devices_add_line() -> String {
+    text("tv-devices-add-line", &[])
+}
+
+/// TV Profiles page with one profile.
+pub fn tv_profiles_only_you() -> String {
+    text("tv-profiles-only-you", &[])
+}
+
+/// TV Settings, Profiles: the row that opens the picker.
+pub fn tv_profiles_opens_picker() -> String {
+    text("tv-profiles-opens-picker", &[])
+}
+
+/// TV Profiles page heading over the profiles.
+pub fn tv_profiles_on_this_tv() -> String {
+    text("tv-profiles-on-this-tv", &[])
+}
+
+/// Android recovery key sheet, third button.
+pub fn rkey_save_file() -> String {
+    text("rkey-save-file", &[])
+}
+
+/// Android recovery key sheet, button that shows the key as a code.
+pub fn rkey_qr_short() -> String {
+    text("rkey-qr-short", &[])
+}
+
+/// Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pub fn pair_show_code() -> String {
+    text("pair-show-code", &[])
+}
+
+/// Cloud row button when the service signed Kaeri out.
+pub fn cloud_sign_in_again() -> String {
+    text("cloud-sign-in-again", &[])
+}
+
+/// Cloud row button when the folder can't be opened.
+pub fn cloud_choose_folder() -> String {
+    text("cloud-choose-folder", &[])
+}
+
+/// Spoken label of a profile's avatar on Home.
+pub fn profiles_avatar_desc(name: &str) -> String {
+    text("profiles-avatar-desc", &[("name", Arg::Text(name))])
+}
+
+/// Heading over the pairing code the other device shows, over the field.
+pub fn pair_code_field() -> String {
+    text("pair-code-field", &[])
+}
+
+pub fn device_kind_phone() -> String {
+    text("device-kind-phone", &[])
+}
+
+pub fn device_kind_tablet() -> String {
+    text("device-kind-tablet", &[])
+}
+
+pub fn device_kind_tv() -> String {
+    text("device-kind-tv", &[])
+}
+
+/// TV welcome, text button.
+pub fn first_setup_phone() -> String {
+    text("first-setup-phone", &[])
+}
+
+/// Error naming a device that is not known by name.
+pub fn devices_other_device() -> String {
+    text("devices-other-device", &[])
+}
+
+/// Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+pub fn cloud_sheet_line(service: &str) -> String {
+    text("cloud-sheet-line", &[("service", Arg::Text(service))])
+}
+
+/// Sheet or dialog title after the browser came back with access allowed.
+pub fn cloud_connecting(service: &str) -> String {
+    text("cloud-connecting", &[("service", Arg::Text(service))])
+}
+
+/// Status line beside the indicator while connecting.
+pub fn cloud_connecting_line() -> String {
+    text("cloud-connecting-line", &[])
+}
+
+/// Status line under Setting up the folder, whose title is cloud-setting-up.
+pub fn cloud_setting_up_line(service: &str) -> String {
+    text("cloud-setting-up-line", &[("service", Arg::Text(service))])
+}
+
+/// Error title in the sign-in sheet or dialog.
+pub fn cloud_err_signin_title(service: &str) -> String {
+    text("cloud-err-signin-title", &[("service", Arg::Text(service))])
+}
+
+/// Error title when the sign-in worked and the folder could not be set up.
+pub fn cloud_err_setup_title() -> String {
+    text("cloud-err-setup-title", &[])
+}
+
+/// Error line beside Try again, after access was refused on the service's page.
+pub fn cloud_err_denied_short(service: &str) -> String {
+    text("cloud-err-denied-short", &[("service", Arg::Text(service))])
+}
+
+/// Error line for any other failure during the sign-in; the details go to Messages.
+pub fn cloud_err_signin_other(service: &str) -> String {
+    text("cloud-err-signin-other", &[("service", Arg::Text(service))])
+}
+
+/// Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+pub fn cloud_err_setup_other(service: &str) -> String {
+    text("cloud-err-setup-other", &[("service", Arg::Text(service))])
+}
+
+/// More menu item, and a row on phones; the Mac adds an ellipsis.
+pub fn cloud_use_another() -> String {
+    text("cloud-use-another", &[])
+}
+
+/// More menu item in red, and a button in the TV's dialog.
+pub fn cloud_remove() -> String {
+    text("cloud-remove", &[])
+}
+
+/// Confirmation title before removing the cloud folder.
+pub fn cloud_remove_title(service: &str) -> String {
+    text("cloud-remove-title", &[("service", Arg::Text(service))])
+}
+
+/// Confirmation line before removing the cloud folder.
+pub fn cloud_remove_line(kind: &str, service: &str) -> String {
+    text("cloud-remove-line", &[("kind", Arg::Text(kind)), ("service", Arg::Text(service))])
+}
+
+/// Destructive button in the remove confirmation.
+pub fn cloud_remove_action() -> String {
+    text("cloud-remove-action", &[])
+}
+
+/// Accessibility label of the More button on the cloud folder row.
+pub fn cloud_more(service: &str) -> String {
+    text("cloud-more", &[("service", Arg::Text(service))])
+}
+
+/// Picker row line for the service in use, under Use another service.
+pub fn cloud_in_use() -> String {
+    text("cloud-in-use", &[])
+}
+
+/// Picker line under Use another service.
+pub fn cloud_switch_foot(service: &str) -> String {
+    text("cloud-switch-foot", &[("service", Arg::Text(service))])
+}
+
+/// Footer under the two ways in while sync is off.
+pub fn sync_start_foot() -> String {
+    text("sync-start-foot", &[])
+}
+
+/// Aside on the Devices page on the Mac and iPad.
+pub fn devices_aside(kind: &str) -> String {
+    text("devices-aside", &[("kind", Arg::Text(kind))])
+}
+
+/// TV Devices footer while sync is off, after devices-sync-foot.
+pub fn tv_sync_start_foot() -> String {
+    text("tv-sync-start-foot", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])
@@ -14805,6 +17055,106 @@ pub fn episode_row_airs(when: &str) -> String {
 /// Accessibility label of an episode's still while spoiler protection hides it.
 pub fn episode_spoiler_hidden() -> String {
     text("episode-spoiler-hidden", &[])
+}
+
+/// Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+pub fn episode_synopsis_hidden() -> String {
+    text("episode-synopsis-hidden", &[])
+}
+
+/// Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+pub fn episode_synopsis_show() -> String {
+    text("episode-synopsis-show", &[])
+}
+
+/// Screen reader hint of that action.
+pub fn episode_synopsis_show_hint() -> String {
+    text("episode-synopsis-show-hint", &[])
+}
+
+/// Facts line of an episode with a length and an air date. The date is already formatted.
+pub fn episode_facts(minutes: i64, date: &str) -> String {
+    text("episode-facts", &[("minutes", Arg::Int(minutes)), ("date", Arg::Text(date))])
+}
+
+/// Facts line of an episode with a length only.
+pub fn episode_facts_length(minutes: i64) -> String {
+    text("episode-facts-length", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Facts line of an episode that is part-watched.
+pub fn episode_facts_left(minutes: i64) -> String {
+    text("episode-facts-left", &[("minutes", Arg::Int(minutes))])
+}
+
+/// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+pub fn episode_protection_line(episode: i64) -> String {
+    text("episode-protection-line", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_line_short(episode: i64) -> String {
+    text("episode-protection-line-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Label of an episode range of a long series, in the range menu.
+pub fn episode_range(from: i64, to: i64) -> String {
+    text("episode-range", &[("from", Arg::Int(from)), ("to", Arg::Int(to))])
+}
+
+/// Label of the control that picks an episode range.
+pub fn episode_range_label() -> String {
+    text("episode-range-label", &[])
+}
+
+/// One line that stands for the watched episodes at the top of a range. Opening it shows them.
+pub fn episode_fold(count: i64) -> String {
+    text("episode-fold", &[("count", Arg::Int(count))])
+}
+
+/// An episode's number in a facts line on phones and in narrow desktop windows.
+pub fn episode_short(episode: i64) -> String {
+    text("episode-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Part of an episode's facts line: when it aired. The date is already formatted.
+pub fn episode_aired(date: &str) -> String {
+    text("episode-aired", &[("date", Arg::Text(date))])
+}
+
+/// Two parts of an episode's facts line, set one after the other.
+pub fn episode_facts_join(first: &str, second: &str) -> String {
+    text("episode-facts-join", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Button in the line where spoiler protection starts: shows what comes after.
+pub fn episode_protection_show() -> String {
+    text("episode-protection-show", &[])
+}
+
+/// Button in that line once the rows after it are shown: hides them again.
+pub fn episode_protection_hide() -> String {
+    text("episode-protection-hide", &[])
+}
+
+/// The line where spoiler protection starts, once the rows after it are shown.
+pub fn episode_protection_shown(episode: i64) -> String {
+    text("episode-protection-shown", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_shown_short(episode: i64) -> String {
+    text("episode-protection-shown-short", &[("episode", Arg::Int(episode))])
+}
+
+/// An episode range in the range menu: the first and the last episode.
+pub fn episode_range_short(from: &str, to: &str) -> String {
+    text("episode-range-short", &[("from", Arg::Text(from)), ("to", Arg::Text(to))])
+}
+
+/// An item of the range menu: the range, then Watched or Not out yet.
+pub fn episode_range_item(range: &str, state: &str) -> String {
+    text("episode-range-item", &[("range", Arg::Text(range)), ("state", Arg::Text(state))])
 }
 
 /// Accessibility label of the button that opens an episode's menu.
@@ -15000,6 +17350,41 @@ pub fn title_fact_tba() -> String {
 /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 pub fn more_following_line(status: &str, score: i64) -> String {
     text("more-following-line", &[("status", Arg::Text(status)), ("score", Arg::Int(score))])
+}
+
+/// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+pub fn episode_go_to() -> String {
+    text("episode-go-to", &[])
+}
+
+/// Title of the Go to episode field.
+pub fn episode_go_to_title() -> String {
+    text("episode-go-to-title", &[])
+}
+
+/// Button of the Go to episode field that goes to the number typed.
+pub fn episode_go_to_go() -> String {
+    text("episode-go-to-go", &[])
+}
+
+/// Placeholder of the Go to episode field: the first and last episode of the show.
+pub fn episode_go_to_hint(first: i64, last: i64) -> String {
+    text("episode-go-to-hint", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+}
+
+/// Accessibility label of the Go to episode field.
+pub fn episode_go_to_label(first: i64, last: i64) -> String {
+    text("episode-go-to-label", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+}
+
+/// Shown when the number typed is not an episode of the show.
+pub fn episode_go_to_none(number: i64, last: i64) -> String {
+    text("episode-go-to-none", &[("number", Arg::Int(number)), ("last", Arg::Int(last))])
+}
+
+/// Shown when the number typed is an episode with no date that has not come out.
+pub fn episode_go_to_not_out(number: i64, latest: i64) -> String {
+    text("episode-go-to-not-out", &[("number", Arg::Int(number)), ("latest", Arg::Int(latest))])
 }
 
 /// Title of the settings group and the screen.
@@ -15995,6 +18380,11 @@ pub fn tv_cast_volume_on_tv() -> String {
 /// Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 pub fn tv_cast_up_next_in(seconds: i64) -> String {
     text("tv-cast-up-next-in", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Line under the paired TVs.
+pub fn tv_forget_note() -> String {
+    text("tv-forget-note", &[])
 }
 
 /// Heading of the update row in settings and about.

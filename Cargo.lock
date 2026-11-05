@@ -2383,7 +2383,7 @@ dependencies = [
 
 [[package]]
 name = "i18n-tool"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2897,7 +2897,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -2934,8 +2934,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaeri-audio-tap"
+version = "0.3.0"
+
+[[package]]
 name = "kaeri-cast"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -2953,7 +2957,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-core"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "directories",
@@ -2969,7 +2973,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-discord"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "serde_json",
  "tempfile",
@@ -2979,15 +2983,18 @@ dependencies = [
 
 [[package]]
 name = "kaeri-engine"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "futures",
+ "hex",
  "image",
  "jiff",
+ "kaeri-audio-tap",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",
+ "kaeri-i18n",
  "kaeri-jellyfin",
  "kaeri-meta",
  "kaeri-model",
@@ -3001,6 +3008,7 @@ dependencies = [
  "kaeri-remote",
  "kaeri-store",
  "kaeri-store-server",
+ "kaeri-sync",
  "kaeri-testkit",
  "kaeri-track",
  "open",
@@ -3017,11 +3025,12 @@ dependencies = [
 
 [[package]]
 name = "kaeri-ffi"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "futures",
  "jiff",
+ "kaeri-audio-tap",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-engine",
@@ -3048,7 +3057,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-i18n"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "fluent-bundle",
  "unic-langid",
@@ -3056,7 +3065,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-jellyfin"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -3076,7 +3085,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-meta"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "graphql-parser",
  "kaeri-core",
@@ -3093,7 +3102,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-model"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "kaeri-core",
  "kaeri-i18n",
@@ -3105,10 +3114,12 @@ dependencies = [
 
 [[package]]
 name = "kaeri-mpv-host"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "find-msvc-tools",
+ "kaeri-audio-tap",
  "kaeri-model",
+ "libc",
  "pkg-config",
  "serde_json",
  "tempfile",
@@ -3117,7 +3128,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-net"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "kaeri-core",
  "reqwest 0.13.1",
@@ -3129,7 +3140,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-party"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "rustls",
  "serde",
@@ -3143,16 +3154,17 @@ dependencies = [
 
 [[package]]
 name = "kaeri-playback"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "kaeri-core",
+ "rusty-chromaprint",
  "serde",
  "serde_json",
 ]
 
 [[package]]
 name = "kaeri-player"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -3170,7 +3182,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3192,7 +3204,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin-store"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3219,7 +3231,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-providers"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -3238,7 +3250,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-remote"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "base64 0.23.1",
  "hex",
@@ -3258,7 +3270,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "kaeri-core",
  "rusqlite",
@@ -3271,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-core"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3288,7 +3300,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-server"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -3303,7 +3315,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-wasm"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "js-sys",
@@ -3314,8 +3326,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaeri-sync"
+version = "0.3.0"
+dependencies = [
+ "async-trait",
+ "base64 0.23.1",
+ "curve25519-dalek",
+ "hex",
+ "kaeri-core",
+ "kaeri-remote",
+ "kaeri-store",
+ "reqwest 0.13.1",
+ "ring",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-rustls",
+ "tracing",
+]
+
+[[package]]
 name = "kaeri-testkit"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "jiff",
  "kaeri-core",
@@ -3330,7 +3365,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-track"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "http",
@@ -3352,7 +3387,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-tui"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "crossterm",
@@ -4506,6 +4541,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "primal-check"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc0d895b311e3af9902528fbb8f928688abbd95872819320517cc24ca6b2bd08"
+dependencies = [
+ "num-integer",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4938,6 +4982,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "realfft"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "538895ccf2006b473aafbe8d72770e21038961ab67aae34f3c577485fc703a7d"
+dependencies = [
+ "rustfft",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5176,6 +5229,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rubato"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5258099699851cfd0082aeb645feb9c084d9a5e1f1b8d5372086b989fc5e56a1"
+dependencies = [
+ "num-complex 0.4.6",
+ "num-integer",
+ "num-traits",
+ "realfft",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.40.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5211,6 +5276,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "rustfft"
+version = "6.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21db5f9893e91f41798c88680037dba611ca6674703c1a18601b01a72c8adb89"
+dependencies = [
+ "num-complex 0.4.6",
+ "num-integer",
+ "num-traits",
+ "primal-check",
+ "strength_reduce",
+ "transpose",
 ]
 
 [[package]]
@@ -5331,6 +5410,16 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
+
+[[package]]
+name = "rusty-chromaprint"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59e4234523e38d9c12201955f8216e1a60313e64c5077f4e1cf49b0db77bd7e8"
+dependencies = [
+ "rubato",
+ "rustfft",
+]
 
 [[package]]
 name = "ryu"
@@ -5764,6 +5853,12 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "strength_reduce"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe895eb47f22e2ddd4dabc02bce419d2e643c8e3b585c78158b349195bc24d82"
 
 [[package]]
 name = "stringprep"
@@ -6452,6 +6547,16 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
+]
+
+[[package]]
+name = "transpose"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ad61aed86bc3faea4300c7aee358b4c6d0c8d6ccc36524c96e4c92ccf26e77e"
+dependencies = [
+ "num-integer",
+ "strength_reduce",
 ]
 
 [[package]]

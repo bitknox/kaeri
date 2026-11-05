@@ -182,3 +182,47 @@ party-in-the-room = Im Raum
 party-here-count = { $count } da
 together-recent-note = Die letzten zehn, auf diesem { -device } gespeichert
 party-pick-continue = { -proceed-cap }
+party-chat-field = Etwas sagen
+party-chat-send = Senden
+party-chat-title = Chat
+party-chat-wait = { $seconds } s warten
+party-chat-wait-spoken = { $seconds ->
+    [one] Eine Sekunde warten
+   *[other] { $seconds } Sekunden warten
+ }
+party-chat-more = { $count } weitere im Chat
+party-chat-off = Der Server dieses Raums hat den Chat ausgeschaltet
+party-chat-privacy = Nachrichten laufen über den Server des Raums. { -app-name } speichert keine.
+party-chat-hidden = Chat ist ausgeblendet
+party-chat-hidden-line = „Chat ausblenden“ ist in den Einstellungen unter Wiedergabe an.
+party-chat-show = Chat zeigen
+settings-hide-chat = Chat in { -watch-party-pl } ausblenden
+settings-hide-chat-line = Zeilen, Reaktionen und ihre Markierungen auf der Zeitleiste bleiben vom Video fern, und das Eingabefeld entfällt. Die Personenliste zeigt trotzdem, wer im Raum ist.
+party-mute = { $name } stummschalten
+party-unmute = { $name } wieder laut schalten
+party-unmute-short = Aufheben
+party-member-muted = Stumm
+party-muted-line = { $name } ist stummgeschaltet
+party-chat-not-sent = Nicht gesendet
+party-chat-retry = Erneut senden
+party-react = Reagieren
+party-react-laugh = Lachen
+party-react-gasp = Staunen
+party-react-clap = Klatschen
+party-react-cry = Weinen
+party-reacted-laugh = { $name }: gelacht
+party-reacted-gasp = { $name }: gestaunt
+party-reacted-clap = { $name }: geklatscht
+party-reacted-cry = { $name }: geweint
+party-reacted-at = { $line } bei { $time }
+party-names-two = { $first } und { $second }
+party-names-three = { $first }, { $second } und { $third }
+party-names-others = { $first }, { $second } und { $count } weitere
+party-chat-you = Du
+party-sends-as = Sendet als { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } sagt { $message }
+party-chat-left = { $count ->
+    [one] { $count } Zeichen übrig
+   *[other] { $count } Zeichen übrig
+ }

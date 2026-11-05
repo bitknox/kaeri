@@ -176,6 +176,7 @@ async fn main() {
             auto_skip: config.playback.skip_opening,
             auto_skip_recap: config.playback.skip_recap_auto,
             ask_was_opening: config.playback.ask_was_opening,
+            find_skip_times: false,
             share_skip_times: config.playback.share_skip_times,
             mark_chapters: config.playback.mark_chapters,
             skip_button: config.playback.skip_button,
@@ -201,6 +202,8 @@ async fn main() {
             up_next_countdown: 10,
             mpv_options: Vec::new(),
             untracked: false,
+            swarm: Default::default(),
+            begin: Default::default(),
         };
         kaeri_engine::playback::play(
             vec![stream],

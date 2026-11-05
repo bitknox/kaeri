@@ -24,18 +24,31 @@ public struct MacPlayerView: View {
     @State private var height: CGFloat = 0
     /// How the main window looked before the player took it over, to give it back.
     @State private var saved: SavedWindow?
-    /// Full screen was the player's doing, and ends with it.
-    @State private var enteredFullScreen = false
+    /// On the way back to browsing: out of the player's full screen first, before the player
+    /// shrinks into its banner.
+    @State private var leavingFullScreen = false
     /// Grown to the window from the banner; false while it is the banner's size.
     @State private var grown = false
+    /// How far below the top the top bar starts: in full screen, under the strip where macOS
+    /// keeps the title bar to slide in with the menu bar (`revealStrip`).
+    @State private var topInset: CGFloat = 0
     /// The top bar's control under the pointer, as the title bar strip says it: where the
     /// controls' own hover cannot see it.
     @State private var pointed: String?
+    /// The episode under the pointer in the Episodes panel.
+    @State private var pointedEpisode: String?
+    /// The episode Go to episode asks the Episodes panel to scroll to.
+    @State private var landedEpisode: String?
+    /// The episode whose row has the keyboard's focus in the Episodes panel.
+    @State private var focusedEpisode: String?
     /// The watch party's popover on the people button.
     @State private var partyOpen = false
     /// Where the panels over the video are, which take the scroll wheel from the player.
     @State private var wheelStops: [CGRect] = []
     @FocusState private var focused: Bool
+    /// The chat field above the control row, opened with C.
+    @State private var fielding = false
+    @FocusState private var fieldFocus: Bool
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.playerZoom) private var zoom
@@ -47,7 +60,10 @@ public struct MacPlayerView: View {
         self.model = model
     }
 
-    private var visible: Bool { (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil && !curtain }
+    private var visible: Bool {
+        (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil
+            && !curtain && !leavingFullScreen && !model.returning
+    }
 
     /// Whether the pointer may hide over the video (PlayerPointer).
     private var pointerIdle: Bool {
@@ -90,6 +106,8 @@ public struct MacPlayerView: View {
         .font(.system(size: 13))
         .clipShape(.rect(cornerRadius: grown ? 0 : ArtShape.bannerRadius))
         .modifier(GrowFromBanner(id: model.staged?.id, zoom: reduceMotion ? nil : zoom, grown: grown))
+        // Faded out as it shrinks, while the browsing fades in under it: the way in, reversed.
+        .opacity(model.returning ? 0 : 1)
         .ignoresSafeArea()
         .background(WindowReader { window = $0 })
         .onPreferenceChange(WheelStops.self) { wheelStops = $0 }
@@ -113,22 +131,45 @@ public struct MacPlayerView: View {
         .onChange(of: window) { _, window in if let window { opened(window) } }
         .onChange(of: model.backRequests) { back() }
         .onChange(of: model.menuRequests) { panel = model.requestedMenu }
+        // A panel opens with its footer on the playing episode, whatever was pointed at last time.
+        .onChange(of: panel) {
+            pointedEpisode = nil
+            focusedEpisode = nil
+        }
         .onChange(of: store.party.panelRequests) {
             panel = nil
             partyOpen = store.party.inParty
         }
         // The party is over: its popover goes with it.
-        .onChange(of: store.party.inParty) { _, inParty in if !inParty { partyOpen = false } }
-        .onChange(of: store.party.inParty, initial: true) { _, inParty in model.marksBlocked = inParty }
+        .onChange(of: store.party.inParty) { _, inParty in if !inParty { partyOpen = false; fielding = false } }
+        // The popover has the conversation's own field: the bar's goes, and the draft stays.
+        .onChange(of: partyOpen) { _, open in
+            if open, fielding {
+                fielding = false
+                model.hold("chat", false)
+            }
+        }
+        .animation(.fadeIn, value: fielding)
+        .onChange(of: store.party.inParty, initial: true) { _, inParty in
+            model.marksBlocked = inParty
+            model.inParty = inParty
+        }
+        .onChange(of: model.chatRequests) { sayHello() }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
-            PlayerModel.note(.info, "player window full screen, \(Self.describe(window))")
+            topInset = Self.revealStrip(of: window)
+            PlayerModel.note(.info, "player window full screen, \(Self.describe(window)), top bar \(Int(topInset)) pt down")
             if !model.fullScreen { model.fullScreen = true }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
+            topInset = 0
             PlayerModel.note(.info, "player window out of full screen, \(Self.describe(window))")
             if model.fullScreen { model.fullScreen = false }
+            if leavingFullScreen {
+                // After the layout the window's new size brings.
+                DispatchQueue.main.async { returnToBrowsing() }
+            }
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
         .onChange(of: SubtitleLift(visible: visible, height: height), initial: true) { _, lift in
@@ -154,20 +195,28 @@ public struct MacPlayerView: View {
             .padding(metrics.cornerInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         ResumeNoteView(model: model, metrics: metrics)
-            .padding(.top, 60)
+            .padding(.top, 60 + topInset)
             .padding(.leading, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .animation(.standard, value: model.resume)
-        PlayerAlertView(model: model, metrics: metrics)
-            .padding(.top, 60)
-            .frame(maxHeight: .infinity, alignment: .top)
-            .animation(.standard, value: model.alert)
+        PartyColumn(model: model, metrics: metrics, covered: partyOpen) { people() }
+            .padding(.top, 60 + topInset)
+            .padding(.leading, 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        if store.party.inParty, store.party.chat.shown {
+            ReactionMomentView(metrics: metrics)
+                .padding(.trailing, 16)
+                .padding(.bottom, model.corner == nil ? 72 : metrics.cornerInset.bottom + 88)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .animation(.standard, value: model.corner == nil)
+                .allowsHitTesting(false)
+        }
         SkipMarkLayer(model: model, metrics: metrics, layout: .bar)
         // Stats for nerds stays up while the controls hide, below where the top bar's capsule
         // is, under the menus that hang from it.
         StatsPanel(model: model, metrics: metrics)
             .takesScrollWheel()
-            .padding(.top, 60)
+            .padding(.top, 60 + topInset)
             .padding(.trailing, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             .animation(model.statsPanel != nil ? .fadeIn : .fadeOut, value: model.statsPanel != nil)
@@ -216,6 +265,9 @@ public struct MacPlayerView: View {
             Button(L.tvPlayOnMenu) { model.playOnTV() }
         }
         Button(L.partyOpen) { people() }
+        if store.party.inParty, store.party.chat.shown {
+            Button(L.menuSaySomething) { sayHello() }
+        }
     }
 
     // MARK: Chrome
@@ -227,7 +279,7 @@ public struct MacPlayerView: View {
                     .init(color: Palette.ground.opacity(0.72), location: 0),
                     .init(color: Palette.ground.opacity(0), location: 1),
                 ])
-                .frame(height: 112)
+                .frame(height: 112 + topInset)
                 Spacer(minLength: 0)
                 scrim(stops: [
                     .init(color: Palette.ground.opacity(0), location: 0),
@@ -239,7 +291,9 @@ public struct MacPlayerView: View {
             .allowsHitTesting(false)
             VStack(spacing: 0) {
                 header
+                    .padding(.top, topInset)
                 Spacer(minLength: 0)
+                chatField
                 controlRow
                     .onHover { overBar = $0 }
             }
@@ -264,14 +318,24 @@ public struct MacPlayerView: View {
             .lineLimit(1)
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)
-            HStack(spacing: 0) {
+            HStack(spacing: 8) {
+                if store.party.inParty, store.party.chat.shown {
+                    ReactionButtons(metrics: metrics)
+                        .padding(2)
+                        .background(.overVideo(0.62), in: .capsule)
+                        .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+                        .transition(.opacity)
+                }
+                HStack(spacing: 0) {
                 partyButton
                 capsuleButton("captions.bubble", L.playerSubtitlesAndAudio, on: panel == .tracks) { toggle(.tracks) }
                 capsuleButton("list.bullet", L.playerEpisodes, on: panel == .episodes) { toggle(.episodes) }
+                }
+                .padding(2)
+                .background(.overVideo(0.62), in: .capsule)
+                .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            .padding(2)
-            .background(.overVideo(0.62), in: .capsule)
-            .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+            .animation(.fadeIn, value: store.party.inParty && store.party.chat.shown)
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)
@@ -396,6 +460,52 @@ public struct MacPlayerView: View {
             }
     }
 
+    /// C: the chat field opens above the control row, or says why it can't.
+    private func sayHello() {
+        guard store.party.inParty, !store.party.chat.hidden else { return }
+        guard store.party.chat.allowed else {
+            model.say(L.partyChatOff)
+            return
+        }
+        fielding = true
+        fieldFocus = true
+        model.hold("chat", true)
+    }
+
+    /// The field above the control row: 480 by 32, 16 from the leading edge.
+    @ViewBuilder
+    private var chatField: some View {
+        let chat = store.party.chat
+        if fielding, store.party.inParty, chat.shown {
+            ChatTextField(
+                text: Binding(get: { chat.draft }, set: { chat.draft = $0 }), placeholder: L.partyChatField, style: .overVideo, limit: chat.maxLength,
+                remaining: chat.remaining,
+                waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
+                waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
+                focus: $fieldFocus
+            ) { chat.submit() }
+            .frame(width: 480)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 16)
+            .padding(.bottom, 6)
+            .transition(.opacity)
+            .onKeyPress(.escape) {
+                closeField()
+                return .handled
+            }
+            .onChange(of: visible) { _, up in if !up, chat.draft.isEmpty { closeField() } }
+            .onChange(of: chat.draft.isEmpty) { _, empty in model.hold("chat", !empty) }
+            .accessibilityElement(children: .contain)
+            .onAppear { fieldFocus = true }
+        }
+    }
+
+    private func closeField() {
+        fielding = false
+        model.hold("chat", false)
+        focused = true
+    }
+
     private func people() {
         panel = nil
         if store.party.inParty {
@@ -411,25 +521,44 @@ public struct MacPlayerView: View {
         Color.clear
             .contentShape(.rect)
             .onTapGesture { panel = nil }
-        MenuPanelFrame {
-            ScrollViewReader { list in
-                MenuScroll {
-                    VStack(alignment: .leading, spacing: 0) {
-                        switch which {
-                        case .tracks: TrackLists(model: model, metrics: metrics, style: $styleOpen)
-                        case .episodes: EpisodeList(model: model, metrics: metrics)
-                        case .speed: SpeedList(model: model, metrics: metrics)
-                        case .picture: PictureLists(model: model, metrics: metrics)
+        VStack(spacing: 0) {
+            MenuPanelFrame {
+                ScrollViewReader { list in
+                    MenuScroll {
+                        VStack(alignment: .leading, spacing: 0) {
+                            switch which {
+                            case .tracks: TrackLists(model: model, metrics: metrics, style: $styleOpen)
+                            case .episodes: EpisodeList(model: model, metrics: metrics, pointed: $pointedEpisode, focused: $focusedEpisode, landed: $landedEpisode)
+                            case .speed: SpeedList(model: model, metrics: metrics)
+                            case .picture: PictureLists(model: model, metrics: metrics)
+                            }
+                        }
+                        .padding(5)
+                        .environment(\.pointedMenuRow, model.pointedRow)
+                        // The pointer moving on to another row closes the submenu, as in a menu.
+                        .environment(\.menuRowEntered) { styleOpen = false }
+                    }
+                    .onAppear {
+                        if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
+                    }
+                    // Go to episode put a row at the top, once its range has crossfaded in.
+                    .onChange(of: landedEpisode) { _, number in
+                        guard let number else { return }
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(150))
+                            list.scrollTo(EpisodeList.row(number), anchor: .top)
+                            landedEpisode = nil
                         }
                     }
-                    .padding(5)
-                    .environment(\.pointedMenuRow, model.pointedRow)
-                    // The pointer moving on to another row closes the submenu, as in a menu.
-                    .environment(\.menuRowEntered) { styleOpen = false }
                 }
-                .onAppear {
-                    if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
-                }
+            }
+            // The pointed or focused episode's title and synopsis in three lines, kept only if
+            // the table had synopses when the panel opened.
+            if which == .episodes {
+                EpisodeFooter(
+                    model: model, metrics: metrics, table: model.staged.flatMap { store.titles.episodes[$0.id] } ?? [],
+                    pointed: pointedEpisode, focused: focusedEpisode
+                )
             }
         }
         .frame(width: Self.panelWidth(which))
@@ -448,7 +577,7 @@ public struct MacPlayerView: View {
         }
         // Below the title strip and above the control row, whichever end it hangs from: the top
         // bar's menus under the capsule, the control row's over their buttons.
-        .padding(EdgeInsets(top: 50, leading: 0, bottom: 60, trailing: Self.panelTrailing(which, playOnTV: model.playOnTVAvailable)))
+        .padding(EdgeInsets(top: 50 + topInset, leading: 0, bottom: 60, trailing: Self.panelTrailing(which, playOnTV: model.playOnTVAvailable)))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: Self.panelHangs(which))
         // One panel for each menu, so going from one to another crossfades rather than jumping
         // the same panel across.
@@ -539,6 +668,8 @@ public struct MacPlayerView: View {
                 model.cancelNext()
             } else if model.corner == .stall {
                 model.keepWaiting()
+            } else if model.corner == .prompt {
+                model.dismissSkipPrompt()
             } else if model.fullScreen {
                 model.fullScreen = false
             } else {
@@ -560,6 +691,8 @@ public struct MacPlayerView: View {
             case "n": model.step(shift ? -1 : 1)
             case "f" where !command: model.fullScreen.toggle()
             case "e": toggle(.episodes)
+            case "c" where !command && !option:
+                sayHello()
             case "i" where !command: model.toggleStats()
             case "[" where command: back()
             case "]": model.setSpeed(min(4, model.speed * 1.1))
@@ -613,9 +746,9 @@ public struct MacPlayerView: View {
         // The player is dark whatever the system's appearance: AppKit's own controls in it, the
         // spinner among them, draw for a dark window.
         window.appearance = NSAppearance(named: .darkAqua)
+        topInset = Self.revealStrip(of: window)
         PlayerModel.note(.info, "player in the main window, \(Self.describe(window)), asked for full screen \(model.fullScreen)")
         if model.fullScreen, !window.styleMask.contains(.fullScreen) {
-            enteredFullScreen = true
             // Once the window is on screen: a window still ordering in will not go full screen.
             DispatchQueue.main.async { [weak window] in
                 guard let window, model.fullScreen, !window.styleMask.contains(.fullScreen) else { return }
@@ -624,30 +757,63 @@ public struct MacPlayerView: View {
         }
     }
 
-    /// The main window as it was before the player, and out of the full screen the player put it
-    /// in.
+    /// The main window as it was before the player, and out of any full screen it went into
+    /// while the player had it, whichever way it went in. Once: Back gives it back before the
+    /// player shrinks, and the player going away finds nothing left to do.
     private func restore(_ window: NSWindow) {
-        saved?.restore(window)
-        saved = nil
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             window.standardWindowButton(kind)?.alphaValue = 1
         }
-        if enteredFullScreen, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
-        enteredFullScreen = false
+        guard let saved else { return }
+        saved.restore(window)
+        self.saved = nil
+        if !saved.fullScreen, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
         PlayerModel.note(.info, "main window back to browsing, \(Self.describe(window))")
     }
 
-    /// Back to the title page: the video shrinks into the banner it came from, and the playback
-    /// stops with its place saved.
+    /// Back to where the play started: the video shrinks into the banner or card it grew out of,
+    /// and the playback stops with its place saved. The way in reversed, so a full screen the
+    /// player went into ends first, the system's way, as it began after the player grew.
     private func back() {
+        guard !leavingFullScreen, !model.returning else { return }
         PlayerModel.note(.info, "back from the player")
         PlayerPointer.shared.release()
-        guard zoom != nil, !reduceMotion else {
-            model.viewerClosed()
+        if let window, window.styleMask.contains(.fullScreen), saved?.fullScreen == false {
+            leavingFullScreen = true
+            window.toggleFullScreen(nil)
+            // Should AppKit never say the window is out, the player goes back from where it is.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                if leavingFullScreen { returnToBrowsing() }
+            }
             return
         }
-        withAnimation(.standard) { grown = false }
+        returnToBrowsing()
+    }
+
+    /// The browsing comes back as it will stay, its toolbar and title bar with it, and the player
+    /// shrinks into its banner (standard) as it fades out over it; under Reduce Motion, where
+    /// nothing grows, the two crossfade.
+    private func returnToBrowsing() {
+        guard !model.returning else { return }
+        leavingFullScreen = false
+        if let window { restore(window) }
+        withAnimation(.standard) {
+            model.returning = true
+            grown = false
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { model.viewerClosed() }
+    }
+
+    /// In full screen, the strip at the top of the screen where macOS keeps the window's title
+    /// bar, ready to slide in with the menu bar: a window of AppKit's own, invisible until then,
+    /// that takes every click in it, so a control there answers only below it. The top bar starts
+    /// under it. None outside full screen, where the bar's controls take their clicks in the
+    /// title bar strip themselves (`titleBarControl`).
+    static func revealStrip(of window: NSWindow) -> CGFloat {
+        guard window.styleMask.contains(.fullScreen),
+              let strip = window.standardWindowButton(.closeButton)?.window, strip !== window
+        else { return 0 }
+        return max(0, strip.frame.intersection(window.frame).height)
     }
 
     /// "1058×595 pt at (227, 175), screen 1512×945 pt at 2.0×, full screen no", for the log.
@@ -670,14 +836,14 @@ public struct MacPlayerView: View {
     private func fullScreen(_ on: Bool) {
         DispatchQueue.main.async { [weak window, model] in
             guard let window, model.fullScreen == on, window.styleMask.contains(.fullScreen) != on else { return }
-            if on { enteredFullScreen = true }
             window.toggleFullScreen(nil)
         }
     }
 
     /// The title bar is transparent and hides with the controls.
     private func titleBar(_ visible: Bool) {
-        guard let window else { return }
+        // On the way back the window's buttons are the browsing's again, and stay.
+        guard let window, !model.returning, !leavingFullScreen else { return }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = visible ? 0.2 : 0.3
             for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
@@ -732,10 +898,13 @@ struct SavedWindow {
     let backgroundColor: NSColor
     let appearance: NSAppearance?
     let toolbarVisible: Bool?
+    /// The window was full screen before the player: it stays so after.
+    let fullScreen: Bool
 
     @MainActor
     init(_ window: NSWindow) {
         toolbarVisible = window.toolbar?.isVisible
+        fullScreen = window.styleMask.contains(.fullScreen)
         transparentTitleBar = window.titlebarAppearsTransparent
         titleVisibility = window.titleVisibility
         fullSizeContent = window.styleMask.contains(.fullSizeContentView)

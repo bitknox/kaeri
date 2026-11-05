@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -270,7 +272,11 @@ fun PartyLobbyScreen(nav: TvNavigator, memory: FocusMemory) {
             if (members.isNotEmpty() && room != null) {
                 val (ready, count) = PartyModel.counts(members)
                 Text(Strings.partyLobbyCount(context, ready, count), style = MaterialTheme.typography.titleMedium, color = ObiSilk.Silk, modifier = Modifier.padding(top = 28.dp, bottom = 8.dp))
-                for (member in members.take(6)) TvMemberRow(member)
+                val chat by store.party.chat.collectAsStateWithLifecycle()
+                for (member in members.take(6)) {
+                    val muted = member.name in chat?.muted.orEmpty()
+                    TvMemberRow(member, muted, if (member.you) null else ({ store.partyMute(member.name, !muted) }))
+                }
             }
             Row(Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 when {
@@ -337,9 +343,21 @@ private fun TvSources(room: PartyView) {
 }
 
 @Composable
-private fun TvMemberRow(member: PartyMember) {
+private fun TvMemberRow(member: PartyMember, muted: Boolean = false, onMute: (() -> Unit)? = null) {
     val context = LocalContext.current
-    Row(Modifier.height(48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    val words = if (muted) Strings.partyUnmute(context, member.name) else Strings.partyMute(context, member.name)
+    // A long press of OK on a member mutes them for this party, on this TV; the phone can do it too.
+    val frame = if (onMute == null) Modifier else Modifier
+    androidx.tv.material3.Surface(
+        onClick = {},
+        onLongClick = onMute,
+        enabled = onMute != null,
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(24.dp)),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, focusedContainerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk, focusedContentColor = ObiSilk.Silk),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1f),
+        modifier = frame.semantics { if (onMute != null) onLongClick(words) { onMute(); true } },
+    ) {
+    Row(Modifier.height(48.dp).padding(end = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Box(Modifier.size(36.dp).background(ObiSilk.RaisedSelected, CircleShape), contentAlignment = Alignment.Center) {
             Text(member.name.take(1).uppercase(), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
         }
@@ -349,6 +367,8 @@ private fun TvMemberRow(member: PartyMember) {
             style = MaterialTheme.typography.bodyMedium,
             color = if (member.ready == true) ObiSilk.Silk else ObiSilk.Haze,
         )
+        if (muted) Text(Strings.partyMemberMuted(context), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+    }
     }
 }
 

@@ -8,6 +8,9 @@ namespace Kaeri.Windows;
 /// What every page reaches: the engine, what it has said, the art, and the window's ways to move
 /// between pages and to play. One per window; pages find it as <see cref="Current"/>.
 /// </summary>
+/// <summary>A title opened by Surprise me: where it was picked from, and whether that pool has another.</summary>
+sealed record Pick(uint Id, SurprisePool Pool, bool More);
+
 sealed class Ctx
 {
     public static Ctx Current { get; set; } = null!;
@@ -259,8 +262,14 @@ sealed class Ctx
 
     public void OpenTitle(uint id) => Window.OpenTitle(id);
 
+    /// <summary>The title Surprise me opened last, while its page is up: it gives the page its Another.</summary>
+    public Pick? Pick { get; set; }
+
     /// <summary>One of the window's own pages, by its tag: "downloads".</summary>
     public void Go(string tag) => Window.Go(tag);
+
+    /// <summary>Back to Your sources from the page of a source that was just removed.</summary>
+    public void LeaveRemoved() => Window.LeaveRemoved();
 
     /// <summary>Plays an episode from where it was left, or from its start with <paramref name="fromStart"/>.</summary>
     public void Play(uint id, string episode, bool fromStart = false) => Send(new Command.Play(id, episode, fromStart));

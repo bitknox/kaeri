@@ -96,6 +96,12 @@ pub enum FfiScene {
     /// show is caught up and the spotlight turns to the popular pick: the change from the first
     /// case to the third, with Continue at one and then at none.
     OneLeft,
+    /// [`Self::Watching`] for Search's extras. Cards say what is known of their dubs: Hoshikuzu no
+    /// Tabibito "Dub 8", Natsukaze Relay "Dub" with no count, and the rest nothing. A source that
+    /// can search for dubs, Tsuki Dub Catalogue, lists Hoshikuzu no Tabibito in the dub with eight
+    /// episodes, so a search for it asks, finds that and says "Dub 8". Surprise me has the
+    /// fixtures to pick from, and the long franchise's table is long enough for ranges.
+    Browsing,
     /// Signed in, with fifteen shows under way, each stopped part way into episode 1, so
     /// Continue shows twelve with View all and its count.
     ContinueFull,
@@ -185,6 +191,26 @@ pub enum FfiScene {
     /// [`Self::Fresh`] with the same store, not joined: [`FfiEngine::testing_store_invite`] is
     /// the Book club link, used once so far, for the join sheet with its name field.
     StoreInvited,
+    /// [`Self::Watching`] with sync set up: this device is Kim's iPhone, the group holds the
+    /// Living room TV as well, heard from two minutes ago, the folder is `Shared/Kaeri`, and one
+    /// note says a watch of Hoshikuzu no Tabibito episode 3 was kept although the iPhone marked
+    /// it unwatched. No folder is behind it; the engine runs no pass.
+    SyncOn,
+    /// [`Self::Watching`] with sync on nearby only: this device is Kim's iPhone, paired with the
+    /// Living room TV (signed in to AniList), heard from five minutes ago. No cloud folder, so no
+    /// recovery key.
+    SyncNearby,
+    /// [`Self::Watching`] syncing through Google Drive, signed in as kim@mail.example: this
+    /// device is Kim's iPhone, the group holds Kim's MacBook Air, and the recovery key was made
+    /// three days ago and can be shown again.
+    SyncCloud,
+    /// [`Self::Watching`] on a TV (start it with `FfiPlatform::AndroidTv`): this device is the
+    /// Living room TV, paired with Kim's iPhone, which syncs through Dropbox and holds the
+    /// sign-in the TV can use. The TV has no folder yet.
+    SyncTvPhoneSignIn,
+    /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
+    /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
+    Profiles,
 }
 
 /// The magnet link [`FfiScene::LinkOpened`] opens: a made-up info hash whose name is
@@ -252,6 +278,7 @@ impl FfiScene {
         matches!(
             self,
             Self::Watching
+                | Self::Browsing
                 | Self::Servers
                 | Self::Library
                 | Self::SourcesBusy
@@ -263,6 +290,11 @@ impl FfiScene {
                 | Self::Slow
                 | Self::Failed
                 | Self::LinkOpened
+                | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
+                | Self::Profiles
         )
     }
 
@@ -271,6 +303,7 @@ impl FfiScene {
         matches!(
             self,
             Self::Watching
+                | Self::Browsing
                 | Self::Servers
                 | Self::Library
                 | Self::SourcesBusy
@@ -285,7 +318,24 @@ impl FfiScene {
                 | Self::NotFound
                 | Self::Slow
                 | Self::Failed
+                | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
+                | Self::Profiles
         )
+    }
+
+    /// How sync stands in the scene, for those that have it on.
+    fn sync(&self) -> Option<kaeri_engine::syncing::FixtureSync> {
+        use kaeri_engine::syncing::FixtureSync;
+        Some(match self {
+            Self::SyncOn => FixtureSync::Folder,
+            Self::SyncNearby => FixtureSync::Nearby,
+            Self::SyncCloud => FixtureSync::Cloud,
+            Self::SyncTvPhoneSignIn => FixtureSync::TvPhoneSignIn,
+            _ => return None,
+        })
     }
 }
 
@@ -352,10 +402,23 @@ impl FfiEngine {
         }
         let now = clock.now();
         scene_config(&dirs, &scene, now)?;
-        let opened = Opened::open(&dirs)?;
+        if scene == FfiScene::Profiles {
+            seed_profiles(&dirs, now)?;
+        }
+        let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
+        if let Some(sync) = scene.sync() {
+            let tokens =
+                TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
+            for (id, value) in kaeri_engine::syncing::seed_fixture_as(&opened.store, now, sync)
+            {
+                tokens.set(id, &value).map_err(|e| {
+                    FfiError::engine(Msg::StartFailed { reason: e.to_string() })
+                })?;
+            }
+        }
         if let Some(world) = world.as_ref().filter(|_| scene.has_world_history()) {
             world.seed_history(&opened.store, now);
             library_statuses(&opened.store, world, now);
@@ -375,6 +438,8 @@ impl FfiEngine {
             // The long franchise beside the six, for a season picker of twelve: a page opens on
             // it by id, as no list has it.
             server.add_titles(fixtures::long_franchise());
+            // And two for the episode list's synopses: twelve episodes, and 230 for its ranges.
+            server.add_titles(fixtures::synopsis_shows());
             // And the short one, five seasons with a film, an OVA and a web series beside them,
             // for a season row that fits across the page with Related beside it.
             server.add_titles(fixtures::franchise());
@@ -512,8 +577,22 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
             MockProvider::new(sources::PROVIDER_ID).with_hits(Vec::new()).arc(),
         ]);
     }
-    let franchise =
-        || sources::with_long_franchise_and(sources::provider_with_art(art), provided);
+    let franchise = || {
+        let mut titles = provided.to_vec();
+        titles.extend(fixtures::synopsis_shows_media().into_iter().map(|media| {
+            // The long runner is still airing: the source lists what is out.
+            let episodes = if media.id == fixtures::LONG_RUNNER {
+                fixtures::LONG_RUNNER_AIRED
+            } else {
+                media.episodes.unwrap_or(1)
+            };
+            (media, episodes)
+        }));
+        sources::with_synopsis_episodes(sources::with_long_franchise_and(
+            sources::provider_with_art(art),
+            &titles,
+        ))
+    };
     let (FfiScene::Playing { media }
     | FfiScene::SkipMarked { media, .. }
     | FfiScene::WatchingMedia { media }) = scene
@@ -770,6 +849,12 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::Unsure
         | FfiScene::Slow
         | FfiScene::Failed
+        | FfiScene::SyncOn
+        | FfiScene::SyncNearby
+        | FfiScene::SyncCloud
+        | FfiScene::SyncTvPhoneSignIn
+        | FfiScene::Profiles
+        | FfiScene::Browsing
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.
             seed::watched(store, AIRING_NO_MAL, 7, now - 3 * DAY);
@@ -782,8 +867,39 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
             if *scene == FfiScene::Together {
                 seed_rooms(store, now);
             }
+            if *scene == FfiScene::Browsing {
+                seed_dubs(store, now);
+            }
         }
     }
+}
+
+/// The profiles [`FfiScene::Profiles`] keeps, Alex last used.
+fn seed_profiles(dirs: &FfiDirs, now: i64) -> Result<(), FfiError> {
+    let data = std::path::Path::new(&dirs.data);
+    let failed = |e: kaeri_store::StoreError| {
+        FfiError::store(Msg::StartFailedDatabase {
+            path: dirs.data.clone(),
+            reason: e.to_string(),
+        })
+    };
+    kaeri_store::profile::add(data, "Kim", false, "Alex", now - 20).map_err(failed)?;
+    kaeri_store::profile::add(data, "Sam", true, "Alex", now - 10).map_err(failed)?;
+    kaeri_store::profile::touch(data, "p1", now).map_err(failed)
+}
+
+/// The dubs [`FfiScene::Browsing`]'s cards say, as title pages once found them.
+fn seed_dubs(store: &Store, now: i64) {
+    let row = |through: Option<u32>| kaeri_store::DubRow {
+        has_dub: true,
+        through,
+        complete: false,
+        aired: None,
+        said_at: now,
+        until: now + 24 * 3_600,
+    };
+    store.put_dub(FINISHED, "franchise", &row(Some(8))).expect("seeding a dub");
+    store.put_dub(AIRING_NO_MAL, "franchise", &row(None)).expect("seeding a dub");
 }
 
 /// The three rooms [`FfiScene::Together`] keeps.
@@ -950,12 +1066,16 @@ mod tests {
             episode_count: Some(12),
             year: Some(2024),
             format: Some(MediaFormat::Tv),
+            hints: Default::default(),
         };
         let source = unsure_source("http://127.0.0.1:9/art/", &sources::episode_clip());
         let runtime =
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-        let search =
-            |query: &str| runtime.block_on(source.search(query, Translation::Sub)).unwrap();
+        let search = |query: &str| {
+            runtime
+                .block_on(source.search(query, Translation::Sub, &Default::default()))
+                .unwrap()
+        };
 
         let ladder = search("Hoshikuzu no Tabibito");
         let ranked = rank(&target, &ladder);
@@ -975,6 +1095,21 @@ mod tests {
         let registry =
             scene_sources(&FfiScene::Unsure, "http://127.0.0.1:9/art/", &world().provided());
         assert_eq!(registry.ids(), [UNSURE_SOURCE, sources::PROVIDER_ID]);
+    }
+
+    #[test]
+    fn browsing_says_the_dubs_it_was_seeded_with_on_the_cards() {
+        let store = Store::open_in_memory().expect("a database");
+        seed_scene(&store, &FfiScene::Browsing, 1_800_000_000);
+        let line = |id| {
+            kaeri_engine::data::entry_from(&fixtures::media(id), Some(&store))
+                .count_line
+                .map(|line| line.long)
+                .unwrap_or_default()
+        };
+        assert!(line(FINISHED).ends_with("Dub 8"), "{}", line(FINISHED));
+        assert!(line(AIRING_NO_MAL).ends_with("Dub"), "{}", line(AIRING_NO_MAL));
+        assert!(!line(ONA).contains("Dub"));
     }
 
     #[test]

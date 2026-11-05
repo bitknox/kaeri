@@ -22,3 +22,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Styl napisów zresetowany
 crash-notice = { -app-name } zamknął się po błędzie.
 crash-notice-tv = { -app-name } zamknął się po błędzie. Możesz to zgłosić w Ustawieniach, w sekcji O aplikacji.
+notice-surprise-empty-filters = Żaden tytuł nie pasuje do tych filtrów.
+notice-surprise-empty-planning = Lista Planowane jest pusta.
+notice-surprise-offline = Brak połączenia. Losowanie w wyszukiwaniu wymaga AniList.
+notice-surprise-failed = Nie udało się teraz wylosować tytułu. Spróbuj za chwilę.

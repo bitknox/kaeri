@@ -148,3 +148,8 @@ player-sound = Sound
 
 # Spoken by VoiceOver on the loading indicator before the video shows.
 player-loading-announce = Starting
+
+# Playback menu item that opens the chat field in a watch party. Key C.
+# @only apple
+# @max 24
+menu-say-something = Say Something…

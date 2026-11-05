@@ -58,6 +58,9 @@ impl Command {
                 format!("signing in to {tracker}")
             }
             Self::ConnectKitsu { .. } => "signing in to kitsu".into(),
+            Self::SyncSignIn { .. } | Self::FinishSyncSignIn { .. } => {
+                "signing in to a cloud drive".into()
+            }
             Self::Play { episode, .. } | Self::PlaySource { episode, .. } => {
                 format!("starting ep {episode}")
             }
@@ -264,6 +267,19 @@ pub enum Command {
     // from what was kept and asks nothing; asked while offline, it answers from what was kept
     // or with `None`, and asks again once back.
     LoadDub(AnilistId),
+    /// Trending over `period`, for Search's Trending rail and its period menu: answered by one
+    /// [`Event::Trending`](crate::event::Event::Trending), with no job. The choice is remembered
+    /// on this device, and Search's start shows the rail for it. Today is AniList's live
+    /// trending; a week or a month is summed from its daily figures, one request for the week
+    /// and two for the month, kept for six hours and a day. A kept answer shows at once, with its
+    /// age, and is asked again behind the screen once old. Never sent at launch.
+    LoadTrending(crate::browsing::TrendPeriod),
+    /// Surprise me, or Another: pick a title from `pool`, and answer with one
+    /// [`Event::Surprise`](crate::event::Event::Surprise) that says which to open. The pick skips
+    /// titles completed, dropped, hidden or adult (adult unless the setting is on), and the last
+    /// twenty picks of the session. The Planning list asks nothing; the filters ask AniList for
+    /// how many titles match, then for one page of them.
+    Surprise(crate::browsing::SurprisePool),
     CheckProviders,
     /// Check the torrent proxy again now, as Sources' Check now asks after a check failed.
     /// Answered with [`Event::TorrentProxy`](crate::event::Event::TorrentProxy): `Checking`,
@@ -329,6 +345,102 @@ pub enum Command {
     ConnectKitsu {
         username: String,
         password: Secret,
+    },
+    /// Say what the profiles are: answered with `Event::Profiles`.
+    LoadProfiles,
+    /// Add a profile. The first one added also makes today's data the first profile, named
+    /// `first_name` when it has to be, and the new profile is switched to.
+    AddProfile {
+        name: String,
+        kids: bool,
+        first_name: Option<String>,
+    },
+    /// Rename a profile or change whether it is a kids profile.
+    EditProfile {
+        id: String,
+        name: String,
+        kids: bool,
+    },
+    /// Stop what plays, keeping its place, and use another profile. Answered with
+    /// `Event::Profiles`, after which the front end reloads its screens.
+    SwitchProfile {
+        id: String,
+    },
+    /// Delete a profile and its data. The one in use cannot be deleted; switch first.
+    DeleteProfile {
+        id: String,
+    },
+    /// Say how sync stands: answered with `Event::SyncStatus`.
+    LoadSync,
+    /// Set sync up in an empty folder, naming this device. Answered with
+    /// `Event::SyncRecoveryKey`, shown once, then `Event::SyncStatus`.
+    StartSync {
+        device_name: String,
+        folder: crate::group::SyncFolderSpec,
+    },
+    /// Join the group a folder holds, with its recovery key.
+    JoinSync {
+        device_name: String,
+        folder: crate::group::SyncFolderSpec,
+        recovery_key: Secret,
+    },
+    /// Sign in to a cloud drive (`GoogleDrive`, `Dropbox` or `OneDrive`) and keep the sign-in,
+    /// without choosing a folder: "Sign in again" after `SyncProblem::SignInNeeded`, or another
+    /// account. Steps come as `Event::SyncSignIn`; when sync already uses the service it runs a
+    /// pass after.
+    SyncSignIn {
+        service: crate::group::SyncFolderKind,
+    },
+    /// The redirect the web sheet ended on, after `SyncSignInStep::Sheet`: the whole URL. A
+    /// secret, since it carries the authorisation code.
+    FinishSyncSignIn {
+        service: crate::group::SyncFolderKind,
+        callback: Secret,
+    },
+    /// Stop the cloud sign-in under way, at any step: the sheet was closed or the code screen
+    /// was left. Nothing is said as a problem.
+    CancelSyncSignIn,
+    /// Forget this device's sign-in to a cloud drive. When sync uses it, the folder road stops
+    /// with `SyncProblem::SignInNeeded` until `SyncSignIn`.
+    SyncSignOut {
+        service: crate::group::SyncFolderKind,
+    },
+    /// Run the folder road now.
+    SyncFolderNow,
+    /// Leave the group: this device stops syncing and keeps its data.
+    LeaveSync,
+    /// Remove another device from the group.
+    RemoveSyncDevice {
+        device: String,
+    },
+    /// Make a new recovery key and rotate the group key: answered with `Event::SyncRecoveryKey`.
+    NewRecoveryKey,
+    /// Show a pairing code and wait for another device on the network to enter it. Sets sync up
+    /// on this device first if it is not, naming it. Answered with `Event::SyncInvite`; the
+    /// code is good for two minutes and three tries, and `Event::SyncStatus` follows a pairing.
+    PairInvite {
+        device_name: String,
+    },
+    /// Stop waiting for a device to pair.
+    PairStop,
+    /// Pair with the device showing `code` at `address` (`host:port`, from its QR code or the
+    /// network), then swap histories. Sets sync up on this device first if it is not.
+    PairJoin {
+        device_name: String,
+        address: String,
+        code: String,
+    },
+    /// Swap histories with a device already paired, at `address`.
+    SyncWithDevice {
+        device: String,
+        address: String,
+    },
+    /// Say the recovery key again, for the sheet the device's own lock guards. Answered with
+    /// `Event::SyncRecoveryKey`. A TV never asks.
+    ShowRecoveryKey,
+    /// Close a note about a watch that was kept.
+    DismissSyncNote {
+        id: i64,
     },
     /// Forget a tracker's token.
     Disconnect {
@@ -571,6 +683,8 @@ pub enum Command {
     LoadDownloads,
     /// A link the viewer opened: see [`crate::opened`].
     Opened(crate::opened::OpenedCommand),
+    // More sync commands; see `SyncCommand`.
+    SyncGroup(crate::group::SyncCommand),
     /// Play a file already on disk — with the identity that lets it record history,
     /// resume, and sync exactly as a streamed episode would.
     PlayLocal {
@@ -1002,6 +1116,14 @@ pub enum PlayerCommand {
     CancelNext,
     /// A pick in the player's menus.
     Choose(PlayerChoice),
+    /// Skip the source being asked while a play looks for its stream: the walk moves on to the
+    /// next source in the viewer's order. Heard only while the stream is being found; once the
+    /// player opens, it does nothing.
+    SkipSource,
+    /// Begin the episode being started at 0, in place of its resume point, without asking the
+    /// sources again. Heard while the walk runs (the file opens at 0), and once the file has
+    /// loaded (it seeks to 0 at once). The stored position is kept until the episode has played.
+    PlayFromBeginning,
     /// The stall prompt's answers: another stream, or keep waiting.
     StallSwitch,
     StallWait,
@@ -1067,9 +1189,24 @@ pub enum PlayerCommand {
     },
     /// The skip prompt was answered without acting on it, or went by: it comes down.
     DismissSkipPrompt,
-    /// "Was that the opening?"'s Don't ask again: the prompt comes down and is turned off in
-    /// Settings, `playback.ask_was_opening`.
+    /// Don't ask again, on "Was that the opening?" or on the found times' card: turned off in
+    /// Settings, `playback.ask_was_opening`, which covers both. "Was that the opening?" comes
+    /// down; the found times' card says `SkipPrompt::FoundNever`.
     NeverAskWasOpening,
+    /// Yes on the found times' card: the found stretch of `kind` becomes the person's own mark
+    /// for this episode, is shared with AniSkip for this one episode, and found stretches of
+    /// `kind` are skipped by themselves for this show from now on. The card says
+    /// `SkipPrompt::FoundSaved`.
+    ConfirmFoundSkip {
+        kind: SkipKind,
+    },
+    /// Adjust, on the found times' card or on a found row of the Skip times panel: the marking
+    /// bar opens on the review of the found stretch of `kind`, with no kind picker, and plays
+    /// the edges once. Its Save confirms and shares as Yes does; Cancel leaves the found times
+    /// as they were.
+    AdjustFoundSkip {
+        kind: SkipKind,
+    },
     /// The answer to "Share your skip times with AniSkip?": Share or Keep on my devices. Kept
     /// as Settings' `playback.share_skip_times`; with Share, the mark just saved is sent.
     AnswerShareSkipTimes {

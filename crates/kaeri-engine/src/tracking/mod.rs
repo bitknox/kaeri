@@ -505,6 +505,7 @@ pub async fn load_library(
                 });
                 // The one place the tracker's status for a title is known, so `a` opens on it.
                 row.list_status = Some(segment);
+                row.recount();
                 rows.push(row);
             }
             answer(ContentList::Entries(rows))
@@ -1179,7 +1180,12 @@ async fn connect_mal(sync: Sync, host: Arc<dyn Host>, job: Option<&JobGuard>, tx
 /// end with "restart to start syncing"), the badge and Accounts screen have to be rebuilt from what
 /// is now true, and a first pull has to be kicked off so the Library is not empty until the next
 /// interval.
-async fn activate(sync: &Sync, tracker_id: &str, pair: &kaeri_track::TokenPair, tx: &Outbox) {
+pub(crate) async fn activate(
+    sync: &Sync,
+    tracker_id: &str,
+    pair: &kaeri_track::TokenPair,
+    tx: &Outbox,
+) {
     if let Some(tracker) = sync.trackers.iter().find(|t| t.id() == tracker_id) {
         tracker
             .accept_credentials(&pair.access, pair.refresh.as_deref(), pair.expires_at)

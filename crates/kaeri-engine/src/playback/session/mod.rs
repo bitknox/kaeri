@@ -18,7 +18,11 @@
 //! viewer's controls, what the companion shows, the picture, what is written down of the watch,
 //! skipping, the subtitles fetched ahead and the Discord presence each have a file of their own.
 
-use kaeri_model::Msg;
+use kaeri_model::{
+    Msg,
+    party::NoSourceWhy,
+    starting::{StartFailure, StartStep},
+};
 use std::sync::Arc;
 
 use kaeri_core::{
@@ -60,6 +64,7 @@ use crate::{
 mod companion_state;
 mod controls;
 mod events;
+mod found;
 mod marking;
 mod presence;
 #[cfg(test)]
@@ -110,6 +115,10 @@ pub struct PlaySettings {
     /// Ask "Was that the opening?" after a skip by hand that looks like one, from
     /// `playback.ask_was_opening`.
     pub ask_was_opening: bool,
+    /// Find the opening and the ending from the audio, from `playback.find_skip_times`, where
+    /// the player hands the audio over and the device is not saving power or storage: see
+    /// [`crate::skip_find::SkipFind::runs`].
+    pub find_skip_times: bool,
     /// Whether the viewer's marks and votes go to AniSkip, from `playback.share_skip_times`:
     /// `None` until asked, which the first Save does.
     pub share_skip_times: Option<bool>,
@@ -152,6 +161,11 @@ pub struct PlaySettings {
     /// Record nothing: no history, resume point, tracker progress, track choices or presence.
     /// An opened link played without tracking. See [`PlaySettings::untracked`].
     pub untracked: bool,
+    /// How a torrent stream is doing, for the starting screen until its first frame.
+    pub swarm: crate::playback::starting::Swarm,
+    /// Set when the viewer asked to begin at 0: the file then opens there, whatever the resume
+    /// point.
+    pub begin: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl PlaySettings {
@@ -302,6 +316,7 @@ pub async fn play(
         skips: aniskip.iter().map(|time| time.interval).collect(),
         aniskip,
         marks,
+        found: Vec::new(),
         marking: marking::SkipMarking::new(settings.ask_was_opening, settings.share_skip_times),
         // Cleared when the UI drops its sender, which disables that select branch — otherwise
         // a closed channel returns `None` instantly and spins the loop. Outside the attempt
@@ -364,7 +379,19 @@ pub async fn play(
         // Before mpv opens the file, so the tracks are on disk by the time it asks for them,
         // but no longer than a moment: the tracks still on their way follow as they arrive.
         let mut late = None;
+        let say = |step, line| {
+            crate::playback::starting::say(
+                &tx,
+                context.anilist_id,
+                &context.episode,
+                step,
+                line,
+            );
+        };
         if !localised[index] {
+            if streams[index].subtitles.iter().any(subtitles::fetches) {
+                say(StartStep::FetchingSubtitles, None);
+            }
             let scratch = opener.scratch_dir();
             // A subbed episode that plays with none says why, rather than leaving the viewer
             // to wonder whether it has any.
@@ -401,6 +428,13 @@ pub async fn play(
             stream.thumbnail_url = proxies.thumbnail_url(&original);
         }
         attempt += 1;
+        say(
+            StartStep::OpeningStream {
+                attempt: u32::try_from(attempt).unwrap_or(u32::MAX),
+                total: u32::try_from(total).unwrap_or(u32::MAX),
+            },
+            None,
+        );
         tracing::info!(
             attempt,
             of = total,
@@ -413,6 +447,12 @@ pub async fn play(
             "trying a stream"
         );
 
+        // Asked to begin at 0 while the sources were walked or this file was found: it opens
+        // there. The stored position stays as it was until the episode has played.
+        let begin = || settings.begin.load(std::sync::atomic::Ordering::SeqCst);
+        if begin() {
+            resume_at = None;
+        }
         let request = PlaybackRequest {
             title: context.window_title(),
             start_at: resume_at,
@@ -442,11 +482,15 @@ pub async fn play(
                     let notice = opener.open_failure_notice().unwrap_or_else(|| {
                         Msg::NoticePlayerFailedToStart { reason: e.to_string() }
                     });
-                    let _ = tx.send(Event::Toast(Notice::alert(notice)));
+                    let _ = tx.send(Event::Toast(Notice::alert(notice.clone())));
                     // The player never existed, but the UI has Now Playing up and a control
                     // surface pointed at it. Saying so is what takes them down.
                     run.servers.settle().await;
-                    let _ = tx.send(Event::playback_ended(false, Ending::Failed));
+                    let _ = tx.send(Event::playback_failed(StartFailure {
+                        why: NoSourceWhy::NotFound,
+                        text: notice,
+                        asked: Vec::new(),
+                    }));
                     return;
                 }
                 Err(e) => {
@@ -491,17 +535,43 @@ pub async fn play(
             subtitle_language: settings.subtitle_language.clone(),
             dub: context.translation == Translation::Dub,
         });
-        if let Err(e) = load(current.link.as_ref(), &stream, &request).await {
+        // The audio of this file's head and tail, for finding its skip times: listened for
+        // before it loads, so none of it is missed. Never on a cast, which plays elsewhere.
+        let finder = (settings.find_skip_times
+            && current.link.target() == crate::playback::link::PlayerTarget::Local)
+            .then(|| {
+                found::Finder::start(
+                    store.clone(),
+                    context.anilist_id,
+                    context.episode.trim().to_owned(),
+                )
+            });
+        let tap = finder.as_ref().map(found::Finder::options).unwrap_or_default();
+        if let Err(e) = load(current.link.as_ref(), &stream, &request, tap).await {
             tracing::warn!(error = %e, "could not hand the stream to mpv");
         }
         // mpv is already at the resume point by now — `start` handled it. Saying so is what
         // keeps it from looking like the episode began in the wrong place.
+        // Asked while the file was handed over, before it could hear the command: seek there.
+        if resume_at.is_some() && begin() {
+            resume_at = None;
+            let _ = current.link.seek(0.0, true).await;
+        }
         if let Some(position) = resume_at {
             let _ = tx.send(Event::Resumed { position });
             let _ = current.link.overlay(Overlay::Resumed { position }).await;
         }
 
-        let outcome = run.file(current, &stream, &streams, index, &mut commands, late).await;
+        let outcome = run
+            .file(
+                current,
+                &stream,
+                &streams,
+                index,
+                &mut commands,
+                events::Beside { late, finder },
+            )
+            .await;
 
         match outcome {
             FileOutcome::Switch { to, at } => {
@@ -570,10 +640,14 @@ pub async fn play(
                         ?reported,
                         "no frames; trying the next stream"
                     );
-                    let _ = tx.send(Event::Toast(Notice::info(Msg::NoticeStreamNoVideo {
-                        next: attempt as i64 + 1,
-                        total: total as i64,
-                    })));
+                    // Said on the starting screen's step line, in place, and not as a notice.
+                    say(
+                        StartStep::TryingAnotherStream {
+                            next: u32::try_from(attempt + 1).unwrap_or(u32::MAX),
+                            total: u32::try_from(total).unwrap_or(u32::MAX),
+                        },
+                        Some(Msg::StartTryingAnotherStream),
+                    );
                     index = next_untried(&tried, index);
                     continue;
                 }
@@ -623,6 +697,7 @@ pub async fn play(
                 // is a choice, and "mpv exited without playing anything" would blame mpv for it.
                 // Both are checked, because a quit that reaches mpv before the file has started
                 // ends no file, and only the socket closing says anything happened.
+                let mut failure = None;
                 if no_frames && !stopped && !quit {
                     let message = match (notice, reported) {
                         (Some(notice), _) => notice,
@@ -634,7 +709,12 @@ pub async fn play(
                         from = %crate::logged::address(&streams[index].url),
                         "playback produced no frames"
                     );
-                    let _ = tx.send(Event::Toast(Notice::alert(message)));
+                    let _ = tx.send(Event::Toast(Notice::alert(message.clone())));
+                    failure = Some(StartFailure {
+                        why: NoSourceWhy::NotFound,
+                        text: message,
+                        asked: Vec::new(),
+                    });
                 }
 
                 // Exactly one ending per playback, sent only now that this attempt is known to
@@ -653,7 +733,13 @@ pub async fn play(
                 } else {
                     Ending::Failed
                 };
-                let _ = tx.send(Event::playback_ended(watched.unwrap_or(false), ending));
+                let failure = failure.filter(|_| ending == Ending::Failed);
+                let _ = tx.send(Event::PlaybackEnded {
+                    watched: watched.unwrap_or(false),
+                    ending,
+                    rolling_on: false,
+                    failure,
+                });
                 return;
             }
         }
@@ -672,15 +758,23 @@ async fn load(
     link: &dyn PlayerLink,
     stream: &Stream,
     request: &PlaybackRequest,
+    // The audio tap's options, when its skip times are found.
+    tap: Vec<(String, String)>,
 ) -> Result<(), LinkError> {
     link.overlay(Overlay::ThumbnailUrl(stream.thumbnail_url.clone())).await?;
-    let options = kaeri_playback::protocol::file_options(
+    let mut options = kaeri_playback::protocol::file_options(
         &stream.headers,
         request.start_at,
         &request.title,
         request.subtitle_language.as_deref(),
         request.dub,
     );
+    options.extend(tap);
+    // A torrent fills the player's cache before the first frame, so that the starting screen
+    // has a real percentage to show; a direct stream starts as soon as it can.
+    if stream.kind == StreamKind::TorrentHttp {
+        options.push(("cache-pause-initial".to_owned(), "yes".to_owned()));
+    }
     link.load(&stream.url, options).await
 }
 
@@ -708,6 +802,8 @@ struct Run<'a> {
     aniskip: Vec<AniSkipTime>,
     /// The viewer's own marks for the episode.
     marks: Vec<MarkedSkip>,
+    /// What was found from the audio of the file playing, by kind.
+    found: Vec<SkipInterval>,
     /// The marking bar, its prompts and the seeks they watch.
     marking: marking::SkipMarking,
     controls_open: bool,

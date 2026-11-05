@@ -1,5 +1,6 @@
 action-try-again = Thử lại
 action-cancel = Hủy
+action-go = Đi
 action-not-now = Để sau
 duration-days = { $days } ngày
 duration-hours-minutes = { $hours } giờ { $minutes } phút

@@ -97,6 +97,8 @@ import app.kaeri.tv.ui.EnterFocus
 import app.kaeri.tv.ui.FocusMemory
 import app.kaeri.tv.ui.LocalAppStore
 import app.kaeri.tv.ui.SafeSpec
+import app.kaeri.tv.sync.devices
+import app.kaeri.tv.sync.profiles
 import app.kaeri.tv.ui.ScrollRule
 import app.kaeri.tv.ui.TvIcons
 import app.kaeri.tv.ui.TvListRow
@@ -110,6 +112,8 @@ enum class SettingsSection(@StringRes val label: Int) {
     Sources(R.string.sources_title),
     PluginStores(R.string.nav_plugin_stores),
     Accounts(R.string.accounts_title),
+    Devices(R.string.devices_title),
+    Profiles(R.string.profiles_title),
     Remotes(R.string.tv_remotes),
     ThisTv(R.string.tv_section_this_tv),
     About(R.string.about_title),
@@ -125,6 +129,7 @@ val PlaybackRows: List<Pair<SettingKey, Int>> = listOf(
     SettingKey.SKIP_RECAP to R.string.settings_skip_recap,
     SettingKey.SKIP_FILLER to R.string.settings_skip_filler,
     SettingKey.MARK_CHAPTERS to R.string.settings_mark_opening,
+    SettingKey.FIND_SKIP_TIMES to R.string.settings_find_skips,
     SettingKey.ASK_WAS_OPENING to R.string.settings_ask_was_opening,
     SettingKey.SHARE_SKIP_TIMES to R.string.settings_share_skips,
     SettingKey.COMMIT_THRESHOLD to R.string.settings_counts_watched,
@@ -156,15 +161,15 @@ fun SettingsScreen(nav: TvNavigator, memory: FocusMemory, start: SettingsSection
     ToTop(nav, memory, scrolled = { false }) {}
 
     Row(Modifier.fillMaxSize().padding(start = Canvas.Keyline, top = Canvas.SafeY, end = Canvas.SafeX)) {
-        Column(Modifier.width(256.dp).fillMaxHeight().focusRestorer(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.width(256.dp).fillMaxHeight().focusRestorer(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 16.dp).semantics { heading() })
-            // Eight sections at 48 each end inside the safe area, under the heading.
+            // Ten sections at 40 each end inside the safe area, under the heading.
             SettingsSection.entries.forEach { each ->
                 TvListRow(
                     stringResource(each.label),
                     onClick = {},
                     selected = each == section,
-                    height = 48.dp,
+                    height = 40.dp,
                     modifier = Modifier
                         .onFocusChanged { if (it.isFocused) section = each }
                         .firstFocus(memory, "section/${each.name}", each == start),
@@ -194,6 +199,8 @@ fun SettingsScreen(nav: TvNavigator, memory: FocusMemory, start: SettingsSection
                     SettingsSection.Sources -> sources(nav, store, view, memory, first)
                     SettingsSection.PluginStores -> pluginStores(nav, memory, first)
                     SettingsSection.Accounts -> accounts(nav, memory, first)
+                    SettingsSection.Devices -> devices(memory, first)
+                    SettingsSection.Profiles -> profiles(memory, first)
                     SettingsSection.Remotes -> remotes(memory, first)
                     SettingsSection.ThisTv -> thisTv(memory, first)
                     SettingsSection.About -> about(nav, memory, first)
@@ -310,7 +317,8 @@ private fun LazyListScope.playbackRows(store: AppStore, view: SettingsView?, mem
                         change(store, key, row?.change, switch, view)
                     }
                 },
-                supporting = overridden,
+                // Why finding is paused, where someone would look: a TV has only low storage to say.
+                supporting = overridden ?: if (key == SettingKey.FIND_SKIP_TIMES) app.kaeri.store.skipFindPausedLine(context, view?.skipFindPaused) else null,
                 value = if (switch) null else settingValue(context, key, row),
                 switch = if (switch) store.settings.isOn(key, view) else null,
                 enabled = SettingsCatalog.editable(row),

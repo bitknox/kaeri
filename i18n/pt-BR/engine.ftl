@@ -21,3 +21,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Estilo de legenda redefinido
 crash-notice = O { -app-name } fechou após um problema.
 crash-notice-tv = O { -app-name } fechou após um problema. Você pode relatá-lo em Configurações, Sobre.
+notice-surprise-empty-filters = Nenhum título corresponde a estes filtros.
+notice-surprise-empty-planning = A lista Planejado está vazia.
+notice-surprise-offline = Sem conexão. As sugestões da pesquisa precisam do AniList.
+notice-surprise-failed = Não foi possível escolher um título agora. Tente de novo daqui a pouco.

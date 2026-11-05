@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>No hay fuentes configuradas. Añade una en la pantalla Fuentes.</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Sin conexión. Inténtalo de nuevo cuando vuelvas a estar en línea.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>El episodio {episode} se emite {when}.</value>
   </data>
@@ -283,6 +286,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Cargando fuentes…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Buscando el título</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Preparando tus fuentes</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Consultando a {name}</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Abriendo la transmisión</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Probando otra transmisión</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Buscando pares</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Almacenando en búfer</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Buscando fuentes del episodio {episode}…</value>
@@ -719,6 +743,12 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>No se pudo guardar esa elección. {reason}</value>
   </data>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>La verificación del proxy falló. Los torrents empiezan cuando se apruebe.</value>
+  </data>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>Los torrents empiezan cuando el proxy pase la verificación.</value>
+  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Eso no es un enlace magnet ni un archivo torrent.</value>
   </data>
@@ -733,6 +763,12 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>No se pudo iniciar la sesión de torrents. {reason}</value>
+  </data>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>No se puede usar el ajuste del proxy. {reason}</value>
+  </data>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>Fuentes recargadas. Los torrents empiezan cuando el proxy pase la verificación.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Los torrents están desactivados. La sesión se detuvo.</value>
@@ -760,6 +796,9 @@
   </data>
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} está lista. La demo queda al final de Tus fuentes.</value>
+  </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Puedes cerrar esta pestaña y volver a Kaeri.</value>
   </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Sesión iniciada en {tracker}.</value>
@@ -847,6 +886,15 @@
   </data>
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>No se pudo guardar esa configuración. {cause}</value>
+  </data>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>El tráfico de los torrents ahora pasa por el proxy.</value>
+  </data>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>Los torrents ahora se conectan directamente, sin proxy.</value>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>No se pudo verificar el proxy. {cause}</value>
   </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>No se pudo guardar la contraseña del proxy. Escríbela otra vez para intentar guardarla. {reason}</value>
@@ -953,6 +1001,18 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>Kaeri se cerró por un problema. Puedes informarlo en Ajustes, Acerca de.</value>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>Ningún título coincide con estos filtros.</value>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>La lista Pendiente está vacía.</value>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>Sin conexión. Las sugerencias de búsqueda necesitan AniList.</value>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>No se pudo elegir un título ahora. Inténtalo de nuevo en un momento.</value>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Continuar viendo</value>
   </data>
@@ -985,6 +1045,18 @@
   </data>
   <data name="CalendarWatchedSpoken" xml:space="preserve">
     <value>{title}, {episode}, visto</value>
+  </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>E{episode} salió {ago}</value>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>E{episode} salió {ago} · Doblado</value>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>E{episode} en {span}</value>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>E{episode} en {span} · Doblado</value>
   </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>{list} {count}</value>
@@ -1451,9 +1523,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Conectando con el televisor</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>Un televisor muestra este dispositivo con el código {code}. Si olvidas un televisor aquí, él también olvida este dispositivo.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>Televisor</value>
   </data>
@@ -1573,6 +1642,21 @@
   </data>
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>Windows te preguntará si permites que Kaeri llegue a tu TV.</value>
+  </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>Puedes verla de nuevo en Ajustes, Dispositivos, con Windows Hello.</value>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Mostrar la clave de recuperación de Kaeri</value>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>Sincronizar con {device}</value>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>Abrir {device}</value>
   </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>Un compartidor</value>
@@ -1894,6 +1978,9 @@
   </data>
   <data name="ActionCancel" xml:space="preserve">
     <value>Cancelar</value>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>Ir</value>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>Ahora no</value>
@@ -2371,6 +2458,12 @@
   </data>
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>{position} de {duration}</value>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first} y {last}</value>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}, {next}</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Discusión</value>
@@ -3692,6 +3785,9 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>¿Tienes un enlace de invitación?</value>
   </data>
+  <data name="OnboardingWhereStores" xml:space="preserve">
+    <value>Complementos vienen de tiendas de complementos. Una tienda de complementos está firmada y le da a cada dispositivo su propio token, así que te unes a una con un enlace de invitación de su propietario.</value>
+  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Pruébalo ahora</value>
   </data>
@@ -4253,6 +4349,132 @@
   <data name="PartyPickContinue" xml:space="preserve">
     <value>Continuar</value>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>Di algo</value>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>Espera {seconds} s</value>
+  </data>
+  <data name="PartyChatWaitSpoken_one" xml:space="preserve">
+    <value>Espera un segundo</value>
+  </data>
+  <data name="PartyChatWaitSpoken_many" xml:space="preserve">
+    <value>Espera {seconds} de segundos</value>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>Espera {seconds} segundos</value>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>{count} más en el chat</value>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>El servidor de esta sala tiene el chat desactivado</value>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>Los mensajes pasan por el servidor de la sala. Kaeri no guarda ninguno.</value>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>El chat está oculto</value>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>Ocultar chat está activado en Ajustes, en Reproducción.</value>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>Mostrar chat</value>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>Ocultar chat en watch parties</value>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>Las líneas, las reacciones y sus marcas en la barra de reproducción no aparecen en el video, y el campo desaparece. La lista de personas sigue mostrando quién está en la sala.</value>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>Silenciar a {name}</value>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>Dejar de silenciar a {name}</value>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>Silenciado</value>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name} está silenciado</value>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>No se envió</value>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>Reaccionar</value>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>Risa</value>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>Asombro</value>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>Aplauso</value>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>Llanto</value>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>Risa de {name}</value>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>Asombro de {name}</value>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>Aplauso de {name}</value>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>Llanto de {name}</value>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{line} a los {time}</value>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first} y {second}</value>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}, {second} y {third}</value>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}, {second} y {count} más</value>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>Tú</value>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>Envía como {device}</value>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name} dice {message}</value>
+  </data>
+  <data name="PartyChatLeft_one" xml:space="preserve">
+    <value>Queda {count} carácter</value>
+  </data>
+  <data name="PartyChatLeft_many" xml:space="preserve">
+    <value>Quedan {count} de caracteres</value>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>Quedan {count} caracteres</value>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>Siguiente</value>
   </data>
@@ -4288,6 +4510,129 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Cargando</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>{place} de {total} fuentes</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Tu elección para esta serie</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} no tiene esta serie</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} no tiene el episodio {episode}</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} no respondió</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} tardó demasiado</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Omitiste {name}</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Omitida por fallas recientes</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>De {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>El primero no mostró video</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Transmisión {next} de {total}</value>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>Un par</value>
+  </data>
+  <data name="PlayerStartPeers_many" xml:space="preserve">
+    <value>{count} pares</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} pares</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Almacenando en búfer · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Reanudando en {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Reproducir desde el inicio</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Detalles</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Omitir {name}</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Omitir esta transmisión</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Aún esperando a {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Esperando conexión</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Estás sin conexión. El episodio {episode} comenzará cuando vuelvas.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Corregir coincidencia</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Audio y subtítulos</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Título encontrado</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Aún iniciando. Puedes elegir otra fuente.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Iniciando el episodio {episode}, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Comenzando desde el inicio</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Consultando</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>No tiene esta serie</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>No tiene el episodio {episode}</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>No respondió</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Tardó demasiado</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Omitida</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>Se consultó a {names}.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Con subtítulos</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>La fuente se está cargando · {seconds} s</value>
@@ -4400,6 +4745,9 @@
   <data name="PlayerMarkShares" xml:space="preserve">
     <value>Al guardar, estos tiempos se comparten con AniSkip.</value>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeri encontró estos tiempos a partir del audio.</value>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>Reemplaza los tiempos de AniSkip, de {start} a {end}, que se reportaron como incorrectos.</value>
   </data>
@@ -4451,11 +4799,35 @@
   <data name="PlayerDontAskAgain" xml:space="preserve">
     <value>No preguntar más</value>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeri encontró esta apertura. ¿Los límites son correctos?</value>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeri encontró este final. ¿Los límites son correctos?</value>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>Sí comparte estos tiempos con AniSkip para el episodio {episode}.</value>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>Ajustar</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>Guardado. AniSkip recibe estos tiempos para el episodio {episode}.</value>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeri no volverá a preguntar por los tiempos de salto.</value>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>Puedes volver a activarlo en Ajustes.</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>¿Compartir tus tiempos de salto con AniSkip?</value>
   </data>
   <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip es una lista gratuita y compartida de aperturas y finales, mantenida por sus propios voluntarios. Los reproductores de otras personas omiten lo que tú marcas.</value>
+    <value>AniSkip es una lista compartida de aperturas y finales, mantenida por sus propios voluntarios. Los reproductores de otras personas omiten los tiempos que marcas y los tiempos encontrados que confirmas.</value>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio creado para esta instalación. No recibe tu nombre, tus cuentas ni la fuente desde la que ves. AniSkip ve tu dirección IP para limitar el spam y sus términos piden que tengas 13 años o más.</value>
@@ -4474,6 +4846,27 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>De AniSkip</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Encontrado por Kaeri</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>En pausa mientras el modo de bajo consumo está activado.</value>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>En pausa mientras el ahorro de batería está activado.</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>En pausa mientras el ahorro de energía está activado.</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>En pausa mientras el modo de ahorro de energía está activado.</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>En pausa hasta que haya 2 GB de almacenamiento libre.</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>No disponible en esta versión de Kaeri.</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>Aún no hay</value>
@@ -4979,6 +5372,207 @@
   <data name="SearchLineService" xml:space="preserve">
     <value>En {service}</value>
   </data>
+  <data name="CountEpisodes_one" xml:space="preserve">
+    <value>Un episodio</value>
+  </data>
+  <data name="CountEpisodes_many" xml:space="preserve">
+    <value>{count} de episodios</value>
+  </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>{count} episodios</value>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>{count} ep.</value>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>{out} de {total} emitidos</value>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>{out} de {total}</value>
+  </data>
+  <data name="CountOut_one" xml:space="preserve">
+    <value>Un episodio emitido</value>
+  </data>
+  <data name="CountOut_many" xml:space="preserve">
+    <value>{count} de eps. emitidos</value>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>{count} eps. emitidos</value>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>{count} emit.</value>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>Empieza el {date}</value>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>Aún no sale</value>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>Ep. {episode} de {total}</value>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>Dob.</value>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>Dob. {through}</value>
+  </data>
+  <data name="CountSpokenEpisodes_one" xml:space="preserve">
+    <value>Un episodio</value>
+  </data>
+  <data name="CountSpokenEpisodes_many" xml:space="preserve">
+    <value>{count} de episodios</value>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>{count} episodios</value>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>{out} de {total} episodios emitidos</value>
+  </data>
+  <data name="CountSpokenOut_one" xml:space="preserve">
+    <value>Un episodio emitido</value>
+  </data>
+  <data name="CountSpokenOut_many" xml:space="preserve">
+    <value>{count} de episodios emitidos</value>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>{count} episodios emitidos</value>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>Empieza el {date}</value>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>Episodio {episode} de {total}</value>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>doblado hasta el episodio {through}</value>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>tiene doblaje</value>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>ene</value>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>enero</value>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>feb</value>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>febrero</value>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>mar</value>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>marzo</value>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>abr</value>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>abril</value>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>may</value>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>mayo</value>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>jun</value>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>junio</value>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>jul</value>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>julio</value>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>ago</value>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>agosto</value>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>sep</value>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>septiembre</value>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>oct</value>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>octubre</value>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>nov</value>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>noviembre</value>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>dic</value>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>diciembre</value>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>Tendencias de hoy</value>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>Tendencias de la semana</value>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>Tendencias del mes</value>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>Hoy</value>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>Esta semana</value>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>Este mes</value>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>No se pudieron cargar las tendencias de {period}.</value>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>Actualizado {age}</value>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>Sorpréndeme</value>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>Sorpréndeme</value>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>Otro</value>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>Abre un título al azar de Pendiente</value>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>Abre un título al azar de estos filtros</value>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>Abre otro título al azar en lugar de este</value>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>Ningún título coincide con estos filtros.</value>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>La lista Pendiente está vacía.</value>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>Sin conexión. Las sugerencias de búsqueda necesitan AniList.</value>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>Agregar un servidor multimedia</value>
   </data>
@@ -5228,6 +5822,9 @@
   <data name="SettingsGroupPlayback" xml:space="preserve">
     <value>Reproducción</value>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>Watch parties</value>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>Viendo</value>
   </data>
@@ -5309,23 +5906,35 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Omitir resúmenes automáticamente</value>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>Encontrar tiempos de salto a partir del audio</value>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>Cuando AniSkip no tiene tiempos, Kaeri compara el audio de los episodios de una serie, en este dispositivo.</value>
+  </data>
   <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Preguntar tras saltar una apertura a mano</value>
+    <value>Preguntar por los tiempos de salto</value>
   </data>
   <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Ofrece marcarla para que se omita la próxima vez</value>
+    <value>Tras saltar una apertura a mano, y tras un salto que Kaeri encontró</value>
   </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Compartir tiempos de salto con AniSkip</value>
   </data>
   <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip es una lista gratuita y compartida de aperturas y finales que usan muchos reproductores. Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio de esta instalación.</value>
+    <value>AniSkip es una lista compartida de aperturas y finales que usan muchos reproductores. Recibe los tiempos que marcas y los tiempos encontrados que confirmas, el número de MyAnimeList de la serie, el episodio y un id aleatorio de esta instalación.</value>
   </data>
   <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Borrar los tiempos de salto que marcaste…</value>
+    <value>Tiempos de salto que marcaste o que Kaeri encontró</value>
   </data>
   <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>¿Borrar los tiempos de salto que marcaste? AniSkip conserva los que compartiste.</value>
+    <value>¿Borrar los tiempos de salto que marcaste y los que Kaeri encontró? AniSkip conserva los que compartiste.</value>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>Borrar tiempos de salto</value>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>Los que marcaste y los que Kaeri encontró</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Saltar episodios de relleno automáticamente</value>
@@ -5349,7 +5958,7 @@
     <value>Protección contra spoilers</value>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Desenfoca las miniaturas de episodios no vistos después del siguiente</value>
+    <value>Desenfoca las imágenes y sinopsis de los episodios no vistos después del siguiente</value>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Cada serie recuerda su propio audio y sus subtítulos.</value>
@@ -5499,7 +6108,7 @@
     <value>Mostrar todo</value>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Desenfoca las miniaturas posteriores al siguiente.</value>
+    <value>Desenfoca imágenes y sinopsis posteriores al siguiente.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Siempre</value>
@@ -5650,6 +6259,9 @@
   </data>
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>¿Restablecer los ajustes?</value>
+  </data>
+  <data name="SettingsResetDetail" xml:space="preserve">
+    <value>Todos los ajustes vuelven a sus valores predeterminados, incluido el proxy de torrents. Tu historial se conserva y el archivo de ajustes anterior se guarda.</value>
   </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Los ajustes volvieron a sus valores predeterminados. El archivo anterior se guardó como {file}.</value>
@@ -5822,6 +6434,9 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>No se pudo relacionar este título</value>
   </data>
+  <data name="SourceNoteHeldBack" xml:space="preserve">
+    <value>Espera la verificación del proxy</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Lanzamientos</value>
   </data>
@@ -5900,6 +6515,9 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>No responde.</value>
   </data>
+  <data name="SourcesDetailHeldBack" xml:space="preserve">
+    <value>En espera hasta que el proxy pase la verificación.</value>
+  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Desactivada. Conserva su lugar y no se prueba.</value>
   </data>
@@ -5977,6 +6595,9 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Orden de la fuente</value>
+  </data>
+  <data name="SourcesTorrentsNote" xml:space="preserve">
+    <value>Los torrents forman parte de Kaeri, no de un complemento. El proxy y compartir se configuran en Ajustes, en Fuentes.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Las fuentes se están configurando de nuevo</value>
@@ -6173,6 +6794,9 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Complementos</value>
   </data>
+  <data name="SourcesSectionCatalogues" xml:space="preserve">
+    <value>Catálogos abiertos</value>
+  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Agregar la demo</value>
   </data>
@@ -6184,6 +6808,9 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Todavía no hay tiendas de complementos</value>
+  </data>
+  <data name="StoresEmptyDetail" xml:space="preserve">
+    <value>Tiendas de complementos guardan complementos firmados y dan a cada dispositivo su propio token. Únete a una con el enlace de invitación que te envíe su propietario.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Los complementos añaden fuentes. Cada uno muestra los hosts a los que se conecta antes de que lo instales.</value>
@@ -6692,6 +7319,9 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Abrir tiendas de complementos</value>
   </data>
+  <data name="StoresWhatIs" xml:space="preserve">
+    <value>Una tienda de complementos es un servidor pequeño que guarda complementos firmados y da a cada dispositivo su propio token. Ofrece fuentes como complementos. Kaeri no administra tiendas de complementos ni lista ninguna, así que te unes a una con un enlace de invitación de su propietario.</value>
+  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>¿Qué es esto?</value>
   </data>
@@ -6709,6 +7339,678 @@
   </data>
   <data name="StoresShare" xml:space="preserve">
     <value>Compartir…</value>
+  </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Tu navegador abrió la página de {service}. Permite el acceso allí y Kaeri continúa solo.</value>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Inicia sesión en {service} en tu navegador</value>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>computadora</value>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Ingresar un código</value>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Desactivar</value>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>Vincular por dirección</value>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>Clave de recuperación</value>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>Nombre de usuario</value>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>Dirección del servidor</value>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>Vinculando</value>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>tu otro dispositivo</value>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>Deja la dirección vacía y Kaeri busca el dispositivo en esta red.</value>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>La sincronización comparte dónde te quedaste, tu historial y tus ajustes.</value>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Control remoto</value>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>Más para {name}</value>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>No se pudo conectar con {store} ni con {device}. Inténtalo de nuevo cuando ambos estén en línea.</value>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store} no aceptó la invitación. Pide una nueva a su propietario.</value>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device} no puede invitar a otros dispositivos a {store}. Pide una invitación al propietario de la tienda de complementos.</value>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>Dispositivos</value>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>Sincronización desactivada</value>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>Sincronizado {ago}</value>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>No se pudo sincronizar</value>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>Este dispositivo</value>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>Sincronización</value>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>La sincronización está desactivada</value>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>Actívala para mantener igual en tus dispositivos dónde te quedaste, tu historial y tus ajustes.</value>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>Activar la sincronización</value>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>¿Cómo quieres que compartan tus dispositivos?</value>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>Con un dispositivo cercano</value>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>Vincúlalo con otro dispositivo en la misma red Wi-Fi. No se guarda nada en otro lugar.</value>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>Con una carpeta en la nube</value>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>Una unidad en la nube que ya usas, o tu propio servidor. Funciona aunque tus dispositivos estén lejos y mantiene una copia de respaldo.</value>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>Puedes añadir la otra forma más tarde. La mayoría usa las dos.</value>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>Tus dispositivos</value>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>Solo este dispositivo</value>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>Vincula otro dispositivo para compartir dónde te quedaste, tu historial y tus ajustes.</value>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>Añadir un dispositivo</value>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>Sin verse desde hace {days} días</value>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>Solo control remoto</value>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>Sincronizar también con {device}</value>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>Vinculado para Reproducir en el televisor. Un televisor vinculado como control remoto nunca recibe tu historial.</value>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>Sincronización</value>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>Control remoto</value>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>La sincronización comparte dónde te quedaste, tu historial y tus ajustes. El control remoto permite que este dispositivo ({kind}) controle {device}.</value>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>Quitar este dispositivo</value>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>¿Quitar {device}?</value>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device} conserva lo que tiene, pero ya no recibe nada nuevo de tus otros dispositivos.</value>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>Desactivar la sincronización en este dispositivo ({kind})</value>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>¿Desactivar la sincronización en {device}?</value>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>Este dispositivo ({kind}) deja de compartir con tus otros dispositivos. Todo lo que tiene se queda aquí.</value>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>Carpeta en la nube</value>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>Se completa mientras tus dispositivos están lejos y guarda una copia de respaldo sellada. Solo tus dispositivos pueden leerla.</value>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>Añadir una carpeta en la nube</value>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>Elegir una carpeta en la nube</value>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>Una carpeta oculta de Kaeri en tu Drive</value>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>Tu propio servidor Nextcloud o uno alojado</value>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>Una carpeta que eliges en iCloud Drive</value>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>Otro</value>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>Servidor WebDAV</value>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>Cualquier servidor compatible con WebDAV</value>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>Para una carpeta que otra app mantiene al día</value>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>Tus dispositivos guardan en esta carpeta una copia sellada de sus cambios. Solo tus dispositivos pueden leerla, y Kaeri no tiene un servidor propio.</value>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>Preparando la carpeta</value>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>Dirección del servidor</value>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>La dirección con la que abres Nextcloud en un navegador.</value>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>Termina de iniciar sesión en {host}</value>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>Tu página de Nextcloud está abierta en el navegador. Permite el acceso allí y esta hoja continúa sola.</value>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>Esperando a {service}</value>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>Abrir la página de nuevo</value>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>Usar una contraseña de aplicación</value>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>No se pudo conectar con {service}. Revisa tu conexión.</value>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>No se encontró un servidor Nextcloud en {host}. Revisa la dirección.</value>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloud no aceptó esa contraseña de aplicación. Crea una nueva en Nextcloud, en Ajustes, Seguridad.</value>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>El servidor rechazó ese nombre de usuario o contraseña.</value>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>La página de inicio de sesión se cerró antes de permitir el acceso.</value>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>Esta carpeta pertenece a otro conjunto de dispositivos. Ingresa su clave de recuperación para unirte a ellos, o elige otra carpeta.</value>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service} cerró la sesión de Kaeri. Tus cambios esperan en este dispositivo ({kind}) hasta que vuelvas a iniciar sesión.</value>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service} está lleno. Libera espacio ahí y vuelve a intentarlo.</value>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeri ya no puede abrir la carpeta. Elígela de nuevo.</value>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>No se pudo sincronizar con {service}</value>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>La carpeta propia de Kaeri en tu Dropbox, Apps/Kaeri</value>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>La carpeta propia de Kaeri en tu OneDrive, Apps/Kaeri</value>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>Sincronizar ahora</value>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>Cerrar sesión</value>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>Iniciar sesión</value>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>Sesión cerrada. Los cambios esperan en este dispositivo ({kind}) hasta que vuelvas a iniciar sesión.</value>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service} no dio acceso a Kaeri. Elígela de nuevo para reintentar.</value>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>Elige la que usan tus otros dispositivos. Una carpeta nueva en la nube se añade en un teléfono o una computadora, donde se puede guardar su clave de recuperación.</value>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>Inicia sesión en tu teléfono</value>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropbox inicia sesión en tu teléfono</value>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device} tiene la sesión de Dropbox iniciada. Este televisor puede usar ese inicio de sesión por el vínculo.</value>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>Usar el inicio de sesión de {device}</value>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>Dropbox no tiene un inicio de sesión que un televisor pueda hacer. En tu teléfono, abre Kaeri, luego Ajustes, Dispositivos, Carpeta en la nube, e inicia sesión en Dropbox ahí. Después elige Dropbox aquí de nuevo.</value>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>Sesión iniciada. Preparando la carpeta</value>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service} cerró la sesión de Kaeri. Selecciona para iniciar sesión de nuevo.</value>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>Sesión cerrada. Selecciona para iniciar sesión.</value>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>¿Cerrar sesión en {service}?</value>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>Este televisor deja de sincronizar a través de {service}. Los cambios esperan aquí hasta que vuelvas a iniciar sesión.</value>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>Esperando una conexión. Los cambios se conservan en este dispositivo ({kind}).</value>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Iniciar sesión en Google Drive</value>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>O escanea para abrir la página</value>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>Escanea esto con tu teléfono y permite el acceso en tu página de Nextcloud. El televisor continúa solo.</value>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>Tu clave de recuperación</value>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>Guárdala en un lugar seguro. Restaura tu historial si pierdes cada dispositivo, y permite que un nuevo dispositivo se una desde tu carpeta en la nube.</value>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>Mostrar como código QR</value>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>Puedes verla de nuevo en Ajustes, Dispositivos, tras desbloquear este dispositivo ({kind}).</value>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>Clave de recuperación</value>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>Creada {date}</value>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>Crear una clave nueva</value>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>La clave anterior deja de funcionar, y tus dispositivos cambian a la nueva la próxima vez que se sincronicen.</value>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>Ingresa tu clave de recuperación</value>
+  </data>
+  <data name="RkeyEnterLine_one" xml:space="preserve">
+    <value>{service} guarda el historial de {count} dispositivo. La clave que guardaste al activar la sincronización lo abre.</value>
+  </data>
+  <data name="RkeyEnterLine_many" xml:space="preserve">
+    <value>{service} guarda el historial de {count} dispositivos. La clave que guardaste al activar la sincronización lo abre.</value>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>{service} guarda el historial de {count} dispositivos. La clave que guardaste al activar la sincronización lo abre.</value>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>24 letras y dígitos, en grupos de cuatro. Los espacios y las mayúsculas no importan.</value>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>Esa clave no abre esta carpeta. Revisa cada grupo de cuatro y vuelve a intentarlo.</value>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>Restaurar</value>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>En el otro dispositivo, abre Kaeri y elige Configurar desde otro dispositivo, o Ajustes, Dispositivos, Mostrar un código. Luego ingresa el código aquí.</value>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>Escanear el código</value>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>Ambos dispositivos deben estar en la misma red Wi-Fi.</value>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>Vincular</value>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>Mostrar un código aquí</value>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>Ingresa este código en tu otro dispositivo</value>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>O escanéalo desde Kaeri en tu teléfono.</value>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>Válido por 2 minutos · {left}</value>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>En tu teléfono, abre Kaeri, luego Ajustes, Dispositivos, Añadir un dispositivo, y escanea este código o ingrésalo.</value>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>Vinculado con {device}</value>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>Trayendo tu historial. Mientras tanto puedes seguir usando Kaeri.</value>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>Copiar inicios de sesión de {device}</value>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}. Cada dispositivo recibe su propia copia por este vínculo.</value>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>Ese código no coincide. Revisa el código en {device} y vuelve a intentarlo.</value>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>No se encontró el dispositivo que muestra este código. Ambos dispositivos deben estar en la misma red Wi-Fi.</value>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>Este código venció. Muestra uno nuevo.</value>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>¿Cuál es tu perfil en {device}?</value>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>Este dispositivo ({kind}) se sincroniza solo con ese perfil. Los demás se quedan en {device}.</value>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device} ya conoce este teléfono por Reproducir en el televisor, así que sincronizar con él no necesita un código nuevo.</value>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>Episodio {n} · te quedaste en {time} en {device}</value>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>Reanudado en {time} desde {device}</value>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>Sincronizando</value>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>Sincronizando con {device}</value>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>Notas de sincronización</value>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>El episodio {n} de {title} sigue como visto. {other} lo marcó como no visto sin saber que {device} lo había terminado.</value>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>Marcar como no visto</value>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>Las notas se conservan 7 días.</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Perfiles</value>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>Solo tú</value>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>Los perfiles guardan historial, Continuar viendo y cuentas por separado para quienes comparten este dispositivo. Con un solo perfil, Kaeri no tiene selector ni nombres.</value>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>Añadir un perfil</value>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>Cada perfil guarda su propio historial, Continuar viendo y cuentas. Las Fuentes y las descargas se comparten en este dispositivo.</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>Perfil nuevo</value>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>Tu perfil</value>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>Se completa desde AniList. Hasta ahora este dispositivo tenía un perfil sin nombre.</value>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>Perfil infantil</value>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>Los títulos para adultos quedan fuera, y las fuentes, los dispositivos y los ajustes de torrents se ocultan en él.</value>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>Las Fuentes y los Dispositivos se ocultan en un perfil infantil, y los títulos para adultos quedan fuera.</value>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>Infantil</value>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>Añadir perfil</value>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>Las Fuentes, las descargas y los ajustes de este dispositivo los comparten todos los perfiles.</value>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>Se sincroniza con</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Eliminar perfil</value>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>¿Eliminar el perfil de {name}?</value>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>Se quitan el historial y los inicios de sesión de {name} en este dispositivo. Los dispositivos que se sincronizan con {name} conservan los suyos.</value>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>¿Quién está viendo?</value>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>Preguntar quién está viendo al abrir</value>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>Desactivado de forma predeterminada. Para un iPad que comparte el hogar. La fila de la cuenta cambia de perfil en cualquier momento.</value>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>Cambiar de perfil</value>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>Administrar perfiles</value>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>Configurar desde otro dispositivo</value>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>En un dispositivo que ya tiene Kaeri, abre Ajustes, Dispositivos, Añadir un dispositivo, e ingresa este código o escanéalo.</value>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>Restaurar desde una carpeta en la nube</value>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>Trayendo tu historial, tus ajustes y tu tienda de complementos. Ya puedes empezar a usar Kaeri.</value>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>Unirte a la tienda de complementos {store}</value>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device} crea para este dispositivo ({kind}) su propia invitación</value>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>Una carpeta en este dispositivo ({kind})</value>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Crea una en Nextcloud, en Ajustes, Seguridad. Se guarda en este dispositivo ({kind}).</value>
+  </data>
+  <data name="DevicesTvsForPlay_one" xml:space="preserve">
+    <value>Un televisor para Reproducir en el televisor</value>
+  </data>
+  <data name="DevicesTvsForPlay_many" xml:space="preserve">
+    <value>{count} de televisores para Reproducir en el televisor</value>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>{count} televisores para Reproducir en el televisor</value>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>Vinculado hoy</value>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>Muestra un código para ingresar en tu teléfono</value>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>Solo tú. Añade un perfil para tener historial, Continuar viendo y cuentas por separado en este televisor.</value>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>Abre ¿Quién está viendo?</value>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>Perfiles en este televisor</value>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>Guardar como archivo</value>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>Código QR</value>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>Mostrar un código</value>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>Iniciar sesión de nuevo</value>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>Elegir carpeta</value>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}, cambiar de perfil</value>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>Código de vinculación</value>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>teléfono</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>tableta</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>televisor</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>Configurar desde tu teléfono</value>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>el otro dispositivo</value>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>La página de {service} está abierta. Permite el acceso allí y Kaeri continúa solo.</value>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>Conectando con {service}</value>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>Acceso permitido. Terminando el inicio de sesión.</value>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>Creando la carpeta de Kaeri en {service} y sellando una primera copia de tu historial.</value>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>No se pudo iniciar sesión en {service}</value>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>No se pudo preparar la carpeta</value>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service} no dio acceso a Kaeri.</value>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service} no terminó el inicio de sesión. Inténtalo de nuevo en un momento.</value>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeri no pudo crear su carpeta en {service}. Inténtalo de nuevo en un momento.</value>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>Usar otro servicio</value>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>Quitar la carpeta en la nube</value>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>¿Quitar {service} de la sincronización?</value>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>Todo lo que hay en este dispositivo ({kind}) se queda aquí, y los dispositivos vinculados cercanos siguen sincronizando. La carpeta se queda en {service} con su copia sellada, y tus otros dispositivos la usan hasta que también la quites en ellos.</value>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>Quitar</value>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>Más para {service}</value>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>En uso</value>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>{service} sigue en uso hasta que la carpeta nueva esté lista.</value>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>Cualquiera de las dos activa la sincronización, y puedes usar ambas.</value>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>La sincronización lleva dónde te quedaste, tu historial y tus ajustes entre tus propios dispositivos, de forma cercana o a través de una carpeta en la nube que elijas. Se sella antes de salir de este dispositivo ({kind}).</value>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>Vincular con tu teléfono activa la sincronización. Entonces este televisor puede unirse a tu carpeta en la nube.</value>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>No se pudo cargar este título</value>
@@ -6820,6 +8122,72 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Oculto por la protección contra spoilers</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Sinopsis oculta por la protección contra spoilers</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Mostrar sinopsis</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Muestra la imagen y la sinopsis de este episodio</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} min · Emitido el {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Quedan {minutes} min</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>La protección contra spoilers oculta lo que viene después del episodio {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Oculto después del episodio {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Episodios {from} a {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Rango de episodios</value>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>Un episodio visto</value>
+  </data>
+  <data name="EpisodeFold_many" xml:space="preserve">
+    <value>{count} episodios vistos</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} episodios vistos</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>E{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Emitido el {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Ocultar</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Se muestra lo que viene después del episodio {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Visible tras el episodio {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Opciones del episodio</value>
@@ -6944,11 +8312,56 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>{status} · {score}/10</value>
   </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>Ir al episodio…</value>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>Ir al episodio</value>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>Ir</value>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>{first} a {last}</value>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>Episodio, de {first} a {last}</value>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>No hay episodio {number}. Esta serie tiene {last}.</value>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>El episodio {number} aún no sale. El más reciente es {latest}.</value>
+  </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrents</value>
   </data>
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrents activados</value>
+  </data>
+  <data name="TorrentsOffDetail" xml:space="preserve">
+    <value>Desactivados de forma predeterminada. Los torrents se conectan directamente salvo que los pases por un proxy.</value>
+  </data>
+  <data name="TorrentsRisk" xml:space="preserve">
+    <value>Otras personas en un torrent pueden ver tu dirección IP. Para mantenerla privada, pasa el tráfico de torrents por un proxy.</value>
+  </data>
+  <data name="TorrentsNotAPlugin" xml:space="preserve">
+    <value>Los torrents forman parte de Kaeri, no de un complemento. El proxy y compartir se configuran en Ajustes, en Fuentes.</value>
+  </data>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>Pasar el tráfico de torrents por un proxy</value>
+  </data>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>El tráfico de torrents pasa por un proxy SOCKS5 que tú administras o alquilas. Mientras esto esté desactivado, los torrents se conectan directamente.</value>
+  </data>
+  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
+    <value>A través de un proxy SOCKS5 en {host}:{port}.</value>
+  </data>
+  <data name="TorrentsSummaryProxy" xml:space="preserve">
+    <value>A través de un proxy SOCKS5.</value>
+  </data>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>Conexión directa, sin proxy.</value>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Host del proxy</value>
@@ -6965,6 +8378,9 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Deja la contraseña vacía para mantener la guardada.</value>
   </data>
+  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
+    <value>Los torrents siguen usando el proxy guardado hasta que el nuevo pase la verificación del proxy.</value>
+  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>El proxy necesita un host y un puerto del 1 al 65535.</value>
   </data>
@@ -6974,17 +8390,29 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxy guardado</value>
   </data>
+  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
+    <value>La verificación del proxy falló</value>
+  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>No se guardó. {why}. Se mantiene el proxy guardado.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Los torrents siguen desactivados. {why}.</value>
   </data>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeri comprueba que puede llegar al proxy antes de que empiecen los torrents. Los torrents esperan mientras esa verificación falle.</value>
+  </data>
+  <data name="TorrentsLastCheck" xml:space="preserve">
+    <value>Verificación del proxy</value>
+  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Correcta</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Comprobando</value>
+  </data>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>La verificación del proxy falló. Los torrents empiezan cuando se apruebe.</value>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Fallida</value>
@@ -7507,6 +8935,9 @@
   </data>
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>Siguiente · se reproduce en {seconds} s</value>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>Si olvidas un televisor aquí, él también olvida este dispositivo.</value>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Actualizaciones</value>

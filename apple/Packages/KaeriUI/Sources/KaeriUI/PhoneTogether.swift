@@ -8,6 +8,7 @@ import KaeriKit
 import KaeriStore
 import KaeriStrings
 import SwiftUI
+import UIKit
 
 /// The people button in Home's toolbar, before the account button.
 struct TogetherButton: ToolbarContent {
@@ -142,42 +143,95 @@ struct PhoneInParty: View {
 /// and Leave and Change episode under More.
 struct PhoneTogetherLobby: View {
     @Environment(AppStore.self) private var store
+    /// The keyboard is up, for the chat's field.
+    @State private var typing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private static let chatPlace = "chat"
+
+    /// The compact header's title: the show.
+    private var compactTitle: String {
+        let party = store.party
+        guard let room = party.lobbyEpisode else { return L.togetherTitle }
+        return room.id.flatMap { store.titles[$0]?.showTitle } ?? room.title
+    }
+
+    /// The compact header's line: how many are in the room and ready.
+    private var compactLine: String {
+        let members = store.party.members ?? []
+        return L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count)
+    }
 
     var body: some View {
         let party = store.party
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                GeometryReader { proxy in
-                    TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
-                                  height: proxy.size.width * 9 / 16)
-                }
-                .aspectRatio(16 / 9, contentMode: .fit)
-                TogetherRoomBlock(titleSize: 22).padding(.top, 16)
-                if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L.partyRoomNothing).foregroundStyle(.silk)
-                        Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+        ScrollViewReader { reader in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // While the chat field has the keyboard the large header steps aside for the
+                    // compact one in the navigation bar (watch together chat board, iPhone).
+                    if !typing {
+                        GeometryReader { proxy in
+                            TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
+                                          height: proxy.size.width * 9 / 16)
+                        }
+                        .aspectRatio(16 / 9, contentMode: .fit)
+                        .transition(.opacity)
+                        TogetherRoomBlock(titleSize: 22).padding(.top, 16)
+                            .transition(.opacity)
                     }
-                    .font(.board(13))
-                    .padding(.top, 4)
+                    if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.partyRoomNothing).foregroundStyle(.silk)
+                            Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+                        }
+                        .font(.board(13))
+                        .padding(.top, 4)
+                    }
+                    if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
+                        TogetherGuesses(guesses: guesses).padding(.top, 14)
+                    }
+                    if let lastOut = party.lastOut, party.inLobbyRoom {
+                        TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
+                    }
+                    TogetherSourcesLine().padding(.top, 12)
+                    // The members step aside with the large header while the field is up.
+                    if !typing {
+                        TogetherMembers(rowHeight: 52).padding(.top, 28).transition(.opacity)
+                    }
+                    if party.inLobbyRoom, let view = party.party {
+                        // Talk before play follows the members (watch together chat board, iPhone).
+                        TogetherChat(size: 15).id(Self.chatPlace).padding(.top, 24)
+                        TogetherInvite(view: view, codeSize: 22).padding(.top, 28)
+                    }
                 }
-                if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
-                    TogetherGuesses(guesses: guesses).padding(.top, 14)
-                }
-                if let lastOut = party.lastOut, party.inLobbyRoom {
-                    TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
-                }
-                TogetherSourcesLine().padding(.top, 12)
-                TogetherMembers(rowHeight: 52).padding(.top, 28)
-                if party.inLobbyRoom, let view = party.party {
-                    TogetherInvite(view: view, codeSize: 22).padding(.top, 28)
-                }
+                .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
             }
-            .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
+            #if FIXTURES
+            .task {
+                // The lobby's chat shot: the conversation is under the members, so it scrolls there.
+                guard TogetherScene.named() == .lobbyChat else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                reader.scrollTo(Self.chatPlace, anchor: .bottom)
+            }
+            #endif
+            .onChange(of: typing) { _, up in
+                // The field and the privacy line under it stay in view above the keyboard.
+                if up { withAnimation(.standard) { reader.scrollTo(Self.chatPlace, anchor: .bottom) } }
+            }
         }
         .background(.ground)
-        .safeAreaInset(edge: .bottom) { pinned }
-        .navigationTitle("")
+        // While typing, the field rides above the keyboard and I'm ready steps aside for it.
+        .safeAreaInset(edge: .bottom) {
+            if !typing { pinned.transition(.opacity) }
+        }
+        .animation(reduceMotion ? .fadeIn : .standard, value: typing)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            typing = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            typing = false
+        }
+        .navigationTitle(typing ? compactTitle : "")
+        .navigationSubtitle(typing ? compactLine : "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
@@ -219,6 +273,8 @@ struct PhoneTogetherLobby: View {
 struct PartyBar: View {
     @Environment(AppStore.self) private var store
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    /// The newest line of chat takes the count's place for 4 s.
+    @State private var said: ChatColumnLine?
 
     var body: some View {
         let party = store.party
@@ -234,9 +290,19 @@ struct PartyBar: View {
                     } ?? L.navWatchTogether)
                         .font(.board(15, weight: .medium)).foregroundStyle(.silk).lineLimit(1)
                     if placement != .inline {
-                        Text(view.playing && !party.playerUp() ? L.partyBarIdle
-                             : L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count))
-                            .font(.ui(13)).foregroundStyle(.haze).lineLimit(1).monospacedDigit()
+                        Group {
+                            if let said {
+                                (Text(said.you ? L.partyChatYou : said.from).fontWeight(.semibold) + Text(" ") + Text(said.text))
+                                    .foregroundStyle(.silk)
+                            } else {
+                                Text(view.playing && !party.playerUp() ? L.partyBarIdle
+                                     : L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count))
+                                    .foregroundStyle(.haze)
+                            }
+                        }
+                        .font(.ui(13)).lineLimit(1).monospacedDigit()
+                        .contentTransition(.opacity)
+                        .animation(.fadeIn, value: said?.id)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -251,6 +317,12 @@ struct PartyBar: View {
             .padding(.leading, 16)
             .padding(.trailing, 4)
             .contentShape(.rect)
+            .task(id: party.chat.latest?.id) {
+                guard party.chat.shown, let latest = party.chat.latest else { return }
+                said = latest
+                try? await Task.sleep(for: .seconds(4))
+                if !Task.isCancelled { said = nil }
+            }
             .onTapGesture(perform: open)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)

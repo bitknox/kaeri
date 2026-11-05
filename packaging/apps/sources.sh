@@ -18,6 +18,9 @@
 #             again), GnuTLS, Nettle, GMP, FriBidi, uchardet and libbluray, as the releases of
 #             the versions MPVKit builds, pinned below, with MPVKit's own build scripts and
 #             patches at the releases apple/scripts/mpv.sh takes their libraries from.
+#   Windows   libmpv-<build>-sources.tar from the deps-libmpv release, everything Kaeri's Windows
+#             libmpv was built from (desktop/windows/scripts/libmpv-build.sh wrote it), checked
+#             against the SHA-256 desktop/windows/scripts/libmpv.ps1 pins with the build.
 #
 # The pins below are for MPVKit's release named first. When apple/scripts/mpv.sh moves to another,
 # this fails until they are brought up to date with it.
@@ -88,7 +91,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 name="kaeri-$version-apps-sources"
 stage="$work/$name"
-mkdir -p "$stage/sources" "$stage/android" "$stage/apple"
+mkdir -p "$stage/sources" "$stage/android" "$stage/apple" "$stage/windows"
 listing="$work/listing"
 
 sha() { shasum -a 256 "$1" | cut -d' ' -f1; }
@@ -121,6 +124,16 @@ for entry in "${apple_sources[@]}"; do
   record "$archive" "Apple" "$sum" "$url"
 done
 
+# Windows's, as the build wrote it: its own SOURCES.txt lists what is inside.
+windows_build="$(sed -n "s/^\$build = '\(.*\)'$/\1/p" desktop/windows/scripts/libmpv.ps1)"
+windows_sum="$(sed -n "s/^\$sources = '\(.*\)'$/\1/p" desktop/windows/scripts/libmpv.ps1)"
+[[ -n "$windows_build" && -n "$windows_sum" ]] || fail "found no \$build and \$sources in libmpv.ps1"
+archive="libmpv-$windows_build-sources.tar"
+url="https://github.com/bitknox/kaeri/releases/download/deps-libmpv/$archive"
+curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 --max-time 1200 -o "$stage/windows/$archive" "$url"
+[[ "$(sha "$stage/windows/$archive")" == "$windows_sum" ]] || fail "$url does not match its SHA-256 $windows_sum"
+record "windows/$archive" "Windows" "$windows_sum" "$url"
+
 # The scripts that built the libraries, and Kaeri's changes to the sources.
 cp android/scripts/mpv.sh android/mpv/libmpv.map android/mpv/NOTICE "$stage/android/"
 cp -R android/mpv/patches "$stage/android/patches"
@@ -143,6 +156,8 @@ built from:
   apple/     apple/scripts/mpv.sh, which built the Mac, iPhone and iPad app's Mpv.framework,
              and the patches it applies to mpv and libass (patches/mpv, patches/libass; MPVKit's
              own three for mpv among them)
+  windows/   libmpv-$windows_build-sources.tar, the Windows app's libmpv-2.dll's own source
+             archive: the archives, the build script and patches, and its SOURCES.txt
 
 The Apple app links mpv and libass with MPVKit $mpvkit's LGPL builds of FFmpeg and the
 libraries beneath it. MPVKit builds each from the project's own repository at the release the

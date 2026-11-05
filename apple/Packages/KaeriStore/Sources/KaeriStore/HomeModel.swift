@@ -58,7 +58,20 @@ public final class HomeModel {
     }
 
     /// Take the engine's view. A title that left the view is no longer on its way out.
-    func apply(_ next: HomeView, titles: TitleCache) {
+    func apply(_ received: HomeView, titles: TitleCache) {
+        var next = received
+        #if FIXTURES
+        // `-KaeriContinueFrom <device>`: the Continue cards say another device played last, as the
+        // engine does for a play on a paired device in the last day.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-KaeriContinueFrom"), arguments.indices.contains(index + 1) {
+            let device = arguments[index + 1]
+            if next.spotlight?.case == .continuing { next.spotlight?.lastDevice = device }
+            for section in next.sections.indices where next.sections[section].kind == .continue {
+                for item in next.sections[section].items.indices { next.sections[section].items[item].lastDevice = device }
+            }
+        }
+        #endif
         if let before = view, next.spotlightMoved(from: before) { spotlightChanges += 1 }
         var continuing: [Entry] = []
         var others: [Entry] = []

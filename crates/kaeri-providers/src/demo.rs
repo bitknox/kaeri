@@ -219,6 +219,7 @@ impl Provider for DemoProvider {
         &self,
         query: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
         // The title matcher asks with the title as the metadata names it, which for the demo is
         // its own: either spelling finds it.
@@ -237,6 +238,7 @@ impl Provider for DemoProvider {
         &self,
         key: &ProviderKey,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         if key.as_str() != TITLE_KEY {
             return Err(ProviderError::NotFound);
@@ -257,6 +259,7 @@ impl Provider for DemoProvider {
         key: &ProviderKey,
         episode: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         if key.as_str() != TITLE_KEY {
             return Err(ProviderError::NotFound);
@@ -284,20 +287,33 @@ mod tests {
     async fn either_spelling_of_the_title_finds_the_work() {
         let demo = DemoProvider::new();
         for query in [DEMO_TITLE, DEMO_TITLE_ROMAJI, "demo", "KOUSHI"] {
-            let hits = demo.search(query, Translation::Sub).await.unwrap();
+            let hits = demo.search(query, Translation::Sub, &Default::default()).await.unwrap();
             assert_eq!(hits.len(), 1, "{query}");
         }
-        assert!(demo.search("something else", Translation::Sub).await.unwrap().is_empty());
-        assert!(demo.search("  ", Translation::Sub).await.unwrap().is_empty());
+        assert!(
+            demo.search("something else", Translation::Sub, &Default::default())
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            demo.search("  ", Translation::Sub, &Default::default()).await.unwrap().is_empty()
+        );
     }
 
     #[tokio::test]
     async fn every_part_is_an_episode_on_the_demo_hosts() {
         let demo = DemoProvider::new();
-        let episodes =
-            demo.episodes(&ProviderKey::new(TITLE_KEY), Translation::Sub).await.unwrap();
+        let episodes = demo
+            .episodes(&ProviderKey::new(TITLE_KEY), Translation::Sub, &Default::default())
+            .await
+            .unwrap();
         assert_eq!(episodes.len(), demo::PARTS.len());
-        assert!(demo.episodes(&ProviderKey::new("other"), Translation::Sub).await.is_err());
+        assert!(
+            demo.episodes(&ProviderKey::new("other"), Translation::Sub, &Default::default())
+                .await
+                .is_err()
+        );
     }
 
     #[test]

@@ -119,6 +119,7 @@ struct MacShell: View {
         .sourcePickerSheet(navigator)
         .matchPickerSheet(navigator)
         .openLinkSheet(navigator)
+        .surprisePicks()
     }
 
     /// What the toolbar says under the section's name.
@@ -155,9 +156,12 @@ struct SectionToolbar: ToolbarContent {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 8) {
                     LibrarySegments()
+                    SurpriseButton()
                     LibraryMenus()
                 }
             }
+        case .search:
+            ToolbarItem(placement: .primaryAction) { SurpriseButton() }
         case .seasonal:
             ToolbarItem(placement: .primaryAction) { SeasonalToolbar() }
         case .providers:
@@ -286,6 +290,8 @@ struct LibraryMenus: View {
 struct Sidebar: View {
     @Binding var selection: AppSection
     @FocusState private var focused: Bool
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -297,6 +303,7 @@ struct Sidebar: View {
                 .accessibilityAddTraits(.isHeader)
             ForEach(AppSection.sources) { row($0) }
             Spacer(minLength: 0)
+            if store.sync.hasProfiles, let profile = store.sync.activeProfile { account(profile) }
             row(.settings)
         }
         .padding(EdgeInsets(top: 0, leading: 10, bottom: 12, trailing: 10))
@@ -307,6 +314,43 @@ struct Sidebar: View {
         .onKeyPress(.downArrow) { step(1) }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L.navSectionsLabel)
+    }
+
+    /// The profile in use, with the menu that switches it: shown only with two or more.
+    private func account(_ profile: ProfileView) -> some View {
+        Menu {
+            ForEach(store.sync.profiles, id: \.id) { other in
+                Button {
+                    if !other.active { store.sync.switchProfile(other.id) }
+                } label: {
+                    if other.active { Label(other.name, systemImage: "checkmark") } else { Text(other.name) }
+                }
+            }
+            Divider()
+            Button(L.profilesAdd + "…") {
+                navigator.openSettings(.profiles)
+                store.sync.sheet = .profileAdd
+            }
+            Button(L.profilesManage) { navigator.openSettings(.profiles) }
+        } label: {
+            HStack(spacing: 10) {
+                ProfileAvatar(profile: profile, size: 22)
+                Text(profile.name)
+                    .font(.mac(13))
+                    .foregroundStyle(.silk)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.mac(10))
+                    .foregroundStyle(.haze)
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+            .contentShape(.rect(cornerRadius: 8))
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .accessibilityLabel(L.profilesAvatarDesc(name: profile.name))
     }
 
     private func row(_ section: AppSection) -> some View {

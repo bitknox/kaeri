@@ -7,6 +7,6 @@ status-reloading-sources = Laddar om { -source-pl }…
 pin-unavailable = { $name } är vald för den här titeln men går inte att använda, så de andra { -source-pl } används.
 tui-together-section = Tillsammans
 tui-together-join-prompt = länk eller kod
-tui-together-keys = r redo · c kopiera länk · s starta nu · x lämna
+tui-together-chat-hidden-line = Rader och reaktioner hålls borta från spelaren i alla partyn.
 tui-together-not-a-link = Det där är varken en länk eller en kod för { -watch-party }.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }

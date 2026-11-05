@@ -35,12 +35,16 @@ use crate::{
 /// offers both, and the phone picks: see the design doc's versioning section.
 pub const ALPN: &[u8] = b"kaeri-remote/1";
 
+/// What two devices syncing their histories name the protocol: the same mutual raw-key TLS as the
+/// remote, under a name of its own so a remote client can never open a sync session.
+pub const SYNC_ALPN: &[u8] = b"kaeri-sync/1";
+
 /// The name a phone dials. Raw public keys carry no name, so it is checked by nobody; rustls only
 /// needs one to start a handshake.
-pub(crate) const SERVER_NAME: &str = "app.kaeri.invalid";
+pub const SERVER_NAME: &str = "app.kaeri.invalid";
 
 /// The label the pairing exchange binds itself to this connection with (RFC 8446, section 7.5).
-pub(crate) const EXPORTER_LABEL: &[u8] = b"EXPORTER-kaeri-remote-pairing";
+pub const EXPORTER_LABEL: &[u8] = b"EXPORTER-kaeri-remote-pairing";
 
 fn provider() -> Arc<CryptoProvider> {
     Arc::new(default_provider())
@@ -52,13 +56,18 @@ fn algorithms() -> WebPkiSupportedAlgorithms {
 
 /// The TV's side: its own key, and any phone's key taken at the TLS layer.
 pub(crate) fn server_config(identity: &Identity) -> Result<Arc<ServerConfig>, Error> {
+    server_config_for(identity, ALPN)
+}
+
+/// [`server_config`] for the protocol `alpn` names.
+pub fn server_config_for(identity: &Identity, alpn: &[u8]) -> Result<Arc<ServerConfig>, Error> {
     let mut config = ServerConfig::builder_with_provider(provider())
         .with_protocol_versions(&[&TLS13])?
         .with_client_cert_verifier(Arc::new(AnyClientKey { algorithms: algorithms() }))
         .with_cert_resolver(Arc::new(AlwaysResolvesServerRawPublicKeys::new(
             identity.certified()?,
         )));
-    config.alpn_protocols = vec![ALPN.to_vec()];
+    config.alpn_protocols = vec![alpn.to_vec()];
     Ok(Arc::new(config))
 }
 
@@ -69,6 +78,15 @@ pub(crate) fn client_config(
     identity: &Identity,
     pinned: Option<Fingerprint>,
 ) -> Result<(Arc<ClientConfig>, Arc<ServerKey>), Error> {
+    client_config_for(identity, pinned, ALPN)
+}
+
+/// [`client_config`] for the protocol `alpn` names.
+pub fn client_config_for(
+    identity: &Identity,
+    pinned: Option<Fingerprint>,
+    alpn: &[u8],
+) -> Result<(Arc<ClientConfig>, Arc<ServerKey>), Error> {
     let server_key =
         Arc::new(ServerKey { pinned, seen: Mutex::new(None), algorithms: algorithms() });
     let mut config = ClientConfig::builder_with_provider(provider())
@@ -78,16 +96,16 @@ pub(crate) fn client_config(
         .with_client_cert_resolver(Arc::new(AlwaysResolvesClientRawPublicKeys::new(
             identity.certified()?,
         )));
-    config.alpn_protocols = vec![ALPN.to_vec()];
+    config.alpn_protocols = vec![alpn.to_vec()];
     Ok((Arc::new(config), server_key))
 }
 
-pub(crate) fn server_name() -> ServerName<'static> {
+pub fn server_name() -> ServerName<'static> {
     ServerName::try_from(SERVER_NAME).expect("a valid DNS name")
 }
 
 /// The fingerprint of the key a peer presented, which the handshake proved it holds.
-pub(crate) fn peer_fingerprint(certs: Option<&[CertificateDer<'_>]>) -> Option<Fingerprint> {
+pub fn peer_fingerprint(certs: Option<&[CertificateDer<'_>]>) -> Option<Fingerprint> {
     certs?.first().map(|spki| Fingerprint::of_spki(spki.as_ref()))
 }
 
@@ -147,7 +165,7 @@ impl ClientCertVerifier for AnyClientKey {
 /// The TV's key as the phone checks it: against the pin when there is one, and noted either way
 /// for pairing to bind.
 #[derive(Debug)]
-pub(crate) struct ServerKey {
+pub struct ServerKey {
     pinned: Option<Fingerprint>,
     seen: Mutex<Option<Fingerprint>>,
     algorithms: WebPkiSupportedAlgorithms,
@@ -155,13 +173,13 @@ pub(crate) struct ServerKey {
 
 impl ServerKey {
     /// The key the TV presented on the last handshake.
-    pub(crate) fn seen(&self) -> Option<Fingerprint> {
+    pub fn seen(&self) -> Option<Fingerprint> {
         *self.seen.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
     /// Whether the TV presented a key other than the pinned one: it was reset or reinstalled,
     /// or it is another device answering at its address.
-    pub(crate) fn mismatched(&self) -> bool {
+    pub fn mismatched(&self) -> bool {
         self.pinned.is_some_and(|pinned| self.seen().is_some_and(|seen| seen != pinned))
     }
 }

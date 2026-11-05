@@ -105,6 +105,9 @@ pub struct EpisodeItem {
     pub number: Option<u32>,
     #[serde(default)]
     pub run_time_ticks: Option<i64>,
+    /// The server's synopsis of the episode, from its own metadata scrapers.
+    #[serde(default)]
+    pub overview: Option<String>,
     #[serde(default)]
     pub user_data: Option<UserData>,
 }

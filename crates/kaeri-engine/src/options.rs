@@ -31,6 +31,10 @@ pub struct EngineOptions {
     /// rather than mpv's process: always so without the desktop feature, where there is no other
     /// player, and on the desktop only when the front end asks.
     pub hosted_player: bool,
+    /// Whether the hosted player hands the audio over through libmpv's demuxer tap, which
+    /// finding skip times needs: the app's libmpv carries the tap, and it handed
+    /// `kaeri_audio_tap` to `mpv_set_audio_tap`. Off unless the front end says so.
+    pub audio_tap: bool,
     /// Whether `syncplay.enabled` sends every play to the watch party the settings name: the
     /// terminal's way in, on for it alone. An app starts parties when asked, with `PartyJoin`
     /// or `PlayParty`, and the setting does nothing there. Off unless the front end turns it on.
@@ -47,6 +51,9 @@ pub struct EngineOptions {
     /// The engine runs on a phone or a tablet, for the defaults that depend on the device:
     /// torrents while casting is off there. `false` for a computer and the terminal.
     pub handheld: bool,
+    /// What kind of device this is, for the other devices' lists in sync. `None` leaves it
+    /// unsaid (the terminal).
+    pub device_kind: Option<kaeri_model::group::SyncDeviceKind>,
     /// The language the front end speaks, as a tag from `kaeri_i18n::languages()`, for what
     /// the engine writes where the front end can't render it: a TV's episode line while casting.
     /// `None` for English.
@@ -70,6 +77,10 @@ pub struct EngineOptions {
     pub set_aside: Option<std::path::PathBuf>,
     #[cfg(feature = "testing")]
     pub parts: Option<Parts>,
+    /// Where the cloud drives' sign-in and folders are, and how fast the device code is polled,
+    /// in place of the real services: a test's fakes on loopback.
+    #[cfg(feature = "testing")]
+    pub cloud_test: Option<crate::cloud::CloudTest>,
     /// What keep next takes to be free on the device, in bytes, in place of asking the disk:
     /// for a test, whose answer should not depend on the machine it runs on.
     #[cfg(feature = "testing")]
@@ -94,10 +105,12 @@ impl EngineOptions {
             store,
             player_theme,
             hosted_player: !cfg!(feature = "desktop"),
+            audio_tap: false,
             every_play_a_party: false,
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,
+            device_kind: None,
             language: None,
             sources: None,
             background: Background::default(),
@@ -105,10 +118,15 @@ impl EngineOptions {
             #[cfg(feature = "testing")]
             parts: None,
             #[cfg(feature = "testing")]
+            cloud_test: None,
+            #[cfg(feature = "testing")]
             free_space: None,
         }
     }
 }
+
+/// The cloud sign-in clients: the iOS, Android, desktop and TV ones.
+pub use kaeri_sync::google::ClientKind as CloudClient;
 
 /// The OAuth clients a native app registered for itself and ships with: AniList's for its
 /// implicit grant, which needs no secret, and MAL's for PKCE, each redirecting to where its client
@@ -138,6 +156,23 @@ pub struct AppClients {
     /// The app's Trakt client secret, for a client that has one. Polling for the device flow's
     /// token goes without it when it is `None`.
     pub trakt_secret: Option<String>,
+    /// The Google client of this platform ([`kaeri_sync::google::ClientKind`]): iOS and Android
+    /// have no secret, the desktop's and the TV's do. `None` for Kaeri's own.
+    pub google: Option<String>,
+    /// The secret of the Google desktop client (Google asks for it in the token exchange), or of
+    /// the TV client.
+    pub google_secret: Option<String>,
+    /// The Dropbox app key, `None` for Kaeri's own. The app has no secret: PKCE.
+    pub dropbox: Option<String>,
+    /// The Microsoft application (client) id, a public client. `None` for Kaeri's own.
+    pub onedrive: Option<String>,
+    /// Which of the cloud clients above this device uses, which decides the redirect and the
+    /// way of signing in. `None` for the desktop feature's default, the desktop client, and for
+    /// no cloud sign-in without it.
+    pub cloud_kind: Option<CloudClient>,
+    /// Leave Kaeri's own cloud clients out where the app names none, as a build without them
+    /// would be: for a test of a service with no client.
+    pub no_built_in_clients: bool,
 }
 
 /// The work the engine does on its own beside the commands, each piece on its own switch.

@@ -39,6 +39,7 @@ use crate::{
 
 mod accounts;
 mod cursor;
+mod devices;
 mod downloads;
 mod episodes;
 #[cfg(test)]
@@ -61,6 +62,10 @@ use self::title::TitleFrame;
 pub use self::{
     accounts::sync_badge,
     cursor::{Cursor, Cursors},
+    devices::{
+        DeviceConfirm, DeviceLine, DevicePageItem, Devices, FolderState, PairCode, code_groups,
+        key_groups, pair_link,
+    },
     episodes::EpisodeFilter,
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
@@ -74,9 +79,19 @@ pub use self::{
     text::{Field, TextField},
 };
 pub(crate) use self::{
+    devices::{is_drive, service_line, service_name},
     episodes::countdown_text,
     title::{push_detail, status_text, watch_order, watched_all},
 };
+
+/// A title Surprise me opened: on its page `z` is Another, from the same pool.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Surprised {
+    pub id: AnilistId,
+    pub pool: kaeri_model::browsing::SurprisePool,
+    /// The pool has another title to pick: with a pool of one there is no Another.
+    pub more: bool,
+}
 
 /// The whole application state.
 pub struct App {
@@ -280,7 +295,7 @@ pub struct App {
     /// needing index remapping at every call site.
     pub episodes: Vec<EpisodeRow>,
     /// Every row, unfiltered — the source [`Self::episodes`] is re-derived from.
-    episodes_all: Vec<EpisodeRow>,
+    pub(crate) episodes_all: Vec<EpisodeRow>,
     /// Which title the rows are, set with them. `detail` is not enough to say: it moves to a
     /// title the moment one is opened, while the rows stay the last title's until its own load
     /// answers, and asked by `detail` they spoke for a show they were never part of.
@@ -290,6 +305,17 @@ pub struct App {
     pub dub: Option<(AnilistId, DubExtent)>,
     /// The active episode filter, cycled with `f`.
     pub episode_filter: EpisodeFilter,
+    /// The digits typed on the episode list, for the `G` that goes to that episode.
+    pub go_count: String,
+    /// Why the last typed `G` went nowhere, said in the status line until the next key.
+    pub go_error: Option<String>,
+    /// A typed `G` just moved the episode cursor: the next frame puts its row in the table's
+    /// top third, and says where the window went.
+    pub episodes_jumped: bool,
+    /// The pool a Surprise me is being picked from: another press waits for it.
+    surprising: Option<kaeri_model::browsing::SurprisePool>,
+    /// The last title Surprise me opened, and its pool, for Another on its page.
+    surprised: Option<Surprised>,
     /// The provider that actually resolved the most recent stream. The header prefers
     /// this over the configured order: during failover the first configured source is
     /// exactly the one that is *not* serving.
@@ -312,6 +338,10 @@ pub struct App {
     pub party_members: Vec<kaeri_model::party::PartyMember>,
     /// The last rooms, newest first.
     pub party_recent: Vec<kaeri_model::party::PartyRecentRoom>,
+    /// The party's conversation, kept for the party only.
+    pub party_chat: kaeri_model::party::PartyConversation,
+    /// What the room's server allows in chat, once it has said.
+    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
     /// Joined plugin stores.
     pub stores: Vec<StoreRow>,
     /// Whether the store list has arrived at least once, so "none joined" is not said early.
@@ -331,6 +361,8 @@ pub struct App {
     pub open_join: Option<(String, OpenJoinView)>,
     /// Whether the open link overlay's link went to the clipboard, as `invite_copied` says it.
     pub open_link_copied: bool,
+    /// The Devices screen: sync, pairing and profiles.
+    pub devices: Devices,
     /// The store just opened from its page, whose link is shown when the answer comes.
     pub(crate) opening: Option<String>,
     /// Text waiting to go to the terminal's clipboard: see [`App::take_clipboard`].
@@ -437,6 +469,11 @@ impl App {
             dub: None,
             episodes_for: None,
             episode_filter: EpisodeFilter::default(),
+            go_count: String::new(),
+            go_error: None,
+            episodes_jumped: false,
+            surprising: None,
+            surprised: None,
             active_provider: None,
             match_candidates: Vec::new(),
             match_context: None,
@@ -448,6 +485,8 @@ impl App {
             party: None,
             party_members: Vec::new(),
             party_recent: Vec::new(),
+            party_chat: Default::default(),
+            party_chat_state: None,
             stores_loaded: false,
             members_for: None,
             store_members: Vec::new(),
@@ -457,6 +496,7 @@ impl App {
             invite_copied: false,
             open_join: None,
             open_link_copied: false,
+            devices: Devices::default(),
             opening: None,
             clipboard: None,
             plugin_action: None,
@@ -513,6 +553,9 @@ impl App {
             | Event::Browse(_)
             | Event::Facets(_)
             | Event::RecentSearches(_) => {}
+            // The periods' rail is the native apps'; the terminal has them in the Sort row.
+            Event::Trending { .. } => {}
+            Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
             // The terminal draws no licensed services yet: what the native apps are sent is not
             // asked for here.
             Event::Licensed(_)
@@ -532,7 +575,7 @@ impl App {
             // a full record for any other id answers a title the user has already left.
             Event::Detail(entry) => self.apply_detail(entry),
             // The terminal has no hover cards.
-            Event::Cards(_) => {}
+            Event::Cards(cards) => self.apply_note_titles(&cards),
             // The engine names every title as the setting says; nothing here asks the viewer's.
             Event::ViewerTitleLanguage(_) => {}
             Event::TitlesChanged(_) => self.titles_changed(),
@@ -559,7 +602,7 @@ impl App {
                 self.set_party(view);
             }
             Event::PartyState(view) => self.set_party(view),
-            Event::PartyMembers(members) => self.party_members = members,
+            Event::PartyMembers(members) => self.set_party_members(members),
             Event::PartyRecent(rooms) => self.set_recent_rooms(rooms),
             Event::PartyLeft { reason: Some(reason) } => {
                 self.end_party();
@@ -570,8 +613,12 @@ impl App {
             }
             Event::PartyLeft { reason: None } => self.end_party(),
             // The lobby of a native app, the start the engine acts on, and a look into a room.
+            Event::PartyChat(conversation) => self.set_party_chat(conversation),
+            Event::PartyChatState(state) => self.party_chat_state = Some(state),
+            Event::PartyChatRefused(refusal) => self.chat_refused(refusal),
             Event::PartyForm(_)
             | Event::PartyMessage(_)
+            | Event::PartyReaction(_)
             | Event::PartyStarted { .. }
             | Event::PartyGlimpse(_)
             | Event::PartyLookFailed { .. }
@@ -599,6 +646,17 @@ impl App {
             }
             Event::MetaStatus(rows) => self.meta_status = rows,
             Event::Stores(rows) => self.apply_stores(rows),
+            Event::Profiles(view) => self.apply_profiles(view),
+            Event::ProfileSwitch { id } => self.apply_profile_switch(id),
+            Event::SyncStatus(status) => self.apply_sync_status(status),
+            Event::SyncInvite { code, port, seconds } => {
+                self.apply_sync_invite(code, port, seconds)
+            }
+            Event::SyncSignIn { service, step } => self.apply_sync_sign_in(service, step),
+            Event::SyncRecoveryKey(key) => self.apply_recovery_key(key),
+            Event::SyncProblem(problem) => self.apply_sync_problem(problem),
+            // Copying sign-ins to another device is the phone apps' part.
+            Event::SyncSignInsCopied { .. } => {}
             Event::StorePreview(outcome) => self.apply_store_preview(outcome),
             Event::StoreJoined { store } => self.apply_store_joined(store),
             Event::InviteLink(view) => self.apply_invite_link(view),
@@ -647,9 +705,19 @@ impl App {
             Event::PlaybackSpeed(speed) => self.apply_playback_speed(speed),
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
-            Event::PlaybackStaged { id, title, episode, episode_title, speed } => {
+            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
                 self.take_staged(id, title, episode, episode_title, speed);
             }
+            // The terminal has no starting screen; it keeps the notice a stream with no video
+            // had before the step carried it.
+            Event::StartingStep {
+                step: kaeri_model::starting::StartStep::TryingAnotherStream { next, total },
+                ..
+            } => self.push_toast(Notice::info(kaeri_model::Msg::NoticeStreamNoVideo {
+                next: i64::from(next),
+                total: i64::from(total),
+            })),
+            Event::StartingStep { .. } => {}
             // A play cast to a TV, which the terminal does not do: no player of its own opens.
             Event::CastStaged { .. } => {}
             // The window has changed hands, so what reports from here on is the successor. What
@@ -715,6 +783,11 @@ impl App {
             Event::Progress { id, progress, resume, episodes } => {
                 self.apply_progress(id, progress, resume, episodes)
             }
+            Event::SyncPairFailed { problem, device } => {
+                self.apply_pair_failed(problem, device)
+            }
+            // Joining a store through a paired device is the apps' first launch.
+            Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
         }
     }
 

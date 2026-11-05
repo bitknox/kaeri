@@ -10,29 +10,34 @@
 # generated episode first on Continue), then after a colon a section (calendar, seasonal, search, library,
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
-# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|filters|messages|discussion-<episode>>,
-# tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
+# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>>,
+# sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
 # Chromecast built in (FixtureCasts.swift lists the scenes), day=<days after today>, the calendar opened on
 # that day, for one with broadcasts, mine=1 the calendar on My list,
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
-# party=<form|joining|refused|invite|panel|ready|sync|chat|lost|left|nosource|choose|unaired|quit>, a
+# party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing
 # scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|all>, the invented rows of `Showcase`
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
 # episodes marked watched as the shot starts (900006:8 is caught up), and
-# fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
+# continuefrom=<device>, Home's Continue cards saying another device played last, fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
 # for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
-# Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching):
+# Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching),
+# and skippause=<low-power|storage>, Settings' "Find skip times" row paused for that reason:
 #
 #   apple/scripts/shots.sh mac watching watching:calendar watching:title=900001 fresh
 #   apple/scripts/shots.sh mac watching:settings+pane=sources+showcase=sources
 #
 # Each goes to apple/.shots/<device>-<shot>.png, ":" and "=" made "-", which git ignores.
+#
+# The starting screen on the engine's made-up starts: player-start-<state>-<seconds>[-details]
+# [-choose], with the state's name from StartingFixture in kebab case (player-start-slow-10,
+# player-start-failed-no-episode-3-details). KAERI_REDUCE_MOTION=1 runs it with Reduce Motion.
 #
 # The player's states are shots too: player-starting, player-playing, player-skip, player-up-next,
 # player-still-watching, player-stall, player-buffering, player-scrubbing, player-tracks (the
@@ -67,7 +72,9 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-stats-buffering player-stats-hdr player-stats-paused player-stats-copied player-discussion player-discussion-open
   player-mark-start player-mark-end player-mark-review player-mark-short player-mark-long player-mark-replaces
   player-mark-shares player-mark-noentry player-mark-editing player-mark-previewing player-prompt-opening
-  player-prompt-wrong player-prompt-share player-skip-times)
+  player-prompt-wrong player-prompt-share player-skip-times player-found-skip player-found-controls
+  player-found-prompt player-found-saved player-found-never player-found-review player-found-nudged
+  player-found-undo player-found-panel player-found-panel-paused)
 
 usage() {
   echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together>[:<section|key=value>]|player|player-<state>]…" >&2
@@ -92,13 +99,37 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing) ;; player-*) ;; *) usage ;; esac
+  if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
+
+# The starting screen's shot player-start-<state>-<seconds>[-details][-choose] as state, seconds
+# and the options, one per line.
+startparts() {
+  local rest="${1#player-start-}" details=0 choose=0
+  while :; do
+    case "$rest" in
+      *-details) details=1; rest="${rest%-details}" ;;
+      *-choose) choose=1; rest="${rest%-choose}" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s\n' "${rest%-*}" "${rest##*-}" "$details" "$choose"
+}
 
 # The launch arguments for a shot: the scene, and the screen it names.
 arguments() {
   local shot="$1" scene="${1%%:*}" screens="" screen
+  if [[ "$shot" == player-start-* ]]; then
+    local parts
+    parts=()
+    while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
+    printf '%s\n' -KaeriScene playing -KaeriPlayerShot start-fixture -KaeriStartState "${parts[0]}" -KaeriStartAt "${parts[1]}"
+    [[ "${parts[2]}" != 1 ]] || printf '%s\n' -KaeriStartDetails 1
+    [[ "${parts[3]}" != 1 ]] || printf '%s\n' -KaeriStartChoose 1
+    return
+  fi
   if [[ "$shot" == player-* ]]; then
     printf '%s\n' -KaeriScene playing -KaeriPlayerShot "${shot#player-}"
     [[ -z "${KAERI_POINTED:-}" ]] || printf '%s\n' -KaeriPlayerPointer "$KAERI_POINTED"
@@ -119,9 +150,11 @@ arguments() {
       scroll=*) printf '%s\n' -KaeriScroll "${screen#scroll=}" ;;
       palette=*) printf '%s\n' -KaeriPalette "${screen#palette=}" ;;
       pane=*) printf '%s\n' -KaeriPane "${screen#pane=}" ;;
+      skippause=*) printf '%s\n' -KaeriSkipPause "${screen#skippause=}" ;;
       notice=*) printf '%s\n' -KaeriNotice "${screen#notice=}" ;;
       sheet=*) printf '%s\n' -KaeriSheet "${screen#sheet=}" ;;
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;
+      sync=*) printf '%s\n' -KaeriSync "${screen#sync=}" ;;
       cast=*) printf '%s\n' -KaeriCast "${screen#cast=}" ;;
       party=*) printf '%s\n' -KaeriParty "${screen#party=}" ;;
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
@@ -131,6 +164,7 @@ arguments() {
       fold=*) printf '%s\n' -KaeriFold "${screen#fold=}" ;;
       day=*) printf '%s\n' -KaeriDay "${screen#day=}" ;;
       mine=*) printf '%s\n' -KaeriCalendarMine "${screen#mine=}" ;;
+      continuefrom=*) printf '%s\n' -KaeriContinueFrom "${screen#continuefrom=}" ;;
       world=*) printf '%s\n' -KaeriHomeWorld "${screen#world=}" ;;
       offline=*) printf '%s\n' -KaeriGoOffline "${screen#offline=}" ;;
       *) printf '%s\n' -KaeriSection "$screen" ;;
@@ -155,6 +189,15 @@ done
 if [[ "$device" == mac ]]; then
   "$apple/scripts/engine.sh" testing macos
   for shot in "${shots[@]}"; do
+    if [[ "$shot" == player-start-* ]]; then
+      parts=()
+      while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
+      (cd "$apple/Packages/KaeriDev" &&
+        KAERI_START_STATE="${parts[0]}" KAERI_START_AT="${parts[1]}" KAERI_START_DETAILS="${parts[2]}" \
+        KAERI_START_CHOOSE="${parts[3]}" swift run KaeriDev --scene playing --player-shot start-fixture \
+          --snapshot "$out/mac-$shot.png")
+      continue
+    fi
     if [[ "$shot" == player-* ]]; then
       pointed=()
       [[ -z "${KAERI_POINTED:-}" ]] || pointed=(-KaeriPlayerPointer "$KAERI_POINTED")

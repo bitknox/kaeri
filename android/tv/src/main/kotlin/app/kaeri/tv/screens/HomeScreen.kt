@@ -218,6 +218,7 @@ fun HomeScreen(
 
 /** The text under a card's title: the engine's line, else why it is here, else when it airs. */
 private fun HomeItem.cardLine(context: android.content.Context): String? {
+    app.kaeri.store.continueFromDeviceLine(context, lastDevice, episode?.toInt(), resume)?.let { return it }
     line?.let { return it.text(context) }
     val reason = when (reason) {
         UpNextReason.NEW_SEASON -> Strings.homeReasonNewSeason(context)
@@ -296,6 +297,7 @@ private fun HomeCard(
             newDot = item.new,
             sheet = sheet,
             modifier = modifier,
+            lineLines = if (item.lastDevice != null && item.episode != null && item.resume != null) 2 else 1,
         )
     } else {
         PosterCard(entry, onClick = { onOpen(entry.id) }, line = line, sheet = sheet, modifier = modifier)
@@ -323,11 +325,11 @@ private fun SpotlightHero(
         notFound && spot.action == HomeAction.ADD_TO_PLANNING -> HomeAction.ADD_TO_PLANNING
         else -> homeCheckedAction(spot.action, if (notFound) Playable.NOT_FOUND else Playable.UNKNOWN, listed)
     }
-    val line = if (notFound) Strings.homeNotFound(context) else spot.line?.text(context)
+    val line = if (notFound) Strings.homeNotFound(context) else app.kaeri.store.continueFromDeviceLine(context, spot.lastDevice, spot.episode.toInt(), spot.resume) ?: spot.line?.text(context)
     HeroHeader(entry, rows, modifier) {
         Spacer(Modifier.height(4.dp))
         Text(spot.label.text(context), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1)
-        if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
+        if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = if (spot.lastDevice != null && !notFound) 2 else 1)
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             // No source can play yet: the one way on is a plugin store, as on the title page.

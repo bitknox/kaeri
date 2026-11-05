@@ -75,6 +75,8 @@ public final class AppStore {
     public let updates = UpdatesModel()
     /// Play on TV: the TVs, pairing, and the card of the one driven.
     public let tv = TVRemoteModel()
+    /// Sync between this person's devices, and the profiles on this one.
+    public let sync = SyncModel()
     /// The watch party this device is in, and the sheets that start one.
     public let party = PartyModel()
     /// The subtitle style before the last reset, for its Undo.
@@ -98,6 +100,9 @@ public final class AppStore {
     @ObservationIgnored public private(set) var artwork: ArtworkStore!
 
     @ObservationIgnored private var client: EngineClient?
+    /// Another profile was chosen: the app stops the engine and starts afresh in it, keeping
+    /// nothing of this profile in memory.
+    @ObservationIgnored public var onProfileSwitch: (@MainActor (String) -> Void)?
     /// When a batch was last applied.
     @ObservationIgnored var lastApplied = ContinuousClock.now
     /// What the screens asked for before the engine was there, sent once it is.
@@ -147,6 +152,8 @@ public final class AppStore {
         continued.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        sync.send = { [weak self] command in self?.send(command) }
+        party.chat.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
             guard let self else { return }
             if party.playerUp() {
@@ -293,11 +300,14 @@ public final class AppStore {
         )
         phase = .running
         attachTV(engine)
+        // Typed-code pairing finds the device showing the code by DNS-SD.
+        engine.setSyncNetwork(network: BonjourSyncNetwork())
         for command in early {
             client?.send(command)
         }
         early = []
         artwork.sendUnsent()
+        sync.load()
     }
 
     /// The engine's sender for Play on TV, browsing the network with Bonjour; in the Fixtures
@@ -629,6 +639,21 @@ public final class AppStore {
         send(.loadDub(id))
     }
 
+    /// Trending over `period`, for Search's rail and its period menu. The choice is remembered by
+    /// the engine; the rail keeps its old covers until the new ones are in.
+    public func loadTrending(_ period: TrendPeriod) {
+        search.choose(period)
+        send(.loadTrending(period))
+    }
+
+    /// Surprise me, or Another: a title from `pool`, which the engine answers with one pick. Past
+    /// 600 ms the button shows a spinner (`search.surpriseSpinning`); pressing again meanwhile
+    /// does nothing.
+    public func surprise(_ pool: SurprisePool) {
+        guard search.beginSurprise() else { return }
+        send(.surprise(pool))
+    }
+
     /// Sources are ready where none were: each title whose episodes are AniList's alone is asked
     /// for them again, however lately it was, so its list takes its source's numbering.
     private func sourcesArrived() {
@@ -843,8 +868,8 @@ public final class AppStore {
     /// The events that open and run the player here.
     static func playsHere(_ event: Event) -> Bool {
         switch event {
-        case .playbackStaged, .playbackEnded, .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered,
-            .playerStats:
+        case .playbackStaged, .startingStep, .playbackEnded, .playerOps, .playerUi, .playbackKept, .playerTimeline,
+            .playerBuffered, .playerStats, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice:
             true
         default:
             false
@@ -854,6 +879,9 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        sync.apply(event)
+        if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
+        if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
@@ -909,6 +937,7 @@ public final class AppStore {
             episodesLanded(id)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)
+            titles.recount(id, dub: dub, dubChanged: dub != nil)
 
         case .toast(let notice):
             party.apply(event)
@@ -982,6 +1011,11 @@ public final class AppStore {
             stores.previewed(answer)
         case .storeJoined(let store):
             stores.joined(store)
+        case .syncStoreJoined(_, _, _, _):
+            // The store list arrives with it (`.stores`), and the store shows there as joined.
+            break
+        case .syncStoreJoinFailed(let device, _, let name, let problem):
+            notices.post(Notice(kind: .alert, text: SyncWords.storeProblem(problem, store: name, device: device), hint: nil))
         case .inviteLink(let link):
             stores.invited(link)
         case .demo(let state):
@@ -1005,24 +1039,29 @@ public final class AppStore {
         case .imageFailed(let url, _):
             artwork.failed(url: url)
 
-        case .playbackStaged(let id, _, let episode, _, _):
+        case .playbackStaged(let id, _, let episode, _, _, _):
             if startAt?.staged(id: id, episode: episode) == false { startAt = nil }
             let after = playSent.map { " \(AppLog.ms(since: $0)) ms after play" } ?? ""
             AppLog.info("store", "staged \(id) episode \(episode)\(after)")
             onPlayback?(event)
-        case .playbackEnded(let watched, let ending, let rollingOn):
+        case .playbackEnded(let watched, let ending, let rollingOn, _):
             AppLog.info("store", "playback ended: \(ending), watched \(watched), rolling on \(rollingOn)")
             onPlayback?(event)
             widgetsChanged()
         case .sources:
             party.apply(event)
             onPlayback?(event)
-        case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard:
+        case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
+             .startingStep, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice:
             onPlayback?(event)
 
         case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,
-             .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted:
+             .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted, .partyChat, .partyChatState,
+             .partyReaction:
             party.apply(event)
+        case .partyChatRefused:
+            // The field and the glyphs already show the wait; the engine has said no.
+            break
         case .partyNoSource:
             // The party's sheet says it, and the player steps aside for it.
             party.apply(event)
@@ -1047,6 +1086,10 @@ public final class AppStore {
             search.live(paused: paused)
         case .browse(let rails):
             search.rails(rails, titles: titles)
+        case .trending(let period, let entries, let updatedAt, let failed, let waiting):
+            search.trending(period, entries: entries, updatedAt: updatedAt, failed: failed, waiting: waiting, titles: titles)
+        case .surprise(let pool, let outcome):
+            search.surprise(pool, outcome)
         case .facets(let facets):
             search.facets(facets)
         case .recentSearches(let queries):

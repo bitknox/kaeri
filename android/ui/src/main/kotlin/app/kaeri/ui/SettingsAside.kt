@@ -85,6 +85,8 @@ internal fun SettingsAside(pane: SettingsPane, focus: String?) {
                 Aside(stringResource(R.string.sources_title), stringResource(R.string.settings_aside_sources))
             }
             SettingsPane.Accounts -> Aside(stringResource(R.string.accounts_title), stringResource(R.string.settings_aside_accounts))
+            SettingsPane.Devices -> Aside(stringResource(R.string.devices_title), stringResource(R.string.devices_only_this_line))
+            SettingsPane.Profiles -> Aside(stringResource(R.string.profiles_title), stringResource(R.string.profiles_one_foot))
             SettingsPane.Hidden -> Aside(stringResource(R.string.settings_hidden_titles), stringResource(R.string.settings_hidden_titles_body))
             SettingsPane.About -> Aside("Kaeri", stringResource(R.string.about_licence)) // i18n-skip
         }

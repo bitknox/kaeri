@@ -36,6 +36,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SERVERS -> FfiScene.Servers
     FixtureScene.SOURCES_BUSY -> FfiScene.SourcesBusy
     FixtureScene.AVAILABLE -> FfiScene.Available
+    FixtureScene.BROWSING -> FfiScene.Browsing
     // What it streams is the player's business, which comes with A3: a path or URL on the device.
     FixtureScene.PLAYING -> FfiScene.Playing(media = fixtureMedia)
     FixtureScene.SUGGESTED -> FfiScene.Suggested
@@ -54,6 +55,11 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.CRASH_SAVED -> FfiScene.CrashSaved
     FixtureScene.CRASH_HELD -> FfiScene.CrashHeld
     FixtureScene.TOGETHER -> FfiScene.Together
+    FixtureScene.SYNC_ON -> FfiScene.SyncOn
+    FixtureScene.SYNC_NEARBY -> FfiScene.SyncNearby
+    FixtureScene.SYNC_CLOUD -> FfiScene.SyncCloud
+    FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
+    FixtureScene.PROFILES -> FfiScene.Profiles
 }
 
 /** What the Playing scene streams, and Watching's when set: the fixtures' `media` extra, set at launch. */

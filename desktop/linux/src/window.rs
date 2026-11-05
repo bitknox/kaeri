@@ -76,6 +76,16 @@ pub struct Ctx {
     pub content_focus: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
     /// The sidebar's main menu button, which a controller's Menu button opens.
     main_menu: RefCell<Option<gtk::MenuButton>>,
+    /// The pick the title page on screen was opened by (Surprise me or Another), for its Another.
+    pub pick: RefCell<Option<Pick>>,
+}
+
+/// A title opened by Surprise me: where it was picked from, and whether that pool has another.
+#[derive(Debug, Clone)]
+pub struct Pick {
+    pub id: AnilistId,
+    pub pool: kaeri_model::browsing::SurprisePool,
+    pub more: bool,
 }
 
 /// A dialog's hold on the engine's alerts: given the words, it says whether it showed them.
@@ -368,6 +378,7 @@ impl Shell {
             controller_device: RefCell::default(),
             content_focus: RefCell::default(),
             main_menu: RefCell::default(),
+            pick: RefCell::default(),
         });
 
         // The offline scene is offline before Home first asks, as a device without a network
@@ -441,6 +452,7 @@ impl Shell {
         let _ = shell.pad.set(crate::pad::Pad::attach(&shell));
         shell.watch_pages();
         crate::tv::sheet::attach(&shell.ctx);
+        crate::sync::install(&shell.ctx);
         shell.breakpoints();
         shell.actions(app);
         shell.listen();
@@ -593,6 +605,18 @@ impl Shell {
         }
     }
 
+    /// Another: the title page on screen gives way to `id`'s in place, so Back returns to where
+    /// the first pick was made.
+    pub fn swap_title(&self, id: AnilistId) {
+        let Some(nav) = self.ctx.nav() else { return };
+        let stack = nav.navigation_stack();
+        let mut kept: Vec<adw::NavigationPage> = (0..stack.n_items().saturating_sub(1))
+            .filter_map(|at| stack.item(at).and_downcast::<adw::NavigationPage>())
+            .collect();
+        kept.push(pages::title::page(&self.ctx, id));
+        nav.replace(&kept);
+    }
+
     pub fn show_player(&self, on: bool) {
         self.top.set_visible_child_name(if on { "player" } else { "main" });
         self.search.capture_keys(!on);
@@ -665,6 +689,15 @@ impl Shell {
             Box::new(move |s, a| {
                 if let Some(id) = id_of(a) {
                     s.open_title(id);
+                }
+            }),
+        );
+        add(
+            "swap-title",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.swap_title(id);
                 }
             }),
         );
@@ -1122,6 +1155,11 @@ impl Shell {
                 shell.ctx.updater.heard(status);
             }
             match event {
+                // The starting screen says why a start failed, and what it is doing instead
+                // of a notice over it.
+                Event::Toast(notice)
+                    if notice.kind == kaeri_model::notice::NoticeKind::Alert
+                        && shell.player.is_starting() => {}
                 Event::Toast(notice) => shell.ctx.notice(notice),
                 Event::Connectivity { offline } => widgets::set_offline(*offline),
                 Event::Content { view: ContentFor::Continue, content }
@@ -1476,7 +1514,15 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let pick = |list: &gtk::ListBox| {
         list.connect_row_activated(|list, row| {
             let name = row.widget_name();
-            if name == "account" {
+            if name == "account" && row.has_css_class("has-profiles") {
+                let mut child = row.first_child();
+                while let Some(w) = child {
+                    if let Some(pop) = w.downcast_ref::<gtk::Popover>() {
+                        pop.popup();
+                    }
+                    child = w.next_sibling();
+                }
+            } else if name == "account" {
                 let _ =
                     list.activate_action("win.settings-pane", Some(&"accounts".to_variant()));
             } else {
@@ -1787,7 +1833,26 @@ fn account_row(ctx: &Rc<Ctx>) -> gtk::ListBoxRow {
     line.append(&text);
     let row = gtk::ListBoxRow::builder().child(&line).build();
     row.set_widget_name("account");
-
+    // From the second profile on, the row names the profile and opens the switcher.
+    let switcher: Rc<RefCell<Option<gtk::Popover>>> = Rc::default();
+    ctx.hub.listen({
+        let (ctx, row, switcher) = (Rc::downgrade(ctx), row.clone(), switcher.clone());
+        move |event| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            if matches!(event, Event::Profiles(_)) {
+                if let Some(old) = switcher.borrow_mut().take() {
+                    old.unparent();
+                }
+                row.remove_css_class("has-profiles");
+                if ctx.hub.known.borrow().profiles.len() >= 2 {
+                    row.add_css_class("has-profiles");
+                    let pop = crate::sync::profiles::popover(&ctx);
+                    pop.set_parent(&row);
+                    switcher.replace(Some(pop));
+                }
+            }
+        }
+    });
     let show = {
         let (avatar, name, status, dot) = (avatar, name, status, dot);
         let hub = Rc::downgrade(&ctx.hub);

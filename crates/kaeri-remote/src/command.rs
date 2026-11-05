@@ -80,6 +80,12 @@ pub enum RemoteCommand {
     PartyStart,
     /// [`Command::PartyLeave`].
     PartyLeave,
+    /// [`PartyCommand::Say`]: say something in the party's chat as the TV. The line shows on
+    /// the TV when the room's server sends it back, as everyone's does.
+    PartyChat { text: String },
+    /// [`PartyCommand::Mute`]: hide a member's lines and reactions on the TV for this party, or
+    /// show them again.
+    PartyMute { member: String, muted: bool },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -173,6 +179,12 @@ impl RemoteCommand {
             Self::PartyReady { ready } => Routed::Engine(Command::PartyReady { ready }),
             Self::PartyStart => Routed::Engine(Command::Party(PartyCommand::StartAnyway)),
             Self::PartyLeave => Routed::Engine(Command::PartyLeave),
+            Self::PartyChat { text } => {
+                Routed::Engine(Command::Party(PartyCommand::Say { text }))
+            }
+            Self::PartyMute { member, muted } => {
+                Routed::Engine(Command::Party(PartyCommand::Mute { name: member, muted }))
+            }
         }
     }
 
@@ -192,6 +204,8 @@ impl RemoteCommand {
                 | Self::PartyReady { .. }
                 | Self::PartyStart
                 | Self::PartyLeave
+                | Self::PartyChat { .. }
+                | Self::PartyMute { .. }
         )
     }
 }
@@ -257,6 +271,18 @@ mod tests {
             Routed::Engine(Command::PartyReady { ready: true })
         );
         assert_eq!(RemoteCommand::PartyLeave.route(), Routed::Engine(Command::PartyLeave));
+        assert_eq!(
+            RemoteCommand::PartyChat { text: "back in 2".into() }.route(),
+            Routed::Engine(Command::Party(PartyCommand::Say { text: "back in 2".into() }))
+        );
+        assert_eq!(
+            RemoteCommand::PartyMute { member: "Ren".into(), muted: true }.route(),
+            Routed::Engine(Command::Party(PartyCommand::Mute {
+                name: "Ren".into(),
+                muted: true
+            }))
+        );
+        assert!(!RemoteCommand::PartyChat { text: String::new() }.needs_playback());
     }
 
     #[test]

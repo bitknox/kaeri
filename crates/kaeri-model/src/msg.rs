@@ -133,6 +133,20 @@ pub enum Msg {
     StatusLookingUpTitle,
     /// Job note while a play waits for the sources to arrive.
     StatusLoadingSources,
+    /// Starting screen, step line while the title is looked up.
+    StartLookingUpTitle,
+    /// Starting screen, step line while sources still being set up are waited for.
+    StartGettingSourcesReady,
+    /// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+    StartAskingSource { name: String },
+    /// Starting screen, step line once a stream is found and the player opens it.
+    StartOpeningStream,
+    /// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+    StartTryingAnotherStream,
+    /// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+    StartFindingPeers,
+    /// Starting screen, step line while the player waits for data to fill its buffer.
+    StartBuffering,
     /// Job note while the sources are asked for an episode. The episode is its label, often a number.
     StatusSearchingSources { episode: String },
     /// Toast when the player cannot be started. The reason comes from the system.
@@ -271,6 +285,8 @@ pub enum Msg {
     PartyLeft,
     /// Message when a watch party's server could not be reached, in the lobby or when looking in.
     PartyServerUnreachable { server: String },
+    /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+    CloudLoopbackDone,
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     NoticeSignedIn { tracker: String },
     /// Toast after a sign-in succeeded and the token went into the system keychain.
@@ -387,6 +403,14 @@ pub enum Msg {
     CrashNotice,
     /// The same notice on the TV, which has no button.
     CrashNoticeTv,
+    /// Toast: Surprise me on a search found no title matching the filters.
+    NoticeSurpriseEmptyFilters,
+    /// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+    NoticeSurpriseEmptyPlanning,
+    /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+    NoticeSurpriseOffline,
+    /// Toast: Surprise me on the filters, and AniList could not be asked.
+    NoticeSurpriseFailed,
     /// A plugin store's, a source's or a torrent's message: see [`StoreMsg`].
     Store(StoreMsg),
     /// Text Kaeri does not own, shown as it is: a plugin's note, a tracker's error.
@@ -458,6 +482,13 @@ impl Msg {
             Self::NoticeNotAiredYet { .. } => "notice-not-aired-yet",
             Self::StatusLookingUpTitle => "status-looking-up-title",
             Self::StatusLoadingSources => "status-loading-sources",
+            Self::StartLookingUpTitle => "start-looking-up-title",
+            Self::StartGettingSourcesReady => "start-getting-sources-ready",
+            Self::StartAskingSource { .. } => "start-asking-source",
+            Self::StartOpeningStream => "start-opening-stream",
+            Self::StartTryingAnotherStream => "start-trying-another-stream",
+            Self::StartFindingPeers => "start-finding-peers",
+            Self::StartBuffering => "start-buffering",
             Self::StatusSearchingSources { .. } => "status-searching-sources",
             Self::NoticePlayerFailedToStart { .. } => "notice-player-failed-to-start",
             Self::NoticeStreamNoVideo { .. } => "notice-stream-no-video",
@@ -527,6 +558,7 @@ impl Msg {
             Self::PartyRejoined => "party-rejoined",
             Self::PartyLeft => "party-left",
             Self::PartyServerUnreachable { .. } => "party-server-unreachable",
+            Self::CloudLoopbackDone => "cloud-loopback-done",
             Self::NoticeSignedIn { .. } => "notice-signed-in",
             Self::NoticeSignedInKeychain { .. } => "notice-signed-in-keychain",
             Self::NoticeSignedInFile { .. } => "notice-signed-in-file",
@@ -585,6 +617,10 @@ impl Msg {
             Self::SettingsSubsResetDone => "settings-subs-reset-done",
             Self::CrashNotice => "crash-notice",
             Self::CrashNoticeTv => "crash-notice-tv",
+            Self::NoticeSurpriseEmptyFilters => "notice-surprise-empty-filters",
+            Self::NoticeSurpriseEmptyPlanning => "notice-surprise-empty-planning",
+            Self::NoticeSurpriseOffline => "notice-surprise-offline",
+            Self::NoticeSurpriseFailed => "notice-surprise-failed",
             Self::Store(msg) => msg.id(),
             Self::Verbatim { .. } => "verbatim",
         }
@@ -654,6 +690,13 @@ impl Msg {
             Self::NoticeNotAiredYet { episode, next, when } => vec![("episode", Value::Int(*episode)), ("next", Value::Int(*next)), ("when", Value::Cause(when.clone()))],
             Self::StatusLookingUpTitle => Vec::new(),
             Self::StatusLoadingSources => Vec::new(),
+            Self::StartLookingUpTitle => Vec::new(),
+            Self::StartGettingSourcesReady => Vec::new(),
+            Self::StartAskingSource { name } => vec![("name", Value::Text(name.clone()))],
+            Self::StartOpeningStream => Vec::new(),
+            Self::StartTryingAnotherStream => Vec::new(),
+            Self::StartFindingPeers => Vec::new(),
+            Self::StartBuffering => Vec::new(),
             Self::StatusSearchingSources { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticePlayerFailedToStart { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeStreamNoVideo { next, total } => vec![("next", Value::Int(*next)), ("total", Value::Int(*total))],
@@ -723,6 +766,7 @@ impl Msg {
             Self::PartyRejoined => Vec::new(),
             Self::PartyLeft => Vec::new(),
             Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
+            Self::CloudLoopbackDone => Vec::new(),
             Self::NoticeSignedIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInKeychain { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInFile { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
@@ -781,6 +825,10 @@ impl Msg {
             Self::SettingsSubsResetDone => Vec::new(),
             Self::CrashNotice => Vec::new(),
             Self::CrashNoticeTv => Vec::new(),
+            Self::NoticeSurpriseEmptyFilters => Vec::new(),
+            Self::NoticeSurpriseEmptyPlanning => Vec::new(),
+            Self::NoticeSurpriseOffline => Vec::new(),
+            Self::NoticeSurpriseFailed => Vec::new(),
             Self::Store(msg) => msg.values(),
             Self::Verbatim { text } => vec![("text", Value::Text(text.clone()))],
         }
@@ -1123,6 +1171,8 @@ impl StoreMsg {
 pub enum Cause {
     /// Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
     NoSources,
+    /// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+    NoConnection,
     /// Part of an air time: the broadcast is later today. The time is the viewer's local time.
     AirsToday { time: String },
     /// Part of an air time: the broadcast is tomorrow. The time is the viewer's local time.
@@ -1168,6 +1218,7 @@ impl Cause {
     pub fn id(&self) -> &'static str {
         match self {
             Self::NoSources => "cause-no-sources",
+            Self::NoConnection => "cause-no-connection",
             Self::AirsToday { .. } => "cause-airs-today",
             Self::AirsTomorrow { .. } => "cause-airs-tomorrow",
             Self::AirsInDays { .. } => "cause-airs-in-days",
@@ -1194,6 +1245,7 @@ impl Cause {
     pub fn values(&self) -> Vec<(&'static str, Value)> {
         match self {
             Self::NoSources => Vec::new(),
+            Self::NoConnection => Vec::new(),
             Self::AirsToday { time } => vec![("time", Value::Text(time.clone()))],
             Self::AirsTomorrow { time } => vec![("time", Value::Text(time.clone()))],
             Self::AirsInDays { days, time } => vec![("days", Value::Int(*days)), ("time", Value::Text(time.clone()))],

@@ -30,6 +30,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Не удалось выйти из { $tracker }. Попробуйте ещё раз. { $reason }
 notice-not-saved-because = Не удалось сохранить настройку. { $cause }
+notice-proxy-saved = Трафик торрентов теперь идёт через прокси.
+notice-proxy-removed = Торренты теперь подключаются напрямую, без прокси.
+notice-proxy-not-checked = Не удалось проверить прокси. { $cause }
 notice-proxy-password-not-kept = Не удалось сохранить пароль прокси. Введите его ещё раз, чтобы попробовать сохранить. { $reason }
 notice-show-setting-refused = Не удалось сохранить настройку. { $value } не подходит для { $setting }.
 notice-show-not-reset = Не удалось сбросить настройки этого тайтла. { $reason }

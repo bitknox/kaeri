@@ -25,7 +25,9 @@ const MIN_TITLE: usize = 16;
 /// Modelled on an animation production timing sheet: a fixed-width numeral column, hairline
 /// headers, and dense rows. Episodes genuinely are a sequence, so the numbering carries
 /// information rather than decorating — which is what earns the zero-padded field.
-pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
+///
+/// Returns the first row it drew, for the App to keep: see [`crate::app::FrameReport`].
+pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
     let heading = t::episodes_heading();
     let title = app.detail.as_ref().map_or(heading.as_str(), |e| e.title.as_str());
     // How far the dub goes sits at the right of the title's row, when the row has room for both:
@@ -55,7 +57,7 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
 
     let mut table = Rect { y: area.top() + 2, height: area.height.saturating_sub(2), ..area };
     if table.height < 3 {
-        return;
+        return None;
     }
 
     // A still panel for the selected episode, and only when there is a reason for it. Coverage
@@ -71,7 +73,7 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
     // show the previous title's rows while it waited, then correct itself.
     if app.episodes_loading {
         render_loading(buf, app, table);
-        return;
+        return None;
     }
 
     if app.episodes.is_empty() {
@@ -88,7 +90,7 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
                 app.palette.style(Role::TextDim),
             );
         }
-        return;
+        return None;
     }
 
     if let Some(panel) = still {
@@ -159,17 +161,35 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
 
     let body_top = table.top() + 2;
     let rows = table.bottom().saturating_sub(body_top) as usize;
-    // Keep the selection on screen without a separate scroll offset: the table is short
-    // enough that anchoring the window to the selection is sufficient.
-    let first = app.cursors.episodes.selected.saturating_sub(rows.saturating_sub(1));
+    // A long show's table is one list, with a heading line where each hundred begins.
+    let headings = range_headings(app);
+    let first = episode_window(app, &headings, rows);
 
     // The meter gives way to the widest tag after it, so `Filler` or `Anime canon` is never cut.
     let tag_room = app.episodes.iter().filter_map(episode_tag).map(|tag| tag.cells()).max();
     let meter_width =
         (table.width.saturating_sub(cols.state + 2 + tag_room.unwrap_or(4) as u16)).min(10)
             as usize;
-    for (i, episode) in app.episodes.iter().enumerate().skip(first).take(rows) {
-        let y = body_top + (i - first) as u16;
+    let mut next_y = body_top;
+    for (i, episode) in app.episodes.iter().enumerate().skip(first) {
+        if let Some(heading) = &headings[i] {
+            if next_y >= table.bottom() {
+                break;
+            }
+            line(
+                buf,
+                table.left() + cols.number,
+                next_y,
+                truncate(heading, table.width.saturating_sub(cols.number) as usize),
+                app.palette.style(Role::TextDim),
+            );
+            next_y += 1;
+        }
+        if next_y >= table.bottom() {
+            break;
+        }
+        let y = next_y;
+        next_y += 1;
         let selected = i == app.cursors.episodes.selected;
 
         if selected {
@@ -257,6 +277,66 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) {
             );
         }
     }
+    Some(first)
+}
+
+/// The heading line before each row that opens a range of a long show: "Episodes 301 to 400",
+/// for every range after the first. Ranges are the whole table's hundreds, so under a filter
+/// the heading goes before the first row shown of its range.
+fn range_headings(app: &App) -> Vec<Option<String>> {
+    use kaeri_model::episodes::{RANGE_SIZE, episode_ranges};
+    let mut headings = vec![None; app.episodes.len()];
+    let all = &app.episodes_all;
+    let ranges = episode_ranges(all, app.clock.now_epoch());
+    if ranges.is_empty() {
+        return headings;
+    }
+    let number = |at: usize, fallback: usize| {
+        all[at].number.trim().parse::<i64>().unwrap_or(fallback as i64)
+    };
+    // The shown rows are the whole table's in its order, so one pass finds each.
+    let mut at = 0;
+    let mut last_range = None;
+    for (i, row) in app.episodes.iter().enumerate() {
+        while at < all.len() && all[at].number != row.number {
+            at += 1;
+        }
+        let Some(range) = ranges.get(at / RANGE_SIZE) else { break };
+        let index = at / RANGE_SIZE;
+        if index > 0 && last_range != Some(index) {
+            let (start, end) = (range.start as usize, range.end as usize);
+            headings[i] =
+                Some(t::episode_range(number(start, start + 1), number(end - 1, end)));
+        }
+        last_range = Some(index);
+        at += 1;
+    }
+    headings
+}
+
+/// The first row the table shows in `rows` lines, headings counted: where the last frame left
+/// it, moved only as far as keeps the highlight in view. After a typed `G` the row goes a fifth
+/// of the way down, in the table's top third, with the rows before it for context.
+fn episode_window(app: &App, headings: &[Option<String>], rows: usize) -> usize {
+    let len = app.episodes.len();
+    if len == 0 || rows == 0 {
+        return 0;
+    }
+    let selected = app.cursors.episodes.selected.min(len - 1);
+    let lines = |first: usize| {
+        selected + 1 - first + headings[first..=selected].iter().filter(|h| h.is_some()).count()
+    };
+    // The lowest first row that still shows the highlight on the last line.
+    let mut lowest = selected.saturating_sub(rows - 1);
+    while lowest < selected && lines(lowest) > rows {
+        lowest += 1;
+    }
+    let wanted = if app.episodes_jumped {
+        selected.saturating_sub(rows / 5)
+    } else {
+        app.cursors.episodes.offset
+    };
+    wanted.clamp(lowest, selected)
 }
 
 /// What follows an episode's meter: `done`, or else its kind. Filler is information, not a

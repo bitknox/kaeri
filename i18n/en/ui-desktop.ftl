@@ -100,3 +100,13 @@ tv-problem-unpaired = The TV doesn't know this { -device } any more. Pair again.
 # @arg position: text
 # @arg duration: text
 player-position-spoken = { $position } of { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+# @arg first: text
+# @arg last: text
+names-pair = { $first } and { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+# @arg list: text
+# @arg next: text
+names-list = { $list }, { $next }

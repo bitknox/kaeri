@@ -154,6 +154,7 @@ impl Provider for JellyfinSource {
         &self,
         query: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
         let needle = query.trim().to_lowercase();
         let matches = self.matches.read().unwrap_or_else(|e| e.into_inner());
@@ -189,6 +190,7 @@ impl Provider for JellyfinSource {
         &self,
         key: &ProviderKey,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         let m = self.by_series(key.as_str()).ok_or(ProviderError::NotFound)?;
         Ok(self
@@ -198,6 +200,8 @@ impl Provider for JellyfinSource {
             .map(|(number, item)| {
                 let mut episode = Episode::new(number);
                 episode.title = Some(item.name).filter(|name| !name.is_empty());
+                episode.description =
+                    item.overview.map(|text| text.trim().to_owned()).filter(|t| !t.is_empty());
                 episode.duration = item
                     .run_time_ticks
                     .filter(|t| *t > 0)
@@ -212,6 +216,7 @@ impl Provider for JellyfinSource {
         key: &ProviderKey,
         episode: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         let m = self.by_series(key.as_str()).ok_or(ProviderError::NotFound)?;
         let wanted: u32 = episode.trim().parse().map_err(|_| ProviderError::NotFound)?;
@@ -257,6 +262,7 @@ mod tests {
             season: Some(season),
             number: Some(number),
             run_time_ticks: None,
+            overview: None,
             user_data: None,
         }
     }

@@ -16,7 +16,10 @@ static class Motion
 {
     static readonly UISettings settings = new();
 
-    public static bool Enabled => settings.AnimationsEnabled;
+    /// <summary>A screenshot run's: reduced motion on or off whatever the system says.</summary>
+    internal static bool? Override { get; set; }
+
+    public static bool Enabled => Override ?? settings.AnimationsEnabled;
 
     public static readonly TimeSpan Quick = TimeSpan.FromMilliseconds(200);
     public static readonly TimeSpan Standard = TimeSpan.FromMilliseconds(300);
@@ -68,6 +71,20 @@ static class Motion
         }
         Fade(element, element.Opacity, to, to > element.Opacity ? FadeInTime : FadeOutTime, to > element.Opacity ? EasingMode.EaseOut : EasingMode.EaseIn, null);
     }
+
+    /// <summary>
+    /// Text changing in place: the new half fades in over the old, which fades away, on the
+    /// standard token, whether or not animation effects are on (a fade is what the brief keeps).
+    /// </summary>
+    public static void Crossfade(UIElement from, UIElement to)
+    {
+        Fade(to, to.Opacity, 1, Standard, EasingMode.EaseOut, null);
+        Fade(from, from.Opacity, 0, Standard, EasingMode.EaseIn, null);
+    }
+
+    /// <summary>Fades an element that keeps its place to <paramref name="to"/>, whether or not animation effects are on.</summary>
+    public static void FadeTo(UIElement element, double to, TimeSpan time) =>
+        Fade(element, element.Opacity, to, time, to > element.Opacity ? EasingMode.EaseOut : EasingMode.EaseIn, null);
 
     /// <summary>Fades freshly arrived content in from nothing: art, a page, a crossfade's new half.</summary>
     public static void FadeIn(UIElement element, TimeSpan? time = null)

@@ -11,9 +11,14 @@
 //   expires   seconds the `signin` code has left, 0 for one already expired
 //   day       days after today the calendar opens on, 0 to 6, for a day with broadcasts: the
 //             fixtures' own day has none
+//   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
+//             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   firstLaunch  true to show first launch's pages, which fixtures leave out otherwise
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
+//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
+//             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
+//             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
 
 package app.kaeri.tv
 
@@ -24,19 +29,27 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.DeviceCodePrompt
 import app.kaeri.engine.model.Event
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.FixtureSync
+import app.kaeri.store.FixtureParty
+import app.kaeri.store.PartyShot
+import app.kaeri.store.PartyStage
 import app.kaeri.store.enginePlatform
 import app.kaeri.store.fixtureMedia
 import app.kaeri.store.fixtures
 import app.kaeri.tv.shell.Destination
 
 internal object Flavour {
+    private var app: TvApp? = null
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
+        app = context.applicationContext as? TvApp
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
         if (named != null && FixtureScene.named(named) == null) Log.w(TvApp.TAG, "no scene named $named")
@@ -77,6 +90,7 @@ internal object Flavour {
             firstLaunch = intent.getBooleanExtra("firstLaunch", false),
             update = UpdateStage.named(intent.getStringExtra("update")) != null,
             signIn = intent.getStringExtra("signin"),
+            settings = intent.getStringExtra("settings"),
         )
     }
 
@@ -91,7 +105,16 @@ internal object Flavour {
      * has no tracker to answer with one. `expires=<seconds>` sets how long its code has left, 0 for
      * one already expired, 899 unless it says.
      */
-    fun started(store: AppStore, intent: Intent) {
+    fun started(context: Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel, host: app.kaeri.player.PlayerHost? = null) {
+        StartReplay.from(context, store, player, intent)
+        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
+            val app = app ?: return@let
+            FixtureParty.listen(app)
+            MainScope().launch {
+                if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
+            }
+        }
+        intent.getStringExtra("found")?.let { which -> host?.let { FoundDemo.run(it, store, MainScope(), which) } }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine
         // look their threads up, so the one with a fixture thread is said found as it would be.
@@ -101,6 +124,13 @@ internal object Flavour {
             store.loadContinue(force = true)
             store.loadDetail(900001u)
             if ("7" in marks) store.apply(listOf(Event.DiscussionFound(900001u, 7u, 6u)))
+        }
+        intent.getStringExtra("sync")?.let { state ->
+            MainScope().launch {
+                store.phase.first { it == AppStore.Phase.Running }
+                delay(1_500)
+                FixtureSync.stage(store, state)
+            }
         }
         val tracker = intent.getStringExtra("signin") ?: return
         val expiresAt = System.currentTimeMillis() / 1000 + (intent.getStringExtra("expires")?.toLongOrNull()?.coerceAtLeast(0) ?: 899)
@@ -113,4 +143,21 @@ internal object Flavour {
             }
         }
     }
+}
+
+/** The TV's player, as the party scenes steer it. */
+private class TvStage(private val app: TvApp) : PartyStage {
+    private val player get() = app.player
+
+    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
+
+    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
+
+    override fun hideControls() = player.hideControls()
+
+    override fun seekTo(seconds: Double) = player.seekTo(seconds)
+
+    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
+
+    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
 }

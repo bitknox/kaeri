@@ -16,6 +16,7 @@ search-statuses-count = { $count ->
 search-leave-out = Hariç tut
 search-include = Dahil et
 search-filters-help = Etiketler, uzunluk, puan, köken ve nerede izlenebileceği
+search-all-filters = Tüm filtreler
 search-filters-set = { $count } ayarlandı
 search-sort-by = Sıralama ölçütü
 search-clear-all = Tümünü temizle

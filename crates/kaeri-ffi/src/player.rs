@@ -128,6 +128,15 @@ pub trait FfiPlayerSink: Send + Sync {
     fn event(&self, event: FfiPlayerEvent);
 }
 
+/// Whether the libmpv the app loaded has the demuxer audio tap, which every [`FfiPlayer`] core
+/// then hands its audio to the engine through: the app's [`crate::FfiStart::audio_tap`]. Kaeri's
+/// own Windows build has it (desktop/windows/scripts/libmpv-build.sh); another libmpv put in its
+/// place may not, and the engine then says so in Settings and finds nothing.
+#[uniffi::export]
+pub fn player_audio_tap() -> bool {
+    kaeri_mpv_host::audio_tap_available()
+}
+
 /// One mpv core driven by the engine's ops, for as long as the app holds it.
 #[derive(uniffi::Object)]
 pub struct FfiPlayer {

@@ -30,6 +30,7 @@
 
 uniffi::setup_scaffolding!();
 
+mod browsing;
 mod bug_report;
 mod crash;
 mod engine;
@@ -45,6 +46,8 @@ mod scenes;
 #[cfg(feature = "remote")]
 mod sender;
 mod start;
+mod sync_network;
+mod synopsis;
 #[cfg(feature = "testing")]
 mod testing;
 mod trailer;
@@ -55,7 +58,7 @@ pub use engine::FfiEngine;
 pub use host::FfiHost;
 pub use log::{FfiLogLevel, log_line, start_log};
 #[cfg(all(feature = "party", feature = "testing"))]
-pub use party::FfiFakeParty;
+pub use party::{FfiChatFixture, FfiFakeParty};
 pub use party::{
     clean_party_code, parse_party_invite, parse_party_target, party_invite_link,
     party_share_app_link, party_share_link,
@@ -63,6 +66,7 @@ pub use party::{
 #[cfg(feature = "mpv-host")]
 pub use player::{
     FfiPlayer, FfiPlayerEvent, FfiPlayerOptions, FfiPlayerSink, FfiPlayerState, FfiVideo,
+    player_audio_tap,
 };
 #[cfg(feature = "remote")]
 pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote, FfiTxtPair};
@@ -81,7 +85,10 @@ pub use sender::{
 };
 #[cfg(all(feature = "remote", feature = "testing"))]
 pub use sender::{FfiFakeCast, FfiFakeCastOptions, FfiFakeTv};
-pub use start::{FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode};
+pub use start::{
+    FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode, audio_tap_callback,
+};
+pub use sync_network::{FfiSyncAdvert, FfiSyncNetwork, FfiSyncSink, FfiSyncTxt};
 
 /// Each command and event, written as the bindings write it and read back: what a front end sends
 /// is what the engine receives, and what the engine says is what the front end reads. The Swift
@@ -281,8 +288,14 @@ mod tests {
             simkl_client_id: Some("a-simkl-client".into()),
             trakt_client_id: Some("a-trakt-client".into()),
             trakt_client_secret: Some("a-trakt-secret".into()),
+            google_client_id: Some("a-google-client".into()),
+            google_client_secret: Some("a-google-secret".into()),
+            dropbox_app_key: Some("a-dropbox-key".into()),
+            onedrive_client_id: Some("an-onedrive-client".into()),
             secrets: Some(SecretsMode::FollowConfig),
             language: Some("da".into()),
+            profile: Some("p2".into()),
+            audio_tap: true,
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());
@@ -298,6 +311,42 @@ mod tests {
         }
         for mode in [SecretsMode::Host, SecretsMode::FollowConfig] {
             assert_eq!(crossed(mode), mode);
+        }
+    }
+
+    #[test]
+    fn joining_a_store_through_a_paired_device_crosses_intact() {
+        use kaeri_model::group::{SyncCommand, SyncStatus, SyncStoreOffer, SyncStoreProblem};
+        let join = Command::SyncGroup(SyncCommand::JoinStoresFrom {
+            device: Some("00000000000000b2".into()),
+            stores: vec!["https://plugins.example".into()],
+            address: Some("192.0.2.4:47812".into()),
+        });
+        assert_eq!(crossed(join.clone()), join);
+        crosses_intact(Event::SyncStatus(SyncStatus {
+            enabled: true,
+            stores_to_join: vec![SyncStoreOffer {
+                address: "https://plugins.example".into(),
+                name: "Hilltop Plugins".into(),
+                invite_from: Some("00000000000000b2".into()),
+            }],
+            ..SyncStatus::default()
+        }));
+        crosses_intact(Event::SyncStoreJoined {
+            device: "00000000000000b2".into(),
+            store: "k1".into(),
+            address: "https://plugins.example".into(),
+            name: "Hilltop Plugins".into(),
+        });
+        for problem in
+            [SyncStoreProblem::Offline, SyncStoreProblem::Refused, SyncStoreProblem::NotAllowed]
+        {
+            crosses_intact(Event::SyncStoreJoinFailed {
+                device: "00000000000000b2".into(),
+                address: "https://plugins.example".into(),
+                name: "Hilltop Plugins".into(),
+                problem,
+            });
         }
     }
 
@@ -776,6 +825,20 @@ mod tests {
             prompt: Some(SkipPrompt::WrongTimes { kind: SkipKind::Ending }),
         });
         crosses_intact(Event::PlayerSkipPrompt { playback, prompt: Some(SkipPrompt::Share) });
+        // The found times' states: each prompt, mark, timeline and control they show.
+        for state in kaeri_model::playback::FoundSkipFixture::ALL {
+            let scene = kaeri_model::playback::found_skip_scene(state);
+            if let Some(prompt) = scene.prompt {
+                crosses_intact(Event::PlayerSkipPrompt { playback, prompt: Some(prompt) });
+            }
+            if let Some(view) = scene.mark.clone() {
+                crosses_intact(Event::PlayerSkipMark { playback, view: Some(view) });
+            }
+            crosses_intact(Event::PlayerTimeline { playback, marks: scene.marks.clone() });
+            for ui in scene.ui {
+                crosses_intact(Event::PlayerUi { playback, ui });
+            }
+        }
         crosses_intact(Event::PlayerSkipNotice {
             playback,
             notice: SkipNotice::SavedHere { kind: SkipKind::Opening, most: 180.0 },
@@ -858,6 +921,8 @@ mod tests {
             PlayerCommand::DismissSkipPrompt,
             PlayerCommand::NeverAskWasOpening,
             PlayerCommand::AnswerShareSkipTimes { share: true },
+            PlayerCommand::ConfirmFoundSkip { kind: SkipKind::Opening },
+            PlayerCommand::AdjustFoundSkip { kind: SkipKind::Ending },
             PlayerCommand::CopyStats {
                 about: StatsAbout {
                     app_version: "0.14.0".into(),
@@ -928,6 +993,7 @@ mod tests {
             licensed_only: true,
             on_list: Some(OnList::Hide),
             available: Some(kaeri_model::search::Available::OnYourServices),
+            period: Some(kaeri_model::browsing::TrendPeriod::Week),
         }
     }
 
@@ -1024,6 +1090,7 @@ mod tests {
             starts,
             playable: Playable::NotFound,
             because: Some("Stardust Wayfarer".into()),
+            last_device: Some("Study Mac".into()),
         };
         crosses_intact(Event::Home(Box::new(HomeView {
             spotlight: Some(Spotlight {
@@ -1038,6 +1105,7 @@ mod tests {
                 playable: Playable::Found,
                 line: Some(Msg::HomeTimeLeft { episode: 3, minutes: 12 }),
                 because: Some("Stardust Wayfarer".into()),
+                last_device: Some("Study Mac".into()),
             }),
             sections: vec![
                 HomeSection {
@@ -1376,12 +1444,56 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         };
         assert_eq!(crossed(row.clone()), row);
         let dub = DubExtent { through: 6, complete: false };
         assert_eq!(crossed(dub), dub);
         crosses_intact(Event::TitleDub { id: AnilistId::new(900_001), dub: Some(dub) });
         crosses_intact(Event::TitleDub { id: AnilistId::new(900_001), dub: None });
+    }
+
+    #[test]
+    fn the_browsing_extras_cross_intact() {
+        use kaeri_model::browsing::{CountLine, SurpriseOutcome, SurprisePool, TrendPeriod};
+        let id = AnilistId::new(900_001);
+        let line = CountLine {
+            long: "12 episodes · Dub 8".into(),
+            short: "12 ep · Dub 8".into(),
+            spoken: "12 episodes, dub through episode 8".into(),
+            dub: Some("Dub 8".into()),
+        };
+        let entry = Entry::new(id, "Kaze no Tegami");
+        crosses_intact(Event::Trending {
+            period: TrendPeriod::Week,
+            entries: vec![entry],
+            updated_at: Some(1_800_000_000),
+            failed: false,
+            waiting: Some(12),
+        });
+        for outcome in [
+            SurpriseOutcome::Picked { id, more: true },
+            SurpriseOutcome::Empty,
+            SurpriseOutcome::Offline,
+            SurpriseOutcome::Failed,
+        ] {
+            crosses_intact(Event::Surprise { pool: SurprisePool::Planning, outcome });
+        }
+        crosses_intact(Event::Surprise {
+            pool: SurprisePool::Filters { query: every_filter() },
+            outcome: SurpriseOutcome::Empty,
+        });
+        assert_eq!(crossed(line.clone()), line);
+        let commands = [
+            Command::LoadTrending(TrendPeriod::Month),
+            Command::Surprise(SurprisePool::Planning),
+            Command::Surprise(SurprisePool::Filters { query: every_filter() }),
+        ];
+        for command in commands {
+            let before = format!("{command:?}");
+            assert_eq!(format!("{:?}", crossed(command)), before);
+        }
     }
 
     #[test]

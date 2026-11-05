@@ -153,6 +153,7 @@ internal fun ContinueShelf(section: HomeSection, items: List<HomeItem>, h: HomeH
 
 /** The short line under a poster: the engine's, else the reason, else the first genre. */
 private fun HomeItem.detail(context: Context): String? {
+    app.kaeri.store.continueFromDeviceLine(context, lastDevice, episode?.toInt(), resume)?.let { return it }
     line?.let { return it.text(context) }
     val reason = when (reason) {
         UpNextReason.NEW_SEASON -> Strings.homeReasonNewSeason(context)
@@ -236,10 +237,11 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (item.new) WaterDot()
                 Text(
-                    item.line?.text(context).orEmpty(),
+                    (app.kaeri.store.continueFromDeviceLine(context, item.lastDevice, item.episode?.toInt(), item.resume) ?: item.line?.text(context)).orEmpty(),
                     style = MaterialTheme.typography.bodyMedium.tabular(),
                     color = colors.onSurfaceVariant,
-                    maxLines = largeTextLines(),
+                    // The line saying which device played last wraps to a second line, never cut.
+                    maxLines = if (item.lastDevice != null) maxOf(2, largeTextLines()) else largeTextLines(),
                     overflow = TextOverflow.Ellipsis,
                 )
             }

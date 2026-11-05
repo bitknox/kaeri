@@ -64,7 +64,9 @@ pub async fn stream_url(
         &media.match_target(),
         translation,
         now,
-        |source, key| async move { source.resolve(&key, episode, translation, now).await },
+        |source, key, hints| async move {
+            source.resolve(&key, episode, translation, &hints, now).await
+        },
     )
     .await;
     let streams = match answer {
@@ -191,6 +193,7 @@ pub async fn play_cli(
         &episode,
         None,
         &config.playback,
+        None,
         None,
     )
     .await

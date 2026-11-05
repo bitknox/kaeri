@@ -205,7 +205,7 @@ async fn localise_one(
 
 /// Whether `subtitle` is fetched before the file opens: a soft track at a remote address, not
 /// one burned in or on disk already.
-fn fetches(subtitle: &Subtitle) -> bool {
+pub(super) fn fetches(subtitle: &Subtitle) -> bool {
     !subtitle.hard && subtitle.url.starts_with("http")
 }
 

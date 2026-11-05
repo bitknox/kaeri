@@ -138,7 +138,7 @@ impl Viewer {
 
 /// Whether the list the database keeps is a signed-in tracker's: the Library's, the first.
 pub(crate) fn listed(services: &Services) -> bool {
-    services.sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated())
+    crate::sync::has_list(services)
 }
 
 impl Ahead {
@@ -591,7 +591,7 @@ fn destination(config: &Config, cache_dir: &Path) -> PathBuf {
 
 /// What is free on the disk `path` is on, or would be once made.
 #[cfg(unix)]
-fn free_space(path: &Path) -> Option<u64> {
+pub(crate) fn free_space(path: &Path) -> Option<u64> {
     let existing = path.ancestors().find(|ancestor| ancestor.exists())?;
     let stat = rustix::fs::statvfs(existing).ok()?;
     Some(stat.f_bavail.saturating_mul(stat.f_frsize))
@@ -600,7 +600,7 @@ fn free_space(path: &Path) -> Option<u64> {
 /// Not asked off Unix: unknown room is taken as room. Windows has no safe way to ask in this
 /// build's dependencies, and the workspace forbids unsafe code.
 #[cfg(not(unix))]
-fn free_space(_: &Path) -> Option<u64> {
+pub(crate) fn free_space(_: &Path) -> Option<u64> {
     None
 }
 
@@ -988,6 +988,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         };
         Event::Episodes { id, rows: (1..=12).map(row).collect(), failed: None }
     }

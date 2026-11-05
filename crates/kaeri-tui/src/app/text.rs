@@ -28,14 +28,32 @@ pub enum Field {
     JoinLink,
     /// A watch party's link or code.
     PartyLink,
+    /// What is said to the party.
+    Say,
     /// Who an invite is for.
     InviteName,
     /// What a store joined with an invite calls this device, on the join's confirmation.
     DeviceLabel,
+    /// A sync folder's address: a server's, or a path on this computer.
+    SyncAddress,
+    /// The user name a sync server signs in with.
+    SyncUser,
+    /// Its password, drawn masked.
+    SyncPassword,
+    /// A recovery key, to join the group a folder holds.
+    RecoveryKey,
+    /// The six digits another device shows to pair.
+    PairCode,
+    /// That device's address and port.
+    PairAddress,
+    /// A new profile's name.
+    ProfileName,
+    /// This device's name in the group.
+    DeviceName,
 }
 
 impl Field {
-    pub const ALL: [Self; 11] = [
+    pub const ALL: [Self; 20] = [
         Self::Search,
         Self::Palette,
         Self::ManualQuery,
@@ -45,8 +63,17 @@ impl Field {
         Self::KitsuPassword,
         Self::JoinLink,
         Self::PartyLink,
+        Self::Say,
         Self::InviteName,
         Self::DeviceLabel,
+        Self::SyncAddress,
+        Self::SyncUser,
+        Self::SyncPassword,
+        Self::RecoveryKey,
+        Self::PairCode,
+        Self::PairAddress,
+        Self::ProfileName,
+        Self::DeviceName,
     ];
 
     /// Whether `ch` goes into this field as it stands: a field that takes only some of what
@@ -59,6 +86,13 @@ impl Field {
             // The server takes up to 64; stopping here says so before it is refused.
             Self::InviteName => field.len() < 64,
             Self::DeviceLabel => field.len() < kaeri_model::stores::DEVICE_LABEL_MAX,
+            // Six digits, and the code is never anything else.
+            Self::PairCode => ch.is_ascii_digit() && field.len() < 6,
+            // Letters, digits and the spaces between their groups; the rest is a slip.
+            Self::RecoveryKey => ch.is_ascii_alphanumeric() || ch == ' ' || ch == '-',
+            Self::PairAddress => !ch.is_whitespace(),
+            Self::ProfileName => field.len() < 40,
+            Self::DeviceName => field.len() < 64,
             _ => true,
         }
     }
@@ -66,7 +100,7 @@ impl Field {
     /// Whether the field is drawn one dot to a character rather than as typed. The screen can
     /// be shared, streamed or screenshotted, and a password never shows in it.
     pub const fn masked(self) -> bool {
-        matches!(self, Self::KitsuPassword)
+        matches!(self, Self::KitsuPassword | Self::SyncPassword)
     }
 }
 
@@ -149,8 +183,17 @@ impl App {
             Some(Overlay::KitsuPassword) => Field::KitsuPassword,
             Some(Overlay::JoinStore) => Field::JoinLink,
             Some(Overlay::JoinParty) => Field::PartyLink,
+            Some(Overlay::Say) => Field::Say,
             Some(Overlay::InviteName) => Field::InviteName,
             Some(Overlay::StoreConfirm) if self.naming_device() => Field::DeviceLabel,
+            Some(Overlay::SyncAddress) => Field::SyncAddress,
+            Some(Overlay::SyncUser) => Field::SyncUser,
+            Some(Overlay::SyncPassword) => Field::SyncPassword,
+            Some(Overlay::SyncRestore) => Field::RecoveryKey,
+            Some(Overlay::SyncPairCode) => Field::PairCode,
+            Some(Overlay::SyncPairAddress) => Field::PairAddress,
+            Some(Overlay::ProfileName) => Field::ProfileName,
+            Some(Overlay::SyncName) => Field::DeviceName,
             _ if self.nav.section() == Section::Search => Field::Search,
             _ => return None,
         })
@@ -182,6 +225,7 @@ impl App {
     pub(super) fn dismiss_field(&mut self) {
         let credentials_open =
             matches!(self.nav.overlay(), Some(Overlay::KitsuUsername | Overlay::KitsuPassword));
+        let sync_form = self.nav.overlay().is_some_and(Overlay::is_devices);
         if !self.nav.close_overlay() {
             // Nothing to dismiss — leave the field rather than trapping the user
             // in it.
@@ -195,8 +239,13 @@ impl App {
         // An invite link is a one-time credential; a dismissed prompt forgets it.
         self.field_mut(Field::JoinLink).clear();
         self.field_mut(Field::PartyLink).clear();
+        self.field_mut(Field::Say).clear();
         self.field_mut(Field::InviteName).clear();
         self.field_mut(Field::DeviceLabel).clear();
+        // A sync form left half filled keeps nothing: a password and a recovery key least.
+        if sync_form {
+            self.forget_sync_form();
+        }
     }
 
     /// What `field` holds.

@@ -42,6 +42,161 @@ player-add-plugin-store = Add a { -plugin-store }
 # Short word while the video buffers.
 player-buffering = Buffering
 
+## The starting screen's steps and details
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+# @arg place: int
+# @arg total: int
+player-start-place = { $place } of { $total } { -source-pl }
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Your pick for this show
+
+# Detail line when a source has no match for the show.
+# @arg name: text
+player-start-miss-no-match = { $name } doesn't have this show
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+# @arg name: text
+# @arg episode: text
+player-start-miss-no-episode = { $name } doesn't have episode { $episode }
+
+# Detail line when a source failed and the next is asked.
+# @arg name: text
+player-start-miss-failed = { $name } didn't answer
+
+# Detail line when a source took too long and the next is asked.
+# @arg name: text
+player-start-miss-timed-out = { $name } took too long
+
+# Detail line after the viewer skipped the source being asked.
+# @arg name: text
+player-start-miss-skipped = You skipped { $name }
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Skipped after recent failures
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+# @arg name: text
+player-start-from = From { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = The first one showed no video
+
+# Detail line with the place of the stream being opened.
+# @arg next: int
+# @arg total: int
+player-start-stream-place = { $next } of { $total } streams
+
+# Detail line while a torrent has peers.
+# @arg count: int
+player-start-peers = { $count ->
+    [one] One peer
+   *[other] { $count } peers
+ }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+# @arg speed: bytes
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+# @arg percent: percent
+player-start-buffering-percent = Buffering · { $percent }
+
+# Step line while the episode resumes where it was left.
+# @arg clock: text
+player-start-resuming = Resuming at { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+# @max 32
+player-start-from-beginning = Play from the beginning
+
+# Button on the starting screen that opens the list of steps.
+# @max 20
+player-start-details = Details
+
+# Button that skips the source being asked. The name is the source's.
+# @arg name: text
+# @max 28
+player-start-skip-source = Skip { $name }
+
+# Button that opens the next stream of the same source.
+# @max 28
+player-start-skip-stream = Skip this stream
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+# @arg name: text
+player-start-still-waiting = Still waiting for { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Waiting for a connection
+
+# Detail line while offline. The episode is its label.
+# @arg episode: text
+player-start-offline-detail = You're offline. Episode { $episode } starts when you're back.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+# @max 28
+player-start-fix-match = Fix match
+
+# Details row label for the translation of the episode.
+player-start-translation = Audio and subtitles
+
+# Details row once the title has been looked up.
+player-start-looked-up = Looked up the title
+
+# Seconds on the starting screen's detail line and Details rows.
+# @arg seconds: int
+player-start-seconds = { $seconds } s
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Still starting. You can choose a { -source } now.
+
+# Spoken when a start begins. The episode is its label.
+# @arg episode: text
+# @arg title: text
+player-start-announce = Starting episode { $episode }, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+# @arg title: text
+# @arg reason: text
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+# @arg step: text
+# @arg detail: text
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Starting from the beginning
+
+# Details row while a source is being asked.
+player-start-row-asking = Asking
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Doesn't have this show
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+# @arg episode: text
+player-start-row-no-episode = Doesn't have episode { $episode }
+
+# Details row outcome when a source failed.
+player-start-row-failed = Didn't answer
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Took too long
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Skipped
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+# @arg names: text
+player-start-asked = { $names } were asked.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+# @max 16
+player-start-subtitled = Subtitled
+
 ## The card in the corner of the video
 
 # Title of the stall card. The seconds count up.
@@ -154,6 +309,9 @@ player-mark-watch-edges = Watch the edges
 # Line in the review with sharing on.
 player-mark-shares = Saving shares these times with AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = { -app-name } found these times from the audio.
+
 # Line in the review when the mark replaces AniSkip's times.
 # @arg start: text
 # @arg end: text
@@ -216,11 +374,37 @@ player-mark-it = Mark it
 # @max 20
 player-dont-ask-again = Don't ask again
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and
+# Don't ask again.
+player-found-ask-opening = { -app-name } found this opening. Were the edges right?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = { -app-name } found this ending. Were the edges right?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+# @arg episode: int
+player-found-ask-share = Yes shares these times with AniSkip for episode { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust
+# opens the review with the edges to nudge.
+# @max 12
+player-found-yes = Yes
+# @max 16
+player-found-adjust = Adjust
+
+# What the prompt says after Yes. $episode is the episode's number.
+# @arg episode: int
+player-found-saved = Saved. AniSkip gets these times for episode { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = { -app-name } won't ask about skip times again.
+player-found-never-how = You can turn it back on in Settings.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Share your skip times with AniSkip?
 
 # Body of the sheet.
-player-share-body = AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.
+player-share-body = AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.
 
 # What is sent, as a line under the body.
 player-share-sent = It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the { -source } you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.
@@ -235,6 +419,20 @@ player-share-no = Don't share
 player-skip-from-file = From the file
 player-skip-yours = Yours
 player-skip-from-aniskip = From AniSkip
+player-skip-found = Found by { -app-name }
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per
+# platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Paused while Low Power Mode is on.
+player-skip-paused-battery-saver = Paused while battery saver is on.
+player-skip-paused-energy-saver = Paused while energy saver is on.
+player-skip-paused-power-saver = Paused while power saver is on.
+player-skip-paused-storage = Paused until 2 GB of storage is free.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this
+# copy of the app has a video player that can't hand its audio over, such as a Linux build
+# using the system's own player library.
+player-skip-unavailable = Not available in this build of { -app-name }.
 player-skip-none = None yet
 
 # Skip times panel: removes your own mark.

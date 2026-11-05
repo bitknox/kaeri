@@ -23,7 +23,7 @@ public static class SettingsCatalog
 {
     static readonly HashSet<SettingKey> Switches =
     [
-        SettingKey.Motion, SettingKey.AutoNext, SettingKey.SkipOpening, SettingKey.SkipRecap, SettingKey.SkipFiller, SettingKey.AskWasOpening, SettingKey.ShareSkipTimes,
+        SettingKey.Motion, SettingKey.AutoNext, SettingKey.SkipOpening, SettingKey.SkipRecap, SettingKey.SkipFiller, SettingKey.FindSkipTimes, SettingKey.AskWasOpening, SettingKey.ShareSkipTimes,
         SettingKey.MarkChapters, SettingKey.SkipButton, SettingKey.Fullscreen, SettingKey.NightMode,
         SettingKey.MergeSubtitles, SettingKey.KeepSeeding, SettingKey.Presence, SettingKey.PresenceTitle,
         SettingKey.PresenceRich,

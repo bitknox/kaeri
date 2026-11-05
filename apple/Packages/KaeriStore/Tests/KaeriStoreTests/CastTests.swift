@@ -204,6 +204,7 @@ struct CastTests {
 
     @Test func aPlayStartedWhileCastingStaysOffThePlayerHere() {
         #expect(AppStore.playsHere(.playbackEnded(watched: false, ending: .stopped, rollingOn: false)))
+        #expect(AppStore.playsHere(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 7))))
         #expect(!AppStore.playsHere(.toast(Notice(kind: .info, text: "", hint: nil))))
     }
 }

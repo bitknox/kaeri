@@ -57,6 +57,10 @@ shortcuts-group-lists = Lists
 # @only linux
 shortcuts-go-to-section = Go to a section
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+# @only linux
+shortcuts-episode-ranges = Previous or next range of episodes
+
 # Shortcut: open the keyboard shortcuts window.
 # @only linux
 shortcuts-show = Keyboard shortcuts
@@ -195,11 +199,6 @@ tv-episode = Episode { $episode }
 # @arg episode: text
 # @arg title: text
 tv-episode-titled = Episode { $episode } · { $title }
-
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-# @only linux
-# @arg code: text
-tv-fingerprint-note = A TV lists this { -device } with the code { $code }. Forget a TV here and it forgets this { -device } too.
 
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 # @only linux

@@ -103,7 +103,7 @@ pub(super) fn entries(n: usize) -> ContentList {
 /// when there is one.
 pub(super) fn finished(next: Option<&str>) -> Event {
     let ending = Ending::Complete { next: next.map(Into::into) };
-    Event::PlaybackEnded { watched: true, ending, rolling_on: next.is_some() }
+    Event::PlaybackEnded { watched: true, ending, rolling_on: next.is_some(), failure: None }
 }
 
 /// A playback the engine staged: `episode` of title `id`, under `title`, at the speed
@@ -120,6 +120,7 @@ pub(super) fn staged(
         episode: episode.into(),
         episode_title: episode_title.map(Into::into),
         speed: 1.0,
+        resume: None,
     }
 }
 
@@ -145,6 +146,8 @@ pub(super) fn app_at_episodes() -> App {
                     source: None,
                     unsourced: false,
                     past_progress: false,
+                    spoiler_ahead: false,
+                    synopsis_pending: false,
                     thumbnail: None,
                     description: None,
                 })

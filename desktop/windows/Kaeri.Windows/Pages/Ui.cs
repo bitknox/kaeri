@@ -13,6 +13,20 @@ static class Ui
 {
     public static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
+    /// <summary>The first <typeparamref name="T"/> in <paramref name="at"/>'s visual tree, such as a NumberBox's own text field.</summary>
+    public static T? Descendant<T>(DependencyObject at) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(at); i++)
+        {
+            var child = VisualTreeHelper.GetChild(at, i);
+            if (child is T found)
+                return found;
+            if (Descendant<T>(child) is { } deeper)
+                return deeper;
+        }
+        return null;
+    }
+
     public static TextBlock Text(string text, string? style = null, bool wrap = true) => new()
     {
         Text = text,

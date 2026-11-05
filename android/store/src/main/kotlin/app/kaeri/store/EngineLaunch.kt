@@ -69,6 +69,10 @@ data class EngineLaunch(
     val malClientId: String? = null,
     val simklClientId: String? = null,
     val traktClientId: String? = null,
+    /** The profile to start in, once the install has more than one; `null` for the one used last. */
+    val profile: String? = null,
+    /** The player's libmpv carries the demuxer's audio tap and each of its cores has the engine's callback. */
+    val audioTap: Boolean = true,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -93,6 +97,8 @@ data class EngineLaunch(
             simklClientId = simklClientId,
             traktClientId = traktClientId,
             secrets = secrets,
+            profile = profile,
+            audioTap = audioTap,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */
@@ -267,7 +273,25 @@ enum class FixtureScene {
     AVAILABLE,
 
     /** [WATCHING] with three watch party rooms kept, as Watch together lists them. */
-    TOGETHER;
+    TOGETHER,
+
+    /** [WATCHING] with sync set up through a cloud folder: this device, the Living room TV, one kept-watch note. */
+    SYNC_ON,
+
+    /** [WATCHING] with sync on nearby only: paired with the Living room TV, no cloud folder, no recovery key. */
+    SYNC_NEARBY,
+
+    /** [WATCHING] syncing through Google Drive, with a recovery key that can be shown again. */
+    SYNC_CLOUD,
+
+    /** A TV paired with a phone that syncs through Dropbox and holds the sign-in the TV can use; the TV has no folder yet. */
+    SYNC_TV_PHONE_SIGN_IN,
+
+    /** [WATCHING] with three profiles, one of them a kids profile. */
+    PROFILES,
+
+    /** [WATCHING] for Search's extras: dub counts on the cards, Surprise me's fixtures and a long franchise for ranges. */
+    BROWSING;
 
     companion object {
         /** The scene [name] says, case aside; `null` for one there is none of. */

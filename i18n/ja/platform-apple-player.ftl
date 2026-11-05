@@ -42,3 +42,4 @@ player-title-episode-line = { $title } · { $episode }
 player-announce-titled = { $line }、{ $title }
 player-sound = 音声
 player-loading-announce = 再生を開始しています
+menu-say-something = ひとこと送る…

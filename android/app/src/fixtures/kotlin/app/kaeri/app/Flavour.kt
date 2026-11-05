@@ -26,10 +26,18 @@
 //   sheet     a sheet to open: torrent, join, kitsu, update or show (from A2); match, match-fix,
 //             match-found or match-empty open the match picker on the first fixture (unsure scene)
 //   player    a player state to shoot (from A3)
+//   found     flow or settings: the found skip times demo, the engine's part scripted, for recording motion
+//   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
+//             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   code      a tracker whose device-code sheet opens, with a made-up code that expires in 15 minutes
 //   expires   seconds the `code` sheet's code has left, 0 for one already expired
 //   day       days after today the calendar opens on, for a day with broadcasts: the fixtures'
 //             own day has none
+//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
+//             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
+//             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
+//             chatloop and bar wait for `am broadcast -a app.kaeri.fixtures.PARTY_GO` before
+//             their timeline, so a recording can roll first
 
 package app.kaeri.app
 
@@ -66,6 +74,9 @@ import app.kaeri.store.CastScene
 import app.kaeri.store.FixtureCasts
 import app.kaeri.store.FixtureTvBrowser
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.FixtureParty
+import app.kaeri.store.PartyShot
+import app.kaeri.store.PartyStage
 import app.kaeri.store.FixtureTvs
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.TvScene
@@ -102,7 +113,7 @@ internal object Flavour {
         intent.getStringExtra("media")?.let { fixtureMedia = it }
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
-        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context))
+        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
     }
 
     /**
@@ -204,6 +215,11 @@ internal object Flavour {
      * screen: what announceReady waits on besides the store. True with no scene asked for.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
+            val app = appContext as? KaeriApp ?: return false
+            FixtureParty.listen(app)
+            return FixtureParty.stage(shot, store, PlayerStage(app))
+        }
         intent.getStringExtra("sheet")?.takeIf { it.startsWith("match") }?.let { stageMatch(store, it) }
         intent.getStringExtra("discussion")?.let { value ->
             // "row" waits for the thread to be found without opening it, for the episode row's quiet line.
@@ -215,6 +231,9 @@ internal object Flavour {
             }
         }
         CastScene.named(intent.getStringExtra("cast"))?.let { return reachedCast(intent, store, it) }
+        intent.getStringExtra("sync")?.let { state ->
+            if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
+        }
         val scene = TvScene.named(intent.getStringExtra("tv")) ?: return true
         val browser = withTimeoutOrNull(60_000) {
             while (store.tv.attachedBrowser == null) delay(50)
@@ -269,7 +288,8 @@ internal object Flavour {
     }
 
     /** What the extras ask of the engine once it is up, once per process. */
-    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier) {
+    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {
+        StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)
@@ -300,6 +320,7 @@ internal object Flavour {
             store.apply(Event.DeviceCode(DeviceCodePrompt(tracker, "4F2K9QX1", "https://activate.example/pin", expiresAt)))
         }
         intent.getStringExtra("player")?.let { Log.w(KaeriApp.TAG, "player=$it is not in this build yet") }
+        intent.getStringExtra("found")?.let { FoundDemo.run(context.applicationContext as app.kaeri.player.PlayerHost, store, MainScope(), it) }
     }
 
     /**
@@ -325,4 +346,21 @@ internal object Flavour {
 
     /** How long a `code` extra's prompt has left: `expires=<seconds>`, 0 for an expired code, or 899. */
     private fun codeSecondsLeft(intent: Intent): Long = intent.getStringExtra("expires")?.toLongOrNull()?.coerceAtLeast(0) ?: 899
+}
+
+/** The phone's player, as the party scenes steer it. */
+private class PlayerStage(private val app: KaeriApp) : PartyStage {
+    private val player get() = app.player
+
+    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
+
+    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
+
+    override fun hideControls() = player.hideControls()
+
+    override fun seekTo(seconds: Double) = player.seekTo(seconds)
+
+    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
+
+    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
 }

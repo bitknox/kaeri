@@ -128,6 +128,92 @@ episode-row-airs = Airs { $when }
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Hidden by spoiler protection
 
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Synopsis hidden by spoiler protection
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Show synopsis
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Shows this episode's still and synopsis
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+# @arg minutes: int
+# @arg date: text
+episode-facts = { $minutes } min · Aired { $date }
+
+# Facts line of an episode with a length only.
+# @arg minutes: int
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+# @arg minutes: int
+episode-facts-left = { $minutes } min left
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+# @arg episode: int
+episode-protection-line = Spoiler protection hides what comes after episode { $episode }.
+
+# The same line on phones.
+# @arg episode: int
+# @max 40
+episode-protection-line-short = Hidden after episode { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+# @arg from: int
+# @arg to: int
+episode-range = Episodes { $from } to { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Episode range
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+# @arg count: int
+episode-fold = { $count ->
+    [one] One watched episode
+   *[other] { $count } watched episodes
+ }
+
+# An episode's number in a facts line on phones and in narrow desktop windows.
+# @arg episode: int
+episode-short = E{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+# @arg date: text
+episode-aired = Aired { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+# @arg first: text
+# @arg second: text
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+# @max 12
+episode-protection-show = Show
+
+# Button in that line once the rows after it are shown: hides them again.
+# @max 16
+episode-protection-hide = Hide
+
+# The line where spoiler protection starts, once the rows after it are shown.
+# @arg episode: int
+episode-protection-shown = Showing what comes after episode { $episode }.
+
+# The same line on phones.
+# @arg episode: int
+# @max 40
+episode-protection-shown-short = Showing after episode { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+# @arg from: text
+# @arg to: text
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+# @arg range: text
+# @arg state: text
+episode-range-item = { $range } · { $state }
+
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Episode options
 
@@ -275,3 +361,37 @@ title-fact-tba = To be announced
 # @arg status: text
 # @arg score: int
 more-following-line = { $status } · { $score }/10
+
+## Go to episode
+
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+# @max 24
+episode-go-to = Go to episode…
+
+# Title of the Go to episode field.
+# @max 24
+episode-go-to-title = Go to episode
+
+# Button of the Go to episode field that goes to the number typed.
+# @max 12
+episode-go-to-go = Go
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+# @arg first: int
+# @arg last: int
+episode-go-to-hint = { $first } to { $last }
+
+# Accessibility label of the Go to episode field.
+# @arg first: int
+# @arg last: int
+episode-go-to-label = Episode, { $first } to { $last }
+
+# Shown when the number typed is not an episode of the show.
+# @arg number: int
+# @arg last: int
+episode-go-to-none = No episode { $number }. This show has { $last }.
+
+# Shown when the number typed is an episode with no date that has not come out.
+# @arg number: int
+# @arg latest: int
+episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.

@@ -23,6 +23,21 @@ use kaeri_store::Store;
 
 /// Convert a title into the UI's flattened projection.
 pub fn entry_from(media: &Media, store: Option<&Store>) -> Entry {
+    let mut entry = entry_without_count(media, store);
+    // What a source said of the dub, kept by a title page, and so on every card.
+    entry.dub = store
+        .and_then(|s| s.dubs_of(&[media.id]).ok())
+        .and_then(|mut found| found.remove(&media.id))
+        .filter(|row| row.has_dub)
+        .map(|row| kaeri_model::browsing::DubKnown {
+            through: row.through,
+            complete: row.complete,
+        });
+    entry.recount();
+    entry
+}
+
+fn entry_without_count(media: &Media, store: Option<&Store>) -> Entry {
     // Local history is the source of truth for progress, so it is read here rather than
     // taken from any remote list — this is what makes the app work with no account.
     let (progress, resume) =
@@ -798,7 +813,7 @@ impl Numbering {
 
 /// An episode's number, when it is a whole one: what AniList numbers by. An "OVA" has none, and
 /// a "12.5" is a recap, not episode 12.
-fn whole(number: &kaeri_core::media::EpisodeNumber) -> Option<u32> {
+pub(crate) fn whole(number: &kaeri_core::media::EpisodeNumber) -> Option<u32> {
     let number = number.as_number()?;
     let whole = number as u32;
     (number >= 1.0 && f64::from(whole) == number).then_some(whole)
@@ -822,6 +837,7 @@ pub fn enrich_episodes(
         &numbering.rekey(&media.episode_titles()),
         &numbering.rekey(&media.episode_thumbnails()),
     );
+    tidy_synopses(episodes, &media.plain_description());
     let length = media
         .duration
         .filter(|minutes| *minutes > 0)
@@ -870,6 +886,84 @@ pub fn name_episodes(
     }
 }
 
+/// The longest a synopsis is kept, in characters.
+const SYNOPSIS_MAX: usize = 1_500;
+
+/// Words a source puts where it has no synopsis.
+const SYNOPSIS_PLACEHOLDERS: &[&str] = &[
+    "no synopsis",
+    "no synopsis available",
+    "no description",
+    "no overview",
+    "tba",
+    "tbd",
+    "n/a",
+];
+
+/// One episode's synopsis as the rows carry it: plain text in one run, capped, and `None` for
+/// what is no synopsis (empty, a placeholder, the episode's own name or number).
+pub fn tidy_synopsis(raw: &str, episode: &kaeri_core::media::Episode) -> Option<String> {
+    let text = kaeri_meta::anilist::model::plain_run(raw);
+    if text.is_empty() {
+        return None;
+    }
+    let lower = text.trim_end_matches(['.', '!']).to_lowercase();
+    if SYNOPSIS_PLACEHOLDERS.contains(&lower.as_str()) {
+        return None;
+    }
+    let number = episode.number.as_str().to_lowercase();
+    if lower == format!("episode {number}")
+        || lower == format!("ep. {number}")
+        || lower == number
+    {
+        return None;
+    }
+    if episode.title.as_deref().is_some_and(|title| title.trim().to_lowercase() == lower) {
+        return None;
+    }
+    if text.chars().count() <= SYNOPSIS_MAX {
+        return Some(text);
+    }
+    let cut: String = text.chars().take(SYNOPSIS_MAX).collect();
+    let at = cut.rfind(' ').unwrap_or(cut.len());
+    Some(format!("{}\u{2026}", cut[..at].trim_end_matches([',', ';', ':', '.'])))
+}
+
+/// Clean every episode's synopsis once, where rows are built: see [`tidy_synopsis`]. Text equal
+/// to the show's own description is dropped, and so is a source's text when most of its
+/// episodes repeat one paragraph (a site that prints the series blurb on every page).
+pub fn tidy_synopses(episodes: &mut [kaeri_core::media::Episode], show: &str) {
+    let show = kaeri_meta::anilist::model::plain_run(show);
+    for episode in episodes.iter_mut() {
+        let tidy = episode.description.as_deref().and_then(|raw| tidy_synopsis(raw, episode));
+        episode.description = tidy.filter(|text| show.is_empty() || *text != show);
+    }
+    let mut counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+    for text in episodes.iter().filter_map(|e| e.description.as_deref()) {
+        *counts.entry(text).or_default() += 1;
+    }
+    let repeated = counts.values().copied().max().unwrap_or(0);
+    if episodes.len() >= 3 && repeated * 2 > episodes.len() {
+        for episode in episodes.iter_mut() {
+            episode.description = None;
+        }
+    }
+}
+
+/// Put `synopses`, by AniList's number, on the episodes that have none.
+pub fn name_synopses(
+    episodes: &mut [kaeri_core::media::Episode],
+    synopses: &std::collections::BTreeMap<u32, String>,
+) {
+    for episode in episodes.iter_mut().filter(|e| e.description.is_none()) {
+        if let Some(whole) = whole(&episode.number)
+            && let Some(text) = synopses.get(&whole)
+        {
+            episode.description = Some(text.clone());
+        }
+    }
+}
+
 /// Merge provider episode listings with local watch history.
 ///
 /// The provider knows what episodes exist; only local history knows how far through them
@@ -885,6 +979,9 @@ pub fn episode_rows(
 /// Mark the episodes the viewer has not reached ([`EpisodeRow::past_progress`]): numbered past
 /// both the tracker's progress and the furthest episode finished here, and not finished
 /// themselves.
+///
+/// Also marks the episodes spoiler protection hides ([`EpisodeRow::spoiler_ahead`]): those past
+/// the one after the furthest reached, which is the next episode and is shown.
 pub fn mark_past_progress(
     rows: &mut [EpisodeRow],
     store: &Store,
@@ -901,6 +998,8 @@ pub fn mark_past_progress(
     for row in rows {
         row.past_progress =
             !row.completed && row.number.parse::<u32>().is_ok_and(|n| n > reached);
+        row.spoiler_ahead =
+            kaeri_model::episodes::spoiler_ahead(row, reached.saturating_add(1));
     }
 }
 
@@ -1032,6 +1131,8 @@ pub fn episode_rows_with_filler(
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
             }
         })
         .collect()
@@ -1543,6 +1644,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         };
         let mut rows =
             vec![row("1", true), row("2", false), row("3", false), row("OVA", false)];
@@ -1562,6 +1665,57 @@ mod tests {
             [false, false, true, false],
             "progress adopted from the tracker counts too"
         );
+    }
+
+    #[test]
+    fn protection_hides_what_comes_after_the_next_episode() {
+        let store = Store::open_in_memory().unwrap();
+        let id = AnilistId::new(7);
+        // The board's example: 1 to 6 watched, 7 next and half seen, 8 to 10 ahead.
+        let mut rows: Vec<EpisodeRow> = (1..=10)
+            .map(|n| EpisodeRow {
+                number: n.to_string(),
+                title: None,
+                thumbnail: None,
+                description: Some("A summary.".into()),
+                duration_secs: None,
+                watched: if n == 7 { 0.5 } else { 0.0 },
+                completed: n <= 6,
+                kind: None,
+                skippable: false,
+                airs_at: None,
+                delayed_from: None,
+                metadata_only: false,
+                source: None,
+                unsourced: false,
+                past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
+            })
+            .collect();
+        mark_past_progress(&mut rows, &store, id);
+        let ahead: Vec<u32> = rows
+            .iter()
+            .filter(|r| r.spoiler_ahead)
+            .map(|r| r.number.parse().unwrap())
+            .collect();
+        assert_eq!(ahead, [8, 9, 10], "the next episode and everything watched show");
+        assert!(rows[6].past_progress, "past progress still counts the next episode");
+
+        // Watching 8 as well moves the next to 9: only 10 is hidden.
+        rows[7].completed = true;
+        mark_past_progress(&mut rows, &store, id);
+        let ahead: Vec<_> =
+            rows.iter().filter(|r| r.spoiler_ahead).map(|r| &*r.number).collect();
+        assert_eq!(ahead, ["10"]);
+
+        // Progress adopted from a tracker counts as watched.
+        let fresh = AnilistId::new(8);
+        store.adopt_progress(fresh, 3, 1).unwrap();
+        rows.iter_mut().for_each(|r| r.completed = false);
+        mark_past_progress(&mut rows, &store, fresh);
+        let first = rows.iter().find(|r| r.spoiler_ahead).map(|r| &*r.number);
+        assert_eq!(first, Some("5"), "3 reached, 4 next, protection starts at 5");
     }
 
     #[test]
@@ -1752,6 +1906,8 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
             })
             .collect();
         date_episodes(&mut rows, &[(1, 100), (2, 200)].into_iter().collect());
@@ -2032,5 +2188,51 @@ mod provider_row_tests {
         assert_eq!(fixture.origin, ProviderOrigin::BuiltIn);
         assert_eq!(fixture.version, None, "a built-in source has no version of its own");
         assert!(!fixture.disabled && fixture.usable);
+    }
+
+    fn with_text(number: &str, text: &str) -> kaeri_core::media::Episode {
+        let mut episode = kaeri_core::media::Episode::new(number);
+        episode.description = Some(text.into());
+        episode
+    }
+
+    #[test]
+    fn synopses_are_tidied_once() {
+        let mut episodes = vec![
+            with_text("1", "<p>A lamplighter &amp; her   lantern.</p>"),
+            with_text("2", "No synopsis"),
+            with_text("3", "Episode 3"),
+            with_text("4", &"word ".repeat(600)),
+            with_text("5", "The show itself."),
+        ];
+        tidy_synopses(&mut episodes, "The show itself.");
+        let text: Vec<_> = episodes.iter().map(|e| e.description.clone()).collect();
+        assert_eq!(text[0].as_deref(), Some("A lamplighter & her lantern."));
+        assert_eq!(text[1], None);
+        assert_eq!(text[2], None);
+        let long = text[3].as_deref().unwrap();
+        assert!(long.chars().count() <= 1_501 && long.ends_with('\u{2026}'));
+        assert_eq!(text[4], None, "the show's own text is no episode's synopsis");
+    }
+
+    #[test]
+    fn a_paragraph_repeated_on_most_episodes_is_dropped() {
+        let mut episodes: Vec<_> = (1..=4)
+            .map(|n| with_text(&n.to_string(), "One blurb for the whole series."))
+            .collect();
+        episodes[3].description = Some("A real one.".into());
+        tidy_synopses(&mut episodes, "");
+        assert!(episodes.iter().all(|e| e.description.is_none()));
+    }
+
+    #[test]
+    fn borrowed_synopses_fill_only_the_gaps() {
+        let mut episodes =
+            vec![with_text("1", "Its own."), kaeri_core::media::Episode::new("2")];
+        let synopses =
+            [(1, "Borrowed one.".to_owned()), (2, "Borrowed two.".to_owned())].into();
+        name_synopses(&mut episodes, &synopses);
+        assert_eq!(episodes[0].description.as_deref(), Some("Its own."));
+        assert_eq!(episodes[1].description.as_deref(), Some("Borrowed two."));
     }
 }

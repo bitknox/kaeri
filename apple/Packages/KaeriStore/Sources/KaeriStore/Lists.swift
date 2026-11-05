@@ -372,6 +372,89 @@ public final class SearchModel {
         self.rails = rails
     }
 
+    /// What the Trending rail says for a period: its covers, when a kept answer was made, and
+    /// whether it could not load.
+    public struct TrendingRail: Equatable {
+        public var entries: [Entry]
+        public var updatedAt: Int64?
+        public var failed: Bool
+        public var waiting: UInt32?
+    }
+
+    /// The period Search's Trending rail shows: the one chosen, else the last the engine
+    /// remembered, else today.
+    public private(set) var trendingPeriod: TrendPeriod = .today
+    /// Each period's rail, as last answered. Today's is also the browse rails' own.
+    public private(set) var trendingRails: [TrendPeriod: TrendingRail] = [:]
+    /// The period asked for and not yet answered, whose old covers stay meanwhile.
+    public private(set) var trendingPending: TrendPeriod?
+    @ObservationIgnored private var chosenThisSession = false
+
+    func choose(_ period: TrendPeriod) {
+        chosenThisSession = true
+        guard period != trendingPeriod || trendingRails[period] == nil else { return }
+        trendingPending = trendingRails[period] == nil || period != .today ? period : nil
+        trendingPeriod = period
+    }
+
+    func trending(
+        _ period: TrendPeriod, entries: [Entry], updatedAt: Int64?, failed: Bool, waiting: UInt32?, titles: TitleCache
+    ) {
+        titles.merge(entries)
+        trendingRails[period] = TrendingRail(entries: entries, updatedAt: updatedAt, failed: failed, waiting: waiting)
+        // The remembered period arrives unasked as Search opens: it is the rail's, unless the
+        // viewer has chosen another since.
+        if !chosenThisSession { trendingPeriod = period }
+        if trendingPending == period { trendingPending = nil }
+    }
+
+    /// The rail Search shows for the period in effect, `nil` while neither it nor the browse
+    /// rails have it. Today's falls back on the browse rail's own covers.
+    public func trendingShown(browse: BrowseRail?) -> TrendingRail? {
+        if let rail = trendingRails[trendingPeriod], !(rail.failed && trendingPeriod == .today && browse != nil) { return rail }
+        if trendingPeriod == .today, let browse { return TrendingRail(entries: browse.entries, updatedAt: nil, failed: false, waiting: nil) }
+        return nil
+    }
+
+    // MARK: Surprise me
+
+    /// A pick the engine made, for the shell to open: `token` changes with each, so the same
+    /// title picked twice still opens.
+    public struct Pick: Equatable {
+        public var id: AnilistId
+        public var more: Bool
+        public var pool: SurprisePool
+        public var token: Int
+    }
+    public private(set) var pick: Pick?
+    /// A Surprise me or Another waiting on its answer.
+    public private(set) var surpriseBusy = false
+    /// Whether it has waited past 600 ms: the glyph gives way to a spinner.
+    public private(set) var surpriseSpinning = false
+    @ObservationIgnored private var surpriseTimer: Task<Void, Never>?
+    @ObservationIgnored private var picks = 0
+
+    func beginSurprise() -> Bool {
+        guard !surpriseBusy else { return false }
+        surpriseBusy = true
+        surpriseTimer = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
+            self?.surpriseSpinning = true
+        }
+        return true
+    }
+
+    func surprise(_ pool: SurprisePool, _ outcome: SurpriseOutcome) {
+        surpriseTimer?.cancel()
+        surpriseBusy = false
+        surpriseSpinning = false
+        if case .picked(let id, let more) = outcome {
+            picks += 1
+            pick = Pick(id: id, more: more, pool: pool, token: picks)
+        }
+    }
+
     func facets(_ facets: SearchFacets) {
         self.facets = facets
     }

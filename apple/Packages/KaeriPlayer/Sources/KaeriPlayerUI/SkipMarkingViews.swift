@@ -34,8 +34,15 @@ struct SkipMarkBar: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel(L.playerMarkSkipTimes)
             .sensoryFeedback(.impact(weight: .light), trigger: model.skipSaves)
-            .transition(.opacity)
+            .transition(barTransition(found: view.found))
         }
+    }
+
+    /// The bar fades in; a found review's, opened by Adjust, comes down 8 pt as it does, and
+    /// Reduce Motion drops that.
+    private func barTransition(found: Bool) -> AnyTransition {
+        guard found, !reduceMotion, layout == .bar else { return .opacity }
+        return .asymmetric(insertion: .opacity.combined(with: .offset(y: -8)), removal: .opacity)
     }
 
     // MARK: The bar
@@ -43,13 +50,17 @@ struct SkipMarkBar: View {
     private func bar(_ view: SkipMarkView, review: Bool) -> some View {
         VStack(alignment: .leading, spacing: review ? 12 : 0) {
             HStack(spacing: 12) {
-                kindPicker(view)
-                    .frame(width: metrics.touch ? 250 : 230)
+                // A found stretch's kind is known, so its title stands where the picker was.
+                if !(review && view.found) {
+                    kindPicker(view)
+                        .frame(width: metrics.touch ? 250 : 230)
+                }
                 Text(review ? L.playerMarkReviewTitle(kind: view.kind.title, length: SkipWords.span(view.length)) : SkipWords.step(view))
                     .font(.system(size: metrics.body, weight: review ? .semibold : .regular))
                     .monospacedDigit()
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, review && view.found ? 2 : 0)
                     .contentTransition(.opacity)
                 if !review { markButton(view) } else { closeButton }
             }
@@ -59,13 +70,21 @@ struct SkipMarkBar: View {
                     edgeRow(view, edge: .start)
                     edgeRow(view, edge: .end)
                 }
-                lines(view)
-                HStack {
-                    Button(L.playerMarkWatchEdges) { model.previewSkipEdges() }
-                        .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        .opacity(view.previewing ? 0.6 : 1)
-                    Spacer(minLength: 0)
-                    saveButton(view)
+                // A found review sets its lines beside the buttons; the others keep them above.
+                if view.found {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        lines(view)
+                        Spacer(minLength: 0)
+                        watchEdges(view)
+                        saveButton(view)
+                    }
+                } else {
+                    lines(view)
+                    HStack {
+                        watchEdges(view)
+                        Spacer(minLength: 0)
+                        saveButton(view)
+                    }
                 }
             }
         }
@@ -79,13 +98,22 @@ struct SkipMarkBar: View {
     private func panel(_ view: SkipMarkView, review: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                kindPicker(view)
+                if review && view.found {
+                    Text(L.playerMarkReviewTitle(kind: view.kind.title, length: SkipWords.span(view.length)))
+                        .font(.system(size: metrics.body, weight: .semibold))
+                        .monospacedDigit()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    kindPicker(view)
+                }
                 closeButton
             }
             if review {
-                Text(L.playerMarkReviewTitle(kind: view.kind.title, length: SkipWords.span(view.length)))
-                    .font(.system(size: metrics.body, weight: .semibold))
-                    .monospacedDigit()
+                if !view.found {
+                    Text(L.playerMarkReviewTitle(kind: view.kind.title, length: SkipWords.span(view.length)))
+                        .font(.system(size: metrics.body, weight: .semibold))
+                        .monospacedDigit()
+                }
                 edgeRow(view, edge: .start)
                 edgeRow(view, edge: .end)
                 lines(view)
@@ -135,6 +163,13 @@ struct SkipMarkBar: View {
             .sensoryFeedback(.impact(weight: .light), trigger: view.start) { old, new in old != new }
     }
 
+    private func watchEdges(_ view: SkipMarkView) -> some View {
+        Button(L.playerMarkWatchEdges) { model.previewSkipEdges() }
+            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+            .opacity(view.previewing ? 0.6 : 1)
+            .animation(.quick, value: view.previewing)
+    }
+
     private func saveButton(_ view: SkipMarkView) -> some View {
         Button(L.playerMarkSave) { model.saveSkipMark() }
             .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
@@ -152,6 +187,13 @@ struct SkipMarkBar: View {
         }
         .buttonStyle(OverVideoButtonStyle())
         .accessibilityLabel(L.actionClose)
+    }
+
+    /// The edge the amber capsule sits on: the one being played while Watch the edges runs, else
+    /// the one the arrow keys step.
+    private func activeEdge(_ view: SkipMarkView) -> SkipEdge {
+        guard view.previewing, let start = view.start, let end = view.end else { return model.markEdge }
+        return abs(model.position - start) <= abs(model.position - end) ? .start : .end
     }
 
     /// "Starts 1:31 −1 s +1 s".
@@ -176,8 +218,10 @@ struct SkipMarkBar: View {
         }
         .padding(.leading, 2)
         .overlay(alignment: .leading) {
-            if layout == .bar, model.markEdge == edge {
+            if layout == .bar {
                 Capsule().fill(.amber).frame(width: 2, height: 16).offset(x: -8)
+                    .opacity(activeEdge(view) == edge ? 1 : 0)
+                    .animation(.quick, value: activeEdge(view))
             }
         }
     }
@@ -200,11 +244,14 @@ struct SkipMarkBar: View {
 
 // MARK: Prompts
 
-/// "Was that the opening?" with Mark it and Don't ask again, or "Wrong opening times?" with
-/// Report and Mark, in the corner for 8 s.
+/// "Was that the opening?" with Mark it and Don't ask again, "Wrong opening times?" with Report
+/// and Mark, or on a found stretch "Kaeri found this opening. Were the edges right?" with Yes,
+/// Adjust and Don't ask again, in the corner. The found card answers in place: its text
+/// crossfades to what Yes or Don't ask again did, and the card shrinks to fit.
 struct SkipPromptCard: View {
     let model: PlayerModel
     let metrics: PlayerMetrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         if let offer = model.skipPrompt {
@@ -219,9 +266,71 @@ struct SkipPromptCard: View {
                     (L.playerSkipReport, .secondary, { model.reportSkip(kind) }),
                     (L.playerSkipMark, .primary, { model.markFromPrompt() }),
                 ])
+            case .foundEdges, .foundSaved, .foundNever:
+                foundCard(offer.prompt)
             case .share:
                 EmptyView()
             }
+        }
+    }
+
+    private func foundCard(_ prompt: SkipPrompt) -> some View {
+        let small: CGFloat = metrics.touch ? 13 : 12
+        return ZStack(alignment: .topLeading) {
+            switch prompt {
+            case .foundEdges(let kind, let episode):
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(kind == .ending ? L.playerFoundAskEnding : L.playerFoundAskOpening)
+                            .font(.system(size: metrics.body, weight: .semibold))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(L.playerFoundAskShare(episode: Int(episode)))
+                            .font(.system(size: small))
+                            .foregroundStyle(.haze)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        Button(L.playerDontAskAgain) { model.neverAskWasOpening() }
+                            .buttonStyle(PillButtonStyle(kind: .quiet, metrics: metrics))
+                        Button(L.playerFoundAdjust) { model.adjustFoundSkip(kind) }
+                            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+                        Button(L.playerFoundYes) { model.confirmFoundSkip(kind) }
+                            .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
+                    }
+                }
+                .transition(.opacity)
+                .id("ask")
+            case .foundSaved(_, let episode):
+                Text(L.playerFoundSaved(episode: Int(episode)))
+                    .font(.system(size: metrics.body))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
+                    .id("saved")
+            default:
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.playerFoundNever).font(.system(size: metrics.body))
+                    Text(L.playerFoundNeverHow).font(.system(size: small)).foregroundStyle(.haze)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .transition(.opacity)
+                .id("never")
+            }
+        }
+        .animation(reduceMotion ? .quick : .standard, value: prompt)
+        .foregroundStyle(.silk)
+        .padding(12)
+        .frame(width: metrics.touch ? 344 : 320, alignment: .topLeading)
+        .overVideo(radius: metrics.cardRadius)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(spoken(prompt))
+    }
+
+    private func spoken(_ prompt: SkipPrompt) -> String {
+        switch prompt {
+        case .foundEdges(let kind, _): kind == .ending ? L.playerFoundAskEnding : L.playerFoundAskOpening
+        case .foundSaved(_, let episode): L.playerFoundSaved(episode: Int(episode))
+        default: L.playerFoundNever
         }
     }
 
@@ -308,10 +417,11 @@ struct SkipTimesPanel: View {
                     HStack(spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(row.kind.title)
-                            Text([row.times, row.origin].compactMap { $0 }.joined(separator: " · "))
+                            Text([row.times, row.origin, model.skipFindPauseWords(for: row)].compactMap { $0 }.joined(separator: " · "))
                                 .font(.system(size: metrics.touch ? 13 : 12))
                                 .monospacedDigit()
                                 .foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
                         if row.canReport {
@@ -322,9 +432,14 @@ struct SkipTimesPanel: View {
                             Button(L.playerSkipClear) { model.clearMySkip(row.kind) }
                                 .buttonStyle(PillButtonStyle(kind: .quiet, metrics: metrics))
                         }
-                        Button(L.playerSkipMark) { model.beginSkipMark(row.kind) }
-                            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                            .disabled(!model.canMarkSkips)
+                        if row.canAdjust {
+                            Button(L.playerFoundAdjust) { model.adjustFoundSkip(row.kind) }
+                                .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+                        } else {
+                            Button(L.playerSkipMark) { model.beginSkipMark(row.kind) }
+                                .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+                                .disabled(!model.canMarkSkips)
+                        }
                     }
                 }
                 if model.marksBlocked {

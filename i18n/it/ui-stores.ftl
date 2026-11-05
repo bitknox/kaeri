@@ -1,6 +1,6 @@
 stores-joined = Unito
 stores-empty-title = Ancora nessun { -plugin-store }
-stores-empty-detail = I { -plugin-store-cap-pl } sono gestiti da persone che conosci. Unisciti con il link di invito che ti manda il proprietario.
+stores-empty-detail = I { -plugin-store-cap-pl } contengono { -plugin-pl } firmati e danno a ogni { -device } il proprio token. Unisciti a uno con il link di invito che ti manda il suo proprietario.
 stores-intro = I { -plugin-cap-pl } aggiungono { -source-pl }. Ognuno elenca gli host che contatta prima che tu lo installi.
 stores-not-from-app = I { -plugin-cap-pl } arrivano dal proprietario del { -plugin-store }, non da { -app-name }. Puoi lasciare un { -plugin-store } in qualsiasi momento.
 stores-join-owner-responsible = { $owner } gestisce questo { -plugin-store } e ha scelto i suoi { -plugin-pl }. { -app-name } non li ha creati, controllati né approvati.
@@ -180,7 +180,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 notice-open-stores = Apri i { -plugin-store-pl }
-stores-what-is = Un { -plugin-store } è un piccolo server gestito da una persona per chi invita. Offre { -source-pl } sotto forma di { -plugin-pl }. { -app-name } non gestisce { -plugin-store-pl } e non ne elenca, quindi ti unisci a uno con un link d'invito del suo proprietario.
+stores-what-is = Un { -plugin-store } è un piccolo server che contiene { -plugin-pl } firmati e dà a ogni { -device } il proprio token. Offre { -source-pl } sotto forma di { -plugin-pl }. { -app-name } non gestisce { -plugin-store-pl } e non ne elenca, quindi ti unisci a uno con un link di invito del suo proprietario.
 stores-what-is-link = Che cos'è un { -plugin-store }?
 stores-invite-rules = Un link d'invito vale una volta, per una persona, e dura sette giorni. Chiedi un nuovo link al proprietario del { -plugin-store } se il tuo è scaduto.
 stores-qr-label = Codice QR del link d'invito

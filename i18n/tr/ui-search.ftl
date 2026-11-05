@@ -90,3 +90,74 @@ search-available-all = Tümü
 search-available-here = Burada oynar
 search-available-services = Hizmetlerinizde
 search-line-service = { $service } üzerinde
+count-episodes = { $count ->
+    [one] Bir bölüm
+   *[other] { $count } bölüm
+ }
+count-episodes-short = { $count } böl.
+count-out-of = { $out }/{ $total } çıktı
+count-out-of-short = { $out }/{ $total }
+count-out = { $count ->
+    [one] Bir bölüm çıktı
+   *[other] { $count } bölüm çıktı
+ }
+count-out-short = { $count } çıktı
+count-starts = { $date } başlıyor
+count-not-out = Henüz çıkmadı
+count-next-of = Böl. { $episode }/{ $total }
+count-dub = Dublaj
+count-dub-through = Dublaj { $through }
+count-spoken-episodes = { $count ->
+    [one] Bir bölüm
+   *[other] { $count } bölüm
+ }
+count-spoken-out-of = { $total } bölümün { $out } tanesi çıktı
+count-spoken-out = { $count ->
+    [one] Bir bölüm çıktı
+   *[other] { $count } bölüm çıktı
+ }
+count-spoken-starts = { $date } tarihinde başlıyor
+count-spoken-next-of = { $total } bölümün { $episode }. bölümü
+count-spoken-dub-through = { $through }. bölüme kadar { -dubbed }
+count-spoken-dub = dublajı var
+date-month-jan-short = Oca
+date-month-jan-long = Ocak
+date-month-feb-short = Şub
+date-month-feb-long = Şubat
+date-month-mar-short = Mar
+date-month-mar-long = Mart
+date-month-apr-short = Nis
+date-month-apr-long = Nisan
+date-month-may-short = May
+date-month-may-long = Mayıs
+date-month-jun-short = Haz
+date-month-jun-long = Haziran
+date-month-jul-short = Tem
+date-month-jul-long = Temmuz
+date-month-aug-short = Ağu
+date-month-aug-long = Ağustos
+date-month-sep-short = Eyl
+date-month-sep-long = Eylül
+date-month-oct-short = Eki
+date-month-oct-long = Ekim
+date-month-nov-short = Kas
+date-month-nov-long = Kasım
+date-month-dec-short = Ara
+date-month-dec-long = Aralık
+trending-today = Bugün öne çıkanlar
+trending-week = Bu hafta öne çıkanlar
+trending-month = Bu ay öne çıkanlar
+trending-choice-today = Bugün
+trending-choice-week = Bu hafta
+trending-choice-month = Bu ay
+trending-failed = Öne çıkanlar ({ $period }) yüklenemedi.
+trending-updated = Güncellendi: { $age }
+surprise-me = Beni şaşırt
+surprise-me-menu = Beni Şaşırt
+surprise-another = Başka biri
+surprise-hint-planning = Planlama'dan rastgele bir başlık açar
+surprise-hint-filters = Bu filtrelerden rastgele bir başlık açar
+surprise-another-hint = Bunun yerine rastgele başka bir başlık açar
+surprise-empty-filters = Bu filtrelere uyan başlık yok.
+surprise-empty-planning = Planlama boş.
+surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.

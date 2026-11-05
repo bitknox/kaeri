@@ -27,3 +27,5 @@ updates-restart = 再起動してアップデート
 tv-problem-full = このテレビはペアリングできる{ -device-pl }の上限に達しています。テレビの設定の「リモコン」から1台削除してください。
 tv-problem-unpaired = このテレビはこの{ -device }をもう認識していません。もう一度ペアリングしてください。
 player-position-spoken = { $position } / { $duration }
+names-pair = { $first }と{ $last }
+names-list = { $list }、{ $next }

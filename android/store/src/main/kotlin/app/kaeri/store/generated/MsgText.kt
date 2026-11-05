@@ -76,6 +76,13 @@ fun Msg.text(context: Context): String =
         is Msg.NoticeNotAiredYet -> Strings.noticeNotAiredYet(context, this.episode.toInt(), this.next.toInt(), this.`when`.text(context))
         is Msg.StatusLookingUpTitle -> Strings.statusLookingUpTitle(context)
         is Msg.StatusLoadingSources -> Strings.statusLoadingSources(context)
+        is Msg.StartLookingUpTitle -> Strings.startLookingUpTitle(context)
+        is Msg.StartGettingSourcesReady -> Strings.startGettingSourcesReady(context)
+        is Msg.StartAskingSource -> Strings.startAskingSource(context, this.name)
+        is Msg.StartOpeningStream -> Strings.startOpeningStream(context)
+        is Msg.StartTryingAnotherStream -> Strings.startTryingAnotherStream(context)
+        is Msg.StartFindingPeers -> Strings.startFindingPeers(context)
+        is Msg.StartBuffering -> Strings.startBuffering(context)
         is Msg.StatusSearchingSources -> Strings.statusSearchingSources(context, this.episode)
         is Msg.NoticePlayerFailedToStart -> Strings.noticePlayerFailedToStart(context, this.reason)
         is Msg.NoticeStreamNoVideo -> Strings.noticeStreamNoVideo(context, this.next.toInt(), this.total.toInt())
@@ -145,6 +152,7 @@ fun Msg.text(context: Context): String =
         is Msg.PartyRejoined -> Strings.partyRejoined(context)
         is Msg.PartyLeft -> Strings.partyLeft(context)
         is Msg.PartyServerUnreachable -> Strings.partyServerUnreachable(context, this.server)
+        is Msg.CloudLoopbackDone -> Strings.cloudLoopbackDone(context)
         is Msg.NoticeSignedIn -> Strings.noticeSignedIn(context, this.tracker)
         is Msg.NoticeSignedInKeychain -> Strings.noticeSignedInKeychain(context, this.tracker)
         is Msg.NoticeSignedInFile -> Strings.noticeSignedInFile(context, this.tracker)
@@ -203,6 +211,10 @@ fun Msg.text(context: Context): String =
         is Msg.SettingsSubsResetDone -> Strings.settingsSubsResetDone(context)
         is Msg.CrashNotice -> Strings.crashNotice(context)
         is Msg.CrashNoticeTv -> Strings.crashNoticeTv(context)
+        is Msg.NoticeSurpriseEmptyFilters -> Strings.noticeSurpriseEmptyFilters(context)
+        is Msg.NoticeSurpriseEmptyPlanning -> Strings.noticeSurpriseEmptyPlanning(context)
+        is Msg.NoticeSurpriseOffline -> Strings.noticeSurpriseOffline(context)
+        is Msg.NoticeSurpriseFailed -> Strings.noticeSurpriseFailed(context)
         is Msg.Store -> this.v1.text(context)
         is Msg.Verbatim -> this.text
     }
@@ -292,6 +304,7 @@ fun StoreMsg.text(context: Context): String =
 fun Cause.text(context: Context): String =
     when (this) {
         is Cause.NoSources -> Strings.causeNoSources(context)
+        is Cause.NoConnection -> Strings.causeNoConnection(context)
         is Cause.AirsToday -> Strings.causeAirsToday(context, this.time)
         is Cause.AirsTomorrow -> Strings.causeAirsTomorrow(context, this.time)
         is Cause.AirsInDays -> Strings.causeAirsInDays(context, this.days.toInt(), this.time)

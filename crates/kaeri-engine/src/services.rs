@@ -62,6 +62,9 @@ pub struct Services {
     /// Whether the device has no network path, as its front end last said: what a playback's
     /// Stats for nerds says of the network.
     pub offline: Arc<std::sync::atomic::AtomicBool>,
+    /// The same state as a watch, true while offline, for what waits for a connection: a start
+    /// that begins offline. Set where `offline` is.
+    pub connection: Arc<tokio::sync::watch::Sender<bool>>,
     /// Whether a play opens the front end's hosted player rather than mpv's process: always
     /// without the desktop feature, and on the desktop when the front end asks for it.
     pub hosted_player: bool,
@@ -70,6 +73,11 @@ pub struct Services {
     pub every_play_a_party: bool,
     /// The next episode's streams, found while the current one's ending plays.
     pub prefetch: Prefetch,
+    /// Every token store the device keeps, under the bare names: the profiles' tracker tokens
+    /// are `p-<id>/` ones beside them, moved and removed through this.
+    pub tokens: TokenStore,
+    /// The folder road of cross-device sync, once it is set up.
+    pub syncing: Arc<crate::syncing::SyncHub>,
     /// The covers downloading, a few at a time.
     pub artwork: crate::artwork::Downloads,
     /// How the player's own interface is dressed: the front end's choice, made once from its
@@ -90,6 +98,8 @@ pub struct Services {
     /// Where playbacks find the watch party, when there is one. Opened by the `party` feature's
     /// party, and never without it.
     pub party: crate::playback::seat::PartyHub,
+    /// Whether skip times are found from the audio, and why not.
+    pub skip_find: Arc<crate::skip_find::SkipFind>,
     /// How many player windows the playbacks opened, for a test that counts them.
     #[cfg(feature = "testing")]
     pub windows: Option<Arc<std::sync::atomic::AtomicUsize>>,
@@ -126,7 +136,8 @@ impl Services {
             .map_err(|e| e.english())?;
         // Trackers are built whether or not they hold a token: the Accounts overlay needs
         // something to offer a sign-in for, and the outbox accumulates against the id meanwhile.
-        let sync = tracking::Sync::with_tokens(config, &store, &http, tokens)
+        let tracker_tokens = crate::profile::scope_tokens(&store, &paths, tokens.clone());
+        let sync = tracking::Sync::with_tokens(config, &store, &http, tracker_tokens)
             .on_budget_of(meta.anilist())
             .with_titles(meta.titles().clone());
         let (power, hosted) = players(&paths);
@@ -145,11 +156,14 @@ impl Services {
             local,
             slot: Default::default(),
             offline: Default::default(),
+            connection: Arc::new(tokio::sync::watch::channel(false).0),
             power,
             hosted,
             hosted_player: !cfg!(feature = "desktop"),
             every_play_a_party: false,
             prefetch: Prefetch::default(),
+            tokens,
+            syncing: Default::default(),
             artwork: Default::default(),
             player_theme,
             app_clients: AppClients::default(),
@@ -157,6 +171,7 @@ impl Services {
             clock: Default::default(),
             fixture_route: false,
             party: Default::default(),
+            skip_find: Default::default(),
             #[cfg(feature = "testing")]
             windows: None,
             #[cfg(feature = "cast")]
@@ -184,5 +199,9 @@ pub(crate) fn players(paths: &Paths) -> (Arc<dyn PowerSource>, Arc<HostedPlayers
 pub fn build_meta(config: &Config, http: &HttpClient, store: &Store) -> Meta {
     let anilist = AniList::new(http.clone(), config.network.anilist_rate_limit);
     let tenrai = config.meta.fallback.then(|| Tenrai::new(http.clone(), store.clone()));
-    Meta::new(anilist, tenrai, store.clone())
+    let text = config
+        .meta
+        .episode_text
+        .then(|| kaeri_meta::EpisodeText::new(http.clone(), store.clone()));
+    Meta::new(anilist, tenrai, store.clone()).with_episode_text(text)
 }

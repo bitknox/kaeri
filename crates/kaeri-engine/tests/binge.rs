@@ -118,6 +118,7 @@ fn settings(auto_next: bool) -> PlaySettings {
         auto_skip: false,
         auto_skip_recap: false,
         ask_was_opening: false,
+        find_skip_times: false,
         share_skip_times: Some(false),
         mark_chapters: false,
         skip_button: false,
@@ -136,6 +137,8 @@ fn settings(auto_next: bool) -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 
@@ -465,6 +468,8 @@ fn row(number: &str) -> kaeri_model::episodes::EpisodeRow {
         source: None,
         unsourced: false,
         past_progress: false,
+        spoiler_ahead: false,
+        synopsis_pending: false,
     }
 }
 

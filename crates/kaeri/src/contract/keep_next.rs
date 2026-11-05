@@ -66,6 +66,7 @@ fn starts(h: &mut Harness, id: AnilistId, episode: &str) {
         episode: episode.into(),
         episode_title: None,
         speed: 1.0,
+        resume: None,
     });
 }
 

@@ -21,6 +21,21 @@ pub enum SeatCue {
     Speed(f64),
     /// Show this on the player, as a notice.
     Notice(String),
+    /// A line someone typed, for the chat column: who said it, worded ("You" for this device),
+    /// and what. `notice` is the same line as a notice, for a player that shows it as one.
+    Chat {
+        who: String,
+        you: bool,
+        text: String,
+        notice: String,
+    },
+    /// A reaction's moment: the glyph and who, worded as for [`SeatCue::Chat`].
+    Reaction {
+        who: String,
+        reaction: kaeri_model::party::Reaction,
+    },
+    /// Hide chat was turned on: what chat has on the video leaves it.
+    ChatCleared,
 }
 
 /// What a playback tells the party.

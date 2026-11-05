@@ -19,7 +19,7 @@ mod bindings {
 }
 
 use bindings::exports::kaeri::provider::provider::{
-    Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate,
+    Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate, TitleHints,
 };
 
 /// One torrent the made-up source lists.
@@ -102,7 +102,7 @@ impl Guest for Component {
         }
     }
 
-    fn search(query: String, _translation: String) -> Result<Vec<SearchHit>, ProviderError> {
+    fn search(query: String, _translation: String, _hints: TitleHints) -> Result<Vec<SearchHit>, ProviderError> {
         if !query.to_lowercase().contains(SHOW) {
             return Ok(vec![]);
         }
@@ -116,7 +116,7 @@ impl Guest for Component {
         }])
     }
 
-    fn list_episodes(id: String, _translation: String) -> Result<Vec<Episode>, ProviderError> {
+    fn list_episodes(id: String, _translation: String, _hints: TitleHints) -> Result<Vec<Episode>, ProviderError> {
         if id != SHOW {
             return Err(ProviderError::NotFound);
         }
@@ -137,6 +137,7 @@ impl Guest for Component {
         id: String,
         episode: String,
         _translation: String,
+        _hints: TitleHints,
     ) -> Result<Vec<MediaStream>, ProviderError> {
         let episode = episode_number(&episode)?;
         if id != SHOW {

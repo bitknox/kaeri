@@ -271,30 +271,87 @@ public struct SystemWebSignIn: WebSignIn {
 
     @MainActor
     public func signIn(url: URL, callbackScheme: String) async throws -> URL {
+        try await signIn(url: url, callbackScheme: callbackScheme, shared: false)
+    }
+
+    /// `shared` uses the browser's own session, so a service the person is already signed in to
+    /// asks for one tap (Apple sign-in for a cloud folder).
+    /// A task cancelled while its page is open closes the page and throws `CancellationError`,
+    /// so a page whose request moved on never comes back to a newer one.
+    @MainActor
+    public func signIn(url: URL, callbackScheme: String, shared: Bool) async throws -> URL {
         let anchor = PresentationAnchor()
-        return try await withCheckedThrowingContinuation { continuation in
-            let answer = Once(continuation)
-            // The system answers on its own queue, not the main actor, so the handler must not
-            // inherit this function's isolation.
-            let session = ASWebAuthenticationSession(
-                url: url, callback: .customScheme(callbackScheme)
-            ) { @Sendable callback, error in
-                if let callback {
-                    answer.resume(.success(callback))
-                } else {
-                    answer.resume(.failure(error ?? ASWebAuthenticationSessionError(.canceledLogin)))
+        let closer = Closer()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                let answer = Once(continuation)
+                // The system answers on its own queue, not the main actor, so the handler must not
+                // inherit this function's isolation.
+                let session = ASWebAuthenticationSession(
+                    url: url, callback: .customScheme(callbackScheme)
+                ) { @Sendable callback, error in
+                    if let callback {
+                        answer.resume(.success(callback))
+                    } else {
+                        answer.resume(.failure(error ?? ASWebAuthenticationSessionError(.canceledLogin)))
+                    }
+                }
+                session.prefersEphemeralWebBrowserSession = !shared
+                session.presentationContextProvider = anchor
+                // Held until it answers: the system keeps no session of its own, and one let go of
+                // closes its sheet, or never answers at all. Its presentation context is a weak
+                // reference, held the same way.
+                answer.keep(session, anchor)
+                guard closer.arm(answer, session) else { return }
+                if !session.start() {
+                    answer.resume(.failure(ASWebAuthenticationSessionError(.presentationContextInvalid)))
                 }
             }
-            session.prefersEphemeralWebBrowserSession = true
-            session.presentationContextProvider = anchor
-            // Held until it answers: the system keeps no session of its own, and one let go of
-            // closes its sheet, or never answers at all. Its presentation context is a weak
-            // reference, held the same way.
-            answer.keep(session, anchor)
-            if !session.start() {
-                answer.resume(.failure(ASWebAuthenticationSessionError(.presentationContextInvalid)))
-            }
+        } onCancel: {
+            closer.close()
         }
+    }
+}
+
+/// Closes a page whose task was cancelled: answers its continuation with `CancellationError`
+/// and cancels its session on the main actor.
+final class Closer: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+    private var answer: Once?
+    private var session: ASWebAuthenticationSession?
+
+    /// Hold the page's answer and session; false, and answered, when the task is already
+    /// cancelled, so the page is never opened.
+    func arm(_ answer: Once, _ session: ASWebAuthenticationSession) -> Bool {
+        lock.lock()
+        let late = cancelled
+        if !late {
+            self.answer = answer
+            self.session = session
+        }
+        lock.unlock()
+        if late { answer.resume(.failure(CancellationError())) }
+        return !late
+    }
+
+    func close() {
+        lock.lock()
+        cancelled = true
+        let answer = self.answer
+        self.answer = nil
+        lock.unlock()
+        answer?.resume(.failure(CancellationError()))
+        Task { @MainActor in self.cancelSession() }
+    }
+
+    @MainActor
+    private func cancelSession() {
+        lock.lock()
+        let session = self.session
+        self.session = nil
+        lock.unlock()
+        session?.cancel()
     }
 }
 

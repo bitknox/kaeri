@@ -179,3 +179,45 @@ party-in-the-room = Trong phòng
 party-here-count = { $count } người ở đây
 together-recent-note = Mười phòng gần nhất, lưu trên { -device } này
 party-pick-continue = { -proceed-cap }
+party-chat-field = Nhắn gì đó
+party-chat-send = Gửi
+party-chat-title = Trò chuyện
+party-chat-wait = Chờ { $seconds } giây
+party-chat-wait-spoken = { $seconds ->
+   *[other] Chờ { $seconds } giây
+ }
+party-chat-more = { $count } tin nữa
+party-chat-off = Máy chủ của phòng này đã tắt trò chuyện
+party-chat-privacy = Tin nhắn đi qua máy chủ của phòng. { -app-name } không lưu tin nào.
+party-chat-hidden = Trò chuyện đang ẩn
+party-chat-hidden-line = Tùy chọn Ẩn trò chuyện đang bật trong Cài đặt, mục Phát.
+party-chat-show = Hiện trò chuyện
+settings-hide-chat = Ẩn trò chuyện trong { -watch-party-pl }
+settings-hide-chat-line = Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.
+party-mute = Tắt tiếng { $name }
+party-unmute = Bật tiếng { $name }
+party-unmute-short = Bật tiếng
+party-member-muted = Đã tắt tiếng
+party-muted-line = { $name } đã bị tắt tiếng
+party-chat-not-sent = Không gửi được
+party-chat-retry = Thử lại
+party-react = Biểu cảm
+party-react-laugh = Cười
+party-react-gasp = Ngạc nhiên
+party-react-clap = Vỗ tay
+party-react-cry = Khóc
+party-reacted-laugh = { $name } đã cười
+party-reacted-gasp = { $name } đã ngạc nhiên
+party-reacted-clap = { $name } đã vỗ tay
+party-reacted-cry = { $name } đã khóc
+party-reacted-at = { $line } lúc { $time }
+party-names-two = { $first } và { $second }
+party-names-three = { $first }, { $second } và { $third }
+party-names-others = { $first }, { $second } và { $count } người khác
+party-chat-you = Bạn
+party-sends-as = Gửi với tên { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } nói { $message }
+party-chat-left = { $count ->
+   *[other] Còn { $count } ký tự
+ }

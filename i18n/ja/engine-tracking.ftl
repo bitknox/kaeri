@@ -27,6 +27,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = { $tracker }からサインアウトできませんでした。もう一度試してください。{ $reason }
 notice-not-saved-because = その設定を保存できませんでした。{ $cause }
+notice-proxy-saved = トレントの通信がプロキシ経由になりました。
+notice-proxy-removed = トレントはプロキシを使わず、直接接続します。
+notice-proxy-not-checked = プロキシを確認できませんでした。{ $cause }
 notice-proxy-password-not-kept = プロキシのパスワードを保存できませんでした。もう一度入力して、保存をお試しください。{ $reason }
 notice-show-setting-refused = その設定を保存できませんでした。{ $value }は{ $setting }に使えない値です。
 notice-show-not-reset = この作品の設定をリセットできませんでした。{ $reason }

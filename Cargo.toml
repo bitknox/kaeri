@@ -7,7 +7,7 @@ members = ["crates/*", "tools/i18n"]
 exclude = ["plugins/*"]
 
 [workspace.package]
-version = "0.2.2"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.98"
 license = "MIT"
@@ -28,6 +28,7 @@ kaeri-player = { path = "crates/kaeri-player" }
 kaeri-playback = { path = "crates/kaeri-playback" }
 kaeri-party = { path = "crates/kaeri-party" }
 kaeri-mpv-host = { path = "crates/kaeri-mpv-host" }
+kaeri-audio-tap = { path = "crates/kaeri-audio-tap" }
 kaeri-plugin = { path = "crates/kaeri-plugin", default-features = false }
 kaeri-plugin-store = { path = "crates/kaeri-plugin-store" }
 kaeri-store-core = { path = "crates/kaeri-store-core" }
@@ -35,6 +36,7 @@ kaeri-store-server = { path = "crates/kaeri-store-server" }
 kaeri-store-wasm = { path = "crates/kaeri-store-wasm" }
 kaeri-providers = { path = "crates/kaeri-providers" }
 kaeri-remote = { path = "crates/kaeri-remote" }
+kaeri-sync = { path = "crates/kaeri-sync" }
 kaeri-cast = { path = "crates/kaeri-cast" }
 kaeri-store = { path = "crates/kaeri-store" }
 # Without its defaults, so each crate says whether it wants the keyring crate: the binary and
@@ -72,6 +74,9 @@ tracing-appender = "0.2"
 # --- serde ---
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Audio fingerprints for found skip times. Pinned: our matcher reads its items, and a new
+# version may compute them differently from the prints already stored.
+rusty-chromaprint = "=0.3.0"
 toml = "1.1"
 # Format-preserving TOML, so writing one setting from the UI does not rewrite the user's whole
 # config file and discard their comments.
@@ -83,7 +88,7 @@ toml_edit = "0.25"
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "form", "rustls", "webpki-roots", "http2", "gzip", "brotli", "deflate", "zstd", "stream", "socks", "system-proxy"] }
 
 # --- storage ---
-rusqlite = { version = "0.40", features = ["bundled", "chrono", "serde_json"] }
+rusqlite = { version = "0.40", features = ["bundled", "chrono", "serde_json", "hooks"] }
 
 # --- tui ---
 ratatui = "0.30"
@@ -146,6 +151,14 @@ opt-level = 3
 [profile.dev.package.wasmtime-environ]
 opt-level = 3
 [profile.dev.package.wasmtime-internal-cranelift]
+opt-level = 3
+# Fingerprinting six minutes of audio takes seconds unoptimised and well under one optimised, and
+# the engine's tests and a dev build of an app fingerprint as they play.
+[profile.dev.package.rusty-chromaprint]
+opt-level = 3
+[profile.dev.package.rustfft]
+opt-level = 3
+[profile.dev.package.rubato]
 opt-level = 3
 
 # The engine as the Apple app links it while it is developed: apple/scripts/engine.sh builds every

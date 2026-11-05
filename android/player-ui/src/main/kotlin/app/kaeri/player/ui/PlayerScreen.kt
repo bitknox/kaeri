@@ -21,6 +21,7 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.BackEventCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
@@ -33,6 +34,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -153,6 +155,7 @@ fun PlayerScreen(
     val context = LocalContext.current
     var surfaceView by remember { mutableStateOf<SurfaceView?>(null) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
+    var typing by remember { mutableStateOf(false) }
     val discussion = discussionEntry(model)
 
     // TalkBack and Switch Access keep the controls up, and Up Next waits for them (T4, T5).
@@ -416,9 +419,14 @@ fun PlayerScreen(
         }
 
         val inParty = LocalAppStore.current.party.view.collectAsStateWithLifecycle().value != null
+        val chatOn = inParty && rememberChatOn()
+        val partyMarks = LocalAppStore.current.party.conversation.collectAsStateWithLifecycle().value.marks
+        val ticks = if (chatOn) remember(partyMarks) { tickSeconds(partyMarks) } else emptyList()
         // "Still watching?" is the only thing a screen reader reaches while it shows.
+        // While the chat field is open the controls make way for it, as the board has it: the
+        // picture above the keyboard stays in view, with the column over it.
         AnimatedVisibility(
-            chromeVisible,
+            chromeVisible && !typing,
             modifier = if (model.stillWatching) Modifier.clearAndSetSemantics { } else Modifier,
             enter = fadeIn(Motion.fadeIn()),
             exit = fadeOut(Motion.fadeOut()),
@@ -433,16 +441,38 @@ fun PlayerScreen(
                 onPlayOnTv = playOnTv,
                 discussion = discussion,
                 onPeople = if (inParty) ({ sheet = PlayerSheet.People }) else null,
+                onChat = if (chatOn) ({ typing = true }) else null,
+                ticks = ticks,
             )
         }
 
         if (still.frame == null && !pip) {
-            CornerCard(model, chromeVisible, { ground.value }, Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp))
+            // A reaction's moment stands above the corner card, bottom trailing.
+            Column(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (inParty) ReactionMoments()
+                CornerCard(model, chromeVisible, { ground.value })
+            }
             ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
-            AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
+            // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
+            if (inParty) {
+                // Above the keyboard there is little room left, so the column moves up while typing.
+                val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column") // i18n-skip
+                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop), compact = typing)
+            } else {
+                AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
+            }
             StillWatching(model)
             MarkingPanel(model)
             ShareSkipTimes(model)
+        }
+        // The controls make way for the field; the hold keeps their clock from running out under
+        // it, so they come back as it closes.
+        DisposableEffect(typing) {
+            model.hold("chat", typing) // i18n-skip
+            onDispose { model.hold("chat", false) } // i18n-skip
+        }
+        AnimatedVisibility(typing && chatOn, modifier = Modifier.align(Alignment.BottomCenter), enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+            TypingBar(onClose = { typing = false })
         }
         PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
 
@@ -541,65 +571,6 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier, view: (SurfaceView?) ->
             onRelease = { view(null) },
             modifier = modifier,
         )
-    }
-}
-
-/**
- * The starting screen, in the player at full size: the ground, the title's wide art cropped to
- * the video rect under a 35 % ground dim, and the 32 dp indicator with "Starting episode 7" below
- * it, until the first frame lifts it on the fade-in curve (T2).
- */
-@Composable
-private fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, onChooseSource: () -> Unit) {
-    val up = model.isPresented && (model.starting != null || !model.hasPicture || model.failure != null)
-    val shown by animateFloatAsState(if (up) 1f else 0f, Motion.fadeIn(), label = "starting") // i18n-skip
-    if (shown == 0f) return
-    val store = LocalAppStore.current
-    val entries by store.titles.entries.collectAsStateWithLifecycle()
-    val tables by store.titles.episodes.collectAsStateWithLifecycle()
-    val id = model.titleId
-    // The hero-art rule, as the title page has it: the banner, else a still already seen.
-    val wide = if (!art) null else id?.let { entries[it] }?.let { HeroArt.of(it, tables[id]).url } ?: model.starting?.bannerUrl
-    Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown }.background(ObiSilk.Ground)) {
-        Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height)) {
-            if (wide != null) ArtworkImage(wide, plate = null, maxPixelSize = pixels(rect.width), modifier = Modifier.fillMaxSize())
-            Box(Modifier.fillMaxSize().background(ObiSilk.Ground.copy(alpha = 0.35f)))
-            val line = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
-                fontWeight = FontWeight.Medium,
-                shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 1f),
-            )
-            Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                val failure = model.failure
-                if (failure != null) {
-                    // It never played: said where the viewer is looking, with another source to choose.
-                    Text(Strings.playerFailedTitleText(LocalContext.current, failure.episode), style = line, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                    Text(
-                        // Why, as the engine said it, when it did.
-                        failure.reasonText(LocalContext.current)?.let { "$it." } ?: stringResource(R.string.player_failed_detail), // i18n-skip
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = ObiSilk.Haze,
-                        modifier = Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite },
-                    )
-                } else {
-                    val loading = stringResource(R.string.state_loading)
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp).semantics { contentDescription = loading },
-                        color = ObiSilk.Silk,
-                        strokeWidth = 3.dp,
-                        trackColor = Color.Transparent,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(model.startingLine(LocalContext.current) ?: model.startingEpisode?.let { Strings.playerStartingText(LocalContext.current, it) }.orEmpty(), style = line, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                    // The licence asks for the credit wherever the work shows, so the starting screen has its line.
-                    if (model.startingDemo) {
-                        Text(stringResource(R.string.player_demo_credit), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
-                    }
-                }
-                StartingChoices(model, onChooseSource)
-            }
-        }
     }
 }
 

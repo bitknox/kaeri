@@ -9,6 +9,9 @@ import KaeriKit
 import KaeriStore
 import KaeriStrings
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 // MARK: - Words
 
@@ -275,7 +278,7 @@ struct TogetherSourcesLine: View {
                         line(dot: .water, airs(reason: reason))
                     case .noSources:
                         line(glyph: true, L.partyLobbySourcesMissing)
-                    case .notFound:
+                    case .notFound, .noConnection:
                         line(glyph: true, L.partyLobbySourcesMissing)
                     }
                     if showsActions, why != .notAired {
@@ -914,54 +917,64 @@ struct TogetherInParty: View {
 struct TogetherLobby: View {
     @Environment(AppStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
+    private static let chatPlace = "chat"
 
     var body: some View {
         let party = store.party
-        ScrollView {
-            let columns = sizeClass == .compact
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 32))
-                : AnyLayout(HStackLayout(alignment: .top, spacing: 40))
-            columns {
-                VStack(alignment: .leading, spacing: 0) {
-                    GeometryReader { proxy in
-                        TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
-                                      height: proxy.size.width * 9 / 16)
-                    }
-                    .aspectRatio(16 / 9, contentMode: .fit)
-                    .frame(maxWidth: 560)
-                    TogetherRoomBlock().padding(.top, 18)
-                    if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L.partyRoomNothing).foregroundStyle(.silk)
-                            Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+        ScrollViewReader { reader in
+            ScrollView {
+                let columns = sizeClass == .compact
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 32))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: 40))
+                columns {
+                    VStack(alignment: .leading, spacing: 0) {
+                        GeometryReader { proxy in
+                            TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
+                                          height: proxy.size.width * 9 / 16)
                         }
-                        .font(.board(13))
-                        .padding(.top, 4)
+                        .aspectRatio(16 / 9, contentMode: .fit)
+                        .frame(maxWidth: 560)
+                        TogetherRoomBlock().padding(.top, 18)
+                        if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L.partyRoomNothing).foregroundStyle(.silk)
+                                Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+                            }
+                            .font(.board(13))
+                            .padding(.top, 4)
+                        }
+                        if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
+                            TogetherGuesses(guesses: guesses).padding(.top, 14)
+                        }
+                        if let lastOut = party.lastOut, party.inLobbyRoom {
+                            TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
+                        }
+                        TogetherSourcesLine().padding(.top, 12)
+                        TogetherActions().padding(.top, 18)
                     }
-                    if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
-                        TogetherGuesses(guesses: guesses).padding(.top, 14)
-                    }
-                    if let lastOut = party.lastOut, party.inLobbyRoom {
-                        TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
-                    }
-                    TogetherSourcesLine().padding(.top, 12)
-                    TogetherActions().padding(.top, 18)
-                }
-                .frame(maxWidth: 560, alignment: .leading)
-                VStack(alignment: .leading, spacing: 0) {
-                    TogetherMembers()
-                    if party.inLobbyRoom, let view = party.party {
-                        TogetherInvite(view: view).padding(.top, 28)
-                        if view.roomEpisode?.id != nil, party.lastOut == nil, !view.playing {
-                            Rectangle().fill(.faintRule).frame(height: 1).padding(.top, 20)
-                            TogetherStartLine(view: view).padding(.top, 12)
+                    .frame(maxWidth: 560, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 0) {
+                        TogetherMembers()
+                        if party.inLobbyRoom, let view = party.party {
+                            TogetherInvite(view: view).padding(.top, 28)
+                            if view.roomEpisode?.id != nil, party.lastOut == nil, !view.playing {
+                                Rectangle().fill(.faintRule).frame(height: 1).padding(.top, 20)
+                                TogetherStartLine(view: view).padding(.top, 12)
+                            }
+                            TogetherChat().id(Self.chatPlace).padding(.top, 24)
                         }
                     }
+                    .frame(maxWidth: 420, alignment: .leading)
                 }
-                .frame(maxWidth: 420, alignment: .leading)
+                .padding(EdgeInsets(top: 20, leading: 28, bottom: 32, trailing: 32))
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(EdgeInsets(top: 20, leading: 28, bottom: 32, trailing: 32))
-            .frame(maxWidth: .infinity, alignment: .leading)
+            #if os(iOS)
+            // On iPad the chat's field and the privacy line under it stay above the keyboard.
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                withAnimation(.standard) { reader.scrollTo(Self.chatPlace, anchor: .bottom) }
+            }
+            #endif
         }
         .background(.ground)
         #if os(iOS)
@@ -1154,5 +1167,97 @@ struct TogetherStartSheet: View {
                 .onSubmit { party.startOnServer() }
         }
         .padding(22)
+    }
+}
+
+
+// MARK: - Chat in the lobby
+
+/// Talk before play: the conversation, the field, and the privacy line once.
+struct TogetherChat: View {
+    @Environment(AppStore.self) private var store
+    /// The lines' size on the board: 14 where the Mac and iPad share the lobby, 15 on iPhone.
+    var size: CGFloat = 14
+    @FocusState private var focus: Bool
+
+    var body: some View {
+        let chat = store.party.chat
+        VStack(alignment: .leading, spacing: 10) {
+            Rectangle().fill(.faintRule).frame(height: 1)
+            Text(L.partyChatTitle).font(.board(13, weight: .semibold)).foregroundStyle(.haze)
+            if chat.hidden {
+                Text(L.partyChatHidden).font(.board(13)).foregroundStyle(.silk)
+                Text(L.partyChatHiddenLine).font(.board(12)).foregroundStyle(.haze)
+                Button(L.partyChatShow) { chat.show() }.buttonStyle(SecondaryCapsuleStyle())
+            } else if !chat.allowed {
+                Text(L.partyChatOff).font(.board(13)).foregroundStyle(.haze)
+            } else {
+                let lines = chat.rows.map(ChatLineData.init)
+                if !lines.isEmpty {
+                    ChatConversation(lines, size: size, spacing: 9, maxHeight: 260, font: .board(size))
+                }
+                if chat.failed != nil {
+                    HStack(spacing: 4) {
+                        Text(L.partyChatNotSent)
+                        Text("·")
+                        Button(L.partyChatRetry) { chat.retry() }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.board(13)).foregroundStyle(.haze)
+                }
+                ForEach(chat.state?.muted ?? [], id: \.self) { name in
+                    HStack(spacing: 4) {
+                        Text(L.partyMutedLine(name: name))
+                        Text("·")
+                        Button(L.partyUnmuteShort) { chat.mute(name, false) }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.board(13)).foregroundStyle(.haze)
+                }
+                HStack(spacing: 8) {
+                    ChatTextField(
+                        text: Binding(get: { chat.draft }, set: { chat.draft = $0 }),
+                        placeholder: L.partyChatField, style: .roomy, limit: chat.maxLength,
+                        remaining: chat.remaining,
+                        waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
+                        waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
+                        focus: $focus
+                    ) { chat.submit() }
+                    #if os(iOS)
+                    Button { chat.submit() } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(chat.canSend ? Palette.silk : Palette.haze)
+                            .frame(width: 40, height: 40)
+                            .background(chat.canSend ? Palette.raisedSelected : Palette.raised, in: .circle)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!chat.canSend)
+                    .accessibilityLabel(L.partyChatSend)
+                    #endif
+                }
+                if !chat.privacySeen {
+                    Text(L.partyChatPrivacy).font(.board(12)).foregroundStyle(.haze)
+                }
+            }
+        }
+        .animation(.standard, value: chat.hidden)
+        #if FIXTURES
+        .task {
+            // The typing shot: the field focused, so the keyboard comes up under it.
+            guard TogetherScene.named() == .lobbyChatTyping else { return }
+            try? await Task.sleep(for: .milliseconds(600))
+            focus = true
+        }
+        #endif
+    }
+}
+
+extension ChatLineData {
+    init(_ row: ChatRow) {
+        switch row.kind {
+        case .said(let from, let text, let you):
+            self.init(id: row.id, name: you ? L.partyChatYou : from, text: text, you: you)
+        case .reacted(let text):
+            self.init(id: row.id, name: nil, text: text)
+        }
     }
 }

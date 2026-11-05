@@ -662,3 +662,166 @@ party-here-count = { $count } here
 together-recent-note = The last ten, kept on this { -device }
 # The start sheet's button after a title is picked.
 party-pick-continue = { -proceed-cap }
+
+## Watch party chat and reactions. The conversation is in memory for the party; nothing is kept.
+
+# Placeholder of every chat field, and the label of the button that opens it.
+# @max 20
+party-chat-field = Say something
+
+# Button that sends a chat line.
+# @max 12
+party-chat-send = Send
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+# @max 16
+party-chat-title = Chat
+
+# End of the chat field while sending waits, after three messages in five seconds.
+# @arg seconds: int
+# @max 16
+party-chat-wait = Wait { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+# @arg seconds: int
+party-chat-wait-spoken = { $seconds ->
+    [one] Wait one second
+   *[other] Wait { $seconds } seconds
+}
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+# @arg count: int
+# @max 24
+party-chat-more = { $count } more in chat
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = This room's server has chat turned off
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Messages go through the room's server. { -app-name } keeps none.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Chat is hidden
+
+# Line under it.
+party-chat-hidden-line = Hide chat is on in Settings, under Playback.
+
+# Button that turns Hide chat off.
+# @max 20
+party-chat-show = Show chat
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Hide chat in { -watch-party-pl }
+
+# Line under that switch.
+settings-hide-chat-line = Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+# @arg name: text
+# @max 32
+party-mute = Mute { $name }
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+# @arg name: text
+# @max 32
+party-unmute = Unmute { $name }
+
+# Button in the conversation on the line that says a member is muted.
+# @max 12
+party-unmute-short = Unmute
+
+# State on a muted member's row.
+# @max 12
+party-member-muted = Muted
+
+# Line in the conversation where a muted member's lines were.
+# @arg name: text
+party-muted-line = { $name } is muted
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+# @max 24
+party-chat-not-sent = Couldn't send
+
+# Button after it, which sends the same text again.
+# @max 16
+party-chat-retry = Try again
+
+# Button on the TV's controls that opens the four reactions.
+# @max 12
+party-react = React
+
+# Label of the laugh reaction button.
+party-react-laugh = Laugh
+
+# Label of the gasp reaction button.
+party-react-gasp = Gasp
+
+# Label of the clap reaction button.
+party-react-clap = Clap
+
+# Label of the cry reaction button.
+party-react-cry = Cry
+
+# Line in the conversation and in the terminal: a member laughed.
+# @arg name: text
+party-reacted-laugh = { $name } laughed
+
+# Line in the conversation and in the terminal: a member gasped.
+# @arg name: text
+party-reacted-gasp = { $name } gasped
+
+# Line in the conversation and in the terminal: a member clapped.
+# @arg name: text
+party-reacted-clap = { $name } clapped
+
+# Line in the conversation and in the terminal: a member cried.
+# @arg name: text
+party-reacted-cry = { $name } cried
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+# @arg line: text
+# @arg time: text
+party-reacted-at = { $line } at { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+# @arg first: text
+# @arg second: text
+party-names-two = { $first } and { $second }
+
+# Three members named together.
+# @arg first: text
+# @arg second: text
+# @arg third: text
+party-names-three = { $first }, { $second } and { $third }
+
+# More than three members named together: two names and how many others.
+# @arg first: text
+# @arg second: text
+# @arg count: int
+party-names-others = { $first }, { $second } and { $count } others
+
+# Name of this device's own member in the conversation and on its reactions.
+# @max 12
+party-chat-you = You
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+# @arg device: text
+# @max 40
+party-sends-as = Sends as { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+# @arg time: text
+# @arg names: text
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+# @arg name: text
+# @arg message: text
+party-chat-announce = { $name } says { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+# @arg count: int
+party-chat-left = { $count ->
+    [one] { $count } character left
+   *[other] { $count } characters left
+}

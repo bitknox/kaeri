@@ -79,6 +79,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 navigator.searchFiltersShown.toggle()
             }
             .keyboardShortcut("f", modifiers: [.command, .option])
+            SurpriseMenuItem(store: store, navigator: navigator)
             Button(L.menuCommandPalette) { navigator.paletteShown.toggle() }
                 .keyboardShortcut("k", modifiers: .command)
             Divider()
@@ -106,6 +107,27 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
 
         CommandMenu(L.menuEpisode) {
             EpisodeCommands(store: store, navigator: navigator)
+        }
+
+        // Profile: only with two or more, switching by number.
+        if store.sync.hasProfiles {
+        CommandMenu(L.profilesMenu) {
+            let sync = store.sync
+            ForEach(Array(sync.profiles.prefix(9).enumerated()), id: \.element.id) { index, profile in
+                Button {
+                    if !profile.active { sync.switchProfile(profile.id) }
+                } label: {
+                    if profile.active { Label(profile.name, systemImage: "checkmark") } else { Text(profile.name) }
+                }
+                .keyboardShortcut(KeyEquivalent(Character(String(index + 1))), modifiers: [.control, .command])
+            }
+            Divider()
+            Button(L.profilesAdd + "…") {
+                navigator.openSettings(.profiles)
+                sync.sheet = .profileAdd
+            }
+            Button(L.profilesManage) { navigator.openSettings(.profiles) }
+        }
         }
 
         CommandMenu(L.sourcesTitle) {
@@ -140,6 +162,19 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 .disabled(navigator.section != .calendar)
             Button(L.calendarFilterMineTitle) { store.setSwitch(.calendarMine, on: true) }
                 .disabled(navigator.section != .calendar)
+            Divider()
+            // A long series' ranges of 100 on the title page, beside Previous Week and Next Week:
+            // ⇧⌘[ and ⇧⌘], since ⌘[ is Back. Go to episode is ⌘L.
+            let ranges = navigator.episodeRangesShown
+            Button(L.menuPreviousEpisodes) { navigator.stepEpisodeRange(by: -1) }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+                .disabled(ranges?.hasPrevious != true)
+            Button(L.menuNextEpisodes) { navigator.stepEpisodeRange(by: 1) }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
+                .disabled(ranges?.hasNext != true)
+            Button(L.episodeGoTo) { navigator.goToAsked += 1 }
+                .keyboardShortcut("l", modifiers: .command)
+                .disabled(navigator.goToShown == nil)
         }
 
         CommandGroup(after: .windowArrangement) {

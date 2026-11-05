@@ -380,13 +380,26 @@ pub struct PosterGrid {
     store: gio::ListStore,
 }
 
+/// What a poster says under its title.
+#[derive(Clone, Copy)]
+enum Lines {
+    /// Search and the rails: the count first, then the format and where it plays.
+    Cell,
+    /// One line, as Library says how far along a title is.
+    One(fn(&Entry) -> String),
+}
+
 impl PosterGrid {
     pub fn new(hub: &Rc<Hub>) -> Self {
-        Self::with_caption(hub, say::cover_caption)
+        Self::build(hub, Lines::Cell)
     }
 
     /// A grid whose caption line under each cover is `caption`'s: Library's says how far.
     pub fn with_caption(hub: &Rc<Hub>, caption: fn(&Entry) -> String) -> Self {
+        Self::build(hub, Lines::One(caption))
+    }
+
+    fn build(hub: &Rc<Hub>, caption: Lines) -> Self {
         let store = gio::ListStore::new::<Item>();
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_bind({
@@ -446,7 +459,7 @@ impl PosterGrid {
     }
 }
 
-fn poster(hub: &Rc<Hub>, entry: &Entry, caption: fn(&Entry) -> String) -> gtk::Box {
+fn poster(hub: &Rc<Hub>, entry: &Entry, lines: Lines) -> gtk::Box {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
     column.set_size_request(120, -1);
     column.append(&cover_fill(hub, entry, 148));
@@ -456,16 +469,52 @@ fn poster(hub: &Rc<Hub>, entry: &Entry, caption: fn(&Entry) -> String) -> gtk::B
     title.set_tooltip_text(Some(&entry.title));
     title.set_valign(gtk::Align::Start);
     column.append(&title);
-    let caption = haze(&caption(entry), "caption");
-    caption.set_wrap(false);
-    caption.set_ellipsize(gtk::pango::EllipsizeMode::End);
-    column.append(&caption);
-    if let Some(at) = &entry.available_at {
-        let line = haze(&crate::say::available_line(at), "caption");
-        line.set_wrap(false);
-        line.set_ellipsize(gtk::pango::EllipsizeMode::End);
-        line.add_css_class("accent");
-        column.append(&line);
+    match lines {
+        Lines::One(caption) => {
+            let line = haze(&caption(entry), "caption");
+            line.set_wrap(false);
+            line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+            column.append(&line);
+            if let Some(at) = &entry.available_at {
+                let line = haze(&crate::say::available_line(at), "caption");
+                line.set_wrap(false);
+                line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+                column.append(&line);
+            }
+            column.update_property(&[gtk::accessible::Property::Label(&entry.title)]);
+        }
+        Lines::Cell => {
+            let mut said = vec![entry.title.clone()];
+            if let Some(count) = &entry.count_line {
+                // The short form until the cell is on screen and its text can be measured: then the
+                // long one when it fits, so the dub part is never cut off.
+                let line = haze(&count.short, "caption");
+                line.set_wrap(false);
+                line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+                line.add_css_class("count-line");
+                line.connect_realize({
+                    let count = count.clone();
+                    move |line| {
+                        let room = 148;
+                        let text = say::count_text(&count, room, |text| {
+                            line.create_pango_layout(Some(text)).pixel_size().0
+                        });
+                        line.set_label(&text);
+                    }
+                });
+                column.append(&line);
+                said.push(count.spoken.clone());
+            }
+            let detail = say::cell_detail(entry);
+            if !detail.is_empty() {
+                let line = haze(&detail, "caption");
+                line.set_wrap(false);
+                line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+                column.append(&line);
+                said.push(detail);
+            }
+            column.update_property(&[gtk::accessible::Property::Label(&said.join(", "))]);
+        }
     }
     title_menu(&column, entry.id.get(), true);
     crate::trailer::hover_preview(hub, &column, entry.id.get());
@@ -538,6 +587,81 @@ pub fn context_menu(widget: &impl IsA<gtk::Widget>, menu: &gio::Menu) {
     widget.insert_action_group("context", Some(&group));
     // The popover goes with its widget.
     widget.connect_destroy(move |_| popover.unparent());
+}
+
+/// Surprise me, or Another: a flat header bar button with its word. It asks the engine for a pick
+/// from `pool` and opens it (or swaps the page on screen for it when `swap`), showing a spinner in
+/// place of the glyph once the pick takes more than 600 ms. Pressed again while it waits, it does
+/// nothing. An empty pool or no connection is said by the engine's own notice.
+pub fn surprise_button(
+    ctx: &Rc<crate::window::Ctx>,
+    label: &str,
+    hint: &str,
+    swap: bool,
+    pool: impl Fn() -> Option<kaeri_model::browsing::SurprisePool> + 'static,
+) -> gtk::Button {
+    use kaeri_model::{browsing::SurpriseOutcome, command::Command, event::Event};
+    let icon = gtk::Stack::new();
+    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
+    let spinner = adw::Spinner::new();
+    icon.add_named(&spinner, Some("wait"));
+    let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    face.append(&icon);
+    face.append(&gtk::Label::new(Some(label)));
+    let button = gtk::Button::builder().child(&face).tooltip_text(hint).build();
+    button.add_css_class("flat");
+    button.update_property(&[
+        gtk::accessible::Property::Label(label),
+        gtk::accessible::Property::Description(hint),
+    ]);
+    let asked: Rc<RefCell<Option<kaeri_model::browsing::SurprisePool>>> = Rc::default();
+    let slow: Rc<RefCell<Option<glib::SourceId>>> = Rc::default();
+    button.connect_clicked({
+        let (ctx, asked, slow, icon) =
+            (Rc::clone(ctx), asked.clone(), slow.clone(), icon.clone());
+        move |_| {
+            if asked.borrow().is_some() {
+                return;
+            }
+            let Some(pool) = pool() else { return };
+            asked.replace(Some(pool.clone()));
+            let icon = icon.clone();
+            let id = glib::timeout_add_local_once(
+                std::time::Duration::from_millis(600),
+                move || {
+                    icon.set_visible_child_name("wait");
+                },
+            );
+            slow.replace(Some(id));
+            ctx.hub.send(Command::Surprise(pool));
+        }
+    });
+    let hub_ctx = Rc::downgrade(ctx);
+    let weak = button.downgrade();
+    ctx.hub.listen(move |event| {
+        let Event::Surprise { pool, outcome } = event else { return };
+        let (Some(ctx), Some(button)) = (hub_ctx.upgrade(), weak.upgrade()) else { return };
+        if asked.borrow().as_ref() != Some(pool) {
+            return;
+        }
+        asked.replace(None);
+        if let Some(id) = slow.take() {
+            id.remove();
+        }
+        icon.set_visible_child_name("dice");
+        if let SurpriseOutcome::Picked { id, more } = outcome {
+            ctx.pick.replace(Some(crate::window::Pick {
+                id: *id,
+                pool: pool.clone(),
+                more: *more,
+            }));
+            let _ = button.activate_action(
+                if swap { "win.swap-title" } else { "win.open-title" },
+                Some(&id.get().to_variant()),
+            );
+        }
+    });
+    button
 }
 
 #[cfg(test)]

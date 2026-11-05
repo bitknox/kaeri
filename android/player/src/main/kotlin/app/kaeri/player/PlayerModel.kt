@@ -204,6 +204,10 @@ class PlayerModel(
         private set
     var starting by mutableStateOf<StartingScreen?>(null)
         private set
+
+    /** The title playing or about to, kept past the start screen, so the Episodes panel can look its table up. */
+    var titleOnScreen by mutableStateOf<AnilistId?>(null)
+        private set
     var episode by mutableStateOf<EpisodeOnScreen?>(null)
         private set
     var menus by mutableStateOf<PlayerMenus?>(null)
@@ -255,6 +259,14 @@ class PlayerModel(
 
     /** The playback never played: "Couldn't play episode 7", with Choose source and Close. */
     var failure by mutableStateOf<PlaybackFailure?>(null)
+        private set
+
+    /** What the start is doing, from the play being staged until its first frame. */
+    var progress by mutableStateOf<StartProgress?>(null)
+        private set
+
+    /** Whether the device has no network, as the engine last said. */
+    var offline by mutableStateOf(false)
         private set
 
     /** The engine's last alert since this episode began to start: why, should it never play. */
@@ -421,8 +433,14 @@ class PlayerModel(
             }
             is Event.PlayerSkipPrompt -> if (accepts(event.playback)) {
                 val prompt = event.prompt
+                // Said in the log, so a card that never showed can be told from one never sent.
+                when {
+                    prompt != null -> note("#${event.playback} skip card shown: ${logName(prompt)}")
+                    skipPrompt != null -> note("#${event.playback} skip card gone: ${logName(skipPrompt!!.prompt)}")
+                }
                 asksToShare = prompt == SkipPrompt.Share
                 skipPrompt = prompt?.takeIf { it != SkipPrompt.Share }?.let { SkipPromptOffer(it, now()) }
+                promptHeld = 0L
             }
             is Event.PlayerSkipNotice -> if (accepts(event.playback)) skipNotice = SkipNoticeOffer(event.notice, now())
             is Event.PlayerBuffered -> if (accepts(event.playback)) buffered = event.ranges
@@ -444,6 +462,10 @@ class PlayerModel(
                 sourceChoices = null
                 verdictPending = false
                 staged = StagedPlayback(event.id, event.title, event.episode, event.episodeTitle)
+                titleOnScreen = event.id
+                // Said again for a play already starting, it changes nothing.
+                val again = progress?.let { it.id == event.id && it.episode == event.episode } == true
+                if (!again) progress = StartProgress(event.id, event.episode, now(), event.resume)
                 present()
                 changed()
             }
@@ -454,7 +476,12 @@ class PlayerModel(
                     // It never played: no stream was found, or none showed a frame. Say so where the
                     // viewer is looking, with another source to choose, rather than vanish.
                     verdictPending = false
-                    failure = PlaybackFailure(staged?.id, startingEpisode!!, failedWith?.let(PlaybackFailure::reason), failedMsg)
+                    val told = event.failure
+                    failure = PlaybackFailure(
+                        staged?.id, startingEpisode!!, failedWith?.let(PlaybackFailure::reason), told?.text ?: failedMsg,
+                        why = told?.why, trail = progress, endedAt = now(), asked = told?.asked.orEmpty(),
+                    )
+                    progress = null
                     failedWith = null
                     failedMsg = null
                     // A release build's logcat says why too, as the engine's own log is the app's.
@@ -471,7 +498,12 @@ class PlayerModel(
             is Event.PlayerStats ->
                 if (accepts(event.playback) && event.playback >= (playback ?: event.playback)) statsSummary = event.stats.summary
             // The playback staged found nothing; the one before plays on.
-            Event.PlaybackKept -> starting = null
+            Event.PlaybackKept -> {
+                starting = null
+                progress = null
+            }
+            is Event.StartingStep -> progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
+            is Event.Connectivity -> offline = event.offline
             // The alerts that come while the player is up: the one before a failed ending says why.
             is Event.Toast -> if (event.v1.kind == NoticeKind.ALERT) {
                 if (isPresented) {
@@ -535,6 +567,7 @@ class PlayerModel(
                 failedWith = null
                 failedMsg = null
                 starting = StartingScreen(playback, ui.id, ui.title, ui.episode, ui.episodeTitle, ui.coverUrl, ui.bannerUrl, now)
+                ui.id?.let { titleOnScreen = it }
                 ui.coverUrl?.let { coverUrl = it }
                 ui.bannerUrl?.let { bannerUrl = it }
                 present()
@@ -837,6 +870,7 @@ class PlayerModel(
         teardown(showing = card != null)
         if (card != null) {
             starting = null
+            progress = null
             failure = card
             changed()
         }
@@ -898,6 +932,8 @@ class PlayerModel(
         fullScreen = false
         staged = null
         starting = null
+        titleOnScreen = null
+        progress = null
         episode = null
         menus = null
         skip = null
@@ -1033,6 +1069,7 @@ class PlayerModel(
         note("#$current first frame")
         val starting = starting
         if (starting != null && (current?.let { it >= starting.playback } != false)) this.starting = null
+        progress = null
         if (stillWatchingAfter > 0 && rolledOn >= stillWatchingAfter && !stillWatching) {
             stillWatching = true
             if (!paused) control(PlayerCommand.TogglePause)
@@ -1271,8 +1308,21 @@ class PlayerModel(
         undo?.let { if (!assisted && now - it.since >= noticeMillis(PlayerTiming.UNDO_PAUSED)) undo = null }
         alert?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) alert = null }
         skipNotice?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) skipNotice = null }
-        skipPrompt?.let { if (now - it.since >= it.stays) dismissSkipPrompt() }
+        // A question holds for 12 s of playback: a pause waits, and a screen reader never times it out.
+        val since = promptTickedAt
+        promptTickedAt = now
+        if (skipPrompt != null && !paused && !assisted && since != null) promptHeld += now - since
+        skipPrompt?.let {
+            if (!assisted && promptHeld >= it.stays) {
+                noteSkipAnswer("timed out")
+                closeSkipPrompt()
+            }
+        }
     }
+
+    /** When the card's clock last ran, and how long it has been up while playing. */
+    private var promptTickedAt: Long? = null
+    private var promptHeld = 0L
 
     /**
      * Whether nothing on screen keeps time: a playback that failed and says so, or a pause nobody
@@ -1281,7 +1331,7 @@ class PlayerModel(
      * sits there; a key ([poke]) or anything that changes the state moves it on again.
      */
     private fun resting(now: Long): Boolean = failure != null ||
-        paused && starting == null && stall == null && upNext == null && skip == null && undo == null &&
+        paused && starting == null && progress == null && stall == null && upNext == null && skip == null && undo == null &&
         alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
     // What the screens read
@@ -1415,7 +1465,41 @@ class PlayerModel(
         choosingSource = false
         sourceChoices = null
         failure = null
+        // A new start: its trail and clock begin again, as on the other platforms.
+        progress = null
         send(Command.PlaySource(id, episode, candidate.providerId, candidate.id))
+    }
+
+    /** Skip the source being asked or the stream being opened. */
+    fun skipSource() {
+        input()
+        startCommand(PlayerCommand.SkipSource)
+    }
+
+    /** Begin the episode starting at 0 instead of where it was left; the resume line goes. */
+    fun playFromBeginning() {
+        input()
+        progress = progress?.fromTheBeginning()
+        startCommand(PlayerCommand.PlayFromBeginning)
+    }
+
+    /** Switch to the other translation: the player restarts behind the screen. */
+    fun chooseTranslation(translation: app.kaeri.engine.core.Translation) {
+        input()
+        startCommand(PlayerCommand.Choose(app.kaeri.engine.model.PlayerChoice.Translation(translation)))
+    }
+
+    /** Ask for the same episode again, from "Couldn't play episode 7". */
+    fun tryAgain() {
+        input()
+        val id = staged?.id ?: failure?.id ?: return
+        val episode = startingEpisode ?: return
+        send(Command.Play(id, episode, fromStart = false))
+    }
+
+    /** A command for the play being started: whatever is being found, or the playback once it has one. */
+    private fun startCommand(command: PlayerCommand) {
+        if (stagedAhead || playback == null) send(Command.Player(command)) else control(command)
     }
 
     fun cancelChoosingSource() {
@@ -1568,20 +1652,50 @@ class PlayerModel(
 
     fun reportSkip(kind: SkipKind) {
         input()
+        noteSkipAnswer("report")
         control(PlayerCommand.ReportSkip(kind))
     }
 
     fun dismissSkipPrompt() {
+        noteSkipAnswer("closed")
+        closeSkipPrompt()
+    }
+
+    private fun closeSkipPrompt() {
         skipPrompt = null
         control(PlayerCommand.DismissSkipPrompt)
     }
 
+    /** The card's answer, or its time running out, in the log. */
+    private fun noteSkipAnswer(answer: String) {
+        val offer = skipPrompt ?: return
+        note("#${playback ?: "?"} skip card answered: $answer, on ${logName(offer.prompt)}")
+    }
+
+    /** On a found card the engine answers with the card that says what happened. */
     fun neverAskWasOpening() {
-        skipPrompt = null
+        noteSkipAnswer("don't ask again")
+        if (skipPrompt?.prompt !is SkipPrompt.FoundEdges) skipPrompt = null
         control(PlayerCommand.NeverAskWasOpening)
     }
 
+    /** Yes on the card: the found times become yours and are shared; the engine says Saved. */
+    fun confirmFoundSkip(kind: SkipKind) {
+        input()
+        noteSkipAnswer("yes")
+        control(PlayerCommand.ConfirmFoundSkip(kind))
+    }
+
+    /** Adjust on the card or a found row: the review opens on the found stretch. */
+    fun adjustFoundSkip(kind: SkipKind) {
+        input()
+        noteSkipAnswer("adjust")
+        skipPrompt = null
+        control(PlayerCommand.AdjustFoundSkip(kind))
+    }
+
     fun answerShare(share: Boolean) {
+        note("#${playback ?: "?"} skip card answered: ${if (share) "share" else "don't share"}, on share skip times")
         asksToShare = false
         control(PlayerCommand.AnswerShareSkipTimes(share))
     }
@@ -1761,6 +1875,16 @@ class PlayerModel(
 
         private fun note(message: String) {
             Log.i(TAG, message)
+        }
+
+        /** What the log calls a skip card. */
+        private fun logName(prompt: SkipPrompt): String = when (prompt) {
+            is SkipPrompt.WasOpening -> "was that the opening"
+            is SkipPrompt.WrongTimes -> "wrong ${prompt.kind.name.lowercase()} times"
+            is SkipPrompt.FoundEdges -> "found ${prompt.kind.name.lowercase()}, episode ${prompt.episode}"
+            is SkipPrompt.FoundSaved -> "found ${prompt.kind.name.lowercase()} saved, episode ${prompt.episode}"
+            is SkipPrompt.FoundNever -> "found, never ask"
+            is SkipPrompt.Share -> "share skip times"
         }
     }
 }

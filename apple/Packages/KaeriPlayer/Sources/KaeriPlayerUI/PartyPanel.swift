@@ -15,6 +15,8 @@ struct PartyPanel: View {
     let metrics: PlayerMetrics
     /// Copy invite link was pressed: "Copied" stands in its label for 2 s.
     @State private var copied = false
+    /// Where the conversation starts, for a sheet opened from the column's "n more in chat".
+    static let chatPlace = "chat"
 
     var body: some View {
         let party = store.party
@@ -36,6 +38,9 @@ struct PartyPanel: View {
                 .toggleStyle(.switch)
                 .font(.system(size: metrics.body))
                 .padding(.top, 10)
+                ChatSection(metrics: metrics)
+                    .id(Self.chatPlace)
+                    .padding(.top, 12)
                 Divider().padding(.vertical, 12)
                 invite(view)
                 plain(view)
@@ -92,7 +97,15 @@ struct PartyPanel: View {
         VStack(alignment: .leading, spacing: 0) {
             if let members {
                 ForEach(members, id: \.name) { member in
-                    MemberRow(member: member, metrics: metrics)
+                    MemberRow(member: member, metrics: metrics, muted: store.party.chat.isMuted(member.name))
+                        .contextMenu {
+                            if !member.you {
+                                let muted = store.party.chat.isMuted(member.name)
+                                Button(muted ? L.partyUnmute(name: member.name) : L.partyMute(name: member.name)) {
+                                    store.party.chat.mute(member.name, !muted)
+                                }
+                            }
+                        }
                 }
             } else {
                 HStack(spacing: 8) {
@@ -169,6 +182,7 @@ struct PartyPanel: View {
 private struct MemberRow: View {
     let member: PartyMember
     let metrics: PlayerMetrics
+    let muted: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -188,13 +202,14 @@ private struct MemberRow: View {
             }
             .lineLimit(1)
             Spacer(minLength: 8)
-            Text(PartyWords.state(member))
-                .font(.system(size: metrics.touch ? 13 : 11, weight: member.ready == true ? .semibold : .regular))
-                .foregroundStyle(member.ready == true ? .silk : .haze)
+            Text(muted ? L.partyMemberMuted : PartyWords.state(member))
+                .font(.system(size: metrics.touch ? 13 : 11, weight: member.ready == true && !muted ? .semibold : .regular))
+                .foregroundStyle(member.ready == true && !muted ? .silk : .haze)
                 .contentTransition(.opacity)
         }
         .frame(minHeight: metrics.touch ? 44 : 36)
         .animation(.quick, value: member.ready)
+        .animation(.quick, value: muted)
         .accessibilityElement(children: .combine)
     }
 }
@@ -207,5 +222,94 @@ enum PartyButton {
 
     static func symbol(inParty: Bool) -> String {
         inParty ? "person.2.fill" : "person.2"
+    }
+}
+
+/// The conversation under the members, and the field. Hidden, off, or in the room's words.
+struct ChatSection: View {
+    let metrics: PlayerMetrics
+    @Environment(AppStore.self) private var store
+    @FocusState private var focus: Bool
+
+    private var small: CGFloat { metrics.touch ? 13 : 11 }
+
+    var body: some View {
+        let chat = store.party.chat
+        VStack(alignment: .leading, spacing: 8) {
+            if chat.hidden {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L.partyChatHidden).font(.system(size: metrics.body))
+                    Text(L.partyChatHiddenLine).font(.system(size: small)).foregroundStyle(.haze)
+                    Button(L.partyChatShow) { chat.show() }
+                        .buttonStyle(.bordered)
+                        .controlSize(metrics.touch ? .large : .small)
+                        .padding(.top, 4)
+                }
+            } else if !chat.allowed {
+                Text(L.partyChatOff)
+                    .font(.system(size: small))
+                    .foregroundStyle(.haze)
+            } else {
+                let lines = chat.rows.map(ChatLineData.init)
+                if !lines.isEmpty {
+                    ChatConversation(lines, size: metrics.touch ? 13 : 12, spacing: metrics.touch ? 9 : 7, maxHeight: metrics.touch ? 260 : 200)
+                }
+                if chat.failed != nil {
+                    HStack(spacing: 4) {
+                        Text(L.partyChatNotSent)
+                        Text("·")
+                        Button(L.partyChatRetry) { chat.retry() }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.system(size: small))
+                    .foregroundStyle(.haze)
+                }
+                ForEach(chat.state?.muted ?? [], id: \.self) { name in
+                    HStack(spacing: 4) {
+                        Text(L.partyMutedLine(name: name))
+                        Text("·")
+                        Button(L.partyUnmuteShort) { chat.mute(name, false) }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.system(size: small))
+                    .foregroundStyle(.haze)
+                }
+                HStack(spacing: 8) {
+                    ChatTextField(
+                        text: Binding(get: { chat.draft }, set: { chat.draft = $0 }),
+                        placeholder: L.partyChatField, style: metrics.touch ? .roomy : .panel, limit: chat.maxLength,
+                        remaining: chat.remaining,
+                        waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
+                        waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
+                        focus: $focus
+                    ) { chat.submit() }
+                    if metrics.touch {
+                        ChatSendButton(enabled: chat.canSend) { chat.submit() }
+                    }
+                }
+            }
+        }
+        .foregroundStyle(.silk)
+        .animation(.standard, value: chat.hidden)
+        .animation(.standard, value: chat.failed)
+    }
+}
+
+/// Send, as a round arrow-up button at the field's end.
+struct ChatSendButton: View {
+    let enabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "arrow.up")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(enabled ? Palette.silk : Palette.haze)
+                .frame(width: 40, height: 40)
+                .background(enabled ? Palette.raisedSelected : Palette.raised, in: .circle)
+                .contentShape(.circle)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .animation(.quick, value: enabled)
+        .accessibilityLabel(L.partyChatSend)
     }
 }

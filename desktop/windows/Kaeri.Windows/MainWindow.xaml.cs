@@ -93,6 +93,7 @@ public sealed partial class MainWindow : Window
         var host = new AppHost(ui, options.Fixture) { Notified = (title, body) => Notified(title, body) };
         (var engine, dirs) = StartEngine(host);
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
+        ChatSetting.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif
@@ -113,6 +114,15 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+#if KAERI_TESTING
+        // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
+        session.Known.ForcedPause = options.Show switch
+        {
+            "found-set-low-power" or "found-panel-paused" => SkipFindPause.LowPower,
+            "found-set-storage" => SkipFindPause.Storage,
+            _ => null,
+        };
+#endif
         // A fixture run has no trailers of its own; the testing build gives most titles a made-up one.
         session.Known.FixtureTrailers = options.Fixture;
         session.Batch += batch =>
@@ -143,6 +153,26 @@ public sealed partial class MainWindow : Window
 #if KAERI_TESTING
             if (options.Showcase && Showcase.Holds(e))
                 return true;
+            // --show=sync-*: the made-up group stands in for the fixture engine's own.
+            if (options.Show?.StartsWith("sync-", StringComparison.Ordinal) == true && e is Event.SyncStatus or Event.SyncInvite)
+                return true;
+            // --show=synopsis...: the title's table with synopses and rows ahead (synopsis-ranges: 250 of
+            // them); --show=player-episodes...: the playing title's, for the Episodes panel.
+            if (options.Show is { } synopsisShot && (synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes", StringComparison.Ordinal))
+                && e is Event.Episodes synopsisTable && synopsisTable.Rows.Length > 0)
+            {
+                var playerShot = synopsisShot.StartsWith("player-", StringComparison.Ordinal);
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var next = playerShot ? ctx.Known.Entry(synopsisTable.Id)?.Progress?.Next ?? 4 : 7;
+                    var ranged = synopsisShot is "synopsis-ranges" || synopsisShot.StartsWith("synopsis-go", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes-ranges", StringComparison.Ordinal);
+                    var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged, synopsisShot == "synopsis-go-not-out") };
+                    ctx.Known.Take(shown[0]);
+                    Heard(shown);
+                    ctx.Heard(shown);
+                });
+                return true;
+            }
             // --show=source-unsourced: the title's table, with episodes no source lists.
             if (options.Show is "source-unsourced" or "source-unsourced-end" && e is Event.Episodes table)
             {
@@ -166,6 +196,7 @@ public sealed partial class MainWindow : Window
         };
         session.Start();
         StartTv(engine);
+        StartSync(engine);
         // The network path, said to the engine now and on every change; it answers with one
         // online or offline state (Event.Connectivity) the pages show.
         network = new NetworkWatch(c => ctx.Send(c), ui, options.Offline);
@@ -310,6 +341,7 @@ public sealed partial class MainWindow : Window
                 "crash-off" => new FfiScene.CrashOff(),
                 "crash-saved" => new FfiScene.CrashSaved(),
                 "crash-held" => new FfiScene.CrashHeld(),
+                "profiles" => new FfiScene.Profiles(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
@@ -491,6 +523,14 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(1500);
                 Pages.InviteDialog.Show(ctx, Root.XamlRoot, "https://store.example/join/Kq3vT9xLw2", "Mira");
             });
+        // --show=starting-<state>[-<seconds>][-reduced]: the player's starting screen on the engine's
+        // made-up start, with no media: the player opens for it and nothing plays.
+        if (options.Show?.StartsWith("starting-", StringComparison.Ordinal) == true && !options.Play)
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1500);
+                await Player.StartDemo(options.Show);
+            });
         // --show=devicecode: Trakt's sign-in code, for a screenshot.
         if (options.Show == "devicecode")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
@@ -537,7 +577,7 @@ public sealed partial class MainWindow : Window
             // the switch, whose first Continue case, the crash question, would take the event.
             if (options.Play && !played)
             {
-                if (e is Event.Home && ctx.Known.Home.Spotlight is { } spot)
+                if (e is Event.Home { V1.Spotlight: { Case: SpotlightCase.Continuing } spot })
                 {
                     played = true;
                     ctx.Play(spot.Entry.Id, spot.Episode.ToString(CultureInfo.InvariantCulture));
@@ -555,7 +595,7 @@ public sealed partial class MainWindow : Window
             }
             switch (e)
             {
-                case Event.Sync:
+                case Event.Sync or Event.SyncStatus or Event.Profiles:
                     ShowAccount();
                     break;
                 case Event.Content { View: ContentFor.Continue } when !crashAsked:
@@ -576,6 +616,9 @@ public sealed partial class MainWindow : Window
                     break;
                 case Event.LicensedReturn back:
                     ShowReturn(back.V1);
+                    break;
+                // A start that failed says why on its own screen, not in a notice over it.
+                case Event.Toast { V1.Kind: NoticeKind.Alert } when Player.IsStarting:
                     break;
                 case Event.Toast t when !Lines.SettingSaved(t.V1):
                     ShowToast(t.V1);
@@ -641,16 +684,40 @@ public sealed partial class MainWindow : Window
     {
         var anilist = ctx.Known.Anilist;
         var reauth = anilist is { NeedsReauth: true };
+        // A cloud folder that signed Kaeri out marks the account too, until it is signed in again.
+        var cloud = ctx.Known.SyncGroup is { Problem: SyncProblem.SignInNeeded needed } && !Sync.SyncDialogs.ByHand
+            ? T.CloudErrSignedOut(SyncWords.ServiceName(needed.Service), SyncWords.Kind)
+            : null;
         AccountText.Text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
         AccountDot.Visibility = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
-        AccountAlert.Visibility = reauth ? Visibility.Visible : Visibility.Collapsed;
-        var tip = anilist is null ? T.LibrarySignedOutAction
+        AccountAlert.Visibility = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
+        var tip = cloud is not null && !reauth ? cloud
+            : anilist is null ? T.LibrarySignedOutAction
             : reauth ? T.AccountsStateExpired(Tracker)
             : anilist.Outbox > 0 ? T.AccountsStateSignedInWaiting(Tracker, anilist.User ?? Tracker, anilist.Outbox)
             : T.AccountsStateSignedIn(Tracker, anilist.User ?? Tracker);
+        // With two or more profiles the item names the one in use and opens the flyout to switch.
+        if (ProfileWords.Active(ctx.Known.Profiles) is { } active)
+        {
+            AccountText.Text = active.Name;
+            tip = T.ProfilesAvatarDesc(active.Name);
+        }
+        AccountItem.SelectsOnInvoked = !ProfileWords.Picking(ctx.Known.Profiles);
         ToolTipService.SetToolTip(AccountItem, tip);
         AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
     }
+
+    /// <summary>Settings open on one pane, such as Profiles from the account flyout.</summary>
+    internal void OpenSettings(string pane) =>
+        ContentFrame.Navigate(typeof(SettingsPage), pane, new SuppressNavigationTransitionInfo());
+
+    void OnNavInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer == AccountItem && ProfileWords.Picking(ctx.Known.Profiles))
+            ShowProfileFlyout();
+    }
+
+    internal void ShowProfileFlyout() => Sync.Profiles.Flyout().ShowAt(AccountItem);
 
     // Notices: the engine's words with the first letter capitalised, for as long as they take to
     // read (4 s, 8 s with a button or for an alert, and 1 s for every 10 words past 12), paused
@@ -795,6 +862,21 @@ public sealed partial class MainWindow : Window
             ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
             Motion.FadeIn(ContentFrame, Motion.Standard);
         }
+    }
+
+    /// <summary>
+    /// Another: this title's page is swapped for the next pick's, so Back goes to where Surprise me
+    /// was pressed. The page as it stood fades away over the new one on the standard token.
+    /// </summary>
+    internal void SwapTitle(uint id)
+    {
+        Crossfade.Swap(ContentFrame, () =>
+        {
+            ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
+            // The page it replaces is not a place to come back to.
+            if (ContentFrame.BackStack.Count > 0)
+                ContentFrame.BackStack.RemoveAt(ContentFrame.BackStack.Count - 1);
+        });
     }
 
     /// <summary>A browse from Home: the query's genres and sort set, nothing typed.</summary>
@@ -1429,7 +1511,7 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
-    void CloseNow()
+    internal void CloseNow()
     {
         closing = true;
         Close();
@@ -1471,6 +1553,7 @@ public sealed partial class MainWindow : Window
     void Shutdown()
     {
         closing = true;
+        Player.Quiet();
         keepGoing?.Stop();
         newEpisodes?.Stop();
         toasts?.Stop();

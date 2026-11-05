@@ -1,5 +1,6 @@
 action-try-again = Tentar de novo
 action-cancel = Cancelar
+action-go = Ir
 action-not-now = Agora não
 duration-days = { $days } d
 duration-hours-minutes = { $hours } h { $minutes } min

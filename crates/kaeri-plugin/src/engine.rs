@@ -59,7 +59,7 @@ wasmtime::component::bindgen!({
 // interface's types do not. Re-exported so callers need not know the generated shape.
 pub use self::exports::kaeri::provider::provider::{
     Episode, Manifest, MediaStream, ProviderError as GuestError, SearchHit, SourceCandidate,
-    Subtitle,
+    Subtitle, TitleHints,
 };
 use self::kaeri::provider::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
 
@@ -115,19 +115,20 @@ pub enum PluginError {
     /// The plugin was built for another major version of the plugin ABI, so none of its imports
     /// or exports line up with this host. It needs a new build from its author.
     #[error(
-        "{path}: built for plugin ABI {found}, this app speaks {}; the plugin needs updating",
+        "{path}: built for plugin ABI {found}, this app speaks {}; rebuild this plugin against the current interface",
         ABI_MAJOR
     )]
     OutdatedAbi { path: String, found: String },
 }
 
 /// The major version of the plugin ABI this host speaks: the major of the WIT package in
-/// `wit/kaeri-provider.wit`. A guest built for another major is refused up front.
-pub const ABI_MAJOR: u64 = 2;
+/// `wit/kaeri-provider.wit`. A guest built for another major is refused up front,
+/// with a message that says to rebuild it.
+pub const ABI_MAJOR: u64 = 3;
 
 /// The ABI version a component was built for, if it was built for another major than this host's.
 ///
-/// Read from the names the component imports and exports (`kaeri:provider/host@2.0.0`)
+/// Read from the names the component imports and exports (`kaeri:provider/host@3.0.0`)
 /// before anything is linked, so an old plugin gets a clear answer instead of a linker error
 /// that names an interface nobody asked about.
 fn outdated_abi(
@@ -717,12 +718,13 @@ impl LoadedPlugin {
         &self,
         query: &str,
         translation: &str,
+        hints: &TitleHints,
     ) -> Result<Result<Vec<SearchHit>, GuestError>, PluginError> {
         let mut store = self.store(self.capabilities());
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_provider_provider()
-            .call_search(&mut store, query, translation)
+            .call_search(&mut store, query, translation, hints)
             .await
             .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
     }
@@ -731,12 +733,13 @@ impl LoadedPlugin {
         &self,
         id: &str,
         translation: &str,
+        hints: &TitleHints,
     ) -> Result<Result<Vec<Episode>, GuestError>, PluginError> {
         let mut store = self.store(self.capabilities());
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_provider_provider()
-            .call_list_episodes(&mut store, id, translation)
+            .call_list_episodes(&mut store, id, translation, hints)
             .await
             .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
     }
@@ -746,12 +749,13 @@ impl LoadedPlugin {
         id: &str,
         episode: &str,
         translation: &str,
+        hints: &TitleHints,
     ) -> Result<Result<Vec<MediaStream>, GuestError>, PluginError> {
         let mut store = self.store(self.capabilities());
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_provider_provider()
-            .call_resolve(&mut store, id, episode, translation)
+            .call_resolve(&mut store, id, episode, translation, hints)
             .await
             .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
     }

@@ -19,7 +19,7 @@ enum FirstLaunchFlag {
     @MainActor
     static func shows(_ navigator: Navigator, store: AppStore) async -> Bool {
         // i18n-skip: a shot's sheet names; welcome-sources opens on the last page
-        if navigator.launchSheet == "welcome" || navigator.launchSheet == "welcome-sources" { return true }
+        if navigator.launchSheet == "welcome" || navigator.launchSheet == "welcome-sources" || navigator.launchSheet == "welcome-setup" { return true }
         guard Bundle.main.bundleIdentifier == "app.kaeri.app" else { return false }
         let seen = UserDefaults.standard.bool(forKey: key)
         let due = await store.firstLaunchDue(seen: seen)
@@ -37,6 +37,8 @@ struct FirstLaunchPresenter: ViewModifier {
     @State private var joining: String?
     /// A shot's request to open on the last page.
     @State private var startOnSources = false
+    /// Restore from a cloud folder, chosen on the code page: the picker opens once this ends.
+    @State private var restoring = false
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -46,6 +48,7 @@ struct FirstLaunchPresenter: ViewModifier {
             .task {
                 if await FirstLaunchFlag.shows(navigator, store: store) {
                     startOnSources = navigator.launchSheet == "welcome-sources"
+                    // The code page takes welcome-setup itself, once it is up.
                     if navigator.launchSheet == "welcome" || startOnSources { navigator.launchSheet = nil }
                     showing = true
                 }
@@ -61,14 +64,21 @@ struct FirstLaunchPresenter: ViewModifier {
     }
 
     private var flow: some View {
-        FirstLaunch(startOnSources: startOnSources) { link in
+        FirstLaunch(startOnSources: startOnSources, finish: { link in
             joining = link
             showing = false
-        }
+        }, restore: {
+            restoring = true
+            showing = false
+        })
     }
 
     private func done() {
         UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
+        if restoring {
+            restoring = false
+            store.sync.addCloudFolder()
+        }
         if let joining {
             navigator.invite = joining
             self.joining = nil
@@ -87,11 +97,14 @@ struct FirstLaunch: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Ends first launch, with the invite link Join took, if it took one.
     let finish: (String?) -> Void
+    /// Ends first launch and opens the cloud folder picker.
+    var restore: () -> Void = {}
 
-    enum Page: Int { case welcome, anilist, sources }
+    enum Page: Int { case welcome, anilist, sources, setup }
     @State private var page: Page
-    init(startOnSources: Bool = false, finish: @escaping (String?) -> Void) {
+    init(startOnSources: Bool = false, finish: @escaping (String?) -> Void, restore: @escaping () -> Void = {}) {
         self.finish = finish
+        self.restore = restore
         _page = State(initialValue: startOnSources ? .sources : .welcome)
     }
     @State private var link = ""
@@ -102,7 +115,7 @@ struct FirstLaunch: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Spacer()
-                if page != .sources {
+                if page != .sources, page != .setup {
                     Button(L.actionSkip) { finish(nil) }
                         .buttonStyle(.plain)
                         .font(.plat(mac: 13, touch: 17))
@@ -116,6 +129,7 @@ struct FirstLaunch: View {
                 case .welcome: welcome
                 case .anilist: anilist
                 case .sources: sources
+                case .setup: setup
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -128,6 +142,10 @@ struct FirstLaunch: View {
         .animation(reduceMotion ? nil : .standard, value: page)
         // An invite link in the field holds the iPad's sheet open; a swipe down is Skip until then.
         .holdsInput(when: !link.isEmpty)
+        .task {
+            // i18n-skip: a shot's sheet name
+            if navigator.launchSheet == "welcome-setup" { navigator.launchSheet = nil; page = .setup }
+        }
         .sheet(isPresented: Bindable(navigator).addServerShown) { AddServerSheet() }
         .onChange(of: store.servers.added) { _, added in
             if added != nil, page == .sources { finish(nil) }
@@ -172,12 +190,25 @@ struct FirstLaunch: View {
                 .padding(.top, 8)
             Spacer(minLength: 24)
             actions {
+                #if os(macOS)
+                setUpElsewhere
+                #endif
                 Button { page = .anilist } label: { Text(L.onboardingContinue).touchFill() }
                     .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
                     .keyboardShortcut(.defaultAction)
+                #if os(iOS)
+                setUpElsewhere
+                #endif
             }
         }
         .fixedSize(horizontal: false, vertical: false)
+    }
+
+    /// Set up from another device: the code this device shows, and the way to a cloud folder.
+    private var setup: some View {
+        PairShowSheet(first: true, restore: restore, leave: { page = .welcome }, finished: { finish(nil) })
+            .environment(store)
+            .environment(\.syncEmbedded, true)
     }
 
     private var anilist: some View {
@@ -332,6 +363,25 @@ struct FirstLaunch: View {
     }
 
     // MARK: Parts
+
+    /// Set up from another device: a quiet capsule on the Mac, a text button under Continue on touch.
+    private var setUpElsewhere: some View {
+        #if os(macOS)
+        Button { page = .setup } label: { Text(L.firstSetupOther) }
+            .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        #else
+        Button { page = .setup } label: {
+            Text(L.firstSetupOther)
+                .font(.ui(17, weight: .semibold))
+                .foregroundStyle(.silk)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        #endif
+    }
 
     private var notNow: some View {
         Button { page = .sources } label: { Text(L.actionNotNow).touchFill() }

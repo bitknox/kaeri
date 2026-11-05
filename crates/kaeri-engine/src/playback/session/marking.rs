@@ -1,5 +1,6 @@
 //! Marking skip times in the player: the marking bar's steps, saving a mark, clearing one,
-//! reporting AniSkip's times, and asking "Was that the opening?" after a skip by hand.
+//! reporting AniSkip's times, asking "Was that the opening?" after a skip by hand, and asking
+//! about the edges of a skip found from the audio.
 //!
 //! The steps and checks are `kaeri_playback::marking`'s; this holds them for the file
 //! playing, keeps what is saved in the store, and says each change to the player as an
@@ -9,8 +10,8 @@ use kaeri_model::{
     command::PlayerCommand,
     event::Event,
     playback::{
-        SkipEdge, SkipMarkCheck, SkipMarkNote, SkipMarkStep, SkipMarkView, SkipNotice,
-        SkipPrompt,
+        FOUND_PROMPT_DELAY_SECS, SkipEdge, SkipMarkCheck, SkipMarkNote, SkipMarkStep,
+        SkipMarkView, SkipNotice, SkipPrompt,
     },
 };
 use kaeri_playback::{
@@ -18,7 +19,7 @@ use kaeri_playback::{
     aniskip::{self, Request, Vote},
     marking::{self, Check, Edge, JumpWatch, Marking, Step},
 };
-use kaeri_store::{SkipMark, Store};
+use kaeri_store::{SkipMark, Store, skip_found::state};
 
 use super::{
     Run,
@@ -45,6 +46,20 @@ pub(super) struct SkipMarking {
     /// What the save that asked would send, held until the answer.
     unshared: Vec<Request>,
     clock: std::time::Instant,
+    /// The bar reviews the found stretch of this kind, opened by Yes or by Adjust.
+    found_review: Option<(SkipKind, FoundFrom)>,
+    /// A found stretch of this kind was skipped, landing here: its card is due once playback has
+    /// gone on past it.
+    found_landed: Option<(SkipKind, f64)>,
+}
+
+/// How a found stretch came to be confirmed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FoundFrom {
+    /// Yes on the card: saved at once, and the card says so.
+    Yes,
+    /// Adjust: the review opens, and its Save confirms.
+    Adjust,
 }
 
 impl SkipMarking {
@@ -57,6 +72,8 @@ impl SkipMarking {
             share,
             unshared: Vec::new(),
             clock: std::time::Instant::now(),
+            found_review: None,
+            found_landed: None,
         }
     }
 
@@ -68,6 +85,8 @@ impl SkipMarking {
     pub(super) fn file_opened(&mut self) {
         self.bar = None;
         self.prompt = None;
+        self.found_review = None;
+        self.found_landed = None;
     }
 
     fn now(&self) -> f64 {
@@ -91,6 +110,8 @@ pub(super) const fn is_marking(command: &PlayerCommand) -> bool {
             | PlayerCommand::DismissSkipPrompt
             | PlayerCommand::NeverAskWasOpening
             | PlayerCommand::AnswerShareSkipTimes { .. }
+            | PlayerCommand::ConfirmFoundSkip { .. }
+            | PlayerCommand::AdjustFoundSkip { .. }
     )
 }
 
@@ -146,6 +167,10 @@ impl Run<'_> {
     fn mark_view(&self, bar: &Marking, tracker: &PlaybackTracker) -> SkipMarkView {
         let check = bar.check(self.episode_length(tracker));
         let mut notes = Vec::new();
+        let found = self.marking.found_review.is_some_and(|(kind, _)| kind == bar.kind);
+        if found && bar.step == Step::Review {
+            notes.push(SkipMarkNote::Found);
+        }
         if bar.step == Step::Review {
             if self.context.mal_id.is_none() {
                 notes.push(SkipMarkNote::NoEntry);
@@ -180,6 +205,7 @@ impl Run<'_> {
             can_save: bar.step == Step::Review && check != Check::TooShort,
             editing: bar.editing,
             previewing: bar.previewing(),
+            found,
         }
     }
 
@@ -192,6 +218,12 @@ impl Run<'_> {
         if self.marking.prompt == prompt {
             return;
         }
+        // Said in the log, so a card that never showed can be told from one never asked.
+        match (self.marking.prompt, prompt) {
+            (_, Some(card)) => tracing::info!(?card, "skip card shown"),
+            (Some(card), None) => tracing::info!(?card, "skip card gone"),
+            (None, None) => {}
+        }
         self.marking.prompt = prompt;
         let _ = link.overlay(Overlay::SkipPrompt(prompt)).await;
     }
@@ -203,6 +235,23 @@ impl Run<'_> {
         link: &dyn PlayerLink,
         tracker: &mut PlaybackTracker,
     ) {
+        if let Some(card) = self.marking.prompt {
+            let answer = match command {
+                PlayerCommand::ConfirmFoundSkip { .. } => Some("yes"),
+                PlayerCommand::AdjustFoundSkip { .. } => Some("adjust"),
+                PlayerCommand::NeverAskWasOpening => Some("don't ask again"),
+                PlayerCommand::BeginSkipMark { .. } => Some("mark"),
+                PlayerCommand::ReportSkip { .. } => Some("report"),
+                PlayerCommand::AnswerShareSkipTimes { share: true } => Some("share"),
+                PlayerCommand::AnswerShareSkipTimes { share: false } => Some("don't share"),
+                // The app's own: the card's time ran out, or the viewer closed it.
+                PlayerCommand::DismissSkipPrompt => Some("dismissed"),
+                _ => None,
+            };
+            if let Some(answer) = answer {
+                tracing::info!(?card, answer, "skip card answered");
+            }
+        }
         match command {
             PlayerCommand::BeginSkipMark { kind } => self.begin_mark(kind, link, tracker).await,
             PlayerCommand::SetSkipMarkKind { kind } => {
@@ -251,12 +300,22 @@ impl Run<'_> {
             }
             PlayerCommand::SaveSkipMark => self.save_mark(link, tracker).await,
             PlayerCommand::CancelSkipMark => {
-                if let Some(bar) = &mut self.marking.bar
+                // A found review has no steps before it: Cancel leaves the found times as they
+                // were.
+                if self.marking.found_review.take().is_some() {
+                    self.marking.bar = None;
+                } else if let Some(bar) = &mut self.marking.bar
                     && !bar.back()
                 {
                     self.marking.bar = None;
                 }
                 self.say_bar(link, tracker).await;
+            }
+            PlayerCommand::ConfirmFoundSkip { kind } => {
+                self.confirm_found(taken(kind), FoundFrom::Yes, link, tracker).await;
+            }
+            PlayerCommand::AdjustFoundSkip { kind } => {
+                self.confirm_found(taken(kind), FoundFrom::Adjust, link, tracker).await;
             }
             PlayerCommand::ClearMySkip { kind } => {
                 self.clear_mark(taken(kind), link, tracker).await
@@ -265,7 +324,10 @@ impl Run<'_> {
             PlayerCommand::DismissSkipPrompt => self.say_prompt(link, None).await,
             PlayerCommand::NeverAskWasOpening => {
                 self.marking.ask = false;
-                self.say_prompt(link, None).await;
+                // The found times' card says so in place; "Was that the opening?" just goes.
+                let said = matches!(self.marking.prompt, Some(SkipPrompt::FoundEdges { .. }))
+                    .then_some(SkipPrompt::FoundNever);
+                self.say_prompt(link, said).await;
                 let _ = self.tx.send(Event::PlayerAskWasOpening(false));
             }
             PlayerCommand::AnswerShareSkipTimes { share } => {
@@ -367,6 +429,7 @@ impl Run<'_> {
         if voted {
             requests.retain(|request| !matches!(request, Request::Vote(_)));
         }
+        let requests_empty = requests.is_empty();
         let ask = match self.marking.share {
             Some(true) => {
                 self.send(&requests);
@@ -379,6 +442,25 @@ impl Run<'_> {
             }
         };
 
+        // A found stretch saved is confirmed: its kind is skipped by itself for this show from
+        // now on, and the card that asked says it was saved.
+        let found = self.marking.found_review.take().filter(|(found, _)| *found == kind);
+        if found.is_some() {
+            let shared = self.marking.sharing() && !requests_empty;
+            let (id, episode, api) = (
+                self.context.anilist_id,
+                self.context.episode.trim().to_owned(),
+                kind.api_type(),
+            );
+            on_store(self.store, "confirm found", move |store| {
+                store.confirm_found_skips(id, api)?;
+                let now = if shared { state::SHARED } else { state::CONFIRMED };
+                store.set_found_skip_state(id, &episode, api, now)
+            })
+            .await;
+            tracker.trust_found(kind, true);
+        }
+
         let notice = match check {
             Check::TooLong { most } => SkipNotice::SavedHere { kind: offered(kind), most },
             _ if confirmed => SkipNotice::Confirmed,
@@ -386,9 +468,182 @@ impl Run<'_> {
         };
         self.marking.bar = None;
         self.say_bar(link, tracker).await;
-        let _ = link.overlay(Overlay::SkipNotice(notice)).await;
+        match (found, self.episode_number()) {
+            (Some((_, FoundFrom::Yes)), Some(episode)) => {
+                let saved = SkipPrompt::FoundSaved { kind: offered(kind), episode };
+                self.say_prompt(link, Some(saved)).await;
+            }
+            _ => {
+                let _ = link.overlay(Overlay::SkipNotice(notice)).await;
+            }
+        }
         if ask {
             self.say_prompt(link, Some(SkipPrompt::Share)).await;
+        }
+    }
+
+    /// The episode's number, for AniSkip and for the found times' card.
+    fn episode_number(&self) -> Option<u32> {
+        self.context.episode.trim().parse::<u32>().ok()
+    }
+
+    /// Yes or Adjust on the found stretch of `kind`: saved as the person's own at once, or the
+    /// review opened on it, playing its edges once.
+    async fn confirm_found(
+        &mut self,
+        kind: SkipKind,
+        from: FoundFrom,
+        link: &dyn PlayerLink,
+        tracker: &mut PlaybackTracker,
+    ) {
+        if self.in_party {
+            return;
+        }
+        let Some(found) = self.found.iter().find(|s| s.kind == kind).copied() else { return };
+        let yours = SkipInterval { origin: SkipOrigin::Yours, ..found };
+        let mut bar = Marking::review(&yours, false);
+        self.marking.found_review = Some((kind, from));
+        match from {
+            FoundFrom::Yes => {
+                self.marking.bar = Some(bar);
+                self.save_mark(link, tracker).await;
+            }
+            FoundFrom::Adjust => {
+                if let Some(to) = bar.preview() {
+                    let _ = link.seek(to, true).await;
+                }
+                self.marking.bar = Some(bar);
+                self.say_prompt(link, None).await;
+                self.say_bar(link, tracker).await;
+            }
+        }
+    }
+
+    /// A new file: the found times kept for this episode, to use once its length is known, and
+    /// whether this show's found times are skipped by themselves. `None` where none are used.
+    pub(super) async fn found_opened(
+        &mut self,
+        tracker: &mut PlaybackTracker,
+    ) -> Option<Vec<(SkipInterval, f64)>> {
+        self.found.clear();
+        if !self.settings.find_skip_times || !self.settings.uses_skip_times() {
+            return None;
+        }
+        let (id, episode) = (self.context.anilist_id, self.context.episode.trim().to_owned());
+        let (rows, opening, ending) = on_store(self.store, "found", move |store| {
+            Ok((
+                store.found_skips(id, &episode)?,
+                store.found_skip_show(id, SkipKind::Opening.api_type())?,
+                store.found_skip_show(id, SkipKind::Ending.api_type())?,
+            ))
+        })
+        .await?;
+        tracker.trust_found(SkipKind::Opening, opening.trusted());
+        tracker.trust_found(SkipKind::Ending, ending.trusted());
+        let kept = rows
+            .into_iter()
+            .filter(|row| row.state == state::FOUND || row.state == state::SKIPPED)
+            .filter_map(|row| {
+                let kind = SkipKind::from_api_type(&row.kind)?;
+                let interval = SkipInterval {
+                    kind,
+                    start: ms_to_secs(row.start_ms),
+                    end: ms_to_secs(row.end_ms),
+                    origin: SkipOrigin::Found,
+                };
+                Some((interval, ms_to_secs(row.length_ms)))
+            })
+            .collect();
+        Some(kept)
+    }
+
+    /// The found times kept for this episode that fit a file `length` seconds long, where this
+    /// file has not found its own.
+    pub(super) fn use_kept_found(
+        &mut self,
+        kept: Vec<(SkipInterval, f64)>,
+        length: f64,
+        tracker: &mut PlaybackTracker,
+    ) {
+        let mut added = false;
+        for (interval, found_on) in kept {
+            let fits = (found_on - length).abs() <= kaeri_playback::skip::MARK_LENGTH_TOLERANCE;
+            if fits && !self.found.iter().any(|s| s.kind == interval.kind) {
+                self.found.push(interval);
+                added = true;
+            }
+        }
+        if added {
+            tracker.set_found(self.found.clone());
+        }
+    }
+
+    /// Whether the skip of `kind` in use is a found one.
+    fn uses_found(kind: SkipKind, tracker: &PlaybackTracker) -> bool {
+        tracker.skips().iter().any(|s| s.kind == kind && s.origin == SkipOrigin::Found)
+    }
+
+    /// The playhead was taken past the skip of `kind`, to `to`, by the button or by itself:
+    /// where it was a found one, counted, and its card due a little after.
+    pub(super) async fn skipped(&mut self, kind: SkipKind, to: f64, tracker: &PlaybackTracker) {
+        if !Self::uses_found(kind, tracker) {
+            return;
+        }
+        let (id, episode, api) =
+            (self.context.anilist_id, self.context.episode.trim().to_owned(), kind.api_type());
+        on_store(self.store, "found skipped", move |store| {
+            store.note_found_skip(id, api)?;
+            store.set_found_skip_state(id, &episode, api, state::SKIPPED)
+        })
+        .await;
+        self.marking.found_landed = Some((kind, to));
+    }
+
+    /// Undo after a skip of `kind`: where it was a found one, the person wanted to watch it.
+    /// Its count starts again, and it is offered, not skipped, until trusted again.
+    pub(super) async fn found_undone(&mut self, kind: SkipKind, tracker: &mut PlaybackTracker) {
+        if !Self::uses_found(kind, tracker) {
+            return;
+        }
+        self.marking.found_landed = None;
+        let (id, episode, api) =
+            (self.context.anilist_id, self.context.episode.trim().to_owned(), kind.api_type());
+        let confirmed = on_store(self.store, "found undone", move |store| {
+            store.undo_found_skip(id, api)?;
+            store.set_found_skip_state(id, &episode, api, state::REJECTED)?;
+            Ok(store.found_skip_show(id, api)?.confirmed)
+        })
+        .await
+        .unwrap_or(false);
+        tracker.trust_found(kind, confirmed);
+    }
+
+    /// The found times' card for `kind`, if it is to be asked: sharing on, AniSkip with nothing
+    /// for this episode, a show it can be shared for, not in a party, nothing else up, and not
+    /// asked for this show and kind before. Counted as asked as it shows.
+    async fn ask_found(&mut self, kind: SkipKind, link: &dyn PlayerLink) {
+        let Some(episode) = self.episode_number() else { return };
+        if !self.marking.ask
+            || !self.marking.sharing()
+            || !self.aniskip.is_empty()
+            || self.context.mal_id.is_none()
+            || self.in_party
+            || self.marking.bar.is_some()
+            || self.marking.prompt.is_some()
+        {
+            tracing::debug!(?kind, "found times' card not asked here");
+            return;
+        }
+        let (id, api) = (self.context.anilist_id, kind.api_type());
+        let first =
+            on_store(self.store, "ask found", move |store| store.ask_found_skip(id, api))
+                .await
+                .unwrap_or(false);
+        if first {
+            let card = SkipPrompt::FoundEdges { kind: offered(kind), episode };
+            self.say_prompt(link, Some(card)).await;
+        } else {
+            tracing::debug!(?kind, "found times' card asked for this show before");
         }
     }
 
@@ -503,6 +758,15 @@ impl Run<'_> {
         tracker: &PlaybackTracker,
     ) {
         let position = tracker.position();
+        if let Some((kind, landed)) = self.marking.found_landed {
+            if position < landed - 1.0 {
+                // Gone back: the skip was not kept.
+                self.marking.found_landed = None;
+            } else if position >= landed + FOUND_PROMPT_DELAY_SECS && !tracker.is_paused() {
+                self.marking.found_landed = None;
+                self.ask_found(kind, link).await;
+            }
+        }
         if let Some(bar) = self.marking.bar.as_mut().filter(|bar| bar.previewing()) {
             if let Some(to) = bar.previewed(position) {
                 let _ = link.seek(to, true).await;

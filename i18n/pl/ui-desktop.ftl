@@ -27,3 +27,5 @@ updates-restart = Uruchom ponownie
 tv-problem-full = Telewizor nie ma już miejsca na sparowane { -device-pl }. Usuń jedno w ustawieniach telewizora, w sekcji Piloty.
 tv-problem-unpaired = Telewizor usunął ten komputer ze swojej listy. Sparuj go ponownie.
 player-position-spoken = { $position } z { $duration }
+names-pair = { $first } i { $last }
+names-list = { $list }, { $next }

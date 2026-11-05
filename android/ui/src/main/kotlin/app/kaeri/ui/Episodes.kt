@@ -131,36 +131,9 @@ internal fun EpisodeLine(
     opensService: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
-    val marks = LocalUserMarks.current
-    val haptics = LocalHapticFeedback.current
     val resume = entry.resume?.takeIf { current }
     val fraction = resume?.fraction?.toFloat()
-    val dim = remember { Animatable(if (row.completed) 1f else 0f) }
-    val fill = remember { Animatable(if (row.completed) 1f else fraction ?: 0f) }
-    val check = remember { Animatable(if (row.completed) 1f else 0f) }
-    LaunchedEffect(row.completed) {
-        val watched = row.completed
-        if (!marks.take(row.number)) {
-            dim.snapTo(if (watched) 1f else 0f)
-            check.snapTo(if (watched) 1f else 0f)
-            fill.snapTo(if (watched) 1f else fraction ?: 0f)
-            return@LaunchedEffect
-        }
-        haptics.performHapticFeedback(if (watched) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
-        if (watched) {
-            fill.animateTo(1f, Motion.standard())
-            coroutineScope {
-                launch { dim.animateTo(1f, Motion.quick()) }
-                launch { check.animateTo(1f, Motion.standard()) }
-            }
-        } else {
-            coroutineScope {
-                launch { dim.animateTo(0f, Motion.quick()) }
-                launch { check.animateTo(0f, Motion.quick()) }
-            }
-            fill.animateTo(fraction ?: 0f, Motion.standard())
-        }
-    }
+    val (dim, fill, check) = rememberRowMarks(row, fraction)
     val context = androidx.compose.ui.platform.LocalContext.current
     val airs = row.airsAt?.takeIf { unaired }?.let { airsWords(context, java.time.Instant.ofEpochSecond(it)) }
     val unairedLabel = if (unaired) {
@@ -262,24 +235,80 @@ internal fun EpisodeLine(
     }
 }
 
+/** A row's mark animations: the dim, the bar's fill and the check, as T9 has them. */
+internal data class RowMarks(
+    val dim: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>,
+    val fill: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>,
+    val check: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>,
+)
+
+/**
+ * The animations that mark [row] watched or not. The user's marks animate; a change from anywhere
+ * else (playback) shows at once, with no haptic. [fraction] is the resume point's, when it is the
+ * current episode.
+ */
+@Composable
+internal fun rememberRowMarks(row: EpisodeRow, fraction: Float?): RowMarks {
+    val marks = LocalUserMarks.current
+    val haptics = LocalHapticFeedback.current
+    val dim = remember { Animatable(if (row.completed) 1f else 0f) }
+    val fill = remember { Animatable(if (row.completed) 1f else fraction ?: 0f) }
+    val check = remember { Animatable(if (row.completed) 1f else 0f) }
+    LaunchedEffect(row.completed) {
+        val watched = row.completed
+        if (!marks.take(row.number)) {
+            dim.snapTo(if (watched) 1f else 0f)
+            check.snapTo(if (watched) 1f else 0f)
+            fill.snapTo(if (watched) 1f else fraction ?: 0f)
+            return@LaunchedEffect
+        }
+        haptics.performHapticFeedback(if (watched) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+        if (watched) {
+            fill.animateTo(1f, Motion.standard())
+            coroutineScope {
+                launch { dim.animateTo(1f, Motion.quick()) }
+                launch { check.animateTo(1f, Motion.standard()) }
+            }
+        } else {
+            coroutineScope {
+                launch { dim.animateTo(0f, Motion.quick()) }
+                launch { check.animateTo(0f, Motion.quick()) }
+            }
+            fill.animateTo(fraction ?: 0f, Motion.standard())
+        }
+    }
+    return RowMarks(dim, fill, check)
+}
+
 /** "E7 · 14 min left" or "E6 · 24 min". */
-private fun episodeDetail(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String {
+internal fun episodeDetail(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String {
+    val detail = episodeDetailOnly(context, row, resume)
+    return if (detail != null) Strings.episodeLineDetail(context, row.number.toInt(), detail) else Strings.episodeNumberShort(context, row.number.toInt())
+}
+
+/** The part of [episodeDetail] after the number: "14 min left" or "24 min", or null when there is none. */
+internal fun episodeDetailOnly(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String? {
     val fraction = resume?.fraction
-    val detail = if (resume != null && fraction != null && fraction > 0) {
+    return if (resume != null && fraction != null && fraction > 0) {
         val left = maxOf(1, ((resume.position / fraction - resume.position) / 60).roundToInt())
         Strings.timeMinutesLeft(context, left)
     } else {
         minutes(context, row)
     }
-    return if (detail != null) Strings.episodeLineDetail(context, row.number.toInt(), detail) else Strings.episodeNumberShort(context, row.number.toInt())
 }
 
 /** The check, drawn along its path to [progress], as the brief's trimPathEnd draw-on does it. */
 @Composable
-private fun DrawnCheck(progress: Float, color: androidx.compose.ui.graphics.Color) {
+internal fun DrawnCheck(
+    progress: Float,
+    color: androidx.compose.ui.graphics.Color,
+    size: androidx.compose.ui.unit.Dp = 24.dp,
+    /** Whether it says Watched itself; not where the words beside it already do. */
+    described: Boolean = true,
+) {
     val watchedWord = stringResource(R.string.episode_watched)
-    Canvas(Modifier.size(24.dp).semantics { contentDescription = watchedWord }) {
-        val unit = size.width / 24f
+    Canvas(Modifier.size(size).then(if (described) Modifier.semantics { contentDescription = watchedWord } else Modifier)) {
+        val unit = this.size.width / 24f
         val path = Path().apply {
             moveTo(5f * unit, 12.5f * unit)
             lineTo(10f * unit, 17.5f * unit)
@@ -298,7 +327,7 @@ private fun DrawnCheck(progress: Float, color: androidx.compose.ui.graphics.Colo
  * Settings has answered, so a still is never shown and then covered.
  */
 @Composable
-internal fun spoilerProtected(id: AnilistId): Boolean {
+fun spoilerProtected(id: AnilistId): Boolean {
     val store = LocalAppStore.current
     val sheets by store.showSettings.sheets.collectAsStateWithLifecycle()
     val view by store.settings.view.collectAsStateWithLifecycle()
@@ -310,34 +339,44 @@ internal fun spoilerProtected(id: AnilistId): Boolean {
 
 /**
  * An episode's still: its art, blurred with the hidden glyph when spoiler protection hides it, and
- * a plain plate before it airs. Hidden and clear crossfade on standard when the next episode moves.
+ * a plain plate before it airs. Hidden and clear crossfade on the reveal token.
+ * An episode with no still stands on the show's banner, never blurred, since a banner cannot spoil
+ * an episode; a still that arrives later fades in over it.
  */
 @Composable
-internal fun EpisodeStill(entry: Entry, row: EpisodeRow, hidden: Boolean, unaired: Boolean) {
-    val url = row.thumbnail ?: entry.bannerUrl
-    Box(Modifier.fillMaxSize().clip(ArtShape.cover(96.dp))) {
+internal fun EpisodeStill(entry: Entry, row: EpisodeRow, hidden: Boolean, unaired: Boolean, width: androidx.compose.ui.unit.Dp = 96.dp, pixels: Int = 300) {
+    val still = row.thumbnail
+    // The banner stays under a still that comes late, so the swap is a fade over art, not over a plate.
+    val bannerUnder = remember(row.number) { still == null }
+    Box(Modifier.fillMaxSize().clip(ArtShape.cover(width))) {
         if (unaired) {
             // A flat plate before it airs.
             Box(Modifier.fillMaxSize().background(ObiSilk.Raised))
             return@Box
         }
-        Crossfade(hidden, animationSpec = Motion.standard(), label = "still") { blurred -> // i18n-skip
-            if (blurred) {
-                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
-                    ArtworkImage(
-                        url,
-                        plate = null,
-                        maxPixelSize = 160,
-                        modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.15f; scaleY = 1.15f }.blur(6.dp),
-                    )
-                    Icon(
-                        Icons.Hidden,
-                        contentDescription = stringResource(R.string.episode_spoiler_hidden),
-                        modifier = Modifier.align(Alignment.Center).size(20.dp),
-                    )
+        if (bannerUnder || still == null) {
+            ArtworkImage(entry.bannerUrl, plate = null, maxPixelSize = pixels, modifier = Modifier.fillMaxSize())
+        }
+        if (still != null) {
+            // The reveal token: a blurred still comes out sharp over 0.3 s, eased out.
+            Crossfade(hidden, animationSpec = Motion.reveal(), label = "still") { blurred -> // i18n-skip
+                if (blurred) {
+                    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
+                        ArtworkImage(
+                            still,
+                            plate = null,
+                            maxPixelSize = 160,
+                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.15f; scaleY = 1.15f }.blur(6.dp),
+                        )
+                        Icon(
+                            Icons.Hidden,
+                            contentDescription = stringResource(R.string.episode_spoiler_hidden),
+                            modifier = Modifier.align(Alignment.Center).size(20.dp),
+                        )
+                    }
+                } else {
+                    ArtworkImage(still, plate = null, maxPixelSize = pixels, modifier = Modifier.fillMaxSize())
                 }
-            } else {
-                ArtworkImage(url, plate = null, maxPixelSize = 300, modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -381,92 +420,6 @@ internal fun DiscussionRow(entry: Entry, row: EpisodeRow, count: UInt) {
             modifier = Modifier.weight(1f),
         )
         Icon(Icons.Chevron, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
-    }
-}
-
-/**
- * The row's long-press menu: mark it watched or not, or play it from the start. One no source has,
- * AniList's alone, offers to add a source in place of downloading and playing it.
- */
-@Composable
-internal fun EpisodeMenu(entry: Entry, row: EpisodeRow, expanded: Boolean, onDismiss: () -> Unit, actions: AppActions) {
-    val store = LocalAppStore.current
-    val marks = LocalUserMarks.current
-    val snackbars = LocalSnackbars.current
-    val navigator = LocalNavigator.current
-    val markedWatched = stringResource(R.string.episode_marked_watched, row.number.toInt())
-    val undoWord = stringResource(R.string.action_undo)
-    Menu(expanded = expanded, onDismissRequest = onDismiss) {
-        val watched = row.completed
-        DropdownMenuItem(
-            text = { Text(stringResource(if (watched) R.string.episode_mark_unwatched else R.string.episode_mark_watched)) },
-            leadingIcon = { Icon(Icons.Check, contentDescription = null) },
-            onClick = {
-                onDismiss()
-                marks.mark(row.number)
-                store.setWatched(entry.id, listOf(row.number), watched = !watched)
-                if (!watched) {
-                    snackbars.show(markedWatched, undoWord) {
-                        marks.mark(row.number)
-                        store.setWatched(entry.id, listOf(row.number), watched = false)
-                    }
-                }
-            },
-        )
-        val comments = discussionCountOf(entry, row)
-        if (comments != null) {
-            DropdownMenuItem(
-                text = {
-                    Column {
-                        Text(stringResource(R.string.discussion_open))
-                        Text(
-                            pluralStringResource(R.plurals.discussion_count, comments.toInt(), comments.toInt()),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-                leadingIcon = { Icon(Icons.Discussion, contentDescription = null) },
-                onClick = {
-                    onDismiss()
-                    row.number.toUIntOrNull()?.let { store.discussion.show(entry.id, it) }
-                },
-            )
-        }
-        if (row.unsourced) {
-            // Nothing to play or download: marking it watched is all that is left.
-        } else if (row.metadataOnly) {
-            // A source that listed titles but could not choose: the question, not another source.
-            val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
-            DropdownMenuItem(
-                text = { Text(stringResource(if (asking) R.string.match_choose else R.string.title_button_add_source)) },
-                leadingIcon = { Icon(if (asking) Icons.Search else Icons.Providers, contentDescription = null) },
-                onClick = {
-                    onDismiss()
-                    if (asking) store.match.open(entry.id, fromMenu = false) else navigator.open(PROVIDERS_ROUTE)
-                },
-            )
-        } else {
-            DownloadMenuItem(entry, row.number, onDismiss)
-            if (store.tv.available) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.tv_play_on)) },
-                    leadingIcon = { Icon(Icons.Tv, contentDescription = null) },
-                    onClick = {
-                        onDismiss()
-                        store.tv.offer(TvPlayRequest(entry.id, entry.showTitle, row.number))
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.episode_play_from_beginning)) },
-                leadingIcon = { Icon(Icons.Restart, contentDescription = null) },
-                onClick = {
-                    onDismiss()
-                    actions.playFromStart(entry.id, row.number)
-                },
-            )
-        }
     }
 }
 

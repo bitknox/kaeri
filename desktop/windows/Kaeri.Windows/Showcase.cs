@@ -112,6 +112,54 @@ static class Showcase
             uint.TryParse(row.Number, out var n) && (n == next || n == next + 1 || at >= last - 3) ? row with { Unsourced = true } : row)] };
     }
 
+    /// <summary>Made-up synopses for the synopsis shots, as the fixture tables have none.</summary>
+    static readonly string[] Lines =
+    [
+        "A lamplighter wakes on the star road with a lantern and no name.",
+        "The crew take on a passenger who pays in maps, and the first map is of a place that has not been built yet.",
+        "A storm closes the pass with the mail still aboard. The pilot has to choose between turning back and flying the old route under the cloud line, the one her mentor never came back from.",
+        "Ryo repairs the engine by lamplight while the others argue over where the next island lies.",
+        "A festival of paper lanterns drifts up from the sea of cloud, and one of them carries a message for the youngest pilot.",
+        "The crew wait out a calm at a floating harbour where nobody has docked in years.",
+        "A storm closes Kiriya Pass with the mail still aboard. Toma has to choose between turning back and flying the old route under the cloud line.",
+        "Ryo finds the letter Toma has carried since the first night, and reads it before she can stop him. Neither of them speaks again until the lamps of Hoshimi come up out of the cloud.",
+        "On an island with one lamp left, the crew meet the keeper who lights it every night for a ship that stopped coming. Ryo stays behind to help, and nearly misses the morning departure. The keeper gives Toma a map that was never meant to leave the island, and asks only that she carry it past the edge of the cloud sea.",
+        "The crew of a patched-up airship carry letters and strangers between islands that float above an endless sea of cloud.",
+        "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
+    ];
+
+    /// <summary>
+    /// A title's table with synopses, for the synopsis shots: the episodes before <paramref name="next"/>
+    /// watched, it part-way, the ones after it ahead of the viewer. <paramref name="long"/> makes it
+    /// 250 episodes, so it lists in ranges; otherwise episode 10 is filler with no text.
+    /// </summary>
+    public static Event.Episodes Synopses(Event.Episodes table, uint next, bool @long, bool dated = false)
+    {
+        var rows = table.Rows;
+        if (@long && rows.Length > 0)
+            rows = [.. Enumerable.Range(1, 250).Select(n => rows[(n - 1) % rows.Length] with { Number = n.ToString(), Title = $"Letter number {n}" })];
+        // Go to episode's not-out refusal: the first 240 have aired, 241 is announced with a date,
+        // and the rest have none, so 245 is not out yet.
+        if (dated)
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            rows = [.. rows.Select((row, at) => row with { AirsAt = at < 240 ? now - (240 - at) * 86400 : at == 240 ? now + 7 * 86400 : null })];
+        }
+        return table with { Rows = [.. rows.Select((row, at) =>
+        {
+            var n = (uint)at + 1;
+            return row with
+            {
+                Completed = n < next,
+                Watched = n == next ? 0.42 : 0,
+                PastProgress = n > next,
+                SpoilerAhead = n > next,
+                Description = n != 10 || @long ? Lines[at % Lines.Length] : null,
+                Kind = n == 10 ? EpisodeKind.Filler : row.Kind,
+            };
+        })] };
+    }
+
     static ProviderRow Plugin(string id, string name, string version, string[] hosts, ProviderOrigin origin,
         string state = "ready", string? error = null, ProviderUpdate? update = null, ulong? latency = 200) =>
         new(Id: id, Kind: "plugin", State: state, Usable: state != "down", Name: name, Origin: origin,

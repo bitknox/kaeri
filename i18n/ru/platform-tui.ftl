@@ -7,6 +7,6 @@ status-reloading-sources = Перезагружаем { -source-pl }…
 pin-unavailable = { $name } закреплён для этого тайтла, но недоступен, поэтому используются другие { -source-pl }.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = ссылка или код
-tui-together-keys = r готов · c копировать ссылку · s начать сейчас · x выйти
+tui-together-chat-hidden-line = Сообщения и реакции не показываются в плеере ни в одном совместном просмотре.
 tui-together-not-a-link = Это не ссылка и не код комнаты.
 tui-together-recent-alone = Эпизод { $episode } · { $when }

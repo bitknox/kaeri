@@ -26,11 +26,17 @@ fi
 out="${OUT:?set OUT}"
 mkdir -p "$out"
 
-docker image inspect "$image" >/dev/null 2>&1 || docker build -t "$image" "$repo/desktop/linux/docker"
+# Built again when the Dockerfile has changed since, by a label with its checksum. The image it
+# replaces is left untagged; `docker image prune` removes it.
+want="$(cksum <"$repo/desktop/linux/docker/Dockerfile" | cut -d' ' -f1)"
+have="$(docker image inspect -f '{{ index .Config.Labels "kaeri.dockerfile" }}' "$image" 2>/dev/null || true)"
+if [ "$have" != "$want" ]; then
+  docker build --label "kaeri.dockerfile=$want" -t "$image" "$repo/desktop/linux/docker"
+fi
 
 exec docker run --rm \
   -v "$repo:/src" -v "$volume:/target" -v "$out:/out" \
   -v kaeri-linux-cargo:/opt/cargo/registry \
   -e CARGO_TARGET_DIR=/target -e CARGO_INCREMENTAL=0 -e RUSTUP_TOOLCHAIN=1.99.1 \
-  -e HOME=/tmp/home -e SIZES -e SHOTS -e SCENES -e HOME_SHOTS \
+  -e HOME=/tmp/home -e SIZES -e SHOTS -e SCENES -e HOME_SHOTS -e MOTIONS -e FRAMES -e RECORD -e REDUCED -e CLIPS -e PREFIX -e SIZE \
   -w /src "$image" "$@"

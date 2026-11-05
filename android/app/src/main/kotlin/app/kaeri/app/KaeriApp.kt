@@ -34,6 +34,7 @@ import app.kaeri.player.SystemCaptions
 import kotlinx.coroutines.flow.map
 import app.kaeri.player.CaptionStyleWatch
 import app.kaeri.player.Device
+import app.kaeri.player.DeviceWatch
 import app.kaeri.player.MpvBackend
 import app.kaeri.player.PlayerConnection
 import app.kaeri.player.PlayerHost
@@ -45,6 +46,7 @@ import app.kaeri.store.EpisodeCheck
 import app.kaeri.app.tv.CastKeeper
 import app.kaeri.app.tv.TvConnection
 import app.kaeri.store.AppStore
+import app.kaeri.store.setSyncNetwork
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.KeystoreKey
 import app.kaeri.store.SealedFileSecrets
@@ -67,6 +69,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         AppStore(scope).also { store ->
             store.tv.openLink = { url -> open(url) }
             store.collectCrashes(this, scope)
+            DeviceWatch(this, store::send).start()
             if (Flavour.UPDATES) {
                 val updates = AppUpdates(this, store.updates)
                 store.updates.attach(updates, updates.files)
@@ -211,6 +214,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         } else {
             store.start(launch, host(), prepare)
         }
+        // A profile switched to: remembered, and the engine started again on it.
+        store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }
         episodeAlerts.follow(scope)
         ContinueShortcut(this).follow(store, scope)
         widgetKeeper.followFillIns(store, scope)
@@ -233,10 +238,12 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         scope.launch {
             store.phase.first { it != AppStore.Phase.Starting }
             if (store.phase.value != AppStore.Phase.Running) return@launch
+            // Typed-code pairing finds the device showing the code by DNS-SD.
+            store.setSyncNetwork(app.kaeri.store.NsdSyncNetwork(this@KaeriApp))
             val browser = Flavour.tvBrowser(this@KaeriApp, store) ?: return@launch
             val tablet = resources.configuration.smallestScreenWidthDp >= 600
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "0"
-            if (!store.startTv(browser, if (tablet) Strings.deviceNameTablet(this@KaeriApp) else Strings.deviceNamePhone(this@KaeriApp), "kaeri-android/$version")) return@launch
+            if (!store.startTv(browser, store.sync.name.value ?: if (tablet) Strings.deviceNameTablet(this@KaeriApp) else Strings.deviceNamePhone(this@KaeriApp), "kaeri-android/$version")) return@launch
             store.tv.handedOff = { player.viewerClosed() }
             tvConnection = TvConnection(this@KaeriApp, store.tv, scope)
             startCasting()

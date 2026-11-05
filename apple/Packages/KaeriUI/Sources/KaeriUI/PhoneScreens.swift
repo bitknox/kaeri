@@ -11,12 +11,21 @@ import SwiftUI
 /// in a sheet.
 struct AccountButton: ToolbarContent {
     @Environment(Navigator.self) private var navigator
+    @Environment(AppStore.self) private var store
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Button(L.navAccountsAndSettings, systemImage: "person.crop.circle") {
+            Button {
                 navigator.phoneSettings = .root
+            } label: {
+                // With profiles, the button is the active profile's initials.
+                if let profile = store.sync.activeProfile, store.sync.hasProfiles {
+                    ProfileAvatar(profile: profile, size: 28)
+                } else {
+                    Image(systemName: "person.crop.circle")
+                }
             }
+            .accessibilityLabel(L.navAccountsAndSettings)
         }
     }
 }
@@ -175,7 +184,10 @@ struct PhoneLibrary: View {
         }
         .pullToRefresh(store, .library(navigator.librarySegment))
         .screenSubtitle(sizeClass == .compact ? store.syncSubtitle() : "")
-        .toolbar { if sizeClass == .compact { AccountButton() } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            if sizeClass == .compact { AccountButton() }
+        }
         .task {
             for segment in LibraryModel.order where store.library.segment(segment).state == .idle {
                 store.loadLibrary(segment)
@@ -256,6 +268,7 @@ struct DownloadsRow: View {
 struct PhoneSearch: View {
     var body: some View {
         SearchScreen(compact: true)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { SurpriseButton() } }
     }
 }
 #endif

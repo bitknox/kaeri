@@ -28,6 +28,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Abmeldung bei { $tracker } fehlgeschlagen. Versuche es noch einmal. { $reason }
 notice-not-saved-because = Diese Einstellung konnte nicht gespeichert werden. { $cause }
+notice-proxy-saved = Der Torrent-Verkehr läuft jetzt über den Proxy.
+notice-proxy-removed = Torrents verbinden sich jetzt direkt, ohne Proxy.
+notice-proxy-not-checked = Der Proxy konnte nicht geprüft werden. { $cause }
 notice-proxy-password-not-kept = Das Passwort des Proxys konnte nicht gespeichert werden. Gib es erneut ein, um das Speichern zu versuchen. { $reason }
 notice-show-setting-refused = Diese Einstellung konnte nicht gespeichert werden. { $value } ist kein gültiger Wert für { $setting }.
 notice-show-not-reset = Die Einstellungen dieser Serie konnten nicht zurückgesetzt werden. { $reason }

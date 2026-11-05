@@ -41,6 +41,7 @@
 //! `android/scripts/engine.sh testing` then `./gradlew :ui:compileFixturesDebugKotlin
 //! :store:testFixturesDebugUnitTest` in `android/`, and `apple/build.sh`.
 
+pub mod browsing;
 pub mod bug_report;
 pub mod catalog;
 pub mod command;
@@ -49,6 +50,7 @@ pub mod discussion;
 pub mod downloads;
 pub mod episodes;
 pub mod event;
+pub mod group;
 pub mod home;
 pub mod hosted;
 pub mod input;
@@ -65,6 +67,7 @@ pub mod opened;
 pub mod party;
 pub mod playback;
 pub mod present;
+pub mod profiles;
 pub mod progress;
 pub mod proxy;
 pub mod qr;
@@ -73,6 +76,7 @@ pub mod search;
 pub mod settings;
 pub mod show;
 pub mod sources;
+pub mod starting;
 pub mod stores;
 pub mod subtitle_style;
 pub mod sync;

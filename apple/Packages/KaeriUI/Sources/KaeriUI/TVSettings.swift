@@ -20,7 +20,7 @@ enum TVSettingsWords {
     }
 
     static func footnote(_ tv: TVRemoteModel) -> String {
-        L.tvSettingsFootnote(code: tv.shortFingerprint)
+        L.tvForgetNote
     }
 }
 
@@ -29,11 +29,14 @@ enum TVSettingsWords {
 struct TVsGroup: View {
     @Environment(AppStore.self) private var store
     @State private var forgetting: FfiPairedTv?
+    /// A heading and a footnote of the Devices pane's own.
+    var title: String?
+    var footnoteOverride: String?
 
     var body: some View {
         let tv = store.tv
         if tv.available {
-            SettingsGroup(title: L.tvPlayOn, footnote: TVSettingsWords.footnote(tv)) {
+            SettingsGroup(title: title ?? L.tvPlayOn, footnote: footnoteOverride ?? TVSettingsWords.footnote(tv)) {
                 ForEach(tv.paired, id: \.fingerprint) { paired in
                     SettingsRow(title: paired.name, note: TVSettingsWords.note(paired, connected: tv.connected == paired.fingerprint)) {
                         Button(L.actionForget) { forgetting = paired }

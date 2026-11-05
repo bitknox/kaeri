@@ -267,6 +267,10 @@
     <value>[Ñö šöüŕçéš àŕé šéţ üþ. Åðð öñé öñ ţĥé Šöüŕçéš šçŕééñ.~~~~~~~~~~~~~~~~]</value>
     <comment>Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.</comment>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>[Ñö çöññéçţîöñ. Ţŕý àĝàîñ ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé.~~~~~~~~~~~~~~~]</value>
+    <comment>Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.</comment>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>[Éþîšöðé {episode} àîŕš {when}.~~~~~~~]</value>
     <comment>A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.</comment>
@@ -354,6 +358,34 @@
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>[Ļöàðîñĝ šöüŕçéš…~~~~~]</value>
     <comment>Job note while a play waits for the sources to arrive.</comment>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>[Ļööķîñĝ üþ ţĥé ţîţļé~~~~~~]</value>
+    <comment>Starting screen, step line while the title is looked up.</comment>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>[Ĝéţţîñĝ ýöüŕ šöüŕçéš ŕéàðý~~~~~~~~]</value>
+    <comment>Starting screen, step line while sources still being set up are waited for.</comment>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>[Åšķîñĝ {name}~~~]</value>
+    <comment>Starting screen, step line while one source is asked for the episode. The name is the source's own.</comment>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>[Öþéñîñĝ ţĥé šţŕéàɱ~~~~~~]</value>
+    <comment>Starting screen, step line once a stream is found and the player opens it.</comment>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>[Ţŕýîñĝ àñöţĥéŕ šţŕéàɱ~~~~~~~]</value>
+    <comment>Starting screen, step line when a stream showed no video and the next stream of the same source is opened.</comment>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>[Ƒîñðîñĝ þééŕš~~~~]</value>
+    <comment>Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.</comment>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>[Ɓüƒƒéŕîñĝ~~~]</value>
+    <comment>Starting screen, step line while the player waits for data to fill its buffer.</comment>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>[Šéàŕçĥîñĝ šöüŕçéš ƒöŕ éþîšöðé {episode}…~~~~~~~~~~~]</value>
@@ -971,6 +1003,10 @@
     <value>[{store} îš ŕéàðý. Ţĥé ðéɱö šţàýš ļàšţ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]</value>
     <comment>Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.</comment>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>[Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]</value>
+    <comment>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</comment>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>[Šîĝñéð îñ ţö {tracker}.~~~~~~]</value>
     <comment>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</comment>
@@ -1226,6 +1262,22 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>[Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ. Ýöü çàñ ŕéþöŕţ îţ ƒŕöɱ Šéţţîñĝš, Åƀöüţ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>The same notice on the TV, which has no button.</comment>
+  </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>[Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on a search found no title matching the filters.</comment>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>[Þļàññîñĝ îš éɱþţý.~~~~~~]</value>
+    <comment>Toast: Surprise me on the Planning list, which has nothing on it to pick.</comment>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>[Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</comment>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on the filters, and AniList could not be asked.</comment>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>[Çöñţîñüé~~~]</value>
@@ -1875,10 +1927,6 @@
     <value>[Çöññéçţîñĝ ţö ţĥé ŢṼ~~~~~~]</value>
     <comment>Title of the pairing sheet while it connects to a TV whose name it does not know yet.</comment>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>[Å ŢṼ ļîšţš ţĥîš ðéṽîçé ŵîţĥ ţĥé çöðé {code}. Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Under the paired TVs in Settings. The code is a few letters and digits the TV shows beside this { -device }.</comment>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>[ŢṼ~]</value>
     <comment>What the remote calls a TV that has not said its name yet. Title of the remote.</comment>
@@ -2034,6 +2082,26 @@
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>[Ŵîñðöŵš ŵîļļ àšķ ţö ļéţ Ķàéŕî ŕéàçĥ ýöüŕ ŢṼ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</comment>
+  </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>[Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, ŵîţĥ Ŵîñðöŵš Ĥéļļö.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footnote on the recovery key dialog; the lock is Windows Hello.</comment>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>[Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]</value>
+    <comment>What Windows Hello says it is asking for before the recovery key shows again.</comment>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>[ÞÇ~]</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this PC”.</comment>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>[Šýñç ŵîţĥ {device}~~~~]</value>
+    <comment>Accessible name of the Sync switch on a device's card, with the device's name.</comment>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>[Öþéñ {device}~~~]</value>
+    <comment>Accessible name of the button that opens a device's page from its card.</comment>
   </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>[Öñé šééðéŕ~~~]</value>
@@ -2458,6 +2526,10 @@
   <data name="ActionCancel" xml:space="preserve">
     <value>[Çàñçéļ~~]</value>
     <comment>Button that closes a dialog without doing what it offered.</comment>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>[Ĝö~]</value>
+    <comment>Button that confirms a small question, such as the episode number to go to.</comment>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>[Ñöţ ñöŵ~~~]</value>
@@ -3086,6 +3158,14 @@
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>[{position} öƒ {duration}~~~]</value>
     <comment>What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".</comment>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>[{first} àñð {last}~~~~]</value>
+    <comment>Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".</comment>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>[{list}, {next}~~~]</value>
+    <comment>A list of names up to the last two, joined one by one: "Alpha, Brook".</comment>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>[Ðîšçüššîöñ~~~]</value>
@@ -5531,6 +5611,166 @@
     <value>[Çöñţîñüé~~~]</value>
     <comment>The start sheet's button after a title is picked.</comment>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>[Šàý šöɱéţĥîñĝ~~~~]</value>
+    <comment>Placeholder of every chat field, and the label of the button that opens it.</comment>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>[Šéñð~~]</value>
+    <comment>Button that sends a chat line.</comment>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>[Çĥàţ~~]</value>
+    <comment>Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.</comment>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>[Ŵàîţ {seconds} š~~~]</value>
+    <comment>End of the chat field while sending waits, after three messages in five seconds.</comment>
+  </data>
+  <data name="PartyChatWaitSpoken_one" xml:space="preserve">
+    <value>[Ŵàîţ öñé šéçöñð~~~~~]</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>[Ŵàîţ {seconds} šéçöñðš~~~~~]</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>[{count} ɱöŕé îñ çĥàţ~~~~~]</value>
+    <comment>Line after the three newest chat lines on the video, which opens the conversation.</comment>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>[Ţĥîš ŕööɱ'š šéŕṽéŕ ĥàš çĥàţ ţüŕñéð öƒƒ~~~~~~~~~~~~]</value>
+    <comment>Notice when the room's server has chat turned off, and the line that replaces the field.</comment>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>[Ṁéššàĝéš ĝö ţĥŕöüĝĥ ţĥé ŕööɱ'š šéŕṽéŕ. Ķàéŕî ķééþš ñöñé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the chat field in the lobby, shown once.</comment>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>[Çĥàţ îš ĥîððéñ~~~~~]</value>
+    <comment>Heading in the conversation when Hide chat is on.</comment>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>[Ĥîðé çĥàţ îš öñ îñ Šéţţîñĝš, üñðéŕ Þļàýƀàçķ.~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>[Šĥöŵ çĥàţ~~~]</value>
+    <comment>Button that turns Hide chat off.</comment>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>[Ĥîðé çĥàţ îñ ŵàţçĥ þàŕţîéš~~~~~~~~]</value>
+    <comment>Settings switch that hides chat in every watch party on this device.</comment>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>[Ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that switch.</comment>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>[Ṁüţé {name}~~~]</value>
+    <comment>Member menu item and accessibility action that hides a member's lines and reactions for this party.</comment>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>[Ûñɱüţé {name}~~~]</value>
+    <comment>Member menu item and accessibility action that shows a muted member's lines again.</comment>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>[Ûñɱüţé~~]</value>
+    <comment>Button in the conversation on the line that says a member is muted.</comment>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>[Ṁüţéð~~]</value>
+    <comment>State on a muted member's row.</comment>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>[{name} îš ɱüţéð~~~~]</value>
+    <comment>Line in the conversation where a muted member's lines were.</comment>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šéñð~~~~]</value>
+    <comment>Line in the conversation when a message never came back from the server, five seconds after it was sent.</comment>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>[Ţŕý àĝàîñ~~~]</value>
+    <comment>Button after it, which sends the same text again.</comment>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>[Ŕéàçţ~~]</value>
+    <comment>Button on the TV's controls that opens the four reactions.</comment>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>[Ļàüĝĥ~~]</value>
+    <comment>Label of the laugh reaction button.</comment>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>[Ĝàšþ~~]</value>
+    <comment>Label of the gasp reaction button.</comment>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>[Çļàþ~~]</value>
+    <comment>Label of the clap reaction button.</comment>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>[Çŕý~]</value>
+    <comment>Label of the cry reaction button.</comment>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>[{name} ļàüĝĥéð~~~~]</value>
+    <comment>Line in the conversation and in the terminal: a member laughed.</comment>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>[{name} ĝàšþéð~~~]</value>
+    <comment>Line in the conversation and in the terminal: a member gasped.</comment>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>[{name} çļàþþéð~~~~]</value>
+    <comment>Line in the conversation and in the terminal: a member clapped.</comment>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>[{name} çŕîéð~~~]</value>
+    <comment>Line in the conversation and in the terminal: a member cried.</comment>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>[{line} àţ {time}~~~]</value>
+    <comment>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.</comment>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>[{first} àñð {second}~~~~]</value>
+    <comment>Two members named together, for a reaction made by both: "Ren and Mika".</comment>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>[{first}, {second} àñð {third}~~~~~]</value>
+    <comment>Three members named together.</comment>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>[{first}, {second} àñð {count} öţĥéŕš~~~~~~~]</value>
+    <comment>More than three members named together: two names and how many others.</comment>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>[Ýöü~]</value>
+    <comment>Name of this device's own member in the conversation and on its reactions.</comment>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>[Šéñðš àš {device}~~~~]</value>
+    <comment>Line on a phone's remote screen under the chat field: which device the line is said as.</comment>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>[{time} · {names}~~~]</value>
+    <comment>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</comment>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>[{name} šàýš {message}~~~~]</value>
+    <comment>Spoken by a screen reader when a chat line arrives.</comment>
+  </data>
+  <data name="PartyChatLeft_one" xml:space="preserve">
+    <value>[{count} çĥàŕàçţéŕ ļéƒţ~~~~~~]</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>[{count} çĥàŕàçţéŕš ļéƒţ~~~~~~]</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>[Ûþ ñéẋţ~~~]</value>
     <comment>Label on the card for the episode that plays after this one.</comment>
@@ -5578,6 +5818,166 @@
   <data name="PlayerBuffering" xml:space="preserve">
     <value>[Ɓüƒƒéŕîñĝ~~~]</value>
     <comment>Short word while the video buffers.</comment>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>[{place} öƒ {total} šöüŕçéš~~~~~~]</value>
+    <comment>Detail line while a source is asked and more than one is in the viewer's order.</comment>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>[Ýöüŕ þîçķ ƒöŕ ţĥîš šĥöŵ~~~~~~~]</value>
+    <comment>Detail line while the source asked is the one the show is pinned to.</comment>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>[{name} ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~~]</value>
+    <comment>Detail line when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>[{name} ðöéšñ'ţ ĥàṽé éþîšöðé {episode}~~~~~~~~~]</value>
+    <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>[{name} ðîðñ'ţ àñšŵéŕ~~~~~~]</value>
+    <comment>Detail line when a source failed and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>[{name} ţööķ ţöö ļöñĝ~~~~~~]</value>
+    <comment>Detail line when a source took too long and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>[Ýöü šķîþþéð {name}~~~~~]</value>
+    <comment>Detail line after the viewer skipped the source being asked.</comment>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>[Šķîþþéð àƒţéŕ ŕéçéñţ ƒàîļüŕéš~~~~~~~~~]</value>
+    <comment>Details row for sources passed over because they failed lately. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>[Ƒŕöɱ {name}~~~]</value>
+    <comment>Detail line once the streams are found and the player opens one. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>[Ţĥé ƒîŕšţ öñé šĥöŵéð ñö ṽîðéö~~~~~~~~~]</value>
+    <comment>Detail line when a stream showed no video and another opens.</comment>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>[{next} öƒ {total} šţŕéàɱš~~~~~~]</value>
+    <comment>Detail line with the place of the stream being opened.</comment>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>[Öñé þééŕ~~~]</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>[{count} þééŕš~~~]</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>[{speed}/š~~]</value>
+    <comment>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</comment>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>[Ɓüƒƒéŕîñĝ · {percent}~~~~~]</value>
+    <comment>Step line while the player fills its buffer and gives a number.</comment>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>[Ŕéšüɱîñĝ àţ {clock}~~~~~]</value>
+    <comment>Step line while the episode resumes where it was left.</comment>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>[Þļàý ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~]</value>
+    <comment>Button on the starting screen that plays the episode from its beginning.</comment>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>[Ðéţàîļš~~~]</value>
+    <comment>Button on the starting screen that opens the list of steps.</comment>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>[Šķîþ {name}~~~]</value>
+    <comment>Button that skips the source being asked. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>[Šķîþ ţĥîš šţŕéàɱ~~~~~]</value>
+    <comment>Button that opens the next stream of the same source.</comment>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>[Šţîļļ ŵàîţîñĝ ƒöŕ {name}~~~~~~~]</value>
+    <comment>Step line when a start is slow: still waiting for the source. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ~~~~~~~~]</value>
+    <comment>Step line while the device is offline and the episode will start when it is back.</comment>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>[Ýöü'ŕé öƒƒļîñé. Éþîšöðé {episode} šţàŕţš ŵĥéñ ýöü'ŕé ƀàçķ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Detail line while offline. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>[Ƒîẋ ɱàţçĥ~~~]</value>
+    <comment>Button on the failure screen that opens the fix for a title that matched the wrong show.</comment>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>[Åüðîö àñð šüƀţîţļéš~~~~~~]</value>
+    <comment>Details row label for the translation of the episode.</comment>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>[Ļööķéð üþ ţĥé ţîţļé~~~~~~]</value>
+    <comment>Details row once the title has been looked up.</comment>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>[{seconds} š~~]</value>
+    <comment>Seconds on the starting screen's detail line and Details rows.</comment>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>[Šţîļļ šţàŕţîñĝ. Ýöü çàñ çĥööšé à šöüŕçé ñöŵ.~~~~~~~~~~~~~~]</value>
+    <comment>Spoken once, when a start has taken more than a few seconds.</comment>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>[Šţàŕţîñĝ éþîšöðé {episode}, {title}~~~~~~~~]</value>
+    <comment>Spoken when a start begins. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>[{title}. {reason}~~~]</value>
+    <comment>Spoken when a start fails: the title, then the reason.</comment>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>[{step}, {detail}~~~]</value>
+    <comment>Accessibility value of the starting screen: the step line, then the detail line.</comment>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>[Šţàŕţîñĝ ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~~~]</value>
+    <comment>Detail line on the starting screen after the viewer chose to play from the beginning.</comment>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>[Åšķîñĝ~~]</value>
+    <comment>Details row while a source is being asked.</comment>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>[Ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~]</value>
+    <comment>Details row outcome when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>[Ðöéšñ'ţ ĥàṽé éþîšöðé {episode}~~~~~~~~]</value>
+    <comment>Details row outcome when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>[Ðîðñ'ţ àñšŵéŕ~~~~]</value>
+    <comment>Details row outcome when a source failed.</comment>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>[Ţööķ ţöö ļöñĝ~~~~]</value>
+    <comment>Details row outcome when a source took too long.</comment>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>[Šķîþþéð~~~]</value>
+    <comment>Details row outcome when the viewer skipped a source.</comment>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>[{names} ŵéŕé àšķéð.~~~~~]</value>
+    <comment>Second clause of a failure: the sources that were asked, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>[Šüƀţîţļéð~~~]</value>
+    <comment>Label of the switch in the Details list that plays the episode with its subtitles.</comment>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>[Šöüŕçé îš ƀüƒƒéŕîñĝ · {seconds} š~~~~~~~~~]</value>
@@ -5717,6 +6117,10 @@
     <value>[Šàṽîñĝ šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ.~~~~~~~~~~~~]</value>
     <comment>Line in the review with sharing on.</comment>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥéšé ţîɱéš ƒŕöɱ ţĥé àüðîö.~~~~~~~~~~~~]</value>
+    <comment>Review line when the stretch under review was found from the audio, not marked by hand.</comment>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>[Ŕéþļàçéš ÅñîŠķîþ'š {start} ţö {end}, ŵĥîçĥ îš ŕéþöŕţéð àš ŵŕöñĝ.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line in the review when the mark replaces AniSkip's times.</comment>
@@ -5783,12 +6187,42 @@
     <value>[Ðöñ'ţ àšķ àĝàîñ~~~~~]</value>
     <comment>Button of that prompt that turns it off. Settings can turn it on again.</comment>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥîš öþéñîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~~]</value>
+    <comment>Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.</comment>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥîš éñðîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~]</value>
+    <comment>The same prompt after a skip over an ending found from the audio.</comment>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>[Ýéš šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ ƒöŕ éþîšöðé {episode}.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that prompt, in a quieter colour. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>[Ýéš~]</value>
+    <comment>Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.</comment>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>[Åðĵüšţ~~]</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>[Šàṽéð. ÅñîŠķîþ ĝéţš ţĥéšé ţîɱéš ƒöŕ éþîšöðé {episode}.~~~~~~~~~~~~~~~]</value>
+    <comment>What the prompt says after Yes. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>[Ķàéŕî ŵöñ'ţ àšķ àƀöüţ šķîþ ţîɱéš àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>What the prompt says after Don't ask again, with the line below it.</comment>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>[Ýöü çàñ ţüŕñ îţ ƀàçķ öñ îñ Šéţţîñĝš.~~~~~~~~~~~]</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>[Šĥàŕé ýöüŕ šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ?~~~~~~~~~~~]</value>
     <comment>Title of the sheet shown on the first Save.</comment>
   </data>
   <data name="PlayerShareBody" xml:space="preserve">
-    <value>[ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ŵĥàţ ýöü ɱàŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Body of the sheet.</comment>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
@@ -5811,6 +6245,29 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>[Ƒŕöɱ ÅñîŠķîþ~~~~]</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>[Ƒöüñð ƀý Ķàéŕî~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé Ļöŵ Þöŵéŕ Ṁöðé îš öñ.~~~~~~~~~~~]</value>
+    <comment>Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.</comment>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé ƀàţţéŕý šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé éñéŕĝý šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé þöŵéŕ šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>[Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>[Ñöţ àṽàîļàƀļé îñ ţĥîš ƀüîļð öƒ Ķàéŕî.~~~~~~~~~~~~]</value>
+    <comment>Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.</comment>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>[Ñöñé ýéţ~~~]</value>
@@ -6479,6 +6936,258 @@
     <value>[Öñ {service}~~]</value>
     <comment>End of a search result's line: one of the person's licensed services has it.</comment>
   </data>
+  <data name="CountEpisodes_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé~~~~]</value>
+    <comment>The count line under a title in a list or on a card: how many episodes a finished show has.</comment>
+  </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš~~~~]</value>
+    <comment>The count line under a title in a list or on a card: how many episodes a finished show has.</comment>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>[{count} éþ~~]</value>
+    <comment>The same, short, for a cell too narrow for the long form.</comment>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>[{out} öƒ {total} öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has a known total: episodes out so far, then the total.</comment>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>[{out} öƒ {total}~~~]</value>
+    <comment>The same, short.</comment>
+  </data>
+  <data name="CountOut_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has no known total: episodes out so far.</comment>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has no known total: episodes out so far.</comment>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>[{count} öüţ~~~]</value>
+    <comment>The same, short.</comment>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>[Šţàŕţš {date}~~~]</value>
+    <comment>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</comment>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>[Ñöţ öüţ ýéţ~~~~]</value>
+    <comment>The count line of a show that has not started and has no date.</comment>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>[Éþ {episode} öƒ {total}~~~~]</value>
+    <comment>The count line of a show the viewer is part way through, in the library: the next episode and the total.</comment>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>[Ðüƀ~]</value>
+    <comment>The dub part of a count line when a source has a dub and does not say how far it goes.</comment>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>[Ðüƀ {through}~~~]</value>
+    <comment>The dub part of a count line: the last episode the dub has.</comment>
+  </data>
+  <data name="CountSpokenEpisodes_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé~~~~]</value>
+    <comment>What a screen reader says for a count line: the long form of a finished show.</comment>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš~~~~]</value>
+    <comment>What a screen reader says for a count line: the long form of a finished show.</comment>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>[{out} öƒ {total} éþîšöðéš öüţ~~~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing, with a known total.</comment>
+  </data>
+  <data name="CountSpokenOut_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé öüţ~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing with no known total.</comment>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš öüţ~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing with no known total.</comment>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>[Šţàŕţš {date}~~~]</value>
+    <comment>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</comment>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>[Éþîšöðé {episode} öƒ {total}~~~~~~]</value>
+    <comment>What a screen reader says for a show the viewer is part way through.</comment>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>[ðüƀƀéð ţö éþîšöðé {through}~~~~~~~]</value>
+    <comment>What a screen reader says after the count when the dub goes to an episode.</comment>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>[ĥàš à ðüƀ~~~]</value>
+    <comment>What a screen reader says after the count when a source has a dub and does not say how far it goes.</comment>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>[Ĵàñ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>[Ĵàñüàŕý~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>[Ƒéƀ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>[Ƒéƀŕüàŕý~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>[Ṁàŕ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>[Ṁàŕçĥ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>[Åþŕ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>[Åþŕîļ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>[Ṁàý~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>[Ṁàý~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>[Ĵüñ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>[Ĵüñé~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>[Ĵüļ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>[Ĵüļý~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>[Åüĝ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>[Åüĝüšţ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>[Šéþ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>[Šéþţéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>[Öçţ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>[Öçţöƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>[Ñöṽ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>[Ñöṽéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>[Ðéç~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>[Ðéçéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţöðàý~~~~~]</value>
+    <comment>Search's Trending heading and sort, for AniList's live trending.</comment>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţĥîš ŵééķ~~~~~~]</value>
+    <comment>Search's Trending heading and sort, for the last seven days.</comment>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţĥîš ɱöñţĥ~~~~~~]</value>
+    <comment>Search's Trending heading and sort, for the last thirty days.</comment>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>[Ţöðàý~~]</value>
+    <comment>One choice of the Trending period menu, where the heading already says Trending.</comment>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>[Ţĥîš ŵééķ~~~]</value>
+    <comment>One choice of the Trending period menu: the last seven days.</comment>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>[Ţĥîš ɱöñţĥ~~~]</value>
+    <comment>One choice of the Trending period menu: the last thirty days.</comment>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð {period}'š ţŕéñðîñĝ.~~~~~~~~~]</value>
+    <comment>Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".</comment>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>[Ûþðàţéð {age}~~~~]</value>
+    <comment>Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".</comment>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>[Šüŕþŕîšé ɱé~~~~]</value>
+    <comment>Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.</comment>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>[Šüŕþŕîšé Ṁé~~~~]</value>
+    <comment>The same as a menu bar item, in title case.</comment>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>[Åñöţĥéŕ~~~]</value>
+    <comment>Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.</comment>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>[Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ Þļàññîñĝ~~~~~~~~~~~]</value>
+    <comment>Hint of the Surprise me button on the library's Planning list.</comment>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>[Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~]</value>
+    <comment>Hint of the Surprise me button in Search.</comment>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>[Öþéñš àñöţĥéŕ ŕàñðöɱ ţîţļé îñ þļàçé öƒ ţĥîš öñé~~~~~~~~~~~~~~~]</value>
+    <comment>Hint of the Another button.</comment>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>[Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]</value>
+    <comment>Notice when Search's filters match no title to pick from.</comment>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>[Þļàññîñĝ îš éɱþţý.~~~~~~]</value>
+    <comment>Notice when the Planning list is empty.</comment>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>[Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]</value>
+    <comment>Notice when a pick from Search needs AniList and the device is offline.</comment>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>[Åðð à ɱéðîà šéŕṽéŕ~~~~~~]</value>
     <comment>Title of the dialog that adds a media server.</comment>
@@ -6799,6 +7508,10 @@
     <value>[Þļàýƀàçķ~~~]</value>
     <comment>Group heading.</comment>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>[Ŵàţçĥ þàŕţîéš~~~~]</value>
+    <comment>Group heading in Playback settings, above the switch that hides chat.</comment>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>[Ŵàţçĥîñĝ~~~]</value>
     <comment>Group heading.</comment>
@@ -6907,12 +7620,20 @@
     <value>[Šķîþ ŕéçàþš àüţöɱàţîçàļļý~~~~~~~~]</value>
     <comment>Settings, Playback: whether recaps are skipped without asking.</comment>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>[Ƒîñð šķîþ ţîɱéš ƒŕöɱ ţĥé àüðîö~~~~~~~~~]</value>
+    <comment>Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.</comment>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>[Ŵĥéñ ÅñîŠķîþ ĥàš ñö ţîɱéš, Ķàéŕî çöɱþàŕéš ţĥé àüðîö àçŕöšš à šĥöŵ'š éþîšöðéš, öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
   <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>[Åšķ àƒţéŕ šķîþþîñĝ àñ öþéñîñĝ ƀý ĥàñð~~~~~~~~~~~~]</value>
-    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.</comment>
+    <value>[Åšķ àƀöüţ šķîþ ţîɱéš~~~~~~]</value>
+    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.</comment>
   </data>
   <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>[Öƒƒéŕš ţö ɱàŕķ îţ, šö îţ îš šķîþþéð ñéẋţ ţîɱé~~~~~~~~~~~~~~]</value>
+    <value>[Åƒţéŕ ýöü šķîþ àñ öþéñîñĝ ƀý ĥàñð, àñð àƒţéŕ à šķîþ Ķàéŕî ƒöüñð~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsShareSkips" xml:space="preserve">
@@ -6920,16 +7641,24 @@
     <comment>Settings, Playback: whether marked skip times go to AniSkip.</comment>
   </data>
   <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>[ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsClearSkips" xml:space="preserve">
-    <value>[Çļéàŕ šķîþ ţîɱéš ýöü ɱàŕķéð…~~~~~~~~~]</value>
-    <comment>Settings, Playback: removes every skip time you marked.</comment>
+    <value>[Šķîþ ţîɱéš ýöü ɱàŕķéð öŕ Ķàéŕî ƒöüñð~~~~~~~~~~~]</value>
+    <comment>Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.</comment>
   </data>
   <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>[Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Question that asks before clearing every skip time you marked.</comment>
+    <value>[Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Question that asks before clearing them.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>[Çļéàŕ šķîþ ţîɱéš~~~~~]</value>
+    <comment>Android's Settings: the title of that row, with the line below.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>[Ţĥé öñéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>[Šķîþ ƒîļļéŕ àüţöɱàţîçàļļý~~~~~~~~]</value>
@@ -6960,7 +7689,7 @@
     <comment>Row: spoiler protection.</comment>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>[Ɓļüŕš šţîļļš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~]</value>
+    <value>[Ĥîðéš šţîļļš àñð šýñöþšéš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
@@ -7156,7 +7885,7 @@
     <comment>Option: show everything.</comment>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>[Ɓļüŕš šţîļļš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~]</value>
+    <value>[Ĥîðéš šţîļļš àñð šýñöþšéš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~~~~~]</value>
     <comment>Line under spoiler protection.</comment>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
@@ -8754,6 +9483,891 @@
     <value>[Šĥàŕé…~~]</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>[Ýöüŕ ƀŕöŵšéŕ öþéñéð {service}’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {service} îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]</value>
+    <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>[çöɱþüţéŕ~~~]</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>[Éñţéŕ à çöðé~~~~]</value>
+    <comment>Button on the Devices page that opens the box for a code another device shows.</comment>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>[Šĥöŵ~~]</value>
+    <comment>Button on the Devices page that shows the recovery key behind the computer’s own lock.</comment>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ~~~]</value>
+    <comment>Button in the alert that turns sync off on this computer.</comment>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>[Åððŕéšš~~~]</value>
+    <comment>Label of the field for the other device’s address in the Enter a code dialog.</comment>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>[Þàîŕ ƀý àððŕéšš~~~~~]</value>
+    <comment>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</comment>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>[000 000~~~]</value>
+    <comment>Placeholder of the pairing code field.</comment>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>[Ŕéçöṽéŕý ķéý~~~~]</value>
+    <comment>Label of the field for a recovery key in the restore dialog.</comment>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>[Ûšéŕ ñàɱé~~~]</value>
+    <comment>Label of the user name field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>[Þàššŵöŕð~~~]</value>
+    <comment>Label of the password field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>[Šéŕṽéŕ àððŕéšš~~~~~]</value>
+    <comment>Label of the WebDAV server address field.</comment>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>[Þàîŕîñĝ~~~]</value>
+    <comment>Line under the pairing code while a device is being paired.</comment>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>[ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]</value>
+    <comment>Name for the device whose pairing code did not match, when no name is known yet.</comment>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has no Remote switch.</comment>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>[{line} · Ŕéɱöţé~~~~]</value>
+    <comment>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</comment>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>[Éðîţ~~]</value>
+    <comment>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</comment>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>[Ñàɱé~~]</value>
+    <comment>Label of the name field in the add and edit profile dialogs.</comment>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>[Ṁöŕé ƒöŕ {name}~~~~]</value>
+    <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ {store} öŕ {device}. Ţŕý àĝàîñ ŵĥéñ ƀöţĥ àŕé öñļîñé.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</comment>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>[{store} ðîðñ'ţ àççéþţ ţĥé îñṽîţé. Åšķ îţš öŵñéŕ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on a store row when the store turned the invite down, for example because it was cancelled or used up.</comment>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>[{device} çàñ'ţ îñṽîţé öţĥéŕ ðéṽîçéš ţö {store}. Åšķ ţĥé þļüĝîñ šţöŕé'š öŵñéŕ ƒöŕ àñ îñṽîţé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.</comment>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>[Ðéṽîçéš~~~]</value>
+    <comment>Settings row and page title, every platform.</comment>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>[Šýñç öƒƒ~~~]</value>
+    <comment>Devices row value while sync is off.</comment>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>[Šýñçéð {ago}~~~]</value>
+    <comment>Devices row value; “Synced 2 min ago”, “Synced just now”.</comment>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šýñç~~~~]</value>
+    <comment>Devices row value with the error glyph.</comment>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>[Ţĥîš ðéṽîçé~~~~]</value>
+    <comment>Group heading over the name.</comment>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>[Ñàɱé~~]</value>
+    <comment>Row for this device’s name.</comment>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>[Šýñç~~]</value>
+    <comment>Group heading while off.</comment>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>[Šýñç îš öƒƒ~~~~]</value>
+    <comment>Off state.</comment>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>[Ţüŕñ îţ öñ ţö ķééþ ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ţĥé šàɱé öñ ýöüŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Off state.</comment>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>[Ţüŕñ öñ šýñç~~~~]</value>
+    <comment>Button; the Mac adds an ellipsis.</comment>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>[Ĥöŵ šĥöüļð ýöüŕ ðéṽîçéš šĥàŕé?~~~~~~~~~]</value>
+    <comment>Road sheet title.</comment>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>[Ŵîţĥ à ðéṽîçé ñéàŕƀý~~~~~~]</value>
+    <comment>Road sheet row.</comment>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>[Þàîŕ ŵîţĥ àñöţĥéŕ ðéṽîçé öñ ţĥé šàɱé Ŵî-Ƒî. Ñöţĥîñĝ îš šţöŕéð àñýŵĥéŕé éļšé.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Road sheet row line.</comment>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>[Ţĥŕöüĝĥ à çļöüð ƒöļðéŕ~~~~~~~]</value>
+    <comment>Road sheet row.</comment>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>[Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Road sheet row line. Names no service, since a build may hide some (decision 14).</comment>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>[Ýöü çàñ àðð ţĥé öţĥéŕ ŵàý ļàţéŕ. Ṁöšţ þéöþļé üšé ƀöţĥ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Road sheet footer.</comment>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>[Ýöüŕ ðéṽîçéš~~~~]</value>
+    <comment>Group heading.</comment>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>[Öñļý ţĥîš ðéṽîçé~~~~~]</value>
+    <comment>Empty Your devices.</comment>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>[Þàîŕ àñöţĥéŕ ðéṽîçé ţö šĥàŕé ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Empty Your devices.</comment>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>[Åðð à ðéṽîçé~~~~]</value>
+    <comment>Row and sheet title.</comment>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>[Ñöţ šééñ ƒöŕ {days} ðàýš~~~~~~~]</value>
+    <comment>Device row line past 30 days.</comment>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>[Ŕéɱöţé öñļý~~~~]</value>
+    <comment>A device paired only for Play on TV.</comment>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>[Åļšö šýñç ŵîţĥ {device}~~~~~~]</value>
+    <comment>Button on a remote-only TV row.</comment>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>[Þàîŕéð ƒöŕ Þļàý öñ ŢṼ. Å ŢṼ þàîŕéð àš à ŕéɱöţé ñéṽéŕ ĝéţš ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footer while sync is off.</comment>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>[Šýñç~~]</value>
+    <comment>Switch on a device.</comment>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>[Ŕéɱöţé~~]</value>
+    <comment>Switch on a TV.</comment>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš {kind} ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</comment>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>[Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]</value>
+    <comment>Device page, destructive.</comment>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>[Ŕéɱöṽé {device}?~~~~]</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>[{device} ķééþš ŵĥàţ îţ ĥàš, ƀüţ ĝéţš ñöţĥîñĝ ñéŵ ƒŕöɱ ýöüŕ öţĥéŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ šýñç öñ ţĥîš {kind}~~~~~~~~]</value>
+    <comment>Last row; “this phone”, “this Mac”.</comment>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ šýñç öñ {device}?~~~~~~~]</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>[Ţĥîš {kind} šţöþš šĥàŕîñĝ ŵîţĥ ýöüŕ öţĥéŕ ðéṽîçéš. Éṽéŕýţĥîñĝ îţ ĥàš šţàýš ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>[Çļöüð ƒöļðéŕ~~~~]</value>
+    <comment>Group heading.</comment>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>[Ƒîļļš îñ ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Group footer.</comment>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>[Åðð à çļöüð ƒöļðéŕ~~~~~~]</value>
+    <comment>Row when only the nearby road is set.</comment>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>[Çĥööšé à çļöüð ƒöļðéŕ~~~~~~~]</value>
+    <comment>Picker title.</comment>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>[Å ĥîððéñ Ķàéŕî ƒöļðéŕ îñ ýöüŕ Ðŕîṽé~~~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>[Ýöüŕ öŵñ öŕ à ĥöšţéð Ñéẋţçļöüð šéŕṽéŕ~~~~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>[Å ƒöļðéŕ ýöü çĥööšé îñ îÇļöüð Ðŕîṽé~~~~~~~~~~~]</value>
+    <comment>Picker row line, Apple and Windows.</comment>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>[Öţĥéŕ~~]</value>
+    <comment>Picker group heading.</comment>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>[ŴéƀÐÅṼ šéŕṽéŕ~~~~]</value>
+    <comment>Picker row.</comment>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>[Åñý šéŕṽéŕ ţĥàţ šþéàķš ŴéƀÐÅṼ~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>[Ƒöŕ à ƒöļðéŕ àñöţĥéŕ àþþ ķééþš îñ šţéþ~~~~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>[Ýöüŕ ðéṽîçéš ķééþ à šéàļéð çöþý öƒ ţĥéîŕ çĥàñĝéš îñ ţĥîš ƒöļðéŕ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ, àñð Ķàéŕî ŕüñš ñö šéŕṽéŕ öƒ îţš öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Picker footer.</comment>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>[Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~]</value>
+    <comment>Row line while the first write runs.</comment>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>[Šéŕṽéŕ àððŕéšš~~~~~]</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>[Ţĥé àððŕéšš ýöü öþéñ Ñéẋţçļöüð àţ îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~]</value>
+    <comment>Field note.</comment>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>[Ƒîñîšĥ šîĝñîñĝ îñ öñ {host}~~~~~~~~]</value>
+    <comment>Login flow wait.</comment>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>[Ýöüŕ Ñéẋţçļöüð þàĝé îš öþéñ îñ ţĥé ƀŕöŵšéŕ. Åļļöŵ àççéšš ţĥéŕé, àñð ţĥîš šĥééţ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Login flow wait.</comment>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ {service}~~~~~]</value>
+    <comment>Wait row.</comment>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>[Öþéñ ţĥé þàĝé àĝàîñ~~~~~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>[Ûšé àñ àþþ þàššŵöŕð îñšţéàð~~~~~~~~~]</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>[Çöññéçţ~~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>[Çöüļðñ’ţ ŕéàçĥ {service}. Çĥéçķ ýöüŕ çöññéçţîöñ.~~~~~~~~~~~~~]</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>[Çöüļðñ’ţ ƒîñð à Ñéẋţçļöüð šéŕṽéŕ àţ {host}. Çĥéçķ ţĥé àððŕéšš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>[Ñéẋţçļöüð ðîðñ’ţ àççéþţ ţĥàţ àþþ þàššŵöŕð. Ṁàķé à ñéŵ öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>[Ţĥé šéŕṽéŕ ŕéƒüšéð ţĥàţ üšéŕ ñàɱé öŕ þàššŵöŕð.~~~~~~~~~~~~~~]</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>[Ţĥé šîĝñ-îñ þàĝé çļöšéð ƀéƒöŕé àççéšš ŵàš àļļöŵéð.~~~~~~~~~~~~~~~]</value>
+    <comment>Error, with Open the page again.</comment>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>[Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, öŕ çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>[{service} šîĝñéð Ķàéŕî öüţ. Ýöüŕ çĥàñĝéš ŵàîţ öñ ţĥîš {kind} üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status error, with Sign in again.</comment>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>[{service} îš ƒüļļ. Ƒŕéé šöɱé šþàçé ţĥéŕé, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Status error.</comment>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>[Ķàéŕî çàñ’ţ öþéñ ţĥé ƒöļðéŕ àñý ɱöŕé. Çĥööšé îţ àĝàîñ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status error, with Choose folder.</comment>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šýñç ŵîţĥ {service}~~~~~~~]</value>
+    <comment>Status error title.</comment>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>[Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ Ðŕöþƀöẋ, Åþþš/Ķàéŕî~~~~~~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>[Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ ÖñéÐŕîṽé, Åþþš/Ķàéŕî~~~~~~~~~~~~~~~]</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>[Šýñç ñöŵ~~~]</value>
+    <comment>Cloud group button.</comment>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>[Šîĝñ öüţ~~~]</value>
+    <comment>Cloud group button; at once, no question, except on the TV.</comment>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>[Šîĝñ îñ~~~]</value>
+    <comment>Cloud group button after signing out.</comment>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>[Šîĝñéð öüţ. Çĥàñĝéš ŵàîţ öñ ţĥîš {kind} üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Cloud row after Sign out; hollow haze dot.</comment>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš. Çĥööšé îţ àĝàîñ ţö ŕéţŕý.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Picker row line after `SignInDenied`.</comment>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>[Çĥööšé ţĥé öñé ýöüŕ öţĥéŕ ðéṽîçéš üšé. Å ñéŵ çļöüð ƒöļðéŕ îš àððéð öñ à þĥöñé öŕ çöɱþüţéŕ, ŵĥéŕé îţš ŕéçöṽéŕý ķéý çàñ ƀé šàṽéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV picker footer (decision 17).</comment>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>[Šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~]</value>
+    <comment>TV picker row line for Dropbox.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>[Ðŕöþƀöẋ šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~~~]</value>
+    <comment>TV, Dropbox.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>[{device} îš šîĝñéð îñ ţö Ðŕöþƀöẋ. Ţĥîš ŢṼ çàñ üšé ţĥàţ šîĝñ-îñ öṽéŕ ýöüŕ þàîŕéð ļîñķ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV, Dropbox, a paired phone has it.</comment>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>[Ûšé {device}’š šîĝñ-îñ~~~~~~]</value>
+    <comment>TV amber button; also for Nextcloud and WebDAV.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>[Ðŕöþƀöẋ ĥàš ñö šîĝñ-îñ à ŢṼ çàñ ðö. Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Çļöüð ƒöļðéŕ, àñð šîĝñ îñ ţö Ðŕöþƀöẋ ţĥéŕé. Ţĥéñ çĥööšé Ðŕöþƀöẋ ĥéŕé àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV, Dropbox, no phone has it.</comment>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>[Šîĝñéð îñ. Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~~~~]</value>
+    <comment>TV code screen after the poll succeeds.</comment>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>[{service} šîĝñéð Ķàéŕî öüţ. Šéļéçţ ţö šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~]</value>
+    <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>[Šîĝñéð öüţ. Šéļéçţ ţö šîĝñ îñ.~~~~~~~~~]</value>
+    <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>[Šîĝñ öüţ öƒ {service}?~~~~~]</value>
+    <comment>TV ConfirmDialog.</comment>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>[Ţĥîš ŢṼ šţöþš šýñçîñĝ ţĥŕöüĝĥ {service}. Çĥàñĝéš ŵàîţ ĥéŕé üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV ConfirmDialog, with Cancel focused and Sign out.</comment>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ. Çĥàñĝéš àŕé ķéþţ öñ ţĥîš {kind}.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line while offline.</comment>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö Ĝööĝļé Ðŕîṽé~~~~~~~]</value>
+    <comment>TV device flow.</comment>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>[Öŕ šçàñ ţö öþéñ ţĥé þàĝé~~~~~~~~]</value>
+    <comment>TV device flow.</comment>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>[Šçàñ ţĥîš ŵîţĥ ýöüŕ þĥöñé àñð àļļöŵ àççéšš öñ ýöüŕ Ñéẋţçļöüð þàĝé. Ţĥé ŢṼ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV Nextcloud.</comment>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>[Ýöüŕ ŕéçöṽéŕý ķéý~~~~~~]</value>
+    <comment>Sheet title.</comment>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>[Ķééþ ţĥîš šöɱéŵĥéŕé šàƒé. Îţ ŕéšţöŕéš ýöüŕ ĥîšţöŕý îƒ ýöü ļöšé éṽéŕý ðéṽîçé, àñð ļéţš à ñéŵ ðéṽîçé ĵöîñ ƒŕöɱ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sheet line.</comment>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>[Çöþý~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>[Šĥöŵ àš ǪŔ çöðé~~~~~]</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>[Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ üñļöçķîñĝ ţĥîš {kind}.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sheet footnote.</comment>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>[Ŕéçöṽéŕý ķéý~~~~]</value>
+    <comment>Devices row.</comment>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>[Ṁàðé {date}~~~]</value>
+    <comment>Devices row value.</comment>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>[Ṁàķé à ñéŵ ķéý~~~~~]</value>
+    <comment>Row.</comment>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>[Ţĥé öļð ķéý šţöþš ŵöŕķîñĝ, àñð ýöüŕ ðéṽîçéš šŵîţçĥ ţö ţĥé ñéŵ öñé ţĥé ñéẋţ ţîɱé ţĥéý šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>[Éñţéŕ ýöüŕ ŕéçöṽéŕý ķéý~~~~~~~]</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterLine_one" xml:space="preserve">
+    <value>[{service} ĥöļðš ĥîšţöŕý ƒŕöɱ {count} ðéṽîçé. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>[{service} ĥöļðš ĥîšţöŕý ƒŕöɱ {count} ðéṽîçéš. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>[24 ļéţţéŕš àñð ðîĝîţš, îñ ĝŕöüþš öƒ ƒöüŕ. Šþàçéš àñð çàšé ðöñ’ţ ɱàţţéŕ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Field note.</comment>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>[Ţĥàţ ķéý ðöéšñ’ţ öþéñ ţĥîš ƒöļðéŕ. Çĥéçķ éàçĥ ĝŕöüþ öƒ ƒöüŕ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>[Ŕéšţöŕé~~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>[Öñ ţĥé öţĥéŕ ðéṽîçé, öþéñ Ķàéŕî àñð çĥööšé Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé, öŕ Šéţţîñĝš, Ðéṽîçéš, Šĥöŵ à çöðé. Ţĥéñ éñţéŕ ţĥé çöðé ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Add a device.</comment>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>[Šçàñ ţĥé çöðé~~~~]</value>
+    <comment>Button, phones.</comment>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>[Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~]</value>
+    <comment>Note.</comment>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>[Þàîŕ~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>[Šĥöŵ à çöðé ĥéŕé îñšţéàð~~~~~~~~]</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>[Éñţéŕ ţĥîš çöðé öñ ýöüŕ öţĥéŕ ðéṽîçé~~~~~~~~~~~]</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>[Öŕ šçàñ îţ ƒŕöɱ Ķàéŕî öñ ýöüŕ þĥöñé.~~~~~~~~~~~]</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>[Ĝööð ƒöŕ 2 ɱîñüţéš · {left}~~~~~~~~]</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>[Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð šçàñ ţĥîš çöðé öŕ éñţéŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV code screen.</comment>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>[Þàîŕéð ŵîţĥ {device}~~~~~]</value>
+    <comment>Success.</comment>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>[Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý. Ýöü çàñ ķééþ üšîñĝ Ķàéŕî ɱéàñŵĥîļé.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Success.</comment>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>[Çöþý šîĝñ-îñš ƒŕöɱ {device}~~~~~~~]</value>
+    <comment>Success switch.</comment>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>[{trackers}. Éàçĥ ðéṽîçé ĝéţš îţš öŵñ çöþý öṽéŕ ţĥîš ļîñķ.~~~~~~~~~~~~~~~]</value>
+    <comment>Success switch line.</comment>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>[Ţĥàţ çöðé ðîðñ’ţ ɱàţçĥ. Çĥéçķ ţĥé çöðé öñ {device} àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>[Çöüļðñ’ţ ƒîñð ţĥé ðéṽîçé šĥöŵîñĝ ţĥîš çöðé. Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>[Ţĥîš çöðé ŕàñ öüţ. Šĥöŵ à ñéŵ öñé.~~~~~~~~~~~]</value>
+    <comment>Error on the showing side.</comment>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>[Ŵĥîçĥ þŕöƒîļé öñ {device} îš ýöüŕš?~~~~~~~~~]</value>
+    <comment>Profile question.</comment>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>[Ţĥîš {kind} šýñçš ŵîţĥ ţĥàţ þŕöƒîļé öñļý. Ţĥé öţĥéŕš šţàý öñ {device}.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Profile question.</comment>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>[{device} àļŕéàðý ķñöŵš ţĥîš þĥöñé ƒŕöɱ Þļàý öñ ŢṼ, šö šýñçîñĝ ŵîţĥ îţ ñééðš ñö ñéŵ çöðé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>[Éþîšöðé {n} · šţöþþéð àţ {time} öñ {device}~~~~~~~~~~~]</value>
+    <comment>Continue, for a day.</comment>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>[Ŕéšüɱéð àţ {time} ƒŕöɱ {device}~~~~~~~]</value>
+    <comment>Player, 6 s, with Start over.</comment>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>[Šýñçîñĝ~~~]</value>
+    <comment>Row line, Mac toolbar status.</comment>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>[Šýñçîñĝ ŵîţĥ {device}~~~~~]</value>
+    <comment>Mac jobs popover.</comment>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>[Šýñç ñöţéš~~~]</value>
+    <comment>Device page group.</comment>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>[Éþîšöðé {n} öƒ {title} šţàýš ŵàţçĥéð. {other} ɱàŕķéð îţ üñŵàţçĥéð ŵîţĥöüţ ķñöŵîñĝ {device} ĥàð ƒîñîšĥéð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sync note.</comment>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>[Ṁàŕķ üñŵàţçĥéð~~~~~]</value>
+    <comment>Sync note action.</comment>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>[Ñöţéš šţàý ƒöŕ 7 ðàýš.~~~~~~~]</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>[Þŕöƒîļéš~~~]</value>
+    <comment>Settings row and page.</comment>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>[Öñļý ýöü~~~]</value>
+    <comment>Profiles row value with one profile.</comment>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>[Þŕöƒîļéš ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš ƒöŕ þéöþļé ŵĥö šĥàŕé ţĥîš ðéṽîçé. Ŵîţĥ öñé þŕöƒîļé, Ķàéŕî ĥàš ñö þîçķéŕ àñð ñö ñàɱéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Profiles page with one.</comment>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>[Åðð à þŕöƒîļé~~~~]</value>
+    <comment>Row, sheet title, picker tile.</comment>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>[Éàçĥ þŕöƒîļé ķééþš îţš öŵñ ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš. Šöüŕçéš àñð ðöŵñļöàðš šţàý šĥàŕéð öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sheet line.</comment>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>[Ñéŵ þŕöƒîļé~~~~]</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>[Ýöüŕ þŕöƒîļé~~~~]</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>[Ƒîļļéð îñ ƒŕöɱ ÅñîĻîšţ. Ûñţîļ ñöŵ ţĥîš ðéṽîçé ĥàð öñé þŕöƒîļé ŵîţĥ ñö ñàɱé.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Field note when signed in.</comment>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>[Ķîðš þŕöƒîļé~~~~]</value>
+    <comment>Switch.</comment>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>[Åðüļţ ţîţļéš šţàý öƒƒ, àñð šöüŕçéš, ðéṽîçéš àñð ţöŕŕéñţ šéţţîñĝš àŕé ĥîððéñ îñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Switch footer.</comment>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>[Šöüŕçéš àñð Ðéṽîçéš àŕé ĥîððéñ îñ à ķîðš þŕöƒîļé, àñð àðüļţ ţîţļéš šţàý öƒƒ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Settings foot in a kids profile.</comment>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>[Ķîðš~~]</value>
+    <comment>Line under a kids profile.</comment>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>[Åðð þŕöƒîļé~~~~]</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>[Šöüŕçéš, ðöŵñļöàðš àñð ţĥîš ðéṽîçé’š šéţţîñĝš àŕé šĥàŕéð ƀý éṽéŕý þŕöƒîļé.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Profiles page footer.</comment>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>[Šýñçš ŵîţĥ~~~]</value>
+    <comment>Profile page row.</comment>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>[Ðéļéţé þŕöƒîļé~~~~~]</value>
+    <comment>Profile page, destructive.</comment>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>[Ðéļéţé {name}’š þŕöƒîļé?~~~~~~~]</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>[{name}’š ĥîšţöŕý àñð šîĝñ-îñš öñ ţĥîš ðéṽîçé àŕé ŕéɱöṽéð. Ðéṽîçéš ţĥàţ šýñç ŵîţĥ {name} ķééþ ţĥéîŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>[Ŵĥö’š ŵàţçĥîñĝ?~~~~~]</value>
+    <comment>TV, and iPad when asked.</comment>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>[Åšķ ŵĥö’š ŵàţçĥîñĝ àţ ļàüñçĥ~~~~~~~~~]</value>
+    <comment>iPad switch.</comment>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>[Öƒƒ ƀý ðéƒàüļţ. Ƒöŕ àñ îÞàð ţĥé ĥöüšéĥöļð šĥàŕéš. Ţĥé àççöüñţ ŕöŵ šŵîţçĥéš þŕöƒîļéš àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>iPad footer.</comment>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>[Šŵîţçĥ þŕöƒîļé~~~~~]</value>
+    <comment>TV Settings.</comment>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>[Ṁàñàĝé þŕöƒîļéš~~~~~]</value>
+    <comment>Account sheet and menus.</comment>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>[Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé~~~~~~~~]</value>
+    <comment>Welcome, text button; TV says “Set up from your phone”.</comment>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>[Öñ à ðéṽîçé ţĥàţ àļŕéàðý ĥàš Ķàéŕî, öþéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð éñţéŕ ţĥîš çöðé öŕ šçàñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Code screen from first launch.</comment>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>[Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ îñšţéàð~~~~~~~~~~~]</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>[Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý, šéţţîñĝš àñð þļüĝîñ šţöŕéš. Ýöü çàñ šţàŕţ üšîñĝ Ķàéŕî ñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Success from first launch.</comment>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>[Ĵöîñ ţĥé þļüĝîñ šţöŕé {store}~~~~~~~~]</value>
+    <comment>Success switch.</comment>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>[{device} ɱàķéš ţĥîš {kind} îţš öŵñ îñṽîţé~~~~~~~~~~]</value>
+    <comment>Success switch line.</comment>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>[Å ƒöļðéŕ öñ ţĥîš {kind}~~~~~~]</value>
+    <comment>Picker row on a phone or computer.</comment>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>[Ṁàķé öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý. Îţ îš ķéþţ öñ ţĥîš {kind}.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Field note under the app password, on Android.</comment>
+  </data>
+  <data name="DevicesTvsForPlay_one" xml:space="preserve">
+    <value>[Öñé ŢṼ ƒöŕ Þļàý öñ ŢṼ~~~~~~~]</value>
+    <comment>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</comment>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>[{count} ŢṼš ƒöŕ Þļàý öñ ŢṼ~~~~~~~]</value>
+    <comment>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</comment>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>[Þàîŕéð ţöðàý~~~~]</value>
+    <comment>Line under a TV paired for Play on TV today.</comment>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>[Šĥöŵš à çöðé ţö éñţéŕ öñ ýöüŕ þĥöñé~~~~~~~~~~~]</value>
+    <comment>Line under Add a device on the TV's Devices page.</comment>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>[Öñļý ýöü. Åðð à þŕöƒîļé ţö ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš öñ ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV Profiles page with one profile.</comment>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>[Öþéñš Ŵĥö’š ŵàţçĥîñĝ?~~~~~~~]</value>
+    <comment>TV Settings, Profiles: the row that opens the picker.</comment>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>[Þŕöƒîļéš öñ ţĥîš ŢṼ~~~~~~]</value>
+    <comment>TV Profiles page heading over the profiles.</comment>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>[Šàṽé àš à ƒîļé~~~~~]</value>
+    <comment>Android recovery key sheet, third button.</comment>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>[ǪŔ çöðé~~~]</value>
+    <comment>Android recovery key sheet, button that shows the key as a code.</comment>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>[Šĥöŵ à çöðé~~~~]</value>
+    <comment>Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.</comment>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>[Šîĝñ îñ àĝàîñ~~~~]</value>
+    <comment>Cloud row button when the service signed Kaeri out.</comment>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>[Çĥööšé ƒöļðéŕ~~~~]</value>
+    <comment>Cloud row button when the folder can't be opened.</comment>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>[{name}, šŵîţçĥ þŕöƒîļé~~~~~~]</value>
+    <comment>Spoken label of a profile's avatar on Home.</comment>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>[Þàîŕîñĝ çöðé~~~~]</value>
+    <comment>Heading over the pairing code the other device shows, over the field.</comment>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>[þĥöñé~~]</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>[ţàƀļéţ~~]</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>[ŢṼ~]</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>[Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]</value>
+    <comment>TV welcome, text button.</comment>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>[ţĥé öţĥéŕ ðéṽîçé~~~~~]</value>
+    <comment>Error naming a device that is not known by name.</comment>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>[{service}’š þàĝé îš öþéñ. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.</comment>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>[Çöññéçţîñĝ ţö {service}~~~~~~]</value>
+    <comment>Sheet or dialog title after the browser came back with access allowed.</comment>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>[Åççéšš àļļöŵéð. Ƒîñîšĥîñĝ ţĥé šîĝñ-îñ.~~~~~~~~~~~~]</value>
+    <comment>Status line beside the indicator while connecting.</comment>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>[Ṁàķîñĝ Ķàéŕî’š ƒöļðéŕ îñ {service} àñð šéàļîñĝ à ƒîŕšţ çöþý öƒ ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line under Setting up the folder, whose title is cloud-setting-up.</comment>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šîĝñ îñ ţö {service}~~~~~~~]</value>
+    <comment>Error title in the sign-in sheet or dialog.</comment>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šéţ üþ ţĥé ƒöļðéŕ~~~~~~~~]</value>
+    <comment>Error title when the sign-in worked and the folder could not be set up.</comment>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš.~~~~~~~~~]</value>
+    <comment>Error line beside Try again, after access was refused on the service's page.</comment>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Error line for any other failure during the sign-in; the details go to Messages.</comment>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ’ţ ɱàķé îţš ƒöļðéŕ îñ {service}. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error line for any other failure while making the folder after the sign-in; the details go to Messages.</comment>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>[Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]</value>
+    <comment>More menu item, and a row on phones; the Mac adds an ellipsis.</comment>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>[Ŕéɱöṽé çļöüð ƒöļðéŕ~~~~~~]</value>
+    <comment>More menu item in red, and a button in the TV's dialog.</comment>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>[Ŕéɱöṽé {service} ƒŕöɱ šýñç?~~~~~~~]</value>
+    <comment>Confirmation title before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>[Éṽéŕýţĥîñĝ öñ ţĥîš {kind} šţàýš ĥéŕé, àñð þàîŕéð ðéṽîçéš ñéàŕƀý ķééþ šýñçîñĝ. Ţĥé ƒöļðéŕ šţàýš îñ {service} ŵîţĥ îţš šéàļéð çöþý, àñð ýöüŕ öţĥéŕ ðéṽîçéš üšé îţ üñţîļ ýöü ŕéɱöṽé îţ öñ ţĥéɱ ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Confirmation line before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>[Ŕéɱöṽé~~]</value>
+    <comment>Destructive button in the remove confirmation.</comment>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>[Ṁöŕé ƒöŕ {service}~~~~]</value>
+    <comment>Accessibility label of the More button on the cloud folder row.</comment>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>[Îñ üšé~~]</value>
+    <comment>Picker row line for the service in use, under Use another service.</comment>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>[{service} šţàýš îñ üšé üñţîļ ţĥé ñéŵ ƒöļðéŕ îš ŕéàðý.~~~~~~~~~~~~~~~]</value>
+    <comment>Picker line under Use another service.</comment>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>[Éîţĥéŕ öñé ţüŕñš šýñç öñ, àñð ýöü çàñ üšé ƀöţĥ.~~~~~~~~~~~~~~~]</value>
+    <comment>Footer under the two ways in while sync is off.</comment>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>[Šýñç çàŕŕîéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ƀéţŵééñ ýöüŕ öŵñ ðéṽîçéš, ñéàŕƀý öŕ ţĥŕöüĝĥ à çļöüð ƒöļðéŕ ýöü çĥööšé. Îţ îš šéàļéð ƀéƒöŕé îţ ļéàṽéš ţĥîš {kind}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Aside on the Devices page on the Mac and iPad.</comment>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>[Þàîŕîñĝ ŵîţĥ ýöüŕ þĥöñé ţüŕñš šýñç öñ. Ţĥéñ ţĥîš ŢṼ çàñ ĵöîñ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV Devices footer while sync is off, after devices-sync-foot.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]</value>
     <comment>Title of the state when a title page could not load.</comment>
@@ -8901,6 +10515,90 @@
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>[Ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~]</value>
     <comment>Accessibility label of an episode's still while spoiler protection hides it.</comment>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>[Šýñöþšîš ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~~~~]</value>
+    <comment>Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.</comment>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>[Šĥöŵ šýñöþšîš~~~~]</value>
+    <comment>Menu item, button and screen reader action that reveals one protected episode's still and synopsis.</comment>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>[Šĥöŵš ţĥîš éþîšöðé'š šţîļļ àñð šýñöþšîš~~~~~~~~~~~~]</value>
+    <comment>Screen reader hint of that action.</comment>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>[{minutes} ɱîñ · Åîŕéð {date}~~~~~~]</value>
+    <comment>Facts line of an episode with a length and an air date. The date is already formatted.</comment>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>[{minutes} ɱîñ~~~]</value>
+    <comment>Facts line of an episode with a length only.</comment>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>[{minutes} ɱîñ ļéƒţ~~~~]</value>
+    <comment>Facts line of an episode that is part-watched.</comment>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>[Šþöîļéŕ þŕöţéçţîöñ ĥîðéš ŵĥàţ çöɱéš àƒţéŕ éþîšöðé {episode}.~~~~~~~~~~~~~~~~~]</value>
+    <comment>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</comment>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>[Ĥîððéñ àƒţéŕ éþîšöðé {episode}~~~~~~~~]</value>
+    <comment>The same line on phones.</comment>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>[Éþîšöðéš {from} ţö {to}~~~~~~]</value>
+    <comment>Label of an episode range of a long series, in the range menu.</comment>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>[Éþîšöðé ŕàñĝé~~~~]</value>
+    <comment>Label of the control that picks an episode range.</comment>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>[Öñé ŵàţçĥéð éþîšöðé~~~~~~]</value>
+    <comment>One line that stands for the watched episodes at the top of a range. Opening it shows them.</comment>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>[{count} ŵàţçĥéð éþîšöðéš~~~~~~]</value>
+    <comment>One line that stands for the watched episodes at the top of a range. Opening it shows them.</comment>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>[É{episode}~~]</value>
+    <comment>An episode's number in a facts line on phones and in narrow desktop windows.</comment>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>[Åîŕéð {date}~~~]</value>
+    <comment>Part of an episode's facts line: when it aired. The date is already formatted.</comment>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>[{first} · {second}~~~]</value>
+    <comment>Two parts of an episode's facts line, set one after the other.</comment>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>[Šĥöŵ~~]</value>
+    <comment>Button in the line where spoiler protection starts: shows what comes after.</comment>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>[Ĥîðé~~]</value>
+    <comment>Button in that line once the rows after it are shown: hides them again.</comment>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>[Šĥöŵîñĝ ŵĥàţ çöɱéš àƒţéŕ éþîšöðé {episode}.~~~~~~~~~~~~]</value>
+    <comment>The line where spoiler protection starts, once the rows after it are shown.</comment>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>[Šĥöŵîñĝ àƒţéŕ éþîšöðé {episode}~~~~~~~~]</value>
+    <comment>The same line on phones.</comment>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>[{from}–{to}~~~]</value>
+    <comment>An episode range in the range menu: the first and the last episode.</comment>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>[{range} · {state}~~~]</value>
+    <comment>An item of the range menu: the range, then Watched or Not out yet.</comment>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>[Éþîšöðé öþţîöñš~~~~~]</value>
@@ -9061,6 +10759,34 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>[{status} · {score}/10~~~~]</value>
     <comment>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</comment>
+  </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>[Ĝö ţö éþîšöðé…~~~~~]</value>
+    <comment>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</comment>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>[Ĝö ţö éþîšöðé~~~~]</value>
+    <comment>Title of the Go to episode field.</comment>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>[Ĝö~]</value>
+    <comment>Button of the Go to episode field that goes to the number typed.</comment>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>[{first} ţö {last}~~~]</value>
+    <comment>Placeholder of the Go to episode field: the first and last episode of the show.</comment>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>[Éþîšöðé, {first} ţö {last}~~~~~~]</value>
+    <comment>Accessibility label of the Go to episode field.</comment>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>[Ñö éþîšöðé {number}. Ţĥîš šĥöŵ ĥàš {last}.~~~~~~~~~~~]</value>
+    <comment>Shown when the number typed is not an episode of the show.</comment>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>[Éþîšöðé {number} îšñ'ţ öüţ ýéţ. Ţĥé ļàţéšţ îš {latest}.~~~~~~~~~~~~~~]</value>
+    <comment>Shown when the number typed is an episode with no date that has not come out.</comment>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>[Ţöŕŕéñţš~~~]</value>
@@ -9861,6 +11587,10 @@
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>[Ûþ ñéẋţ · þļàýš îñ {seconds} š~~~~~~~~]</value>
     <comment>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</comment>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>[Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the paired TVs.</comment>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>[Ûþðàţéš~~~]</value>

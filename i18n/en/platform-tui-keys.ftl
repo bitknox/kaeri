@@ -189,6 +189,9 @@ keys-action-filter = Filter
 keys-action-filter-search = Search filters
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Surprise me
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Play or pause
 
 # Action label in the help overlay and the command palette.
@@ -268,6 +271,22 @@ keys-hint-mark-previous = Mark previous
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 # @max 20
 keys-hint-filters = Filters
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+# @max 20
+keys-hint-surprise = Surprise me
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+# @max 20
+keys-hint-go-to-episode = Go to
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+# @max 20
+keys-hint-clear = Clear
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+# @max 20
+keys-hint-another = Another
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 # @max 20
@@ -490,6 +509,9 @@ keys-where-episodes = in the episode table
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = on another screen
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = on Search's browse and on Planning
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 # @arg action: text
 keys-unbound = “{ $action }” in the palette
@@ -666,3 +688,26 @@ keys-hint-copy-link = Copy link
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
 keys-hint-leave-party = Leave
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+# @max 20
+keys-hint-say = Say
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions
+# for the party. Keep it to a word or two.
+# @max 20
+keys-hint-mute = Mute
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again.
+# Keep it to a word or two.
+# @max 20
+keys-hint-unmute = Unmute
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off
+# the screen in every watch party. Keep it to a word or two.
+# @max 20
+keys-hint-hide-chat = Hide chat
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+# @max 20
+keys-hint-show-chat = Show chat

@@ -19,6 +19,7 @@ public static class Searches
     public static SearchQuery With(string text, SearchFilters filters) =>
         Of(text, filters.Sort, filters.Season, filters.Year is { } y ? new Bounds(Min: y, Max: y) : null) with
         {
+            Period = filters.Sort == SearchSort.Trending && filters.Period is TrendPeriod.Week or TrendPeriod.Month ? filters.Period : null,
             Genres = filters.Genres.Length == 0 ? [] : [.. filters.Genres],
             Formats = filters.Formats.Length == 0 ? [] : [.. filters.Formats],
             Available = filters.Available,
@@ -29,7 +30,7 @@ public static class Searches
     /// arrays, which a record's own equality compares by reference.
     /// </summary>
     public static bool Same(SearchQuery a, SearchQuery b) =>
-        a.Text == b.Text && a.Sort == b.Sort && a.Season == b.Season && a.MinTagRank == b.MinTagRank
+        a.Text == b.Text && a.Sort == b.Sort && a.Period == b.Period && a.Season == b.Season && a.MinTagRank == b.MinTagRank
         && a.MinScore == b.MinScore && a.MinPopularity == b.MinPopularity && a.LicensedOnly == b.LicensedOnly && a.Available == b.Available
         && a.OnList == b.OnList
         && Same(a.Years, b.Years) && Same(a.Episodes, b.Episodes) && Same(a.Minutes, b.Minutes)
@@ -102,6 +103,10 @@ public static class Searches
         _ => T.SearchSortFavourites,
     };
 
+    /// <summary>A sort as the Sort button says it: Trending with its period ("Trending this week").</summary>
+    public static string SortName(SearchSort sort, TrendPeriod? period) =>
+        sort == SearchSort.Trending ? Browsing.Heading(period ?? TrendPeriod.Today) : SortName(sort);
+
     /// <summary>The formats the Format filter offers, by the engine's names for them.</summary>
     public static readonly MediaFormat[] Formats =
         [MediaFormat.Tv, MediaFormat.Movie, MediaFormat.Ona, MediaFormat.Ova, MediaFormat.Special, MediaFormat.TvShort];
@@ -139,7 +144,7 @@ public static class Searches
 }
 
 /// <summary>The Search page's filter row: what each drop-down has set.</summary>
-public sealed record SearchFilters(string[] Genres, MediaFormat[] Formats, Season? Season, uint? Year, SearchSort? Sort, Available? Available = null)
+public sealed record SearchFilters(string[] Genres, MediaFormat[] Formats, Season? Season, uint? Year, SearchSort? Sort, Available? Available = null, TrendPeriod? Period = null)
 {
     public static readonly SearchFilters None = new([], [], null, null, null);
 

@@ -100,11 +100,13 @@ public final class TitleCache {
     ) {
         entries[id]?.progress = progress
         entries[id]?.resume = resume
+        recount(id)
         guard !rows.isEmpty, var table = episodes[id] else { return }
         for row in rows {
             guard let index = table.firstIndex(where: { $0.number == row.number }) else { continue }
             table[index].watched = row.watched
             table[index].completed = row.completed
+            table[index].spoilerAhead = row.spoilerAhead
         }
         episodes[id] = table
     }
@@ -127,6 +129,15 @@ public final class TitleCache {
             return
         }
         dubLines[id] = extent.complete ? L.audioDubbed : L.titleDubbedTo(episode: Int(extent.through))
+    }
+
+    /// A title's count line, said again by the engine after the dub it learned or the progress
+    /// that moved, so every cell showing it changes together: the dub part fades in at its end.
+    func recount(_ id: AnilistId, dub extent: DubExtent? = nil, dubChanged: Bool = false) {
+        guard var entry = entries[id] else { return }
+        if dubChanged { entry.dub = extent.map { DubKnown(through: $0.through, complete: $0.complete) } }
+        entry.countLine = entryCountLine(entry: entry, dub: entry.dub)
+        entries[id] = entry
     }
 
     /// Whether title `id`'s episodes, as last loaded, are AniList's alone: no source set up has

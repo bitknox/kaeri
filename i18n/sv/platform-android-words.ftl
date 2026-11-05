@@ -191,7 +191,6 @@ tv-sheet-position = Position på TV:n
 tv-sheet-position-state = { $at } av { $total }
 tv-sheet-request-titled = { $title }, avsnitt { $episode }
 tv-sheet-request-plain = Avsnitt { $episode }
-tv-sheet-footer = En TV listar den här { -device }en med koden { $code }. Tar du bort en TV här glömmer den också den här { -device }en.
 tv-sheet-title-fallback = TV
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

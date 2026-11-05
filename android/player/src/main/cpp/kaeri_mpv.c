@@ -552,6 +552,15 @@ static jlong n_create(JNIEnv *env, jclass cls, jobject listener) {
     return (jlong)(intptr_t)c;
 }
 
+// The engine's audio tap (kaeri_audio_tap in libkaeri_ffi): its address is the engine's to give.
+// One per mpv core, set before mpv_initialize; the patched libmpv takes it, as mpv.sh builds it.
+static jint n_set_audio_tap(JNIEnv *env, jclass cls, jlong handle, jlong callback) {
+    struct client *c = client_of(handle);
+    if (!c)
+        return MPV_ERROR_UNINITIALIZED;
+    return mpv_set_audio_tap(c->mpv, (mpv_audio_tap_fn)(intptr_t)callback, NULL);
+}
+
 static jint n_set_option(JNIEnv *env, jclass cls, jlong handle, jstring jname, jstring jvalue) {
     struct client *c = client_of(handle);
     const char *name = (*env)->GetStringUTFChars(env, jname, NULL);
@@ -792,6 +801,7 @@ static void n_destroy(JNIEnv *env, jclass cls, jlong handle) {
 static const JNINativeMethod methods[] = {
     {"setAppContext", "(Landroid/content/Context;)V", n_set_app_context},
     {"create", "(Lapp/kaeri/player/MpvNative$Listener;)J", n_create},
+    {"setAudioTap", "(JJ)I", n_set_audio_tap},
     {"setOption", "(JLjava/lang/String;Ljava/lang/String;)I", n_set_option},
     {"initialize", "(JLjava/lang/String;)I", n_initialize},
     {"command", "(J[Ljava/lang/String;)I", n_command},

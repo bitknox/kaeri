@@ -306,6 +306,7 @@ fn settings() -> PlaySettings {
         auto_skip: false,
         auto_skip_recap: false,
         ask_was_opening: false,
+        find_skip_times: false,
         share_skip_times: Some(false),
         mark_chapters: true,
         skip_button: true,
@@ -326,6 +327,8 @@ fn settings() -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 
@@ -539,6 +542,8 @@ async fn the_viewers_controls_tell_the_player_what_the_golden_says() {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
             })
             .collect();
         for command in [

@@ -239,6 +239,20 @@ pub(crate) fn status_hints_paged(
         }
         // Enter plays in the table; that is the table's whole point. A row from AniList alone
         // has nothing to play it from, and Enter there goes to add a source.
+        V::Episodes(_) if !app.go_count.is_empty() || app.go_error.is_some() => {
+            // A number is being typed: the key that takes it, drawn beside what it will take,
+            // and Esc to let go of it. After one went nowhere, only Esc: the line says why.
+            let mut hints = Vec::new();
+            if app.go_error.is_none() {
+                let go = key(Action::Bottom).unwrap_or_default();
+                hints.push((
+                    format!("{} {go}", app.go_count),
+                    said(t::keys_hint_go_to_episode()),
+                ));
+            }
+            hints.push((ESC.to_string(), said(t::keys_hint_clear())));
+            return hints;
+        }
         V::Episodes(_) => vec![
             (
                 Action::Open,
@@ -249,8 +263,12 @@ pub(crate) fn status_hints_paged(
         ],
         // Enter on a title page goes one deeper, into its episodes. Space is play next only
         // while nothing plays; then it pauses the player, as on every other screen.
-        V::Title(id) => vec![
-            if app.playing.is_some() {
+        V::Title(id) => [
+            // Another, on the page Surprise me opened, while its pool has one to pick.
+            app.surprised_here()
+                .filter(|picked| picked.more)
+                .map(|_| (Action::Surprise, said(t::keys_hint_another()))),
+            Some(if app.playing.is_some() {
                 (Action::PlayPause, Action::PlayPause.hint())
             } else if app.unlisted(*id) {
                 (Action::PlayNext, hint_add_source())
@@ -258,10 +276,13 @@ pub(crate) fn status_hints_paged(
                 (Action::PlayNext, said(t::title_button_watch_again()))
             } else {
                 (Action::PlayNext, Action::PlayNext.hint())
-            },
-            (Action::Open, Action::ShowEpisodes.hint()),
-            (Action::Back, Action::Back.hint()),
-        ],
+            }),
+            Some((Action::Open, Action::ShowEpisodes.hint())),
+            Some((Action::Back, Action::Back.hint())),
+        ]
+        .into_iter()
+        .flatten()
+        .collect(),
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
         }
@@ -293,6 +314,10 @@ pub(crate) fn status_hints_paged(
             let mut hints: Vec<(String, &'static str)> = Vec::new();
             hints.extend(sideways().map(|keys| (keys, hint_list())));
             if !app.content.is_empty() {
+                // Planning has Surprise me: a title picked from the list.
+                if app.library_segment == kaeri_model::catalog::LibrarySegment::Planning {
+                    hints.extend(key(Action::Surprise).map(|k| (k, Action::Surprise.hint())));
+                }
                 hints.extend(key(Action::Open).map(|k| (k, hint_open())));
                 hints.extend(
                     key(Action::ShowEpisodes).map(|k| (k, Action::ShowEpisodes.hint())),
@@ -352,18 +377,35 @@ pub(crate) fn status_hints_paged(
             hints.extend(key(Action::Open).map(|k| (k, hint_stores())));
             return with_help(keymap, hints);
         }
-        // Together: Enter joins the highlighted room or asks for a link; the party's own keys are
-        // named only while there is a party to use them on.
+        // Together: Enter joins the highlighted room or asks for a link, and on a member's row
+        // `M` mutes them instead. The party's own keys are named only while there is a party
+        // to use them on. A narrow line drops from the front, so Hide chat goes first and the
+        // row's own key and Say last.
         V::Section(Section::Together) => {
-            let mut hints = vec![(Action::Open, hint_open())];
+            let mut hints = Vec::new();
             if let Some(party) = &app.party {
+                hints.push(if app.chat_hidden() {
+                    (Action::ToggleSynopsis, said(t::keys_hint_show_chat()))
+                } else {
+                    (Action::ToggleSynopsis, said(t::keys_hint_hide_chat()))
+                });
                 hints.push((Action::Refresh, hint_ready()));
                 hints.push((Action::ClearCompleted, hint_copy_link()));
                 if party.can_start_anyway {
                     hints.push((Action::ShowSources, hint_start_now()));
                 }
                 hints.push((Action::HideFromContinue, hint_leave_party()));
+                if !app.chat_hidden() {
+                    hints.push((Action::FixMapping, said(t::keys_hint_say())));
+                }
             }
+            hints.push(match app.selected_member() {
+                Some(member) if app.is_muted(&member.name) => {
+                    (Action::MarkAllPrevious, said(t::keys_hint_unmute()))
+                }
+                Some(_) => (Action::MarkAllPrevious, said(t::keys_hint_mute())),
+                None => (Action::Open, hint_open()),
+            });
             hints
         }
         // Enter signs the highlighted tracker in or out, so it is named for which.
@@ -376,13 +418,40 @@ pub(crate) fn status_hints_paged(
         },
         // Settings has nothing to open and no episodes, so offering those keys would be a lie.
         // Left and Right are what actually do something here.
+        // `d` leads to Devices, first so a narrow line drops it before the arrows.
         V::Section(Section::Settings) => {
-            let hints: Vec<_> =
-                sideways().map(|keys| (keys, hint_change())).into_iter().collect();
+            let mut hints: Vec<_> = key(Action::Download)
+                .map(|k| (k, said(t::devices_title())))
+                .into_iter()
+                .collect();
+            hints.extend(sideways().map(|keys| (keys, hint_change())));
             return with_help(keymap, hints);
+        }
+        // Enter is named for what it does on the row under the cursor.
+        V::Devices => {
+            use crate::app::{DeviceLine as L, FolderState};
+            let enter = match app.device_line() {
+                Some(L::Device(_)) => said(t::sync_tui_hint_remove()),
+                Some(L::RecoveryKey) => said(t::sync_tui_hint_show()),
+                Some(L::TurnOff) => said(t::sync_tui_hint_turn_off()),
+                Some(L::SignOut) => hint_sign_out(),
+                Some(L::Folder) if app.folder_state() == FolderState::SignedOut => {
+                    hint_sign_in()
+                }
+                Some(L::Folder) => said(t::cloud_sync_now()),
+                Some(L::Profile(_)) => hint_use(),
+                _ => hint_open(),
+            };
+            vec![(Action::Open, enter), (Action::Back, Action::Back.hint())]
         }
         // An empty or failed list has no row to open.
         V::Section(_) if app.content.is_empty() => Vec::new(),
+        // Search's browse picks at random from its filters, where a search with words opens a
+        // row's episodes.
+        V::Section(Section::Search) if app.searched_query.is_browse() => vec![
+            (Action::Open, Action::Open.hint()),
+            (Action::Surprise, Action::Surprise.hint()),
+        ],
         V::Section(_) => vec![
             (Action::Open, Action::Open.hint()),
             (Action::ShowEpisodes, Action::ShowEpisodes.hint()),
@@ -439,6 +508,27 @@ fn overlay_hints(
         O::CommandPalette => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_run()), hint(ESC, hint_close())]
         }
+        O::SyncDevice => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_change()), hint(ESC, hint_close())]
+        }
+        O::SyncWait => vec![hint("↵", hint_open()), hint(ESC, hint_cancel())],
+        O::SyncRecoveryKey => vec![
+            hint("c", said(t::sync_tui_hint_copy())),
+            hint("v", said(t::rkey_qr_short())),
+            hint("↵", hint_close()),
+        ],
+        O::SyncPairShow if app.pair_code_expired() => {
+            vec![hint("↵", said(t::pair_show_code())), hint(ESC, hint_close())]
+        }
+        O::SyncPairShow => vec![hint(ESC, hint_close())],
+        O::SyncConfirm => {
+            let verb = match &app.devices.confirm {
+                Some(crate::app::DeviceConfirm::Remove { .. }) => t::sync_tui_hint_remove(),
+                Some(crate::app::DeviceConfirm::NewKey) => t::rkey_new(),
+                _ => t::sync_tui_hint_turn_off(),
+            };
+            vec![hint("↵", said(verb)), hint(ESC, hint_cancel())]
+        }
         other => {
             let verb = match other {
                 O::ListStatus => hint_set(),
@@ -460,10 +550,21 @@ fn overlay_hints(
                 O::KitsuPassword => hint_sign_in(),
                 O::JoinStore => hint_check(),
                 O::JoinParty => hint_open(),
+                O::Say => said(t::party_chat_send()),
                 O::InviteName => hint_make_link(),
+                O::SyncAddress
+                    if app.devices.kind != Some(kaeri_model::group::SyncFolderKind::WebDav) =>
+                {
+                    said(t::cloud_connect())
+                }
+                O::SyncAddress | O::SyncUser | O::SyncPairCode | O::ProfileName => hint_next(),
+                O::SyncPassword => hint_sign_in(),
+                O::SyncRestore => said(t::rkey_restore()),
+                O::SyncPairAddress => said(t::pair_button()),
                 _ => hint_choose(),
             };
-            vec![hint("↵", verb), hint(ESC, hint_cancel())]
+            let leave = if matches!(other, O::Say) { hint_close() } else { hint_cancel() };
+            vec![hint("↵", verb), hint(ESC, leave)]
         }
     }
 }

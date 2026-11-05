@@ -106,6 +106,12 @@ public sealed partial class PlayerView : UserControl
             accelerator.Invoked += (_, e) => Key(e, () => SpeedStep(step));
             KeyboardAccelerators.Add(accelerator);
         }
+        // The window closing takes the starting screen's clock and its looping line down first.
+        Unloaded += (_, _) =>
+        {
+            startTick?.Stop();
+            EndStart();
+        };
         tick = DispatcherQueue.GetForCurrentThread().CreateTimer();
         tick.Interval = TimeSpan.FromMilliseconds(250);
         tick.Tick += (_, _) => Tick();
@@ -165,6 +171,7 @@ public sealed partial class PlayerView : UserControl
         LiftSubtitles(animated: false);
         tick.Start();
         ShowStats();
+        ChatReflect();
         // Just made visible, the view has no layout yet and WinUI refuses it the focus, which
         // then stays on what opened it under the player: the player's keys would go there (Space
         // pressing a Home card again). Asked again once it is laid out.
@@ -208,12 +215,15 @@ public sealed partial class PlayerView : UserControl
         still.Reset();
         click.Stop();
         Visibility = Visibility.Collapsed;
-        foreach (var layer in new UIElement[] { StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, Flash, StatsLayer })
+        foreach (var layer in new UIElement[] { StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, Flash, StatsLayer, ChatFieldSlot, TickLabel })
             Motion.Set(layer, false);
+        ChatClear();
         // Kept up for the next playback, which waits for its own figures.
         stats.Restart();
         statsUp = false;
         startingShown = skipShown = stallShown = upNextShown = false;
+        EndStart();
+        start = null;
         cornerCard = null;
         undo = null;
         upNext = null;
@@ -257,22 +267,33 @@ public sealed partial class PlayerView : UserControl
                     Heard(ui.Ui);
                     break;
                 case Event.PlaybackStaged s when !Showing:
+                    HeardStart(e);
                     Staged(s);
                     break;
-                case Event.PlaybackEnded when staged is not null:
-                    // Over before the player opened: no stream was found, or none would start.
-                    // The engine's notice says why; the starting screen goes.
-                    staged = null;
+                case Event.PlaybackEnded { Failure: null } when findingFor is not null:
+                    // Over before the player opened, with no failure for the starting screen to
+                    // show: the engine's notice says why, and the screen goes.
+                    findingFor = null;
                     Hide();
+                    break;
+                case Event.PlaybackStaged or Event.StartingStep or Event.PlaybackEnded:
+                    HeardStart(e);
                     break;
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
                     break;
                 case Event.PartyJoined or Event.PartyLeft:
                     ShowPartyButton();
+                    ChatHeard(e);
+                    break;
+                case Event.PartyChat or Event.PartyChatState or Event.PartyReaction or Event.PartyChatRefused:
+                    ChatHeard(e);
                     break;
                 case Event.TitleDub td when td.Id == playingId:
                     BuildTracks();
+                    break;
+                case Event.ShowSettings st when st.V1.Id == playingId:
+                    ownSpoilers = st.V1.Rows.FirstOrDefault(r => r.Key == ShowSettingKey.SpoilerProtection) is { } own ? own.Value == "on" : null;
                     break;
                 case Event.Settings:
                     stylePanel?.Heard(batch);
@@ -310,10 +331,10 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>The title staged and waiting on a source, before the player itself has said anything.</summary>
-    uint? staged;
+    uint? findingFor;
 
     /// <summary>
-    /// Play was pressed: the starting screen at once, the show's banner behind the ring, while the
+    /// Play was pressed: the starting screen at once, the show's banner behind it, while the
     /// engine finds a source, which can take seconds (native-ux: from PlaybackStaged to the first
     /// frame). The player's own Starting carries on from it.
     /// </summary>
@@ -321,18 +342,14 @@ public sealed partial class PlayerView : UserControl
     {
         closedWhileFinding = false;
         Open();
-        staged = s.Id;
+        findingFor = s.Id;
         pictureSeen = false;
         playingId = s.Id;
         ShowTitle.Text = s.Title;
         EpisodeTitle.Text = Lines.EpisodeNamed(s.Episode, s.EpisodeTitle);
-        StartingShow.Text = s.Title;
-        startingEpisode = playingEpisode = s.Episode;
-        startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
-        StartingArt.Source = null;
-        if (ctx?.Known.Entry(s.Id) is { } entry)
-            ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, image => StartingArt.Source = image);
-        ShowStarting();
+        playingEpisode = s.Episode;
+        var entry = ctx?.Known.Entry(s.Id);
+        BeginStart(new PlayerUi.Starting(s.Id, s.Title, s.Episode, s.EpisodeTitle, entry?.CoverUrl, entry?.BannerUrl));
     }
 
     void Heard(PlayerUi ui)
@@ -347,9 +364,8 @@ public sealed partial class PlayerView : UserControl
                     break;
                 }
                 // Up since Play was pressed (Staged): the same screen goes on, its clock too.
-                var fromStaged = staged == s.Id;
-                var since = startingFrom;
-                staged = null;
+                var fromStaged = findingFor == s.Id;
+                findingFor = null;
                 Open();
                 still.Started();
                 pictureSeen = false;
@@ -359,24 +375,38 @@ public sealed partial class PlayerView : UserControl
                 // Whether the show has a dub decides whether Tracks offers Sub and Dub; asked once
                 // a session for a show whose page has not already asked.
                 playingId = s.Id;
+                ownSpoilers = null;
                 if (ctx is { } c && !c.Known.Dubbed.ContainsKey(s.Id))
                     c.Send(new Command.LoadDub(s.Id));
+                // The table's synopses and the show's own protection, for the Episodes panel.
+                if (ctx is { } asking && s.Id != 0)
+                {
+                    asking.Send(new Command.LoadEpisodes(s.Id));
+                    asking.Send(new Command.LoadShowSettings(s.Id));
+                }
                 ShowTitle.Text = s.Title;
                 EpisodeTitle.Text = Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle);
-                StartingShow.Text = s.Title;
-                startingEpisode = playingEpisode = s.EpisodeValue;
-                startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
-                if (ctx is not null)
-                    ctx.Known.DemoPlay = false;
+                playingEpisode = s.EpisodeValue;
                 ShowTvButton();
-                if (!fromStaged || StartingArt.Source is null)
+                if (fromStaged && start is { } open && open.Id == s.Id && open.Episode == s.EpisodeValue)
                 {
-                    StartingArt.Source = null;
-                    ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                    // Up since Play was pressed: the same start goes on, its steps and clock too,
+                    // given the art now if the title's entry had none.
+                    if (StartingArt.Source is null && (s.BannerUrl ?? s.CoverUrl) is { Length: > 0 } art)
+                    {
+                        ctx?.Art.Bind(art, image =>
+                        {
+                            StartingArt.Source = image;
+                            startArtLoaded = true;
+                            RevealStartArt();
+                        });
+                        ctx?.Art.Bytes(art, bytes => _ = MeasureGround(bytes));
+                    }
                 }
-                ShowStarting();
-                if (fromStaged)
-                    startingFrom = since;
+                else
+                {
+                    BeginStart(s);
+                }
                 undo = null;
                 UpdateCorner();
                 break;
@@ -432,7 +462,9 @@ public sealed partial class PlayerView : UserControl
                 UpdateCorner();
                 break;
             case PlayerUi.Alert alert:
-                Alert(alert.Text);
+                // A chat line has its own place on the video, in the column.
+                if (!ChatEcho(alert.Text))
+                    Alert(alert.Text);
                 break;
             case PlayerUi.Thumbnails thumb:
                 if (thumb.Url != thumbnails)
@@ -452,14 +484,23 @@ public sealed partial class PlayerView : UserControl
     /// <summary>A line for the viewer over the video, where the window's toasts can't be seen.</summary>
     internal void Say(string text) => Alert(text);
 
+    /// <summary>Whether the alert is up: it counts as one of the chat column's three lines.</summary>
+    bool alertUp;
+
     async void Alert(string text)
     {
         AlertText.Text = text;
         Motion.Show(AlertCard);
+        alertUp = true;
+        MakeChatRoom();
         Announce(AlertText);
         await Task.Delay(TimeSpan.FromSeconds(4 * NoticeTime.Scale(DeviceWatch.ScreenReaderRunning())));
         if (AlertText.Text == text)
+        {
             Motion.Hide(AlertCard);
+            alertUp = false;
+            DrainChat();
+        }
     }
 
     /// <summary>
@@ -501,77 +542,7 @@ public sealed partial class PlayerView : UserControl
         flash.Start();
     }
 
-    // The starting screen: the episode, then after 3 s the wait, and after 20 s a way out.
-
-    bool startingDemo;
-
-    void ShowStarting()
-    {
-        startingShown = true;
-        startingFrom = Stopwatch.GetTimestamp();
-        StartingLine.Text = startingDemo ? Lines.StartingPart(startingEpisode) : Lines.Starting(startingEpisode);
-        StartingCredit.Visibility = startingDemo ? Visibility.Visible : Visibility.Collapsed;
-        StartingRing.Visibility = Visibility.Visible;
-        StartingChoices.Visibility = Visibility.Collapsed;
-        if (movingOn)
-        {
-            // Moving on to the next episode: the last frame fades to the ground over 0.25 s (T5).
-            movingOn = false;
-            Starting.Opacity = 0;
-            Motion.FadeIn(Starting, TimeSpan.FromMilliseconds(250));
-        }
-        else
-            Motion.Set(Starting, true);
-    }
-
-    bool movingOn;
-
-    void StartingClock()
-    {
-        if (!startingShown || StartingChoices.Visibility == Visibility.Visible)
-            return;
-        var waited = Stopwatch.GetElapsedTime(startingFrom).TotalSeconds;
-        if (waited >= 20)
-        {
-            StartingLine.Text = Lines.StartFailed(startingEpisode);
-            StartingRing.Visibility = Visibility.Collapsed;
-            // The source menu, once the player has one; before that, the next stream, as the stall card does.
-            var listed = menus is { Sources.Length: > 0 };
-            StartingChoose.Content = listed ? T.PlayerChooseSource : T.PlayerSwitchSource;
-            StartingChoose.Flyout = listed ? StartingSources : null;
-            StartingChoices.Visibility = Visibility.Visible;
-            Announce(StartingLine);
-            ShowPointer();
-        }
-        else if (waited >= 3)
-            StartingLine.Text = T.PlayerFindingSource((long)waited);
-    }
-
-    void OnStartingStop(object sender, RoutedEventArgs e) => Close();
-
-    void OnStartingChoose(object sender, RoutedEventArgs e)
-    {
-        if (StartingChoose.Flyout is not null)
-            return;
-        Send(new PlayerCommand.StallSwitch());
-        ShowStarting();
-    }
-
-    void OnStartingSourcesOpening(object? sender, object e)
-    {
-        StartingSources.Items.Clear();
-        foreach (var source in menus?.Sources ?? [])
-        {
-            var item = new MenuFlyoutItem { Text = source.Detail is { Length: > 0 } d ? $"{source.Label} · {d}" : source.Label };
-            var id = source.Id;
-            item.Click += (_, _) =>
-            {
-                Send(new PlayerCommand.Choose(new PlayerChoice.Source(id)));
-                ShowStarting();
-            };
-            StartingSources.Items.Add(item);
-        }
-    }
+    // The starting screen is in PlayerView.Starting.cs.
 
     /// <summary>The corner's clocks, four times a second: the stall count, the Undo window, Skip's dim.</summary>
     void CornerClock()
@@ -627,6 +598,7 @@ public sealed partial class PlayerView : UserControl
     void DrawTimeline()
     {
         TimelineUnder.Children.Clear();
+        tickPlaces.Clear();
         if (Find(Timeline, "HorizontalTrackRect") is not FrameworkElement track || track.ActualWidth <= 0)
             return;
         var thumb = Find(Timeline, "HorizontalThumb") as FrameworkElement;
@@ -676,6 +648,8 @@ public sealed partial class PlayerView : UserControl
         // The stretch being marked grows at half water until it is saved.
         if (ProvisionalMark() is { } mine)
             Bar(X(mine.From), X(mine.To), water, 0.5);
+        // The party's reactions, as ticks above the line.
+        DrawTicks(X, at.Y, usable);
     }
 
     Microsoft.UI.Xaml.Shapes.Rectangle? playedBar;
@@ -707,6 +681,7 @@ public sealed partial class PlayerView : UserControl
         {
             // The first frame fades in over the starting screen.
             startingShown = false;
+            EndStart();
             Motion.Hide(Starting);
         }
         if (state.HasPicture && !pictureSeen)
@@ -753,7 +728,6 @@ public sealed partial class PlayerView : UserControl
 
     void Tick()
     {
-        StartingClock();
         CornerClock();
         if (marking is { Step: SkipMarkStep.End })
             DrawTimeline();
@@ -848,6 +822,10 @@ public sealed partial class PlayerView : UserControl
             return;
         chromeShown = false;
         Motion.Hide(Chrome);
+        // An empty field goes with the controls.
+        if (chatField is { } field && field.Box.Text.Length == 0)
+            CloseChatField();
+        TickLabel.Visibility = Visibility.Collapsed;
         LiftSubtitles();
         PreviewBox.Visibility = Visibility.Collapsed;
         ControlsChanged?.Invoke(false);
@@ -857,6 +835,11 @@ public sealed partial class PlayerView : UserControl
     {
         if (keepControls || paused || overBar || menuOpen || Marking)
             return;
+        if (ChatFieldHolds())
+        {
+            idle.Start();
+            return;
+        }
         if (ControlsInUse())
         {
             // A screen reader is running, or a control has focus by any means: hold them.
@@ -940,6 +923,8 @@ public sealed partial class PlayerView : UserControl
             partyPanel = new PartyPanel(ctx);
             partyPanel.Flyout.Opened += OnMenuOpened;
             partyPanel.Flyout.Closed += OnMenuClosed;
+            partyPanel.Flyout.Opened += (_, _) => ChatPopover(true);
+            partyPanel.Flyout.Closed += (_, _) => ChatPopover(false);
         }
         ShowControls();
         partyPanel.Flyout.ShowAt(PartyButton);
@@ -1048,11 +1033,11 @@ public sealed partial class PlayerView : UserControl
 
     internal void Close()
     {
-        if (staged is not null)
+        if (findingFor is not null)
         {
             // Nothing opened yet: what is being found stops, and nothing the engine says brings
             // the player back until Play is pressed again (as Apple's viewerClosed).
-            staged = null;
+            findingFor = null;
             closedWhileFinding = true;
             Send(new PlayerCommand.Stop());
             Hide();
@@ -1340,22 +1325,28 @@ public sealed partial class PlayerView : UserControl
         return track.External ? T.PlayerTrackAdded(name) : name;
     }
 
+    EpisodesPanel? episodesPanel;
+    bool? ownSpoilers;
+
+    /// <summary>The Episodes panel: compact rows and a footer, from the engine's menu entries and the title's table.</summary>
+    void EnsureEpisodesPanel()
+    {
+        if (episodesPanel is not null)
+            return;
+        episodesPanel = new EpisodesPanel(
+            () => (PanelEpisodes(), ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
+                ownSpoilers ?? SettingsCatalog.IsOn(ctx?.Known.Setting(SettingKey.SpoilerProtection))),
+            number => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number))));
+        episodesPanel.Flyout.Opened += OnMenuOpened;
+        episodesPanel.Flyout.Closed += OnMenuClosed;
+        EpisodesButton.Flyout = episodesPanel.Flyout;
+    }
+
     void BuildMenus()
     {
         if (menus is null)
             return;
-        EpisodesMenu.Items.Clear();
-        foreach (var ep in menus.Episodes)
-        {
-            var item = new ToggleMenuFlyoutItem
-            {
-                Text = Lines.Episode(ep.Label, ep.Title, null),
-                IsChecked = ep.Current,
-            };
-            var number = ep.Number;
-            item.Click += (_, _) => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number)));
-            EpisodesMenu.Items.Add(item);
-        }
+        EnsureEpisodesPanel();
         EpisodesButton.IsEnabled = menus.Episodes.Length > 0;
 
         BuildTracks();
@@ -1499,6 +1490,9 @@ public sealed partial class PlayerView : UserControl
             return;
         // Typing in the discussion's field, or pressing a key on one of its buttons, is not a player key.
         if (discussion is { } pane && XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focus && Within(focus, pane))
+            return;
+        // Nor is typing in the chat's field, over the video or in the people flyout.
+        if (Typing())
             return;
         e.Handled = true;
         if (show)
@@ -1673,6 +1667,17 @@ public sealed partial class PlayerView : UserControl
     void OnStillContinue(object sender, RoutedEventArgs e) => ContinueWatching();
     void OnStillStop(object sender, RoutedEventArgs e) => StillStopNow();
 
+    /// <summary>The panel's rows: the player's menu, or on a ranged shot one per row of the table.</summary>
+    MenuEpisode[] PanelEpisodes()
+    {
+#if KAERI_TESTING
+        if (ctx?.Options.Show is { } show && show.StartsWith("player-episodes-ranges", StringComparison.Ordinal)
+            && ctx.Known.Episodes.GetValueOrDefault(playingId) is { Length: > 100 } table)
+            return table.Select(r => new MenuEpisode(r.Number, T.EpisodeNumber(long.Parse(r.Number, System.Globalization.CultureInfo.InvariantCulture)), r.Title, r.Watched >= 0.9, false, r.Number == "230")).ToArray();
+#endif
+        return menus?.Episodes ?? [];
+    }
+
 #if KAERI_TESTING
     /// <summary>
     /// A state to bring up for a screenshot, on the testing build:
@@ -1681,6 +1686,116 @@ public sealed partial class PlayerView : UserControl
     /// <c>stats-copied</c> or <c>stats-mini</c>; a <c>.srt</c> beside the clip is loaded for those and for
     /// <c>subtitles</c> and <c>subtitles-mini</c>.
     /// </summary>
+    /// <summary>A found skip times state from the engine's fixtures, as <c>--show=found-skip</c> and the rest: its marks, buttons, card, bar and panel over the playing clip, its times scaled to the clip's length.</summary>
+    async Task StageFound(string what)
+    {
+        var state = what switch
+        {
+            "found-skip" => FoundSkipFixture.Skip,
+            "found-controls" => FoundSkipFixture.Controls,
+            "found-prompt" => FoundSkipFixture.Prompt,
+            "found-saved" => FoundSkipFixture.Saved,
+            "found-never" => FoundSkipFixture.Never,
+            "found-review" => FoundSkipFixture.Review,
+            "found-nudged" => FoundSkipFixture.Nudged,
+            "found-undo" => FoundSkipFixture.Undo,
+            "found-panel" => FoundSkipFixture.Panel,
+            "found-panel-paused" => FoundSkipFixture.PanelPaused,
+            var motion when motion.StartsWith("found-motion-", StringComparison.Ordinal) => FoundSkipFixture.Prompt,
+            _ => FoundSkipFixture.SettingsOn,
+        };
+        var motionName = what.StartsWith("found-motion-", StringComparison.Ordinal) ? what["found-motion-".Length..] : null;
+        var scene = KaeriFfiMethods.FoundSkipScene(state);
+        if (scene.Settings)
+            return;
+        HoldUpNext = true;
+        upNext = null;
+        ShowUpNext();
+        // The fixture's times, 91 to 180 s and 1290 to 1379 s of a 1420 s episode, sit in the
+        // shot's 60 s clip at 10 to 34 s and 44 to 58 s.
+        (double At, double In)[] anchors = [(0, 0), (91, 10), (180, 34), (1290, 44), (1379, 58)];
+        double Into(double at)
+        {
+            if (at >= anchors[^1].At)
+                return Math.Min(60, anchors[^1].In + (at - anchors[^1].At) * 2 / 41);
+            var n = Array.FindLastIndex(anchors, a => a.At <= at);
+            var (a0, b0) = (anchors[n], anchors[n + 1]);
+            return a0.In + (at - a0.At) * (b0.In - a0.In) / (b0.At - a0.At);
+        }
+        var nothingYet = scene.Paused is not null;
+        timelineMarks = nothingYet ? [] : [.. scene.Marks.Select(m => new TimelineMark(m.Kind, Into(m.Start), Into(m.End), m.Origin))];
+        DrawTimeline();
+        foreach (var ui in scene.Ui)
+            Heard(ui switch
+            {
+                PlayerUi.Skip skip => new PlayerUi.Skip(skip.Kind, Into(skip.To)),
+                PlayerUi.AutoSkipped auto => new PlayerUi.AutoSkipped(auto.Kind, Into(auto.UndoTo)),
+                _ => ui,
+            });
+        // The Undo note stays up for the shot, as --show=undo's does.
+        if (undo is not null)
+        {
+            undo.Played = -600;
+            undo.Waited = -600;
+        }
+        if (scene.Mark is { } view)
+        {
+            marking = view with { Start = view.Start is { } vs ? Into(vs) : null, End = view.End is { } ve ? Into(ve) : null };
+            if (marking.Start is { } ms && marking.End is { } me)
+                marking = marking with { Length = me - ms };
+            DrawMarking();
+        }
+        if (scene.Prompt is { } card && motionName is null)
+        {
+            promptHeld = true;
+            ShowPrompt(card);
+        }
+        if (scene.Controls || scene.Mark is not null)
+            ShowControls();
+        if (scene.Panel)
+        {
+            await Task.Delay(300);
+            ShowSkipTimes();
+        }
+        if (motionName is not null && scene.Prompt is { } question)
+            await FoundMotion(motionName, question, Into);
+    }
+
+    /// <summary>
+    /// The found card's motion for a recording: the card comes in, then the engine's answer
+    /// replaces its question in place (<c>yes</c>, <c>never</c>), or Adjust closes it for the
+    /// review (<c>adjust</c>). It starts when the recording's script drops the go file.
+    /// </summary>
+    async Task FoundMotion(string name, SkipPrompt question, Func<double, double> into)
+    {
+        var go = Path.Combine(Path.GetTempPath(), "kaeri-motion-go");
+        while (!File.Exists(go))
+            await Task.Delay(40);
+        await Task.Delay(600);
+        promptHeld = false;
+        ShowPrompt(question);
+        await Task.Delay(2600);
+        switch (name)
+        {
+            case "yes":
+                ShowPrompt(KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Saved).Prompt);
+                break;
+            case "never":
+                ShowPrompt(KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Never).Prompt);
+                break;
+            case "adjust":
+                ShowPrompt(null);
+                if (KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Review).Mark is { } view)
+                {
+                    marking = view with { Start = view.Start is { } vs ? into(vs) : null, End = view.End is { } ve ? into(ve) : null };
+                    marking = marking with { Length = (marking.End ?? 0) - (marking.Start ?? 0) };
+                }
+                DrawMarking();
+                ShowControls();
+                break;
+        }
+    }
+
     async void Demo(string what)
     {
         await Task.Delay(1200);
@@ -1692,6 +1807,28 @@ public sealed partial class PlayerView : UserControl
                 break;
             case "mini":
                 ToggleMini();
+                break;
+            case "player-episodes-ranges":
+            case "player-episodes-ranges-menu":
+                // 250 episodes in ranges, 230 playing; with -menu, the range menu open on Go to episode.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-ranges-menu")
+                {
+                    await Task.Delay(900);
+                    episodesPanel?.OpenRanges();
+                }
+                break;
+            case "player-episodes":
+            case "player-episodes-focus":
+                // The Episodes panel open; with -focus, the keyboard then on its second row.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-focus")
+                {
+                    await Task.Delay(800);
+                    episodesPanel?.FocusRow(1);
+                }
                 break;
             case "discussion-player":
                 if (ctx is { } talk && uint.TryParse(playingEpisode, out var talked))
@@ -1728,10 +1865,10 @@ public sealed partial class PlayerView : UserControl
                 UpdateCorner();
                 break;
             case "starting":
-                startingEpisode = "1";
-                startingHeld = true;
-                ShowStarting();
-                startingFrom -= 21 * Stopwatch.Frequency;
+                await StartDemo("starting-slow-24");
+                break;
+            case var m when m.StartsWith("starting-", StringComparison.Ordinal):
+                await StartDemo(m);
                 break;
             case "tracks":
             case "tracks-sub":
@@ -1756,6 +1893,9 @@ public sealed partial class PlayerView : UserControl
                     && FrameworkElementAutomationPeer.CreatePeerForElement(sub)?.GetPattern(PatternInterface.ExpandCollapse)
                         is Microsoft.UI.Xaml.Automation.Provider.IExpandCollapseProvider peer)
                     peer.Expand();
+                break;
+            case var f when f.StartsWith("found-"):
+                await StageFound(f);
                 break;
             case var m when m.StartsWith("mark-"):
                 var fixture = m switch
@@ -1836,8 +1976,7 @@ public sealed partial class PlayerView : UserControl
                 {
                     case "stats-waiting":
                         // Opened before the file has: over the starting screen, a while on.
-                        startingHeld = true;
-                        ShowStarting();
+                        await StartDemo("starting-asking-first-4");
                         StageStats(StatsFixture.Waiting, TimeSpan.FromSeconds(5), copied: false);
                         break;
                     case "stats-buffering":
@@ -1913,6 +2052,10 @@ public sealed partial class PlayerView : UserControl
             ClosePreview();
         stats.Mini = on;
         ShowStats();
+        // The small window has no room for the column or the reactions.
+        if (on)
+            ChatClear();
+        ChatReflect();
     }
 
     // Previews on the timeline.
@@ -1950,6 +2093,7 @@ public sealed partial class PlayerView : UserControl
             return;
         var point = e.GetCurrentPoint(Timeline).Position;
         PreviewAtFraction(Math.Clamp((point.X - 10) / Math.Max(1, Timeline.ActualWidth - 20), 0, 1));
+        ShowTickLabel(e.GetCurrentPoint(TimelineUnder).Position.X);
     }
 
     void PreviewAtFraction(double fraction)
@@ -1965,7 +2109,11 @@ public sealed partial class PlayerView : UserControl
         PreviewBox.Visibility = Visibility.Visible;
     }
 
-    void OnTimelineExited(object sender, PointerRoutedEventArgs e) => PreviewBox.Visibility = Visibility.Collapsed;
+    void OnTimelineExited(object sender, PointerRoutedEventArgs e)
+    {
+        PreviewBox.Visibility = Visibility.Collapsed;
+        TickLabel.Visibility = Visibility.Collapsed;
+    }
 
     void ClosePreview()
     {

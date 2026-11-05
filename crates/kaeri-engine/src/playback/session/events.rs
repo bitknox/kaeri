@@ -4,13 +4,14 @@
 
 use std::time::Duration;
 
-use kaeri_core::stream::Stream;
+use kaeri_core::stream::{Stream, StreamKind};
 use kaeri_model::{
     Msg,
     command::PlayerCommand,
     event::Event,
     hosted::TrackKind as TrackChoice,
     notice::{Notice, NoticeHint},
+    starting::StartStep,
 };
 use kaeri_playback::{
     Action, Choice, PlaybackEvent, PlaybackTracker, ScriptEvent, SkipInterval, SkipKind,
@@ -52,6 +53,14 @@ const BATTERY_POLL: Duration = Duration::from_secs(60);
 /// is said at once.
 const SEAT_REPORTS: Duration = Duration::from_millis(200);
 
+/// What goes on beside one file as it plays.
+pub(super) struct Beside {
+    /// Subtitle tracks still being fetched as the file opened, added as each arrives.
+    pub late: Option<LateSubtitles>,
+    /// The capture finding the file's skip times from its audio, when they are found.
+    pub finder: Option<super::found::Finder>,
+}
+
 impl Run<'_> {
     /// Play one file to its end, feeding the tracker and answering the viewer.
     pub(super) async fn file(
@@ -61,9 +70,9 @@ impl Run<'_> {
         streams: &[Stream],
         index: usize,
         commands: &mut mpsc::UnboundedReceiver<PlayerCommand>,
-        // Subtitle tracks still being fetched as the file opened, added as each arrives.
-        mut late: Option<LateSubtitles>,
+        beside: Beside,
     ) -> FileOutcome {
+        let Beside { mut late, mut finder } = beside;
         let context = self.context;
         let settings = self.settings;
         let tx = self.tx;
@@ -77,6 +86,9 @@ impl Run<'_> {
                 .skipping_recaps(settings.auto_skip_recap)
                 .marking_chapters(settings.mark_chapters);
         self.marking.file_opened();
+        // Found times kept for this episode, used once the file's length says they fit it, and
+        // whether this show's found times are skipped by themselves.
+        let mut found_kept = self.found_opened(&mut tracker).await;
 
         // Presence is connected here rather than at startup: it should exist for exactly as
         // long as something is playing, and holding a socket open while idle would claim a
@@ -127,6 +139,17 @@ impl Run<'_> {
         let mut buffered = super::timeline::Buffered::default();
         let clock = tokio::time::Instant::now();
         let mut picture_tick = tokio::time::interval(Duration::from_secs(1));
+        // Until the first frame, once a second: how fast data arrives, for the starting screen.
+        let mut pace_tick = tokio::time::interval(Duration::from_secs(1));
+        let say = |step, line| {
+            crate::playback::starting::say(
+                tx,
+                context.anilist_id,
+                &context.episode,
+                step,
+                line,
+            );
+        };
         // The governor keeps its steps across episodes in this window, but its evidence is
         // per file.
         player.picture.governor.new_file();
@@ -207,6 +230,23 @@ impl Run<'_> {
                     }
                     continue;
                 }
+                _ = pace_tick.tick(), if !ever_played => {
+                    if stream.kind == StreamKind::TorrentHttp {
+                        if let Some(pace) = settings.swarm.pace(&stream.url) {
+                            say(
+                                StartStep::Swarm {
+                                    peers: pace.peers,
+                                    bytes_per_second: pace.bytes_per_second,
+                                },
+                                None,
+                            );
+                        }
+                    } else {
+                        // Answered as a sampled figure, which is said below.
+                        let _ = link.sample(vec!["cache-speed".to_owned()]).await;
+                    }
+                    continue;
+                }
                 _ = picture_tick.tick() => {
                     // What the player holds and the pace kept back, now due: when nothing
                     // more arrives, as once the whole file is held.
@@ -279,6 +319,16 @@ impl Run<'_> {
                         Some(subtitle) if loaded => add_subtitle(link, &subtitle).await,
                         Some(subtitle) => waiting.push(subtitle),
                         None => late = None,
+                    }
+                    continue;
+                }
+                found = async { finder.as_mut().expect("guarded").next().await },
+                    if finder.as_ref().is_some_and(super::found::Finder::is_open) =>
+                {
+                    if let Some(found) = found {
+                        self.found.retain(|s| s.kind != found.interval.kind);
+                        self.found.push(found.interval);
+                        tracker.set_found(self.found.clone());
                     }
                     continue;
                 }
@@ -436,7 +486,14 @@ impl Run<'_> {
             // The stats take their figures from what the player says; what is read for them
             // alone goes no further.
             stats.observe(&event);
-            if matches!(event, PlaybackEvent::Sampled { .. }) {
+            if let PlaybackEvent::Sampled { name, value } = &event {
+                if !ever_played
+                    && name == "cache-speed"
+                    && stream.kind != StreamKind::TorrentHttp
+                    && let Some(speed) = value.as_f64().filter(|s| s.is_finite() && *s >= 0.0)
+                {
+                    say(StartStep::Speed { bytes_per_second: speed as u64 }, None);
+                }
                 continue;
             }
 
@@ -618,6 +675,16 @@ impl Run<'_> {
                         }
                     }
                 }
+                // A number only while playback waits on the cache, which before the first frame
+                // a torrent's start does (the player is told to fill it first).
+                PlaybackEvent::BufferFill(percent) => {
+                    if buffering && !ever_played {
+                        say(
+                            StartStep::Buffering { percent: u32::from(*percent) },
+                            Some(Msg::StartBuffering),
+                        );
+                    }
+                }
                 PlaybackEvent::Cached(ranges) => {
                     let now = clock.elapsed().as_secs_f64();
                     if let Some(ranges) =
@@ -631,6 +698,16 @@ impl Run<'_> {
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
                     self.maybe_prefetch(*position, *duration);
+                    if let Some(length) = *duration {
+                        // The tail is tapped once the length places it.
+                        if let Some(windows) = finder.as_mut().and_then(|f| f.length(length)) {
+                            let windows = serde_json::Value::String(windows);
+                            let _ = link.set("demuxer-audio-tap-windows", windows).await;
+                        }
+                        if let Some(kept) = found_kept.take() {
+                            self.use_kept_found(kept, length, &mut tracker);
+                        }
+                    }
                     if !ever_played {
                         ever_played = true;
                         let _ = link.overlay(Overlay::Playing).await;
@@ -678,6 +755,7 @@ impl Run<'_> {
                             let _ = link.seek(to, true).await;
                             let _ = link.overlay(Overlay::Skipped { kind, from, to }).await;
                             last_skip = Some(kind);
+                            self.skipped(kind, to, &tracker).await;
                         } else if settings.skip_button {
                             // On the video, not the terminal: the viewer is looking at it.
                             let _ = link.overlay(Overlay::SkipOffer { kind, to }).await;
@@ -830,6 +908,13 @@ async fn apply_cue(link: &dyn PlayerLink, cue: SeatCue) {
             let level = kaeri_playback::companion::Level::Info;
             link.overlay(Overlay::Toast { text, level }).await
         }
+        SeatCue::Chat { who, you, text, notice } => {
+            link.overlay(Overlay::ChatLine { who, you, text, notice }).await
+        }
+        SeatCue::Reaction { who, reaction } => {
+            link.overlay(Overlay::Reaction { who, reaction }).await
+        }
+        SeatCue::ChatCleared => link.overlay(Overlay::ChatCleared).await,
     };
     if let Err(e) = done {
         tracing::debug!(error = %e, "the player did not take what the party asked");

@@ -353,16 +353,24 @@ impl StreamingEpisode {
     }
 }
 
-/// An episode's title without the numbering put in front of it, or `None` when the numbering is
-/// all there is: showing "Episode 12" beside the number 12 is worse than showing nothing.
+/// An episode's title without the numbering put in front of it, or `None` when there is no title
+/// worth showing: showing "Episode 12" beside the number 12 is worse than showing nothing.
 ///
 /// Titles are free text, from AniList's streaming listings and from sources alike, so this trims
 /// the shapes actually seen and gives up rather than guessing: "Episode 12 - ", "Episode 1 – ",
 /// "Episode 7: ", "Ep. 3: ", "EP03 - ", "Episode 12.5 - ". The word has to be followed by a
 /// number, so a title that only starts with one ("Episodes of Spring", "Epilogue") is kept whole,
 /// as is one that starts with a number of its own.
+///
+/// A label that is no name is dropped too, whole: one that only restates the number ("EP04",
+/// "#4", "04", "第4話"), one that carries a date or a clock time, one that starts with a release
+/// word ("Released", "Airs", "Coming soon") and a file name. Anything else stays as written;
+/// a year alone is not a date.
 pub fn unnumbered(title: &str) -> Option<&str> {
     let title = title.trim();
+    if is_label(title) {
+        return None;
+    }
     let lower = title.to_ascii_lowercase();
     let numbered = ["episode", "ep.", "ep"].into_iter().find_map(|word| {
         // The word's bytes are ASCII, so its length in the lowercased copy is its length here.
@@ -375,7 +383,80 @@ pub fn unnumbered(title: &str) -> Option<&str> {
         .unwrap_or(title)
         .trim_start_matches([' ', '-', '\u{2013}', '\u{2014}', ':', '.', '|'])
         .trim();
-    (!rest.is_empty()).then_some(rest)
+    (!rest.is_empty() && !is_label(rest)).then_some(rest)
+}
+
+/// Whether `text` is a label a source made up (the number, a release note, a file name) rather
+/// than a name.
+fn is_label(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    restates_number(&lower)
+        || starts_with_release_word(&lower)
+        || has_date_or_time(&lower)
+        || is_file_name(&lower)
+}
+
+/// "episode 04", "ep04", "#4", "04", "第4話", "4 episode": nothing but the number and its words.
+fn restates_number(lower: &str) -> bool {
+    let bare = lower
+        .replace("episode", "")
+        .replace("ep.", "")
+        .replace("ep", "")
+        .replace(['第', '話', '话', '集', '回', '화', '#'], "");
+    bare.chars().any(|c| c.is_ascii_digit())
+        && bare.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-' || c.is_whitespace())
+}
+
+fn starts_with_release_word(lower: &str) -> bool {
+    ["release", "airs", "aired", "uploaded", "coming soon"].iter().any(|word| {
+        lower.strip_prefix(word).is_some_and(|rest| {
+            // "Release", "Released:", "Airs Sunday", but not "Airship Dawn".
+            rest.is_empty()
+                || !rest.starts_with(|c: char| c.is_alphabetic())
+                || rest.starts_with("d")
+                    && *word == "release"
+                    && !rest[1..].starts_with(|c: char| c.is_alphabetic())
+        })
+    })
+}
+
+fn has_date_or_time(lower: &str) -> bool {
+    let words: Vec<&str> = lower
+        .split(|c: char| !c.is_alphanumeric() && c != ':')
+        .filter(|w| !w.is_empty())
+        .collect();
+    let clock = lower
+        .as_bytes()
+        .windows(3)
+        .any(|w| w[0].is_ascii_digit() && w[1] == b':' && w[2].is_ascii_digit());
+    // 2026/10/25 and 2026-10-25: a four-digit year, then a month and a day.
+    let numeric = lower.as_bytes().windows(10).any(|w| {
+        let d = |i: usize| w[i].is_ascii_digit();
+        let sep = |i: usize| w[i] == b'/' || w[i] == b'-' || w[i] == b'.';
+        d(0) && d(1) && d(2) && d(3) && sep(4) && d(5) && d(6) && sep(7) && d(8) && d(9)
+    });
+    // 25 Oct 2026, Oct 25 2026: a month name with a day and a year.
+    const MONTHS: [&str; 12] =
+        ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    let month = words.iter().any(|w| {
+        let name = w.trim_end_matches(|c: char| c.is_ascii_digit());
+        name.len() >= 3 && MONTHS.iter().any(|m| name.starts_with(m)) && name.len() <= 9
+    });
+    let day = words.iter().any(|w| w.len() <= 2 && w.chars().all(|c| c.is_ascii_digit()));
+    let year = words.iter().any(|w| w.len() == 4 && w.chars().all(|c| c.is_ascii_digit()));
+    clock || numeric || (month && day && year)
+}
+
+/// "... .mkv", "... .mp4", or a resolution such as "1080p" as a word of its own.
+fn is_file_name(lower: &str) -> bool {
+    let trimmed = lower.trim_end_matches([']', ')', ' ']);
+    trimmed.ends_with(".mkv")
+        || trimmed.ends_with(".mp4")
+        || lower.split(|c: char| !c.is_ascii_alphanumeric()).any(|w| {
+            w.len() >= 4
+                && w.ends_with('p')
+                && w[..w.len() - 1].chars().all(|c| c.is_ascii_digit())
+        })
 }
 
 /// How one title relates to another.
@@ -689,6 +770,12 @@ fn decode_entities(text: &str) -> String {
     }
     out.push_str(rest);
     out
+}
+
+/// Markup in a source's text as plain text: tags out, entities decoded, whitespace collapsed to
+/// single spaces, so a paragraph reads as one run.
+pub fn plain_run(raw: &str) -> String {
+    plain_text(raw).split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// AniList's HTML as plain text, keeping its line structure: tags out, the entities it uses put
@@ -1029,6 +1116,19 @@ impl Media {
             episode_count: self.episodes,
             year: self.season_year,
             format: self.format,
+            hints: self.title_hints(),
+        }
+    }
+
+    /// The ids and names a source is told about this title.
+    pub fn title_hints(&self) -> kaeri_core::media::TitleHints {
+        let known = |t: &Option<String>| t.clone().filter(|t| !t.is_empty());
+        kaeri_core::media::TitleHints {
+            anilist_id: Some(self.id),
+            romaji: known(&self.title.romaji),
+            english: known(&self.title.english),
+            native: known(&self.title.native),
+            synonyms: self.synonyms.iter().filter(|s| !s.is_empty()).cloned().collect(),
         }
     }
 }
@@ -1080,12 +1180,42 @@ mod title_tests {
         assert_eq!(listing("").episode_title(), None);
     }
 
+    #[test]
+    fn a_label_that_is_no_name_is_dropped() {
+        for label in [
+            "Release: 2026/10/25 15:00 GMT - Episode 4",
+            "EP04",
+            "Episode 04",
+            "#4",
+            "04",
+            "\u{7b2c}4\u{8a71}",
+            "Airs 1 Nov 2026",
+            "Released",
+            "Uploaded yesterday",
+            "Coming soon",
+            "Lantern Ferry - 06 [1080p].mkv",
+            "Lantern Ferry 06.mp4",
+            "25 Oct 2026",
+            "2026-10-25",
+            "15:00 GMT",
+        ] {
+            assert_eq!(unnumbered(label), None, "{label}");
+        }
+        assert_eq!(unnumbered("Episode 5 - The Purser's Ledger"), Some("The Purser's Ledger"));
+        assert_eq!(unnumbered("Summer of 2031"), Some("Summer of 2031"));
+        assert_eq!(unnumbered("Airship Dawn"), Some("Airship Dawn"));
+        assert_eq!(unnumbered("Released from the Lamp"), None, "a release word leads");
+        assert_eq!(unnumbered("Aired Out"), None);
+        assert_eq!(unnumbered("Shanghai 1080"), Some("Shanghai 1080"));
+        assert_eq!(unnumbered("Deep Blue 4"), Some("Deep Blue 4"));
+    }
+
     fn media_with(episodes: Option<u32>, numbers: &[u32]) -> Media {
         let listings: Vec<_> = numbers
             .iter()
             .map(|n| {
                 serde_json::json!({
-                    "title": format!("Episode {n} - Ep {n}"),
+                    "title": format!("Episode {n} - Chapter {n}"),
                     "thumbnail": format!("https://cdn.example/{n}.jpg"),
                 })
             })
@@ -1106,7 +1236,7 @@ mod title_tests {
         let titles = media.episode_titles();
         assert_eq!(titles.keys().next(), Some(&1));
         assert_eq!(titles.keys().next_back(), Some(&24));
-        assert_eq!(titles[&1], "Ep 25", "episode one is the first listing, renumbered");
+        assert_eq!(titles[&1], "Chapter 25", "episode one is the first listing, renumbered");
         assert_eq!(media.episode_thumbnails().len(), 24, "stills move with the titles");
     }
 
@@ -1583,6 +1713,16 @@ mod tests {
         assert_eq!(t.year, Some(2023));
         assert_eq!(t.format, Some(MediaFormat::Tv));
         assert!(t.titles.len() >= 3);
+    }
+
+    #[test]
+    fn match_target_hands_sources_the_id_and_every_name() {
+        let hints = hoshikuzu().match_target().hints;
+        assert_eq!(hints.anilist_id.map(|id| id.get()), Some(154587));
+        assert_eq!(hints.romaji.as_deref(), Some("Hoshikuzu no Tabibito"));
+        assert_eq!(hints.english.as_deref(), Some("Stardust Wayfarer"));
+        assert_eq!(hints.native.as_deref(), Some("星屑の旅人"));
+        assert_eq!(hints.synonyms, ["Hoshitabi"]);
     }
 
     #[test]

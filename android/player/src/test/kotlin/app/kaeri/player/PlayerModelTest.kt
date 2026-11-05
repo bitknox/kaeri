@@ -256,7 +256,7 @@ class ClosingTest {
         rig.ops(1u, PlayerOp.Close)
         assertTrue("the starting screen waits for how it ended", rig.model.isPresented)
         rig.model.apply(Event.PlaybackEnded(false, Ending.Failed, false))
-        assertEquals(PlaybackFailure(900_001u, "7"), rig.model.failure)
+        assertEquals(PlaybackFailure(900_001u, "7"), rig.model.failure?.copy(trail = null))
         rig.model.viewerClosed()
         assertFalse(rig.model.isPresented)
     }
@@ -355,7 +355,7 @@ class ClosingTest {
         rig.model.apply(Event.Toast(Notice(NoticeKind.INFO, "looking for sources", null)))
         rig.model.apply(Event.Toast(Notice(NoticeKind.ALERT, "no sources configured: see the Providers screen", null)))
         rig.model.apply(Event.PlaybackEnded(false, Ending.Failed, false))
-        assertEquals(PlaybackFailure(900_001u, "7", "No sources configured"), rig.model.failure)
+        assertEquals(PlaybackFailure(900_001u, "7", "No sources configured"), rig.model.failure?.copy(trail = null))
     }
 
     @Test
@@ -377,7 +377,7 @@ class ClosingTest {
         rig.model.apply(Event.Toast(Notice(NoticeKind.ALERT, "could not match this title: none", null)))
         staged(rig, "8")
         rig.model.apply(Event.PlaybackEnded(false, Ending.Failed, false))
-        assertEquals(PlaybackFailure(900_001u, "8"), rig.model.failure)
+        assertEquals(PlaybackFailure(900_001u, "8"), rig.model.failure?.copy(trail = null))
     }
 
     @Test

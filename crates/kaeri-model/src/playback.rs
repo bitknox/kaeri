@@ -41,8 +41,9 @@ pub enum SkipKind {
     Recap,
 }
 
-/// Where a skip time came from, as the Skip times panel says it: "From the file", "Yours" or
-/// "From AniSkip". Per kind the file's chapters win, then the person's own marks, then AniSkip.
+/// Where a skip time came from, as the Skip times panel says it: "From the file", "Yours",
+/// "From AniSkip" or "Found by Kaeri". Per kind the file's chapters win, then the person's own
+/// marks, then AniSkip, then found times.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum SkipOrigin {
@@ -52,6 +53,9 @@ pub enum SkipOrigin {
     Yours,
     /// AniSkip's shared list. Only these can be reported.
     AniSkip,
+    /// Found on this device from the audio the episode shares with an earlier one. Drawn like
+    /// AniSkip's; the panel offers Adjust on it.
+    Found,
 }
 
 /// A stretch of the playing file the timeline marks: an opening, an ending or a recap, from
@@ -124,6 +128,9 @@ pub enum SkipMarkNote {
     /// The show has no MyAnimeList entry: "AniSkip has no entry for this show, so this stays on
     /// your devices."
     NoEntry,
+    /// The stretch under review was found from the audio: "Kaeri found these times from the
+    /// audio."
+    Found,
 }
 
 /// The marking bar for the playing file, as it stands: see
@@ -153,6 +160,10 @@ pub struct SkipMarkView {
     pub editing: bool,
     /// Whether Watch the edges is playing.
     pub previewing: bool,
+    /// Whether this reviews a stretch found from the audio, opened by Adjust: the review's
+    /// title takes the kind picker's place, and Save confirms the found times.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub found: bool,
 }
 
 /// A made-up marking bar, for an app's previews, screenshots and tests: the bar at each step
@@ -196,6 +207,7 @@ impl SkipMarkFixture {
             can_save: true,
             editing: false,
             previewing: false,
+            found: false,
         };
         match self {
             Self::Start => SkipMarkView {
@@ -262,6 +274,248 @@ pub enum SkipPrompt {
     /// "Share your skip times with AniSkip?", once, after the first Save, with Share and Keep
     /// on my devices: answered with `PlayerCommand::AnswerShareSkipTimes`.
     Share,
+    /// "Kaeri found this opening. Were the edges right?", [`FOUND_PROMPT_DELAY_SECS`] of
+    /// playback after a skip over a found stretch of `kind`, with the line "Yes shares these
+    /// times with AniSkip for episode 3." and Yes (`PlayerCommand::ConfirmFoundSkip`), Adjust
+    /// (`PlayerCommand::AdjustFoundSkip`) and Don't ask again
+    /// (`PlayerCommand::NeverAskWasOpening`). Asked once per show and kind, counted as asked
+    /// when it shows. The app holds it for [`SKIP_PROMPT_HOLD_SECS`] of playback, waits while
+    /// paused, and holds it with no limit under a screen reader; then it sends
+    /// `PlayerCommand::DismissSkipPrompt`.
+    FoundEdges { kind: SkipKind, episode: u32 },
+    /// The same card after Yes: "Saved. AniSkip gets these times for episode 3.", crossfaded in
+    /// and held [`FOUND_ANSWER_SECS`].
+    FoundSaved { kind: SkipKind, episode: u32 },
+    /// The same card after Don't ask again: "Kaeri won't ask about skip times again." and "You
+    /// can turn it back on in Settings.", held [`FOUND_ANSWER_SECS`].
+    FoundNever,
+}
+
+/// How long of playback a skip prompt is held before it goes by unanswered, in seconds: "Was
+/// that the opening?", "Wrong opening times?" and the found times' card alike.
+pub const SKIP_PROMPT_HOLD_SECS: u32 = 12;
+/// How long the found times' card holds its answer line, in seconds.
+pub const FOUND_ANSWER_SECS: u32 = 4;
+/// How long of playback after landing from a skip over a found stretch its card waits, in
+/// seconds: the engine says the prompt then.
+pub const FOUND_PROMPT_DELAY_SECS: f64 = 3.0;
+
+/// [`SKIP_PROMPT_HOLD_SECS`], for a front end.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub const fn skip_prompt_hold_secs() -> u32 {
+    SKIP_PROMPT_HOLD_SECS
+}
+
+/// [`FOUND_ANSWER_SECS`], for a front end.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub const fn found_answer_secs() -> u32 {
+    FOUND_ANSWER_SECS
+}
+
+/// What the player shows in a found times' fixture state, for the apps' Fixtures builds. Exported
+/// once, by kaeri-ffi's `words`, so Swift's one module has a single `foundSkipScene`.
+pub fn found_skip_scene(state: FoundSkipFixture) -> FoundSkipScene {
+    state.scene()
+}
+
+/// Why finding skip times from the audio is paused, or can't run at all: the line under its
+/// Settings row and in the Skip times panel. The player says nothing of it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipFindPause {
+    /// The system's power saving mode is on, by each platform's name for it: "Paused while Low
+    /// Power Mode is on." on Apple, battery saver on Android, energy saver on Windows, power
+    /// saver on Linux. Android TV pauses for storage only.
+    LowPower,
+    /// Under 2 GB of storage is free: "Paused until 2 GB of storage is free."
+    Storage,
+    /// The player can't hand its audio over: its libmpv has no demuxer audio tap, as a
+    /// distribution's libmpv under a Linux build, or the app has not given it the engine's
+    /// callback. "Not available in this build of Kaeri." Finding never runs, and nothing else
+    /// changes: playback, AniSkip and marking work as they do with the setting off.
+    Unavailable,
+}
+
+/// A made-up state of found skip times, for an app's previews, screenshots and tests: one for
+/// each state the board draws, with no player behind it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FoundSkipFixture {
+    /// Skip opening on a found opening, the controls hidden.
+    Skip,
+    /// The same with the controls up: the timeline marks the found opening.
+    Controls,
+    /// The card, 3 s after landing.
+    Prompt,
+    /// The card after Yes.
+    Saved,
+    /// The card after Don't ask again.
+    Never,
+    /// Adjust's review while it plays the start edge.
+    Review,
+    /// Adjust's review after a +1 s nudge of the start.
+    Nudged,
+    /// The next episode, skipped by itself: Skipped opening · Undo.
+    Undo,
+    /// The Skip times panel with found times.
+    Panel,
+    /// The Skip times panel while finding is paused by a power saving mode.
+    PanelPaused,
+    /// Settings with finding on.
+    SettingsOn,
+    /// Settings paused by a power saving mode.
+    SettingsLowPower,
+    /// Settings paused by low storage.
+    SettingsStorage,
+}
+
+/// What a [`FoundSkipFixture`] shows: the player's state for it, and what Settings and the panel
+/// say.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FoundSkipScene {
+    /// The episode's number.
+    pub episode: u32,
+    /// The playhead and the file's length, in seconds.
+    pub position: f64,
+    pub length: f64,
+    /// Whether the player's controls are up.
+    pub controls: bool,
+    /// What the player shows, in order: the skip button or the undo.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ui: Vec<crate::hosted::PlayerUi>,
+    /// What the timeline and the Skip times panel mark.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub marks: Vec<TimelineMark>,
+    /// The card on the video.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub prompt: Option<SkipPrompt>,
+    /// The marking bar.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub mark: Option<SkipMarkView>,
+    /// Whether the Skip times panel is open.
+    pub panel: bool,
+    /// Whether this is the Settings screen's Playback group.
+    pub settings: bool,
+    /// Whether finding is on, and why it is paused.
+    pub find_on: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub paused: Option<SkipFindPause>,
+}
+
+impl FoundSkipFixture {
+    /// Every state, in the board's order.
+    pub const ALL: [Self; 13] = [
+        Self::Skip,
+        Self::Controls,
+        Self::Prompt,
+        Self::Saved,
+        Self::Never,
+        Self::Review,
+        Self::Nudged,
+        Self::Undo,
+        Self::Panel,
+        Self::PanelPaused,
+        Self::SettingsOn,
+        Self::SettingsLowPower,
+        Self::SettingsStorage,
+    ];
+
+    /// The scene it names: episode 3 of a 24-minute show, its opening found from 1:31 to 3:00.
+    pub fn scene(self) -> FoundSkipScene {
+        use crate::hosted::PlayerUi;
+        let (start, end) = (91.0, 180.0);
+        let found =
+            |kind, start, end, origin| TimelineMark { kind, start, end, origin: Some(origin) };
+        let opening = found(SkipKind::Opening, start, end, SkipOrigin::Found);
+        let base = FoundSkipScene {
+            episode: 3,
+            position: 95.0,
+            length: 1420.0,
+            controls: false,
+            ui: Vec::new(),
+            marks: vec![opening],
+            prompt: None,
+            mark: None,
+            panel: false,
+            settings: false,
+            find_on: true,
+            paused: None,
+        };
+        let review = |start: f64, previewing| SkipMarkView {
+            kind: SkipKind::Opening,
+            step: SkipMarkStep::Review,
+            start: Some(start),
+            end: Some(end),
+            length: end - start,
+            check: SkipMarkCheck::Fine,
+            notes: vec![SkipMarkNote::Found, SkipMarkNote::Shares],
+            can_save: true,
+            editing: false,
+            previewing,
+            found: true,
+        };
+        let card = |prompt| FoundSkipScene {
+            position: end + FOUND_PROMPT_DELAY_SECS,
+            prompt: Some(prompt),
+            ..base.clone()
+        };
+        let panel = FoundSkipScene {
+            panel: true,
+            controls: true,
+            marks: vec![opening, found(SkipKind::Ending, 1290.0, 1379.0, SkipOrigin::Found)],
+            ..base.clone()
+        };
+        let settings = |paused| FoundSkipScene {
+            settings: true,
+            paused,
+            ui: Vec::new(),
+            marks: Vec::new(),
+            ..base.clone()
+        };
+        match self {
+            Self::Skip => FoundSkipScene {
+                ui: vec![PlayerUi::Skip { kind: SkipKind::Opening, to: end }],
+                ..base.clone()
+            },
+            Self::Controls => FoundSkipScene {
+                controls: true,
+                ui: vec![PlayerUi::Skip { kind: SkipKind::Opening, to: end }],
+                ..base.clone()
+            },
+            Self::Prompt => {
+                card(SkipPrompt::FoundEdges { kind: SkipKind::Opening, episode: 3 })
+            }
+            Self::Saved => FoundSkipScene {
+                marks: vec![TimelineMark { origin: Some(SkipOrigin::Yours), ..opening }],
+                ..card(SkipPrompt::FoundSaved { kind: SkipKind::Opening, episode: 3 })
+            },
+            Self::Never => card(SkipPrompt::FoundNever),
+            Self::Review => FoundSkipScene {
+                position: start - 3.0,
+                mark: Some(review(start, true)),
+                ..base.clone()
+            },
+            Self::Nudged => FoundSkipScene {
+                position: start + 1.0,
+                mark: Some(review(start + 1.0, false)),
+                ..base.clone()
+            },
+            Self::Undo => FoundSkipScene {
+                episode: 4,
+                position: end,
+                ui: vec![PlayerUi::AutoSkipped { kind: SkipKind::Opening, undo_to: start }],
+                ..base.clone()
+            },
+            Self::Panel => panel,
+            Self::PanelPaused => {
+                FoundSkipScene { paused: Some(SkipFindPause::LowPower), ..panel }
+            }
+            Self::SettingsOn => settings(None),
+            Self::SettingsLowPower => settings(Some(SkipFindPause::LowPower)),
+            Self::SettingsStorage => settings(Some(SkipFindPause::Storage)),
+        }
+    }
 }
 
 /// Something done to the skip times that the player says once, as a notice on the video: see

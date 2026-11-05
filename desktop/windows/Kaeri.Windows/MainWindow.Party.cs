@@ -185,6 +185,88 @@ public sealed partial class MainWindow
     }
 
 #if KAERI_TESTING
+    /// <summary>
+    /// The chat states the watch together chat board draws, over the playing party: Sol comes
+    /// in, then the lines, reactions, typing or panel the state is for, all within about 3 s.
+    /// </summary>
+    async Task ChatScene(string state, FfiFakeParty party)
+    {
+        // The joins said, so the shot shows its own lines.
+        await Task.Delay(3000);
+        party.AddMember(FixtureRoom, "Sol");
+        await Task.Delay(600);
+        (string Who, string Text)[] lines =
+        [
+            ("Mika", "ok starting"),
+            ("Ren", "the handoff in the rain, I knew it"),
+            ("Sol", "wait, who is the new runner"),
+        ];
+        async Task Say(IEnumerable<(string Who, string Text)> said, int gap)
+        {
+            foreach (var (who, text) in said)
+            {
+                party.MemberSays(who, text);
+                await Task.Delay(gap);
+            }
+        }
+        switch (state)
+        {
+            case "party-chat-fold":
+                await Say(lines.Concat([("Mika", "this part again"), ("Ren", "ready"), ("Sol", "one sec")]), 150);
+                break;
+            case "party-chat-moment":
+                party.MemberSays("Mika", "ok starting");
+                await Task.Delay(300);
+                party.MemberReacts("Ren", Reaction.Gasp, 1.5);
+                party.MemberReacts("Mika", Reaction.Laugh, 3.0);
+                party.MemberReacts("Sol", Reaction.Laugh, 3.1);
+                await Task.Delay(400);
+                Player.ShotTickHover(3.0);
+                // A moment holds 1.5 s: the room keeps reacting, so a shot finds some up.
+                for (var round = 0; round < 12; round++)
+                {
+                    await Task.Delay(700);
+                    if (round % 2 == 0)
+                        party.MemberReacts("Ren", Reaction.Gasp, 1.5);
+                    else
+                        party.MemberReacts("Sol", round % 3 == 0 ? Reaction.Clap : Reaction.Laugh, 3.1);
+                }
+                break;
+            case "party-chat-off" or "party-chat-hidden":
+                party.MemberSays("Mika", "ok starting");
+                await Task.Delay(400);
+                Player.ShowParty();
+                break;
+            case "party-chat-field":
+                party.MemberSays("Mika", lines[0].Text);
+                await Task.Delay(300);
+                Player.ShotChatType("the handoff in the rain");
+                break;
+            case "party-chat-count":
+                await Task.Delay(300);
+                Player.ShotChatType("the handoff in the rain, I knew it");
+                break;
+            case "party-chat-failed":
+                await Task.Delay(300);
+                Player.ShotChatType("anyone there");
+                Player.ShotChatSend();
+                await Task.Delay(6000);
+                Player.ShowParty();
+                break;
+            case "party-chat-popover" or "party-chat-muted":
+                await Say(lines, 200);
+                party.MemberReacts("Ren", Reaction.Laugh, 3.0);
+                if (state == "party-chat-muted")
+                    ctx.Send(new Command.Party(new PartyCommand.Mute("Sol", true)));
+                await Task.Delay(400);
+                Player.ShowParty();
+                break;
+            default:
+                await Say(lines, 300);
+                break;
+        }
+    }
+
     FfiFakeParty? fakeParty;
     const string FixtureRoom = "quiet-harbor-k7m2xq9ad4tnwe3p";
 
@@ -238,7 +320,7 @@ public sealed partial class MainWindow
             }
             return;
         }
-        if (state is "party-lobby" or "party-lobby-ready" or "party-bar")
+        if (state is "party-lobby" or "party-lobby-ready" or "party-bar" or "party-chat-lobby")
         {
             // A party this device started for episode 7, with two friends in the lobby.
             ctx.Send(new Command.Party(new PartyCommand.Lobby(server, FixtureRoom, "Ada", new PartyEpisode(900001, "7"))));
@@ -251,6 +333,13 @@ public sealed partial class MainWindow
             fakeParty.AddMember(FixtureRoom, "Ren");
             fakeParty.MemberOpens("Ren", "Stardust Wayfarer · Episode 7", 1400);
             fakeParty.MemberReady("Ren", false);
+            if (state == "party-chat-lobby")
+            {
+                ChatSetting.Set(false);
+                fakeParty.MemberSays("Mika", "snacks ready?");
+                fakeParty.MemberSays("Ren", "two minutes, making tea");
+                fakeParty.MemberSays("Mika", "the soundtrack is at music.example/ost");
+            }
             await Task.Delay(1200);
             if (state == "party-lobby-ready")
             {
@@ -259,9 +348,30 @@ public sealed partial class MainWindow
                 await Task.Delay(600);
             }
             Go(state == "party-bar" ? "home" : "together");
+            if (state == "party-chat-lobby")
+            {
+                // The conversation sits under the room: scrolled down to it.
+                await Task.Delay(1200);
+                (ContentFrame.Content as TogetherPage)?.ShotScrollToEnd();
+            }
             return;
         }
         Player.HoldUpNext = state != "party-next";
+        // The server as the chat shot needs it, before the join reads its features.
+        if (state.StartsWith("party-chat", StringComparison.Ordinal))
+            ChatSetting.Set(state == "party-chat-hidden");
+        switch (state)
+        {
+            case "party-chat-count":
+                fakeParty.SetChat(true, 40);
+                break;
+            case "party-chat-off":
+                fakeParty.SetChat(false, null);
+                break;
+            case "party-chat-failed":
+                fakeParty.SwallowChat(true);
+                break;
+        }
         ctx.Send(new Command.PartyJoin(server, FixtureRoom, "Ada"));
         ctx.Play(900001, "7", fromStart: true);
         // Until this device's member has the episode open, for the others to open the same.
@@ -317,6 +427,9 @@ public sealed partial class MainWindow
                 break;
             case "party-chat":
                 fakeParty.MemberSays("Mika", "Starting in a minute, grabbing tea");
+                break;
+            case { } chat when chat.StartsWith("party-chat-", StringComparison.Ordinal):
+                await ChatScene(chat, fakeParty);
                 break;
             case "party-left":
                 Player.ShowParty();

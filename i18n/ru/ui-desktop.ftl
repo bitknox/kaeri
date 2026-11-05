@@ -27,3 +27,5 @@ updates-restart = Перезапустить и обновить
 tv-problem-full = У телевизора уже максимум сопряжённых пультов. Удалите один в настройках телевизора, в разделе «Пульты».
 tv-problem-unpaired = Телевизор больше не знает это { -device }. Выполните сопряжение заново.
 player-position-spoken = { $position } из { $duration }
+names-pair = { $first } и { $last }
+names-list = { $list }, { $next }

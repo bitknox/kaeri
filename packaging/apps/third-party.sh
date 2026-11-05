@@ -118,8 +118,9 @@ for arch in "${windows_archs[@]}"; do
   cp "$windows/windows-$arch/stamp" "$stage/windows/$arch/build/"
 done
 mkdir -p "$stage/windows/build"
-cp desktop/windows/scripts/libmpv.ps1 desktop/windows/scripts/package.sh packaging/windows/kaeri-app.iss \
-  "$stage/windows/build/"
+cp desktop/windows/scripts/libmpv.ps1 desktop/windows/scripts/libmpv-build.sh desktop/windows/scripts/package.sh \
+  packaging/windows/kaeri-app.iss "$stage/windows/build/"
+cp -R desktop/windows/libmpv "$stage/windows/build/libmpv"
 
 for arch in "${linux_archs[@]}"; do
   mkdir -p "$stage/linux/$arch/build"
@@ -178,10 +179,12 @@ apple/     kaeri-$version-macos.dmg, kaeri-$version-ios-unsigned.ipa
 
 windows/   kaeri-$version-windows-x64-setup.exe, kaeri-$version-windows-arm64-setup.exe
 
-  libmpv-2.dll is mpv's own LGPL build for Windows, $windows_mpv, from mpv's development
-  builds, made by mpv-winbuild-cmake with FFmpeg and the libraries beneath it linked into the
-  one DLL, which the app loads as a library of its own. kaeri keeps the build, unmodified, on
-  its deps-libmpv release, and build/libmpv.ps1 fetches it by its SHA-256. Each architecture's
+  libmpv-2.dll is kaeri's LGPL build of mpv for Windows, $windows_mpv, made as mpv's own
+  development builds are, by build/libmpv-build.sh: mpv's build-mingw64-full.sh in FFmpeg-Builds'
+  LGPL images, with kaeri's patches to mpv, FFmpeg and the libraries beneath it linked into the
+  one DLL, which the app loads as a library of its own. kaeri keeps each build on its
+  deps-libmpv release beside libmpv-$windows_mpv-sources.tar, everything it was built from, and
+  build/libmpv.ps1 fetches it by its SHA-256. Each architecture's
   folder is the notices its installer puts in the app's third-party folder: libmpv's licence,
   the Windows App SDK's${windows_sdk:+ ($windows_sdk)}, whose runtime the app carries, the Rust crates in the engine,
   the fonts' and the shaders'.

@@ -283,7 +283,7 @@ private struct HoverCardContent: View {
     private var details: some View {
         let action = TitleAction(entry, handedOff: navigator.handedOff, episodes: store.titles.episodes[entry.id])
         let home = navigator.section == .home ? HomeHover(store, entry.id) : nil
-        let synopsis = entry.shownSynopsis
+        let synopsis = home?.episodeSynopsis ?? entry.shownSynopsis
         let reserves = !((store.titles.detailed.contains(entry.id) || store.titles.cardedIds.contains(entry.id)) && synopsis.isEmpty)
         return VStack(alignment: .leading, spacing: HoverCardSize.gap) {
             if let line = home?.line {
@@ -386,7 +386,7 @@ private struct HoverSoundToggle: View {
         }
         .buttonStyle(.plain)
         .focusable(false)
-        .help(L.titleTrailerSound)
+        .tooltip(L.titleTrailerSound)
         .accessibilityLabel(L.titleTrailerSound)
         .accessibilityValue(on ? L.valueOn : L.valueOff)
         .opacity(shown ? 1 : 0)

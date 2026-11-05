@@ -93,6 +93,7 @@ async fn main() -> anyhow::Result<()> {
             auto_skip: false,
             auto_skip_recap: false,
             ask_was_opening: false,
+            find_skip_times: false,
             share_skip_times: Some(false),
             mark_chapters: true,
             skip_button: true,
@@ -111,6 +112,8 @@ async fn main() -> anyhow::Result<()> {
             up_next_countdown: 10,
             mpv_options: Vec::new(),
             untracked: false,
+            swarm: Default::default(),
+            begin: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),

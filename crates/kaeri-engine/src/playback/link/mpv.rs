@@ -9,6 +9,28 @@ use kaeri_player::{Mpv, MpvSession, PlayerError, companion, protocol::Command};
 
 use super::{LinkError, Opened, Overlay, PlayerLink, PlayerOpener};
 
+/// The fold line's words for every count the column can hold back, "1 more in chat" on: the
+/// companion counts and picks, as the words are the terminal's language's.
+fn fold_words() -> Vec<String> {
+    (1..=FOLD_WORDS).map(kaeri_i18n::t::party_chat_more).collect()
+}
+
+/// Lines the fold has words for. The companion holds back no more than this: past it, the
+/// oldest waiting line leaves the video unshown, and stays in the Together screen's
+/// conversation.
+const FOLD_WORDS: i64 = 40;
+
+/// The reaction's glyph, by the name the companion draws it under.
+fn glyph(reaction: kaeri_model::party::Reaction) -> &'static str {
+    use kaeri_model::party::Reaction;
+    match reaction {
+        Reaction::Laugh => "laugh",
+        Reaction::Gasp => "gasp",
+        Reaction::Clap => "clap",
+        Reaction::Cry => "cry",
+    }
+}
+
 impl From<PlayerError> for LinkError {
     fn from(error: PlayerError) -> Self {
         Self(error.to_string())
@@ -101,6 +123,11 @@ impl PlayerLink for MpvSession {
                 companion::skipped(kind.label(), kind.label(), from, to)
             }
             Overlay::Toast { text, level } => companion::toast(&text, level),
+            Overlay::ChatLine { who, you, text, .. } => {
+                companion::chat_line(&who, you, &text, &fold_words())
+            }
+            Overlay::Reaction { who, reaction } => companion::reaction(&who, glyph(reaction)),
+            Overlay::ChatCleared => companion::chat_clear(),
             Overlay::Stall { seconds } => companion::stall(seconds),
             Overlay::StallCleared => companion::stall_clear(),
             // The companion's seek bar reads mpv itself, chapters and cache alike.

@@ -15,7 +15,8 @@ import Foundation
 ///     -KaeriAvailable here      Search's Available filter: here or services
 ///     -KaeriFilters set         Search with a row of filters and the sheet's set: Fantasy, 2024, Spring, TV,
 ///                                   score 70% and Licensed only
-///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn
+///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn; on
+///                                   iPhone the title page at its episodes, on the Mac at that episode
 ///     -KaeriLibrary planning    the Library's list
 ///     -KaeriPalette hoshi       the ⌘K palette, open on these words
 ///     -KaeriPane accounts       Settings' pane, or on iPhone the Settings sheet at its page

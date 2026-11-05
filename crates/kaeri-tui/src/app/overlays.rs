@@ -25,6 +25,8 @@ pub struct FrameReport {
     pub overlay_offset: Option<usize>,
     /// How many pages the help table ran to, when it was drawn.
     pub help_pages: Option<usize>,
+    /// The first row the episode table's window showed, when it was drawn.
+    pub episodes_offset: Option<usize>,
 }
 
 impl App {
@@ -44,6 +46,10 @@ impl App {
         action: Action,
         visible_rows: usize,
     ) -> Option<Command> {
+        // The Devices screen's questions, where leaving says something to the engine.
+        if let Some(task) = self.devices_overlay_key(overlay, action) {
+            return task;
+        }
         match action {
             Action::Quit => {
                 self.should_quit = true;
@@ -276,6 +282,7 @@ impl App {
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
             Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
             _ => 0,
         }
     }
@@ -333,6 +340,10 @@ impl App {
         }
         if let Some(pages) = report.help_pages {
             self.help_pages = pages;
+        }
+        if let Some(offset) = report.episodes_offset {
+            self.cursors.episodes.offset = offset;
+            self.episodes_jumped = false;
         }
     }
 }

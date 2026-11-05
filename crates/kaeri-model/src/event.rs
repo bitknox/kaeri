@@ -6,6 +6,7 @@ use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 
 use crate::{
     Msg,
+    browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
     catalog::{ContentFor, ContentList, Entry, ResumePoint, TitleAired, TitleLanguage},
     discussion::DiscussionView,
     downloads::{DownloadRow, SeedRow},
@@ -16,7 +17,8 @@ use crate::{
     notice::Notice,
     notifications::{NewEpisode, UpcomingNotices},
     party::{
-        NoSourceWhy, PartyForm, PartyGlimpse, PartyMember, PartyMessage, PartyRecentRoom,
+        NoSourceWhy, PartyChatRefusal, PartyChatState, PartyConversation, PartyForm,
+        PartyGlimpse, PartyMember, PartyMessage, PartyReaction, PartyRecentRoom,
         PartyStartKind, PartyView,
     },
     playback::{Ending, PlaybackId, SkipKind, TimeRange, TimelineMark},
@@ -43,6 +45,8 @@ use crate::{
 ///
 /// Async work never touches the interface's `App` directly; it sends one of these instead. That
 /// is what guarantees the render loop is never blocked on I/O.
+// uniffi packs this enum's names, types and `///` docs into one 32 KiB metadata buffer, and it
+// is nearly full: the longest variant docs are plain `//` comments, as in `Command`.
 #[derive(Debug)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum Event {
@@ -278,12 +282,12 @@ pub enum Event {
     PlaybackVolume(f64),
     /// Which provider the current stream actually came from.
     ActiveProvider(String),
-    /// The player asked for an episode of what is playing: its Episodes menu, Up Next's
-    /// "play now", N/P inside the window, or the terminal's n/N. `title` is the episode's name
-    /// from the episode list the playback holds, which is that title's whatever is open here.
-    ///
-    /// The engine starts it, of the title Now Playing shows, and says so with the
-    /// [`Event::PlaybackStaged`] that follows this: there is nothing here for a front end to do.
+    // The player asked for an episode of what is playing: its Episodes menu, Up Next's
+    // "play now", N/P inside the window, or the terminal's n/N. `title` is the episode's name
+    // from the episode list the playback holds, which is that title's whatever is open here.
+    //
+    // The engine starts it, of the title Now Playing shows, and says so with the
+    // [`Event::PlaybackStaged`] that follows this: there is nothing here for a front end to do.
     PlayerPlayEpisode {
         episode: String,
         title: Option<String>,
@@ -341,36 +345,60 @@ pub enum Event {
     },
     SkipCleared,
     PlaybackSpeed(f64),
-    /// A playback is over. `watched` is the tracker's verdict, for the meters; `ending` is how
-    /// it came to an end, which is what decides whether anything plays next.
-    ///
-    /// `rolling_on` is whether it did: the engine has started the next episode in the same
-    /// window, and stages it with the [`Event::PlaybackStaged`] that follows this, so Now
-    /// Playing stays up for it rather than coming down. Only an ending of the playback Now
-    /// Playing shows rolls on, when mpv played it to its end and the playback kept its window
-    /// for the next. A playback cannot know this of itself, and says `false`
-    /// ([`Event::playback_ended`]); the engine says it on the way.
+    // A playback is over. `watched` is the tracker's verdict, for the meters; `ending` is how
+    // it came to an end, which is what decides whether anything plays next.
+    //
+    // `rolling_on` is whether it did: the engine has started the next episode in the same
+    // window, and stages it with the [`Event::PlaybackStaged`] that follows this, so Now
+    // Playing stays up for it rather than coming down. Only an ending of the playback Now
+    // Playing shows rolls on, when mpv played it to its end and the playback kept its window
+    // for the next. A playback cannot know this of itself, and says `false`
+    // ([`Event::playback_ended`]); the engine says it on the way.
     PlaybackEnded {
         watched: bool,
         ending: Ending,
         rolling_on: bool,
+        /// Why it failed, when `ending` is [`Ending::Failed`] and the engine knows: the same
+        /// reason the alert before it says, so a failure screen picks its words and its
+        /// actions from one value.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        failure: Option<crate::starting::StartFailure>,
     },
-    /// A playback the engine has started, as Now Playing shows it while its stream is found:
-    /// whose it is, what it is called, which episode and the episode's own name, and the speed
-    /// it starts at. Said for every play Now Playing shows, the ones a front end asked for and
-    /// the ones the engine starts on its own: the next episode an ending rolls on to, an episode
-    /// picked in the player, and an episode restarted in the other translation.
-    ///
-    /// Applied idempotently: a front end that staged this playback itself, as it asked for it,
-    /// or was told it once already, changes nothing. A watch party is not staged, and is not
-    /// said: the party's player is not the app's. A play cast to a TV is said as
-    /// [`Event::CastStaged`] instead: no player opens here for it.
+    // A playback the engine has started, as Now Playing shows it while its stream is found:
+    // whose it is, what it is called, which episode and the episode's own name, and the speed
+    // it starts at. Said for every play Now Playing shows, the ones a front end asked for and
+    // the ones the engine starts on its own: the next episode an ending rolls on to, an episode
+    // picked in the player, and an episode restarted in the other translation.
+    //
+    // Applied idempotently: a front end that staged this playback itself, as it asked for it,
+    // or was told it once already, changes nothing. A watch party is not staged, and is not
+    // said: the party's player is not the app's. A play cast to a TV is said as
+    // [`Event::CastStaged`] instead: no player opens here for it.
     PlaybackStaged {
         id: AnilistId,
         title: String,
         episode: String,
         episode_title: Option<String>,
         speed: f64,
+        /// Where the episode was left, in seconds, when it resumes there: read when the play
+        /// is staged, so the starting screen can say "Resuming at 12:04" from the start. `None`
+        /// for an episode played from the beginning or never watched.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        resume: Option<f64>,
+    },
+    // A step of a start the engine is making, as the starting screen shows it: which source
+    // is being asked, one coming up empty, a torrent finding peers, the streams found, the
+    // player opening one, buffering. Named by the title and episode of the play it belongs to,
+    // which the screen matches to the [`Event::PlaybackStaged`] it holds. Said from the play
+    // being staged until its first frame; a start that is cancelled or fails says no more.
+    //
+    // `line` is what the step line says now, as a message id, when this step changes it, and
+    // `None` for a step that only adds to the detail line or the Details list.
+    StartingStep {
+        id: AnilistId,
+        episode: String,
+        step: crate::starting::StartStep,
+        line: Option<Msg>,
     },
     /// A playback the engine has started on the TV it casts to, as [`Event::PlaybackStaged`]
     /// says one for the player here: every play while casting, the first and the next episode
@@ -382,23 +410,23 @@ pub enum Event {
         episode_title: Option<String>,
         speed: f64,
     },
-    /// Whether the device has a network, as the front end's monitor last said with
-    /// [`Command::NetworkPath`](crate::command::Command::NetworkPath): said each time that
-    /// changes, and never before the first change, the engine starting online. While
-    /// `offline`, a screen shows what it has with the offline line, and one with nothing to
-    /// show says it is offline. Back online, the engine asks again for what failed meanwhile,
-    /// once, and the screens take the answers as they come.
+    // Whether the device has a network, as the front end's monitor last said with
+    // [`Command::NetworkPath`](crate::command::Command::NetworkPath): said each time that
+    // changes, and never before the first change, the engine starting online. While
+    // `offline`, a screen shows what it has with the offline line, and one with nothing to
+    // show says it is offline. Back online, the engine asks again for what failed meanwhile,
+    // once, and the screens take the answers as they come.
     Connectivity {
         offline: bool,
     },
-    /// Whether trailers may start by themselves now, from the Play trailers setting, the network
-    /// ([`Command::NetworkPath`]) and the device ([`Command::DeviceState`]): said once at launch
-    /// and again each time the answer changes. A trailer starts only while this says so and
-    /// [`crate::trailer::trailer_may_autoplay`] allows that title's; Play trailer plays whatever
-    /// it says.
-    ///
-    /// [`Command::NetworkPath`]: crate::command::Command::NetworkPath
-    /// [`Command::DeviceState`]: crate::command::Command::DeviceState
+    // Whether trailers may start by themselves now, from the Play trailers setting, the network
+    // ([`Command::NetworkPath`]) and the device ([`Command::DeviceState`]): said once at launch
+    // and again each time the answer changes. A trailer starts only while this says so and
+    // [`crate::trailer::trailer_may_autoplay`] allows that title's; Play trailer plays whatever
+    // it says.
+    //
+    // [`Command::NetworkPath`]: crate::command::Command::NetworkPath
+    // [`Command::DeviceState`]: crate::command::Command::DeviceState
     Autoplay(AutoplayView),
     /// Playback started from a stored position rather than the beginning.
     Resumed {
@@ -415,11 +443,11 @@ pub enum Event {
         playback: PlaybackId,
         ui: PlayerUi,
     },
-    /// The openings and endings the timeline of `playback` marks, whole, replacing what was
-    /// said before: the times the skip button and auto-skip use, from the file's own chapters
-    /// when they name them and otherwise from community times. Said when the file starts and
-    /// again when they change, as when the file's chapters or its length arrive. Empty when
-    /// nothing is known, and the timeline marks nothing.
+    // The openings and endings the timeline of `playback` marks, whole, replacing what was
+    // said before: the times the skip button and auto-skip use, from the file's own chapters
+    // when they name them and otherwise from community times. Said when the file starts and
+    // again when they change, as when the file's chapters or its length arrive. Empty when
+    // nothing is known, and the timeline marks nothing.
     PlayerTimeline {
         playback: PlaybackId,
         marks: Vec<TimelineMark>,
@@ -491,15 +519,36 @@ pub enum Event {
         id: AnilistId,
         dub: Option<DubExtent>,
     },
-    /// Where a title stands now, whole, after something moved it: a mark, the playhead of an
-    /// episode playing, or how one ended. Sent ahead of the event that moved it, when an event
-    /// did, so that whatever that event brings up shows the title as it now stands.
-    ///
-    /// `progress` and `resume` are what every entry of the title says, on its page and in any
-    /// list; `episodes` is each episode's watched state, from the title's table as it was last
-    /// loaded, whether or not another title's has loaded since, and empty when none of it was.
-    /// A table is only ever loaded with [`Event::Episodes`]: this says how far through it the
-    /// viewer is, never which episodes there are.
+    // Trending over `period`, in answer to
+    // [`Command::LoadTrending`](crate::command::Command::LoadTrending). `entries` is empty with
+    // `failed` set when it could not load and nothing was kept; the rail shows its own failed
+    // state. `updated_at` is when a kept answer was made, in Unix seconds, for "Updated
+    // yesterday" on one that was not just fetched. `waiting` is how many seconds AniList asked
+    // us to wait, when the budget is spent.
+    Trending {
+        period: TrendPeriod,
+        entries: Vec<Entry>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        updated_at: Option<i64>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        failed: bool,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        waiting: Option<u32>,
+    },
+    /// What a [`Command::Surprise`](crate::command::Command::Surprise) came to.
+    Surprise {
+        pool: SurprisePool,
+        outcome: SurpriseOutcome,
+    },
+    // Where a title stands now, whole, after something moved it: a mark, the playhead of an
+    // episode playing, or how one ended. Sent ahead of the event that moved it, when an event
+    // did, so that whatever that event brings up shows the title as it now stands.
+    //
+    // `progress` and `resume` are what every entry of the title says, on its page and in any
+    // list; `episodes` is each episode's watched state, from the title's table as it was last
+    // loaded, whether or not another title's has loaded since, and empty when none of it was.
+    // A table is only ever loaded with [`Event::Episodes`]: this says how far through it the
+    // viewer is, never which episodes there are.
     Progress {
         id: AnilistId,
         progress: Option<TitleProgress>,
@@ -513,12 +562,12 @@ pub enum Event {
     ///
     /// [`Command::CheckTorrentProxy`]: crate::command::Command::CheckTorrentProxy
     ProxyChecked(ProxyStatus),
-    /// A cover or banner as it was fetched or read from the cache, not yet decoded.
-    ///
-    /// Bytes rather than pixels: what a cover becomes on screen is the front end's to decide.
-    /// The reducer leaves them alone. Decoding takes long enough to stutter a frame, so whoever
-    /// runs the app decodes them off its loop and hands the image over, in the terminal with
-    /// `App::artwork_decoded`.
+    // A cover or banner as it was fetched or read from the cache, not yet decoded.
+    //
+    // Bytes rather than pixels: what a cover becomes on screen is the front end's to decide.
+    // The reducer leaves them alone. Decoding takes long enough to stutter a frame, so whoever
+    // runs the app decodes them off its loop and hands the image over, in the terminal with
+    // `App::artwork_decoded`.
     ArtworkReady {
         url: String,
         bytes: Vec<u8>,
@@ -540,14 +589,14 @@ pub enum Event {
     /// task sending a status — a rate-limit notice, a finished download — would wipe it. `None`
     /// clears it when the flow ends.
     DeviceCode(Option<DeviceCodePrompt>),
-    /// Sign in to `tracker` through the system's sign-in sheet: open `url` in it, and hand back
-    /// the redirect it ends on, one with `callback_scheme` for its scheme, with
-    /// [`Command::FinishSignIn`], or say it was closed with [`Command::CancelSignIn`]. What a
-    /// native app's own sign-in clients start; the terminal's sign-in catches its redirect on
-    /// a loopback port instead.
-    ///
-    /// [`Command::FinishSignIn`]: crate::command::Command::FinishSignIn
-    /// [`Command::CancelSignIn`]: crate::command::Command::CancelSignIn
+    // Sign in to `tracker` through the system's sign-in sheet: open `url` in it, and hand back
+    // the redirect it ends on, one with `callback_scheme` for its scheme, with
+    // [`Command::FinishSignIn`], or say it was closed with [`Command::CancelSignIn`]. What a
+    // native app's own sign-in clients start; the terminal's sign-in catches its redirect on
+    // a loopback port instead.
+    //
+    // [`Command::FinishSignIn`]: crate::command::Command::FinishSignIn
+    // [`Command::CancelSignIn`]: crate::command::Command::CancelSignIn
     Authorize {
         tracker: String,
         url: String,
@@ -576,6 +625,66 @@ pub enum Event {
     Discussion(DiscussionView),
     /// Every joined plugin store, replacing whatever was there.
     Stores(Vec<StoreRow>),
+    /// The profiles, and which is in use, replacing whatever was there. Empty for a single user.
+    Profiles(crate::profiles::ProfilesView),
+    /// A profile was chosen. The front end stops the engine, which saves what plays, and starts
+    /// it again with this profile in `FfiStart::profile`; nothing of the one left is kept in
+    /// memory, so its screens, caches and signed-in trackers are the next profile's from then on.
+    ProfileSwitch {
+        id: String,
+    },
+    /// How sync stands, replacing whatever was there.
+    SyncStatus(crate::group::SyncStatus),
+    /// A pairing code is showing: this device listens at `port` for it, and it stops working
+    /// after `seconds` or three wrong tries. The QR code carries the device's address, `port`
+    /// and the code.
+    SyncInvite {
+        code: String,
+        port: u16,
+        seconds: u32,
+    },
+    /// The recovery key, to show once. Never sent again; only a new one can be made.
+    SyncRecoveryKey(String),
+    /// A cloud sign-in for sync moved on: `step` says what to show, `None` that it is over (signed
+    /// in, cancelled or failed; a failure comes as `SyncProblem` too).
+    SyncSignIn {
+        service: crate::group::SyncFolderKind,
+        step: Option<crate::group::SyncSignInStep>,
+    },
+    /// A sync set-up or join did not work.
+    SyncProblem(crate::group::SyncProblem),
+    /// Sign-ins asked of `device` came: the `trackers` signed in here now, the `clouds` held
+    /// now, and the cloud sign-ins asked for that it did not have (`lacking`).
+    SyncSignInsCopied {
+        device: String,
+        trackers: Vec<String>,
+        clouds: Vec<crate::group::SyncFolderKind>,
+        lacking: Vec<crate::group::SyncFolderKind>,
+    },
+    /// Pairing did not work, for the Add a device sheet: `device` is the name of the device whose
+    /// code did not match, when one device was showing a code. `Event::SyncProblem` follows with
+    /// the same in words.
+    SyncPairFailed {
+        problem: crate::group::SyncPairProblem,
+        device: Option<String>,
+    },
+    /// A plugin store was joined with an invite `device` made for this one
+    /// (`SyncCommand::JoinStoresFrom`): `store` is its id, as `Event::StoreJoined` has it,
+    /// `address` and `name` as `SyncStoreOffer` has them. `Event::Stores` comes too.
+    SyncStoreJoined {
+        device: String,
+        store: String,
+        address: String,
+        name: String,
+    },
+    /// A plugin store asked of `device` with `SyncCommand::JoinStoresFrom` was not joined, and
+    /// why.
+    SyncStoreJoinFailed {
+        device: String,
+        address: String,
+        name: String,
+        problem: crate::group::SyncStoreProblem,
+    },
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.
@@ -627,14 +736,14 @@ pub enum Event {
         store: String,
         view: OpenJoinView,
     },
-    /// Where the update check stands: a newer release and whether to tell of it now, or that
-    /// there is none. Sent at launch by the daily check when it is switched on, from what it
-    /// kept within the day or a request past it, and for each
-    /// [`Command::CheckForUpdates`](crate::command::Command::CheckForUpdates). The daily check
-    /// says nothing when it fails.
-    ///
-    /// The terminal app tells of a release with a notice of its own, which names
-    /// `kaeri --update`; an app tells of it when `notify` says to.
+    // Where the update check stands: a newer release and whether to tell of it now, or that
+    // there is none. Sent at launch by the daily check when it is switched on, from what it
+    // kept within the day or a request past it, and for each
+    // [`Command::CheckForUpdates`](crate::command::Command::CheckForUpdates). The daily check
+    // says nothing when it fails.
+    //
+    // The terminal app tells of a release with a notice of its own, which names
+    // `kaeri --update`; an app tells of it when `notify` says to.
     Update(UpdateStatus),
     /// What a phone's remote asks of a TV's front end: a title to open, text for the focused
     /// field, a key, a volume step, or a pairing code to show or hide. Sent only on a TV that
@@ -655,6 +764,16 @@ pub enum Event {
     /// correction to stay with the room, everyone ready, or chat. Already shown on the player
     /// as a notice; this is for a party panel.
     PartyMessage(PartyMessage),
+    /// The party's conversation, whole, after every change: a line, a reaction, a mute, a send
+    /// that was never echoed. Nothing is kept past the party.
+    PartyChat(PartyConversation),
+    /// What this device may do in the conversation: whether the server has chat on, how long a
+    /// message may be, who is muted and how long Send waits.
+    PartyChatState(PartyChatState),
+    /// A reaction for the moment on the video, from any member but a muted one.
+    PartyReaction(PartyReaction),
+    /// A send that was not made, and why.
+    PartyChatRefused(PartyChatRefusal),
     /// The party is over: left on purpose with `None`, or for the reason given, worded for the
     /// user ("party.example:8999 refused the party: …"). What is playing goes on as a private
     /// session.
@@ -698,6 +817,16 @@ impl Event {
     /// A playback's ending as the playback says it: whether it rolls on is not its to know,
     /// and the engine says it on the way. See [`Event::PlaybackEnded`].
     pub fn playback_ended(watched: bool, ending: Ending) -> Self {
-        Self::PlaybackEnded { watched, ending, rolling_on: false }
+        Self::PlaybackEnded { watched, ending, rolling_on: false, failure: None }
+    }
+
+    /// A playback that could not play, with the reason the failure screen gives.
+    pub fn playback_failed(failure: crate::starting::StartFailure) -> Self {
+        Self::PlaybackEnded {
+            watched: false,
+            ending: Ending::Failed,
+            rolling_on: false,
+            failure: Some(failure),
+        }
     }
 }

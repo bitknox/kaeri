@@ -63,6 +63,8 @@ extension PhoneSettingsPage {
         case .about: PhoneAboutPage()
         case .acknowledgements: PhoneAcknowledgementsPage()
         case .tvs: PhoneTVsPage()
+        case .devices: PhoneDevicesPage()
+        case .profiles: PhoneProfilesPage()
         case .hiddenTitles: PhoneHiddenTitlesPage()
         case .store(let id): PhoneStorePage(id: id)
         case .plugin(let id): PhonePluginPage(id: id)
@@ -76,13 +78,23 @@ extension PhoneSettingsPage {
 struct PhoneList<Content: View>: View {
     @ViewBuilder let content: Content
 
+    @Environment(Navigator.self) private var navigator
+
     var body: some View {
-        List { content }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(.ground)
-            .listRowBackground(Palette.raised)
-            .environment(\.defaultMinListRowHeight, 48)
+        ScrollViewReader { proxy in
+            List { content }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(.ground)
+                .listRowBackground(Palette.raised)
+                .environment(\.defaultMinListRowHeight, 48)
+                .task {
+                    // A launch scroll brings the find row into view, for the Fixtures shots.
+                    guard navigator.launchScroll != nil else { return }
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("findSkips", anchor: .center)
+                }
+        }
     }
 }
 
@@ -106,6 +118,9 @@ struct PhoneSectionHeader: View {
 struct PhoneRowTitle: View {
     let title: String
     var note: String?
+    /// A line in silk under the note: a status, such as why a setting is paused.
+    var status: String?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -113,7 +128,12 @@ struct PhoneRowTitle: View {
             if let note {
                 Text(note).font(.ui(13)).foregroundStyle(.haze)
             }
+            if let status {
+                Text(status).font(.ui(13)).foregroundStyle(.silk).padding(.top, 4)
+                    .transition(.opacity.animation(.fadeIn))
+            }
         }
+        .animation(reduceMotion ? nil : .standard, value: status)
     }
 }
 
@@ -122,10 +142,11 @@ struct PhoneSettingSwitch: View {
     @Environment(AppStore.self) private var store
     let key: SettingKey
     var note: String?
+    var status: String?
 
     var body: some View {
         Toggle(isOn: Binding(get: { store.settings.isOn(key) }, set: { store.setSwitch(key, on: $0) })) {
-            PhoneRowTitle(title: key.title, note: note)
+            PhoneRowTitle(title: key.title, note: note, status: status)
         }
         .tint(.amber)
         .disabled(store.settings.row(key) == nil)
@@ -224,9 +245,8 @@ struct PhoneSettingsRoot: View {
                 link(.notifications, L.settingsGroupNotifications, "bell", value: store.settings.isOn(.episodeNotifications) ? L.valueOn : L.valueOff)
                 link(.sources, L.sourcesTitle, "powerplug", value: store.settings.isOn(.torrents) ? L.settingsTorrentsValueOn : L.settingsTorrentsValueOff)
                 link(.accounts, L.navAccounts, "person", value: anilist?.connected == true ? AccountsModel.name("anilist") : L.valueNone)
-                if store.tv.available {
-                    link(.tvs, L.tvTitleList, "tv", value: store.tv.paired.isEmpty ? L.valueNone : store.tv.paired.count.formatted(.number.locale(AirTime.locale)))
-                }
+                link(.devices, L.devicesTitle, "laptopcomputer.and.iphone", value: SyncWords.rowValue(store.sync, tvs: store.tv.paired.count))
+                link(.profiles, L.profilesTitle, "person.2", value: store.sync.profiles.isEmpty ? L.profilesOnlyYou : store.sync.profiles.count.formatted(.number.locale(AirTime.locale)))
             }
             Section {
                 link(.about, L.aboutTitle, "info.circle", value: AppVersion.short)
@@ -329,6 +349,7 @@ struct PhoneGeneralPage: View {
 
 struct PhonePlaybackPage: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmClearSkips = false
 
     var body: some View {
@@ -353,6 +374,8 @@ struct PhonePlaybackPage: View {
                 PhoneSettingSwitch(key: .skipFiller, note: overridden(.skipFiller))
                 PhoneSettingSwitch(key: .markChapters)
                 PhoneSettingSwitch(key: .skipButton, note: L.settingsSkipButtonDetail)
+                PhoneSettingSwitch(key: .findSkipTimes, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords)
+                    .id("findSkips")
                 PhoneSettingSwitch(key: .askWasOpening, note: L.settingsAskWasOpeningDetail)
                 PhoneSettingSwitch(key: .shareSkipTimes, note: L.settingsShareSkipsDetail)
                 Button(L.settingsClearSkips) { confirmClearSkips = true }
@@ -373,7 +396,19 @@ struct PhonePlaybackPage: View {
             } header: {
                 PhoneSectionHeader(L.playerPictureAndSound)
             }
+            Section {
+                Toggle(isOn: Binding(
+                    get: { store.party.chat.hidden }, set: { store.party.chat.hidden = $0 })
+                ) {
+                    PhoneRowTitle(title: L.settingsHideChat, note: L.settingsHideChatLine)
+                }
+                .tint(.amber)
+                .listRowBackground(Palette.raised)
+            } header: {
+                PhoneSectionHeader(L.settingsGroupWatchParties)
+            }
         }
+        .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)
         .navigationTitle(L.settingsGroupPlayback)
         .navigationBarTitleDisplayMode(.inline)
     }

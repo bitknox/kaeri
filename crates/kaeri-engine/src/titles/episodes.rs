@@ -163,8 +163,8 @@ async fn load_listed(
         &media.match_target(),
         Translation::Sub,
         now,
-        |source, key| {
-            coverage::listing(source, key, Translation::Sub, (store, id), &media, now)
+        |source, key, hints| {
+            coverage::listing(source, key, hints, Translation::Sub, (store, id), &media, now)
         },
         |answers| coverage::is_whole(&media, answers, now),
         |answers| progress(build(&media, store, registry, id, answers, now).rows),
@@ -203,6 +203,7 @@ async fn load_listed(
         &built.main,
         built.marks,
         now,
+        meta.episode_text(),
     );
     Ok(Listed { load: EpisodeLoad::Rows(built.rows), unnamed, main: Some(built.main) })
 }
@@ -399,12 +400,19 @@ pub(crate) async fn dub_answer(
         &media.match_target(),
         Translation::Dub,
         now,
-        |source, key| {
+        |source, key, hints| {
             let (asked, nothing) = (asked.clone(), nothing.clone());
             async move {
-                let attempt =
-                    coverage::listing(source, key, Translation::Dub, (store, id), media, now)
-                        .await;
+                let attempt = coverage::listing(
+                    source,
+                    key,
+                    hints,
+                    Translation::Dub,
+                    (store, id),
+                    media,
+                    now,
+                )
+                .await;
                 asked.fetch_add(1, Ordering::SeqCst);
                 let not_found = attempt.failures.iter().all(|(_, error)| {
                     matches!(error, kaeri_core::error::ProviderError::NotFound)
@@ -461,6 +469,10 @@ pub(crate) async fn list_episodes(
         }
     };
     let listed = load_listed(&meta, &store, &registry, id, &mut early).await;
+    // Listed by a source: a miss Home kept for the title is a find now.
+    if listed.as_ref().is_ok_and(|listed| listed.main.is_some()) {
+        crate::catalog::probe::listed(&store, &tx, id);
+    }
     let current = match &listed {
         Ok(listed) => current_match(&store, &registry, id, listed.main.as_deref()),
         Err(_) => None,

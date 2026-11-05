@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>Chưa thiết lập các nguồn. Hãy thêm một nguồn trong mục Các nguồn.</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Không có kết nối. Hãy thử lại khi bạn trực tuyến.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>Tập {episode} sẽ phát sóng {when}.</value>
   </data>
@@ -265,6 +268,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Đang tải các nguồn…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Đang tìm tiêu đề</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Đang chuẩn bị các nguồn của bạn</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Đang hỏi {name}</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Đang mở luồng</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Đang thử luồng khác</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Đang tìm peer</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Đang đệm</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Đang tìm trong các nguồn tập {episode}…</value>
@@ -647,6 +671,12 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Không lưu được lựa chọn đó. {reason}</value>
   </data>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</value>
+  </data>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</value>
+  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Đây không phải liên kết magnet hay tệp torrent.</value>
   </data>
@@ -661,6 +691,12 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Không khởi động được phiên torrent. {reason}</value>
+  </data>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>Không dùng được cài đặt proxy. {reason}</value>
+  </data>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>Đã tải lại Các nguồn. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrent đang tắt. Phiên đã dừng.</value>
@@ -688,6 +724,9 @@
   </data>
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} đã sẵn sàng. Bản demo vẫn nằm cuối mục Các nguồn của bạn.</value>
+  </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Bạn có thể đóng thẻ này và quay lại Kaeri.</value>
   </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Đã đăng nhập vào {tracker}.</value>
@@ -769,6 +808,15 @@
   </data>
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Không lưu được cài đặt đó. {cause}</value>
+  </data>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>Lưu lượng torrent giờ đi qua proxy.</value>
+  </data>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>Torrent giờ kết nối trực tiếp, không qua proxy.</value>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>Không kiểm tra được proxy. {cause}</value>
   </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. {reason}</value>
@@ -863,6 +911,18 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>Kaeri đã đóng sau một sự cố. Bạn có thể báo cáo trong Cài đặt, Giới thiệu.</value>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>Không có tựa nào khớp với các bộ lọc này.</value>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>Danh sách Dự định xem đang trống.</value>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.</value>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.</value>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Xem tiếp</value>
   </data>
@@ -889,6 +949,18 @@
   </data>
   <data name="CalendarWatchedSpoken" xml:space="preserve">
     <value>{title}, {episode}, đã xem</value>
+  </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>E{episode} ra {ago}</value>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>E{episode} ra {ago} · Lồng tiếng</value>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>E{episode} sau {span}</value>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>E{episode} sau {span} · Lồng tiếng</value>
   </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>{list} {count}</value>
@@ -1313,9 +1385,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Đang kết nối với TV</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>TV hiển thị thiết bị này với mã {code}. Quên TV ở đây cũng quên thiết bị này.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
   </data>
@@ -1429,6 +1498,21 @@
   </data>
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>Windows sẽ hỏi có cho phép Kaeri kết nối tới TV của bạn không.</value>
+  </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>Bạn có thể xem lại trong Cài đặt, Các thiết bị, bằng Windows Hello.</value>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Hiện khóa khôi phục của Kaeri</value>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>Đồng bộ với {device}</value>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>Mở {device}</value>
   </data>
   <data name="SourcePickerSeeders_other" xml:space="preserve">
     <value>{count} người đang chia sẻ</value>
@@ -1744,6 +1828,9 @@
   </data>
   <data name="ActionCancel" xml:space="preserve">
     <value>Hủy</value>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>Đi</value>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>Để sau</value>
@@ -2209,6 +2296,12 @@
   </data>
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>{position} trên {duration}</value>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first} và {last}</value>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}, {next}</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Thảo luận</value>
@@ -3446,6 +3539,9 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Có liên kết mời?</value>
   </data>
+  <data name="OnboardingWhereStores" xml:space="preserve">
+    <value>Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin được ký xác thực và cấp cho mỗi thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.</value>
+  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Dùng thử ngay</value>
   </data>
@@ -3989,6 +4085,120 @@
   <data name="PartyPickContinue" xml:space="preserve">
     <value>Tiếp tục</value>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>Nhắn gì đó</value>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>Gửi</value>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>Trò chuyện</value>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>Chờ {seconds} giây</value>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>Chờ {seconds} giây</value>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>{count} tin nữa</value>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>Máy chủ của phòng này đã tắt trò chuyện</value>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>Tin nhắn đi qua máy chủ của phòng. Kaeri không lưu tin nào.</value>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>Trò chuyện đang ẩn</value>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>Tùy chọn Ẩn trò chuyện đang bật trong Cài đặt, mục Phát.</value>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>Hiện trò chuyện</value>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>Ẩn trò chuyện trong các buổi xem chung</value>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.</value>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>Tắt tiếng {name}</value>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>Bật tiếng {name}</value>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>Bật tiếng</value>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>Đã tắt tiếng</value>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name} đã bị tắt tiếng</value>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>Không gửi được</value>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>Thử lại</value>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>Biểu cảm</value>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>Cười</value>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>Ngạc nhiên</value>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>Vỗ tay</value>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>Khóc</value>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>{name} đã cười</value>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>{name} đã ngạc nhiên</value>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>{name} đã vỗ tay</value>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>{name} đã khóc</value>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{line} lúc {time}</value>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first} và {second}</value>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}, {second} và {third}</value>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}, {second} và {count} người khác</value>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>Bạn</value>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>Gửi với tên {device}</value>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name} nói {message}</value>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>Còn {count} ký tự</value>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>Tiếp theo</value>
   </data>
@@ -4024,6 +4234,123 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Đang đệm</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>nguồn {place} trên {total}</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Lựa chọn của bạn cho phim này</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} không có phim này</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} không có tập {episode}</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} không phản hồi</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} mất quá nhiều thời gian</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Bạn đã bỏ qua {name}</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Đã bỏ qua do lỗi gần đây</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>Từ {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>Luồng đầu tiên không có hình</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Luồng {next} trên {total}</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} peer</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Đang đệm · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Phát lại từ {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Phát từ đầu</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Chi tiết</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Bỏ qua {name}</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Bỏ qua luồng này</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Vẫn đang chờ {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Đang chờ kết nối</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Bạn đang ngoại tuyến. Tập {episode} sẽ bắt đầu khi bạn trực tuyến.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Sửa kết quả khớp</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Âm thanh và phụ đề</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Đã tìm thấy tiêu đề</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} giây</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Vẫn đang bắt đầu. Bạn có thể chọn nguồn.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Đang bắt đầu tập {episode}, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Bắt đầu từ đầu</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Đang hỏi</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Không có phim này</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Không có tập {episode}</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Không phản hồi</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Mất quá nhiều thời gian</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Đã bỏ qua</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>Đã hỏi: {names}.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Có phụ đề</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Nguồn đang đệm · {seconds} s</value>
@@ -4136,6 +4463,9 @@
   <data name="PlayerMarkShares" xml:space="preserve">
     <value>Khi lưu, các mốc này được chia sẻ với AniSkip.</value>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeri tìm thấy các mốc này từ âm thanh.</value>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>Thay mốc {start} đến {end} của AniSkip, vốn bị báo là sai.</value>
   </data>
@@ -4187,11 +4517,35 @@
   <data name="PlayerDontAskAgain" xml:space="preserve">
     <value>Đừng hỏi lại</value>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeri đã tìm thấy đoạn mở đầu này. Hai đầu mốc có đúng không?</value>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeri đã tìm thấy đoạn kết này. Hai đầu mốc có đúng không?</value>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>Chọn Có để chia sẻ các mốc này với AniSkip cho tập {episode}.</value>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>Có</value>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>Chỉnh</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>Đã lưu. AniSkip nhận các mốc này cho tập {episode}.</value>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeri sẽ không hỏi về mốc bỏ qua nữa.</value>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>Bạn có thể bật lại trong Cài đặt.</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Chia sẻ mốc bỏ qua của bạn với AniSkip?</value>
   </data>
   <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, do các tình nguyện viên của riêng nó vận hành. Trình phát của người khác sẽ bỏ qua những gì bạn đánh dấu.</value>
+    <value>AniSkip là danh sách chung về đoạn mở đầu và đoạn kết, do các tình nguyện viên của nó vận hành. Trình phát của người khác sẽ bỏ qua các mốc bạn đánh dấu và các mốc tìm thấy mà bạn xác nhận.</value>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên tạo riêng cho bản cài này. Không có tên, tài khoản hay nguồn bạn xem. AniSkip thấy địa chỉ IP của bạn để hạn chế spam, và điều khoản của họ yêu cầu bạn từ 13 tuổi trở lên.</value>
@@ -4210,6 +4564,27 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>Từ AniSkip</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Do Kaeri tìm thấy</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>Tạm dừng khi chế độ pin yếu đang bật.</value>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>Tạm dừng khi chế độ tiết kiệm pin đang bật.</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>Tạm dừng khi chế độ tiết kiệm năng lượng đang bật.</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>Tạm dừng khi chế độ tiết kiệm điện đang bật.</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>Tạm dừng cho đến khi còn trống 2 GB bộ nhớ.</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>Không có trong bản Kaeri này.</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>Chưa có</value>
@@ -4709,6 +5084,183 @@
   <data name="SearchLineService" xml:space="preserve">
     <value>Trên {service}</value>
   </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>{count} tập</value>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>{count} tập</value>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>Đã ra {out} trên {total} tập</value>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>{out} trên {total}</value>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>Đã ra {count} tập</value>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>Ra {count}</value>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>Bắt đầu {date}</value>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>Chưa ra mắt</value>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>Tập {episode} trên {total}</value>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>Lồng tiếng</value>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>LT {through}</value>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>{count} tập</value>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>Đã ra {out} trên {total} tập</value>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>Đã ra {count} tập</value>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>Bắt đầu {date}</value>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>Tập {episode} trên {total}</value>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>lồng tiếng đến tập {through}</value>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>có bản lồng tiếng</value>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>thg 1</value>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>tháng 1</value>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>thg 2</value>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>tháng 2</value>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>thg 3</value>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>tháng 3</value>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>thg 4</value>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>tháng 4</value>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>thg 5</value>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>tháng 5</value>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>thg 6</value>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>tháng 6</value>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>thg 7</value>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>tháng 7</value>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>thg 8</value>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>tháng 8</value>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>thg 9</value>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>tháng 9</value>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>thg 10</value>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>tháng 10</value>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>thg 11</value>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>tháng 11</value>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>thg 12</value>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>tháng 12</value>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>Thịnh hành hôm nay</value>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>Thịnh hành tuần này</value>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>Thịnh hành tháng này</value>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>Hôm nay</value>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>Tuần này</value>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>Tháng này</value>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>Không tải được mục thịnh hành {period}.</value>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>Cập nhật {age}</value>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>Ngẫu nhiên</value>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>Ngẫu nhiên</value>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>Tựa khác</value>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>Mở một tựa ngẫu nhiên từ Dự định xem</value>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>Mở một tựa ngẫu nhiên từ các bộ lọc này</value>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>Mở một tựa ngẫu nhiên khác thay cho tựa này</value>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>Không có tựa nào khớp với các bộ lọc này.</value>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>Danh sách Dự định xem đang trống.</value>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.</value>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>Thêm máy chủ media</value>
   </data>
@@ -4940,6 +5492,9 @@
   <data name="SettingsGroupPlayback" xml:space="preserve">
     <value>Phát</value>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>Các buổi xem chung</value>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>Xem</value>
   </data>
@@ -5021,23 +5576,35 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Tự động bỏ qua phần tóm tắt</value>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>Tìm mốc bỏ qua từ âm thanh</value>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>Khi AniSkip chưa có mốc nào, Kaeri so sánh âm thanh giữa các tập của một phim, ngay trên thiết bị này.</value>
+  </data>
   <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Hỏi sau khi tự bỏ qua phần mở đầu</value>
+    <value>Hỏi về mốc bỏ qua</value>
   </data>
   <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Đề nghị đánh dấu để lần sau được bỏ qua</value>
+    <value>Sau khi bạn tự bỏ qua đoạn mở đầu, và sau khi bỏ qua một mốc do Kaeri tìm thấy</value>
   </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Chia sẻ mốc bỏ qua với AniSkip</value>
   </data>
   <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, nhiều trình phát đang dùng. Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài này.</value>
+    <value>AniSkip là danh sách chung về đoạn mở đầu và đoạn kết mà nhiều trình phát dùng. Nó nhận các mốc bạn đánh dấu và các mốc tìm thấy mà bạn xác nhận, số MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài đặt này.</value>
   </data>
   <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Xóa mốc bỏ qua bạn đã đánh dấu…</value>
+    <value>Mốc bỏ qua bạn đã đánh dấu hoặc do Kaeri tìm thấy</value>
   </data>
   <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Xóa các mốc bỏ qua bạn đã đánh dấu? AniSkip vẫn giữ những mốc bạn đã chia sẻ.</value>
+    <value>Xóa các mốc bỏ qua bạn đã đánh dấu và những mốc do Kaeri tìm thấy? AniSkip vẫn giữ những mốc bạn đã chia sẻ.</value>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>Xóa mốc bỏ qua</value>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>Các mốc bạn đã đánh dấu và các mốc do Kaeri tìm thấy</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Tự động bỏ qua tập độn</value>
@@ -5061,7 +5628,7 @@
     <value>Bảo vệ tiết lộ nội dung</value>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Làm mờ ảnh của các tập chưa xem sau tập kế tiếp</value>
+    <value>Làm mờ ảnh và tóm tắt của các tập chưa xem sau tập kế tiếp</value>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Mỗi tựa tự nhớ âm thanh và phụ đề riêng.</value>
@@ -5205,7 +5772,7 @@
     <value>Hiện tất cả</value>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Làm mờ ảnh sau tập kế tiếp.</value>
+    <value>Làm mờ ảnh và tóm tắt sau tập kế tiếp.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Luôn</value>
@@ -5350,6 +5917,9 @@
   </data>
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Đặt lại cài đặt?</value>
+  </data>
+  <data name="SettingsResetDetail" xml:space="preserve">
+    <value>Mọi cài đặt trở về mặc định, kể cả proxy cho torrent. Lịch sử xem của bạn được giữ, và tệp cài đặt cũ cũng được giữ lại.</value>
   </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Cài đặt đã về mặc định. Tệp cũ được giữ với tên {file}.</value>
@@ -5516,6 +6086,9 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Không khớp được tựa này</value>
   </data>
+  <data name="SourceNoteHeldBack" xml:space="preserve">
+    <value>Đang chờ kiểm tra proxy</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Các bản phát hành</value>
   </data>
@@ -5594,6 +6167,9 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Không phản hồi.</value>
   </data>
+  <data name="SourcesDetailHeldBack" xml:space="preserve">
+    <value>Đang chờ cho đến khi proxy đạt kiểm tra.</value>
+  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Đã tắt. Vẫn giữ vị trí nhưng không được thử.</value>
   </data>
@@ -5659,6 +6235,9 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Thứ tự ưu tiên</value>
+  </data>
+  <data name="SourcesTorrentsNote" xml:space="preserve">
+    <value>Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Các nguồn đang được thiết lập lại</value>
@@ -5849,6 +6428,9 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Các plugin</value>
   </data>
+  <data name="SourcesSectionCatalogues" xml:space="preserve">
+    <value>Danh mục mở</value>
+  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Thêm bản demo</value>
   </data>
@@ -5860,6 +6442,9 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Chưa có các cửa hàng plugin</value>
+  </data>
+  <data name="StoresEmptyDetail" xml:space="preserve">
+    <value>Các cửa hàng plugin giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Hãy tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.</value>
@@ -6338,6 +6923,9 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Mở các cửa hàng plugin</value>
   </data>
+  <data name="StoresWhatIs" xml:space="preserve">
+    <value>Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành các cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.</value>
+  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Cửa hàng plugin là gì?</value>
   </data>
@@ -6355,6 +6943,666 @@
   </data>
   <data name="StoresShare" xml:space="preserve">
     <value>Chia sẻ…</value>
+  </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Trình duyệt của bạn đã mở trang của {service}. Hãy cho phép truy cập ở đó, rồi Kaeri sẽ tự làm tiếp.</value>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Đăng nhập {service} trong trình duyệt</value>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>máy tính</value>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Nhập mã</value>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Hiện</value>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Tắt</value>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>Địa chỉ</value>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>Ghép nối bằng địa chỉ</value>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>Khóa khôi phục</value>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>Tên người dùng</value>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>Địa chỉ máy chủ</value>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>Đang ghép nối</value>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>thiết bị kia của bạn</value>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>Để trống địa chỉ thì Kaeri sẽ tìm thiết bị trong mạng này.</value>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>Đồng bộ chia sẻ chỗ bạn đã xem dở, lịch sử và cài đặt của bạn.</value>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Điều khiển</value>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Sửa</value>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Tên</value>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>Thêm cho {name}</value>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>Không kết nối được với {store} hoặc {device}. Hãy thử lại khi cả hai đều trực tuyến.</value>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store} không chấp nhận lời mời. Hãy nhờ chủ của nó gửi lời mời mới.</value>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device} không thể mời các các thiết bị khác vào {store}. Hãy nhờ chủ của cửa hàng plugin gửi lời mời.</value>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>Các thiết bị</value>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>Đồng bộ tắt</value>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>Đã đồng bộ {ago}</value>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>Không đồng bộ được</value>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>Thiết bị này</value>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>Tên</value>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>Đồng bộ</value>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>Đồng bộ đang tắt</value>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>Bật lên để giữ chỗ xem dở, lịch sử và cài đặt giống nhau trên các các thiết bị của bạn.</value>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>Bật đồng bộ</value>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>Các các thiết bị của bạn nên chia sẻ bằng cách nào?</value>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>Với một thiết bị ở gần</value>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>Ghép nối với một thiết bị khác trong cùng mạng Wi-Fi. Không có gì được lưu ở nơi nào khác.</value>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>Qua thư mục đám mây</value>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Dùng được khi các các thiết bị ở xa nhau, và giữ một bản sao lưu.</value>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>Bạn có thể thêm cách còn lại sau. Hầu hết mọi người dùng cả hai.</value>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>Các thiết bị của bạn</value>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>Chỉ thiết bị này</value>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>Hãy ghép nối thêm một thiết bị để chia sẻ chỗ xem dở, lịch sử và cài đặt của bạn.</value>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>Thêm một thiết bị</value>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>Đã {days} ngày chưa thấy</value>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>Chỉ điều khiển</value>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>Đồng bộ luôn với {device}</value>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>Đã ghép nối để Phát trên TV. TV được ghép nối làm bộ điều khiển sẽ không nhận lịch sử của bạn.</value>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>Đồng bộ</value>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>Điều khiển</value>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>Đồng bộ chia sẻ chỗ bạn đã xem dở, lịch sử và cài đặt của bạn. Điều khiển cho phép {kind} này điều khiển {device}.</value>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>Gỡ thiết bị này</value>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>Gỡ {device}?</value>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device} giữ những gì nó đang có, nhưng sẽ không nhận thêm gì từ các các thiết bị khác của bạn.</value>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>Tắt đồng bộ trên {kind} này</value>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>Tắt đồng bộ trên {device}?</value>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>{kind} này ngừng chia sẻ với các các thiết bị khác của bạn. Mọi thứ nó có vẫn ở lại đây.</value>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>Thư mục đám mây</value>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>Bổ sung khi các các thiết bị của bạn ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được.</value>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>Thêm thư mục đám mây</value>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>Chọn thư mục đám mây</value>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>Một thư mục ẩn của Kaeri trong Drive của bạn</value>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>Máy chủ Nextcloud của riêng bạn hoặc loại dùng dịch vụ lưu trữ</value>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>Một thư mục bạn chọn trong iCloud Drive</value>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>Khác</value>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>Máy chủ WebDAV</value>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>Bất kỳ máy chủ nào hỗ trợ WebDAV</value>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>Cho thư mục mà một ứng dụng khác giữ đồng bộ</value>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>Các các thiết bị của bạn giữ một bản sao đã niêm phong các thay đổi trong thư mục này. Chỉ các các thiết bị của bạn đọc được, và Kaeri không chạy máy chủ riêng nào.</value>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>Đang thiết lập thư mục</value>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>Địa chỉ máy chủ</value>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>Địa chỉ bạn mở Nextcloud trong trình duyệt.</value>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>Hoàn tất đăng nhập trên {host}</value>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>Trang Nextcloud của bạn đang mở trong trình duyệt. Hãy cho phép truy cập ở đó, rồi bảng này sẽ tự làm tiếp.</value>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>Đang chờ {service}</value>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>Mở lại trang</value>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>Dùng mật khẩu ứng dụng</value>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>Kết nối</value>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>Không kết nối được với {service}. Hãy kiểm tra kết nối của bạn.</value>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>Không tìm thấy máy chủ Nextcloud tại {host}. Hãy kiểm tra địa chỉ.</value>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloud không chấp nhận mật khẩu ứng dụng đó. Hãy tạo mật khẩu mới trong Nextcloud, mục Cài đặt, Bảo mật.</value>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>Máy chủ từ chối tên người dùng hoặc mật khẩu đó.</value>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>Trang đăng nhập đã đóng trước khi truy cập được cho phép.</value>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.</value>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service} đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên {kind} này cho đến khi bạn đăng nhập lại.</value>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service} đã đầy. Hãy giải phóng bớt dung lượng ở đó rồi thử lại.</value>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeri không mở được thư mục nữa. Hãy chọn lại.</value>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>Không đồng bộ được với {service}</value>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>Thư mục riêng của Kaeri trong Dropbox của bạn, Apps/Kaeri</value>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>Thư mục riêng của Kaeri trong OneDrive của bạn, Apps/Kaeri</value>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>Đồng bộ ngay</value>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>Đăng xuất</value>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>Đã đăng xuất. Các thay đổi chờ trên {kind} này cho đến khi bạn đăng nhập lại.</value>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service} không cấp quyền truy cập cho Kaeri. Hãy chọn lại để thử lần nữa.</value>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>Hãy chọn dịch vụ mà các các thiết bị khác của bạn đang dùng. Thư mục đám mây mới được thêm trên điện thoại hoặc máy tính, nơi lưu được khóa khôi phục của nó.</value>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>Đăng nhập trên điện thoại của bạn</value>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropbox đăng nhập trên điện thoại của bạn</value>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device} đã đăng nhập Dropbox. TV này có thể dùng lượt đăng nhập đó qua liên kết đã ghép nối.</value>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>Dùng lượt đăng nhập của {device}</value>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>TV không tự đăng nhập Dropbox được. Trên điện thoại, hãy mở Kaeri, rồi vào Cài đặt, Các thiết bị, Thư mục đám mây và đăng nhập Dropbox ở đó. Sau đó chọn lại Dropbox tại đây.</value>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>Đã đăng nhập. Đang thiết lập thư mục</value>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service} đã đăng xuất Kaeri. Chọn để đăng nhập lại.</value>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>Đã đăng xuất. Chọn để đăng nhập.</value>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>Đăng xuất khỏi {service}?</value>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>TV này ngừng đồng bộ qua {service}. Các thay đổi chờ ở đây cho đến khi bạn đăng nhập lại.</value>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>Đang chờ kết nối. Các thay đổi được giữ trên {kind} này.</value>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Đăng nhập Google Drive</value>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>Hoặc quét để mở trang</value>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>Hãy quét mã này bằng điện thoại và cho phép truy cập trên trang Nextcloud của bạn. TV sẽ tự làm tiếp.</value>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>Khóa khôi phục của bạn</value>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>Hãy cất ở nơi an toàn. Khóa khôi phục lịch sử của bạn nếu bạn mất hết mọi thiết bị, và cho phép một thiết bị mới tham gia từ thư mục đám mây của bạn.</value>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>Sao chép</value>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>Hiện dưới dạng mã QR</value>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>Bạn có thể xem lại trong Cài đặt, Các thiết bị, sau khi mở khóa {kind} này.</value>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>Khóa khôi phục</value>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>Tạo ngày {date}</value>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>Tạo khóa mới</value>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>Khóa cũ sẽ ngừng hoạt động, và các các thiết bị của bạn chuyển sang khóa mới ở lần đồng bộ kế tiếp.</value>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>Nhập khóa khôi phục của bạn</value>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>{service} đang giữ lịch sử từ {count} thiết bị. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó.</value>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>24 chữ cái và chữ số, chia thành các nhóm bốn. Khoảng trắng và chữ hoa, chữ thường đều không quan trọng.</value>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>Khóa đó không mở được thư mục này. Hãy kiểm tra từng nhóm bốn ký tự rồi thử lại.</value>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>Khôi phục</value>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>Trên thiết bị kia, hãy mở Kaeri rồi chọn Thiết lập từ thiết bị khác, hoặc vào Cài đặt, Các thiết bị, Hiện mã. Sau đó nhập mã vào đây.</value>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>Quét mã</value>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>Cả hai các thiết bị cần ở cùng một mạng Wi-Fi.</value>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>Ghép nối</value>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>Hiện mã ở đây</value>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>Nhập mã này trên thiết bị kia của bạn</value>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>Hoặc quét bằng Kaeri trên điện thoại.</value>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>Dùng được trong 2 phút · {left}</value>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>Trên điện thoại, hãy mở Kaeri, rồi vào Cài đặt, Các thiết bị, Thêm một thiết bị, và quét hoặc nhập mã này.</value>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>Đã ghép nối với {device}</value>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>Đang chuyển lịch sử của bạn sang. Trong lúc đó bạn vẫn dùng Kaeri được.</value>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>Sao chép các lượt đăng nhập từ {device}</value>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}. Mỗi thiết bị có bản sao riêng qua liên kết này.</value>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>Mã không khớp. Hãy kiểm tra mã trên {device} rồi thử lại.</value>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>Không tìm thấy thiết bị đang hiện mã này. Cả hai các thiết bị cần ở cùng một mạng Wi-Fi.</value>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>Mã này đã hết hạn. Hãy hiện mã mới.</value>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>Hồ sơ nào trên {device} là của bạn?</value>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>{kind} này chỉ đồng bộ với hồ sơ đó. Các hồ sơ khác vẫn ở trên {device}.</value>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device} đã biết điện thoại này từ Phát trên TV, nên đồng bộ với nó không cần mã mới.</value>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>Tập {n} · dừng ở {time} trên {device}</value>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>Đã phát lại từ {time} trên {device}</value>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>Đang đồng bộ</value>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>Đang đồng bộ với {device}</value>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>Ghi chú đồng bộ</value>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>Tập {n} của {title} vẫn được giữ là đã xem. {other} đã đánh dấu chưa xem mà không biết {device} đã xem xong tập này.</value>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>Đánh dấu chưa xem</value>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>Ghi chú được giữ trong 7 ngày.</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Hồ sơ</value>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>Chỉ mình bạn</value>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>Hồ sơ giúp tách riêng lịch sử, Xem tiếp và tài khoản cho những người dùng chung thiết bị này. Khi chỉ có một hồ sơ, Kaeri không hiện trình chọn hay tên nào.</value>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>Thêm hồ sơ</value>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>Mỗi hồ sơ có lịch sử, Xem tiếp và tài khoản riêng. Các nguồn và các tệp tải xuống vẫn dùng chung trên thiết bị này.</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>Hồ sơ mới</value>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>Hồ sơ của bạn</value>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>Điền sẵn từ AniList. Trước đây thiết bị này có một hồ sơ không tên.</value>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>Hồ sơ trẻ em</value>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>Tựa dành cho người lớn bị ẩn, và các nguồn, các thiết bị cùng cài đặt torrent cũng bị ẩn trong hồ sơ này.</value>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>Các nguồn và Các thiết bị bị ẩn trong hồ sơ trẻ em, và tựa dành cho người lớn cũng bị ẩn.</value>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>Trẻ em</value>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>Thêm hồ sơ</value>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>Các nguồn, tệp tải xuống và cài đặt của thiết bị này được dùng chung cho mọi hồ sơ.</value>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>Đồng bộ với</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Xóa hồ sơ</value>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>Xóa hồ sơ của {name}?</value>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>Lịch sử và các lượt đăng nhập của {name} trên thiết bị này sẽ bị xóa. Các Các thiết bị đồng bộ với {name} vẫn giữ bản của chúng.</value>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>Ai đang xem?</value>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>Hỏi ai đang xem khi mở ứng dụng</value>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>Mặc định tắt. Dành cho iPad cả nhà dùng chung. Hàng tài khoản cho phép đổi hồ sơ bất cứ lúc nào.</value>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>Đổi hồ sơ</value>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>Quản lý hồ sơ</value>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>Thiết lập từ thiết bị khác</value>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>Trên một thiết bị đã có Kaeri, hãy mở Cài đặt, Các thiết bị, Thêm một thiết bị, rồi nhập hoặc quét mã này.</value>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>Khôi phục từ thư mục đám mây</value>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>Đang chuyển lịch sử, cài đặt và các cửa hàng plugin của bạn sang. Bạn có thể bắt đầu dùng Kaeri ngay.</value>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>Tham gia cửa hàng plugin {store}</value>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device} tạo lời mời riêng cho {kind} này</value>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>Một thư mục trên {kind} này</value>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Hãy tạo một mật khẩu trong Nextcloud, mục Cài đặt, Bảo mật. Mật khẩu được giữ trên {kind} này.</value>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>{count} TV để Phát trên TV</value>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>Ghép nối hôm nay</value>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>Hiện một mã để nhập trên điện thoại của bạn</value>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>Chỉ mình bạn. Hãy thêm hồ sơ để tách riêng lịch sử, Xem tiếp và tài khoản trên TV này.</value>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>Mở màn hình Ai đang xem?</value>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>Hồ sơ trên TV này</value>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>Lưu thành tệp</value>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>Mã QR</value>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>Hiện mã</value>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>Đăng nhập lại</value>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>Chọn thư mục</value>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}, đổi hồ sơ</value>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>Mã ghép nối</value>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>điện thoại</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>máy tính bảng</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>TV</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>Thiết lập từ điện thoại</value>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>thiết bị kia</value>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>Trang của {service} đang mở. Hãy cho phép truy cập ở đó, rồi Kaeri sẽ tự làm tiếp.</value>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>Đang kết nối với {service}</value>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>Đã cho phép truy cập. Đang hoàn tất đăng nhập.</value>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>Đang tạo thư mục của Kaeri trong {service} và niêm phong bản sao đầu tiên của lịch sử bạn.</value>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>Không đăng nhập được {service}</value>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>Không thiết lập được thư mục</value>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service} không cấp quyền truy cập cho Kaeri.</value>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service} chưa hoàn tất đăng nhập. Hãy thử lại sau ít phút.</value>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeri không tạo được thư mục trong {service}. Hãy thử lại sau ít phút.</value>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>Dùng dịch vụ khác</value>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>Gỡ thư mục đám mây</value>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>Gỡ {service} khỏi đồng bộ?</value>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>Mọi thứ trên {kind} này vẫn ở lại đây, và các các thiết bị ở gần đã ghép nối vẫn đồng bộ. Thư mục vẫn nằm trong {service} cùng bản sao đã niêm phong, và các các thiết bị khác của bạn dùng nó cho đến khi bạn gỡ trên chúng.</value>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>Gỡ</value>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>Thêm cho {service}</value>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>Đang dùng</value>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>{service} vẫn được dùng cho đến khi thư mục mới sẵn sàng.</value>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>Cách nào cũng bật được đồng bộ, và bạn có thể dùng cả hai.</value>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>Đồng bộ mang chỗ bạn đã xem dở, lịch sử và cài đặt giữa các các thiết bị của chính bạn, ở gần hoặc qua một thư mục đám mây bạn chọn. Dữ liệu được niêm phong trước khi rời {kind} này.</value>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>Ghép nối với điện thoại sẽ bật đồng bộ. Sau đó TV này có thể tham gia thư mục đám mây của bạn.</value>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Không tải được tác phẩm này</value>
@@ -6466,6 +7714,66 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Đã ẩn bởi chế độ chống tiết lộ</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Tóm tắt bị ẩn bởi chế độ chống spoiler</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Hiện tóm tắt</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Hiện ảnh và tóm tắt của tập này</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} phút · Phát sóng {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} phút</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Còn {minutes} phút</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Chế độ chống spoiler ẩn mọi thứ sau tập {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Ẩn sau tập {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Tập {from} đến {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Phạm vi tập</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} tập đã xem</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>T{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Phát sóng {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Hiện</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Ẩn</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Đang hiện mọi thứ sau tập {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Hiện sau tập {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Tùy chọn tập</value>
@@ -6584,11 +7892,56 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>{status} · {score}/10</value>
   </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>Đến tập…</value>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>Đến tập</value>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>Đi</value>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>{first} đến {last}</value>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>Tập, từ {first} đến {last}</value>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>Không có tập {number}. Phim này có {last} tập.</value>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>Tập {number} chưa ra mắt. Tập mới nhất là {latest}.</value>
+  </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>
   </data>
   <data name="TorrentsOn" xml:space="preserve">
     <value>Đang bật</value>
+  </data>
+  <data name="TorrentsOffDetail" xml:space="preserve">
+    <value>Mặc định tắt. Torrent kết nối trực tiếp trừ khi bạn đưa chúng qua proxy.</value>
+  </data>
+  <data name="TorrentsRisk" xml:space="preserve">
+    <value>Những người khác trong một torrent có thể thấy địa chỉ IP của bạn. Để giữ kín, hãy đưa lưu lượng torrent qua proxy.</value>
+  </data>
+  <data name="TorrentsNotAPlugin" xml:space="preserve">
+    <value>Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.</value>
+  </data>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>Đưa lưu lượng torrent qua proxy</value>
+  </data>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>Lưu lượng torrent đi qua proxy SOCKS5 do bạn tự chạy hoặc thuê. Khi tùy chọn này tắt, torrent kết nối trực tiếp.</value>
+  </data>
+  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
+    <value>Qua proxy SOCKS5 tại {host}:{port}.</value>
+  </data>
+  <data name="TorrentsSummaryProxy" xml:space="preserve">
+    <value>Qua proxy SOCKS5.</value>
+  </data>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>Kết nối trực tiếp, không qua proxy.</value>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Máy chủ proxy</value>
@@ -6605,6 +7958,9 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Để trống mật khẩu để giữ mật khẩu đã lưu.</value>
   </data>
+  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
+    <value>Torrent tiếp tục dùng proxy đã lưu cho đến khi proxy mới đạt kiểm tra.</value>
+  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proxy cần có máy chủ và cổng từ 1 đến 65535.</value>
   </data>
@@ -6614,17 +7970,29 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Đã lưu proxy</value>
   </data>
+  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
+    <value>Kiểm tra proxy không đạt</value>
+  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Chưa lưu. {why}, nên proxy đã lưu vẫn được giữ.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent vẫn tắt. {why}.</value>
   </data>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeri kiểm tra xem có kết nối được với proxy không trước khi torrent bắt đầu. Torrent chờ trong lúc kiểm tra còn không đạt.</value>
+  </data>
+  <data name="TorrentsLastCheck" xml:space="preserve">
+    <value>Kiểm tra proxy</value>
+  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Đạt</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Đang kiểm tra</value>
+  </data>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</value>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Thất bại</value>
@@ -7141,6 +8509,9 @@
   </data>
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>Tiếp theo · phát sau {seconds} s</value>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>Quên một TV ở đây thì TV đó cũng quên thiết bị này.</value>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Cập nhật</value>

@@ -24,10 +24,12 @@ public sealed partial class LibraryPage : Page
     readonly Ctx ctx = Ctx.Current;
     LibrarySegment segment = LibrarySegment.Watching;
     string order = "updated";
+    readonly SurpriseButton surprise = new(() => new SurprisePool.Planning(), T.SurpriseHintPlanning);
 
     public LibraryPage()
     {
         InitializeComponent();
+        SurpriseHost.Content = surprise;
         SignedOut.Child = States.Empty(T.LibrarySignedOutTitle, T.LibrarySignedOutDetail, T.LibrarySignedOutAction, () => ctx.Send(new Command.Connect("anilist")));
         if (SignedOut.Child is StackPanel panel && panel.Children[^1] is Button signIn)
             signIn.Style = Ui.Res<Style>("AccentButtonStyle");
@@ -50,6 +52,7 @@ public sealed partial class LibraryPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
+        surprise.Heard(batch);
         if (batch.Any(e => e is Event.Content { View: ContentFor.Library } or Event.Sync or Event.Progress))
             Show();
     }
@@ -62,6 +65,7 @@ public sealed partial class LibraryPage : Page
         Scroll.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
         if (!signedIn)
             return;
+        SurpriseHost.Visibility = segment == LibrarySegment.Planning ? Visibility.Visible : Visibility.Collapsed;
         foreach (var item in Lists.Items)
         {
             var s = (LibrarySegment)item.Tag;

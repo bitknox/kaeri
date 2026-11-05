@@ -101,6 +101,7 @@ pub mod cache;
 pub mod cast;
 pub mod catalog;
 pub mod clock;
+pub mod cloud;
 pub mod config;
 pub mod connectivity;
 pub mod crash;
@@ -111,6 +112,7 @@ pub(crate) mod dispatch;
 pub mod downloads;
 pub mod engine;
 pub mod error;
+pub mod handoff;
 pub mod host;
 pub mod jobs;
 pub mod licensed;
@@ -123,10 +125,13 @@ pub mod outbox;
 #[cfg(feature = "party")]
 pub mod party;
 #[cfg(feature = "party")]
+mod party_chat;
+#[cfg(feature = "party")]
 mod party_identify;
 pub mod phases;
 pub mod playback;
 pub mod plugin_stores;
+pub mod profile;
 pub mod proxy;
 #[cfg(feature = "remote")]
 pub mod remote;
@@ -134,10 +139,14 @@ pub mod servers;
 pub mod services;
 pub mod settings;
 pub mod show_settings;
+pub mod skip_find;
 pub mod skip_marks;
 pub mod sources;
 pub(crate) mod state;
+pub mod store_join;
 pub mod subtitles;
+pub mod sync;
+pub mod syncing;
 pub mod title_language;
 mod titlematch;
 pub mod titles;

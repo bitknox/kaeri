@@ -29,6 +29,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = No se pudo cerrar la sesión en { $tracker }. Inténtalo de nuevo. { $reason }
 notice-not-saved-because = No se pudo guardar esa configuración. { $cause }
+notice-proxy-saved = El tráfico de los torrents ahora pasa por el proxy.
+notice-proxy-removed = Los torrents ahora se conectan directamente, sin proxy.
+notice-proxy-not-checked = No se pudo verificar el proxy. { $cause }
 notice-proxy-password-not-kept = No se pudo guardar la contraseña del proxy. Escríbela otra vez para intentar guardarla. { $reason }
 notice-show-setting-refused = No se pudo guardar esa configuración. { $value } no es un valor válido para { $setting }.
 notice-show-not-reset = No se pudo restablecer la configuración de esta serie. { $reason }

@@ -28,6 +28,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Det gick inte att logga ut från { $tracker }. Försök igen. { $reason }
 notice-not-saved-because = Det gick inte att spara inställningen. { $cause }
+notice-proxy-saved = Torrenttrafiken går nu via proxyn.
+notice-proxy-removed = Torrenter ansluter nu direkt, utan proxy.
+notice-proxy-not-checked = Det gick inte att kontrollera proxyn. { $cause }
 notice-proxy-password-not-kept = Det gick inte att spara proxyns lösenord. Ange det igen för att försöka spara det. { $reason }
 notice-show-setting-refused = Det gick inte att spara inställningen. { $value } är inte ett värde för { $setting }.
 notice-show-not-reset = Det gick inte att återställa den här seriens inställningar. { $reason }

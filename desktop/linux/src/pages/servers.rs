@@ -740,9 +740,7 @@ pub fn push(ctx: &Rc<Ctx>, id: &str) {
         move |ctx, page, column| {
             let server = ctx.hub.known.borrow().servers.iter().find(|s| s.id == id).cloned();
             let Some(server) = server else {
-                if let Some(nav) = ctx.nav() {
-                    nav.pop();
-                }
+                first_party::leave(ctx, page);
                 return;
             };
             fill(ctx, page, column, &server);

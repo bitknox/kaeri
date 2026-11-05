@@ -15,7 +15,7 @@ use kaeri_core::{ids::AnilistId, media::SearchHit};
 use kaeri_engine::clock::Clock;
 use kaeri_model::{
     Msg,
-    catalog::Season,
+    catalog::{Entry, Season},
     command::Command,
     event::Event,
     home::{
@@ -496,7 +496,23 @@ async fn a_return_within_the_half_hour_asks_nothing() {
 
     assert!(cold <= 6, "a cold Home asks {cold} times");
     assert_eq!(warm, 0, "a warm Home asks nothing");
-    assert_eq!(again, first, "and is the same Home");
+    assert_eq!(without_countdowns(again), without_countdowns(first), "and is the same Home");
+}
+
+/// `home` with its countdowns cleared. The test clock runs on with the system's, so two views of
+/// the same Home a moment apart can count a second less to an episode.
+fn without_countdowns(mut home: HomeView) -> HomeView {
+    let clear = |entry: &mut Entry| {
+        entry.airing_in = None;
+        entry.next_airing_in = None;
+    };
+    if let Some(spot) = home.spotlight.as_mut() {
+        clear(&mut spot.entry);
+    }
+    for item in home.sections.iter_mut().flat_map(|s| s.items.iter_mut()) {
+        clear(&mut item.entry);
+    }
+    home
 }
 
 #[tokio::test]

@@ -54,6 +54,7 @@ import app.kaeri.store.label
 import app.kaeri.store.latestAired
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.LibrarySegment
+import app.kaeri.engine.model.SurprisePool
 import app.kaeri.i18n.R
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
@@ -92,9 +93,11 @@ fun LibraryScreen(actions: AppActions) {
 
     ScreenFrame(
         title = stringResource(R.string.nav_library),
-        account = Account(user, actions.openSettings),
+        account = profileAccount(user, actions.openSettings),
         actions = {
             if (!signedOut) {
+                // Surprise me picks from Planning, beside Sort, on that list only.
+                if (segment == LibrarySegment.PLANNING) SurpriseButton(SurprisePool.Planning)
                 Box {
                     androidx.compose.material3.IconButton(onClick = { sorting = true }) {
                         Icon(Icons.Sort, contentDescription = stringResource(R.string.sort_button, stringResource(sort.labelRes)))
@@ -159,7 +162,9 @@ fun LibraryScreen(actions: AppActions) {
                     Box(itemMotion()) { Quiet(stringResource(R.string.library_list_empty, segment.label(LocalContext.current))) }
                 }
                 is ListState.Loaded -> items(entries, key = { it.id.toLong() }, contentType = { "poster" }) { entry ->
-                    PosterCell(entry, itemMotion(), from = "library", detail = libraryDetail(LocalContext.current, entry), fresh = hasNew(entry))
+                    // The Library keeps one line: the count, with the dub after it.
+                    val count = entry.countLineNow()
+                    PosterCell(entry, itemMotion(), from = "library", detail = if (count == null) libraryDetail(LocalContext.current, entry) else null, fresh = hasNew(entry), count = count, narrow = !wideWindow())
                 }
                 else -> if (offline) {
                     item(span = { GridItemSpan(maxLineSpan) }, key = "offline", contentType = "quiet") { Box(itemMotion()) { AfterWait { OfflineState() } } }

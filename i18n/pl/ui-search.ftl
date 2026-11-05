@@ -90,3 +90,82 @@ search-available-all = Wszystkie
 search-available-here = Odtwarzane tutaj
 search-available-services = W twoich serwisach
 search-line-service = Na { $service }
+count-episodes = { $count ->
+    [one] Jeden odcinek
+    [few] { $count } odcinki
+    [many] { $count } odcinków
+   *[other] { $count } odcinka
+ }
+count-episodes-short = { $count } odc.
+count-out-of = { $out } z { $total } wyszło
+count-out-of-short = { $out } z { $total }
+count-out = { $count ->
+    [one] Jeden odcinek wyszedł
+    [few] { $count } odcinki wyszły
+    [many] { $count } odcinków wyszło
+   *[other] { $count } odcinka wyszło
+ }
+count-out-short = { $count } wyszło
+count-starts = Start: { $date }
+count-not-out = Jeszcze nie wyszło
+count-next-of = Odc. { $episode } z { $total }
+count-dub = Dub
+count-dub-through = Dub { $through }
+count-spoken-episodes = { $count ->
+    [one] Jeden odcinek
+    [few] { $count } odcinki
+    [many] { $count } odcinków
+   *[other] { $count } odcinka
+ }
+count-spoken-out-of = Wyszło odcinków: { $out } z { $total }
+count-spoken-out = { $count ->
+    [one] Wyszedł jeden odcinek
+    [few] Wyszły { $count } odcinki
+    [many] Wyszło { $count } odcinków
+   *[other] Wyszło { $count } odcinka
+ }
+count-spoken-starts = Start: { $date }
+count-spoken-next-of = Odcinek { $episode } z { $total }
+count-spoken-dub-through = { -dubbed } do odcinka { $through }
+count-spoken-dub = ma dubbing
+date-month-jan-short = sty
+date-month-jan-long = stycznia
+date-month-feb-short = lut
+date-month-feb-long = lutego
+date-month-mar-short = mar
+date-month-mar-long = marca
+date-month-apr-short = kwi
+date-month-apr-long = kwietnia
+date-month-may-short = maj
+date-month-may-long = maja
+date-month-jun-short = cze
+date-month-jun-long = czerwca
+date-month-jul-short = lip
+date-month-jul-long = lipca
+date-month-aug-short = sie
+date-month-aug-long = sierpnia
+date-month-sep-short = wrz
+date-month-sep-long = września
+date-month-oct-short = paź
+date-month-oct-long = października
+date-month-nov-short = lis
+date-month-nov-long = listopada
+date-month-dec-short = gru
+date-month-dec-long = grudnia
+trending-today = Na topie dzisiaj
+trending-week = Na topie w tym tygodniu
+trending-month = Na topie w tym miesiącu
+trending-choice-today = Dzisiaj
+trending-choice-week = Ten tydzień
+trending-choice-month = Ten miesiąc
+trending-failed = Nie udało się wczytać popularnych: { $period }.
+trending-updated = Zaktualizowano { $age }
+surprise-me = Zaskocz mnie
+surprise-me-menu = Zaskocz mnie
+surprise-another = Inny
+surprise-hint-planning = Otwiera losowy tytuł z listy Planowane
+surprise-hint-filters = Otwiera losowy tytuł pasujący do tych filtrów
+surprise-another-hint = Otwiera inny losowy tytuł zamiast tego
+surprise-empty-filters = Żaden tytuł nie pasuje do tych filtrów.
+surprise-empty-planning = Lista Planowane jest pusta.
+surprise-offline = Brak połączenia. Losowanie w wyszukiwaniu wymaga AniList.

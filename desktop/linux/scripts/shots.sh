@@ -41,6 +41,8 @@ runs=(
   "wide 1280x800 ${SHOTS:-all}"
   "medium 900x720 ${SHOTS:-home,calendar,title,downloads,providers,store,settings,settings-upscaling}"
   "match 1280x800 match"
+  # The found skip times' states at the board's size: SIZES=found SHOTS=found.
+  "found 960x600 ${SHOTS:-found}"
   "narrow 400x780 ${SHOTS:-home,calendar,title,show-settings,library,downloads,providers,store,join,settings}"
   # A first launch with the demo as the only source: a run of its own, as its shots need it.
   "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"

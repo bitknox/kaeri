@@ -27,3 +27,5 @@ updates-restart = Cập nhật và mở lại
 tv-problem-full = TV này đã ghép nối tối đa { -device-pl }. Xóa một { -device } trong cài đặt TV, mục Điều khiển từ xa.
 tv-problem-unpaired = TV không còn nhận { -device } này. Hãy ghép nối lại.
 player-position-spoken = { $position } trên { $duration }
+names-pair = { $first } và { $last }
+names-list = { $list }, { $next }

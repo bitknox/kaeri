@@ -17,7 +17,7 @@ use async_trait::async_trait;
 use kaeri_core::{
     error::ProviderError,
     ids::ProviderKey,
-    media::{Episode, SearchHit, Translation},
+    media::{Episode, SearchHit, TitleHints, Translation},
     stream::Stream,
     traits::{Provider, ProviderKind, ProviderManifest, SourceCandidate},
 };
@@ -47,6 +47,8 @@ pub struct MockProvider {
     calls: Arc<AtomicUsize>,
     /// How long each call takes to answer, so tests can tell asking at once from asking in turn.
     latency: Duration,
+    /// The hints each search, listing and stream request came with, in order.
+    hints_seen: Arc<std::sync::Mutex<Vec<TitleHints>>>,
 }
 
 impl MockProvider {
@@ -75,6 +77,7 @@ impl MockProvider {
             unavailable: None,
             calls: Arc::new(AtomicUsize::new(0)),
             latency: Duration::ZERO,
+            hints_seen: Arc::default(),
         }
     }
 
@@ -180,6 +183,11 @@ impl MockProvider {
         self
     }
 
+    /// Handle to the hints the provider was asked with, taken before the provider is boxed.
+    pub fn hints_seen(&self) -> Arc<std::sync::Mutex<Vec<TitleHints>>> {
+        Arc::clone(&self.hints_seen)
+    }
+
     /// Handle to the call counter, taken before the provider is boxed.
     pub fn call_count(&self) -> Arc<AtomicUsize> {
         Arc::clone(&self.calls)
@@ -187,6 +195,10 @@ impl MockProvider {
 
     pub fn arc(self) -> Arc<dyn Provider> {
         Arc::new(self)
+    }
+
+    fn note(&self, hints: &TitleHints) {
+        self.hints_seen.lock().unwrap_or_else(|e| e.into_inner()).push(hints.clone());
     }
 
     async fn record(&self) -> Result<(), ProviderError> {
@@ -211,7 +223,9 @@ impl Provider for MockProvider {
         &self,
         query: &str,
         _translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
+        self.note(hints);
         self.record().await?;
         if self.hits_for.is_empty() {
             return Ok(self.hits.clone());
@@ -223,7 +237,9 @@ impl Provider for MockProvider {
         &self,
         key: &ProviderKey,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
+        self.note(hints);
         self.record().await?;
         if translation == Translation::Dub {
             if let Some(dub) = self.dub_for.get(key) {
@@ -241,7 +257,9 @@ impl Provider for MockProvider {
         key: &ProviderKey,
         _episode: &str,
         _translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
+        self.note(hints);
         self.record().await?;
         Ok(self.streams_for.get(key).unwrap_or(&self.streams).clone())
     }
@@ -285,7 +303,10 @@ mod tests {
             .with_streams(vec![Stream::new("x", kaeri_core::stream::StreamKind::Hls)]);
         let calls = p.call_count();
 
-        let streams = p.resolve(&ProviderKey::new("k"), "1", Translation::Sub).await.unwrap();
+        let streams = p
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default())
+            .await
+            .unwrap();
         assert_eq!(streams.len(), 1);
         assert_eq!(calls.load(Ordering::SeqCst), 1);
     }
@@ -301,19 +322,34 @@ mod tests {
             );
 
         let two = ProviderKey::new("two");
-        assert_eq!(p.episodes(&two, Translation::Sub).await.unwrap().len(), 2);
-        assert_eq!(p.resolve(&two, "2", Translation::Sub).await.unwrap()[0].url, "y");
+        assert_eq!(
+            p.episodes(&two, Translation::Sub, &Default::default()).await.unwrap().len(),
+            2
+        );
+        assert_eq!(
+            p.resolve(&two, "2", Translation::Sub, &Default::default()).await.unwrap()[0].url,
+            "y"
+        );
 
         let other = ProviderKey::new("other");
-        assert_eq!(p.episodes(&other, Translation::Sub).await.unwrap().len(), 1, "shared list");
-        assert!(p.resolve(&other, "1", Translation::Sub).await.unwrap().is_empty());
+        assert_eq!(
+            p.episodes(&other, Translation::Sub, &Default::default()).await.unwrap().len(),
+            1,
+            "shared list"
+        );
+        assert!(
+            p.resolve(&other, "1", Translation::Sub, &Default::default())
+                .await
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[tokio::test]
     async fn a_failing_mock_reports_its_error_and_still_counts_the_call() {
         let p = MockProvider::new("m").failing(ProviderError::Blocked("x".into()));
         let calls = p.call_count();
-        assert!(p.search("q", Translation::Sub).await.is_err());
+        assert!(p.search("q", Translation::Sub, &Default::default()).await.is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 1);
     }
 

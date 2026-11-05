@@ -274,6 +274,7 @@ pub enum Event {
     SubDelay(f64),
     /// Whether playback is held waiting for data.
     Buffering(bool),
+    BufferFill(u8),
     /// What the player holds of the file: see [`PlaybackEvent::Cached`].
     Cached(Vec<(f64, f64)>),
     FrameDrops(u64),
@@ -381,6 +382,9 @@ pub fn property_change(name: Option<&str>, value: Option<serde_json::Value>) -> 
         Some("sid") => value.as_ref().and_then(track_id).map(Event::Sid),
         Some("sub-delay") => value.and_then(|v| v.as_f64()).map(Event::SubDelay),
         Some("paused-for-cache") => value.and_then(|v| v.as_bool()).map(Event::Buffering),
+        Some("cache-buffering-state") => value
+            .and_then(|v| v.as_u64())
+            .map(|percent| Event::BufferFill(percent.min(100) as u8)),
         // Null before a file is open, and a map after: only its seekable ranges are read.
         Some("demuxer-cache-state") => {
             value.as_ref().and_then(seekable_ranges).map(Event::Cached)
@@ -460,6 +464,7 @@ impl Reader {
             Event::Sid(id) => Some(PlaybackEvent::Sid(id)),
             Event::SubDelay(delay) => Some(PlaybackEvent::SubDelay(delay)),
             Event::Buffering(held) => Some(PlaybackEvent::Buffering(held)),
+            Event::BufferFill(percent) => Some(PlaybackEvent::BufferFill(percent)),
             Event::Cached(ranges) => Some(PlaybackEvent::Cached(ranges)),
             Event::FrameDrops(count) => Some(PlaybackEvent::FrameDrops(count)),
             Event::Seeking(seeking) => Some(PlaybackEvent::Seeking(seeking)),

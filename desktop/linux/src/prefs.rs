@@ -42,12 +42,17 @@ impl CloseChoice {
     }
 }
 
+/// Called when Hide chat changes.
+type Watcher = Box<dyn Fn(bool)>;
+
 pub struct Prefs {
     file: PathBuf,
     keys: RefCell<glib::KeyFile>,
     /// Where the engine's `config.toml` is, for the one setting this app writes there itself:
     /// the language.
     config: Option<Paths>,
+    /// What follows Hide chat, called with the new value when Settings changes it.
+    chat_watchers: RefCell<Vec<Watcher>>,
 }
 
 const GROUP: &str = "window";
@@ -57,7 +62,7 @@ impl Prefs {
     pub fn open(file: PathBuf) -> Self {
         let keys = glib::KeyFile::new();
         let _ = keys.load_from_file(&file, glib::KeyFileFlags::NONE);
-        Self { file, keys: RefCell::new(keys), config: None }
+        Self { file, keys: RefCell::new(keys), config: None, chat_watchers: RefCell::default() }
     }
 
     /// These preferences, with the engine's config files named, so the language can be read and
@@ -116,6 +121,35 @@ impl Prefs {
         self.save();
     }
 
+    /// The name given to this computer in Devices, kept for the Play on TV sender, which says
+    /// it to TVs when it starts.
+    pub fn set_device_name(&self, name: &str) {
+        self.keys.borrow().set_string("sync", "device-name", name);
+        self.save();
+    }
+
+    /// Whether chat is hidden in every watch party on this device: its lines, reactions, ticks
+    /// and field. Settings › Playback.
+    pub fn hide_chat(&self) -> bool {
+        self.keys.borrow().boolean("party", "hide-chat").unwrap_or(false)
+    }
+
+    pub fn set_hide_chat(&self, hidden: bool) {
+        if self.hide_chat() == hidden {
+            return;
+        }
+        self.keys.borrow().set_boolean("party", "hide-chat", hidden);
+        self.save();
+        for watcher in self.chat_watchers.borrow().iter() {
+            watcher(hidden);
+        }
+    }
+
+    /// Call `watcher` with the new value whenever Hide chat changes.
+    pub fn watch_hide_chat(&self, watcher: impl Fn(bool) + 'static) {
+        self.chat_watchers.borrow_mut().push(Box::new(watcher));
+    }
+
     /// Whether first launch has been shown or passed over, so it never shows again.
     pub fn welcomed(&self) -> bool {
         self.keys.borrow().boolean("first-launch", "done").unwrap_or(false)
@@ -137,6 +171,16 @@ impl Prefs {
             self.keys.borrow().set_boolean("controller", "seen", true);
             self.save();
         }
+    }
+
+    /// Whether the starting screen's Details list is open: kept for this device.
+    pub fn starting_details(&self) -> bool {
+        self.keys.borrow().boolean("player", "starting-details").unwrap_or(false)
+    }
+
+    pub fn set_starting_details(&self, open: bool) {
+        self.keys.borrow().set_boolean("player", "starting-details", open);
+        self.save();
     }
 
     /// The searches made last, newest first.
@@ -176,6 +220,13 @@ impl Prefs {
             tracing::warn!(error = %e, file = %self.file.display(), "the preferences were not saved");
         }
     }
+}
+
+/// The device name kept in the preferences at `file`, when one was given.
+pub fn saved_device_name(file: &std::path::Path) -> Option<String> {
+    let keys = glib::KeyFile::new();
+    keys.load_from_file(file, glib::KeyFileFlags::NONE).ok()?;
+    keys.string("sync", "device-name").ok().map(String::from).filter(|n| !n.is_empty())
 }
 
 /// The `language` key of the config file at `file`: `None` when it is unset, `"system"`, or the

@@ -35,6 +35,8 @@ pub enum Action {
     CopyReport,
     /// Delete the chosen saved crash report, from Report a bug.
     DeleteCrash,
+    /// The Devices screen: sync with this person's other devices, and their profiles.
+    ShowDevices,
 
     // Movement
     Up,
@@ -105,6 +107,9 @@ pub enum Action {
     /// Open the search filter overlay, from anywhere. A modified key on purpose: the
     /// search box eats plain letters, and filters are wanted mid-query.
     FilterSearch,
+    /// Pick a title at random from the screen's pool: Search's browse, or Planning. On the page
+    /// a pick opened, another in its place.
+    Surprise,
 
     // Playback
     PlayPause,
@@ -149,6 +154,7 @@ impl Action {
         Self::ReportBug,
         Self::CopyReport,
         Self::DeleteCrash,
+        Self::ShowDevices,
         Self::JumpSection(1),
         Self::JumpSection(2),
         Self::JumpSection(3),
@@ -197,6 +203,7 @@ impl Action {
         Self::MarkAllPrevious,
         Self::Filter,
         Self::FilterSearch,
+        Self::Surprise,
         Self::PlayPause,
         Self::SeekBack,
         Self::SeekForward,
@@ -246,6 +253,7 @@ impl Action {
             Self::ReportBug => t::keys_action_report_bug(),
             Self::CopyReport => t::keys_action_copy_report(),
             Self::DeleteCrash => t::keys_action_delete_crash(),
+            Self::ShowDevices => t::devices_title(),
             Self::Up => t::keys_action_up(),
             Self::Down => t::keys_action_down(),
             Self::Left => t::keys_action_left(),
@@ -284,6 +292,7 @@ impl Action {
             Self::MarkAllPrevious => t::keys_action_mark_all_previous(),
             Self::Filter => t::keys_action_filter(),
             Self::FilterSearch => t::keys_action_filter_search(),
+            Self::Surprise => t::keys_action_surprise(),
             Self::PlayPause => t::keys_action_play_pause(),
             Self::SeekBack => t::keys_action_seek_back(),
             Self::SeekForward => t::keys_action_seek_forward(),
@@ -319,6 +328,7 @@ impl Action {
             Self::OpenInBrowser => said(t::keys_hint_on_anilist()),
             Self::MarkAllPrevious => said(t::keys_hint_mark_previous()),
             Self::FilterSearch => said(t::keys_hint_filters()),
+            Self::Surprise => said(t::keys_hint_surprise()),
             Self::ForceResync => said(t::keys_hint_resync()),
             Self::Help => said(t::keys_hint_keys()),
             Self::Refresh => said(t::keys_hint_refresh()),
@@ -350,7 +360,8 @@ impl Action {
             | Self::OpenPrivacy
             | Self::ReportBug
             | Self::CopyReport
-            | Self::DeleteCrash => Scope::Global,
+            | Self::DeleteCrash
+            | Self::ShowDevices => Scope::Global,
 
             Self::Up
             | Self::Down
@@ -370,6 +381,7 @@ impl Action {
             | Self::RateTitle
             | Self::ToggleSynopsis
             | Self::FilterSearch
+            | Self::Surprise
             | Self::HideFromContinue => Scope::Lists,
 
             Self::ShowEpisodes
@@ -437,6 +449,9 @@ impl Action {
     /// would not.
     pub fn where_it_works(self) -> &'static str {
         use kaeri_i18n::t;
+        if matches!(self, Self::Surprise) {
+            return said(t::keys_where_surprise());
+        }
         said(match self.scope() {
             Scope::Playback => t::keys_where_playback(),
             Scope::Downloads => t::keys_where_downloads(),

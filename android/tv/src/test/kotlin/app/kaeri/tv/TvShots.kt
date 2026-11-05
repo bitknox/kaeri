@@ -48,6 +48,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -71,10 +72,14 @@ import app.kaeri.tv.ui.ActionsPanel
 import app.kaeri.tv.ui.notInstalledPanel
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.ffi.playerStatsFixture
+import app.kaeri.engine.ffi.startingFixture
+import app.kaeri.engine.model.StartingFixture
 import app.kaeri.engine.model.ContentFor
 import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.SectionKind
+import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.HiddenTitle
 import app.kaeri.engine.model.MenuChoices
 import app.kaeri.engine.model.MenuSource
@@ -86,7 +91,10 @@ import app.kaeri.engine.model.PlayerUi
 import app.kaeri.engine.model.SkipMarkFixture
 import app.kaeri.engine.model.SkipOrigin
 import app.kaeri.engine.model.SkipPrompt
+import app.kaeri.engine.ffi.foundSkipScene
 import app.kaeri.engine.ffi.skipMarkFixture
+import app.kaeri.engine.model.FoundSkipFixture
+import app.kaeri.engine.model.SkipFindPause
 import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.core.SourceCandidate
@@ -206,6 +214,203 @@ class TvShots {
 
     @Test
     fun title() = shoot("tv-title", title = 900001u)
+
+    // Browsing extras (the browsing board): the Trending rail with its periods, Surprise me and Another.
+    @Test
+    fun browse_search_start() = shoot("tv-browse-search-start", start = Destination.Search, scene = BROWSING) { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }
+
+    @Test
+    fun browse_trending_week() = shoot("tv-browse-trending-week", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+    }
+
+    /** Loop B on TV: the period chip chosen, the posters crossfade on standard, as frames 33 ms apart. */
+    @Test
+    fun browse_period_clip() = shoot("tv-browse-period-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        settle()
+        compose.mainClock.autoAdvance = false
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-browse-period-clip-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    @Test
+    fun browse_results() = shoot("tv-browse-results", query = "hoshi", scene = BROWSING)
+
+    /** [change] captured as frames 33 ms apart, the clock held between them. */
+    private fun frames(name: String, change: () -> Unit) {
+        settle()
+        compose.mainClock.autoAdvance = false
+        change()
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    private fun dubArrives() = shot.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+
+    /** Loop A on TV: the dub part fades in on the end of each card's count line. */
+    @Test
+    fun browse_dub_arrives_clip() = shoot("tv-browse-dub-clip-end", query = "hoshi", scene = BROWSING) { frames("tv-browse-dub-clip") { dubArrives() } }
+
+    @Test
+    fun browse_dub_arrives_clip_removed() = shoot("tv-browse-dub-removed-clip-end", query = "hoshi", scene = BROWSING, removed = true) { frames("tv-browse-dub-removed-clip") { dubArrives() } }
+
+    /** Loop B on TV with Remove animations on: the shelf still crossfades. */
+    @Test
+    fun browse_period_clip_removed() = shoot("tv-browse-period-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        frames("tv-browse-period-removed-clip") { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK) }
+    }
+
+    /** Surprise me on Planning: a tonal pill ending the header row, after the tabs. */
+    @Test
+    fun browse_planning_surprise() = shoot("tv-browse-planning-surprise", start = Destination.Library, scene = BROWSING) {
+        compose.onNodeWithText("Planning", substring = true).performSemanticsAction(SemanticsActions.OnClick)
+        settle()
+        compose.onNodeWithText("Surprise me").assertExists()
+    }
+
+    /** Another on TV: the title page crossfades to the pick, also with Remove animations on. */
+    @Test
+    fun browse_another_clip() = shoot("tv-browse-another-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+    @Test
+    fun browse_another_clip_removed() = shoot("tv-browse-another-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-removed-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+
+    @Test
+    fun browse_title_another() = shoot("tv-browse-title-another", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+    }
+
+    // Episode synopses (the synopsis board, section 4): three cards across with text under each.
+
+    /** The shelf with the next episode focused, its neighbours readable. */
+    @Test
+    fun title_episode_shelf() = shoot("tv-shelf", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) { toShelf() }
+
+    /** Cards after the next episode: facts and a blurred still, the text covered. */
+    @Test
+    fun title_episode_shelf_protected() = shoot("tv-protected", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) {
+        toShelf()
+        press(Key.DirectionRight)
+        settle()
+    }
+
+    /** A long series: a row of range chips above the shelf. */
+    @Test
+    fun title_episode_ranges() = shoot("tv-ranges", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) { toShelf() }
+
+    /** Long press on OK: the episode sheet with the whole synopsis above the actions. */
+    @Test
+    fun title_episode_sheet() = shoot("tv-sheet", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) {
+        toShelf()
+        // The card's long click, which a held OK sends.
+        compose.onNode(isFocused()).performSemanticsAction(SemanticsActions.OnLongClick)
+        settle()
+    }
+
+    /** A long series: focus on a range chip that is not the one shown, above the shelf. */
+    @Test
+    fun title_episode_range_chips() = shoot("tv-range-chips", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) {
+        toChips()
+        toChip("Episodes 201")
+    }
+
+    /** Choosing another range: the cards crossfade in place, as frames 33 ms apart. */
+    @Test
+    fun title_episode_range_clip() = shoot("tv-range-clip-end", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) {
+        toChips()
+        toChip("Episodes 201")
+        compose.mainClock.autoAdvance = false
+        // The key alone: press() would run the clock past the crossfade.
+        compose.onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.DirectionCenter) }
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-range-clip-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    /** Along the range chips to the one starting [prefix]. */
+    private fun toChip(prefix: String) {
+        repeat(4) {
+            if (focusedText().startsWith(prefix)) return
+            press(Key.DirectionRight)
+            settle()
+        }
+        error("no chip $prefix took focus: ${focusedText()}")
+    }
+
+    /** From the header down to the range chips over the shelf. */
+    private fun toChips() {
+        repeat(8) {
+            if (focusedText().startsWith("Episodes ") || focusedLabel().startsWith("Episodes ")) return
+            press(Key.DirectionDown)
+            settle()
+        }
+        error("no range chip took focus: ${focusedText()} / ${focusedLabel()}")
+    }
+
+    /** The player's Episodes panel: focus on episode 6, and the footer under the list follows it. */
+    @Test
+    fun player_episodes() = playerShot("tv-player-episodes", prepare = { it.apply(listOf(Event.Episodes(900_001u, app.kaeri.testkit.SynopsisFixtures.table(900_001u)))) }) { model ->
+        compose.runOnUiThread {
+            model.apply(
+                Event.PlayerUi(
+                    1u,
+                    PlayerUi.Menus(
+                        episodes = app.kaeri.testkit.SynopsisFixtures.menu(app.kaeri.testkit.SynopsisFixtures.table(900_001u)),
+                        sources = emptyList(),
+                        translation = Translation.SUB,
+                        upscaling = MenuChoices("off"),
+                        toneMapping = null,
+                        nightMode = false,
+                    ),
+                ),
+            )
+        }
+        repeat(6) { if (focusedText() != "Episodes") press(Key.DirectionRight) }
+        assertEquals("Episodes", focusedText())
+        press(Key.DirectionCenter)
+        settle()
+        press(Key.DirectionUp)
+        settle()
+    }
+
+    /** Down from the header to the Episodes shelf, which opens focused on the next episode. */
+    private fun toShelf() {
+        repeat(6) {
+            if (focusedLabel().contains("E7")) return
+            press(Key.DirectionDown)
+            settle()
+        }
+    }
 
     /**
      * Source for this title from the title page's More, by the D-pad alone: the panel lists Automatic
@@ -427,6 +632,152 @@ class TvShots {
         repeat(8) { if (focusedText() != "Skip times") press(Key.DirectionRight) }
         assertEquals("Skip times", focusedText())
         press(Key.DirectionCenter)
+    }
+
+    // Found skip times: the engine's fixture scenes on the TV, as the board draws them.
+
+    private fun tvFound(name: String?, state: FoundSkipFixture, focus: String? = null, hide: Boolean = true, removed: Boolean = false) = playerShot(name, removed) { model ->
+        val scene = foundSkipScene(state)
+        if (hide) time = CHROME_HIDE + 1_000
+        compose.runOnUiThread {
+            playerMpv!!.emit(MpvEvent.property("time-pos", MpvValue.Real(scene.position)))
+            for (ui in scene.ui) model.apply(Event.PlayerUi(1u, ui))
+            model.apply(Event.PlayerTimeline(1u, scene.marks))
+            scene.prompt?.let { model.apply(Event.PlayerSkipPrompt(1u, it)) }
+            scene.mark?.let { model.apply(Event.PlayerSkipMark(1u, it)) }
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        focus?.let { assertEquals(it, focusedText()) }
+    }
+
+    @Test
+    fun found_skip() = tvFound("tv-found-skip", FoundSkipFixture.SKIP)
+
+    /** The card, focus on Yes. */
+    @Test
+    fun found_prompt() = tvFound("tv-found-prompt", FoundSkipFixture.PROMPT, focus = "Yes")
+
+    /** Right walks the card's buttons from Yes, and the card keeps the focus. */
+    @Test
+    fun found_prompt_focus_walks() {
+        tvFound("tv-found-prompt-walk", FoundSkipFixture.PROMPT, focus = "Yes")
+        press(Key.DirectionRight)
+        assertEquals("Adjust", focusedText())
+        press(Key.DirectionRight)
+        assertEquals("Don't ask again", focusedText())
+    }
+
+    @Test
+    fun found_saved() = tvFound("tv-found-saved", FoundSkipFixture.SAVED)
+
+    @Test
+    fun found_never() = tvFound("tv-found-never", FoundSkipFixture.NEVER)
+
+    /** Adjust's review, focus on Watch the edges. */
+    @Test
+    fun found_review() = tvFound("tv-found-review", FoundSkipFixture.REVIEW, focus = "Watch the edges", hide = false)
+
+    @Test
+    fun found_undo() = tvFound("tv-found-undo", FoundSkipFixture.UNDO)
+
+    /** Settings, Playback, with finding paused by low storage. */
+    @Test
+    fun found_settings_paused() = shoot("tv-found-settings-paused", section = "Playback", then = {
+        val view = shot.settings.view.value!!
+        shot.apply(listOf(Event.Settings(view.copy(skipFindPaused = SkipFindPause.STORAGE))))
+        settle()
+        // The row is below the first screenful: the way down is how the list scrolls.
+        press(Key.DirectionRight)
+        var presses = 0
+        while (compose.onAllNodesWithText("Paused until", substring = true).fetchSemanticsNodes().isEmpty() && presses++ < 14) press(Key.DirectionDown)
+        compose.onNodeWithText("Find skip times from the audio").assertExists()
+        compose.onNodeWithText("Paused until", substring = true).assertExists()
+    })
+
+    /** Left walks back along the card's buttons: Yes, Adjust, Don't ask again, then Left to Adjust. */
+    @Test
+    fun found_prompt_left_walks_back() {
+        tvFound("tv-found-prompt-left", FoundSkipFixture.PROMPT, focus = "Yes")
+        press(Key.DirectionRight)
+        press(Key.DirectionRight)
+        assertEquals("Don't ask again", focusedText())
+        press(Key.DirectionLeft)
+        assertEquals("Adjust", focusedText())
+        press(Key.DirectionLeft)
+        assertEquals("Yes", focusedText())
+    }
+
+    /** [change]s done at their times and the root captured every 33 ms until [end], the clock held between. */
+    private fun frames(name: String, end: Long, changes: List<Pair<Long, () -> Unit>>) {
+        compose.mainClock.autoAdvance = false
+        var now = 0L
+        for (ms in 0L..end step 33L) {
+            changes.filter { it.first in (if (ms == 0L) 0L else now + 1)..ms }.forEach { it.second() }
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+    }
+
+    private fun key(key: Key): () -> Unit = { compose.onAllNodes(isRoot()).onLast().performKeyInput { pressKey(key) } }
+
+    /** Loop D: focus on the card from Yes, Right, Right, then Left back to Adjust: the fill moves on quick, the button grows to 1.05. */
+    @Test
+    fun found_focus_clip() {
+        tvFound(null, FoundSkipFixture.PROMPT, focus = "Yes")
+        frames("tv-found-focus-clip", 2_400, listOf(300L to key(Key.DirectionRight), 1_000L to key(Key.DirectionRight), 1_700L to key(Key.DirectionLeft)))
+        assertEquals("Adjust", focusedText())
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-found-focus-clip-end.png")
+    }
+
+    /** Loop D with Remove animations on: the fill moves and the scale is dropped. */
+    @Test
+    fun found_focus_clip_removed() {
+        tvFound(null, FoundSkipFixture.PROMPT, focus = "Yes", removed = true)
+        frames("tv-found-focus-removed-clip", 2_400, listOf(300L to key(Key.DirectionRight), 1_000L to key(Key.DirectionRight), 1_700L to key(Key.DirectionLeft)))
+        assertEquals("Adjust", focusedText())
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-found-focus-removed-clip-end.png")
+    }
+
+    private fun pausedLine(on: Boolean) = {
+        val view = shot.settings.view.value!!
+        shot.apply(listOf(Event.Settings(view.copy(skipFindPaused = if (on) SkipFindPause.STORAGE else null))))
+    }
+
+    /** Down from the first row to the Find skip times row, which the list scrolls into view. */
+    private fun toFindRow() {
+        press(Key.DirectionRight)
+        var presses = 0
+        while (!focusedText().startsWith("Find skip times") && presses++ < 14) press(Key.DirectionDown)
+        assertTrue("focus reached the find row", focusedText().startsWith("Find skip times"))
+    }
+
+    /** Loop E: low storage pauses finding at 0.6 s and it resumes at 3.6 s; the line opens and closes under the row on standard. */
+    @Test
+    fun found_settings_clip() = shoot("tv-found-settings-clip-end", section = "Playback", then = {
+        toFindRow()
+        frames("tv-found-settings-clip", 4_800, listOf(600L to { pausedLine(true)() }, 3_600L to { pausedLine(false)() }))
+    })
+
+    @Test
+    fun found_settings_clip_removed() = shoot("tv-found-settings-removed-clip-end", section = "Playback", removed = true, then = {
+        toFindRow()
+        frames("tv-found-settings-removed-clip", 4_800, listOf(600L to { pausedLine(true)() }, 3_600L to { pausedLine(false)() }))
+    })
+
+
+    /** Back closes the card unanswered. */
+    @Test
+    fun found_prompt_back_dismisses() = tvFound("tv-found-prompt-back", FoundSkipFixture.PROMPT).also {
+        compose.runOnUiThread {
+            listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP).forEach { compose.activity.dispatchKeyEvent(KeyEvent(it, KeyEvent.KEYCODE_BACK)) }
+        }
+        compose.mainClock.advanceTimeBy(600)
+        compose.waitForIdle()
+        assertTrue("Back dismissed the card", sentCommands.any { it.toString().contains("DismissSkipPrompt") })
     }
 
     /** Back steps the marking panel back, then closes it. */
@@ -852,13 +1203,20 @@ class TvShots {
         downTo("Upload limit")
     }
 
-    /** A torrent starting: 23 s in, what the wait is on, and another source offered. */
-    @Test
-    fun player_torrent_starting() = startingShot("tv-player-torrent-starting", waited = 23_000)
-
-    /** The first seconds of a start, before the wait says what it is on. */
-    @Test
-    fun player_starting() = startingShot("tv-player-starting", waited = 1_000)
+    @Test fun player_start_title_lookup() = startingShot("tv-start-title-lookup", StartingFixture.TITLE_LOOKUP, 1_500)
+    @Test fun player_start_asking_first() = startingShot("tv-start-asking-first", StartingFixture.ASKING_FIRST, 3_500)
+    @Test fun player_start_source_missed() = startingShot("tv-start-source-missed", StartingFixture.SOURCE_MISSED, 3_500)
+    @Test fun player_start_slow() = startingShot("tv-start-slow", StartingFixture.SLOW, 500)
+    @Test fun player_start_finding_peers() = startingShot("tv-start-finding-peers", StartingFixture.FINDING_PEERS, 3_500)
+    @Test fun player_start_peers_known() = startingShot("tv-start-peers-known", StartingFixture.PEERS_KNOWN, 1_500)
+    @Test fun player_start_found() = startingShot("tv-start-found", StartingFixture.FOUND, 1_500)
+    @Test fun player_start_buffering_torrent() = startingShot("tv-start-buffering-torrent", StartingFixture.BUFFERING_TORRENT, 1_500)
+    @Test fun player_start_offline() = startingShot("tv-start-offline", StartingFixture.OFFLINE, 1_500)
+    @Test fun player_start_offline_timed_out() = startingShot("tv-start-offline-timed-out", StartingFixture.OFFLINE_TIMED_OUT, 1_500)
+    @Test fun player_start_failed_no_episode() = startingShot("tv-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, 1_500)
+    @Test fun player_start_failed_no_match() = startingShot("tv-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, 1_500)
+    @Test fun player_start_failed_no_sources() = startingShot("tv-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, 1_500)
+    @Test fun player_start_failed_not_aired() = startingShot("tv-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, 1_500)
 
     /** A torrent that stalled mid-episode: the stall card, Switch source focused. */
     @Test
@@ -949,19 +1307,18 @@ class TvShots {
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-player-failed.png")
     }
 
-    /** The starting screen [waited] ms after the engine said it is starting, before any frame. */
-    private fun startingShot(name: String, waited: Long) {
+    /** The starting screen as the engine's made-up start in [state] leaves it [extra] ms after its last event. */
+    private fun startingShot(name: String, state: StartingFixture, extra: Long) {
         AppClock.clock = Clock.fixed(Instant.parse("2026-10-20T19:02:00Z"), ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         val model = PlayerModel(send = {}, backend = { ScriptedMpv() }, scope = scope, now = { time }, hwdec = "no")
+        val events = startingFixture(state)
         compose.runOnUiThread {
-            model.apply(Event.PlaybackStaged(900_001u, TITLE, "7", EPISODE, 1.0))
-            model.apply(
-                Event.PlayerUi(
-                    1u,
-                    PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg"),
-                ),
-            )
+            model.apply(Event.PlayerUi(1u, PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg")))
+            for (e in events) {
+                time = e.atMs.toLong()
+                model.apply(e.event)
+            }
         }
         compose.setContent {
             TvTheme {
@@ -971,7 +1328,7 @@ class TvShots {
             }
         }
         compose.waitForIdle()
-        time = waited
+        time = (events.lastOrNull()?.atMs ?: 0u).toLong() + extra
         compose.runOnUiThread { model.poke() }
         settle()
         awaitArt(store)
@@ -1000,9 +1357,13 @@ class TvShots {
     /** The navigator of the root [shoot] drew. */
     private var nav = TvNavigator()
 
-    private fun playerShot(name: String?, then: (PlayerModel) -> Unit) {
+    private fun playerShot(name: String?, removed: Boolean = false, prepare: (AppStore) -> Unit = {}, then: (PlayerModel) -> Unit) {
+        if (removed) {
+            android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        }
         AppClock.clock = Clock.fixed(Instant.parse("2026-10-20T19:02:00Z"), ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
+        prepare(store)
         var mpv: ScriptedMpv? = null
         val model = PlayerModel(send = { sentCommands += it }, backend = { ScriptedMpv().also { mpv = it; playerMpv = it } }, scope = scope, now = { time }, hwdec = "no")
         compose.runOnUiThread {
@@ -1101,6 +1462,8 @@ class TvShots {
         offline: Boolean = false,
         /** Whether every show on Continue was last watched dubbed. */
         dub: Boolean = false,
+        /** Whether another device of the group played Continue last. */
+        device: Boolean = false,
         scene: String = WATCHING,
         /** The Settings section to open at, by its name. */
         section: String? = null,
@@ -1110,13 +1473,21 @@ class TvShots {
         proxy: Boolean = false,
         /** The TV's address on the network, so a QR page has one: none, as the JVM has no network, when null. */
         pageHost: String? = null,
+        /** The episode tables of the scene as they are sent: text and stills laid on, say. */
+        episodes: ((AnilistId, List<app.kaeri.engine.model.EpisodeRow>) -> List<app.kaeri.engine.model.EpisodeRow>)? = null,
+        /** Remove animations on, the system's animator duration scale at 0, as a person turns it on. */
+        removed: Boolean = false,
         then: (() -> Unit)? = null,
     ) {
+        if (removed) {
+            android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        }
         val recorded = Scene.named(scene)
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         shot = store
-        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it } +
+        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it }
+            .map { if (episodes != null && it is Event.Episodes) Event.Episodes(it.id, episodes(it.id, it.rows)) else it } +
             listOfNotNull(Event.Connectivity(true).takeIf { offline })
         // The proxy check's last word, said once.
         torrents?.let { store.apply(listOf(Event.TorrentProxy(it))) }
@@ -1178,6 +1549,69 @@ class TvShots {
         compose.onNodeWithText("Available").assertExists()
     })
 
+    /** A sync state of the Fixtures app staged on a recorded scene, as the Fixtures app's `sync` extra stages it. */
+    private fun syncShot(name: String, scene: String, state: String?, section: String? = "Devices", firstLaunch: Boolean = false) =
+        shoot(name, scene = scene, section = section, firstLaunch = firstLaunch, then = {
+            if (state != null) runBlocking { app.kaeri.store.FixtureSync.stage(shot, state) }
+        })
+
+    @Test fun sync_off() = syncShot("tv-sync-off", WATCHING, null)
+
+    @Test fun sync_on() = syncShot("tv-sync-on", "sync_on", null)
+
+    @Test fun sync_cloud() = syncShot("tv-sync-cloud", "sync_cloud", null)
+
+    @Test fun sync_error() = syncShot("tv-sync-error", "sync_cloud", "offline")
+
+    @Test fun sync_signed_out() = syncShot("tv-sync-signed-out", "sync_cloud", "signed-out")
+
+    @Test fun sync_code_denied() = syncShot("tv-sync-code-denied", "sync_nearby", "onedrive-code-denied")
+
+    @Test fun sync_remove_menu() = syncShot("tv-sync-remove-menu", "sync_cloud", "remove-menu")
+    @Test fun sync_remove_ask() = syncShot("tv-sync-remove-ask", "sync_cloud", "remove-ask")
+
+    @Test fun sync_picker() = syncShot("tv-sync-picker", "sync_nearby", "picker")
+
+    @Test fun sync_google_code() = syncShot("tv-sync-google-code", "sync_nearby", "google-code")
+
+    @Test fun sync_onedrive_code() = syncShot("tv-sync-onedrive-code", "sync_nearby", "onedrive-code")
+
+    @Test fun sync_code_expired() = syncShot("tv-sync-code-expired", "sync_nearby", "code-expired")
+
+    @Test fun sync_nextcloud_qr() = syncShot("tv-sync-nextcloud-qr", "sync_nearby", "nextcloud-qr")
+
+    @Test fun sync_dropbox_phone() = syncShot("tv-sync-dropbox-phone", "sync_tv_phone_sign_in", "dropbox-phone")
+
+    @Test fun sync_dropbox_no_phone() = syncShot("tv-sync-dropbox-no-phone", "sync_nearby", "dropbox-nophone")
+
+    @Test fun sync_pair_code() = syncShot("tv-sync-pair-code", "sync_on", "code")
+
+    @Test fun sync_pair_ok() = syncShot("tv-sync-pair-ok", "sync_on", "pair-ok")
+
+    @Test fun sync_first_welcome() = syncShot("tv-first-welcome", "fresh", null, section = null, firstLaunch = true)
+
+    @Test fun sync_first_code() = syncShot("tv-first-code", "fresh", "first-code", section = null, firstLaunch = true)
+
+    @Test fun sync_first_ok_join() = syncShot("tv-first-ok-join", "fresh", "first-ok-join", section = null, firstLaunch = true)
+
+    @Test fun sync_join_failed() = syncShot("tv-sync-join-failed", "sync_on", "join-failed-offline")
+
+    @Test fun home_continue_device() = shoot("tv-home-continue-device", scene = WATCHING, device = true)
+
+    /** The Continue cards under the spotlight, with the line that says which device played last wrapping to two lines. */
+    @Test fun home_continue_device_cards() = shoot("tv-home-continue-device-cards", scene = WATCHING, device = true) {
+        press(Key.DirectionDown)
+        settle()
+    }
+
+    @Test fun sync_first_ok() = syncShot("tv-first-ok", "fresh", "first-ok", section = null, firstLaunch = true)
+
+    @Test fun profiles_settings() = syncShot("tv-profiles", "profiles", null, section = "Profiles")
+
+    @Test fun profiles_only_you() = syncShot("tv-profiles-one", WATCHING, null, section = "Profiles")
+
+    @Test fun profiles_who() = syncShot("tv-profiles-who", "profiles", "who", section = null)
+
     private fun settle() {
         compose.mainClock.advanceTimeBy(3_000)
         compose.waitForIdle()
@@ -1198,6 +1632,10 @@ class TvShots {
     /** The focused control's text, its descendants' merged. */
     /** The store [shoot] made, for a test that has the engine answer partway. */
     private lateinit var shot: AppStore
+
+    /** The focused control's content description: a card's, which says number, title, facts and synopsis. */
+    private fun focusedLabel(): String =
+        compose.onNode(isFocused()).fetchSemanticsNode().config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().joinToString(" ")
 
     private fun focusedText(): String {
         val node: SemanticsNodeInteraction = compose.onNode(isFocused())
@@ -1228,6 +1666,7 @@ class TvShots {
         const val TV = "w960dp-h540dp-land-television-xhdpi"
 
         const val WATCHING = "watching"
+        const val BROWSING = "browsing"
         const val HOME_WATCHING = "home-watching"
         const val TOGETHER = "together"
 
@@ -1258,6 +1697,19 @@ private fun torrentsOn(event: Event, proxy: Boolean = false): Event = when (even
             rows = event.v1.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
             sources = event.v1.sources.copy(torrent = true),
             torrent = TorrentView(if (proxy) ProxyView("proxy.example", 1080u, "mika") else null),
+        ),
+    )
+    else -> event
+}
+
+/** [event], when it is the Home view, with Continue as another device of the group played it last, as the engine would say it. */
+private fun fromDevice(event: Event): Event = when (event) {
+    is Event.Home -> Event.Home(
+        event.v1.copy(
+            spotlight = event.v1.spotlight?.let { if (it.case == SpotlightCase.CONTINUING) it.copy(lastDevice = "Study Mac") else it },
+            sections = event.v1.sections.map { section ->
+                if (section.kind == SectionKind.CONTINUE) section.copy(items = section.items.map { it.copy(lastDevice = "Study Mac") }) else section
+            },
         ),
     )
     else -> event

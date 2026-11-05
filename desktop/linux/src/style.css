@@ -70,6 +70,11 @@ progressbar progress { background: var(--amber); }
 .banner.flush { border-radius: 0; }
 .still { border-radius: 6px; }
 .still.spoiler { filter: blur(10px); }
+/* The eye over a blurred still, and the resume track along a still's bottom edge. */
+.still-eye { color: var(--silk); }
+progressbar.still-progress { min-height: 3px; }
+progressbar.still-progress trough { min-height: 3px; min-width: 0; border-radius: 2px; background: rgba(16, 19, 31, 0.7); }
+progressbar.still-progress progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
 .art-fade { background: linear-gradient(to bottom, alpha(var(--ground), 0) 30%, var(--ground)); }
 
 /* The sidebar's foot. */
@@ -123,8 +128,14 @@ levelbar block.empty { background: var(--edge); }
 .filter-chip image { -gtk-icon-size: 12px; opacity: 0.7; }
 
 /* Episode rows. */
+list.episode-list { background: none; }
+list.episode-list > row { border-radius: 8px; }
 .episode-row { min-height: 72px; padding: 6px 0; }
+/* Rows with a synopsis have a height of their own, set from the size and never from the text. */
+.episode-row.synopsis-row { min-height: 0; padding: 0 0 0 12px; }
 .watched .episode-name { color: var(--haze); }
+/* The synopsis line is 20 px, as on Windows, where GTK would give about 17.5. */
+.synopsis-text { line-height: 1.43; }
 
 /* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that
    reaches 72% at the screen edge, so silk holds 5:1 on a white frame. */
@@ -140,6 +151,24 @@ levelbar block.empty { background: var(--edge); }
 .player-bar button { min-width: 40px; min-height: 40px; }
 .player-bar label { color: var(--silk); }
 .player-starting { background: var(--ground); }
+/* The starting screen: the art under 55% of the ground, 80% over bright art, then the column. */
+.start-ground { background: alpha(var(--ground), 0.55); }
+.start-ground.bright { background: alpha(var(--ground), 0.80); }
+.start-title { font-size: 30px; }
+.start-episode { font-size: 15px; margin-top: 6px; }
+.start-loader { color: var(--silk); }
+.start-amber { color: var(--amber); }
+.start-column overlay { margin-top: 14px; }
+.start-step { font-size: 15px; font-weight: 500; color: var(--silk); }
+.start-detail { font-size: 13px; font-feature-settings: "tnum"; }
+.start-actions { margin-top: 16px; }
+.start-actions .start-button { min-height: 34px; padding-top: 0; padding-bottom: 0; font-weight: 700; }
+.start-dot { background: var(--vermilion); border-radius: 999px; min-width: 8px; min-height: 8px; }
+.start-rows { font-size: 13px; margin-top: 10px; }
+.start-row { min-height: 28px; }
+.start-row-skip { min-height: 24px; padding: 0 8px; }
+.start-language { margin-top: 4px; font-size: 13px; }
+
 /* The seek line is drawn whole over the scale (player/timeline.rs): the scale keeps the input
    and the keyboard, and draws nothing of its own. */
 .timeline trough { background: none; min-height: 6px; outline: none; }
@@ -156,6 +185,9 @@ levelbar block.empty { background: var(--edge); }
 .corner-card.mark-bar { border-radius: 12px; padding: 10px 12px 12px 16px; margin: 72px 16px 0; min-width: 420px; }
 .mark-bar .mark-button, .prompt-card .mark-button { min-height: 34px; padding-top: 0; padding-bottom: 0; }
 .corner-card.prompt-card { padding: 8px 8px 8px 16px; }
+/* The found times' card: the question in bold, the line under it a little smaller. */
+.prompt-card .found-line { font-weight: 700; }
+.prompt-card .found-detail { font-size: 13px; }
 /* The Sub and Dub switch at the top of the Subtitles and Audio menu. */
 .translation-switch button { padding: 4px 16px; }
 .seek-preview { padding: 4px; }
@@ -309,3 +341,87 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end { font-size: 14px; }
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
+
+/* Sync and profiles: the recovery key card, the pairing code, the small Kids tag. */
+.key-card {
+  background: var(--raised);
+  border: 1px solid var(--faint-rule);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.key-grid {
+  font-family: monospace;
+  font-size: 17px;
+  letter-spacing: 1px;
+  color: var(--silk);
+}
+.pair-code {
+  font-family: monospace;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--silk);
+}
+.tag-pill {
+  background: var(--raised);
+  color: var(--haze);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+}
+
+/* Watch together chat. Chat never takes the amber: Send is tonal, glyphs are silk, ticks are haze.
+   Lines and moments sit on the ground at 82 % with a hairline, so they hold on a bright frame. */
+.chat-line { background: rgba(22, 26, 46, 0.82); box-shadow: inset 0 0 0 1px rgba(228, 224, 214, 0.08); color: var(--silk); border-radius: 12px; padding: 8px 14px; min-height: 0; border: none; font-size: 14px; line-height: 1.43; }
+.chat-line label { color: inherit; }
+button.chat-fold:hover { background: rgba(36, 40, 58, 0.9); }
+button.chat-fold label { color: var(--haze); font-weight: 400; }
+.chat-moment { background: rgba(22, 26, 46, 0.82); box-shadow: inset 0 0 0 1px rgba(228, 224, 214, 0.08); color: var(--silk); border-radius: 18px; min-height: 36px; padding: 0 14px 0 10px; font-size: 14px; font-weight: 600; }
+/* The field and Send, flush: the field's ring is silk, never the accent, and Send is tonal. */
+.chat-field entry { min-height: 34px; background: rgba(36, 40, 58, 0.94); border-radius: 6px 0 0 6px; outline-color: rgba(228, 224, 214, 0.4); }
+.chat-field entry:focus-within { outline-color: rgba(228, 224, 214, 0.4); }
+.chat-field > button { min-height: 34px; background: rgba(58, 63, 88, 0.96); color: var(--silk); font-weight: 700; font-size: 14px; border-radius: 0 6px 6px 0; padding: 0 14px; }
+.chat-field > button:hover { background: rgba(72, 78, 105, 0.98); }
+.chat-field > button:disabled { color: alpha(var(--silk), 0.5); }
+.chat-tail { color: var(--haze); font-size: 0.85em; }
+.chat-field entry.counting { padding-right: 44px; }
+.chat-link link { color: var(--silk); }
+button.cooling { opacity: 0.4; }
+
+/* Go to episode: the row it went to takes the selection fill, and the typed number is a small
+   capsule at the top right. The dialog's Go is the selected fill too, not amber: the view keeps
+   one amber. */
+row.go-target, row.go-target:hover { background: var(--raised-selected); }
+dialog.go-to button.suggested, dialog.go-to button.suggested-action {
+  background: var(--raised-selected);
+  color: var(--silk);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  font-weight: 600;
+}
+dialog.go-to button.suggested:hover, dialog.go-to button.suggested-action:hover {
+  background: color-mix(in srgb, var(--raised-selected) 88%, var(--silk));
+}
+dialog.go-to button.suggested:disabled, dialog.go-to button.suggested-action:disabled {
+  opacity: 0.5;
+}
+.typed-capsule {
+  background: rgba(46, 50, 74, 0.97);
+  color: var(--silk);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-feature-settings: "tnum";
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */
+popover.ep-panel > contents { padding: 0; }
+.ep-panel-list { background: transparent; padding: 6px 4px; }
+.ep-panel-list row { border-radius: 6px; padding: 6px 8px; min-height: 0; }
+.ep-panel-list row:hover, .ep-panel-list row:focus-visible { background: alpha(white, 0.07); }
+.ep-row .ep-current { color: var(--amber); }
+.ep-foot { border-top: 1px solid var(--faint-rule); padding: 8px 12px 10px; }
+.ep-foot .ep-foot-title { font-size: 0.92em; }
+.ep-foot .ep-foot-text { color: #C9CAD6; font-size: 0.95em; margin-top: 2px; }

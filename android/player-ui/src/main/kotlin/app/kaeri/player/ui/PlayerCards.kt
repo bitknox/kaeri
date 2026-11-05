@@ -292,10 +292,11 @@ fun ResumeNote(model: PlayerModel, modifier: Modifier = Modifier) {
 
 /** A message on the video, under the top bar, for 4 s. */
 @Composable
-fun AlertNote(model: PlayerModel, modifier: Modifier = Modifier) {
+fun AlertNote(model: PlayerModel, modifier: Modifier = Modifier, suppress: (String) -> Boolean = { false }) {
     val context = LocalContext.current
     // What was done to the skip times is said in the same capsule, as a notice, not an alert.
-    val alert = model.alert ?: model.skipNotice?.let { PlayerAlert(SkipWords.notice(context, it.notice), NoticeKind.INFO, it.since) }
+    val alert = (model.alert ?: model.skipNotice?.let { PlayerAlert(SkipWords.notice(context, it.notice), NoticeKind.INFO, it.since) })
+        ?.takeUnless { suppress(it.text) }
     AnimatedVisibility(alert != null, enter = fadeIn(Motion.standard()), exit = fadeOut(Motion.quick()), modifier = modifier) {
         val shown = alert ?: return@AnimatedVisibility
         Row(
@@ -345,31 +346,6 @@ fun StillWatching(model: PlayerModel) {
                     ) { Text(stringResource(R.string.player_still_watching_continue)) }
                 }
             }
-        }
-    }
-}
-
-/**
- * What the starting screen says under its line: after 20 s of finding nothing, Choose source and
- * Stop; and when the playback never played, "Couldn't play episode 7" with Choose source and Close.
- */
-@Composable
-internal fun StartingChoices(model: PlayerModel, onChooseSource: () -> Unit) {
-    val starting = model.starting
-    if (model.failure == null && (starting == null || !starting.offersChoice(model.clock))) return
-    Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (model.failure != null) {
-            Button(
-                onClick = onChooseSource,
-                colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
-            ) { Text(stringResource(R.string.player_choose_source)) }
-            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_close), color = ObiSilk.Silk) }
-        } else {
-            FilledTonalButton(
-                onClick = onChooseSource,
-                colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
-            ) { Text(stringResource(R.string.player_choose_source)) }
-            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_stop), color = ObiSilk.Silk) }
         }
     }
 }

@@ -54,125 +54,6 @@ struct PlayerPicture: View {
     }
 }
 
-/// From the playback staged to the first frame: the title's wide art at the screen's full size
-/// under a calm ground scrim (the banner, else a still already seen, else the ground alone),
-/// the title, "Starting episode 7" over a thin amber line that sweeps while it waits, and what
-/// the wait is on below. After 20 s it offers another source, and to stop. When the playback
-/// never played, it says so: "Couldn't play episode 7", with Choose source and Close. Between
-/// episodes the last frame fades through the ground colour, never black.
-struct StartingCurtain: View {
-    @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let model: PlayerModel
-    let metrics: PlayerMetrics
-
-    var body: some View {
-        // The title the engine names with the starting screen, else the one staged: its art by
-        // the hero-art rule where the title is known here, else the banner the engine sends.
-        let id = model.starting?.id ?? model.staged?.id
-        let entry = id.flatMap { store.titles[$0] }
-        let url = entry.map { store.heroArt($0).url } ?? model.starting?.bannerUrl
-        let image = url.flatMap { store.artwork.image($0) }
-        GeometryReader { proxy in
-            ZStack {
-                Palette.ground
-                if let image {
-                    FilledArt(image: image)
-                        .transition(.opacity)
-                    Palette.ground.opacity(0.55)
-                }
-                block
-                    .frame(width: min(520, max(0, proxy.size.width - 2 * (metrics.touch ? 56 : 48))), alignment: .leading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .animation(.fadeIn, value: image != nil)
-        .clipped()
-        .task(id: url) {
-            // As sharp as the screen, which the player may come to fill.
-            if let url { await store.artwork.show(url, maxPixelSize: ScreenPixels.longSide) }
-        }
-        .task(id: entry?.id) {
-            // A title with no banner shows a still already seen, which the episode list has.
-            if let entry, entry.bannerUrl == nil, store.titles.episodes[entry.id] == nil {
-                store.loadEpisodes(entry.id)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var block: some View {
-        let episode = model.startingEpisode ?? ""
-        VStack(alignment: .leading, spacing: 0) {
-            Text(model.showTitle)
-                .font(.showTitle(size: metrics.touch ? 22 : 30))
-                .lineLimit(2)
-            if model.failure != nil {
-                Text(L.playerFailedTitleText(episode: episode))
-                    .font(.system(size: metrics.touch ? 17 : 15, weight: .semibold))
-                    .padding(.top, 10)
-                Text(L.playerFailedDetail)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.haze)
-                    .padding(.top, 4)
-                HStack(spacing: 8) {
-                    Button(L.playerChooseSource) { model.chooseSource() }
-                        .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
-                        .keyboardShortcut(.defaultAction)
-                    Button(L.actionClose) { model.viewerClosed() }
-                        .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        .keyboardShortcut(.cancelAction)
-                }
-                .padding(.top, 16)
-            } else {
-                let starting = model.starting
-                let note = starting.flatMap { PlayerModel.startingNote(in: store.jobs.running, episode: $0.episode) }
-                let demo = (model.starting?.id ?? model.staged?.id).flatMap { store.titles[$0] }?.isDemo == true
-                Text(demo ? L.playerStartingPart(part: episode) : L.playerStartingText(episode: episode))
-                    .font(.system(size: metrics.touch ? 17 : 15, weight: .medium))
-                    .padding(.top, 8)
-                if demo {
-                    // The licence asks for the credit wherever the work shows.
-                    Text(L.playerDemoCredit)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.haze)
-                        .padding(.top, 4)
-                }
-                LoaderLine(reduceMotion: reduceMotion)
-                    .frame(height: 2)
-                    .padding(.top, 12)
-                // Its place kept while there is nothing to say, so nothing moves when there is.
-                Text(starting?.wait(at: model.clock, note: note) ?? " ")
-                    .font(.system(size: 13))
-                    .monospacedDigit()
-                    .foregroundStyle(.haze)
-                    .contentTransition(.opacity)
-                    .padding(.top, 10)
-                if starting?.offersChoice(at: model.clock) == true {
-                    HStack(spacing: 8) {
-                        Button(L.playerChooseSource) { model.chooseSource() }
-                            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        Button(L.actionStop) { model.viewerClosed() }
-                            .buttonStyle(PillButtonStyle(kind: .quiet, metrics: metrics))
-                    }
-                    .padding(.top, 16)
-                    .transition(.opacity)
-                }
-            }
-            if model.choosingSource {
-                SourceList(model: model, metrics: metrics)
-                    .padding(.top, 16)
-                    .transition(.opacity)
-            }
-        }
-        .foregroundStyle(.silk)
-        .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.5), radius: 1, y: 1)
-        .animation(.standard, value: model.failure)
-        .animation(.standard, value: model.choosingSource)
-        .accessibilityElement(children: .contain)
-    }
-}
-
 /// Indeterminate progress as a thin amber line: a stretch of amber easing across a faint track,
 /// back and forth, calm. Still, with Reduce Motion.
 ///
@@ -180,6 +61,9 @@ struct StartingCurtain: View {
 /// line takes its size and place at once wherever it is laid out, and only the stretch moves.
 struct LoaderLine: View {
     let reduceMotion: Bool
+    /// How full it is, 0 to 1, when mpv gives a buffering percentage: the stretch gives way to a
+    /// fill that follows each number.
+    var progress: Double?
     /// What VoiceOver says it is.
     var label = L.playerLoadingAnnounce
     /// When the stretch set off from the left.
@@ -191,7 +75,14 @@ struct LoaderLine: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Palette.silk.opacity(0.14))
                 if reduceMotion {
-                    Capsule().fill(Palette.amber.opacity(0.8))
+                    // 100% to 40% over 2 s and back, a 4 s cycle, from the clock: no repeating
+                    // animation, so a change of layout is never caught up in it.
+                    TimelineView(.animation) { context in
+                        Capsule()
+                            .fill(Palette.amber)
+                            .frame(width: stretch)
+                            .opacity(progress != nil ? 0 : Self.breath(after: context.date.timeIntervalSince(began)))
+                    }
                 } else {
                     TimelineView(.animation) { context in
                         let travel = proxy.size.width - stretch
@@ -200,12 +91,27 @@ struct LoaderLine: View {
                             .frame(width: stretch)
                             .offset(x: travel * Self.across(after: context.date.timeIntervalSince(began), travel: travel))
                     }
+                    .opacity(progress != nil ? 0 : 1)
+                }
+                if let progress {
+                    Capsule()
+                        .fill(Palette.amber)
+                        .frame(width: proxy.size.width * min(1, max(0, progress)))
+                        .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? .fadeIn : .standard, value: progress)
+            .animation(.fadeIn, value: progress == nil)
         }
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// The stretch's opacity under Reduce Motion `elapsed` seconds in: 1 falling to 0.4 over 2 s
+    /// and back over the next 2 s.
+    nonisolated static func breath(after elapsed: TimeInterval) -> Double {
+        0.7 + 0.3 * cos(2 * .pi * max(0, elapsed) / 4)
     }
 
     /// The standard spring's shape, slowed to a calm sweep; never a bounce.
@@ -372,6 +278,7 @@ struct SeekLine: View {
     var showsPreview = true
     @State private var touched = false
     @State private var pace = ScrubPace()
+    @Environment(AppStore.self) private var store: AppStore?
 
     private var lineHeight: CGFloat { metrics.touch ? 6 : (touched ? 6 : 4) }
 
@@ -410,6 +317,12 @@ struct SeekLine: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
             .overlay(alignment: .leading) { MarkedStretch(model: model, width: proxy.size.width, height: lineHeight) }
+            .overlay {
+                // Where the room reacted: ticks above the line, for this episode.
+                let ticks = reactionTicks(duration: duration, width: proxy.size.width)
+                if !ticks.isEmpty { ReactionTicks(ticks: ticks, lineHeight: lineHeight) }
+            }
+            .animation(.fadeIn, value: reactionTicks(duration: duration, width: proxy.size.width).count)
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -448,7 +361,10 @@ struct SeekLine: View {
                 if showsPreview, let time = model.scrubbing ?? model.hovering, duration > 0 {
                     let width = ScrubBubble.width
                     let x = proxy.size.width * time / duration - width / 2
-                    ScrubBubble(model: model, time: time)
+                    ScrubBubble(
+                        model: model, time: time,
+                        tick: reactionTicks(duration: duration, width: proxy.size.width)
+                            .first { abs($0.x - proxy.size.width * time / duration) <= 4 }?.label)
                         .frame(width: width, alignment: .bottom)
                         .offset(
                             x: min(max(x, -16), proxy.size.width - width + 16),
@@ -475,6 +391,12 @@ struct SeekLine: View {
         .accessibilityAdjustableAction { direction in
             model.seek(by: direction == .increment ? 10 : -10)
         }
+    }
+
+    /// The ticks of the party's reactions on a line `width` wide.
+    private func reactionTicks(duration: Double, width: Double) -> [ReactionTick] {
+        guard let chat = store?.party.chat, store?.party.inParty == true, chat.shown else { return [] }
+        return chat.ticks(duration: duration, width: width)
     }
 
     /// While scrubbing, the opening or ending under the thumb, or none: a change is a mark crossed.
@@ -510,6 +432,8 @@ struct SeekLine: View {
 struct ScrubBubble: View {
     let model: PlayerModel
     let time: Double
+    /// "12:04 · Ren and Mika", when the pointer is over a reaction's tick.
+    var tick: String?
 
     static let width: CGFloat = 220
 
@@ -545,7 +469,7 @@ struct ScrubBubble: View {
                 .clipShape(.rect(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            Text(model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
+            Text(tick ?? model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(.silk)
@@ -877,12 +801,21 @@ struct StallCardView: View {
 struct CornerCard: View {
     let model: PlayerModel
     let metrics: PlayerMetrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The found times' card fades in and rises 8 pt; Reduce Motion drops the rise. It fades out.
+    private var promptTransition: AnyTransition {
+        switch model.skipPrompt?.prompt {
+        case .foundEdges where !reduceMotion: .asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity)
+        default: .opacity
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             switch model.corner {
             case .stall: StallCardView(model: model, metrics: metrics).transition(.opacity)
-            case .prompt: SkipPromptCard(model: model, metrics: metrics).transition(.opacity)
+            case .prompt: SkipPromptCard(model: model, metrics: metrics).transition(promptTransition)
             case .undo: UndoNote(model: model, metrics: metrics).transition(.opacity)
             case .upNext: UpNextCardView(model: model, metrics: metrics).transition(.opacity)
             case .skip: SkipButton(model: model, metrics: metrics).transition(.opacity)
@@ -949,24 +882,6 @@ struct StillWatchingDialog: View {
         .overVideo(radius: 24)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
-    }
-}
-
-/// A message on the video, at the top.
-struct PlayerAlertView: View {
-    let model: PlayerModel
-    let metrics: PlayerMetrics
-
-    var body: some View {
-        if let alert = model.alert {
-            Label(alert.text, systemImage: alert.kind == .alert ? "exclamationmark.triangle.fill" : "info.circle")
-                .font(.system(size: metrics.body))
-                .foregroundStyle(alert.kind == .alert ? Palette.vermilion : Palette.silk)
-                .padding(.horizontal, 14)
-                .frame(height: metrics.touch ? 44 : 32)
-                .overVideo(radius: metrics.touch ? 22 : 16)
-                .transition(.opacity)
-        }
     }
 }
 
@@ -1283,10 +1198,53 @@ struct EpisodeList: View {
     /// After an episode is picked: the iPhone's and iPad's sheet closes, since the sources move
     /// to the picked row and every row between would shift under the next tap.
     var picked: (() -> Void)? = nil
+    /// The episode the pointer is over, for the panel's footer.
+    var pointed: Binding<String?>? = nil
+    /// The episode whose row has the keyboard's focus, for the panel's footer.
+    var focused: Binding<String?>? = nil
+    /// A long series' range of 100 the panel shows: the playing episode's until one is picked.
+    @State private var picked_range: Int?
+    @State private var goToOpen = false
+    /// The row Go to episode asks the panel's scroll view to put at the top.
+    var landed: Binding<String?>? = nil
+    @FocusState private var focus: String?
+    /// The pointer's last row, let go 150 ms after the pointer leaves it: crossing a gap or a
+    /// source between rows keeps the footer where it was.
+    @State private var leaving: Task<Void, Never>?
 
     var body: some View {
-        let episodes = model.menus?.episodes ?? []
-        MenuHeading(title: L.playerEpisodes)
+        let all = model.menus?.episodes ?? []
+        let ranges = PanelRanges(all, picked: picked_range)
+        let episodes = ranges.shown
+        HStack(spacing: 0) {
+            MenuHeading(title: L.playerEpisodes)
+            if !ranges.chunks.isEmpty {
+                PanelRangeMenu(ranges: ranges, pick: { picked_range = $0 }, goTo: { goToOpen = true })
+                    .popover(isPresented: $goToOpen, arrowEdge: .bottom) {
+                        PanelGoTo(episodes: all) { number in
+                            goToOpen = false
+                            if let index = all.firstIndex(where: { $0.number == number }) {
+                                picked_range = index / PanelRanges.size
+                                landed?.wrappedValue = number
+                            }
+                        }
+                    }
+                    .padding(.trailing, 8)
+            }
+        }
+            .onChange(of: focus) { focused?.wrappedValue = focus }
+            #if FIXTURES
+            .task {
+                // A screenshot's keyboard focus on a row, by its number.
+                guard focused != nil, let number = PlayerShot.focusedEpisode(in: ProcessInfo.processInfo.arguments)
+                else { return }
+                try? await Task.sleep(for: .milliseconds(300))
+                focus = number
+                // A window that is not key takes no focus, as a snapshot's never is: the footer
+                // is told the row all the same.
+                focused?.wrappedValue = number
+            }
+            #endif
         ForEach(episodes, id: \.number) { row in
             if row.current {
                 // One block, which the list scrolls into view whole as it opens.
@@ -1301,7 +1259,7 @@ struct EpisodeList: View {
             }
         }
         // Before the engine has listed the episodes, or with none of them playing.
-        if !episodes.contains(where: \.current) {
+        if !all.contains(where: \.current) {
             SourceGroup(model: model, metrics: metrics)
         }
     }
@@ -1315,6 +1273,22 @@ struct EpisodeList: View {
             model.choose(.episode(row.number))
             if !row.current { picked?() }
         }
+        .focused($focus, equals: row.number)
+        .onHover { inside in
+            guard let pointed else { return }
+            if inside {
+                leaving?.cancel()
+                leaving = nil
+                pointed.wrappedValue = row.number
+            } else if pointed.wrappedValue == row.number {
+                leaving?.cancel()
+                leaving = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(150))
+                    guard !Task.isCancelled, pointed.wrappedValue == row.number else { return }
+                    pointed.wrappedValue = nil
+                }
+            }
+        }
     }
 
     static func row(_ number: String) -> String { "episode \(number)" }
@@ -1322,6 +1296,115 @@ struct EpisodeList: View {
     /// The episode playing: what a list too long for its panel or sheet scrolls to as it opens.
     static func selectedRow(_ model: PlayerModel) -> String? {
         model.menus?.episodes.first(where: \.current).map { row($0.number) }
+    }
+}
+
+/// A long series' ranges of 100 in the player's Episodes panel: the same ranges as the title
+/// page's, opening on the playing episode's.
+struct PanelRanges {
+    static let size = 100
+    let all: [MenuEpisode]
+    let chunks: [Range<Int>]
+    let index: Int
+
+    init(_ all: [MenuEpisode], picked: Int?) {
+        self.all = all
+        guard all.count > Self.size else {
+            chunks = []
+            index = 0
+            return
+        }
+        chunks = stride(from: 0, to: all.count, by: Self.size).map { $0..<min($0 + Self.size, all.count) }
+        let playing = all.firstIndex(where: \.current).map { $0 / Self.size } ?? 0
+        index = min(max(picked ?? playing, 0), chunks.count - 1)
+    }
+
+    /// The rows shown: the range's, or all of them.
+    var shown: [MenuEpisode] { chunks.isEmpty ? all : Array(all[chunks[index]]) }
+
+    func title(_ i: Int) -> String {
+        let range = chunks[i]
+        return L.episodeRangeShort(from: all[range.lowerBound].number, to: all[range.upperBound - 1].number)
+    }
+}
+
+/// The range pop-up at the trailing end of the panel's heading row, with the title page's items
+/// and Go to episode last.
+struct PanelRangeMenu: View {
+    let ranges: PanelRanges
+    let pick: (Int) -> Void
+    let goTo: () -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(ranges.chunks.indices, id: \.self) { i in
+                Toggle(ranges.title(i), isOn: Binding(get: { i == ranges.index }, set: { _ in pick(i) }))
+            }
+            Divider()
+            Button(L.episodeGoTo, systemImage: "arrow.right.to.line", action: goTo)
+        } label: {
+            HStack(spacing: 4) {
+                Text(ranges.title(ranges.index)).monospacedDigit()
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 8, weight: .semibold))
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.haze)
+            .frame(minHeight: 22)
+            .contentShape(.rect)
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityLabel(L.episodeRangeLabel)
+        .accessibilityValue(ranges.title(ranges.index))
+    }
+}
+
+/// Go to episode in the player's panel: a number, and the range and row it lands on.
+struct PanelGoTo: View {
+    let episodes: [MenuEpisode]
+    let go: (String) -> Void
+    @State private var typed = ""
+    @State private var message: String?
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L.episodeGoToTitle).font(.system(size: 13, weight: .semibold)).foregroundStyle(.silk)
+            TextField("", text: $typed)
+                .textFieldStyle(.roundedBorder)
+                .focused($focused)
+                .onSubmit(submit)
+                .onChange(of: typed) { _, _ in message = nil }
+                #if os(iOS)
+                .keyboardType(.numberPad)
+                #endif
+            if let message {
+                Text(message).font(.system(size: 12)).foregroundStyle(.vermilion)
+            } else if let first = episodes.first?.number, let last = episodes.last?.number {
+                Text(L.episodeGoToHint(first: Int(first) ?? 1, last: Int(last) ?? episodes.count))
+                    .font(.system(size: 12)).foregroundStyle(.haze)
+            }
+            HStack {
+                Spacer()
+                Button(L.episodeGoToGo, action: submit).disabled(typed.isEmpty)
+            }
+        }
+        .padding(12)
+        .frame(width: 220)
+        .onAppear { focused = true }
+    }
+
+    private func submit() {
+        let number = typed.trimmingCharacters(in: .whitespaces)
+        guard !number.isEmpty else { return }
+        if episodes.contains(where: { $0.number == number }) {
+            go(number)
+        } else {
+            let last = episodes.compactMap { Int($0.number) }.max() ?? episodes.count
+            message = L.episodeGoToNone(number: Int(number) ?? 0, last: last)
+        }
     }
 }
 
@@ -1503,5 +1586,77 @@ struct MarkedStretch: View {
             .animation(.quick, value: start)
             .animation(.quick, value: view.end)
         }
+    }
+}
+
+/// The foot of the Episodes panel: the title of the episode under the pointer, else the one with
+/// the keyboard's focus, else the one playing, and its synopsis in three lines. A protected
+/// episode gets its title and length and no synopsis, and no bar to say so. The room is kept only
+/// if the table had synopses when the panel opened, decided as the panel is made so it opens at
+/// its final layout; text that comes later fades in.
+struct EpisodeFooter: View {
+    @Environment(AppStore.self) private var store
+    let model: PlayerModel
+    let metrics: PlayerMetrics
+    let pointed: String?
+    let focused: String?
+    /// Whether the table had synopses when the panel opened: the first value made is kept.
+    @State private var reserved: Bool
+
+    init(model: PlayerModel, metrics: PlayerMetrics, table: [EpisodeRow], pointed: String?, focused: String?) {
+        self.model = model
+        self.metrics = metrics
+        self.pointed = pointed
+        self.focused = focused
+        _reserved = State(initialValue: episodeText(rows: table) == .present)
+    }
+
+    var body: some View {
+        if reserved, let id = model.staged?.id {
+            footer(id: id, table: store.titles.episodes[id] ?? [])
+        }
+    }
+
+    private func footer(id: AnilistId, table: [EpisodeRow]) -> some View {
+        let episodes = model.menus?.episodes ?? []
+        // A screenshot points at a row by its words, as the list's rows light them.
+        let named = model.pointedRow.flatMap { words in
+            episodes.first { item in
+                (item.title.map { "\(item.label) · \($0)" } ?? item.label) == words
+            }?.number
+        }
+        let number = pointed ?? focused ?? named ?? episodes.first(where: \.current)?.number
+        let row = table.first { $0.number == number }
+        let hidden = row.map { store.spoilerProtection(for: id) && $0.spoilerAhead } ?? false
+        let text = hidden ? nil : row?.description
+        return VStack(alignment: .leading, spacing: 3) {
+            if let row {
+                Text(row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number))
+                    .font(metrics.touch ? .footnote : .system(size: 11.5))
+                    .foregroundStyle(.haze)
+                    .lineLimit(1)
+                ZStack(alignment: .topLeading) {
+                    if hidden {
+                        Text(row.durationSecs.map { L.episodeFactsLength(minutes: max(1, Int((Double($0) / 60).rounded()))) } ?? "")
+                            .id("facts")
+                    } else if let text, !text.isEmpty {
+                        Text(text).lineLimit(3).id(text)
+                    }
+                }
+                .font(metrics.touch ? .subheadline : .system(size: 12))
+                // 12 on 17 on the Mac.
+                .lineSpacing(metrics.touch ? 0 : 2.7)
+                .foregroundStyle(.haze)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .transition(.opacity)
+                .animation(.fadeIn, value: text)
+            }
+        }
+        .padding(.horizontal, metrics.touch ? 16 : 12)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, minHeight: metrics.touch ? 104 : 92, maxHeight: metrics.touch ? nil : 92, alignment: .topLeading)
+        .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
+        .accessibilityElement(children: .combine)
     }
 }

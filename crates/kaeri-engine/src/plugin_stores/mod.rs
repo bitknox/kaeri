@@ -67,12 +67,26 @@ pub struct Refused {
     /// Boxed, since a `Result` carries its error by value.
     pub msg: Box<Msg>,
     pub contact: Option<String>,
+    /// The store could not be reached: trying again later can work.
+    pub offline: bool,
 }
 
 impl From<Msg> for Refused {
     fn from(msg: Msg) -> Self {
-        Self { msg: Box::new(msg), contact: None }
+        Self { msg: Box::new(msg), contact: None, offline: false }
     }
+}
+
+/// Why this device could not make an invite for another device of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeviceInviteRefusal {
+    /// The store could not be reached.
+    Offline,
+    /// The store turned the request down.
+    Refused,
+    /// This device may not make one: it is not a member of the store at that address, joined it
+    /// with the open link, or the store no longer accepts its token.
+    NotAllowed,
 }
 
 /// A store's members and invite links, for its owner.
@@ -169,6 +183,11 @@ impl Stores {
         let out = change(&mut state);
         state.save(&self.state_path).map_err(foreign)?;
         Ok(out)
+    }
+
+    /// A joined store's address and name, for the sync log: never its token.
+    pub fn address_of(&self, id: &str) -> Option<(String, String)> {
+        self.joined(id).ok().map(|joined| (joined.base, joined.name))
     }
 
     fn joined(&self, id: &str) -> Result<Joined, Msg> {
@@ -393,7 +412,7 @@ impl Stores {
         Self::not_unnamed(&invite, previous.as_ref())?;
         // Checked again right before the invite is spent, not only when it was previewed: the
         // answer is what decides who receives the code.
-        let info = self.client.preview(&invite).await.map_err(foreign)?;
+        let info = self.client.preview(&invite).await.map_err(unreached)?;
         // An open join is sent no label: the store keeps nothing about who joined.
         let label = if invite.open {
             String::new()
@@ -624,6 +643,43 @@ impl Stores {
             max: created.max_uses,
             until: until(created.expires_at),
         })
+    }
+
+    /// A link that adds another device to this device's membership of the store at `address`,
+    /// for a paired device of the same person (sync's Join the plugin store). It works once, for
+    /// seven days, as any link for another device does. Answers the store's name with it.
+    pub async fn device_invite_for(
+        &self,
+        address: &str,
+    ) -> Result<(String, Secret), DeviceInviteRefusal> {
+        let state = self.load().map_err(|_| DeviceInviteRefusal::NotAllowed)?;
+        let joined = state
+            .stores
+            .iter()
+            .find(|joined| joined.base == address && !joined.revoked)
+            .cloned()
+            .ok_or(DeviceInviteRefusal::NotAllowed)?;
+        // A device that joined with the open link has no name to make an invite for.
+        if joined.anonymous {
+            return Err(DeviceInviteRefusal::NotAllowed);
+        }
+        let token = self.token(&joined).map_err(|_| DeviceInviteRefusal::NotAllowed)?;
+        let created = self
+            .client
+            .create_invite(&joined.base, &token, &InviteRequest::Device)
+            .await
+            .map_err(|e| match e {
+                ClientError::Network(_) => DeviceInviteRefusal::Offline,
+                ClientError::Unauthorized => DeviceInviteRefusal::NotAllowed,
+                ClientError::Server { status: 403, .. } => DeviceInviteRefusal::NotAllowed,
+                _ => DeviceInviteRefusal::Refused,
+            })?;
+        // A link carrying a different key would send whoever uses it to a different store.
+        let link = Invite::parse(&created.link).map_err(|_| DeviceInviteRefusal::Refused)?;
+        if Some(link.key) != joined.public_key() || link.base != joined.base {
+            return Err(DeviceInviteRefusal::Refused);
+        }
+        Ok((joined.name, Secret(link.link())))
     }
 
     /// A one-time link that signs a browser in to the store's admin page.
@@ -970,7 +1026,8 @@ const OWNERS_NAMED: usize = 3;
 /// `store`.
 fn refused(error: ClientError, store: &str) -> Refused {
     let ClientError::InviteEnded { reason, at, contact, owners, .. } = error else {
-        return unusable(error).into();
+        let offline = matches!(error, ClientError::Network(_));
+        return Refused { offline, ..Refused::from(unusable(error)) };
     };
     let named: Vec<&str> = owners
         .iter()
@@ -992,7 +1049,13 @@ fn refused(error: ClientError, store: &str) -> Refused {
         EndReason::Cancelled => Msg::Store(StoreMsg::StoreInviteWasCancelled { owners }),
     };
     let contact = contact.map(|c| c.trim().to_owned()).filter(|c| !c.is_empty());
-    Refused { msg: Box::new(msg), contact }
+    Refused { msg: Box::new(msg), contact, offline: false }
+}
+
+/// A store that did not answer as the person reads it, marked offline when it was the network.
+fn unreached(error: ClientError) -> Refused {
+    let offline = matches!(error, ClientError::Network(_));
+    Refused { offline, ..Refused::from(foreign(error)) }
 }
 
 /// The day an invite ended, where this device is: "on 7 November 2026".

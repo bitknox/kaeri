@@ -16,6 +16,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
+    playback::SkipFindPause,
     proxy::ProxyView,
     settings::{SettingChange, SettingKey, SettingRow},
     updates::UpdateStatus,
@@ -90,7 +91,7 @@ struct Pane {
     groups: &'static [(Group, &'static [SettingKey])],
 }
 
-const PANES: [Pane; 10] = [
+const PANES: [Pane; 12] = [
     Pane {
         name: "general",
         icon: "preferences-system-symbolic", // i18n-skip
@@ -114,6 +115,7 @@ const PANES: [Pane; 10] = [
                     K::SkipFiller,
                     K::MarkChapters,
                     K::SkipButton,
+                    K::FindSkipTimes,
                     K::AskWasOpening,
                     K::ShareSkipTimes,
                     K::Fullscreen,
@@ -164,6 +166,8 @@ const PANES: [Pane; 10] = [
         ],
     },
     Pane { name: "accounts", icon: "avatar-default-symbolic", groups: &[] }, // i18n-skip
+    Pane { name: "devices", icon: "computer-symbolic", groups: &[] },        // i18n-skip
+    Pane { name: "profiles", icon: "system-users-symbolic", groups: &[] },   // i18n-skip
     Pane { name: "hidden", icon: "view-conceal-symbolic", groups: &[] },     // i18n-skip
     Pane {
         name: "integrations",
@@ -203,6 +207,26 @@ fn follows(switch: SettingKey) -> Option<&'static [SettingKey]> {
     }
 }
 
+/// The line under Find skip times from the audio: why it is paused or can't run, by Linux's name
+/// for power saving, or what it does.
+fn find_skips_line(paused: Option<SkipFindPause>) -> String {
+    match paused {
+        // The reason joins what the row says it does; an app that can't find at all says only that.
+        Some(SkipFindPause::LowPower) => {
+            format!(
+                "{} {}",
+                t::settings_find_skips_detail(),
+                t::player_skip_paused_power_saver()
+            )
+        }
+        Some(SkipFindPause::Storage) => {
+            format!("{} {}", t::settings_find_skips_detail(), t::player_skip_paused_storage())
+        }
+        Some(SkipFindPause::Unavailable) => t::player_skip_unavailable(),
+        None => t::settings_find_skips_detail(),
+    }
+}
+
 /// The subtitle languages listed by name, as the Mac lists them.
 const SUBTITLE_LANGUAGES: [&str; 12] =
     ["en", "ja", "es", "pt", "fr", "de", "it", "ru", "ar", "id", "ko", "zh"];
@@ -235,6 +259,8 @@ pub fn pane_title(name: &str) -> String {
         "notifications" => t::settings_group_notifications(),
         "sources" => t::sources_title(),
         "accounts" => t::accounts_title(),
+        "devices" => t::devices_title(),
+        "profiles" => t::profiles_title(),
         "hidden" => t::settings_hidden_titles(),
         "integrations" => t::settings_group_integrations(),
         "advanced" => t::settings_group_advanced(),
@@ -444,6 +470,22 @@ impl Inner {
                     shown();
                 }
             }
+            Event::SyncStatus(_) | Event::Profiles(_)
+                if matches!(*self.pane.borrow(), "devices" | "profiles") =>
+            {
+                let pane = *self.pane.borrow();
+                self.built.replace(None);
+                self.show(pane);
+            }
+            // A sync note's title came in.
+            Event::Cards(cards)
+                if *self.pane.borrow() == "devices"
+                    && crate::sync::devices::waits_for(cards) =>
+            {
+                let pane = *self.pane.borrow();
+                self.built.replace(None);
+                self.show(pane);
+            }
             Event::Sync(_)
             | Event::Authorize { .. }
             | Event::DeviceCode(_)
@@ -472,6 +514,8 @@ impl Inner {
         let page = adw::PreferencesPage::new();
         match name {
             "accounts" => self.accounts(&page),
+            "devices" => crate::sync::devices::fill(&self.ctx, &page),
+            "profiles" => crate::sync::profiles::fill(&self.ctx, &page),
             "hidden" => hidden_pane(&self.ctx, &page),
             "about" => {
                 about_pane(&page);
@@ -480,14 +524,13 @@ impl Inner {
                 page.add(&group);
             }
             "general" => page.add(&self.language_group()),
-            // The TVs paired for Play on TV lead Integrations, as on the Mac.
+            // The TVs paired for Play on TV moved to Devices; whether it lists TVs with
+            // Chromecast built in stays with the integrations.
             "integrations" => {
-                if let Some(group) = crate::tv::paired::group(&self.ctx) {
-                    // Whether Play on TV lists TVs with Chromecast built in, under the paired TVs.
-                    let cast_tvs = self.ctx.hub.known.borrow().setting(K::CastTvs);
-                    if let Some(row) = cast_tvs {
-                        group.add(&self.row(&row));
-                    }
+                let cast_tvs = self.ctx.hub.known.borrow().setting(K::CastTvs);
+                if let Some(row) = cast_tvs {
+                    let group = adw::PreferencesGroup::builder().title(t::tv_play_on()).build();
+                    group.add(&self.row(&row));
                     page.add(&group);
                 }
             }
@@ -562,6 +605,7 @@ impl Inner {
             }
             if name == "playback" && *title == Group::Player {
                 group.add(&self.clear_skips_row());
+                group.add(&self.hide_chat_row());
                 any = true;
             }
             if name == "downloads" && *title == Group::Files {
@@ -689,6 +733,22 @@ impl Inner {
     }
 
     /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
+    /// Hide chat: this device stops showing chat and reactions, in the player and the lobby.
+    fn hide_chat_row(self: &Rc<Self>) -> adw::SwitchRow {
+        let row = adw::SwitchRow::builder()
+            .title(t::settings_hide_chat())
+            .subtitle(t::settings_hide_chat_line())
+            .active(self.ctx.prefs.hide_chat())
+            .build();
+        let ctx = Rc::downgrade(&self.ctx);
+        row.connect_active_notify(move |row| {
+            if let Some(ctx) = ctx.upgrade() {
+                ctx.prefs.set_hide_chat(row.is_active());
+            }
+        });
+        row
+    }
+
     fn clear_skips_row(self: &Rc<Self>) -> adw::ActionRow {
         let row = adw::ActionRow::builder().title(t::settings_clear_skips()).build();
         let clear = gtk::Button::with_label(&t::player_skip_clear());
@@ -721,6 +781,7 @@ impl Inner {
             // The footnote: what trailers are, and when they do not play.
             match key {
                 K::Trailers => Some(t::settings_note_trailers_linux()),
+                K::FindSkipTimes => Some(find_skips_line(self.find_paused())),
                 K::AskWasOpening => Some(t::settings_ask_was_opening_detail()),
                 K::ShareSkipTimes => Some(t::settings_share_skips_detail()),
                 K::CastTvs => Some(t::settings_note_cast_tvs_computer()),
@@ -758,7 +819,22 @@ impl Inner {
             });
             self.keep(key, {
                 let line = line.clone();
-                move |row| line.set_active(catalog::is_on(row))
+                let hub = Rc::downgrade(&self.ctx.hub);
+                move |row| {
+                    line.set_active(catalog::is_on(row));
+                    // Why finding skip times is paused changes with the device, not the row.
+                    if key == K::FindSkipTimes
+                        && let Some(hub) = hub.upgrade()
+                    {
+                        let paused = hub
+                            .known
+                            .borrow()
+                            .settings
+                            .as_ref()
+                            .and_then(|v| v.skip_find_paused);
+                        line.set_subtitle(&find_skips_line(paused));
+                    }
+                }
             });
             return line.upcast();
         }
@@ -1145,6 +1221,11 @@ impl Inner {
             }
         });
         nav.push(&page);
+    }
+
+    /// Why finding skip times from the audio is paused, as the engine last said.
+    fn find_paused(&self) -> Option<SkipFindPause> {
+        self.ctx.hub.known.borrow().settings.as_ref().and_then(|v| v.skip_find_paused)
     }
 
     fn keep(&self, key: SettingKey, update: impl Fn(&SettingRow) + 'static) {

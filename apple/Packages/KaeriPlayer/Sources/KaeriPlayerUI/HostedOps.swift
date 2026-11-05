@@ -93,7 +93,7 @@ extension KaeriPlayer.MpvValue {
 public let reportedProperties = [
     "time-pos", "duration", "pause", "speed", "volume", "chapter-list", "video-params",
     "current-tracks/video", "track-list", "aid", "sid", "sub-delay", "paused-for-cache",
-    "frame-drop-count", "seeking", "demuxer-cache-state", "hwdec-current",
+    "frame-drop-count", "seeking", "demuxer-cache-state", "hwdec-current", "cache-buffering-state",
 ]
 
 extension PlayerReport {

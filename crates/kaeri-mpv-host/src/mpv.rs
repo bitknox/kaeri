@@ -118,6 +118,18 @@ impl Mpv {
         Ok(mpv)
     }
 
+    /// Hand the audio the demuxer tap copies to the engine's listeners, where this libmpv has
+    /// the tap (`android/mpv/patches/mpv/0001-demux-audio-tap.patch`). Whether it has.
+    pub fn set_audio_tap(&self) -> bool {
+        let Some(set) = audio_tap_setter() else { return false };
+        // SAFETY: the setter is the patch's `mpv_set_audio_tap`, called with a live handle and
+        // the engine's callback, which takes no context and outlives every core.
+        let code = unsafe {
+            set(self.raw(), Some(kaeri_audio_tap::kaeri_audio_tap), std::ptr::null_mut())
+        };
+        code >= 0
+    }
+
     pub(crate) fn raw(&self) -> *mut sys::mpv_handle {
         self.handle.0
     }
@@ -323,4 +335,60 @@ pub(crate) fn opaque<T>(value: &T) -> *mut c_void {
 pub(crate) unsafe fn c_text<'a>(ptr: *const std::ffi::c_char) -> &'a str {
     // SAFETY: the caller vouches for it.
     unsafe { CStr::from_ptr(ptr) }.to_str().unwrap_or_default()
+}
+
+/// The patch's `mpv_audio_tap_fn`.
+type AudioTapFn = unsafe extern "C" fn(*mut c_void, i64, f64, *const i16, std::ffi::c_int);
+/// The patch's `mpv_set_audio_tap`.
+type SetAudioTap = unsafe extern "C" fn(
+    *mut sys::mpv_handle,
+    Option<AudioTapFn>,
+    *mut c_void,
+) -> std::ffi::c_int;
+
+/// `mpv_set_audio_tap` where the libmpv loaded has it, looked up as the app runs: a system
+/// libmpv, as a Linux distribution's, lacks the patch.
+#[cfg(unix)]
+fn audio_tap_setter() -> Option<SetAudioTap> {
+    // SAFETY: a lookup by a valid C string in every loaded object.
+    let found = unsafe { libc::dlsym(libc::RTLD_DEFAULT, c"mpv_set_audio_tap".as_ptr()) };
+    // SAFETY: the symbol the patch exports has this signature.
+    (!found.is_null())
+        .then(|| unsafe { std::mem::transmute::<*mut c_void, SetAudioTap>(found) })
+}
+
+/// `mpv_set_audio_tap` in the libmpv DLL the app loaded, by the names build.rs links: Kaeri's
+/// own build has it (desktop/windows/scripts/libmpv-build.sh), mpv's development builds do not.
+#[cfg(windows)]
+fn audio_tap_setter() -> Option<SetAudioTap> {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetModuleHandleW(name: *const u16) -> *mut c_void;
+        fn GetProcAddress(module: *mut c_void, name: *const std::ffi::c_char) -> *mut c_void;
+    }
+    ["libmpv-2.dll", "mpv-2.dll", "libmpv.dll"].into_iter().find_map(|dll| {
+        let wide: Vec<u16> = dll.encode_utf16().chain([0]).collect();
+        // SAFETY: a valid NUL-terminated wide string. The handle is only used for the lookup
+        // below, and the DLL stays loaded for as long as the app, which links it, runs.
+        let module = unsafe { GetModuleHandleW(wide.as_ptr()) };
+        if module.is_null() {
+            return None;
+        }
+        // SAFETY: a live module handle and a valid C string.
+        let found = unsafe { GetProcAddress(module, c"mpv_set_audio_tap".as_ptr()) };
+        // SAFETY: the symbol the patch exports has this signature.
+        (!found.is_null())
+            .then(|| unsafe { std::mem::transmute::<*mut c_void, SetAudioTap>(found) })
+    })
+}
+
+#[cfg(not(any(unix, windows)))]
+fn audio_tap_setter() -> Option<SetAudioTap> {
+    None
+}
+
+/// Whether the libmpv this app runs on has the demuxer tap: what the engine is told at its
+/// start, as `EngineOptions::audio_tap`, before any core exists.
+pub fn audio_tap_available() -> bool {
+    audio_tap_setter().is_some()
 }

@@ -15,6 +15,10 @@ use kaeri_model::{
     command::{Command, PlayerCommand},
     event::Event,
     hosted::{PlayerReport, TrackKind},
+    party::{
+        PartyChatBody, PartyChatLine, PartyChatState, PartyCommand, PartyConnection,
+        PartyConversation, PartyFound, PartyMember, PartyRoomEpisode, PartyView, Reaction,
+    },
     playback::{Ending, SkipKind},
 };
 use tokio::{sync::mpsc, task::JoinHandle};
@@ -77,6 +81,43 @@ struct Script {
     shown: Option<String>,
     query: String,
     commands: Vec<String>,
+    /// The watch party the TV is in, when the Fixtures app put it in one.
+    party: Option<FakeParty>,
+}
+
+/// The fake TV's watch party: a room of three beside it, and what was said there.
+struct FakeParty {
+    view: PartyView,
+    lines: Vec<PartyChatLine>,
+    muted: Vec<String>,
+}
+
+impl FakeParty {
+    /// The members beside the TV.
+    const MEMBERS: [&'static str; 3] = ["Mika", "Ren", "Sol"];
+
+    fn conversation(&self) -> PartyConversation {
+        let lines = self
+            .lines
+            .iter()
+            .map(|line| PartyChatLine {
+                muted: self.muted.contains(&line.from),
+                ..line.clone()
+            })
+            .collect();
+        PartyConversation { lines, ..PartyConversation::default() }
+    }
+
+    fn chat_state(&self) -> PartyChatState {
+        PartyChatState {
+            allowed: true,
+            max_length: 150,
+            muted: self.muted.clone(),
+            wait_seconds: 0,
+            react_wait_seconds: 0,
+            hidden: false,
+        }
+    }
 }
 
 /// A TV on 127.0.0.1, running until dropped.
@@ -84,6 +125,7 @@ pub struct FakeTv {
     server: Arc<RemoteServer>,
     script: Arc<Mutex<Script>>,
     task: JoinHandle<()>,
+    name: String,
 }
 
 impl FakeTv {
@@ -104,7 +146,7 @@ impl FakeTv {
         server.set_volume(40.0);
         let script = Arc::new(Mutex::new(Script { volume: 40.0, ..Script::default() }));
         let task = tokio::spawn(run(Arc::downgrade(&server), Arc::clone(&script), titles, rx));
-        Ok(Self { server, script, task })
+        Ok(Self { server, script, task, name: name.to_owned() })
     }
 
     pub fn addr(&self) -> SocketAddr {
@@ -159,6 +201,100 @@ impl FakeTv {
     pub fn volume(&self) -> f64 {
         lock(&self.script).volume
     }
+
+    /// Put the TV in a watch party in `room`, with Mika, Ren and Sol beside it and the
+    /// conversation of the chat board so far: what the phone's remote screen shows of a TV in a
+    /// party. A line the phone sends as the TV comes back as the TV's own, as a server's echo
+    /// would.
+    pub fn join_party(&self, room: &str, title: &str, episode: &str) {
+        let view = PartyView {
+            server: "127.0.0.1:8999".into(),
+            room: room.into(),
+            name: self.name.clone(),
+            connection: PartyConnection::Connected,
+            encrypted: false,
+            ready: true,
+            episode: None,
+            invite: None,
+            motd: None,
+            latency_ms: None,
+            room_episode: Some(PartyRoomEpisode {
+                id: None,
+                episode: episode.into(),
+                title: title.into(),
+                file: format!("{title} {episode}"),
+                found: PartyFound::Name,
+                plain_by: None,
+            }),
+            next_episode: None,
+            starter: None,
+            starter_present: false,
+            can_start_anyway: false,
+            code: None,
+            link: Some(format!("https://kaeri.app/party#{room}")),
+            playing: true,
+            starting_in: None,
+            sources: None,
+            guesses: Vec::new(),
+            looking: false,
+            moves_on: false,
+        };
+        let said = |id: u64, from: &str, text: &str| PartyChatLine {
+            id,
+            from: from.into(),
+            you: false,
+            body: PartyChatBody::Said { text: text.into() },
+            muted: false,
+        };
+        let lines = vec![
+            said(1, "Mika", "ok starting"),
+            said(2, "Ren", "the handoff in the rain, I knew it"),
+            PartyChatLine {
+                id: 3,
+                from: "Ren".into(),
+                you: false,
+                body: PartyChatBody::Reacted {
+                    reaction: Reaction::Laugh,
+                    at: 724.0,
+                    with: vec!["Mika".into()],
+                },
+                muted: false,
+            },
+            said(4, "Sol", "wait, who is the new runner"),
+            PartyChatLine {
+                you: true,
+                ..said(5, &view.name, "back in 2, pause if it gets good")
+            },
+            said(6, "Mika", "this part again"),
+        ];
+        let party = FakeParty { view, lines, muted: Vec::new() };
+        observe_party(&self.server, &party);
+        lock(&self.script).party = Some(party);
+    }
+}
+
+/// Everything a TV's engine says of its party, for the remote state.
+fn observe_party(server: &RemoteServer, party: &FakeParty) {
+    server.observe(&Event::PartyJoined(party.view.clone()));
+    let mut members = vec![PartyMember {
+        name: party.view.name.clone(),
+        ready: Some(true),
+        file: None,
+        duration: None,
+        file_matches: None,
+        you: true,
+    }];
+    members.extend(FakeParty::MEMBERS.iter().map(|name| PartyMember {
+        name: (*name).into(),
+        ready: Some(true),
+        file: None,
+        duration: None,
+        file_matches: None,
+        you: false,
+    }));
+    server.observe(&Event::PartyMembers(members));
+    server.observe(&Event::PartyChatState(party.chat_state()));
+    server.observe(&Event::PartyChat(party.conversation()));
 }
 
 impl Drop for FakeTv {
@@ -231,6 +367,7 @@ fn stage(server: &RemoteServer, playing: &Playing) {
         episode: number,
         episode_title,
         speed: 1.0,
+        resume: None,
     });
     tracks(server, playing);
     server.observe(&position(playing));
@@ -315,6 +452,7 @@ fn engine(server: &RemoteServer, script: &mut Script, titles: &[FakeTitle], comm
                         watched: by > 0,
                         ending: Ending::Complete { next: Some(playing.episode.to_string()) },
                         rolling_on: true,
+                        failure: None,
                     });
                     stage(server, playing);
                     return;
@@ -336,6 +474,28 @@ fn engine(server: &RemoteServer, script: &mut Script, titles: &[FakeTitle], comm
                 _ => return,
             }
             server.observe(&position(playing));
+        }
+        Command::Party(PartyCommand::Say { text }) => {
+            let Some(party) = &mut script.party else { return };
+            let id = party.lines.last().map_or(1, |line| line.id + 1);
+            let from = party.view.name.clone();
+            party.lines.push(PartyChatLine {
+                id,
+                from,
+                you: true,
+                body: PartyChatBody::Said { text },
+                muted: false,
+            });
+            server.observe(&Event::PartyChat(party.conversation()));
+        }
+        Command::Party(PartyCommand::Mute { name, muted }) => {
+            let Some(party) = &mut script.party else { return };
+            party.muted.retain(|n| *n != name);
+            if muted {
+                party.muted.push(name);
+            }
+            server.observe(&Event::PartyChatState(party.chat_state()));
+            server.observe(&Event::PartyChat(party.conversation()));
         }
         _ => {}
     }

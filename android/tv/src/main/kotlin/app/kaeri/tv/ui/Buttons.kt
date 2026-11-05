@@ -42,6 +42,7 @@ fun TonalButton(
     icon: ImageVector? = null,
     enabled: Boolean = true,
     height: Dp = 48.dp,
+    padding: Dp = 20.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     Button(
@@ -62,7 +63,7 @@ fun TonalButton(
         border = ButtonDefaults.border(
             focusedDisabledBorder = Border(BorderStroke(2.dp, ObiSilk.Silk), inset = 2.dp, shape = CircleShape),
         ),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp + (height - 48.dp) / 2),
+        contentPadding = PaddingValues(horizontal = padding, vertical = 12.dp + (height - 48.dp) / 2),
     ) {
         ButtonContent(icon, content)
     }

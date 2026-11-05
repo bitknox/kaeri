@@ -676,7 +676,7 @@ impl Harness {
             Internal::SettingsSaved => self.trace.push("SettingsSaved"),
             Internal::SourcesReordered => self.trace.push("SourcesReordered"),
             // What it leads to, it says: keep next's rows on the queue.
-            Internal::SourcesChanged | Internal::LetGo => {}
+            Internal::SourcesChanged | Internal::LetGo | Internal::SyncEffects => {}
         }
     }
 
@@ -839,6 +839,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::PinUnavailable { .. } => "PinUnavailable",
         Event::PlaybackVolume(_) => "PlaybackVolume",
         Event::ActiveProvider(_) => "ActiveProvider",
+        Event::StartingStep { .. } => "StartingStep",
         Event::PlayerPlayEpisode { .. } => "PlayerPlayEpisode",
         Event::PlaybackKept => "PlaybackKept",
         Event::EpisodeLeft { .. } => "EpisodeLeft",
@@ -874,6 +875,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::Conflicts(_) => "Conflicts",
         Event::Episodes { .. } => "Episodes",
         Event::TitleDub { .. } => "TitleDub",
+        Event::Trending { .. } => "Trending",
+        Event::Surprise { .. } => "Surprise",
         Event::Progress { .. } => "Progress",
         Event::TorrentProxy(_) => "TorrentProxy",
         Event::ProxyChecked(_) => "ProxyChecked",
@@ -886,6 +889,14 @@ pub fn name(update: &Event) -> &'static str {
         Event::DiscussionFound { .. } => "DiscussionFound",
         Event::Discussion(_) => "Discussion",
         Event::Stores(_) => "Stores",
+        Event::Profiles(_) => "Profiles",
+        Event::ProfileSwitch { .. } => "ProfileSwitch",
+        Event::SyncStatus(_) => "SyncStatus",
+        Event::SyncInvite { .. } => "SyncInvite",
+        Event::SyncSignIn { .. } => "SyncSignIn",
+        Event::SyncRecoveryKey(_) => "SyncRecoveryKey",
+        Event::SyncProblem(_) => "SyncProblem",
+        Event::SyncSignInsCopied { .. } => "SyncSignInsCopied",
         Event::StorePreview(_) => "StorePreview",
         Event::StoreJoined { .. } => "StoreJoined",
         Event::InviteLink(_) => "InviteLink",
@@ -904,6 +915,10 @@ pub fn name(update: &Event) -> &'static str {
         Event::PartyState(_) => "PartyState",
         Event::PartyMembers(_) => "PartyMembers",
         Event::PartyMessage(_) => "PartyMessage",
+        Event::PartyChat(_) => "PartyChat",
+        Event::PartyChatState(_) => "PartyChatState",
+        Event::PartyReaction(_) => "PartyReaction",
+        Event::PartyChatRefused(_) => "PartyChatRefused",
         Event::PartyLeft { .. } => "PartyLeft",
         Event::PartyNoSource { .. } => "PartyNoSource",
         Event::PartyStarted { .. } => "PartyStarted",
@@ -911,6 +926,9 @@ pub fn name(update: &Event) -> &'static str {
         Event::PartyLookFailed { .. } => "PartyLookFailed",
         Event::PartyRecent(_) => "PartyRecent",
         Event::PartyLastOut { .. } => "PartyLastOut",
+        Event::SyncPairFailed { .. } => "SyncPairFailed",
+        Event::SyncStoreJoined { .. } => "SyncStoreJoined",
+        Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
     }
 }
 
@@ -1067,20 +1085,28 @@ fn copy(update: &Event) -> Event {
         Event::SkipAvailable { kind, to } => Event::SkipAvailable { kind: *kind, to: *to },
         Event::SkipCleared => Event::SkipCleared,
         Event::PlaybackSpeed(speed) => Event::PlaybackSpeed(*speed),
-        Event::PlaybackEnded { watched, ending, rolling_on } => Event::PlaybackEnded {
+        Event::PlaybackEnded { watched, ending, rolling_on, failure } => Event::PlaybackEnded {
             watched: *watched,
             ending: ending.clone(),
             rolling_on: *rolling_on,
+            failure: failure.clone(),
         },
-        Event::PlaybackStaged { id, title, episode, episode_title, speed } => {
+        Event::PlaybackStaged { id, title, episode, episode_title, speed, resume } => {
             Event::PlaybackStaged {
                 id: *id,
                 title: title.clone(),
                 episode: episode.clone(),
                 episode_title: episode_title.clone(),
                 speed: *speed,
+                resume: *resume,
             }
         }
+        Event::StartingStep { id, episode, step, line } => Event::StartingStep {
+            id: *id,
+            episode: episode.clone(),
+            step: step.clone(),
+            line: line.clone(),
+        },
         Event::CastStaged { id, title, episode, episode_title, speed } => Event::CastStaged {
             id: *id,
             title: title.clone(),
@@ -1123,6 +1149,16 @@ fn copy(update: &Event) -> Event {
             Event::Episodes { id: *id, rows: rows.clone(), failed: failed.clone() }
         }
         Event::TitleDub { id, dub } => Event::TitleDub { id: *id, dub: *dub },
+        Event::Trending { period, entries, updated_at, failed, waiting } => Event::Trending {
+            period: *period,
+            entries: entries.clone(),
+            updated_at: *updated_at,
+            failed: *failed,
+            waiting: *waiting,
+        },
+        Event::Surprise { pool, outcome } => {
+            Event::Surprise { pool: pool.clone(), outcome: outcome.clone() }
+        }
         Event::Progress { id, progress, resume, episodes } => Event::Progress {
             id: *id,
             progress: *progress,
@@ -1146,6 +1182,25 @@ fn copy(update: &Event) -> Event {
         }
         Event::Discussion(view) => Event::Discussion(view.clone()),
         Event::Stores(rows) => Event::Stores(rows.clone()),
+        Event::Profiles(view) => Event::Profiles(view.clone()),
+        Event::ProfileSwitch { id } => Event::ProfileSwitch { id: id.clone() },
+        Event::SyncStatus(status) => Event::SyncStatus(status.clone()),
+        Event::SyncInvite { code, port, seconds } => {
+            Event::SyncInvite { code: code.clone(), port: *port, seconds: *seconds }
+        }
+        Event::SyncSignIn { service, step } => {
+            Event::SyncSignIn { service: service.clone(), step: step.clone() }
+        }
+        Event::SyncRecoveryKey(key) => Event::SyncRecoveryKey(key.clone()),
+        Event::SyncProblem(problem) => Event::SyncProblem(problem.clone()),
+        Event::SyncSignInsCopied { device, trackers, clouds, lacking } => {
+            Event::SyncSignInsCopied {
+                device: device.clone(),
+                trackers: trackers.clone(),
+                clouds: clouds.clone(),
+                lacking: lacking.clone(),
+            }
+        }
         Event::StorePreview(preview) => Event::StorePreview(preview.clone()),
         Event::StoreJoined { store } => Event::StoreJoined { store: store.clone() },
         Event::InviteLink(view) => Event::InviteLink(view.clone()),
@@ -1182,6 +1237,10 @@ fn copy(update: &Event) -> Event {
         Event::PartyState(view) => Event::PartyState(view.clone()),
         Event::PartyMembers(members) => Event::PartyMembers(members.clone()),
         Event::PartyMessage(message) => Event::PartyMessage(message.clone()),
+        Event::PartyChat(conversation) => Event::PartyChat(conversation.clone()),
+        Event::PartyChatState(state) => Event::PartyChatState(state.clone()),
+        Event::PartyReaction(reaction) => Event::PartyReaction(reaction.clone()),
+        Event::PartyChatRefused(refusal) => Event::PartyChatRefused(*refusal),
         Event::PartyLeft { reason } => Event::PartyLeft { reason: reason.clone() },
         Event::PartyNoSource { id, episode, why, reason } => Event::PartyNoSource {
             id: *id,
@@ -1201,6 +1260,23 @@ fn copy(update: &Event) -> Event {
         Event::PartyRecent(rooms) => Event::PartyRecent(rooms.clone()),
         Event::PartyLastOut { episode, airs } => {
             Event::PartyLastOut { episode: episode.clone(), airs: airs.clone() }
+        }
+        Event::SyncPairFailed { problem, device } => {
+            Event::SyncPairFailed { problem: *problem, device: device.clone() }
+        }
+        Event::SyncStoreJoined { device, store, address, name } => Event::SyncStoreJoined {
+            device: device.clone(),
+            store: store.clone(),
+            address: address.clone(),
+            name: name.clone(),
+        },
+        Event::SyncStoreJoinFailed { device, address, name, problem } => {
+            Event::SyncStoreJoinFailed {
+                device: device.clone(),
+                address: address.clone(),
+                name: name.clone(),
+                problem: *problem,
+            }
         }
     }
 }

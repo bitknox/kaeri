@@ -57,6 +57,14 @@ final class AppDelegate: NSObject {
         tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
         #endif
         super.init()
+        player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
+        #if FIXTURES
+        // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-KaeriSkipPause"), arguments.indices.contains(at + 1) {
+            store.settings.pausedOverride = arguments[at + 1] == "storage" ? .storage : .lowPower
+        }
+        #endif
         store.onPlayback = { [weak player = self.player] event in player?.apply(event) }
         store.playerTakesPlay = { [weak player = self.player] command in player?.playAsked(command) ?? false }
         // Play on TV from the player: the TV picker over it, and the player closed once the TV
@@ -65,6 +73,10 @@ final class AppDelegate: NSObject {
         // What a watch party says goes over the video while the player is up.
         store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
+        player.alertFilter = { [weak store] text in
+            guard let store, store.party.inParty else { return false }
+            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
+        }
         #if os(iOS)
         // The playback's Live Activity, told what plays as Now Playing is, and its Play and Pause.
         player.onLiveActivity = { [weak store] playing in store?.playbackChanged(playing) }
@@ -121,11 +133,47 @@ final class AppDelegate: NSObject {
         #endif
         #endif
         crashCollection = CrashCollection(store: store)
+        store.onProfileSwitch = { [weak self] id in self?.enterProfile(id) }
         player.openSubtitleSettings = { [weak player, weak navigator] in
             player?.viewerClosed()
             navigator?.openSettings(.playback)
         }
+        player.openFixMatch = { [weak player, weak navigator] id in
+            player?.viewerClosed()
+            navigator?.matchPicker = MatchPickerRequest(id: id, fromMenu: false)
+        }
+        player.openPluginStores = { [weak player, weak navigator] in
+            player?.viewerClosed()
+            navigator?.open(.pluginStores)
+        }
+        player.openDownloads = { [weak player, weak navigator] in
+            player?.viewerClosed()
+            #if os(iOS)
+            navigator?.showDownloads(compact: UIDevice.current.userInterfaceIdiom == .phone)
+            #else
+            navigator?.showDownloads(compact: false)
+            #endif
+        }
         watchPlaying()
+    }
+
+    /// Another profile: the engine stops, then the app starts again in it, so nothing of the
+    /// old profile stays in memory. The Mac opens a new instance; an iPhone or iPad closes and
+    /// opens on the next launch, in the profile chosen.
+    private func enterProfile(_ id: String) {
+        UserDefaults.standard.set(id, forKey: "profileToEnter")
+        Task { @MainActor in
+            await store.shutdown(within: .seconds(3))
+            #if os(macOS)
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.createsNewApplicationInstance = true
+            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
+                DispatchQueue.main.async { NSApp.terminate(nil) }
+            }
+            #else
+            exit(0)
+            #endif
+        }
     }
 
     /// In the background, what waits follows whether the player plays: watched here rather than
@@ -169,7 +217,10 @@ final class AppDelegate: NSObject {
         // The testing engine keeps tokens in files of its own; nothing reaches the keychain.
         let secrets: any SecretBackend = MemorySecrets()
         #else
-        let launch = EngineLaunch.app(platform: Self.platform)
+        var launch = EngineLaunch.app(platform: Self.platform)
+        // The profile a switch chose, used once; after it the engine remembers the last in use.
+        launch.profile = UserDefaults.standard.string(forKey: "profileToEnter")
+        UserDefaults.standard.removeObject(forKey: "profileToEnter")
         let secrets: any SecretBackend = KeychainSecrets()
         #endif
         await store.start(launch, host: AppHost(secrets: secrets, open: Self.open))
@@ -216,6 +267,10 @@ final class AppDelegate: NSObject {
         if let scene = TVScene.named() {
             ready = await store.tv.reached(scene) && ready
         }
+        // A screenshot of sync: the state the arguments name, on screen.
+        if let scene = SyncScene.named() {
+            ready = await store.sync.stage(scene, store: store) && ready
+        }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {
             ready = await store.tv.cast.reached(scene, tv: store.tv) && ready
@@ -233,6 +288,16 @@ final class AppDelegate: NSObject {
             print("KAERI_READY")
             fflush(stdout)
         }
+        #if FIXTURES
+        // `-KaeriSkipPauseFlip`: Low Power Mode on at 0.8 s and off at 3.8 s, from 1.5 s after the
+        // scene is ready, for the recording of the paused line (motion E).
+        if ProcessInfo.processInfo.arguments.contains("-KaeriSkipPauseFlip") {
+            try? await Task.sleep(for: .seconds(2.3))
+            store.settings.pausedOverride = .lowPower
+            try? await Task.sleep(for: .seconds(3))
+            store.settings.pausedOverride = nil
+        }
+        #endif
         #if FIXTURES && os(macOS)
         // The Mac feature video's Home sequence: see VideoHomeSequence.
         if let file = VideoHomeSequence.marksFile() {

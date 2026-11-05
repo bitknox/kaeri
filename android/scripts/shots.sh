@@ -29,6 +29,8 @@
 #   tablet     kaeri-tablet         1280 × 800 dp                                       port 5562
 #   fold       kaeri-fold           a foldable, unfolded                                port 5564
 #
+# KAERI_AVD names another AVD than the table's, for a worktree with its own.
+#
 # KAERI_SHOTS_LOCALE=en-XA takes the shots in that app language, to look for clipped or
 # unaccented text.
 #
@@ -53,11 +55,12 @@ case "$device" in
   *) usage ;;
 esac
 port="${KAERI_EMULATOR_PORT:-$port}"
+avd="${KAERI_AVD:-$avd}"
 shift
 shots=("$@")
 (( ${#shots[@]} )) || shots=(watching)
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | app) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | app) ;; *) usage ;; esac
 done
 
 android="$(cd "$(dirname "$0")/.." && pwd)"
@@ -88,6 +91,7 @@ extras() {
   for screen in $screens; do
     case "$screen" in
       "") ;;
+      firstLaunch=*) printf '%s\n' --ez firstLaunch true ;;
       query=*) printf '%s\n' --es section search --es query "${screen#query=}" ;;
       *=*) printf '%s\n' --es "${screen%%=*}" "${screen#*=}" ;;
       *) printf '%s\n' --es section "$screen" ;;

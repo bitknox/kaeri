@@ -46,6 +46,12 @@ pub struct EngineState {
     /// on is the session's, read off `player_tx` as every other control is. `None` for a play
     /// that opens at once.
     pub finding: Option<tokio::sync::watch::Sender<bool>>,
+    /// The same playback's skip of the source being asked: each `SkipSource` moves the count,
+    /// which the walk through the sources watches. Set where `finding` is.
+    pub skipping: Option<tokio::sync::watch::Sender<u64>>,
+    /// Whether the viewer asked this playback to begin at 0 (`PlayFromBeginning`). Set where
+    /// `finding` is.
+    pub beginning: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     /// The copy of the config the background tasks read: the download manager, the seeding
     /// watch and the stream cache's. Brought up to `config` whenever a setting is written, so
     /// "saved" and "in effect" are the same moment.
@@ -108,6 +114,8 @@ pub struct EngineState {
     /// How far each title's dub goes, kept, and the lookup running: see
     /// [`crate::titles::dub`].
     pub dubs: crate::titles::dub::Dubs,
+    /// The last picks of Surprise me, and the counts of matches it asked.
+    pub picks: crate::catalog::surprise::Picks,
     /// The calendar's last window, kept ten minutes: see [`crate::catalog::calendar`].
     pub calendar: crate::catalog::calendar::CalendarMemory,
     /// Episode titles and stills another source gave a table without them, kept, and the
@@ -139,6 +147,8 @@ impl EngineState {
             config: ConfigState::new(config, saved, paths),
             player_tx: None,
             finding: None,
+            skipping: None,
+            beginning: None,
             torrent_tasks: TorrentTasks::default(),
             torrent_route: None,
             arrivals,
@@ -161,6 +171,7 @@ impl EngineState {
             ahead: Default::default(),
             search: Default::default(),
             dubs: Default::default(),
+            picks: Default::default(),
             calendar: Default::default(),
             names: Default::default(),
             listed: Default::default(),

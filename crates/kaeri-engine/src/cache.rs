@@ -350,7 +350,14 @@ impl TitleCache {
         progress: Option<TitleProgress>,
         resume: Option<ResumePoint>,
     ) -> Event {
-        let episodes = self.episodes.get(&id).cloned().unwrap_or_default();
+        let mut episodes = self.episodes.get(&id).cloned().unwrap_or_default();
+        // What protection hides moves on with the next episode, so it is worked out again here.
+        if let Some(TitleProgress { next, .. }) = progress {
+            for episode in &mut episodes {
+                episode.spoiler_ahead = !episode.completed
+                    && episode.number.trim().parse::<u32>().is_ok_and(|n| n > next);
+            }
+        }
         Event::Progress { id, progress, resume, episodes }
     }
 
@@ -570,6 +577,8 @@ fn as_rows(episodes: &[EpisodeProgress]) -> Vec<EpisodeRow> {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         })
         .collect()
 }
@@ -610,6 +619,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         }
     }
 
@@ -1089,6 +1100,21 @@ mod tests {
         assert_eq!(row_of(&cache, "2"), (0.0, false), "only the episode watched changes");
         // And a tick after the end is a straggler, not the playback coming back.
         assert!(say(&mut cache, &played, tick(100.0, 1_440.0)).is_none());
+    }
+
+    #[test]
+    fn what_protection_hides_moves_on_with_the_next_episode() {
+        let mut cache = at_episodes(Some((6, 7)), &[1, 2, 3, 4, 5, 6]);
+        let ahead = |cache: &TitleCache| -> Vec<String> {
+            let Some(Event::Progress { episodes, .. }) = cache.progress(SHOW) else {
+                panic!("a title the record knows")
+            };
+            episodes.into_iter().filter(|e| e.spoiler_ahead).map(|e| e.number).collect()
+        };
+        assert_eq!(ahead(&cache), ["8", "9", "10", "11", "12"], "7 is next and shows");
+        let played = play(&mut cache, "7");
+        say(&mut cache, &played, finished(None));
+        assert_eq!(ahead(&cache), ["9", "10", "11", "12"], "finishing 7 makes 8 next");
     }
 
     #[test]

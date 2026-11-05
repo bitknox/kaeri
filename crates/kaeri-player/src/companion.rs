@@ -60,6 +60,27 @@ pub fn toast(text: &str, level: Level) -> Command {
     message("toast", serde_json::json!({ "text": text, "level": level, "duration": 3 }))
 }
 
+/// A watch party's chat line for the column at the top leading corner, under any notice: who
+/// said it, already worded, and what. `you` draws the name in haze. The companion holds it 4 s, and 1 s for every 10 words
+/// past 12, shows three at most, and folds the rest into the line `more` words for each count
+/// it can hold back, "1 more in chat" first.
+pub fn chat_line(who: &str, you: bool, text: &str, more: &[String]) -> Command {
+    message(
+        "chat-line",
+        serde_json::json!({ "who": who, "you": you, "text": text, "more": more }),
+    )
+}
+
+/// A reaction's moment, bottom trailing: `glyph` is `laugh`, `gasp`, `clap` or `cry`.
+pub fn reaction(who: &str, glyph: &str) -> Command {
+    message("chat-react", serde_json::json!({ "who": who, "glyph": glyph }))
+}
+
+/// Hide chat was turned on: the column and the moments leave the video.
+pub fn chat_clear() -> Command {
+    message("chat-clear", serde_json::json!({}))
+}
+
 /// The stream has been held waiting for data this long, mid-episode.
 pub fn stall(seconds: u64) -> Command {
     message("stall", serde_json::json!({ "seconds": seconds }))
@@ -226,6 +247,22 @@ mod tests {
         };
         assert_eq!(command, "toast");
         assert_eq!(payload["level"], "alert");
+        let more = ["1 more in chat".to_owned()];
+        let Command::ScriptMessage { command, payload } =
+            chat_line("Mika", false, "ok starting", &more)
+        else {
+            panic!()
+        };
+        assert_eq!(command, "chat-line");
+        assert_eq!(
+            (payload["who"].as_str(), payload["text"].as_str()),
+            (Some("Mika"), Some("ok starting"))
+        );
+        assert_eq!(payload["more"][0], "1 more in chat");
+        let Command::ScriptMessage { command, payload } = reaction("Ren", "laugh") else {
+            panic!()
+        };
+        assert_eq!((command, payload["glyph"].as_str()), ("chat-react", Some("laugh")));
     }
 
     #[test]

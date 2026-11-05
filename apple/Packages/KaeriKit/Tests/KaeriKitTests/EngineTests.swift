@@ -141,7 +141,7 @@ struct EngineTests {
                             break
                         }
                     }
-                case .playbackEnded(_, let ended, _):
+                case .playbackEnded(_, let ended, _, _):
                     ending = ended
                 default:
                     break

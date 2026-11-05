@@ -3,6 +3,7 @@
 
 package app.kaeri.ui
 
+import android.view.View
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -76,6 +78,29 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(titleRoute(current(), id))
     }
 
+    /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
+    var replacing: Boolean by mutableStateOf(false)
+        private set
+
+    /**
+     * Another: [id]'s page takes the place of the title page on screen, so Back returns to where
+     * Surprise me was pressed. The two crossfade; nothing flies.
+     */
+    fun replaceTitle(id: AnilistId) {
+        val here = current()
+        source = null
+        replacing = true
+        nav.navigate(titleRoute(here, id)) { popUpTo(titlePattern(here)) { inclusive = true } }
+    }
+
+    /** The container the host is drawn in, for a still of the page being replaced (Another with Remove animations on). */
+    var fade: app.kaeri.design.StillFade? = null
+
+    /** The swap has settled. */
+    fun replaced() {
+        replacing = false
+    }
+
     /**
      * Switch to [destination] as it was left; on the current one, back to its start, scrolled to
      * the top by the screen.
@@ -107,11 +132,27 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     }
 }
 
+/** Open Downloads over whatever is on screen, from the player's offline start. */
+fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
+
+/** Open the plugin stores page, from a start that has no source to ask. */
+fun Navigator.openStores() = open(STORES_ROUTE)
+
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
+
+/** The same navigator, or null where none is provided (the player on its own, in a test). */
+val LocalNavigatorOrNull = staticCompositionLocalOf<Navigator?> { null }
 
 /** The layout the shared elements fly in, around the NavHost. */
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitions = compositionLocalOf<SharedTransitionScope?> { null }
+
+/**
+ * The window [LocalSharedTransitions] lays out in. A dialog or popup drawn from a screen, such as
+ * Search's full-screen field, is a window of its own: the composition locals reach it, but the
+ * layout's lookahead does not, and a shared element measured there throws.
+ */
+internal val LocalSharedTransitionsView = staticCompositionLocalOf<View?> { null }
 
 /** The NavHost entry a screen is drawn in, which its shared elements animate with. */
 val LocalPageAnimation = compositionLocalOf<AnimatedVisibilityScope?> { null }
@@ -144,7 +185,8 @@ enum class Shared(internal val prefix: String) {
 fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground: Color = Color.Unspecified): Modifier {
     val layout = LocalSharedTransitions.current
     val page = LocalPageAnimation.current
-    if (layout == null || page == null) return if (ground.isSpecified) background(ground) else this
+    val outside = LocalView.current !== LocalSharedTransitionsView.current
+    if (layout == null || page == null || outside) return if (ground.isSpecified) background(ground) else this
     if (from != null && LocalNavigator.current.source != "$from:$id") return this
     return with(layout) {
         val state = rememberSharedContentState("${shared.prefix}-$id")

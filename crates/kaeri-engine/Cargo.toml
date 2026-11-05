@@ -28,7 +28,7 @@ presence = ["dep:kaeri-discord"]
 # What a test stands the engine up with instead of what it builds, and what only a test wants to
 # hear from it: see `options::Parts` and `engine::Traced`. Never on in a build that ships: the
 # binary turns it on for its own tests alone, as a dev-dependency.
-testing = ["kaeri-party?/testing"]
+testing = ["kaeri-party?/testing", "kaeri-sync/testing"]
 # Watch parties on a Syncplay server, played with whichever player a play has: see `party`. The
 # desktop apps turn it on beside `--no-default-features`; a phone's build leaves it off for now.
 party = ["dep:kaeri-party"]
@@ -43,6 +43,7 @@ cast = ["remote", "dep:kaeri-cast"]
 kaeri-core.workspace = true
 kaeri-jellyfin.workspace = true
 kaeri-meta.workspace = true
+kaeri-i18n.workspace = true
 kaeri-model.workspace = true
 kaeri-net.workspace = true
 kaeri-discord = { workspace = true, optional = true }
@@ -51,6 +52,7 @@ kaeri-player = { workspace = true, optional = true }
 # The pure half of playback, which the session drives any player with: the policy, the tracks,
 # skips, and what a player reports and is shown. Allowed in a phone's build.
 kaeri-playback.workspace = true
+kaeri-audio-tap.workspace = true
 kaeri-plugin = { workspace = true, features = ["fetch"] }
 kaeri-plugin-store.workspace = true
 kaeri-store-server.workspace = true
@@ -58,6 +60,8 @@ kaeri-providers.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true
+kaeri-sync.workspace = true
+hex = "0.4"
 kaeri-track.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true
@@ -82,6 +86,9 @@ rustix = { version = "1.1", features = ["fs"] }
 
 [dev-dependencies]
 tempfile = "3"
+# A stopped clock, for the paced fills that wait seconds between titles and the start that
+# waits two minutes for a connection.
+tokio = { workspace = true, features = ["test-util"] }
 # The fixture titles' schedules, for keep next's tests of what is out.
 kaeri-testkit.workspace = true
 # A Syncplay server on the loopback interface, for the watch party's tests.

@@ -36,6 +36,12 @@ public sealed class Known
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
     public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
 
+    /// <summary>Testing builds: a reason finding skip times is paused to say, whatever the engine does.</summary>
+    public SkipFindPause? ForcedPause { get; set; }
+
+    /// <summary>Why finding skip times from the audio is paused or can't run, as the engine last said.</summary>
+    public SkipFindPause? SkipFindPaused => ForcedPause ?? Settings?.SkipFindPaused;
+
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 
@@ -53,7 +59,31 @@ public sealed class Known
 
     /// <summary>What the search filters choose from, once the engine has said.</summary>
     public SearchFacets? Facets { get; private set; }
+    /// <summary>Search's Trending rail by period, as the engine last sent it; a failed period is not here.</summary>
+    public Dictionary<TrendPeriod, Entry[]> TrendingKept { get; } = [];
+    /// <summary>The period the engine says was last picked on this device, when it is not today.</summary>
+    public TrendPeriod? TrendingRemembered { get; private set; }
+    /// <summary>The periods whose last ask failed.</summary>
+    public HashSet<TrendPeriod> TrendingFailed { get; } = [];
     public Dictionary<string, SyncState> Sync { get; } = [];
+
+    /// <summary>Sync between the person's own devices, as the engine last said; null before it has.</summary>
+    public SyncStatus? SyncGroup { get; set; }
+
+    /// <summary>The recovery key the engine just said, until its dialog closes.</summary>
+    public string? RecoveryKey { get; set; }
+
+    /// <summary>The pairing code this PC shows, its port, and when it runs out in Unix seconds.</summary>
+    public (string Code, ushort Port, long Until)? PairInvite { get; set; }
+
+    /// <summary>The problem sync last raised that a dialog may show, until it is dealt with.</summary>
+    public SyncProblem? SyncTrouble { get; set; }
+
+    /// <summary>The profiles on this PC, empty for one person, who never sees a picker or a name.</summary>
+    public ProfileView[] Profiles { get; set; } = [];
+
+    /// <summary>A cloud sign-in under way, and its step.</summary>
+    public (SyncFolderKind Service, SyncSignInStep Step)? SyncSigningIn { get; set; }
     public DownloadRow[] Downloads => Queue.Rows;
     public SeedRow[] Seeding { get; private set; } = [];
 
@@ -205,6 +235,12 @@ public sealed class Known
 
     public string? PartyLookFailure { get; private set; }
 
+    /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
+    public PartyConversation? PartyChat { get; private set; }
+
+    /// <summary>What this device may do in the conversation now, once the room's server has said.</summary>
+    public PartyChatState? PartyChatState { get; private set; }
+
     /// <summary>The AniList account, when signed in.</summary>
     public SyncState? Anilist => Sync.TryGetValue("anilist", out var s) && s.Connected ? s : null;
 
@@ -331,8 +367,47 @@ public sealed class Known
             case Event.Facets f:
                 Facets = f.V1;
                 break;
+            case Event.Browse browse:
+                // Today is the first rail of the browse.
+                if (browse.V1.FirstOrDefault(r => r.Query.Sort == SearchSort.Trending) is { } rail && rail.Entries.Length > 0)
+                    KeepTrending(TrendPeriod.Today, rail.Entries);
+                break;
+            case Event.Trending trending:
+                if (trending.Failed)
+                    TrendingFailed.Add(trending.Period);
+                else
+                {
+                    TrendingFailed.Remove(trending.Period);
+                    KeepTrending(trending.Period, trending.Entries);
+                    if (trending.Period != TrendPeriod.Today)
+                        TrendingRemembered = trending.Period;
+                }
+                break;
             case Event.Sync s:
                 Sync[s.V1.Tracker] = s.V1;
+                break;
+            case Event.SyncStatus group:
+                // A pass that works clears the problem, except those only a dialog can answer.
+                if (group.V1.Problem is null && SyncTrouble is not (null or SyncProblem.WrongRecoveryKey or SyncProblem.GroupExists or SyncProblem.NoGroup))
+                    SyncTrouble = null;
+                SyncGroup = group.V1;
+                break;
+            case Event.SyncInvite invite:
+                PairInvite = (invite.Code, invite.Port, DateTimeOffset.UtcNow.ToUnixTimeSeconds() + invite.Seconds);
+                break;
+            case Event.SyncRecoveryKey recovery:
+                RecoveryKey = recovery.V1;
+                SyncSigningIn = null;
+                break;
+            case Event.SyncSignIn signIn:
+                SyncSigningIn = signIn.Step is { } step ? (signIn.Service, step) : null;
+                break;
+            case Event.Profiles profiles:
+                Profiles = profiles.V1.Profiles ?? [];
+                break;
+            case Event.SyncProblem problem:
+                SyncTrouble = problem.V1;
+                SyncSigningIn = null;
                 break;
             case Event.Downloads d:
                 Queue.Apply(d.V1, DateTimeOffset.UtcNow);
@@ -402,7 +477,11 @@ public sealed class Known
             case Event.PartyJoined j:
                 // A room joined afresh lists its members afresh.
                 if (Party is null || Party.Server != j.V1.Server || Party.Room != j.V1.Room)
+                {
                     PartyMembers = null;
+                    PartyChat = null;
+                    PartyChatState = null;
+                }
                 Party = j.V1;
                 break;
             case Event.PartyState p:
@@ -426,6 +505,14 @@ public sealed class Known
             case Event.PartyLeft:
                 Party = null;
                 PartyMembers = null;
+                PartyChat = null;
+                PartyChatState = null;
+                break;
+            case Event.PartyChat c:
+                PartyChat = c.V1;
+                break;
+            case Event.PartyChatState c:
+                PartyChatState = c.V1;
                 break;
             case Event.Update u:
                 // A check that found nothing new leaves a release found before on offer only
@@ -437,6 +524,13 @@ public sealed class Known
 
     /// <summary>The testing build's fixture runs give most titles a made-up trailer.</summary>
     public bool FixtureTrailers { get; set; }
+
+    void KeepTrending(TrendPeriod period, Entry[] entries)
+    {
+        foreach (var entry in entries)
+            Entries[entry.Id] = Merge(Fixed(entry), false);
+        TrendingKept[period] = entries;
+    }
 
     Entry Fixed(Entry entry) =>
 #if KAERI_TESTING

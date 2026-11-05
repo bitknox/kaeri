@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Settings' panes. Integrations stays out of v1.
 public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case general, playback, downloads, notifications, sources, accounts, integrations, advanced
+    case general, playback, downloads, notifications, sources, accounts, devices, profiles, integrations, advanced
 
     public var id: String { rawValue }
 
@@ -21,6 +21,8 @@ public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable
         case .notifications: L.settingsGroupNotifications
         case .sources: L.sourcesTitle
         case .accounts: L.navAccounts
+        case .devices: L.devicesTitle
+        case .profiles: L.profilesTitle
         case .integrations: L.settingsGroupIntegrations
         case .advanced: L.settingsGroupAdvanced
         }
@@ -42,6 +44,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
     case root, general, playback, downloads, notifications, sources, accounts, providers, stores, about, acknowledgements
     /// The TVs paired for Play on TV.
     case tvs
+    /// Sync with the devices in the group, and profiles.
+    case devices, profiles
     /// The titles marked Not interested, with Restore.
     case hiddenTitles
     case store(String)
@@ -65,6 +69,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
         case "licensed": .licensed
         case "about": .about
         case "tvs": .tvs
+        case "devices", "sync": .devices
+        case "profiles": .profiles
         case "hidden": .hiddenTitles
         case "stores", "pluginStores": .stores
         // The showcase's own, for screenshots.
@@ -83,15 +89,23 @@ struct SettingsScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             SettingsTabs(selection: $navigator.settingsPane)
                 .padding(EdgeInsets(top: 4, leading: 24, bottom: 0, trailing: 24))
-            ScrollView {
-                SettingsColumns {
-                    pane
-                    SettingsAside(pane: navigator.settingsPane)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    SettingsColumns {
+                        pane
+                        SettingsAside(pane: navigator.settingsPane)
+                    }
+                    .padding(EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .scrollIndicators(.never)
+                .task {
+                    // A launch scroll brings the find row into view, for the Fixtures shots.
+                    guard navigator.launchScroll != nil else { return }
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("findSkips", anchor: .center)
+                }
             }
-            .scrollIndicators(.never)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -109,6 +123,8 @@ struct SettingsScreen: View {
             case .notifications: NotificationsPane()
             case .sources: SourcesPane()
             case .accounts: AccountsPane()
+            case .devices: DevicesPane()
+            case .profiles: ProfilesPane()
             case .integrations: IntegrationsPane()
             case .advanced: AdvancedPane()
                 }
@@ -204,10 +220,10 @@ struct SettingsResults: View {
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
         (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
-        (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
+        (L.settingsFindSkips, .playback), (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
-        (L.settingsStartFullScreen, .playback),
+        (L.settingsStartFullScreen, .playback), (L.settingsHideChat, .playback),
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
         (L.settingsNewEpisodes, .notifications), (L.settingsSystemNotifications, .notifications),
@@ -218,6 +234,8 @@ struct SettingsResults: View {
         (AccountsModel.name("kitsu"), .accounts), (AccountsModel.name("simkl"), .accounts),
         (AccountsModel.name("trakt"), .accounts), (L.accountsSyncNow, .accounts),
         (L.accountsSignOut, .accounts), (L.settingsPrivacy, .accounts),
+        (L.devicesTitle, .devices), (L.syncRoadNearby, .devices), (L.syncRoadCloud, .devices), (L.cloudGroup, .devices), (L.rkeyRow, .devices),
+        (L.profilesTitle, .profiles), (L.profilesAdd, .profiles),
         (L.settingsCheckUpdates, updatesPane),
         (L.settingsMpvOptions, .advanced),
     ].filter { SettingsPane.shown.contains($0.pane) }
@@ -273,6 +291,22 @@ struct SettingsTabs: View {
     @Binding var selection: SettingsPane
 
     var body: some View {
+        #if os(iOS)
+        // Eleven panes outgrow an iPad's width: the row scrolls, and its ends fade where more is.
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) { tabs.padding(.horizontal, 16) }
+                .mask(LinearGradient(stops: [
+                    .init(color: .clear, location: 0), .init(color: .black, location: 0.03),
+                    .init(color: .black, location: 0.94), .init(color: .clear, location: 1),
+                ], startPoint: .leading, endPoint: .trailing))
+                .onChange(of: selection) { _, new in withAnimation(.standard) { proxy.scrollTo(new, anchor: .center) } }
+        }
+        #else
+        tabs
+        #endif
+    }
+
+    private var tabs: some View {
         HStack(spacing: 4) {
             ForEach(SettingsPane.shown) { pane in
                 let selected = pane == selection
@@ -282,12 +316,14 @@ struct SettingsTabs: View {
                     Text(pane.title)
                         .font(.mac(13, weight: selected ? .medium : .regular))
                         .foregroundStyle(selected ? .amber : .silk)
+                        .fixedSize()
                         .padding(.horizontal, 12)
                         .frame(height: 28)
                         .background(selected ? Palette.selection : .clear, in: .capsule)
                         .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
+                .id(pane)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
@@ -322,6 +358,10 @@ struct SettingsAside: View {
                 }
             case .accounts:
                 aside(L.navAccounts, L.settingsAsideAccounts)
+            case .devices:
+                aside(L.devicesTitle, L.devicesAside(kind: Device.name))
+            case .profiles:
+                aside(L.profilesTitle, L.profilesOneFoot)
             case .integrations:
                 if store.settings.hasPresence { PresencePreview() }
             case .advanced:
@@ -347,6 +387,14 @@ struct SettingsAside: View {
 
 /// What the device is called in a sentence: "this Mac", "this iPad", "this iPhone".
 enum Device {
+    static var isPad: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        false
+        #endif
+    }
+
     static var name: String {
         #if os(macOS)
         "Mac" // i18n-skip
@@ -388,6 +436,7 @@ struct GeneralPane: View {
 
 struct PlaybackPane: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmClearSkips = false
 
     var body: some View {
@@ -410,6 +459,10 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.skipButton.title, note: L.settingsSkipButtonDetail) {
                 SettingSwitch(key: .skipButton)
             }
+            SettingsRow(title: SettingKey.findSkipTimes.title, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords) {
+                SettingSwitch(key: .findSkipTimes)
+            }
+            .id("findSkips")
             SettingsRow(title: SettingKey.askWasOpening.title, note: L.settingsAskWasOpeningDetail) {
                 SettingSwitch(key: .askWasOpening)
             }
@@ -433,6 +486,7 @@ struct PlaybackPane: View {
                 SettingSwitch(key: .spoilerProtection)
             }
         }
+        .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)
         SettingsGroup(title: L.playerPictureAndSound) {
             // Selected: the column beside the pane is about it.
             SettingsRow(title: SettingKey.upscaling.title, selected: true) {
@@ -444,6 +498,9 @@ struct PlaybackPane: View {
             #if os(macOS)
             SettingsRow(title: SettingKey.fullscreen.title) { SettingSwitch(key: .fullscreen) }
             #endif
+        }
+        SettingsGroup(title: L.settingsGroupWatchParties) {
+            SettingsRow(title: L.settingsHideChat, note: L.settingsHideChatLine) { HideChatSwitch() }
         }
         #if os(iOS)
         // The TVs paired to this iPad, beside the rest of how episodes play. The Mac keeps them
@@ -573,5 +630,19 @@ struct AdvancedPane: View {
                 .padding(.top, 24)
             #endif
         }
+    }
+}
+
+/// Hide chat: lines, reactions, ticks and the field stay off the video, in every party on this
+/// device.
+struct HideChatSwitch: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let chat = store.party.chat
+        Toggle(L.settingsHideChat, isOn: Binding(get: { chat.hidden }, set: { chat.hidden = $0 }))
+            .toggleStyle(.switch)
+            .tint(.amber)
+            .labelsHidden()
     }
 }

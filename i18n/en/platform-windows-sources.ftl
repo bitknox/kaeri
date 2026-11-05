@@ -21,11 +21,6 @@ episode-label-of = Episode { $episode } of { $title }
 # @only windows
 tv-connecting-to-tv = Connecting to the TV
 
-# Under the paired TVs in Settings. The code is a few letters and digits the TV shows beside this { -device }.
-# @only windows
-# @arg code: text
-tv-device-code = A TV lists this { -device } with the code { $code }. Forget a TV here and it forgets this { -device } too.
-
 # What the remote calls a TV that has not said its name yet. Title of the remote.
 # @only windows
 tv-unnamed = TV

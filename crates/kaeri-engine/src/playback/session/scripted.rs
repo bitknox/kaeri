@@ -138,6 +138,7 @@ pub(super) fn settings() -> PlaySettings {
         auto_skip: false,
         auto_skip_recap: false,
         ask_was_opening: false,
+        find_skip_times: false,
         share_skip_times: Some(false),
         mark_chapters: false,
         skip_button: true,
@@ -156,6 +157,8 @@ pub(super) fn settings() -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 
@@ -308,6 +311,33 @@ async fn a_playback_opens_a_window_loads_the_file_and_plays_it_to_its_end() {
     // And what was watched is written down.
     let completed = rig.store.completed_episodes(AnilistId::new(900_001)).unwrap();
     assert_eq!(completed, ["1"], "episode 1 is recorded as watched");
+}
+
+#[tokio::test]
+async fn a_resume_point_opens_the_file_there_unless_the_viewer_asked_to_begin_at_nought() {
+    let start_of = |rig: &Rig| {
+        rig.opener.calls().into_iter().find_map(|c| match c {
+            Call::Load { options, .. } => {
+                Some(options.iter().find(|(k, _)| k == "start").map(|(_, v)| v.clone()))
+            }
+            _ => None,
+        })
+    };
+    let resuming = || PlaybackContext { resume_at: Some(606.0), ..context("1", None) };
+
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let events = rig.play(stream(StreamKind::Mp4), resuming(), settings()).await;
+    assert!(start_of(&rig).flatten().is_some(), "it resumes");
+    assert!(events.iter().any(|e| matches!(e, Event::Resumed { .. })));
+
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let asked = settings();
+    asked.begin.store(true, std::sync::atomic::Ordering::SeqCst);
+    let events = rig.play(stream(StreamKind::Mp4), resuming(), asked).await;
+    assert_eq!(start_of(&rig), Some(None), "it opens at nought");
+    assert!(!events.iter().any(|e| matches!(e, Event::Resumed { .. })), "nothing resumed");
+    let id = AnilistId::new(900_001);
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), None, "no position was kept");
 }
 
 #[tokio::test]
@@ -1187,4 +1217,321 @@ async fn with_sharing_off_a_save_sends_nothing() {
     assert_eq!(prompts, 0, "asked already");
     assert!(rig.store.due_aniskip(i64::MAX, 10).unwrap().is_empty());
     assert_eq!(rig.store.skip_marks(AnilistId::new(900_001), "3").unwrap().len(), 1);
+}
+
+/// The generated opening two episodes share, from `kaeri_playback::detect::fixtures`.
+const SHARED_OPENING: u64 = 7;
+const LENGTH: f64 = 1_440.0;
+
+/// A rig whose store holds episode 1's head: its opening runs from 10 s to 100 s.
+fn found_rig() -> Rig {
+    use kaeri_playback::detect::{Capture, Part, fixtures};
+    let rig = Rig::new(vec![opening(&[])]);
+    let one = fixtures::episode(&[(11, 10.0), (SHARED_OPENING, 90.0), (12, 260.0)]);
+    let mut capture = Capture::new();
+    for (k, chunk) in one.chunks(4096).enumerate() {
+        capture.samples(k as f64 * 4096.0 / f64::from(kaeri_playback::detect::RATE), chunk);
+    }
+    capture.brk();
+    let print = capture.print(Part::Head).expect("a head");
+    rig.store
+        .put_skip_print(&kaeri_store::SkipPrint {
+            anilist_id: AnilistId::new(900_001),
+            episode: "1".into(),
+            part: "head".into(),
+            length_ms: 1_440_000,
+            start_ms: (print.start * 1000.0).round() as i64,
+            items: print.to_bytes(),
+            taken_at: kaeri_store::now(),
+        })
+        .unwrap();
+    rig
+}
+
+/// Hands episode 2's head to the tap the load turned on, as the player would: its opening runs
+/// from 30 s to 120 s. Waits until the seek bar shows what was found.
+async fn hear_episode_two(rig: &Rig) {
+    let tag = rig
+        .opener
+        .calls()
+        .iter()
+        .find_map(|call| match call {
+            Call::Load { options, .. } => options
+                .iter()
+                .find(|(name, _)| name == "demuxer-audio-tap-tag")
+                .map(|(_, tag)| tag.parse::<i64>().unwrap()),
+            _ => None,
+        })
+        .expect("the load turns the tap on");
+    let two = kaeri_playback::detect::fixtures::episode(&[
+        (21, 30.0),
+        (SHARED_OPENING, 90.0),
+        (22, 240.0),
+    ]);
+    let rate = f64::from(kaeri_playback::detect::RATE);
+    // In chunks of five seconds, well inside what the tap's queue holds.
+    let chunk = (5.0 * rate) as usize;
+    for (k, samples) in two.chunks(chunk).enumerate() {
+        let pts = (k * chunk) as f64 / rate;
+        kaeri_audio_tap::deliver(
+            tag,
+            kaeri_audio_tap::Tap::Samples { pts, samples: samples.to_vec() },
+        );
+    }
+    kaeri_audio_tap::deliver(tag, kaeri_audio_tap::Tap::Break);
+    let window = rig.opener.window().expect("a window is open");
+    for _ in 0..600 {
+        // Any event lets the session say what changed on the seek bar.
+        window.send(PlaybackEvent::Progress { position: 1.0, duration: Some(LENGTH) }).unwrap();
+        let found = rig.opener.calls().iter().any(|call| {
+            matches!(call, Call::Overlay(Overlay::Timeline(marks))
+                if marks.iter().any(|m| m.origin == kaeri_playback::SkipOrigin::Found))
+        });
+        if found {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+    panic!("nothing found: {:#?}", rig.opener.calls().last());
+}
+
+fn found_settings() -> PlaySettings {
+    PlaySettings {
+        find_skip_times: true,
+        auto_skip: true,
+        ask_was_opening: true,
+        share_skip_times: Some(true),
+        ..settings()
+    }
+}
+
+fn prompts(calls: &[Call]) -> Vec<Option<kaeri_model::playback::SkipPrompt>> {
+    calls
+        .iter()
+        .filter_map(|call| match call {
+            Call::Overlay(Overlay::SkipPrompt(prompt)) => Some(*prompt),
+            _ => None,
+        })
+        .collect()
+}
+
+/// An opening found from the audio is offered, not skipped by itself, until it is trusted.
+/// Skipping it asks about it 3 s later, once per show; Yes keeps it as the viewer's own, shares
+/// that one episode and trusts the show's found openings from then on.
+#[tokio::test]
+async fn a_found_opening_is_offered_then_asked_about_and_yes_shares_it() {
+    use kaeri_model::playback::{SkipKind as Kind, SkipPrompt};
+    use kaeri_playback::aniskip::Request;
+    let rig = found_rig();
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(LENGTH) };
+        window.send(at(1.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        hear_episode_two(&rig).await;
+        window.send(at(40.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipOffer { .. })))
+            .await;
+        controls.send(PlayerCommand::TakeSkip).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Seek { .. })).await;
+        let (to, _) = *seeks(&rig.opener.calls()).last().unwrap();
+        window.send(at(to + 1.0)).unwrap();
+        window.send(at(to + 3.5)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipPrompt(Some(_)))))
+            .await;
+        controls.send(PlayerCommand::ConfirmFoundSkip { kind: Kind::Opening }).unwrap();
+        until_called(&rig, |call| {
+            matches!(
+                call,
+                Call::Overlay(Overlay::SkipPrompt(Some(SkipPrompt::FoundSaved { .. })))
+            )
+        })
+        .await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let context = PlaybackContext { mal_id: Some(4_242), ..context("2", None) };
+    tokio::join!(
+        rig.play_steered(vec![stream(StreamKind::Mp4)], context, found_settings(), commands),
+        driving
+    );
+    let calls = rig.opener.calls();
+    assert!(
+        calls.iter().any(|call| matches!(call,
+            Call::Set { property: "demuxer-audio-tap-windows", value }
+                if value.as_str() == Some("0-360,1200-1440"))),
+        "the tail is tapped once the length is known"
+    );
+    assert!(
+        !calls.iter().any(|call| matches!(call, Call::Overlay(Overlay::Skipped { .. }))),
+        "not skipped by itself before it is trusted"
+    );
+    assert_eq!(
+        prompts(&calls),
+        [
+            Some(SkipPrompt::FoundEdges { kind: Kind::Opening, episode: 2 }),
+            Some(SkipPrompt::FoundSaved { kind: Kind::Opening, episode: 2 }),
+        ]
+    );
+
+    let show = AnilistId::new(900_001);
+    let found = rig.store.found_skips(show, "2").unwrap();
+    assert_eq!(found.len(), 1, "{found:#?}");
+    let (start, end) = (found[0].start_ms as f64 / 1000.0, found[0].end_ms as f64 / 1000.0);
+    assert!((start - 31.0).abs() <= 1.5 && (end - 119.0).abs() <= 1.5, "{start}-{end}");
+    assert_eq!(found[0].state, kaeri_store::skip_found::state::SHARED);
+    assert!(rig.store.found_skip_show(show, "op").unwrap().trusted());
+    let kept = rig.store.skip_marks(show, "2").unwrap();
+    assert_eq!((kept.len(), kept[0].start_ms), (1, found[0].start_ms));
+
+    let queued = rig.store.due_aniskip(i64::MAX, 10).unwrap();
+    assert_eq!(queued.len(), 1, "one episode shared: {queued:#?}");
+    let Request::Submit(submission) = serde_json::from_str(&queued[0].request).unwrap() else {
+        panic!("a submission");
+    };
+    assert_eq!(submission.episode, 2);
+}
+
+/// The order a real session had: a found opening, Up Next known from the start, Skip pressed,
+/// the source holding the stream while the player waits at the landing, a pause and play again.
+/// The card is asked once play has gone on past the landing, and nothing takes it back.
+#[tokio::test]
+async fn the_found_card_is_asked_after_a_held_stream_and_stays_up() {
+    use kaeri_model::playback::{SkipKind as Kind, SkipPrompt};
+    let rig = found_rig();
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(LENGTH) };
+        window.send(at(1.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        hear_episode_two(&rig).await;
+        window.send(at(40.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipOffer { .. })))
+            .await;
+        controls.send(PlayerCommand::TakeSkip).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Seek { .. })).await;
+        let (to, _) = *seeks(&rig.opener.calls()).last().unwrap();
+        // The source holds: the player waits at the landing, then is paused and played again.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(PlaybackEvent::Buffering(true)).unwrap();
+        window.send(at(to)).unwrap();
+        window.send(PlaybackEvent::Paused(true)).unwrap();
+        window.send(at(to + 4.0)).unwrap();
+        window.send(PlaybackEvent::Paused(false)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        window.send(PlaybackEvent::Buffering(false)).unwrap();
+        window.send(at(to + 1.0)).unwrap();
+        window.send(at(to + 3.5)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipPrompt(Some(_)))))
+            .await;
+        for second in 5..20 {
+            window.send(at(to + f64::from(second))).unwrap();
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let context = PlaybackContext { mal_id: Some(4_242), ..context("2", Some("3")) };
+    tokio::join!(
+        rig.play_steered(vec![stream(StreamKind::Mp4)], context, found_settings(), commands),
+        driving
+    );
+    let calls = rig.opener.calls();
+    assert!(
+        calls
+            .iter()
+            .any(|call| matches!(call, Call::Overlay(Overlay::Next { card: Some(_), .. }))),
+        "Up Next is said: {calls:#?}"
+    );
+    assert_eq!(
+        prompts(&calls),
+        [Some(SkipPrompt::FoundEdges { kind: Kind::Opening, episode: 2 })]
+    );
+    let show = rig.store.found_skip_show(AnilistId::new(900_001), "op").unwrap();
+    assert_eq!((show.skips, show.asked, show.confirmed), (1, true, false));
+}
+
+/// Don't ask again on the found times' card says so on the card and turns asking off.
+#[tokio::test]
+async fn never_on_the_found_card_says_so_and_turns_asking_off() {
+    use kaeri_model::playback::{SkipKind as Kind, SkipPrompt};
+    let rig = found_rig();
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(LENGTH) };
+        window.send(at(1.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        hear_episode_two(&rig).await;
+        window.send(at(40.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipOffer { .. })))
+            .await;
+        controls.send(PlayerCommand::TakeSkip).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Seek { .. })).await;
+        let (to, _) = *seeks(&rig.opener.calls()).last().unwrap();
+        window.send(at(to + 3.5)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipPrompt(Some(_)))))
+            .await;
+        controls.send(PlayerCommand::NeverAskWasOpening).unwrap();
+        until_called(&rig, |call| {
+            matches!(call, Call::Overlay(Overlay::SkipPrompt(Some(SkipPrompt::FoundNever))))
+        })
+        .await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let context = PlaybackContext { mal_id: Some(4_242), ..context("2", None) };
+    let (events, ()) = tokio::join!(
+        rig.play_steered(vec![stream(StreamKind::Mp4)], context, found_settings(), commands),
+        driving
+    );
+    assert_eq!(
+        prompts(&rig.opener.calls())[..2],
+        [
+            Some(SkipPrompt::FoundEdges { kind: Kind::Opening, episode: 2 }),
+            Some(SkipPrompt::FoundNever),
+        ]
+    );
+    assert!(
+        events.iter().any(|event| matches!(event, Event::PlayerAskWasOpening(false))),
+        "{events:#?}"
+    );
+    assert!(rig.store.due_aniskip(i64::MAX, 10).unwrap().is_empty(), "nothing shared");
+}
+
+/// Trusted after two skips, a found opening is skipped by itself; Undo says the viewer wanted
+/// to watch it, so it is offered again until trusted anew.
+#[tokio::test]
+async fn undo_after_a_found_skip_takes_the_trust_back() {
+    let rig = found_rig();
+    let show = AnilistId::new(900_001);
+    rig.store.note_found_skip(show, "op").unwrap();
+    rig.store.note_found_skip(show, "op").unwrap();
+    assert!(rig.store.found_skip_show(show, "op").unwrap().trusted());
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(LENGTH) };
+        window.send(at(1.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        hear_episode_two(&rig).await;
+        window.send(at(40.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::Skipped { .. }))).await;
+        controls.send(PlayerCommand::UndoSkip { to: 40.0 }).unwrap();
+        controls.send(PlayerCommand::Volume(1.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Add { property: "volume", .. })).await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let context = PlaybackContext { mal_id: Some(4_242), ..context("2", None) };
+    tokio::join!(
+        rig.play_steered(vec![stream(StreamKind::Mp4)], context, found_settings(), commands),
+        driving
+    );
+    let after = rig.store.found_skip_show(show, "op").unwrap();
+    assert!(!after.trusted(), "{after:?}");
+    let found = rig.store.found_skips(show, "2").unwrap();
+    assert_eq!(found[0].state, kaeri_store::skip_found::state::REJECTED);
+    assert!(prompts(&rig.opener.calls()).is_empty(), "no card after an Undo");
 }

@@ -206,6 +206,7 @@ pub const REPORTED_PROPERTIES: &[&str] = &[
     "sid",
     "sub-delay",
     "paused-for-cache",
+    "cache-buffering-state",
     "demuxer-cache-state",
     "frame-drop-count",
     "seeking",

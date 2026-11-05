@@ -18,6 +18,7 @@ use crate::{
 
 use super::{
     accounts::{accounts_rows, conflict_rows},
+    devices::{devices_body, draw_art, tone_style},
     episodes::{candidate_rows, source_rows},
     line,
     stores::{
@@ -116,6 +117,10 @@ pub(super) fn render_overlay(
     let Some(overlay) = app.nav.overlay() else {
         return report;
     };
+    if *overlay == Overlay::Say {
+        render_say(buf, app, geometry.stage);
+        return report;
+    }
 
     // Full width, but only ever as tall as the stage. The header and status line carry state
     // the user still needs while a modal is open — provider health, the proxy badge, the sync
@@ -127,7 +132,11 @@ pub(super) fn render_overlay(
         height: geometry.stage.height,
     };
 
-    let rows = match overlay {
+    // The Devices screen's questions are laid out whole by the screen, QR code and all.
+    let room = host.height.saturating_sub(4).max(1) as usize;
+    let body = overlay.is_devices().then(|| devices_body(app, overlay, area.width, room));
+
+    let mut rows = match overlay {
         Overlay::Help => help_rows(app),
         Overlay::CommandPalette => palette_rows(app),
         Overlay::Accounts => accounts_rows(app),
@@ -156,6 +165,7 @@ pub(super) fn render_overlay(
             .collect(),
         Overlay::JoinStore => vec![(String::new(), t::overlays_hint_join_store())],
         Overlay::JoinParty => vec![(String::new(), t::together_join_line())],
+        Overlay::Say => vec![(String::new(), t::party_chat_privacy())],
         Overlay::InviteName => vec![(String::new(), t::overlays_hint_invite_name())],
         Overlay::StoreConfirm => store_confirm_rows(app),
         Overlay::PluginAction => plugin_action_rows(app).0,
@@ -171,7 +181,12 @@ pub(super) fn render_overlay(
             ("i".into(), t::onboarding_invite_heading()),
             ("s".into(), t::onboarding_skip()),
         ],
+        _ => body.as_ref().map(|body| body.rows.clone()).unwrap_or_default(),
     };
+    // Tall enough for the QR code beside the rows.
+    if let Some(body) = &body {
+        rows.resize(rows.len().max(body.art.len()), (String::new(), String::new()));
+    }
 
     // Overlays that are a list of things you pick from need a focus marker. The palette was
     // excluded here on the theory that it is a preview rather than a picker — but it *is* a
@@ -181,6 +196,7 @@ pub(super) fn render_overlay(
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
+        _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
         _ => matches!(
             overlay,
             Overlay::Accounts
@@ -211,7 +227,6 @@ pub(super) fn render_overlay(
 
     // Only the help overlay is a reference table worth columnising. A picker reads as a
     // single ranked list; splitting it would scatter the best match away from the top.
-    let room = host.height.saturating_sub(4).max(1) as usize;
     let (columns, column_width, per_column, position) = if matches!(overlay, Overlay::Help) {
         let available = area.width.saturating_sub(4);
         let help = help_layout(&rows, available, room);
@@ -253,6 +268,11 @@ pub(super) fn render_overlay(
         (shown, area.width.saturating_sub(4), visible.max(1), position)
     };
 
+    // A QR code takes the right of the band, so the keys sit to its left.
+    let art_width =
+        body.as_ref().and_then(|body| body.art.first()).map_or(0, |row| row.cells());
+    let column_width =
+        column_width.saturating_sub(if art_width > 0 { art_width as u16 + 3 } else { 0 });
     let height = (per_column as u16 + 4).min(host.height);
     let band = layout::overlay_band(host, height);
 
@@ -308,6 +328,7 @@ pub(super) fn render_overlay(
             let room = (band.width as usize).saturating_sub(title.cells() + 8);
             titled(&format!("{}▏", tail(&field_text(app, Field::PartyLink), room)))
         }
+        Overlay::Say => typed(Field::Say),
         Overlay::InviteName => typed(Field::InviteName),
         Overlay::StoreConfirm => store_confirm_heading(app),
         Overlay::PluginAction => match app.plugin_in_action() {
@@ -360,7 +381,7 @@ pub(super) fn render_overlay(
             Some((_, episode)) => t::overlays_heading_releases(episode),
             None => t::overlays_heading_releases_bare(),
         }),
-        _ => title.clone(),
+        _ => body.as_ref().map_or_else(|| title.clone(), |body| body.heading.clone()),
     };
     // Where in a table too long for the band the window is, so the rest is known to exist.
     let position = position.filter(|p| p.cells() + 8 < band.width as usize);
@@ -403,11 +424,14 @@ pub(super) fn render_overlay(
         // group apart without spending bold, which stays reserved for the selection.
         let is_scope_heading =
             matches!(overlay, Overlay::Help) && key.is_empty() && !label.starts_with(' ');
+        let tone = body.as_ref().and_then(|body| body.tones.get(i));
         buf.set_string(
             x,
             y,
             truncate(label, label_room),
-            if is_selected || i < emphasised {
+            if let Some(tone) = tone {
+                tone_style(app, *tone, is_selected)
+            } else if is_selected || i < emphasised {
                 app.palette.style(Role::Text).add_modifier(Modifier::BOLD)
             } else if is_scope_heading {
                 app.palette.style(Role::Text)
@@ -422,10 +446,43 @@ pub(super) fn render_overlay(
             }
         }
     }
+    if let Some(body) = body.as_ref().filter(|body| !body.art.is_empty()) {
+        draw_art(buf, &body.art, band, title_y + 2);
+    }
     report
 }
 
 /// What a text field shows: what was typed, or a dot for each character of a masked one.
+/// The Say line: one row at the bottom of the stage under a hairline, so the conversation it
+/// answers stays in view above it. No scrim; the keys are on the status line.
+fn render_say(buf: &mut Buffer, app: &App, stage: Rect) {
+    if stage.height < 3 || stage.width < 8 {
+        return;
+    }
+    let y = stage.bottom() - 1;
+    let ground =
+        app.palette.raised().or(app.palette.ground()).unwrap_or(app.palette.ground_ref());
+    for row in y - 1..=y {
+        for x in stage.left()..stage.right() {
+            buf[(x, row)].reset();
+            buf[(x, row)].set_char(' ').set_bg(ground.to_ratatui());
+        }
+    }
+    Hairline::new(&app.palette).render(Rect { y: y - 1, height: 1, ..stage }, buf);
+    buf[(stage.left(), y)].set_char(OBI).set_style(app.palette.style(Role::Obi));
+    let title = Overlay::Say.title().to_string();
+    let x = stage.left() + 2;
+    buf.set_string(x, y, &title, app.palette.style(Role::Text).add_modifier(Modifier::BOLD));
+    let x = x + title.cells() as u16 + 2;
+    let room = stage.right().saturating_sub(x + 1) as usize;
+    buf.set_string(
+        x,
+        y,
+        format!("{}▏", tail(&field_text(app, Field::Say), room)),
+        app.palette.style(Role::Text),
+    );
+}
+
 pub(super) fn field_text(app: &App, field: Field) -> String {
     let line = app.field(field);
     if field.masked() { "•".repeat(line.len()) } else { line.as_str().to_owned() }
@@ -520,7 +577,10 @@ mod tests {
         assert_eq!(help.overlay_offset, None);
         app.nav.close_overlay();
         app.nav.open_overlay(Overlay::Logs);
-        assert_eq!(draw(&app), FrameReport { overlay_offset: Some(0), help_pages: None });
+        assert_eq!(
+            draw(&app),
+            FrameReport { overlay_offset: Some(0), ..FrameReport::default() }
+        );
     }
 
     #[test]

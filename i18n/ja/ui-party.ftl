@@ -179,3 +179,45 @@ party-in-the-room = ルーム内
 party-here-count = { $count }人
 together-recent-note = 直近10件をこの{ -device }に保存
 party-pick-continue = { -proceed-cap }
+party-chat-field = ひとこと送る
+party-chat-send = 送信
+party-chat-title = チャット
+party-chat-wait = { $seconds }秒待機
+party-chat-wait-spoken = { $seconds ->
+   *[other] { $seconds }秒お待ちください
+ }
+party-chat-more = チャットにあと{ $count }件
+party-chat-off = このルームのサーバーでは、チャットがオフです
+party-chat-privacy = メッセージはルームのサーバーを経由します。{ -app-name }には残りません。
+party-chat-hidden = チャットは非表示です
+party-chat-hidden-line = 設定の「再生」で、チャットの非表示がオンになっています。
+party-chat-show = チャットを表示
+settings-hide-chat = { -watch-party-pl }でチャットを非表示
+settings-hide-chat-line = メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。
+party-mute = { $name }をミュート
+party-unmute = { $name }のミュートを解除
+party-unmute-short = 解除
+party-member-muted = ミュート中
+party-muted-line = { $name }はミュート中です
+party-chat-not-sent = 送信できませんでした
+party-chat-retry = 再試行
+party-react = リアクション
+party-react-laugh = 笑う
+party-react-gasp = 驚く
+party-react-clap = 拍手
+party-react-cry = 泣く
+party-reacted-laugh = { $name }が笑いました
+party-reacted-gasp = { $name }が驚きました
+party-reacted-clap = { $name }が拍手しました
+party-reacted-cry = { $name }が泣きました
+party-reacted-at = { $time }に{ $line }
+party-names-two = { $first }さんと{ $second }さん
+party-names-three = { $first }さん、{ $second }さん、{ $third }さん
+party-names-others = { $first }さん、{ $second }さんほか{ $count }人
+party-chat-you = あなた
+party-sends-as = { $device }として送信
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name }：{ $message }
+party-chat-left = { $count ->
+   *[other] あと{ $count }文字
+ }

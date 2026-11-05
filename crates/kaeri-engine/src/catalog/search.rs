@@ -245,6 +245,11 @@ async fn find(
     if keeps && let Some(found) = searches.recall(&key, now_epoch()) {
         return Ok(found);
     }
+    if query.available.is_none()
+        && let Some(period) = query.period_in_effect()
+    {
+        return find_in_period(lent, searches, query, adult, page, period).await;
+    }
     let mut filter = browse_filter(query, adult);
     let own = match query.available {
         Some(Available::PlaysHere) => {
@@ -289,6 +294,58 @@ async fn find(
         searches.keep(key, &found, now_epoch());
     }
     Ok(found)
+}
+
+/// A page of a Trending browse over a week or a month: the period's titles in its order, held
+/// to the filters set. The period is summed from daily figures AniList does not sort by, so the
+/// fifty it names are asked for whole, filtered there by id, and paged here.
+async fn find_in_period(
+    lent: &Lent,
+    searches: &Searches,
+    query: &SearchQuery,
+    adult: bool,
+    page: u32,
+    period: kaeri_model::browsing::TrendPeriod,
+) -> Result<Found, String> {
+    // The whole ranked answer is kept as page 0, and each page is cut from it.
+    let key = Key { query: normal(query), adult, page: 0 };
+    let now = now_epoch();
+    let whole = match searches.recall(&key, now) {
+        Some(found) => found,
+        None => {
+            let ranked =
+                crate::catalog::trending::ranked(&lent.meta, &lent.store, period, adult, now)
+                    .await
+                    .map_err(|wait| match wait {
+                        Some(secs) => format!("AniList asks to wait {secs} seconds."),
+                        None => "Trending could not load.".to_owned(),
+                    })?;
+            let narrowed = query.has_filters();
+            let items = if narrowed && !ranked.is_empty() {
+                let mut filter = browse_filter(query, adult);
+                filter.ids = ranked.iter().map(|m| m.id.get()).collect();
+                let found = lent
+                    .meta
+                    .find("", &filter, 1, kaeri_meta::anilist::trends::TREND_TITLES as u32)
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let mut items = found.page.items;
+                let place = |m: &Media| ranked.iter().position(|r| r.id == m.id);
+                items.sort_by_key(|m| place(m).unwrap_or(usize::MAX));
+                items
+            } else {
+                ranked
+            };
+            let found = Found { page: Page { items, has_next: false }, unapplied: Vec::new() };
+            searches.keep(key, &found, now);
+            found
+        }
+    };
+    let from = (page.max(1) as usize - 1) * PAGE as usize;
+    let items: Vec<Media> =
+        whole.page.items.iter().skip(from).take(PAGE as usize).cloned().collect();
+    let has_next = whole.page.items.len() > from + PAGE as usize;
+    Ok(Found { page: Page { items, has_next }, unapplied: Vec::new() })
 }
 
 fn entries(lent: &Lent, page: &Page<Media>) -> Vec<Entry> {

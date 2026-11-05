@@ -17,6 +17,7 @@ extension View {
 
 struct PlayerAccessibility: ViewModifier {
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+    @Environment(\.accessibilitySwitchControlEnabled) private var switchControl
     let model: PlayerModel
 
     func body(content: Content) -> some View {
@@ -25,6 +26,11 @@ struct PlayerAccessibility: ViewModifier {
             // picture (ux_part3, Dynamic Type).
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .onChange(of: voiceOver, initial: true) { _, on in model.hold("voiceover", on) }
+            // Switch Control, like VoiceOver, is given the found times' card with no time limit.
+            .onChange(of: switchControl, initial: true) { _, on in model.hold("switchcontrol", on) }
+            .onChange(of: model.skipPrompt?.prompt) { _, prompt in
+                if let words = prompt.flatMap({ model.foundCardWords($0) }) { announce(words) }
+            }
             #if os(iOS)
             .accessibilityAction(.magicTap) { model.togglePause() }
             #endif

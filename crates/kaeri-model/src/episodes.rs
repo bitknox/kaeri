@@ -72,6 +72,91 @@ pub struct EpisodeRow {
     /// episode with no number to compare.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub past_progress: bool,
+    /// Spoiler protection, when it is on, hides this episode: it is not finished and comes after
+    /// the title's next episode (the one Continue offers), which is shown, as is everything
+    /// watched. This is the one rule every front end reads; none works it out for itself. A row
+    /// not out yet can be ahead too: it has nothing to hide, and a front end draws it as the
+    /// unaired row it is. Never set for an episode with no number to compare.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub spoiler_ahead: bool,
+    /// This row has no synopsis yet, and another source's lookup is still running that may
+    /// bring one: [`episode_text`] reads it as [`EpisodeText::Expected`], so a front end keeps
+    /// room for the text where it will land. Never stored: a table read back from the cache
+    /// has no lookup running.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub synopsis_pending: bool,
+}
+
+/// Whether a table has synopses to show, which decides at first layout how tall its rows are:
+/// room for text only where text can land.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum EpisodeText {
+    /// At least one row has a synopsis.
+    Present,
+    /// None yet, and a lookup that may bring some is still running.
+    Expected,
+    /// None, and none coming: every row is the short form.
+    None,
+}
+
+/// What `rows` have of synopses: see [`EpisodeText`].
+pub fn episode_text(rows: &[EpisodeRow]) -> EpisodeText {
+    if rows.iter().any(|row| row.description.as_deref().is_some_and(|t| !t.trim().is_empty())) {
+        EpisodeText::Present
+    } else if rows.iter().any(|row| row.synopsis_pending) {
+        EpisodeText::Expected
+    } else {
+        EpisodeText::None
+    }
+}
+
+/// How many episodes one range of a long series holds.
+pub const RANGE_SIZE: usize = 100;
+
+/// One range of a long series' table: rows `start..end` of it (`end` exclusive).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct EpisodeRange {
+    pub start: u32,
+    pub end: u32,
+    /// Every row in the range is completed.
+    pub watched: bool,
+    /// Every row in the range is not out yet (a schedule date later than `now`).
+    pub not_out: bool,
+}
+
+/// The ranges `rows` split into: none for a series of [`RANGE_SIZE`] episodes or fewer, else
+/// consecutive ranges of 100 in table order. `now` is Unix seconds.
+pub fn episode_ranges(rows: &[EpisodeRow], now: i64) -> Vec<EpisodeRange> {
+    if rows.len() <= RANGE_SIZE {
+        return Vec::new();
+    }
+    rows.chunks(RANGE_SIZE)
+        .enumerate()
+        .map(|(i, chunk)| EpisodeRange {
+            start: (i * RANGE_SIZE) as u32,
+            end: (i * RANGE_SIZE + chunk.len()) as u32,
+            watched: chunk.iter().all(|row| row.completed),
+            not_out: chunk.iter().all(|row| row.airs_at.is_some_and(|at| at > now)),
+        })
+        .collect()
+}
+
+/// The index of the range that opens first: the one holding the first episode not completed
+/// (the next episode), else the last.
+pub fn episode_range_to_open(rows: &[EpisodeRow]) -> u32 {
+    let next =
+        rows.iter().position(|row| !row.completed).unwrap_or(rows.len().saturating_sub(1));
+    (next / RANGE_SIZE) as u32
+}
+
+/// How many of the leading rows of a range are watched, for the one line they fold into when
+/// the range opens: the run of completed rows from `start`, never the whole range.
+pub fn episode_fold(rows: &[EpisodeRow], range: &EpisodeRange) -> u32 {
+    let slice = &rows[range.start as usize..range.end as usize];
+    let run = slice.iter().take_while(|row| row.completed).count();
+    if run == slice.len() { 0 } else { run as u32 }
 }
 
 /// How far a title's dub goes, as the source a dubbed play would use lists it: what
@@ -136,9 +221,77 @@ impl EpisodeRow {
     }
 }
 
+/// Whether spoiler protection hides `row` when it is on ([`EpisodeRow::spoiler_ahead`]): the
+/// episode is not finished and is numbered after `next`, the title's next episode. With 1 to 6
+/// watched and 7 next, 8 and later are ahead, and 7 is not.
+pub fn spoiler_ahead(row: &EpisodeRow, next: u32) -> bool {
+    !row.completed && row.number.trim().parse::<u32>().is_ok_and(|n| n > next)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rows(count: usize) -> Vec<EpisodeRow> {
+        (1..=count)
+            .map(|n| EpisodeRow {
+                number: n.to_string(),
+                title: None,
+                thumbnail: None,
+                description: None,
+                duration_secs: None,
+                watched: 0.0,
+                completed: false,
+                kind: None,
+                skippable: false,
+                airs_at: None,
+                delayed_from: None,
+                metadata_only: false,
+                source: None,
+                unsourced: false,
+                past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn text_is_present_expected_or_not_coming() {
+        let mut table = rows(3);
+        assert_eq!(episode_text(&table), EpisodeText::None);
+        table[1].synopsis_pending = true;
+        assert_eq!(episode_text(&table), EpisodeText::Expected);
+        table[2].description = Some("A lamplighter walks on.".into());
+        assert_eq!(episode_text(&table), EpisodeText::Present);
+        table[2].description = Some("  ".into());
+        assert_eq!(episode_text(&table), EpisodeText::Expected);
+    }
+
+    #[test]
+    fn long_series_split_into_ranges_of_a_hundred() {
+        assert!(episode_ranges(&rows(100), 0).is_empty());
+        let mut table = rows(230);
+        for row in table.iter_mut().take(120) {
+            row.completed = true;
+        }
+        for row in table.iter_mut().skip(200) {
+            row.airs_at = Some(10);
+        }
+        let ranges = episode_ranges(&table, 5);
+        let spans: Vec<_> = ranges.iter().map(|r| (r.start, r.end)).collect();
+        assert_eq!(spans, [(0, 100), (100, 200), (200, 230)]);
+        assert_eq!(ranges.iter().map(|r| r.watched).collect::<Vec<_>>(), [true, false, false]);
+        assert_eq!(ranges.iter().map(|r| r.not_out).collect::<Vec<_>>(), [false, false, true]);
+        // A range only partly out carries no word: Not out yet means all of it.
+        table[205].airs_at = Some(1);
+        let partly = episode_ranges(&table, 5);
+        assert!(!partly[2].not_out && !partly[2].watched);
+        table[205].airs_at = Some(10);
+        assert_eq!(episode_range_to_open(&table), 1);
+        assert_eq!(episode_fold(&table, &ranges[1]), 20);
+        assert_eq!(episode_fold(&table, &ranges[0]), 0, "a whole watched range folds nothing");
+    }
 
     #[test]
     fn a_broadcast_is_upcoming_until_its_moment() {

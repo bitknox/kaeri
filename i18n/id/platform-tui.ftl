@@ -7,6 +7,6 @@ status-reloading-sources = Memuat ulang { -source-pl }…
 pin-unavailable = { $name } disematkan untuk judul ini tetapi tidak tersedia, jadi { -source-pl } lain yang dipakai.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = tautan atau kode
-tui-together-keys = r siap · c salin tautan · s mulai sekarang · x keluar
+tui-together-chat-hidden-line = Pesan dan reaksi tidak muncul di pemutar di semua sesi.
 tui-together-not-a-link = Itu bukan tautan atau kode { -watch-party }.
 tui-together-recent-alone = Episode { $episode } · { $when }
