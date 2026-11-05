@@ -64,6 +64,10 @@ pub struct FfiPlayerState {
     /// The file on screen has shown its first frame.
     pub has_picture: bool,
     pub frame_drops: i64,
+    /// mpv's volume, 0 to 100 or above to its `volume-max`, from the level the session started
+    /// at: the engine's `PlaybackVolume` says only what the viewer changed.
+    #[uniffi(default = None)]
+    pub volume: Option<f64>,
     /// The file's audio and subtitle tracks, for the Tracks menu; a pick goes to the engine as
     /// `PlayerCommand::ChooseTrack`, which keeps it for the series.
     pub tracks: Vec<FfiTrack>,
@@ -92,6 +96,7 @@ impl From<PlayerState> for FfiPlayerState {
             seeking: s.seeking,
             has_picture: s.has_picture,
             frame_drops: s.frame_drops,
+            volume: s.volume,
             tracks: s
                 .tracks
                 .into_iter()

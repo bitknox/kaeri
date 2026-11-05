@@ -218,3 +218,16 @@ fn a_file_after_a_paused_one_was_closed_plays() {
     assert!(!rig.player.state().paused);
     assert_eq!(rig.player.mpv().get("pause"), Some(serde_json::Value::Bool(false)));
 }
+
+#[test]
+fn the_state_has_the_volume_a_session_starts_at_and_each_change() {
+    // The engine reports only the viewer's changes, so the controls read the starting level here.
+    let rig = rig();
+    let one = PlaybackId::new(6);
+    rig.player
+        .apply(one, &PlayerOp::Open { fullscreen: false, speed: None, volume: Some(25.0) });
+    rig.until(|e| matches!(e, HostEvent::State(s) if s.volume == Some(25.0)));
+    rig.player.apply(one, &PlayerOp::Add { property: "volume".into(), delta: 5.0 });
+    rig.until(|e| matches!(e, HostEvent::State(s) if s.volume == Some(30.0)));
+    assert_eq!(rig.player.state().volume, Some(30.0));
+}

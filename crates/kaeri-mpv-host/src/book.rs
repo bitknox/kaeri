@@ -19,6 +19,8 @@ pub struct PlayerState {
     /// The file on screen has shown its first frame.
     pub has_picture: bool,
     pub frame_drops: i64,
+    /// mpv's `volume`, 0 to its `volume-max`, including the level a session started at.
+    pub volume: Option<f64>,
     /// The file's audio and subtitle tracks, from `track-list`.
     pub tracks: Vec<ops::PlayerTrack>,
 }
