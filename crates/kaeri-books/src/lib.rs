@@ -5,10 +5,13 @@
 //! count, declared and actual entry sizes, total size, compression ratio, decoder dictionary
 //! size, XML size and node count, and rendered pixels. Entry names are normalised and any that
 //! would leave the book are dropped ([`path`]). Nothing here touches the network, runs a
-//! script or writes a file named by the book.
+//! script or writes a file named by the book; the writers stream into whatever they are given.
 //!
 //! [`open`] sniffs the file's first bytes and opens it as the right [`Book`]. The readers can
 //! also be used one by one: [`Archive`], [`Comic`], [`Epub`] and [`Pdf`].
+//!
+//! [`write`](mod@write) makes books for downloads and Send to e-reader (CBZ, EPUB, fixed-layout EPUB and
+//! KEPUB), and [`opds`] makes the documents of the OPDS catalogue served to e-readers.
 //!
 //! Everything here is synchronous and blocking. Archives, EPUBs and comics finish in time
 //! proportional to what they decode, which the limits cap. PDFs do not: a crafted PDF can keep
@@ -23,6 +26,7 @@ mod error;
 mod limits;
 pub mod mime;
 pub mod natural;
+pub mod opds;
 pub mod path;
 #[cfg(feature = "pdf")]
 pub mod pdf;
