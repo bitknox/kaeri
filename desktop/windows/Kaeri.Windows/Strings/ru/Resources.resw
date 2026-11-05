@@ -6611,6 +6611,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>Ждёт проверки прокси</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>Воспроизведение торрентов выключено</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Релизы</value>
   </data>
@@ -6677,6 +6680,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>Задержан</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>Торренты выключены</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Медленный</value>
   </data>
@@ -6691,6 +6697,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>Ждёт, пока прокси пройдёт проверку.</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>Воспроизведение торрентов выключено. Его можно включить в настройках, в разделе Источники.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Выключен. Он сохраняет своё место и не проверяется.</value>

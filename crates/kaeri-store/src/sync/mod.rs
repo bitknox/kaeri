@@ -14,6 +14,8 @@
 //!   arrives later is not put back. A watch it never saw is not named, and survives.
 //! - Everything else is a register: the highest `(stamp, device)` wins, whichever order the ops
 //!   arrive in.
+//! - An op of a kind this version does not know, as a newer version writes, is held and relayed
+//!   like any other but not applied. The version that knows its kind applies it after an update.
 
 mod apply;
 mod log;

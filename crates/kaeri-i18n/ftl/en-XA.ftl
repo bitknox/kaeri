@@ -8928,6 +8928,9 @@ source-note-ambiguous = [Çöüļðñ'ţ ɱàţçĥ ţĥîš ţîţļé~~~~~~~~]
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = [Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~]
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~]
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = [Ŕéļéàšéš~~~]
 
@@ -8994,6 +8997,9 @@ sources-status-not-answering = [Ñöţ àñšŵéŕîñĝ~~~~]
 # Status: held back.
 sources-status-held-back = [Ĥéļð ƀàçķ~~~]
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = [Ţöŕŕéñţš öƒƒ~~~~]
+
 # Status: slow.
 sources-status-slow = [Šļöŵ~~]
 
@@ -9008,6 +9014,9 @@ sources-detail-not-answering-plain = [Ñöţ àñšŵéŕîñĝ.~~~~~]
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = [Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~]
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ. Ýöü çàñ ţüŕñ îţ öñ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Status line: disabled.
 sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]

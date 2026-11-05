@@ -8316,6 +8316,10 @@
     <value>[Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~]</value>
     <comment>Under a source that waits for the proxy check in Settings.</comment>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>[Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~]</value>
+    <comment>Under a source that names torrents while torrent playback is off in Settings.</comment>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>[Ŕéļéàšéš~~~]</value>
     <comment>Heading over one source's releases, for a source that offers several (a batch, single episodes).</comment>
@@ -8404,6 +8408,10 @@
     <value>[Ĥéļð ƀàçķ~~~]</value>
     <comment>Status: held back.</comment>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>[Ţöŕŕéñţš öƒƒ~~~~]</value>
+    <comment>Status: a source that names torrents, while torrent playback is off.</comment>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>[Šļöŵ~~]</value>
     <comment>Status: slow.</comment>
@@ -8423,6 +8431,10 @@
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>[Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~]</value>
     <comment>Status line: waiting for the proxy check.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>[Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ. Ýöü çàñ ţüŕñ îţ öñ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line: torrent playback is off.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>[Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]</value>

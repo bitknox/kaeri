@@ -8928,6 +8928,9 @@ source-note-ambiguous = Det gick inte att matcha titeln
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = Väntar på proxykontrollen
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = Torrentuppspelning är av
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Utgåvor
 
@@ -8994,6 +8997,9 @@ sources-status-not-answering = Svarar inte
 # Status: held back.
 sources-status-held-back = Spärrad
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrents av
+
 # Status: slow.
 sources-status-slow = Långsam
 
@@ -9008,6 +9014,9 @@ sources-detail-not-answering-plain = Svarar inte.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Väntar tills proxykontrollen godkänns.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Torrentuppspelning är av. Du kan slå på den i Inställningar, under Källor.
 
 # Status line: disabled.
 sources-detail-disabled = Av. Den behåller sin plats och provas inte.

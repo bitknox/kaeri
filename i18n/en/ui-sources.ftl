@@ -51,6 +51,10 @@ source-note-ambiguous = Couldn't match this title
 # @max 36
 source-note-held-back = Waiting for the proxy check
 
+# Under a source that names torrents while torrent playback is off in Settings.
+# @max 36
+source-note-torrents-off = Torrent playback is off
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 # @max 20
 source-picker-releases = { -release-cap-pl }
@@ -125,6 +129,9 @@ sources-status-not-answering = Not answering
 # Status: held back.
 sources-status-held-back = Held back
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrents off
+
 # Status: slow.
 sources-status-slow = Slow
 
@@ -140,6 +147,9 @@ sources-detail-not-answering-plain = Not answering.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Waiting until the proxy check passes.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Torrent playback is off. You can turn it on in Settings, under { -source-cap-pl }.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.

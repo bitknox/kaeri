@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A hybrid logical clock stamp: wall-clock milliseconds in the high 48 bits and a counter in the
 /// low 16. Compared as a number; ties break by the writer's device id.
@@ -44,8 +44,11 @@ pub struct Op {
 }
 
 /// What a change was. A `Reg` is a last-writer-wins register; the rest have rules of their own.
+///
+/// Read through [`OpBody`]'s own `Deserialize`, which keeps a kind this version does not know as
+/// [`OpBody::Unknown`] instead of failing the batch it came in.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "k", rename_all = "snake_case")]
+#[serde(remote = "Self", tag = "k", rename_all = "snake_case")]
 pub enum OpBody {
     /// A watch event. Its id is `device:seq` of this op.
     Watch {
@@ -83,6 +86,52 @@ pub enum OpBody {
     DeviceRemove { device: String },
     /// What compaction leaves of a superseded op, so that numbering has no gaps.
     Noop,
+    /// An op of a kind a newer version writes, as it arrived, its `k` included. Held and relayed
+    /// to other devices unchanged, and never applied here; a version that knows the kind applies
+    /// it once it runs (see [`crate::Store::apply_ops`]).
+    #[serde(skip)]
+    Unknown(serde_json::Value),
+}
+
+/// The `k` of every kind this version applies: anything else is read as [`OpBody::Unknown`].
+const KINDS: &[&str] = &[
+    "watch",
+    "unwatch",
+    "adopt",
+    "reg",
+    "tracker_mark",
+    "download_state",
+    "device_add",
+    "device_remove",
+    "noop",
+];
+
+impl Serialize for OpBody {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::Unknown(raw) => raw.serialize(serializer),
+            known => Self::serialize(known, serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for OpBody {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = serde_json::Value::deserialize(deserializer)?;
+        match raw.get("k").and_then(serde_json::Value::as_str) {
+            Some(kind) if !KINDS.contains(&kind) => Ok(Self::Unknown(raw)),
+            // A known kind, or no kind at all: read as this version reads it, so a damaged op
+            // is still an error.
+            _ => Self::deserialize(raw).map_err(serde::de::Error::custom),
+        }
+    }
+}
+
+impl OpBody {
+    /// Whether this version knows the op's kind, and so applies it.
+    pub fn is_known(&self) -> bool {
+        !matches!(self, Self::Unknown(_))
+    }
 }
 
 /// The highest op number held from each device.
@@ -169,6 +218,8 @@ pub struct Applied {
     pub duplicates: usize,
     /// Ops held back because an earlier one from the same device is missing.
     pub gaps: usize,
+    /// Ops of a kind this version does not know: held and relayed, not applied.
+    pub unknown: usize,
     pub effects: Vec<Effect>,
     pub notes: Vec<SyncNote>,
     pub titles: Vec<u32>,
@@ -274,5 +325,50 @@ mod tests {
         };
         let json = serde_json::to_string(&op).unwrap();
         assert_eq!(serde_json::from_str::<Op>(&json).unwrap(), op);
+    }
+
+    #[test]
+    fn every_kind_this_version_writes_reads_back_as_known() {
+        let bodies = [
+            OpBody::Watch {
+                anilist_id: 1,
+                episode: "1".into(),
+                position_secs: 1.0,
+                duration_secs: None,
+                watched_secs: 1.0,
+                provider_id: None,
+                translation: None,
+                completed: false,
+                at: 0,
+                queued_for: Vec::new(),
+                seen_unwatch: 0,
+            },
+            OpBody::Unwatch { anilist_id: 1, episode: "1".into(), removes: Vec::new() },
+            OpBody::Adopt { anilist_id: 1, upto: 2, at: 0 },
+            OpBody::Reg { kind: "k".into(), key: "1".into(), value: None },
+            OpBody::TrackerMark { tracker: "t".into(), anilist_id: 1, episode: 2 },
+            OpBody::DownloadState { anilist_id: 1, episode: "1".into(), done: true },
+            OpBody::DeviceAdd { device: "ab".into(), name: "n".into(), pubkey: "00".into() },
+            OpBody::DeviceRemove { device: "ab".into() },
+            OpBody::Noop,
+        ];
+        assert_eq!(bodies.len(), KINDS.len());
+        for body in bodies {
+            let json = serde_json::to_string(&body).unwrap();
+            assert_eq!(serde_json::from_str::<OpBody>(&json).unwrap(), body, "{json}");
+        }
+    }
+
+    #[test]
+    fn an_unknown_kind_is_kept_as_it_came_and_a_damaged_known_one_is_refused() {
+        let raw = r#"{"k":"chapter_read","work":"w-1","pages":[1,2],"at":{"n":1}}"#;
+        let body: OpBody = serde_json::from_str(raw).unwrap();
+        assert!(!body.is_known());
+        let again: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&body).unwrap()).unwrap();
+        assert_eq!(again, serde_json::from_str::<serde_json::Value>(raw).unwrap());
+        // A kind this version knows, missing what it needs, is damage rather than the future.
+        assert!(serde_json::from_str::<OpBody>(r#"{"k":"unwatch","anilist_id":1}"#).is_err());
+        assert!(serde_json::from_str::<OpBody>(r#"{"anilist_id":1}"#).is_err());
     }
 }

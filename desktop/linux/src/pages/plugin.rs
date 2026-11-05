@@ -10,7 +10,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
-    sources::{ProviderOrigin, ProviderRow},
+    sources::{HoldReason, ProviderOrigin, ProviderRow},
     stores::{StorePluginRow, StorePluginStatus, StoreRow, StoreState},
 };
 
@@ -170,6 +170,9 @@ fn fill(ctx: &Rc<Ctx>, column: &gtk::Box, info: &Info) {
                 Some(error) => t::sources_detail_not_answering(&capitalized(error)),
                 None => t::sources_detail_not_answering_plain(),
             }),
+            Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsOff) => {
+                Some(t::sources_detail_torrents_off())
+            }
             Standing::HeldBack => Some(t::sources_detail_held_back()),
             Standing::Off => Some(t::sources_detail_disabled()),
             _ => None,

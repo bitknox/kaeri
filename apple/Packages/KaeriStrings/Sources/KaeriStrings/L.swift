@@ -8366,6 +8366,9 @@ public enum L {
     /// Under a source that waits for the proxy check in Settings.
     public static var sourceNoteHeldBack: String { string("source-note-held-back", fallback: "Waiting for the proxy check") }
 
+    /// Under a source that names torrents while torrent playback is off in Settings.
+    public static var sourceNoteTorrentsOff: String { string("source-note-torrents-off", fallback: "Torrent playback is off") }
+
     /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
     public static var sourcePickerReleases: String { string("source-picker-releases", fallback: "Releases") }
 
@@ -8438,6 +8441,9 @@ public enum L {
     /// Status: held back.
     public static var sourcesStatusHeldBack: String { string("sources-status-held-back", fallback: "Held back") }
 
+    /// Status: a source that names torrents, while torrent playback is off.
+    public static var sourcesStatusTorrentsOff: String { string("sources-status-torrents-off", fallback: "Torrents off") }
+
     /// Status: slow.
     public static var sourcesStatusSlow: String { string("sources-status-slow", fallback: "Slow") }
 
@@ -8454,6 +8460,9 @@ public enum L {
 
     /// Status line: waiting for the proxy check.
     public static var sourcesDetailHeldBack: String { string("sources-detail-held-back", fallback: "Waiting until the proxy check passes.") }
+
+    /// Status line: torrent playback is off.
+    public static var sourcesDetailTorrentsOff: String { string("sources-detail-torrents-off", fallback: "Torrent playback is off. You can turn it on in Settings, under Sources.") }
 
     /// Status line: disabled.
     public static var sourcesDetailDisabled: String { string("sources-detail-disabled", fallback: "Off. It keeps its place and isn't tried.") }

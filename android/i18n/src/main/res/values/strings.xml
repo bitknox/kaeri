@@ -4545,6 +4545,8 @@
     <string name="source_note_ambiguous">Couldn\'t match this title</string>
     <!-- Under a source that waits for the proxy check in Settings. -->
     <string name="source_note_held_back">Waiting for the proxy check</string>
+    <!-- Under a source that names torrents while torrent playback is off in Settings. -->
+    <string name="source_note_torrents_off">Torrent playback is off</string>
     <!-- Heading over one source's releases, for a source that offers several (a batch, single episodes). -->
     <string name="source_picker_releases">Releases</string>
     <!-- Accessibility label and badge for the chosen row. -->
@@ -4589,6 +4591,8 @@
     <string name="sources_status_not_answering">Not answering</string>
     <!-- Status: held back. -->
     <string name="sources_status_held_back">Held back</string>
+    <!-- Status: a source that names torrents, while torrent playback is off. -->
+    <string name="sources_status_torrents_off">Torrents off</string>
     <!-- Status: slow. -->
     <string name="sources_status_slow">Slow</string>
     <!-- Status: an update exists. -->
@@ -4599,6 +4603,8 @@
     <string name="sources_detail_not_answering_plain">Not answering.</string>
     <!-- Status line: waiting for the proxy check. -->
     <string name="sources_detail_held_back">Waiting until the proxy check passes.</string>
+    <!-- Status line: torrent playback is off. -->
+    <string name="sources_detail_torrents_off">Torrent playback is off. You can turn it on in Settings, under Sources.</string>
     <!-- Status line: disabled. -->
     <string name="sources_detail_disabled">Off. It keeps its place and isn\'t tried.</string>
     <!-- Status line: the source is gone. -->

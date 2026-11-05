@@ -6263,6 +6263,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>Väntar på proxykontrollen</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>Torrentuppspelning är av</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Utgåvor</value>
   </data>
@@ -6329,6 +6332,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>Spärrad</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>Torrents av</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Långsam</value>
   </data>
@@ -6343,6 +6349,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>Väntar tills proxykontrollen godkänns.</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>Torrentuppspelning är av. Du kan slå på den i Inställningar, under Källor.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Av. Den behåller sin plats och provas inte.</value>

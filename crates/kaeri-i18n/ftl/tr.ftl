@@ -8928,6 +8928,9 @@ source-note-ambiguous = Bu başlık eşleştirilemedi
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = Proxy denetimi bekleniyor
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = Torrent oynatma kapalı
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Sürümler
 
@@ -8994,6 +8997,9 @@ sources-status-not-answering = Yanıt vermiyor
 # Status: held back.
 sources-status-held-back = Bekletildi
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrentler kapalı
+
 # Status: slow.
 sources-status-slow = Yavaş
 
@@ -9008,6 +9014,9 @@ sources-detail-not-answering-plain = Yanıt vermiyor.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Proxy denetimi geçilene kadar bekleniyor.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Torrent oynatma kapalı. Ayarlar'da Kaynaklar bölümünden açabilirsin.
 
 # Status line: disabled.
 sources-detail-disabled = Kapalı. Yerini korur, denenmez.

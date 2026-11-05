@@ -8846,6 +8846,9 @@ source-note-ambiguous = Tidak bisa mencocokkan judul ini
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = Menunggu pemeriksaan proxy
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = Pemutaran torrent mati
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Rilis
 
@@ -8912,6 +8915,9 @@ sources-status-not-answering = Tidak merespons
 # Status: held back.
 sources-status-held-back = Ditahan
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrent mati
+
 # Status: slow.
 sources-status-slow = Lambat
 
@@ -8926,6 +8932,9 @@ sources-detail-not-answering-plain = Tidak merespons.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Menunggu sampai pemeriksaan proxy lolos.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Pemutaran torrent mati. Kamu bisa menyalakannya di Pengaturan, di bagian Sumber-sumber.
 
 # Status line: disabled.
 sources-detail-disabled = Mati. Posisinya tetap, dan tidak dicoba.

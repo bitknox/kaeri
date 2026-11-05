@@ -6437,6 +6437,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>Attend la vérification du proxy</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>Torrents désactivés</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Releases</value>
   </data>
@@ -6503,6 +6506,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>Retenue</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>Torrents désactivés</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Lente</value>
   </data>
@@ -6517,6 +6523,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>En attente que la vérification du proxy réussisse.</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>La lecture des torrents est désactivée. Vous pouvez l'activer dans Réglages, sous Sources.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Désactivée. Elle garde sa place et n'est pas essayée.</value>

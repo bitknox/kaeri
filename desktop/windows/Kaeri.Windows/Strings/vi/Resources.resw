@@ -6089,6 +6089,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>Đang chờ kiểm tra proxy</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>Phát torrent đang tắt</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Các bản phát hành</value>
   </data>
@@ -6155,6 +6158,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>Bị giữ lại</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>Torrent đang tắt</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Chậm</value>
   </data>
@@ -6169,6 +6175,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>Đang chờ cho đến khi proxy đạt kiểm tra.</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>Phát torrent đang tắt. Bạn có thể bật trong Cài đặt, ở mục Các nguồn.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Đã tắt. Vẫn giữ vị trí nhưng không được thử.</value>

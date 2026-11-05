@@ -116,6 +116,30 @@ struct AskingTests {
         #expect(store.sentLog.count == 1, "answered for what is so: not asked again")
     }
 
+    @Test func aPageOpenedAgainAsksForItsEpisodesOnlyOnceTheTableIsOld() {
+        let store = AppStore()
+        var clock = ContinuousClock.now
+        store.now = { clock }
+        let row = { (number: String) in
+            EpisodeRow(number: number, title: nil, thumbnail: nil, description: nil, durationSecs: nil, watched: 0,
+                       completed: false, kind: nil, skippable: false, airsAt: nil, delayedFrom: nil,
+                       metadataOnly: false)
+        }
+        store.loadEpisodesForPage(900_001)
+        store.apply(.episodes(id: 900_001, rows: [row("1")]))
+        clock += .seconds(4 * 60)
+        store.loadEpisodesForPage(900_001)
+        #expect(store.sentLog == ["loadEpisodes"], "within the window: nothing asked")
+        clock += .seconds(2 * 60)
+        store.loadEpisodesForPage(900_001)
+        #expect(store.sentLog == ["loadEpisodes", "loadEpisodes"], "older than the window: asked again")
+        #expect(store.titles.episodes[900_001]?.count == 1, "the held table stays until the new one lands")
+        store.apply(.episodes(id: 900_001, rows: [row("1"), row("2")]))
+        #expect(store.titles.episodes[900_001]?.count == 2, "the new episode replaces the old table")
+        store.loadEpisodesForPage(900_001)
+        #expect(store.sentLog.count == 2, "fresh again")
+    }
+
     @Test func aSourceReadyWhereNoneWasAsksAgainForEpisodesThatWereAniListsAlone() {
         let store = AppStore()
         let row = { (metadataOnly: Bool) in

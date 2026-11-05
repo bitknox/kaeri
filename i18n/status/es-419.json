@@ -22623,6 +22623,12 @@
     "at": "2026-10-31",
     "back": "Not answering, will be retried soon"
   },
+  "source-note-torrents-off": {
+    "source": "1b1b0a02a381",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-05"
+  },
   "source-picker-automatic": {
     "source": "d200028b9f60",
     "state": "draft",
@@ -22954,6 +22960,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "The source did not respond."
+  },
+  "sources-detail-torrents-off": {
+    "source": "24669778b4c5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-05"
   },
   "sources-drag-hint": {
     "source": "bc502150a0f5",
@@ -23543,6 +23555,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Slow"
+  },
+  "sources-status-torrents-off": {
+    "source": "113659297daa",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-05"
   },
   "sources-status-update": {
     "source": "6c410fedda2a",

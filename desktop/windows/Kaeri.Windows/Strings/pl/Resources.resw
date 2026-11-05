@@ -6611,6 +6611,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>Czeka na sprawdzenie proxy</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>Odtwarzanie torrentów jest wyłączone</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Wydania</value>
   </data>
@@ -6677,6 +6680,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>Wstrzymane</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>Torrenty wyłączone</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Wolne</value>
   </data>
@@ -6691,6 +6697,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>Czeka, aż proxy przejdzie sprawdzenie.</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>Odtwarzanie torrentów jest wyłączone. Możesz je włączyć w Ustawieniach, w sekcji Źródła.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Wyłączone. Zachowuje swoje miejsce i nie jest sprawdzane.</value>

@@ -654,6 +654,25 @@ class AppStore(
     private val episodesAsked = mutableSetOf<AnilistId>()
 
     /**
+     * A title page's episodes: asked when there is no table, or the one held arrived longer than
+     * [EPISODES_FRESH_MILLIS] ago. The page keeps showing the held table until the new one lands.
+     */
+    fun loadEpisodesForPage(id: AnilistId) {
+        val now = clock()
+        if (titles.episodes.value[id] == null) return loadEpisodes(id)
+        val arrived = episodesArrived[id]
+        if (arrived != null && now - arrived < EPISODES_FRESH_MILLIS) return
+        // An older ask still on its way is not put again.
+        val requested = episodesRequested[id]
+        if (requested != null && now - requested < ASK_AGAIN_MILLIS) return
+        episodesRequested[id] = now
+        loadEpisodes(id, force = true)
+    }
+
+    private val episodesArrived = mutableMapOf<AnilistId, Long>()
+    private val episodesRequested = mutableMapOf<AnilistId, Long>()
+
+    /**
      * How far a title's dub goes, once a session per title. The engine answers in the background
      * and the page shows the line when it lands, so nothing waits on it.
      */
@@ -1331,7 +1350,10 @@ class AppStore(
             is Event.TitlesChanged -> titlesChanged()
             is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)
             is Event.LastAired -> titles.lastAired(event.v1)
-            is Event.Episodes -> titles.episodes(event.id, event.rows, event.failed)
+            is Event.Episodes -> {
+                titles.episodes(event.id, event.rows, event.failed)
+                if (event.failed == null) episodesArrived[event.id] = clock()
+            }
             is Event.TitleDub -> titles.dub(event.id, event.dub)
             is Event.Trending -> search.trending(event.period, TrendAnswer(event.entries, event.updatedAt, event.failed, event.waiting), titles)
             is Event.Surprise -> surprise.answer(event.pool, event.outcome)
@@ -1612,6 +1634,15 @@ class AppStore(
     companion object {
         /** How long a list's answer stands: showing it again within this asks for nothing. */
         const val LIST_FRESH_MILLIS = 60_000L
+
+        /**
+         * How long a title's episode table stands for a page opening. A source may list the next
+         * episode minutes after a page was first shown, so an older table is asked for again.
+         */
+        const val EPISODES_FRESH_MILLIS = 5 * 60_000L
+
+        /** How long a page's ask for a newer table is left to answer before it is put again. */
+        const val ASK_AGAIN_MILLIS = 20_000L
     }
 }
 

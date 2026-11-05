@@ -312,7 +312,7 @@ struct PhoneTitle: View {
         .task(id: id) {
             navigator.focusedTitle = id
             if !store.titles.detailed.contains(id) { store.loadDetail(id) }
-            if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
+            store.loadEpisodesForPage(id)
             store.loadDub(id)
             // What the show sets for itself, its spoiler protection among it: from the database.
             store.loadShowSettings(id)
