@@ -185,3 +185,49 @@ party-in-the-room = Dans le salon
 party-here-count = { $count } présents
 together-recent-note = Les dix derniers, gardés sur cet { -device }
 party-pick-continue = { -proceed-cap }
+party-chat-field = Dire quelque chose
+party-chat-send = Envoyer
+party-chat-title = Chat
+party-chat-wait = Attendez { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Attendez une seconde
+    [many] Attendez { $seconds } secondes
+   *[other] Attendez { $seconds } secondes
+ }
+party-chat-more = Encore { $count } dans le chat
+party-chat-off = Le chat est désactivé sur le serveur de ce salon
+party-chat-privacy = Les messages passent par le serveur du salon. { -app-name } n’en garde aucun.
+party-chat-hidden = Le chat est masqué
+party-chat-hidden-line = Masquer le chat est activé dans Réglages, sous Lecture.
+party-chat-show = Afficher le chat
+settings-hide-chat = Masquer le chat dans les { -watch-party-pl }
+settings-hide-chat-line = Les messages, les réactions et leurs repères sur la barre de lecture restent hors de la vidéo, et le champ disparaît. La liste des personnes indique toujours qui est dans le salon.
+party-mute = Rendre { $name } muet
+party-unmute = Réactiver { $name }
+party-unmute-short = Réactiver
+party-member-muted = Muet
+party-muted-line = { $name } est muet
+party-chat-not-sent = Envoi impossible
+party-chat-retry = Réessayer
+party-react = Réagir
+party-react-laugh = Rire
+party-react-gasp = Surprise
+party-react-clap = Applaudir
+party-react-cry = Pleurer
+party-reacted-laugh = { $name } a ri
+party-reacted-gasp = { $name } a été surpris
+party-reacted-clap = { $name } a applaudi
+party-reacted-cry = { $name } a pleuré
+party-reacted-at = { $line } à { $time }
+party-names-two = { $first } et { $second }
+party-names-three = { $first }, { $second } et { $third }
+party-names-others = { $first }, { $second } et { $count } autres
+party-chat-you = Vous
+party-sends-as = Envoyé en tant que { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } dit : { $message }
+party-chat-left = { $count ->
+    [one] { $count } caractère restant
+    [many] { $count } caractères restants
+   *[other] { $count } caractères restants
+ }

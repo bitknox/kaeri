@@ -21,3 +21,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Stile dei sottotitoli reimpostato
 crash-notice = { -app-name } si è chiuso a causa di un problema.
 crash-notice-tv = { -app-name } si è chiuso a causa di un problema. Puoi segnalarlo da Impostazioni, Informazioni.
+notice-surprise-empty-filters = Nessun titolo corrisponde a questi filtri.
+notice-surprise-empty-planning = La lista In programma è vuota.
+notice-surprise-offline = Sei offline. I suggerimenti della ricerca richiedono AniList.
+notice-surprise-failed = Impossibile scegliere un titolo ora. Riprova tra un attimo.
