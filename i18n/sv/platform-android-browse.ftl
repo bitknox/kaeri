@@ -21,3 +21,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } kommentarer · pausar
  }
 player-more-discussion-pauses = Pausar videon
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, valfri
+search-pill-all-set = Alla filter, { $count } valda
+search-pill-clear = Rensa alla filter

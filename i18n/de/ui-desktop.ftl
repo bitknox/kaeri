@@ -27,3 +27,5 @@ updates-restart = Neu starten
 tv-problem-full = Der Fernseher hat so viele { -device-pl } gekoppelt, wie er speichern kann. Entferne eines in den Einstellungen des Fernsehers unter Fernbedienungen.
 tv-problem-unpaired = Der Fernseher kennt dieses { -device } nicht mehr. Koppel neu.
 player-position-spoken = { $position } von { $duration }
+names-pair = { $first } und { $last }
+names-list = { $list }, { $next }

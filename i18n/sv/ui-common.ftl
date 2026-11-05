@@ -1,5 +1,6 @@
 action-try-again = Försök igen
 action-cancel = Avbryt
+action-go = Gå
 action-not-now = Inte nu
 duration-days = { $days } d
 duration-hours-minutes = { $hours } h { $minutes } min

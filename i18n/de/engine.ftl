@@ -20,3 +20,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Untertitelstil zurückgesetzt
 crash-notice = { -app-name } wurde nach einem Problem beendet.
 crash-notice-tv = { -app-name } wurde nach einem Problem beendet. Du kannst es unter Einstellungen, Über melden.
+notice-surprise-empty-filters = Keine Titel passen zu diesen Filtern.
+notice-surprise-empty-planning = Die Liste „Geplant“ ist leer.
+notice-surprise-offline = Offline. Für Zufallsvorschläge aus der Suche wird AniList gebraucht.
+notice-surprise-failed = Gerade konnte kein Titel gewählt werden. Versuch es gleich noch einmal.

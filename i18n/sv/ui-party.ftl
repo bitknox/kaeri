@@ -182,3 +182,47 @@ party-in-the-room = I rummet
 party-here-count = { $count } här
 together-recent-note = De tio senaste, sparade på den här { -device }en
 party-pick-continue = { -proceed-cap }
+party-chat-field = Säg något
+party-chat-send = Skicka
+party-chat-title = Chatt
+party-chat-wait = Vänta { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Vänta en sekund
+   *[other] Vänta { $seconds } sekunder
+ }
+party-chat-more = { $count } till i chatten
+party-chat-off = Rummets server har stängt av chatten
+party-chat-privacy = Meddelanden går via rummets server. { -app-name } sparar inga.
+party-chat-hidden = Chatten är dold
+party-chat-hidden-line = Dölj chatt är på i Inställningar, under Uppspelning.
+party-chat-show = Visa chatten
+settings-hide-chat = Dölj chatten i { -watch-party-pl }
+settings-hide-chat-line = Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.
+party-mute = Tysta { $name }
+party-unmute = Avtysta { $name }
+party-unmute-short = Avtysta
+party-member-muted = Tystad
+party-muted-line = { $name } är tystad
+party-chat-not-sent = Kunde inte skickas
+party-chat-retry = Försök igen
+party-react = Reagera
+party-react-laugh = Skratta
+party-react-gasp = Häpna
+party-react-clap = Klappa
+party-react-cry = Gråta
+party-reacted-laugh = { $name } skrattade
+party-reacted-gasp = { $name } häpnade
+party-reacted-clap = { $name } klappade
+party-reacted-cry = { $name } grät
+party-reacted-at = { $line } vid { $time }
+party-names-two = { $first } och { $second }
+party-names-three = { $first }, { $second } och { $third }
+party-names-others = { $first }, { $second } och { $count } till
+party-chat-you = Du
+party-sends-as = Skickar som { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } säger { $message }
+party-chat-left = { $count ->
+    [one] { $count } tecken kvar
+   *[other] { $count } tecken kvar
+ }

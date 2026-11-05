@@ -90,3 +90,74 @@ search-available-all = Alla
 search-available-here = Spelas här
 search-available-services = På dina tjänster
 search-line-service = På { $service }
+count-episodes = { $count ->
+    [one] Ett avsnitt
+   *[other] { $count } avsnitt
+ }
+count-episodes-short = { $count } avs
+count-out-of = { $out } av { $total } ute
+count-out-of-short = { $out } av { $total }
+count-out = { $count ->
+    [one] Ett avsnitt ute
+   *[other] { $count } avsnitt ute
+ }
+count-out-short = { $count } ute
+count-starts = Startar { $date }
+count-not-out = Inte ute än
+count-next-of = Avs { $episode } av { $total }
+count-dub = Dub
+count-dub-through = Dub { $through }
+count-spoken-episodes = { $count ->
+    [one] Ett avsnitt
+   *[other] { $count } avsnitt
+ }
+count-spoken-out-of = { $out } av { $total } avsnitt ute
+count-spoken-out = { $count ->
+    [one] Ett avsnitt ute
+   *[other] { $count } avsnitt ute
+ }
+count-spoken-starts = Startar { $date }
+count-spoken-next-of = Avsnitt { $episode } av { $total }
+count-spoken-dub-through = { -dubbed } till avsnitt { $through }
+count-spoken-dub = har en dubbning
+date-month-jan-short = jan
+date-month-jan-long = januari
+date-month-feb-short = feb
+date-month-feb-long = februari
+date-month-mar-short = mar
+date-month-mar-long = mars
+date-month-apr-short = apr
+date-month-apr-long = april
+date-month-may-short = maj
+date-month-may-long = maj
+date-month-jun-short = jun
+date-month-jun-long = juni
+date-month-jul-short = jul
+date-month-jul-long = juli
+date-month-aug-short = aug
+date-month-aug-long = augusti
+date-month-sep-short = sep
+date-month-sep-long = september
+date-month-oct-short = okt
+date-month-oct-long = oktober
+date-month-nov-short = nov
+date-month-nov-long = november
+date-month-dec-short = dec
+date-month-dec-long = december
+trending-today = Trendar idag
+trending-week = Trendar den här veckan
+trending-month = Trendar den här månaden
+trending-choice-today = Idag
+trending-choice-week = Den här veckan
+trending-choice-month = Den här månaden
+trending-failed = Det gick inte att läsa in trenderna för { $period }.
+trending-updated = Uppdaterad { $age }
+surprise-me = Överraska mig
+surprise-me-menu = Överraska mig
+surprise-another = Annan
+surprise-hint-planning = Öppnar en slumpad titel från Planerar
+surprise-hint-filters = Öppnar en slumpad titel från de här filtren
+surprise-another-hint = Öppnar en annan slumpad titel i stället för den här
+surprise-empty-filters = Inga titlar matchar de här filtren.
+surprise-empty-planning = Planerar är tom.
+surprise-offline = Offline. Slumpval från sökningen kräver AniList.

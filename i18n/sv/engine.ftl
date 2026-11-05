@@ -20,3 +20,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Undertextstilen återställdes
 crash-notice = { -app-name } stängdes efter ett fel.
 crash-notice-tv = { -app-name } stängdes efter ett fel. Du kan rapportera det under Inställningar, Om.
+notice-surprise-empty-filters = Inga titlar matchar de här filtren.
+notice-surprise-empty-planning = Planerar är tom.
+notice-surprise-offline = Offline. Slumpval från sökningen kräver AniList.
+notice-surprise-failed = Det gick inte att välja en titel just nu. Försök igen om en stund.

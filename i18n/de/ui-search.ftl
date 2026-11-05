@@ -90,3 +90,74 @@ search-available-all = Alle
 search-available-here = Läuft hier
 search-available-services = Auf deinen Diensten
 search-line-service = Auf { $service }
+count-episodes = { $count ->
+    [one] Eine Folge
+   *[other] { $count } Folgen
+ }
+count-episodes-short = { $count } Flg.
+count-out-of = { $out } von { $total } erschienen
+count-out-of-short = { $out } von { $total }
+count-out = { $count ->
+    [one] Eine Folge erschienen
+   *[other] { $count } Folgen erschienen
+ }
+count-out-short = { $count } da
+count-starts = Startet { $date }
+count-not-out = Noch nicht erschienen
+count-next-of = Flg. { $episode } von { $total }
+count-dub = Dub
+count-dub-through = Dub { $through }
+count-spoken-episodes = { $count ->
+    [one] Eine Folge
+   *[other] { $count } Folgen
+ }
+count-spoken-out-of = { $out } von { $total } Folgen erschienen
+count-spoken-out = { $count ->
+    [one] Eine Folge erschienen
+   *[other] { $count } Folgen erschienen
+ }
+count-spoken-starts = Startet { $date }
+count-spoken-next-of = Folge { $episode } von { $total }
+count-spoken-dub-through = { -dubbed } bis Folge { $through }
+count-spoken-dub = hat eine Synchronfassung
+date-month-jan-short = Jan
+date-month-jan-long = Januar
+date-month-feb-short = Feb
+date-month-feb-long = Februar
+date-month-mar-short = Mär
+date-month-mar-long = März
+date-month-apr-short = Apr
+date-month-apr-long = April
+date-month-may-short = Mai
+date-month-may-long = Mai
+date-month-jun-short = Jun
+date-month-jun-long = Juni
+date-month-jul-short = Jul
+date-month-jul-long = Juli
+date-month-aug-short = Aug
+date-month-aug-long = August
+date-month-sep-short = Sep
+date-month-sep-long = September
+date-month-oct-short = Okt
+date-month-oct-long = Oktober
+date-month-nov-short = Nov
+date-month-nov-long = November
+date-month-dec-short = Dez
+date-month-dec-long = Dezember
+trending-today = Heute im Trend
+trending-week = Diese Woche im Trend
+trending-month = Diesen Monat im Trend
+trending-choice-today = Heute
+trending-choice-week = Diese Woche
+trending-choice-month = Diesen Monat
+trending-failed = Der Trend für { $period } ließ sich nicht laden.
+trending-updated = Aktualisiert { $age }
+surprise-me = Überrasch mich
+surprise-me-menu = Überrasch mich
+surprise-another = Anderer
+surprise-hint-planning = Öffnet einen zufälligen Titel aus „Geplant“
+surprise-hint-filters = Öffnet einen zufälligen Titel zu diesen Filtern
+surprise-another-hint = Öffnet einen anderen zufälligen Titel an dieser Stelle
+surprise-empty-filters = Keine Titel passen zu diesen Filtern.
+surprise-empty-planning = Die Liste „Geplant“ ist leer.
+surprise-offline = Offline. Für Zufallsvorschläge aus der Suche wird AniList gebraucht.

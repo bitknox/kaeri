@@ -11,6 +11,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · Synkad
 shortcuts-group-lists = Listor
 shortcuts-go-to-section = Gå till en sektion
+shortcuts-episode-ranges = Föregående eller kommande avsnittsintervall
 shortcuts-show = Tangentbordsgenvägar
 shortcuts-close-window = Stäng fönstret
 shortcuts-quit = Avsluta
