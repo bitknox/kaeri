@@ -4,9 +4,19 @@
 //! hayro opens PDFs whose only password is the empty one (an owner password with no user
 //! password); a PDF that needs a password to open is [`BookError::Protected`].
 //!
-//! Opening is bounded in memory and stack but not in time: a damaged cross-reference table
-//! sends hayro through a repair scan, and a crafted file of nested dictionaries makes that scan
-//! cost seconds per megabyte. Open PDFs off the interface thread, where the work can be dropped.
+//! # Time
+//!
+//! Opening and rendering are bounded in memory and stack but not in time. A damaged
+//! cross-reference table sends hayro through a repair scan, and a crafted file of nested
+//! dictionaries makes that scan cost seconds per megabyte (about 12 s for 3.2 MB in an optimised
+//! build). hayro 0.9 has no cancellation or budget hook: no callback runs often enough to stop
+//! it, and nothing can interrupt it from outside. So callers
+//!
+//! - never open or render a PDF on an interface thread;
+//! - run [`Pdf::open`], [`Pdf::render`] and [`Pdf::page_image`] on a worker thread with a time
+//!   budget (a few seconds for open, about one for a page), and when the budget runs out report
+//!   the book as unreadable and drop the result when the worker finishes;
+//! - run at most one such worker per book, so a hostile file cannot pile them up.
 
 use hayro::hayro_syntax::content::ops::TypedInstruction;
 use hayro::hayro_syntax::object::{Dict, Name};
@@ -152,9 +162,6 @@ impl Pdf {
         if dict.get::<Name<'_>>(b"Subtype")?.as_ref() != b"Image" {
             return None;
         }
-        if stream.filters().as_slice() != [Filter::DctDecode] {
-            return None;
-        }
         // A mask, a decode array or an unusual colour space changes what the JPEG's pixels mean.
         for key in [&b"SMask"[..], b"Mask", b"Decode", b"ImageMask"] {
             if dict.contains_key(key) {
@@ -181,8 +188,16 @@ impl Pdf {
         {
             return None;
         }
-        let data = stream.raw_data().into_owned();
-        if data.len() as u64 > self.limits.max_entry_bytes || !data.starts_with(&[0xFF, 0xD8]) {
+        // The JPEG as stored, or under a text encoding some PDF writers wrap it in.
+        let raw = stream.raw_data();
+        let cap = self.limits.max_entry_bytes;
+        let data = match stream.filters().as_slice() {
+            [Filter::DctDecode] => raw.into_owned(),
+            [Filter::Ascii85Decode, Filter::DctDecode] => ascii85(&raw, cap)?,
+            [Filter::AsciiHexDecode, Filter::DctDecode] => ascii_hex(&raw, cap)?,
+            _ => return None,
+        };
+        if data.len() as u64 > cap || !data.starts_with(&[0xFF, 0xD8]) {
             return None;
         }
         Some(PdfImage { data, mime: "image/jpeg", width, height })
@@ -231,6 +246,72 @@ impl Pdf {
     }
 }
 
+/// Decodes ASCII base-85 (PDF's `ASCII85Decode`), up to `cap` bytes.
+fn ascii85(data: &[u8], cap: u64) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(data.len() * 4 / 5);
+    let mut group = [0u8; 5];
+    let mut n = 0;
+    let mut bytes = data.iter().copied().filter(|c| !c.is_ascii_whitespace());
+    if data.starts_with(b"<~") {
+        bytes.next();
+        bytes.next();
+    }
+    for c in bytes {
+        match c {
+            b'~' => break,
+            b'z' if n == 0 => out.extend_from_slice(&[0; 4]),
+            b'!'..=b'u' => {
+                group[n] = c - b'!';
+                n += 1;
+                if n == 5 {
+                    out.extend_from_slice(&base85_word(&group)?.to_be_bytes());
+                    n = 0;
+                }
+            }
+            _ => return None,
+        }
+        if out.len() as u64 > cap {
+            return None;
+        }
+    }
+    if n == 1 {
+        return None;
+    }
+    if n > 1 {
+        group[n..].fill(84);
+        out.extend_from_slice(&base85_word(&group)?.to_be_bytes()[..n - 1]);
+    }
+    Some(out)
+}
+
+fn base85_word(group: &[u8; 5]) -> Option<u32> {
+    group.iter().try_fold(0u32, |acc, &d| acc.checked_mul(85)?.checked_add(u32::from(d)))
+}
+
+/// Decodes PDF's `ASCIIHexDecode`, up to `cap` bytes.
+fn ascii_hex(data: &[u8], cap: u64) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(data.len() / 2);
+    let mut high: Option<u8> = None;
+    for &c in data {
+        let digit = match c {
+            b'>' => break,
+            c if c.is_ascii_whitespace() => continue,
+            c => char::from(c).to_digit(16)? as u8,
+        };
+        match high.take() {
+            Some(h) => out.push(h << 4 | digit),
+            None => high = Some(digit),
+        }
+        if out.len() as u64 > cap {
+            return None;
+        }
+    }
+    if let Some(h) = high {
+        out.push(h << 4);
+    }
+    Some(out)
+}
+
 fn multiply(m: [f64; 6], n: [f64; 6]) -> [f64; 6] {
     [
         m[0] * n[0] + m[1] * n[2],
@@ -266,4 +347,26 @@ fn guard<T>(f: impl FnOnce() -> T) -> Result<T> {
         .map_err(|_| BookError::malformed(Format::Pdf, "the PDF renderer failed"));
     #[cfg(feature = "fuzzing")]
     return Ok(f());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ascii_hex, ascii85};
+
+    #[test]
+    fn ascii85_decodes() {
+        // "Man is" from the usual example, with the end marker and whitespace.
+        assert_eq!(ascii85(b"9jqo^\nBla~>", 100).unwrap(), b"Man is");
+        assert_eq!(ascii85(b"s4IA0@:E^", 100).unwrap(), b"\xff\xd8\xff\xe0abc");
+        assert_eq!(ascii85(b"z~>", 100).unwrap(), [0; 4]);
+        assert_eq!(ascii85(b"<~9jqo^~>", 100).unwrap(), b"Man ");
+        assert!(ascii85(b"9jqo^", 2).is_none());
+        assert!(ascii85(b"s8W-\"", 100).is_none(), "a group past 2^32");
+    }
+
+    #[test]
+    fn ascii_hex_decodes() {
+        assert_eq!(ascii_hex(b"FF d8 F>", 100).unwrap(), [0xFF, 0xD8, 0xF0]);
+        assert!(ascii_hex(b"zz", 100).is_none());
+    }
 }

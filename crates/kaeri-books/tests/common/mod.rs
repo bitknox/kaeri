@@ -485,6 +485,44 @@ fn stream(dict: &str, data: &[u8]) -> Vec<u8> {
 
 /// A PDF whose pages are each one full-page greyscale JPEG, like a scanned comic.
 pub fn pdf_of_jpegs(pages: &[Vec<u8>], width: u32, height: u32) -> Vec<u8> {
+    jpeg_pdf(pages, width, height, Wrap::None)
+}
+
+/// How the JPEGs in [`pdf_of_wrapped_jpegs`] are wrapped in a text filter.
+#[derive(Clone, Copy)]
+pub enum Wrap {
+    None,
+    Ascii85,
+    Hex,
+}
+
+/// Like [`pdf_of_jpegs`], with each JPEG behind ASCII85 or hex, as some scanners write them.
+pub fn pdf_of_wrapped_jpegs(pages: &[Vec<u8>], width: u32, height: u32, wrap: Wrap) -> Vec<u8> {
+    jpeg_pdf(pages, width, height, wrap)
+}
+
+fn ascii85(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for chunk in data.chunks(4) {
+        let mut word = [0u8; 4];
+        word[..chunk.len()].copy_from_slice(chunk);
+        let mut v = u32::from_be_bytes(word);
+        if chunk.len() == 4 && v == 0 {
+            out.push(b'z');
+            continue;
+        }
+        let mut digits = [0u8; 5];
+        for d in digits.iter_mut().rev() {
+            *d = (v % 85) as u8 + b'!';
+            v /= 85;
+        }
+        out.extend_from_slice(&digits[..chunk.len() + 1]);
+    }
+    out.extend_from_slice(b"~>");
+    out
+}
+
+fn jpeg_pdf(pages: &[Vec<u8>], width: u32, height: u32, wrap: Wrap) -> Vec<u8> {
     let n = pages.len();
     // 1 catalog, 2 pages, 3 info, then per page: page, content, image.
     let mut objects = vec![
@@ -505,11 +543,19 @@ pub fn pdf_of_jpegs(pages: &[Vec<u8>], width: u32, height: u32) -> Vec<u8> {
             .into_bytes(),
         );
         objects.push(stream("", format!("q {width} 0 0 {height} 0 0 cm /Im0 Do Q").as_bytes()));
+        let (filter, data) = match wrap {
+            Wrap::None => ("/DCTDecode", jpeg.clone()),
+            Wrap::Ascii85 => ("[/ASCII85Decode /DCTDecode]", ascii85(jpeg)),
+            Wrap::Hex => (
+                "[/AHx /DCT]",
+                jpeg.iter().map(|b| format!("{b:02X}\n")).collect::<String>().into_bytes(),
+            ),
+        };
         objects.push(stream(
             &format!(
-                "/Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /DCTDecode"
+                "/Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter {filter}"
             ),
-            jpeg,
+            &data,
         ));
     }
     objects[1] = format!("<< /Type /Pages /Kids [{kids}] /Count {n} >>").into_bytes();

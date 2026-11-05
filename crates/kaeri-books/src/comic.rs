@@ -14,6 +14,8 @@ use crate::{BookError, Format, Limits, Result, mime, natural, path};
 pub struct Page {
     /// The entry's normalised name, or the file's name in a folder.
     pub name: String,
+    /// The type the name says. The bytes may disagree; [`mime::sniff_image`] on what
+    /// [`Comic::read_page`] returns says what they are.
     pub mime: &'static str,
     /// The declared size in bytes.
     pub size: u64,

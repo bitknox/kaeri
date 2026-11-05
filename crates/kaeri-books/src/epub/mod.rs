@@ -20,6 +20,7 @@ use crate::{BookError, Format, Limits, Result, mime, path};
 
 pub use images::ImagePage;
 pub use nav::TocEntry;
+pub(crate) use nav::html_entities;
 pub use opf::{
     Creator, Direction, Layout, ManifestItem, Metadata, Package, PageSpread, Rendition, Series,
     SpineItem,

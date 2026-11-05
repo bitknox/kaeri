@@ -9,6 +9,11 @@
 //!
 //! [`open`] sniffs the file's first bytes and opens it as the right [`Book`]. The readers can
 //! also be used one by one: [`Archive`], [`Comic`], [`Epub`] and [`Pdf`].
+//!
+//! Everything here is synchronous and blocking. Archives, EPUBs and comics finish in time
+//! proportional to what they decode, which the limits cap. PDFs do not: a crafted PDF can keep
+//! the parser busy for minutes, and the parser cannot be cancelled, so PDFs are opened and
+//! rendered on a worker with a time budget. The [`pdf`] module says how.
 
 pub mod archive;
 pub mod comic;
@@ -21,6 +26,7 @@ pub mod natural;
 pub mod path;
 #[cfg(feature = "pdf")]
 pub mod pdf;
+pub mod write;
 mod xml;
 
 use std::fs::File;
@@ -112,12 +118,24 @@ pub fn open_source(
     let mut head = Vec::with_capacity(SNIFF_BYTES);
     (&mut source).take(SNIFF_BYTES as u64).read_to_end(&mut head)?;
     source.seek(SeekFrom::Start(0))?;
-    let unsupported = || BookError::Unsupported {
-        what: name
-            .and_then(path::extension)
-            .map_or_else(|| "a file of unknown type".to_owned(), |e| format!(".{e} files")),
+    // Content that matches no format: a damaged book when the name says it is one (an empty or
+    // truncated download), otherwise a file Kaeri does not read.
+    let unrecognised = || {
+        let ext = name.and_then(path::extension);
+        match ext.as_deref().and_then(claimed_format) {
+            Some(format) if head.is_empty() => {
+                BookError::malformed(format, "the file is empty")
+            }
+            Some(format) => BookError::malformed(format, "the content is not that format"),
+            None => BookError::Unsupported {
+                what: ext.map_or_else(
+                    || "a file of unknown type".to_owned(),
+                    |e| format!(".{e} files"),
+                ),
+            },
+        }
     };
-    match sniff(&head).ok_or_else(unsupported)? {
+    match sniff(&head).ok_or_else(unrecognised)? {
         Sniffed::Zip => {
             let mut archive = Archive::open(source, ArchiveKind::Zip, limits)?;
             if epub::looks_like_epub(&mut archive) {
@@ -151,6 +169,18 @@ pub fn open_source(
         #[cfg(not(feature = "pdf"))]
         Sniffed::Pdf => Err(BookError::Unsupported { what: "PDF in this build".to_owned() }),
     }
+}
+
+/// The format a file's extension claims.
+fn claimed_format(ext: &str) -> Option<Format> {
+    Some(match ext {
+        "cbz" | "zip" => Format::Cbz,
+        "cbr" | "rar" => Format::Cbr,
+        "cb7" | "7z" => Format::Cb7,
+        "epub" | "kepub" => Format::Epub,
+        "pdf" => Format::Pdf,
+        _ => return None,
+    })
 }
 
 /// Opens a book held in memory.

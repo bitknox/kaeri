@@ -31,6 +31,18 @@ fn scanned_pages_pass_through_as_jpeg() {
 }
 
 #[test]
+fn jpegs_behind_a_text_filter_pass_through() {
+    let jpegs: Vec<Vec<u8>> = (0..2).map(|i| jpeg(60, 80, i)).collect();
+    for wrap in [Wrap::Ascii85, Wrap::Hex] {
+        let pdf = pdf_book(pdf_of_wrapped_jpegs(&jpegs, 60, 80, wrap));
+        for (i, j) in jpegs.iter().enumerate() {
+            let img = pdf.page_image(i).expect("passthrough");
+            assert_eq!(&img.data, j, "page {i} is the original file");
+        }
+    }
+}
+
+#[test]
 fn scanned_page_also_renders() {
     let pdf = pdf_book(pdf_of_jpegs(&[jpeg(60, 80, 1)], 60, 80));
     let page = pdf.render(0, 120, 120).unwrap();

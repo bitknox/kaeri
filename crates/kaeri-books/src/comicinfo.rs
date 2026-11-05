@@ -53,6 +53,62 @@ impl ComicInfo {
         self.manga == Some(MangaFlag::YesAndRightToLeft)
     }
 
+    /// Writes the metadata as ComicInfo.xml, elements in the schema's order.
+    pub fn to_xml(&self) -> String {
+        use crate::write::{escape_attr, escape_text};
+        let mut out = String::from(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ComicInfo xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n",
+        );
+        let mut el = |name: &str, value: Option<String>| {
+            if let Some(v) = value {
+                out += &format!("  <{name}>{}</{name}>\n", escape_text(&v));
+            }
+        };
+        let yes_no = |b: bool| if b { "Yes" } else { "No" }.to_owned();
+        el("Title", self.title.clone());
+        el("Series", self.series.clone());
+        el("Number", self.number.clone());
+        el("Count", self.count.map(|v| v.to_string()));
+        el("Volume", self.volume.clone());
+        el("Summary", self.summary.clone());
+        el("Year", self.year.map(|v| v.to_string()));
+        el("Month", self.month.map(|v| v.to_string()));
+        el("Day", self.day.map(|v| v.to_string()));
+        el("Writer", self.writer.clone());
+        el("Penciller", self.penciller.clone());
+        el("Publisher", self.publisher.clone());
+        el("Genre", self.genre.clone());
+        el("Tags", self.tags.clone());
+        el("Web", self.web.clone());
+        el("PageCount", self.page_count.map(|v| v.to_string()));
+        el("LanguageISO", self.language.clone());
+        el("BlackAndWhite", self.black_and_white.map(yes_no));
+        el("Manga", self.manga.map(|m| format!("{m:?}")));
+        el("AgeRating", self.age_rating.clone());
+        if !self.pages.is_empty() {
+            out += "  <Pages>\n";
+            for p in &self.pages {
+                out += &format!("    <Page Image=\"{}\"", p.image);
+                if let Some(k) = p.kind {
+                    out += &format!(" Type=\"{}\"", escape_attr(&format!("{k:?}")));
+                }
+                if p.double_page {
+                    out += " DoublePage=\"true\"";
+                }
+                if let Some(w) = p.width {
+                    out += &format!(" ImageWidth=\"{w}\"");
+                }
+                if let Some(h) = p.height {
+                    out += &format!(" ImageHeight=\"{h}\"");
+                }
+                out += "/>\n";
+            }
+            out += "  </Pages>\n";
+        }
+        out += "</ComicInfo>\n";
+        out
+    }
+
     /// The page entry describing the page at `index` in reading order, if the file lists one.
     pub fn page(&self, index: usize) -> Option<&ComicPage> {
         self.pages.iter().find(|p| p.image as usize == index)
