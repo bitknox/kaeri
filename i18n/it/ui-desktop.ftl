@@ -27,3 +27,5 @@ updates-restart = Riavvia per aggiornare
 tv-problem-full = La TV ha già il massimo di { -device-pl } abbinati. Rimuovine uno nelle impostazioni della TV, alla voce Telecomandi.
 tv-problem-unpaired = La TV non riconosce più questo { -device }. Abbinalo di nuovo.
 player-position-spoken = { $position } di { $duration }
+names-pair = { $first } e { $last }
+names-list = { $list }, { $next }

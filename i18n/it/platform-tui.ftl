@@ -7,5 +7,6 @@ status-reloading-sources = Ricarico le { -source-pl }…
 pin-unavailable = { $name } è fissata per questo titolo ma non è disponibile, quindi si usano le altre { -source-pl }.
 tui-together-section = Insieme
 tui-together-join-prompt = link o codice
+tui-together-chat-hidden-line = Messaggi e reazioni restano fuori dal player in ogni party.
 tui-together-not-a-link = Non è un link o un codice di una { -watch-party }.
 tui-together-recent-alone = Episodio { $episode } · { $when }

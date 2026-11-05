@@ -69,3 +69,4 @@ tv-cast-mute = Disattiva audio
 tv-cast-unmute = Riattiva audio
 tv-cast-volume-on-tv = Impostato sulla TV
 tv-cast-up-next-in = { -up-next-cap } · si avvia tra { $seconds } s
+tv-forget-note = Dimentica una TV qui e anche lei dimentica questo { -device }.

@@ -1,5 +1,6 @@
 action-try-again = Riprova
 action-cancel = Annulla
+action-go = Vai
 action-not-now = Non ora
 duration-days = { $days } g
 duration-hours-minutes = { $hours } h { $minutes } min

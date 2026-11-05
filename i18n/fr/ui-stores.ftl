@@ -1,6 +1,6 @@
 stores-joined = Rejoint
 stores-empty-title = Aucune { -plugin-store-pl } pour l'instant
-stores-empty-detail = { -plugin-store-cap-pl } sont gérées par des personnes que vous connaissez. Rejoignez-en une avec le lien d'invitation que son propriétaire vous envoie.
+stores-empty-detail = Les { -plugin-store-pl } contiennent des { -plugin-pl } signés et donnent à chaque { -device } son propre jeton. Rejoignez-en une avec le lien d’invitation que son propriétaire vous envoie.
 stores-intro = { -plugin-cap-pl } ajoutent des { -source-pl }. Chacun liste les serveurs qu'il contacte avant que vous l'installiez.
 stores-not-from-app = Les { -plugin-pl } viennent du propriétaire de la { -plugin-store }, pas de { -app-name }. Vous pouvez quitter une { -plugin-store } à tout moment.
 stores-join-owner-responsible = { $owner } gère cette { -plugin-store } et a choisi ses { -plugin-pl }. { -app-name } ne les a ni créés, ni vérifiés, ni approuvés.
@@ -180,7 +180,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 notice-open-stores = Ouvrir les { -plugin-store-pl }
-stores-what-is = Une { -plugin-store } est un petit serveur géré par une personne pour celles qu’elle invite. Elle propose des { -source-pl } sous forme de { -plugin-pl }. { -app-name } ne gère aucune { -plugin-store } et n’en liste aucune : vous en rejoignez une avec un lien d’invitation de son propriétaire.
+stores-what-is = Une { -plugin-store } est un petit serveur qui contient des { -plugin-pl } signés et donne à chaque { -device } son propre jeton. Elle propose des { -source-pl } sous forme de { -plugin-pl }. { -app-name } ne gère aucune { -plugin-store } et n’en liste aucune : vous en rejoignez une avec un lien d’invitation de son propriétaire.
 stores-what-is-link = Qu’est-ce qu’une { -store } ?
 stores-invite-rules = Un lien d’invitation est valable une fois, pour une personne, pendant sept jours. Demandez-en un nouveau au propriétaire de la { -plugin-store } si le vôtre a expiré.
 stores-qr-label = Code QR du lien d’invitation

@@ -27,3 +27,5 @@ updates-restart = Redémarrer
 tv-problem-full = Cette TV a atteint le nombre maximal d’{ -device-pl } appairés. Retirez-en un dans les réglages de la TV, sous Télécommandes.
 tv-problem-unpaired = La TV ne connaît plus cet { -device }. Appairez-la de nouveau.
 player-position-spoken = { $position } sur { $duration }
+names-pair = { $first } et { $last }
+names-list = { $list }, { $next }

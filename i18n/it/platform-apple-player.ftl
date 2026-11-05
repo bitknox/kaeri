@@ -42,3 +42,4 @@ player-title-episode-line = { $title } · { $episode }
 player-announce-titled = { $line }, { $title }
 player-sound = Suono
 player-loading-announce = Avvio
+menu-say-something = Scrivi qualcosa…
