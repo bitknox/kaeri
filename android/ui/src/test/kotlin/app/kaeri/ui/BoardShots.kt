@@ -154,7 +154,13 @@ class BoardShots {
     fun phone_join_failed_not_allowed() = shoot("phone-join-failed-not-allowed", WATCHING) { kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "join-failed-not-allowed") } }
 
     /** One frame of the sign-in wait board: Devices on [scene], with [state] staged as the Fixtures app stages it. */
-    private fun signInWait(name: String, scene: String, state: String?) =
+    private fun signInWait(name: String, scene: String, state: String?): Unit {
+        // A phone people know by name, not the test runtime's.
+        android.provider.Settings.Global.putString(context.contentResolver, "device_name", "Rowan's phone")
+        shootWait(name, scene, state)
+    }
+
+    private fun shootWait(name: String, scene: String, state: String?) =
         shoot(name, scene, page = "settings/devices", screen = true) {
             if (state != null) kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, state) }
         }

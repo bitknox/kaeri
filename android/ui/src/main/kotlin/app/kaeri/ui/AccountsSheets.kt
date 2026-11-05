@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import app.kaeri.design.Motion
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -80,7 +83,7 @@ import app.kaeri.store.CodeCountdown
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SettingsSheet(onDismiss: () -> Unit, tall: Boolean = false, holdsInput: Boolean = false, dismissible: Boolean = true, content: @Composable () -> Unit) {
+internal fun SettingsSheet(onDismiss: () -> Unit, tall: Boolean = false, full: Boolean = false, holdsInput: Boolean = false, dismissible: Boolean = true, content: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
     // A sheet that must stay (a set-up past the point it can be stopped, a key not yet seen) says no to every way out.
     val allowed = rememberUpdatedState(dismissible)
@@ -98,6 +101,8 @@ internal fun SettingsSheet(onDismiss: () -> Unit, tall: Boolean = false, holdsIn
         Column(
             Modifier
                 .fillMaxWidth()
+                .animateContentSize(Motion.standard())
+                .then(if (full) Modifier.fillMaxHeight() else Modifier)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp)

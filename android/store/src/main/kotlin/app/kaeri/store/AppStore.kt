@@ -61,6 +61,7 @@ import app.kaeri.engine.model.InviteUses
 import app.kaeri.engine.model.JobId
 import app.kaeri.engine.model.LibrarySegment
 import app.kaeri.engine.model.NoticeKind
+import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.Release
 import app.kaeri.engine.model.ReleaseAsset
 import app.kaeri.engine.model.SearchQuery
@@ -1354,7 +1355,12 @@ class AppStore(
             is Event.SyncInvite -> sync.invite(event.code, event.port.toInt(), event.seconds.toInt())
             is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
             is Event.SyncSignIn -> syncSignIn(event.service, event.step)
-            is Event.SyncProblem -> sync.problem(event.v1)
+            is Event.SyncProblem -> {
+                sync.problem(event.v1)
+                // After the sign-in worked, the sheet says a fixed line; the engine's own words go to Messages.
+                val other = event.v1 as? SyncProblem.Other
+                if (other != null && sync.passedSignIn) notices.log(EngineNotice(kind = NoticeKind.ALERT, text = other.v1, hint = null))
+            }
             is Event.SyncPairFailed -> sync.pairFailed(event.problem, event.device)
             is Event.SyncSignInsCopied -> sync.copied(SignInsCopied(event.device, event.trackers, event.clouds, event.lacking))
             is Event.SyncStoreJoined -> sync.storeJoin(StoreJoin.Joined(event.device, event.name))

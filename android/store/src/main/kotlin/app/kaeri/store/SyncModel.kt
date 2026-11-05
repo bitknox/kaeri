@@ -109,6 +109,11 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     var starting: app.kaeri.engine.model.SyncFolderSpec? = null
         private set
 
+    private val _lastCode = MutableStateFlow<Pair<SyncFolderKind, SyncSignInStep.Code>?>(null)
+
+    /** The last code a device sign-in showed, kept so a refusal or lapse can stay on that code's page. */
+    val lastCode: StateFlow<Pair<SyncFolderKind, SyncSignInStep.Code>?> = _lastCode.asStateFlow()
+
     /** A set-up or a change of folder is under way: begun, and neither failed, cancelled nor come through. */
     var working: Boolean = false
         private set
@@ -134,6 +139,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         passedSignIn = false
         _keyInSheet.value = false
         _problem.value = null
+        _lastCode.value = null
         _pairFailed.value = null
     }
 
@@ -142,6 +148,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         working = false
         _settingUp.value = false
         _signIn.value = null
+        _lastCode.value = null
     }
 
     private val _name = MutableStateFlow<String?>(null)
@@ -182,6 +189,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         if (step is SyncSignInStep.Finishing) _settingUp.value = true
         if (step is SyncSignInStep.Finishing || step is SyncSignInStep.Connecting) passedSignIn = true
         if (step != null) _problem.value = null
+        if (step is SyncSignInStep.Code) _lastCode.value = service to step else if (step != null) _lastCode.value = null
     }
 
     internal fun problem(problem: SyncProblem) {
@@ -251,6 +259,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     fun problemSeen() {
         _pairFailed.value = null
         _problem.value = null
+        _lastCode.value = null
     }
 
     /** The pairing code was stopped or has run out. */

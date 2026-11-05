@@ -112,6 +112,7 @@ object FixtureSync {
             "onedrive-code-denied" -> {
                 store.apply(Event.SyncSignIn(SyncFolderKind.ONE_DRIVE, SyncSignInStep.Code("B4NQ7XLK", CODE_URL, (now + 899).toLong(), 5u)))
                 delay(600)
+                // The refusal comes a frame after the code, as it does from the engine.
                 store.apply(Event.SyncProblem(SyncProblem.SignInDenied(SyncFolderKind.ONE_DRIVE)))
             }
             "key" -> store.sync.askKey(spec)
