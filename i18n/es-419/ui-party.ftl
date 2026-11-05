@@ -185,3 +185,49 @@ party-in-the-room = En la sala
 party-here-count = { $count } aquí
 together-recent-note = Las últimas diez, guardadas en este { -device }
 party-pick-continue = { -proceed-cap }
+party-chat-field = Di algo
+party-chat-send = Enviar
+party-chat-title = Chat
+party-chat-wait = Espera { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Espera un segundo
+    [many] Espera { $seconds } de segundos
+   *[other] Espera { $seconds } segundos
+ }
+party-chat-more = { $count } más en el chat
+party-chat-off = El servidor de esta sala tiene el chat desactivado
+party-chat-privacy = Los mensajes pasan por el servidor de la sala. { -app-name } no guarda ninguno.
+party-chat-hidden = El chat está oculto
+party-chat-hidden-line = Ocultar chat está activado en Ajustes, en Reproducción.
+party-chat-show = Mostrar chat
+settings-hide-chat = Ocultar chat en { -watch-party-pl }
+settings-hide-chat-line = Las líneas, las reacciones y sus marcas en la barra de reproducción no aparecen en el video, y el campo desaparece. La lista de personas sigue mostrando quién está en la sala.
+party-mute = Silenciar a { $name }
+party-unmute = Dejar de silenciar a { $name }
+party-unmute-short = Mostrar
+party-member-muted = Silenciado
+party-muted-line = { $name } está silenciado
+party-chat-not-sent = No se envió
+party-chat-retry = Reintentar
+party-react = Reaccionar
+party-react-laugh = Risa
+party-react-gasp = Asombro
+party-react-clap = Aplauso
+party-react-cry = Llanto
+party-reacted-laugh = Risa de { $name }
+party-reacted-gasp = Asombro de { $name }
+party-reacted-clap = Aplauso de { $name }
+party-reacted-cry = Llanto de { $name }
+party-reacted-at = { $line } a los { $time }
+party-names-two = { $first } y { $second }
+party-names-three = { $first }, { $second } y { $third }
+party-names-others = { $first }, { $second } y { $count } más
+party-chat-you = Tú
+party-sends-as = Envía como { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } dice { $message }
+party-chat-left = { $count ->
+    [one] Queda { $count } carácter
+    [many] Quedan { $count } de caracteres
+   *[other] Quedan { $count } caracteres
+ }

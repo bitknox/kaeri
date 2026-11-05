@@ -27,3 +27,5 @@ updates-restart = Reiniciar y actualizar
 tv-problem-full = La TV tiene tantos { -device-pl } vinculados como puede guardar. Quita uno en los ajustes de la TV, en Controles remotos.
 tv-problem-unpaired = La TV ya no conoce este { -device }. Vincúlala de nuevo.
 player-position-spoken = { $position } de { $duration }
+names-pair = { $first } y { $last }
+names-list = { $list }, { $next }

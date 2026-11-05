@@ -7,5 +7,6 @@ status-reloading-sources = Recargando { -source-pl }…
 pin-unavailable = { $name } está fijada para este título pero no está disponible, así que se usan las otras { -source-pl }.
 tui-together-section = Juntos
 tui-together-join-prompt = enlace o código
+tui-together-chat-hidden-line = Las líneas y las reacciones no aparecen en el reproductor en ninguna sala.
 tui-together-not-a-link = Eso no es un enlace ni un código de sala.
 tui-together-recent-alone = Episodio { $episode } · { $when }

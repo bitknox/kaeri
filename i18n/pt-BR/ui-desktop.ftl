@@ -27,3 +27,5 @@ updates-restart = Reiniciar para atualizar
 tv-problem-full = A TV já tem o máximo de { -device-pl } pareados. Remova um nas configurações dela, em Controles remotos.
 tv-problem-unpaired = A TV não reconhece mais este { -device }. Pareie de novo.
 player-position-spoken = { $position } de { $duration }
+names-pair = { $first } e { $last }
+names-list = { $list }, { $next }
