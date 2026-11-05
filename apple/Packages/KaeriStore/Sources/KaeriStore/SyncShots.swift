@@ -3,6 +3,9 @@
 
 import Foundation
 import KaeriKit
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// The states `-KaeriSync` stages. Settings opens at Devices with `-KaeriPane devices`.
 ///
@@ -64,7 +67,7 @@ extension SyncModel {
     private static func devices(now: Int64, paused: Bool = false, remoteOff: Bool = false) -> [SyncDeviceView] {
         [
             SyncDeviceView(id: "me", name: DeviceName.this, thisDevice: true, lastSeen: now),
-            SyncDeviceView(id: "kim-phone", name: "Kim’s iPhone", thisDevice: false, lastSeen: now - 20, kind: .phone), // i18n-skip
+            SyncDeviceView(id: "kim-phone", name: DeviceName.phone, thisDevice: false, lastSeen: now - 20, kind: .phone),
             SyncDeviceView(
                 id: "living-room", name: "Living room TV", thisDevice: false, lastSeen: now - 120, kind: .tv, // i18n-skip
                 paused: false, remoteKey: Self.tvKey, remoteOff: remoteOff),
@@ -196,22 +199,22 @@ extension SyncModel {
             sheet = .pairShow
             Task { [weak self] in
                 try? await Task.sleep(for: .seconds(4))
-                self?.stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+                self?.stage(pair: .paired(DeviceName.phone))
             }
         case .firstMotion:
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
             Task { [weak self] in
                 try? await Task.sleep(for: .seconds(4))
-                self?.stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+                self?.stage(pair: .paired(DeviceName.phone))
             }
         case .firstSetup:
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
         case .firstPaired:
-            stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+            stage(pair: .paired(DeviceName.phone))
         case .firstPairedStore:
-            stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+            stage(pair: .paired(DeviceName.phone))
         case .pairWrong:
-            stage(pair: .failed(.code), device: "Kim’s iPhone") // i18n-skip
+            stage(pair: .failed(.code), device: DeviceName.phone)
             sheet = .pairEnter
         case .pairWorking:
             stage(pair: .working)
@@ -241,7 +244,12 @@ enum DeviceName {
         #if os(macOS)
         "Kim’s Mac" // i18n-skip
         #else
-        "Kim’s iPad" // i18n-skip
+        MainActor.assumeIsolated { UIDevice.current.userInterfaceIdiom == .phone } ? "Kim’s iPhone" : "Kim’s iPad" // i18n-skip
         #endif
+    }
+
+    /// The phone in the group, named so that it is never this device.
+    static var phone: String {
+        this == "Kim’s iPhone" ? "Sam’s phone" : "Kim’s iPhone" // i18n-skip
     }
 }

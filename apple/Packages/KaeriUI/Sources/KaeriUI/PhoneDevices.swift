@@ -136,19 +136,26 @@ struct PhoneDevicesPage: View {
         Section {
             if let folder = sync.status.folder {
                 let line = SyncWords.cloud(sync)
+                let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
+                let needsSignIn = line.state == .signedOut || sync.status.problem.map(CloudRow.isSignIn) == true
                 VStack(alignment: .leading, spacing: 4) {
                     Text(SyncModel.name(folder.kind)).font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
                     HStack(spacing: 6) {
                         StateDot(state: line.state)
                         Text(line.text)
-                        if let account = folder.account { Text("· " + account).lineLimit(1) }
+                        if let account = folder.account, !needsSignIn { Text("· " + account).lineLimit(1) }
                     }
                     .font(.ui(13)).foregroundStyle(.haze)
+                    if let account = folder.account, needsSignIn {
+                        Text(account).font(.ui(13)).foregroundStyle(.haze).lineLimit(1)
+                    }
                 }
                 .listRowBackground(Palette.raised)
-                Button(L.cloudSyncNow) { sync.syncNow() }.listRowBackground(Palette.raised)
+                if !(needsSignIn && cloud) {
+                    Button(L.cloudSyncNow) { sync.syncNow() }.listRowBackground(Palette.raised)
+                }
                 Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
-                if [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind) {
+                if cloud {
                     if line.state == .signedOut || line.state == .problem {
                         Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
                             .listRowBackground(Palette.raised)

@@ -137,7 +137,7 @@ struct CloudPickerSheet: View {
     private func list(_ sync: SyncModel) -> some View {
         let current = sync.switching ? sync.status.folder?.kind : nil
         SyncSheetFrame(title: L.cloudPickTitle, cancel: { sync.close() }) {
-            SyncSection(footer: current.map { L.cloudSwitchFoot(service: SyncModel.name($0)) + " " + L.cloudPickFoot } ?? L.cloudPickFoot) {
+            SyncSection {
                 ForEach(sync.offered, id: \.service) { view in
                     let inUse = current == view.service
                     SyncChoice(title: SyncModel.name(view.service), line: inUse ? L.cloudInUse : line(view.service), glyph: glyph(view.service)) {
@@ -150,7 +150,7 @@ struct CloudPickerSheet: View {
                     }
                 }
             }
-            SyncSection(header: L.cloudOther) {
+            SyncSection(header: L.cloudOther, footer: current.map { L.cloudSwitchFoot(service: SyncModel.name($0)) + " " + L.cloudPickFoot } ?? L.cloudPickFoot) {
                 SyncChoice(title: L.cloudWebdav, line: current == .webDav ? L.cloudInUse : L.cloudWebdavLine, glyph: "server.rack") {
                     sync.sheet = .webDav
                 }
@@ -194,7 +194,7 @@ private struct CloudStepView: View {
 
     var body: some View {
         let sync = store.sync
-        let busy = step.underWay && !waiting
+        let busy = sync.cloudCancelDimmed || (step.underWay && !waiting)
         SyncSheetFrame(title: title, cancel: { sync.cancelCloudStep() }, cancelDimmed: busy) {
             switch step {
             case .waiting(let kind):
@@ -218,6 +218,9 @@ private struct CloudStepView: View {
                     Spacer(minLength: 0)
                     SyncButton(title: L.actionCancel) { sync.cancelCloudStep() }
                 }
+                // The frame's own 10 pt between its spacer and this row, so Open the page again
+                // starts at the content's edge.
+                .padding(.leading, -10)
                 .frame(maxWidth: .infinity)
                 .layoutPriority(1)
             case .failed:
@@ -277,7 +280,7 @@ private struct CloudStepView: View {
         case .signInDenied: return L.cloudErrDeniedShort(service: name)
         case .signInExpired: return L.cloudErrTimeout
         case .unreachable: return L.cloudErrOffline(service: name)
-        default: return folder ? L.cloudErrTitle(service: name) : L.cloudErrSigninOther(service: name)
+        default: return folder ? L.cloudErrSetupOther(service: name) : L.cloudErrSigninOther(service: name)
         }
     }
 }
@@ -474,7 +477,7 @@ struct RecoveryKeySheet: View {
         let key = sync.recoveryKey ?? ""
         let groups = groupedKey(key)
         SyncSheetFrame(title: L.rkeyTitle) {
-            SyncNote(text: L.rkeyLine)
+            SyncNote(text: L.rkeyLine).listRowSeparator(.hidden)
             keyCard(groups)
             SyncSection(footer: sync.keyCameFromDevices ? nil : L.rkeyAgain(kind: Device.name)) {
                 SyncChoice(title: copied ? L.actionDone : L.rkeyCopy) {

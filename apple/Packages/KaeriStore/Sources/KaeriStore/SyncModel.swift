@@ -160,7 +160,7 @@ public final class SyncModel {
     @ObservationIgnored private var settleTask: Task<Void, Never>?
     @ObservationIgnored private var syncingTask: Task<Void, Never>?
     /// The step the engine is at, which `cloudStep` shows once its time comes.
-    @ObservationIgnored private var cloudTarget: CloudStep?
+    private var cloudTarget: CloudStep?
     @ObservationIgnored private var cloudShownAt: ContinuousClock.Instant?
     @ObservationIgnored private var cloudTask: Task<Void, Never>?
 
@@ -300,6 +300,15 @@ public final class SyncModel {
             aim(.failed(service, .signInDenied(service: service), folder: false))
         } else {
             problem = .signInDenied(service: service)
+        }
+    }
+
+    /// The step aimed at is past the page's answer, so Cancel can't stop it: dimmed at once, while
+    /// the step shown may still be the wait.
+    public var cloudCancelDimmed: Bool {
+        switch cloudTarget {
+        case .connecting?, .settingUp?: true
+        default: false
         }
     }
 

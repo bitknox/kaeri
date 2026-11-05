@@ -90,6 +90,13 @@ struct DeviceNameField: View {
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Palette.amber : Palette.glassRule, lineWidth: 1))
             .focused($focused)
             .onAppear { draft = current }
+            #if os(macOS)
+            // The pane opens with nothing focused: the first responder the window picks is let go.
+            .task {
+                try? await Task.sleep(for: .milliseconds(80))
+                if focused { focused = false }
+            }
+            #endif
             .onChange(of: current) { draft = current }
             .onSubmit(commit)
             .onChange(of: focused) { if !focused { commit() } }
@@ -147,6 +154,7 @@ struct YourDevicesGroup: View {
                             Image(systemName: "ellipsis").foregroundStyle(.haze)
                         }
                         .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                        .tint(.haze)
                         .accessibilityLabel(device.name)
                     }
                 }
@@ -196,8 +204,12 @@ struct CloudFolderGroup: View {
             }
         }
         .alert(L.cloudRemoveTitle(service: service), isPresented: Binding(get: { sync.removingFolder }, set: { sync.removingFolder = $0 })) {
+            #if os(macOS)
             Button(L.actionCancel, role: .cancel) {}
                 .keyboardShortcut(.defaultAction)
+            #else
+            Button(L.actionCancel, role: .cancel) {}
+            #endif
             Button(L.cloudRemoveAction, role: .destructive) { sync.removeFolder() }
         } message: {
             Text(L.cloudRemoveLine(kind: Device.name, service: service))
@@ -214,6 +226,7 @@ struct CloudRow: View {
         let sync = store.sync
         let line = SyncWords.cloud(sync)
         let dimmed = sync.settingUpShown
+        let signedOut = line.state == .signedOut
         TimelineView(.periodic(from: .now, by: 30)) { _ in
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -223,9 +236,12 @@ struct CloudRow: View {
                     HStack(spacing: 6) {
                         StateDot(state: line.state)
                         Text(line.text).font(.mac(12)).foregroundStyle(.haze)
-                        if let account = folder.account, !dimmed {
+                        if let account = folder.account, !dimmed, !signedOut {
                             Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                         }
+                    }
+                    if let account = folder.account, !dimmed, signedOut {
+                        Text(account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                     }
                 }
                 .macLineHeight(16)
@@ -267,6 +283,7 @@ struct CloudRow: View {
             Image(systemName: "ellipsis").foregroundStyle(.haze)
         }
         .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .tint(.haze)
         #if os(iOS)
         .frame(minWidth: 34, minHeight: 34)
         #endif
@@ -282,7 +299,7 @@ struct CloudRow: View {
         #endif
     }
 
-    private static func isSignIn(_ problem: SyncProblem) -> Bool {
+    static func isSignIn(_ problem: SyncProblem) -> Bool {
         if case .signInNeeded = problem { return true }
         return false
     }
