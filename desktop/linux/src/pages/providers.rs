@@ -16,8 +16,8 @@ use kaeri_model::{
     servers::ServerCommand,
     settings::SettingKey,
     sources::{
-        HoldReason, ProviderOrigin, ProviderRow, SourceSection, has_no_sources, order_with_source_moved,
-        source_groups,
+        HoldReason, ProviderOrigin, ProviderRow, SourceSection, has_no_sources,
+        order_with_source_moved, source_groups,
     },
 };
 
