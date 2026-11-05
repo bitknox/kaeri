@@ -20,3 +20,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Altyazı stili sıfırlandı
 crash-notice = { -app-name } bir sorun nedeniyle kapandı.
 crash-notice-tv = { -app-name } bir sorun nedeniyle kapandı. Ayarlar, Hakkında bölümünden bildirebilirsiniz.
+notice-surprise-empty-filters = Bu filtrelere uyan başlık yok.
+notice-surprise-empty-planning = Planlama boş.
+notice-surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.
+notice-surprise-failed = Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.

@@ -11,6 +11,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · Eşitlendi
 shortcuts-group-lists = Listeler
 shortcuts-go-to-section = Bir bölüme git
+shortcuts-episode-ranges = Önceki veya sonraki bölüm aralığı
 shortcuts-show = Klavye kısayolları
 shortcuts-close-window = Pencereyi kapat
 shortcuts-quit = Uygulamadan çık

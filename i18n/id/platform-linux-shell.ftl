@@ -10,6 +10,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · Tersinkron
 shortcuts-group-lists = Daftar
 shortcuts-go-to-section = Buka bagian dengan nomor
+shortcuts-episode-ranges = Rentang episode sebelumnya atau selanjutnya
 shortcuts-show = Pintasan keyboard
 shortcuts-close-window = Tutup jendela
 shortcuts-quit = Keluar

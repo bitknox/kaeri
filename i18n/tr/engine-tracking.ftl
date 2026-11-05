@@ -28,6 +28,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Oturum kapatılamadı: { $tracker }. Yeniden deneyin. { $reason }
 notice-not-saved-because = Bu ayar kaydedilemedi. { $cause }
+notice-proxy-saved = Torrent trafiği artık proxy üzerinden gidiyor.
+notice-proxy-removed = Torrent'ler artık proxy olmadan doğrudan bağlanıyor.
+notice-proxy-not-checked = Proxy denetlenemedi. { $cause }
 notice-proxy-password-not-kept = Vekil sunucu parolası saklanamadı. Kaydetmeyi denemek için yeniden girin. { $reason }
 notice-show-setting-refused = Bu ayar kaydedilemedi. { $value }, { $setting } için geçerli bir değer değil.
 notice-show-not-reset = Bu dizinin ayarları sıfırlanamadı. { $reason }

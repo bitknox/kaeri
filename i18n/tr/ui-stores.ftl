@@ -1,6 +1,6 @@
 stores-joined = Katıldı
 stores-empty-title = Henüz { -plugin-store-pl } yok
-stores-empty-detail = { -plugin-store-cap-pl } sizin tanıdığınız kişiler tarafından işletilir. Sahibinin gönderdiği davet bağlantısıyla birine katılabilirsiniz.
+stores-empty-detail = { -plugin-store-cap-pl } imzalı { -plugin-pl } tutar ve her { -device } için ayrı bir belirteç verir. Sahibinin gönderdiği davet bağlantısıyla birine katılın.
 stores-intro = { -plugin-cap-pl } { -source-pl } ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.
 stores-not-from-app = { -plugin-cap-pl } { -plugin-store }nın sahibinden gelir, { -app-name }'den gelmez. İstediğiniz zaman { -plugin-store }ndan ayrılabilirsiniz.
 stores-join-owner-responsible = Bu { -plugin-store } sahibi { $owner } tarafından işletiliyor ve { -plugin-pl } onun tarafından seçildi. { -app-name } bunları yapmadı, incelemedi ya da onaylamadı.
@@ -175,7 +175,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin }
  }
 notice-open-stores = { -plugin-store-pl }nı aç
-stores-what-is = Bir { -plugin-store }, bir kişinin davet ettiği insanlar için işlettiği küçük bir sunucudur. { -source-pl }ı { -plugin-pl } olarak sunar. { -app-name } hiçbir { -plugin-store } işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+stores-what-is = Bir { -plugin-store }, imzalı { -plugin-pl } tutan ve her { -device } için ayrı bir belirteç veren küçük bir sunucudur. { -source-pl } { -plugin-pl } olarak sunar. { -app-name } hiçbir { -plugin-store } işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
 stores-what-is-link = { -plugin-store } nedir?
 stores-invite-rules = Bir davet bağlantısı bir kişi için bir kez geçerlidir ve yedi gün sürer. Sizinkinin süresi dolduysa { -plugin-store } sahibinden yenisini isteyin.
 stores-qr-label = Davet bağlantısı için QR kodu

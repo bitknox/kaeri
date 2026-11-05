@@ -182,3 +182,47 @@ party-in-the-room = Odada
 party-here-count = { $count } kişi burada
 together-recent-note = Son on oda, bu { -device } üzerinde tutulur
 party-pick-continue = { -proceed-cap }
+party-chat-field = Bir şey söyle
+party-chat-send = Gönder
+party-chat-title = Sohbet
+party-chat-wait = { $seconds } sn bekle
+party-chat-wait-spoken = { $seconds ->
+    [one] Bir saniye bekleyin
+   *[other] { $seconds } saniye bekleyin
+ }
+party-chat-more = Sohbette { $count } daha
+party-chat-off = Bu odanın sunucusunda sohbet kapalı
+party-chat-privacy = İletiler odanın sunucusu üzerinden gider. { -app-name } hiçbirini tutmaz.
+party-chat-hidden = Sohbet gizli
+party-chat-hidden-line = Ayarlar'da, Oynatma bölümünde Sohbeti gizle açık.
+party-chat-show = Sohbeti göster
+settings-hide-chat = { -watch-party-cap-pl } içinde sohbeti gizle
+settings-hide-chat-line = Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
+party-mute = { $name } kişisini sustur
+party-unmute = { $name } kişisinin sesini aç
+party-unmute-short = Sesi aç
+party-member-muted = Susturuldu
+party-muted-line = { $name } susturuldu
+party-chat-not-sent = Gönderilemedi
+party-chat-retry = Yeniden dene
+party-react = Tepki ver
+party-react-laugh = Gül
+party-react-gasp = Şaşır
+party-react-clap = Alkışla
+party-react-cry = Ağla
+party-reacted-laugh = { $name } güldü
+party-reacted-gasp = { $name } şaşırdı
+party-reacted-clap = { $name } alkışladı
+party-reacted-cry = { $name } ağladı
+party-reacted-at = { $line }, { $time } anında
+party-names-two = { $first } ve { $second }
+party-names-three = { $first }, { $second } ve { $third }
+party-names-others = { $first }, { $second } ve { $count } kişi daha
+party-chat-you = Siz
+party-sends-as = { $device } olarak gönderilir
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } diyor ki: { $message }
+party-chat-left = { $count ->
+    [one] { $count } karakter kaldı
+   *[other] { $count } karakter kaldı
+ }

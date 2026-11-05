@@ -1,5 +1,6 @@
 action-try-again = Yeniden dene
 action-cancel = Vazgeç
+action-go = Git
 action-not-now = Şimdi değil
 duration-days = { $days } g
 duration-hours-minutes = { $hours } sa { $minutes } dk

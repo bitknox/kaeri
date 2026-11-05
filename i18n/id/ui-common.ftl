@@ -1,5 +1,6 @@
 action-try-again = Coba lagi
 action-cancel = Batal
+action-go = Ke
 action-not-now = Nanti saja
 duration-days = { $days } hr
 duration-hours-minutes = { $hours } j { $minutes } mnt

@@ -179,3 +179,45 @@ party-in-the-room = Di ruang
 party-here-count = { $count } di sini
 together-recent-note = Sepuluh terakhir, disimpan di { -device } ini
 party-pick-continue = { -proceed-cap }
+party-chat-field = Tulis pesan
+party-chat-send = Kirim
+party-chat-title = Obrolan
+party-chat-wait = Tunggu { $seconds } dtk
+party-chat-wait-spoken = { $seconds ->
+   *[other] Tunggu { $seconds } detik
+ }
+party-chat-more = { $count } lagi di chat
+party-chat-off = Obrolan dimatikan di server ruangan ini
+party-chat-privacy = Pesan lewat server ruangan. { -app-name } tidak menyimpannya.
+party-chat-hidden = Obrolan disembunyikan
+party-chat-hidden-line = Sembunyikan obrolan aktif di Pengaturan, bagian Pemutaran.
+party-chat-show = Tampilkan obrolan
+settings-hide-chat = Sembunyikan obrolan di { -watch-party-pl }
+settings-hide-chat-line = Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.
+party-mute = Bisukan { $name }
+party-unmute = Aktifkan suara { $name }
+party-unmute-short = Suarakan
+party-member-muted = Dibisukan
+party-muted-line = { $name } dibisukan
+party-chat-not-sent = Gagal terkirim
+party-chat-retry = Coba lagi
+party-react = Beri reaksi
+party-react-laugh = Tertawa
+party-react-gasp = Terkejut
+party-react-clap = Tepuk tangan
+party-react-cry = Menangis
+party-reacted-laugh = { $name } tertawa
+party-reacted-gasp = { $name } terkejut
+party-reacted-clap = { $name } bertepuk tangan
+party-reacted-cry = { $name } menangis
+party-reacted-at = { $line } pada { $time }
+party-names-two = { $first } dan { $second }
+party-names-three = { $first }, { $second }, dan { $third }
+party-names-others = { $first }, { $second }, dan { $count } lainnya
+party-chat-you = Anda
+party-sends-as = Dikirim sebagai { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } berkata { $message }
+party-chat-left = { $count ->
+   *[other] Sisa { $count } karakter
+ }

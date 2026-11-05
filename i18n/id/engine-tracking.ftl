@@ -27,6 +27,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Tidak dapat keluar dari { $tracker }. Coba lagi. { $reason }
 notice-not-saved-because = Tidak dapat menyimpan pengaturan itu. { $cause }
+notice-proxy-saved = Lalu lintas torrent kini melewati proxy.
+notice-proxy-removed = Torrent kini terhubung langsung, tanpa proxy.
+notice-proxy-not-checked = Proxy tidak dapat diperiksa. { $cause }
 notice-proxy-password-not-kept = Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. { $reason }
 notice-show-setting-refused = Tidak dapat menyimpan pengaturan itu. { $value } bukan nilai untuk { $setting }.
 notice-show-not-reset = Tidak dapat mengatur ulang pengaturan judul ini. { $reason }

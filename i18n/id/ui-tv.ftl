@@ -69,3 +69,4 @@ tv-cast-mute = Bisukan
 tv-cast-unmute = Bunyikan
 tv-cast-volume-on-tv = Atur di TV
 tv-cast-up-next-in = { -up-next-cap } · diputar dalam { $seconds } d
+tv-forget-note = Jika Anda melupakan TV di sini, TV itu juga melupakan { -device } ini.
