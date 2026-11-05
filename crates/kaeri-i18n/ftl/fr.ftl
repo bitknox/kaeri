@@ -696,6 +696,12 @@ release-pinned = { $name } sera utilisé pour ce titre.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Impossible d’enregistrer ce choix. { $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = La vérification du proxy a échoué. Les torrents démarrent dès qu’elle réussit.
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Les torrents démarrent dès que la vérification du proxy réussit.
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Ce n’est ni un lien magnet ni un fichier torrent.
 
@@ -710,6 +716,12 @@ torrent-interface-closed = Kaeri s’est fermé avant le démarrage des torrents
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Impossible de démarrer la session torrent. { $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = Le réglage du proxy est inutilisable. { $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = Sources rechargées. Les torrents démarrent dès que la vérification du proxy réussit.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrents désactivés. La session a été arrêtée.
@@ -827,6 +839,15 @@ notice-sign-out-failed = Impossible de vous déconnecter de { $tracker }. Réess
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Impossible d'enregistrer ce réglage. { $cause }
 
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Le trafic des torrents passe désormais par le proxy.
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Les torrents se connectent désormais directement, sans proxy.
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = Impossible de vérifier le proxy. { $cause }
+
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Impossible de conserver le mot de passe du proxy. Saisissez-le à nouveau pour essayer de l'enregistrer. { $reason }
 
@@ -929,6 +950,18 @@ crash-notice = Kaeri s’est fermé après un problème.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri s’est fermé après un problème. Vous pouvez le signaler dans Paramètres, À propos.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = Aucun titre ne correspond à ces filtres.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = La liste Planning est vide.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Hors ligne. Les suggestions de la recherche ont besoin d’AniList.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Impossible de choisir un titre pour le moment. Réessayez dans un instant.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Modifier le proxy
@@ -1270,6 +1303,9 @@ shortcuts-group-lists = Listes
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Aller à une section
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Plage d’épisodes précédente ou suivante
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Raccourcis clavier
 
@@ -1452,6 +1488,27 @@ stores-published-state = Publié
 
 # Accessible name of a row's Publish button.
 stores-publish-label = Publier { $name } { $version }
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = Vous pourrez la revoir dans Réglages, Appareils, après avoir saisi le mot de passe de votre compte.
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Afficher la clé de récupération de Kaeri
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = Profils
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = Ajouter
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = Choisir un dossier
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = Enregistrer dans un fichier
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = Terminé
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2184,6 +2241,9 @@ keys-action-filter = Filtrer
 keys-action-filter-search = Filtres de recherche
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Surprenez-moi
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Lire ou mettre en pause
 
 # Action label in the help overlay and the command palette.
@@ -2254,6 +2314,18 @@ keys-hint-mark-previous = Marquer avant
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Filtres
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Surprenez-moi
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Aller à
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Effacer
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Un autre
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Resynchroniser
@@ -2423,6 +2495,9 @@ keys-where-episodes = uniquement dans le tableau des épisodes
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = uniquement sur un autre écran
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = dans la navigation de la recherche et dans Planning
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = « { $action } » dans la palette
 
@@ -2554,6 +2629,21 @@ keys-hint-copy-link = Copier le lien
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Quitter
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Dire
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Muet
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Son
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Masquer chat
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Afficher chat
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Agrandissez le terminal
@@ -2862,6 +2952,33 @@ lists-episode-dubbed = E{ $episode } · Doublé
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score } %
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = film
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = prévu
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = VF
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = VF{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Épis.
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = VF
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · { $percent } %
 
@@ -3077,6 +3194,9 @@ sources-too-small = Agrandissez le terminal pour afficher cet écran.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Pas de sources disponibles
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = Les torrents sont désactivés tant que { $setting } n’est pas activé.
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Source
 
@@ -3127,6 +3247,9 @@ sources-state-held-back = Bloquée
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Boutiques de plugins
+
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = Plugins pour vos propres appareils. Rejoignez avec un lien d’invitation.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = Rejointes : { $count }
@@ -3182,6 +3305,18 @@ sources-meta-skipped-until = Ignoré jusqu’à { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Nouvel essai à la prochaine demande ({ $cause })
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = Proxy { $mark }  Vérification
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = Proxy { $mark }  Réussi
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = Proxy { $mark }  Échec
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = La vérification du proxy a échoué. Les torrents démarrent dès qu’elle réussit.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Inchangé. Supprimez la ligne dans config.toml pour annuler le réglage.
@@ -3384,6 +3519,9 @@ settings-label-seed-hours = Partage pendant au plus
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Limite d’envoi
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Proxy des torrents
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Stockage des jetons
 
@@ -3459,6 +3597,9 @@ settings-note-download-dir = Appuyez sur Entrée pour saisir un chemin. Appliqu�
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Appliqué au prochain téléchargement terminé.
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = Désactivé par défaut pour économiser l’envoi ; activez-le pour contribuer à l’essaim.
+
 # Note under the after each download row.
 settings-note-download-hook = Appuyez sur Entrée pour saisir une commande. Elle s’exécute après chaque téléchargement terminé.
 
@@ -3485,6 +3626,12 @@ settings-note-presence-title = Désactivé affiche « Regarde un anime » sans n
 
 # Note under the rich presence row.
 settings-note-presence-rich = Ajoute la jaquette, une barre de progression et un lien AniList. Nécessite l’affichage du titre.
+
+# Note under the torrent playback row.
+settings-note-torrents = Désactivé par défaut. Effet immédiat.
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = Facultatif. Modifiez config.toml pour faire passer le trafic des torrents par un proxy SOCKS5.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Garde les épisodes vus en partage tant que Kaeri est ouvert.
@@ -4020,6 +4167,102 @@ stores-toast-nothing-to-publish = Votre dossier des plugins ne contient aucun pl
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = C'est vous. Une boutique garde toujours son gérant.
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = ordinateur
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = Saisir un code
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = Aucun dossier cloud
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = Pas encore synchronisé
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = Utilisé
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = Votre navigateur a ouvert la page de { $service }. Autorisez l’accès là-bas, et Kaeri continue tout seul.
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = Ou rendez-vous vous-même à cette adresse :
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = Connexion
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = Adresse WebDAV
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = L’adresse du dossier sur votre serveur, en commençant par https://.
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = Dossier
+
+# Under the folder path field.
+sync-tui-folder-path-note = Le chemin complet d’un dossier qu’une autre application tient à jour, comme un lecteur synchronisé.
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = Nom d’utilisateur
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Le nom avec lequel vous vous connectez à Nextcloud.
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = Mot de passe
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = Mot de passe d’application
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = Code
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = Adresse
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = Création d’un code
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = Adresse de l’autre appareil
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = L’adresse que l’autre appareil affiche sous son code, par exemple 192.168.1.20:47811.
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = Appairage
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = Vous pourrez la revoir dans Réglages, Appareils.
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = Ajouter comme profil enfant
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = Relancez Kaeri pour utiliser le profil de { $name }.
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = Ce dossier ne contient aucun historique à rejoindre. Choisissez un autre dossier.
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = { $service } n’est pas disponible sur cet appareil.
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = Retirer
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = Afficher
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = Désactiver
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = Copier
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = Agrandissez la fenêtre en hauteur pour voir le code QR.
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = Appuyez sur { $key } pour arrêter la lecture.
 
@@ -4046,6 +4289,9 @@ tui-together-section = Ensemble
 
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = lien ou code
+
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Les lignes et réactions restent hors du lecteur dans chaque groupe.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Ce n’est ni un lien ni un code de groupe.
@@ -4358,6 +4604,9 @@ action-try-again = Réessayer
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Annuler
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Aller
 
 # Button that puts a question off until later.
 action-not-now = Pas maintenant
@@ -4833,6 +5082,12 @@ tv-problem-unpaired = La TV ne connaît plus cet appareil. Appairez-la de nouvea
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } sur { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first } et { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }, { $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = Discussion
@@ -6143,6 +6398,9 @@ onboarding-own-heading = Vous avez vos propres médias ?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Vous avez un lien d’invitation ?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = Plugins viennent de boutiques de plugins. Une boutique de plugins est signée et donne à chaque appareil son propre jeton : vous en rejoignez une avec un lien d’invitation de son propriétaire.
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Essayez maintenant
 
@@ -6701,6 +6959,130 @@ together-recent-note = Les dix derniers, gardés sur cet appareil
 # The start sheet's button after a title is picked.
 party-pick-continue = Continuer
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Dire quelque chose
+
+# Button that sends a chat line.
+party-chat-send = Envoyer
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Chat
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = Attendez { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] Attendez une seconde
+        [many] Attendez { $seconds } secondes
+       *[other] Attendez { $seconds } secondes
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = Encore { $count } dans le chat
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = Le chat est désactivé sur le serveur de ce salon
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Les messages passent par le serveur du salon. Kaeri n’en garde aucun.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Le chat est masqué
+
+# Line under it.
+party-chat-hidden-line = Masquer le chat est activé dans Réglages, sous Lecture.
+
+# Button that turns Hide chat off.
+party-chat-show = Afficher le chat
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Masquer le chat dans les visionnages en groupe
+
+# Line under that switch.
+settings-hide-chat-line = Les messages, les réactions et leurs repères sur la barre de lecture restent hors de la vidéo, et le champ disparaît. La liste des personnes indique toujours qui est dans le salon.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = Rendre { $name } muet
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = Réactiver { $name }
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Réactiver
+
+# State on a muted member's row.
+party-member-muted = Muet
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } est muet
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Envoi impossible
+
+# Button after it, which sends the same text again.
+party-chat-retry = Réessayer
+
+# Button on the TV's controls that opens the four reactions.
+party-react = Réagir
+
+# Label of the laugh reaction button.
+party-react-laugh = Rire
+
+# Label of the gasp reaction button.
+party-react-gasp = Surprise
+
+# Label of the clap reaction button.
+party-react-clap = Applaudir
+
+# Label of the cry reaction button.
+party-react-cry = Pleurer
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } a ri
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } a été surpris
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } a applaudi
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } a pleuré
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line } à { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } et { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second } et { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second } et { $count } autres
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = Vous
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = Envoyé en tant que { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } dit : { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] { $count } caractère restant
+        [many] { $count } caractères restants
+       *[other] { $count } caractères restants
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = À suivre
 
@@ -6960,6 +7342,9 @@ player-mark-watch-edges = Voir les bords
 # Line in the review with sharing on.
 player-mark-shares = L’enregistrement partage ces repères avec AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri a trouvé ces repères d’après l’audio.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = Remplace la plage d’AniSkip, de { $start } à { $end }, signalée comme erronée.
 
@@ -7009,8 +7394,33 @@ player-mark-it = La marquer
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Ne plus demander
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri a trouvé cette intro. Les bords étaient-ils justes ?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri a trouvé ce générique de fin. Les bords étaient-ils justes ?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Oui partage ces repères avec AniSkip pour l’épisode { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Oui
+
+player-found-adjust = Ajuster
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Enregistré. AniSkip reçoit ces repères pour l’épisode { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri ne posera plus de question sur les repères de saut.
+
+player-found-never-how = Vous pouvez la réactiver dans Réglages.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Partager vos repères avec AniSkip ?
+
+# Body of the sheet.
+player-share-body = AniSkip est une liste partagée d’intros et de génériques, tenue par ses propres bénévoles. Les lecteurs des autres passent les repères que vous marquez et ceux trouvés que vous confirmez.
 
 # What is sent, as a line under the body.
 player-share-sent = Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire créé pour cette installation. Pas votre nom, vos comptes ni la source d’où vous regardez. AniSkip voit votre adresse IP pour limiter le spam, et ses conditions exigent d’avoir 13 ans ou plus.
@@ -7026,6 +7436,22 @@ player-skip-from-file = Du fichier
 player-skip-yours = Les vôtres
 
 player-skip-from-aniskip = D’AniSkip
+
+player-skip-found = Trouvé par Kaeri
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = En pause tant que le mode économie d’énergie est activé.
+
+player-skip-paused-battery-saver = En pause tant que l’économiseur de batterie est activé.
+
+player-skip-paused-energy-saver = En pause tant que l’économiseur d’énergie est activé.
+
+player-skip-paused-power-saver = En pause tant que l’économiseur d’énergie est activé.
+
+player-skip-paused-storage = En pause jusqu’à ce que 2 Go d’espace soient libres.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = Indisponible dans cette version de Kaeri.
 
 player-skip-none = Aucun pour l’instant
 
@@ -7529,6 +7955,203 @@ search-available-services = Sur vos services
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = Sur { $service }
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+        [one] Un épisode
+        [many] { $count } épisodes
+       *[other] { $count } épisodes
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count } ép.
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = { $out } sur { $total } sortis
+
+# The same, short.
+count-out-of-short = { $out } sur { $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+        [one] Un épisode sorti
+        [many] { $count } épisodes sortis
+       *[other] { $count } épisodes sortis
+    }
+
+# The same, short.
+count-out-short = { $count } sortis
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = Début le { $date }
+
+# The count line of a show that has not started and has no date.
+count-not-out = Pas encore sorti
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = Ép. { $episode } sur { $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = VF
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = VF { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+        [one] Un épisode
+        [many] { $count } épisodes
+       *[other] { $count } épisodes
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = { $out } épisodes sortis sur { $total }
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+        [one] Un épisode sorti
+        [many] { $count } épisodes sortis
+       *[other] { $count } épisodes sortis
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = Début le { $date }
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = Épisode { $episode } sur { $total }
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = doublé jusqu’à l’épisode { $through }
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = a une version doublée
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = janv.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = janvier
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = févr.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = février
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = mars
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = mars
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = avr.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = avril
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = mai
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = mai
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = juin
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = juin
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = juil.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = juillet
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = août
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = août
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = sept.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = septembre
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = oct.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = octobre
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = nov.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = novembre
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = déc.
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = décembre
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = Tendances du jour
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = Tendances de la semaine
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = Tendances du mois
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = Aujourd’hui
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = Cette semaine
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = Ce mois-ci
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = Impossible de charger les tendances ({ $period }).
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = Mis à jour { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = Surprenez-moi
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = Surprenez-moi
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = Un autre
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Ouvre un titre au hasard dans Planning
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Ouvre un titre au hasard parmi ces filtres
+
+# Hint of the Another button.
+surprise-another-hint = Ouvre un autre titre au hasard à la place de celui-ci
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = Aucun titre ne correspond à ces filtres.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = La liste Planning est vide.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Hors ligne. Les suggestions de la recherche ont besoin d’AniList.
+
 # Title of the dialog that adds a media server.
 servers-add-title = Ajouter un serveur multimédia
 
@@ -7775,6 +8398,9 @@ settings-group-titles = Titres
 # Group heading.
 settings-group-playback = Lecture
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Visionnages en groupe
+
 # Group heading.
 settings-group-watching = Visionnage
 
@@ -7856,8 +8482,35 @@ settings-skip-opening = Passer le générique d’ouverture automatiquement
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Passer les résumés automatiquement
 
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Trouver les repères de saut d’après l’audio
+
+# Line under it.
+settings-find-skips-detail = Quand AniSkip n’a aucun repère, Kaeri compare l’audio des épisodes d’une série, sur cet appareil.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Demander pour les repères de saut
+
+# Line under it.
+settings-ask-was-opening-detail = Après un saut d’intro manuel, et après un saut que Kaeri a trouvé
+
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Partager les repères avec AniSkip
+
+# Line under it.
+settings-share-skips-detail = AniSkip est une liste partagée d’intros et de génériques que de nombreux lecteurs utilisent. Il reçoit les repères que vous marquez et ceux trouvés que vous confirmez, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire pour cette installation.
+
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = Repères que vous avez marqués ou que Kaeri a trouvés
+
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Effacer les repères que vous avez marqués et ceux que Kaeri a trouvés ? AniSkip garde ceux que vous avez partagés.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Effacer les repères de saut
+
+# Line under it.
+settings-clear-skips-android-detail = Ceux que vous avez marqués et ceux que Kaeri a trouvés
 
 # Row: skip filler.
 settings-skip-filler = Passer les épisodes de remplissage automatiquement
@@ -8181,6 +8834,9 @@ settings-reset = Réinitialiser les réglages
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Réinitialiser les réglages ?
 
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = Tous les réglages reviennent à leur valeur par défaut, proxy des torrents compris. Votre historique reste, et l’ancien fichier de réglages est conservé.
+
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Les réglages sont revenus à leurs valeurs par défaut. L’ancien fichier est conservé sous le nom { $file }.
 
@@ -8351,6 +9007,9 @@ source-note-gone = Non installée
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Correspondance impossible
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = Attend la vérification du proxy
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Releases
 
@@ -8429,6 +9088,9 @@ sources-detail-not-answering = Ne répond pas. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Ne répond pas.
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = En attente que la vérification du proxy réussisse.
+
 # Status line: disabled.
 sources-detail-disabled = Désactivée. Elle garde sa place et n'est pas essayée.
 
@@ -8504,6 +9166,9 @@ sources-torrent-source = Lecture de torrents
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Ordre des sources
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = Les torrents font partie de Kaeri, pas d’un plugin. Le proxy et le partage se règlent dans Réglages, sous Sources.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Les Sources sont en cours de reconfiguration.
@@ -8699,6 +9364,9 @@ sources-your-intro = Les épisodes sont lus depuis la première source qui les a
 # Heading of the section that lists the plugins.
 sources-section-plugins = Plugins
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = Catalogues ouverts
+
 # Link in the empty state.
 sources-add-demo = Ajouter la démo
 
@@ -8710,6 +9378,9 @@ stores-joined = Rejoint
 
 # Title of the empty list.
 stores-empty-title = Aucune boutiques de plugins pour l'instant
+
+# Line under the empty title.
+stores-empty-detail = Les boutiques de plugins contiennent des plugins signés et donnent à chaque appareil son propre jeton. Rejoignez-en une avec le lien d’invitation que son propriétaire vous envoie.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugins ajoutent des sources. Chacun liste les serveurs qu'il contacte avant que vous l'installiez.
@@ -9208,6 +9879,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Ouvrir les boutiques de plugins
 
+# Explainer on the empty plugin stores page.
+stores-what-is = Une boutique de plugins est un petit serveur qui contient des plugins signés et donne à chaque appareil son propre jeton. Elle propose des sources sous forme de plugins. Kaeri ne gère aucune boutique de plugins et n’en liste aucune : vous en rejoignez une avec un lien d’invitation de son propriétaire.
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Qu’est-ce qu’une boutique ?
 
@@ -9225,6 +9899,673 @@ stores-qr-warning-device = Scannez ce code avec l’appareil que vous voulez lie
 
 # Button that opens the system share sheet for the invite link.
 stores-share = Partager…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = Votre navigateur a ouvert la page de { $service }. Autorisez l’accès là-bas, et Kaeri continue tout seul.
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = Connectez-vous à { $service } dans votre navigateur
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = ordinateur
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = Saisir un code
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = Afficher
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = Désactiver
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Adresse
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Appairer par adresse
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Clé de récupération
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = Nom d’utilisateur
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Mot de passe
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Adresse du serveur
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Appairage
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = votre autre appareil
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Laissez l’adresse vide et Kaeri cherche l’appareil sur ce réseau.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = La synchronisation partage où vous vous êtes arrêté, votre historique et vos réglages.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Télécommande
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Modifier
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Nom
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = Plus pour { $name }
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = Impossible de joindre { $store } ou { $device }. Réessayez quand les deux sont en ligne.
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store } n’a pas accepté l’invitation. Demandez-en une nouvelle à son propriétaire.
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device } ne peut pas inviter d’autres appareils sur { $store }. Demandez une invitation au propriétaire de la boutique de plugins.
+
+# Settings row and page title, every platform.
+devices-title = Appareils
+
+# Devices row value while sync is off.
+devices-row-off = Synchronisation désactivée
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = Synchronisé { $ago }
+
+# Devices row value with the error glyph.
+devices-row-error = Synchronisation impossible
+
+# Group heading over the name.
+devices-this-device = Cet appareil
+
+# Row for this device’s name.
+devices-name = Nom
+
+# Group heading while off.
+sync-group = Synchronisation
+
+# Off state.
+sync-off-title = La synchronisation est désactivée
+
+# Off state.
+sync-off-line = Activez-la pour garder où vous vous êtes arrêté, votre historique et vos réglages identiques sur vos appareils.
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = Activer la synchronisation
+
+# Road sheet title.
+sync-road-title = Comment vos appareils doivent-ils partager ?
+
+# Road sheet row.
+sync-road-nearby = Avec un appareil à proximité
+
+# Road sheet row line.
+sync-road-nearby-line = Appairez un autre appareil sur le même Wi-Fi. Rien n’est stocké ailleurs.
+
+# Road sheet row.
+sync-road-cloud = Via un dossier cloud
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = Un espace cloud que vous utilisez déjà, ou votre propre serveur. Fonctionne même quand vos appareils sont éloignés, et garde une sauvegarde.
+
+# Road sheet footer.
+sync-road-later = Vous pourrez ajouter l’autre voie plus tard. La plupart des gens utilisent les deux.
+
+# Group heading.
+devices-yours = Vos appareils
+
+# Empty Your devices.
+devices-only-this = Seulement cet appareil
+
+# Empty Your devices.
+devices-only-this-line = Appairez un autre appareil pour partager où vous vous êtes arrêté, votre historique et vos réglages.
+
+# Row and sheet title.
+devices-add = Ajouter un appareil
+
+# Device row line past 30 days.
+devices-not-seen = Pas vu depuis { $days } jours
+
+# A device paired only for Play on TV.
+devices-remote-only = Télécommande seulement
+
+# Button on a remote-only TV row.
+devices-also-sync = Synchroniser aussi avec { $device }
+
+# Footer while sync is off.
+devices-paired-tvs-foot = Appairée pour Lire sur la TV. Une TV appairée comme télécommande ne reçoit jamais votre historique.
+
+# Switch on a device.
+devices-sync-switch = Synchronisation
+
+# Switch on a TV.
+devices-remote-switch = Télécommande
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = La synchronisation partage où vous vous êtes arrêté, votre historique et vos réglages. Télécommande permet à cet { $kind } de piloter { $device }.
+
+# Device page, destructive.
+devices-remove = Retirer cet appareil
+
+# Alert title.
+devices-remove-alert = Retirer { $device } ?
+
+# Alert message.
+devices-remove-alert-line = { $device } garde ce qu’il a, mais ne reçoit plus rien de vos autres appareils.
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = Désactiver la synchronisation sur cet { $kind }
+
+# Alert title.
+sync-turn-off-alert = Désactiver la synchronisation sur { $device } ?
+
+# Alert message.
+sync-turn-off-alert-line = Cet { $kind } arrête de partager avec vos autres appareils. Tout ce qu’il a reste ici.
+
+# Group heading.
+cloud-group = Dossier cloud
+
+# Group footer.
+cloud-foot = Se remplit quand vos appareils sont éloignés, et garde une sauvegarde scellée. Seuls vos appareils peuvent la lire.
+
+# Row when only the nearby road is set.
+cloud-add = Ajouter un dossier cloud
+
+# Picker title.
+cloud-pick-title = Choisir un dossier cloud
+
+# Picker row line.
+cloud-google-line = Un dossier Kaeri caché dans votre Drive
+
+# Picker row line.
+cloud-nextcloud-line = Votre propre serveur Nextcloud ou un serveur hébergé
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = Un dossier de votre choix dans iCloud Drive
+
+# Picker group heading.
+cloud-other = Autre
+
+# Picker row.
+cloud-webdav = Serveur WebDAV
+
+# Picker row line.
+cloud-webdav-line = Tout serveur compatible WebDAV
+
+# Picker row line.
+cloud-folder-line = Pour un dossier qu’une autre application tient à jour
+
+# Picker footer.
+cloud-pick-foot = Vos appareils gardent dans ce dossier une copie scellée de leurs changements. Seuls vos appareils peuvent la lire, et Kaeri n’a pas de serveur à lui.
+
+# Row line while the first write runs.
+cloud-setting-up = Préparation du dossier
+
+# Field label.
+cloud-nextcloud-address = Adresse du serveur
+
+# Field note.
+cloud-nextcloud-address-note = L’adresse à laquelle vous ouvrez Nextcloud dans un navigateur.
+
+# Login flow wait.
+cloud-nextcloud-wait-title = Terminez la connexion sur { $host }
+
+# Login flow wait.
+cloud-nextcloud-wait-line = Votre page Nextcloud est ouverte dans le navigateur. Autorisez l’accès là-bas, et cette feuille continue toute seule.
+
+# Wait row.
+cloud-waiting = En attente de { $service }
+
+# Button.
+cloud-open-again = Rouvrir la page
+
+# Text button.
+cloud-app-password = Utiliser plutôt un mot de passe d’application
+
+# Button.
+cloud-connect = Connecter
+
+# Error.
+cloud-err-offline = Impossible de joindre { $service }. Vérifiez votre connexion.
+
+# Inline error.
+cloud-err-no-server = Aucun serveur Nextcloud trouvé à { $host }. Vérifiez l’adresse.
+
+# Inline error.
+cloud-err-app-password = Nextcloud n’a pas accepté ce mot de passe d’application. Créez-en un nouveau dans Nextcloud, sous Réglages, Sécurité.
+
+# Inline error.
+cloud-err-webdav = Le serveur a refusé ce nom d’utilisateur ou ce mot de passe.
+
+# Error, with Open the page again.
+cloud-err-timeout = La page de connexion s’est fermée avant que l’accès soit autorisé.
+
+# Error.
+cloud-err-other-group = Ce dossier appartient à un autre ensemble de appareils. Saisissez sa clé de récupération pour les rejoindre, ou choisissez un autre dossier.
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service } a déconnecté Kaeri. Vos changements attendent sur cet { $kind } jusqu’à votre nouvelle connexion.
+
+# Status error.
+cloud-err-full = { $service } est plein. Libérez de l’espace là-bas, puis réessayez.
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeri ne peut plus ouvrir le dossier. Choisissez-le à nouveau.
+
+# Status error title.
+cloud-err-title = Synchronisation avec { $service } impossible
+
+# Picker row line.
+cloud-dropbox-line = Le dossier propre à Kaeri dans votre Dropbox, Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = Le dossier propre à Kaeri dans votre OneDrive, Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = Synchroniser maintenant
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = Se déconnecter
+
+# Cloud group button after signing out.
+cloud-sign-in = Se connecter
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = Déconnecté. Les changements attendent sur cet { $kind } jusqu’à votre nouvelle connexion.
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service } n’a pas donné l’accès à Kaeri. Choisissez-le à nouveau pour réessayer.
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = Choisissez celui que vos autres appareils utilisent. Un nouveau dossier cloud s’ajoute sur un téléphone ou un ordinateur, où sa clé de récupération peut être enregistrée.
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = Connexion sur votre téléphone
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropbox se connecte sur votre téléphone
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device } est connecté à Dropbox. Cette TV peut utiliser cette connexion via votre lien appairé.
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = Utiliser la connexion de { $device }
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = Dropbox n’a pas de connexion qu’une TV peut faire. Sur votre téléphone, ouvrez Kaeri, puis Réglages, Appareils, Dossier cloud, et connectez-vous à Dropbox là-bas. Choisissez ensuite Dropbox ici à nouveau.
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = Connecté. Préparation du dossier
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service } a déconnecté Kaeri. Sélectionnez pour vous reconnecter.
+
+# TV cloud row.
+tv-cloud-signed-out-line = Déconnecté. Sélectionnez pour vous connecter.
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = Se déconnecter de { $service } ?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = Cette TV arrête de se synchroniser via { $service }. Les changements attendent ici jusqu’à votre nouvelle connexion.
+
+# Status line while offline.
+cloud-offline = En attente d’une connexion. Les changements sont gardés sur cet { $kind }.
+
+# TV device flow.
+tv-google-title = Connexion à Google Drive
+
+# TV device flow.
+tv-qr-open-page = Ou scannez pour ouvrir la page
+
+# TV Nextcloud.
+tv-nextcloud-line = Scannez ceci avec votre téléphone et autorisez l’accès sur votre page Nextcloud. La TV continue toute seule.
+
+# Sheet title.
+rkey-title = Votre clé de récupération
+
+# Sheet line.
+rkey-line = Gardez-la en lieu sûr. Elle restaure votre historique si vous perdez chaque appareil, et permet à un nouvel appareil de rejoindre depuis votre dossier cloud.
+
+# Button.
+rkey-copy = Copier
+
+# Text button.
+rkey-qr = Afficher en code QR
+
+# Sheet footnote.
+rkey-again = Vous pourrez la revoir dans Réglages, Appareils, après avoir déverrouillé cet { $kind }.
+
+# Devices row.
+rkey-row = Clé de récupération
+
+# Devices row value.
+rkey-made = Créée le { $date }
+
+# Row.
+rkey-new = Créer une nouvelle clé
+
+# Footer.
+rkey-new-foot = L’ancienne clé cesse de fonctionner, et vos appareils passent à la nouvelle à leur prochaine synchronisation.
+
+# Restore.
+rkey-enter-title = Saisissez votre clé de récupération
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+        [one] { $service } contient l’historique de { $count } appareil. La clé que vous avez enregistrée à l’activation de la synchronisation l’ouvre.
+        [many] { $service } contient l’historique de { $count } appareils. La clé que vous avez enregistrée à l’activation de la synchronisation l’ouvre.
+       *[other] { $service } contient l’historique de { $count } appareils. La clé que vous avez enregistrée à l’activation de la synchronisation l’ouvre.
+    }
+
+# Field note.
+rkey-enter-note = 24 lettres et chiffres, par groupes de quatre. Les espaces et la casse n’ont pas d’importance.
+
+# Inline error.
+rkey-wrong = Cette clé n’ouvre pas ce dossier. Vérifiez chaque groupe de quatre et réessayez.
+
+# Button.
+rkey-restore = Restaurer
+
+# Add a device.
+pair-enter-line = Sur l’autre appareil, ouvrez Kaeri et choisissez Configurer depuis un autre appareil, ou Réglages, Appareils, Afficher un code. Saisissez ensuite le code ici.
+
+# Button, phones.
+pair-scan = Scanner le code
+
+# Note.
+pair-same-wifi = Les deux appareils doivent être sur le même Wi-Fi.
+
+# Button.
+pair-button = Appairer
+
+# Text button.
+pair-show-instead = Afficher plutôt un code ici
+
+# Code screen.
+pair-show-title = Saisissez ce code sur votre autre appareil
+
+# Code screen.
+pair-show-scan = Ou scannez-le depuis Kaeri sur votre téléphone.
+
+# Code screen.
+pair-good-for = Valable 2 minutes · { $left }
+
+# TV code screen.
+pair-tv-line = Sur votre téléphone, ouvrez Kaeri, puis Réglages, Appareils, Ajouter un appareil, et scannez ce code ou saisissez-le.
+
+# Success.
+pair-ok = Appairé avec { $device }
+
+# Success.
+pair-ok-line = Transfert de votre historique. Vous pouvez utiliser Kaeri en attendant.
+
+# Success switch.
+pair-copy-signins = Copier les connexions depuis { $device }
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }. Chaque appareil reçoit sa propre copie via ce lien.
+
+# Error.
+pair-err-code = Ce code ne correspond pas. Vérifiez le code sur { $device } et réessayez.
+
+# Error.
+pair-err-not-found = Impossible de trouver l’appareil qui affiche ce code. Les deux appareils doivent être sur le même Wi-Fi.
+
+# Error on the showing side.
+pair-err-expired = Ce code a expiré. Affichez-en un nouveau.
+
+# Profile question.
+pair-which-profile = Quel profil sur { $device } est le vôtre ?
+
+# Profile question.
+pair-which-profile-line = Cet { $kind } se synchronise uniquement avec ce profil. Les autres restent sur { $device }.
+
+# Footer.
+pair-also-sync-foot = { $device } connaît déjà ce téléphone grâce à Lire sur la TV, donc la synchronisation avec lui n’a pas besoin d’un nouveau code.
+
+# Continue, for a day.
+continue-from-device = Épisode { $n } · arrêté à { $time } sur { $device }
+
+# Player, 6 s, with Start over.
+player-resumed-from = Repris à { $time } depuis { $device }
+
+# Row line, Mac toolbar status.
+sync-syncing = Synchronisation en cours
+
+# Mac jobs popover.
+sync-syncing-with = Synchronisation avec { $device }
+
+# Device page group.
+sync-notes = Notes de synchronisation
+
+# Sync note.
+sync-note-kept-watched = L’épisode { $n } de { $title } reste vu. { $other } l’a marqué comme non vu sans savoir que { $device } l’avait terminé.
+
+# Sync note action.
+sync-note-undo = Marquer comme non vu
+
+# Footer.
+sync-notes-foot = Les notes restent 7 jours.
+
+# Settings row and page.
+profiles-title = Profils
+
+# Profiles row value with one profile.
+profiles-only-you = Vous seul
+
+# Profiles page with one.
+profiles-one-foot = Les profils gardent un historique, Reprendre et des comptes séparés pour les personnes qui partagent cet appareil. Avec un seul profil, Kaeri n’affiche ni sélecteur ni noms.
+
+# Row, sheet title, picker tile.
+profiles-add = Ajouter un profil
+
+# Sheet line.
+profiles-add-line = Chaque profil garde son propre historique, Reprendre et ses comptes. Les sources et les téléchargements restent partagés sur cet appareil.
+
+# Field label.
+profiles-new = Nouveau profil
+
+# Field label.
+profiles-yours = Votre profil
+
+# Field note when signed in.
+profiles-yours-note = Rempli depuis AniList. Jusqu’ici, cet appareil avait un profil sans nom.
+
+# Switch.
+profiles-kids = Profil enfant
+
+# Switch footer.
+profiles-kids-line = Les titres pour adultes restent masqués, ainsi que les sources, les appareils et les réglages des torrents.
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = Les sources et les appareils sont masqués dans un profil enfant, et les titres pour adultes restent masqués.
+
+# Line under a kids profile.
+profiles-kids-tag = Enfant
+
+# Button.
+profiles-add-button = Ajouter le profil
+
+# Profiles page footer.
+profiles-shared-foot = Les sources, les téléchargements et les réglages de cet appareil sont partagés par tous les profils.
+
+# Profile page row.
+profiles-syncs-with = Se synchronise avec
+
+# Profile page, destructive.
+profiles-delete = Supprimer le profil
+
+# Alert title.
+profiles-delete-alert = Supprimer le profil de { $name } ?
+
+# Alert message.
+profiles-delete-alert-line = L’historique et les connexions de { $name } sur cet appareil sont supprimés. Les appareils qui se synchronisent avec { $name } gardent les leurs.
+
+# TV, and iPad when asked.
+profiles-picker = Qui regarde ?
+
+# iPad switch.
+profiles-ask-at-launch = Demander qui regarde au lancement
+
+# iPad footer.
+profiles-ask-foot = Désactivé par défaut. Pour un iPad que le foyer partage. La ligne du compte change de profil à tout moment.
+
+# TV Settings.
+profiles-switch = Changer de profil
+
+# Account sheet and menus.
+profiles-manage = Gérer les profils
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = Configurer depuis un autre appareil
+
+# Code screen from first launch.
+first-setup-line = Sur un appareil qui a déjà Kaeri, ouvrez Réglages, Appareils, Ajouter un appareil, et saisissez ce code ou scannez-le.
+
+# Text button.
+first-restore = Restaurer plutôt depuis un dossier cloud
+
+# Success from first launch.
+first-ok-line = Transfert de votre historique, de vos réglages et de vos boutiques de plugins. Vous pouvez commencer à utiliser Kaeri dès maintenant.
+
+# Success switch.
+first-join-store = Rejoindre la boutique de plugins { $store }
+
+# Success switch line.
+first-join-store-line = { $device } fait de cet { $kind } sa propre invitation
+
+# Picker row on a phone or computer.
+cloud-folder = Un dossier sur cet { $kind }
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Créez-en un dans Nextcloud, sous Réglages, Sécurité. Il est gardé sur cet { $kind }.
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+        [one] Une TV pour Lire sur la TV
+        [many] { $count } TV pour Lire sur la TV
+       *[other] { $count } TV pour Lire sur la TV
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = Appairée aujourd’hui
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = Affiche un code à saisir sur votre téléphone
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = Vous seul. Ajoutez un profil pour garder un historique, Reprendre et des comptes séparés sur cette TV.
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = Ouvre Qui regarde ?
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = Profils sur cette TV
+
+# Android recovery key sheet, third button.
+rkey-save-file = Enregistrer dans un fichier
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = Code QR
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = Afficher un code
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = Se reconnecter
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = Choisir le dossier
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }, changer de profil
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = Code d’appairage
+
+device-kind-phone = téléphone
+
+device-kind-tablet = tablette
+
+device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Configurer depuis votre téléphone
+
+# Error naming a device that is not known by name.
+devices-other-device = l’autre appareil
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = La page de { $service } est ouverte. Autorisez l’accès là-bas, et Kaeri continue tout seul.
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = Connexion à { $service }
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Accès autorisé. Fin de la connexion.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = Création du dossier de Kaeri dans { $service } et scellement d’une première copie de votre historique.
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = Connexion à { $service } impossible
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Impossible de préparer le dossier
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service } n’a pas donné l’accès à Kaeri.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service } n’a pas terminé la connexion. Réessayez dans un instant.
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeri n’a pas pu créer son dossier dans { $service }. Réessayez dans un instant.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Utiliser un autre service
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Retirer le dossier cloud
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = Retirer { $service } de la synchronisation ?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = Tout ce qui est sur cet { $kind } y reste, et les appareils appairés à proximité continuent de se synchroniser. Le dossier reste dans { $service } avec sa copie scellée, et vos autres appareils l’utilisent jusqu’à ce que vous le retiriez aussi sur eux.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Retirer
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = Plus pour { $service }
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = Utilisé
+
+# Picker line under Use another service.
+cloud-switch-foot = { $service } reste utilisé jusqu’à ce que le nouveau dossier soit prêt.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = L’une ou l’autre active la synchronisation, et vous pouvez utiliser les deux.
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = La synchronisation transporte où vous vous êtes arrêté, votre historique et vos réglages entre vos propres appareils, à proximité ou via un dossier cloud de votre choix. Elle est scellée avant de quitter cet { $kind }.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = L’appairage avec votre téléphone active la synchronisation. Cette TV peut ensuite rejoindre votre dossier cloud.
 
 # Title of the state when a title page could not load.
 title-load-failed = Impossible de charger ce titre
@@ -9524,11 +10865,56 @@ title-fact-tba = À annoncer
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = Aller à l’épisode…
+
+# Title of the Go to episode field.
+episode-go-to-title = Aller à l’épisode
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Aller
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first } à { $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = Épisode, { $first } à { $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = Pas d’épisode { $number }. Cette série en compte { $last }.
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = L’épisode { $number } n’est pas encore sorti. Le dernier est le { $latest }.
+
 # Title of the settings group and the screen.
 torrents-title = Torrents
 
 # Label and short value for the switch.
 torrents-on = Torrents activés
+
+# Line under the switch while torrents are off.
+torrents-off-detail = Désactivés par défaut. Les torrents se connectent directement, sauf si vous les faites passer par un proxy.
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = D’autres personnes dans un torrent peuvent voir votre adresse IP. Pour la garder privée, faites passer le trafic des torrents par un proxy.
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = Les torrents font partie de Kaeri, pas d’un plugin. Le proxy et le partage se règlent dans Réglages, sous Sources.
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Faire passer le trafic des torrents par un proxy
+
+# Line under the switch.
+torrents-proxy-route-detail = Le trafic des torrents passe par un proxy SOCKS5 que vous gérez ou louez. Tant que c’est désactivé, les torrents se connectent directement.
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = Via un proxy SOCKS5 à { $host }:{ $port }.
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Via un proxy SOCKS5.
+
+# Summary: no proxy is set.
+torrents-summary-direct = Connexion directe, sans proxy.
 
 # Label of the proxy host field.
 torrents-proxy-host = Hôte du proxy
@@ -9545,6 +10931,9 @@ torrents-proxy-password = Mot de passe
 # Line under the password field.
 torrents-password-keep = Laissez le mot de passe vide pour garder celui qui est enregistré.
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = Les torrents continuent d’utiliser le proxy enregistré jusqu’à ce que le nouveau réussisse la vérification du proxy.
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Le proxy a besoin d’un hôte et d’un port compris entre 1 et 65535.
 
@@ -9554,17 +10943,29 @@ torrents-checking-proxy = Vérification du proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy enregistré
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = La vérification du proxy a échoué
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Non enregistré. { $why }, le proxy enregistré reste en place.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Les torrents restent désactivés. { $why }.
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeri vérifie qu’il peut joindre le proxy avant le démarrage des torrents. Les torrents attendent tant que cette vérification échoue.
+
+# Label of the proxy check's result.
+torrents-last-check = Vérification du proxy
+
 # Check passed.
 torrents-check-passed = Réussie
 
 # Check running: the short word.
 torrents-check-running = Vérification
+
+# Check failed: the line.
+torrents-check-failed-line = La vérification du proxy a échoué. Les torrents démarrent dès qu’elle réussit.
 
 # Short word: the check failed.
 torrents-check-failed = Échec
@@ -10086,6 +11487,9 @@ tv-cast-volume-on-tv = Réglé sur la TV
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = À suivre · lecture dans { $seconds } s
+
+# Line under the paired TVs.
+tv-forget-note = Oubliez une TV ici et elle oublie aussi cet appareil.
 
 # Heading of the update row in settings and about.
 updates-title = Mises à jour

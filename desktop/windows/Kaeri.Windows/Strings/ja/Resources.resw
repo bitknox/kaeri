@@ -671,6 +671,12 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>その選択を保存できませんでした。{reason}</value>
   </data>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。</value>
+  </data>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>プロキシの確認に通ると、トレントが開始されます。</value>
+  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>マグネットリンクでもトレントファイルでもありません。</value>
   </data>
@@ -685,6 +691,12 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>トレントのセッションを開始できませんでした。{reason}</value>
+  </data>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>このプロキシ設定は使えません。{reason}</value>
+  </data>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>ソースを再読み込みしました。プロキシの確認に通ると、トレントが開始されます。</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>トレントはオフです。セッションを停止しました。</value>
@@ -797,6 +809,15 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>その設定を保存できませんでした。{cause}</value>
   </data>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>トレントの通信がプロキシ経由になりました。</value>
+  </data>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>トレントはプロキシを使わず、直接接続します。</value>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>プロキシを確認できませんでした。{cause}</value>
+  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>プロキシのパスワードを保存できませんでした。もう一度入力して、保存をお試しください。{reason}</value>
   </data>
@@ -890,6 +911,18 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>問題が発生したため、Kaeriを終了しました。設定の「情報」から報告できます。</value>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>この条件に合う作品がありません。</value>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>「計画中」リストが空です。</value>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>オフラインです。検索からのおまかせにはAniListが必要です。</value>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>いまは作品を選べませんでした。しばらくしてからもう一度お試しください。</value>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>続きを見る</value>
   </data>
@@ -916,6 +949,18 @@
   </data>
   <data name="CalendarWatchedSpoken" xml:space="preserve">
     <value>{title}、{episode}、視聴済み</value>
+  </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>E{episode} 配信済み、{ago}</value>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>E{episode} 配信済み、{ago} · 吹替版</value>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>E{episode} 配信まで{span}</value>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>E{episode} 配信まで{span} · 吹替版</value>
   </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>{list}（{count}）</value>
@@ -1454,6 +1499,21 @@
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>Kaeriがテレビに接続することを許可するよう、Windowsから確認があります。</value>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>あとで確認するには、設定のデバイスを開き、Windows Helloで認証します。</value>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Kaeriの復元キーを表示します</value>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>{device}と同期</value>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>{device}を開く</value>
+  </data>
   <data name="SourcePickerSeeders_other" xml:space="preserve">
     <value>{count}人が共有中</value>
   </data>
@@ -1768,6 +1828,9 @@
   </data>
   <data name="ActionCancel" xml:space="preserve">
     <value>キャンセル</value>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>移動</value>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>後で</value>
@@ -2233,6 +2296,12 @@
   </data>
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>{position} / {duration}</value>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first}と{last}</value>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}、{next}</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>ディスカッション</value>
@@ -3470,6 +3539,9 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>招待リンクをお持ちですか?</value>
   </data>
+  <data name="OnboardingWhereStores" xml:space="preserve">
+    <value>プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。</value>
+  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>今すぐ試す</value>
   </data>
@@ -4013,6 +4085,120 @@
   <data name="PartyPickContinue" xml:space="preserve">
     <value>続ける</value>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>ひとこと送る</value>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>送信</value>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>チャット</value>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>{seconds}秒待機</value>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>{seconds}秒お待ちください</value>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>チャットにあと{count}件</value>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>このルームのサーバーでは、チャットがオフです</value>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>メッセージはルームのサーバーを経由します。Kaeriには残りません。</value>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>チャットは非表示です</value>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>設定の「再生」で、チャットの非表示がオンになっています。</value>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>チャットを表示</value>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>同時視聴でチャットを非表示</value>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</value>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>{name}をミュート</value>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>{name}のミュートを解除</value>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>解除</value>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>ミュート中</value>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name}はミュート中です</value>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>送信できませんでした</value>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>再試行</value>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>リアクション</value>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>笑う</value>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>驚く</value>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>拍手</value>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>泣く</value>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>{name}が笑いました</value>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>{name}が驚きました</value>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>{name}が拍手しました</value>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>{name}が泣きました</value>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{time}に{line}</value>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first}さんと{second}さん</value>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}さん、{second}さん、{third}さん</value>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}さん、{second}さんほか{count}人</value>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>あなた</value>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>{device}として送信</value>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name}：{message}</value>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>あと{count}文字</value>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>次のエピソード</value>
   </data>
@@ -4277,6 +4463,9 @@
   <data name="PlayerMarkShares" xml:space="preserve">
     <value>保存すると、この位置がAniSkipと共有されます。</value>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeriが音声からこれらの位置を見つけました。</value>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>誤りと報告されているAniSkipの{start}から{end}を置き換えます。</value>
   </data>
@@ -4328,8 +4517,35 @@
   <data name="PlayerDontAskAgain" xml:space="preserve">
     <value>今後は確認しない</value>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeriがこのオープニングを見つけました。範囲は合っていましたか?</value>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeriがこのエンディングを見つけました。範囲は合っていましたか?</value>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>「はい」を選ぶと、エピソード{episode}のこの位置がAniSkipに共有されます。</value>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>調整</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>保存しました。エピソード{episode}のこの位置をAniSkipに送信します。</value>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeriは、スキップ位置について今後たずねません。</value>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>設定からいつでもオンに戻せます。</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>スキップ位置をAniSkipと共有しますか?</value>
+  </data>
+  <data name="PlayerShareBody" xml:space="preserve">
+    <value>AniSkipは、ボランティアが運営する、オープニングとエンディングの共有リストです。あなたがマークした位置と、確認した検出済みの位置は、ほかの人のプレーヤーでもスキップされます。</value>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>送信されるのは、スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用に作られたランダムなIDです。あなたの名前、アカウント、視聴中のソースは送信されません。AniSkipはスパム対策のためIPアドレスを確認し、利用規約は13歳以上であることを求めています。</value>
@@ -4348,6 +4564,27 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>AniSkipから</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Kaeriが検出</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>低電力モードがオンの間は一時停止します。</value>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>バッテリーセーバーがオンの間は一時停止します。</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>省エネモードがオンの間は一時停止します。</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>省電力モードがオンの間は一時停止します。</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>ストレージの空きが2 GBになるまで一時停止します。</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>このKaeriのビルドでは利用できません。</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>まだありません</value>
@@ -4847,6 +5084,183 @@
   <data name="SearchLineService" xml:space="preserve">
     <value>{service}にあります</value>
   </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>{count}話</value>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>{count}話</value>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>{out}/{total}話 配信済み</value>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>{out}/{total}</value>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>{count}話 配信済み</value>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>{count}話</value>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>{date}開始</value>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>未配信</value>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>第{episode}話/全{total}話</value>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>吹替</value>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>吹替 {through}</value>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>{count}話</value>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>全{total}話のうち{out}話が配信済み</value>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>{count}話が配信済み</value>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>{date}開始</value>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>全{total}話のうち第{episode}話</value>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>第{through}話まで吹替版</value>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>吹替あり</value>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>1月</value>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>1月</value>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>2月</value>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>2月</value>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>3月</value>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>3月</value>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>4月</value>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>4月</value>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>5月</value>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>5月</value>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>6月</value>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>6月</value>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>7月</value>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>7月</value>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>8月</value>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>8月</value>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>9月</value>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>9月</value>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>10月</value>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>10月</value>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>11月</value>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>11月</value>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>12月</value>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>12月</value>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>今日のトレンド</value>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>今週のトレンド</value>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>今月のトレンド</value>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>今日</value>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>今週</value>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>今月</value>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>{period}のトレンドを読み込めませんでした。</value>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>{age}に更新</value>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>おまかせ</value>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>おまかせ</value>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>別の作品</value>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>「計画中」からランダムに作品を開きます</value>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>この条件からランダムに作品を開きます</value>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>この作品の代わりに、別のランダムな作品を開きます</value>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>この条件に合う作品がありません。</value>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>「計画中」リストが空です。</value>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>オフラインです。検索からのおまかせにはAniListが必要です。</value>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>メディアサーバーを追加</value>
   </data>
@@ -5078,6 +5492,9 @@
   <data name="SettingsGroupPlayback" xml:space="preserve">
     <value>再生</value>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>同時視聴</value>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>視聴</value>
   </data>
@@ -5159,8 +5576,35 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>前回のあらすじを自動でスキップ</value>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>音声からスキップ位置を検出</value>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>AniSkipに位置がない場合、Kaeriはこのデバイス上で、作品のエピソード間の音声を比較します。</value>
+  </data>
+  <data name="SettingsAskWasOpening" xml:space="preserve">
+    <value>スキップ位置について確認する</value>
+  </data>
+  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
+    <value>オープニングを手動でスキップしたあと、およびKaeriが検出した位置をスキップしたあと</value>
+  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>スキップ位置をAniSkipと共有</value>
+  </data>
+  <data name="SettingsShareSkipsDetail" xml:space="preserve">
+    <value>AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの共有リストです。あなたがマークした位置と、確認した検出済みの位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。</value>
+  </data>
+  <data name="SettingsClearSkips" xml:space="preserve">
+    <value>マークした、またはKaeriが検出したスキップ位置</value>
+  </data>
+  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
+    <value>マークしたスキップ位置と、Kaeriが検出した位置を消去しますか?共有済みの位置はAniSkipに残ります。</value>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>スキップ位置を消去</value>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>マークした位置と、Kaeriが検出した位置</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>フィラーを自動でスキップ</value>
@@ -5474,6 +5918,9 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>設定をリセットしますか?</value>
   </data>
+  <data name="SettingsResetDetail" xml:space="preserve">
+    <value>トレントのプロキシを含め、すべての設定が初期値に戻ります。視聴履歴は残り、古い設定ファイルも保管されます。</value>
+  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>設定を初期値に戻しました。古いファイルは{file}として保管されています。</value>
   </data>
@@ -5639,6 +6086,9 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>この作品と一致させられませんでした</value>
   </data>
+  <data name="SourceNoteHeldBack" xml:space="preserve">
+    <value>プロキシの確認待ち</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>リリース</value>
   </data>
@@ -5717,6 +6167,9 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>応答がありません。</value>
   </data>
+  <data name="SourcesDetailHeldBack" xml:space="preserve">
+    <value>プロキシの確認に通るまで待機します。</value>
+  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>オフです。順番は保持されますが、試されません。</value>
   </data>
@@ -5782,6 +6235,9 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>ソースの順番</value>
+  </data>
+  <data name="SourcesTorrentsNote" xml:space="preserve">
+    <value>トレントはプラグインではなく、Kaeriに含まれています。プロキシとシーディングは、設定のソースで設定します。</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>ソースを設定し直しています</value>
@@ -5972,6 +6428,9 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>プラグイン</value>
   </data>
+  <data name="SourcesSectionCatalogues" xml:space="preserve">
+    <value>公開カタログ</value>
+  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>デモを追加</value>
   </data>
@@ -5983,6 +6442,9 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>まだプラグインストアがありません</value>
+  </data>
+  <data name="StoresEmptyDetail" xml:space="preserve">
+    <value>プラグインストアは署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行します。運営者から届いた招待リンクで参加できます。</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。</value>
@@ -6461,6 +6923,9 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>プラグインストアを開く</value>
   </data>
+  <data name="StoresWhatIs" xml:space="preserve">
+    <value>プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</value>
+  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>プラグインストアとは?</value>
   </data>
@@ -6478,6 +6943,666 @@
   </data>
   <data name="StoresShare" xml:space="preserve">
     <value>共有…</value>
+  </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>ブラウザで{service}のページが開きました。そこでアクセスを許可すると、Kaeriは自動で先に進みます。</value>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>ブラウザで{service}にサインイン</value>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>コンピュータ</value>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>コードを入力</value>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>オフにする</value>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>アドレス</value>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>アドレスでペアリング</value>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>復元キー</value>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>ユーザー名</value>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>サーバーのアドレス</value>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>ペアリング中</value>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>ほかのデバイス</value>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>アドレスを空にすると、Kaeriはこのネットワーク上でデバイスを探します。</value>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>同期では、続きの位置、履歴、設定が共有されます。</value>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · リモコン</value>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>{name}のその他の操作</value>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>{store}または{device}に接続できません。両方がオンラインのときにもう一度お試しください。</value>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store}が招待を受け付けませんでした。運営者に新しい招待を依頼してください。</value>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device}は、{store}に他のデバイスを招待できません。プラグインストアの運営者に招待を依頼してください。</value>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>デバイス</value>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>同期オフ</value>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>{ago}に同期</value>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>同期できませんでした</value>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>このデバイス</value>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>同期</value>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>同期はオフです</value>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>オンにすると、続きの位置、履歴、設定をデバイスの間で同じに保てます。</value>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>同期をオンにする</value>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>デバイスをどうやって共有しますか?</value>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>近くのデバイスと</value>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>同じWi-Fi上の別のデバイスとペアリングします。ほかの場所には何も保存されません。</value>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>クラウドフォルダ経由</value>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。</value>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。</value>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>あなたのデバイス</value>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>このデバイスのみ</value>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>別のデバイスをペアリングすると、続きの位置、履歴、設定を共有できます。</value>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>デバイスを追加</value>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>{days}日間確認されていません</value>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>リモコン専用</value>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>{device}とも同期</value>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>テレビで再生のためにペアリング済みです。リモコンとしてペアリングしたテレビには、履歴は送られません。</value>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>同期</value>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>リモコン</value>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>同期では、続きの位置、履歴、設定が共有されます。リモコンをオンにすると、この{kind}から{device}を操作できます。</value>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>このデバイスを削除</value>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>{device}を削除しますか?</value>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device}は保存済みの内容を保持しますが、ほかのデバイスからは何も受け取らなくなります。</value>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>この{kind}の同期をオフにする</value>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>{device}の同期をオフにしますか?</value>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>この{kind}は、ほかのデバイスとの共有をやめます。保存済みの内容はここに残ります。</value>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>クラウドフォルダ</value>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</value>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>クラウドフォルダを追加</value>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>クラウドフォルダを選択</value>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>Googleドライブ内のKaeriの非表示フォルダ</value>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>自分のNextcloudサーバー、またはホスティング版</value>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>iCloud Driveで選んだフォルダ</value>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>WebDAVサーバー</value>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>WebDAVに対応した任意のサーバー</value>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>ほかのアプリが同期しているフォルダ用</value>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>デバイスは、このフォルダに変更内容の封印したコピーを保管します。読み取れるのは、あなたのデバイスだけです。Kaeriは独自のサーバーを運営していません。</value>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>フォルダを設定中</value>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>サーバーのアドレス</value>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>ブラウザでNextcloudを開くときのアドレスです。</value>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>{host}でサインインを完了してください</value>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>ブラウザでNextcloudのページが開いています。そこでアクセスを許可すると、このシートは自動で先に進みます。</value>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>{service}を待っています</value>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>ページをもう一度開く</value>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>代わりにアプリパスワードを使う</value>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>接続</value>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>{service}に接続できません。接続を確認してください。</value>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>{host}でNextcloudサーバーが見つかりません。アドレスを確認してください。</value>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloudがそのアプリパスワードを受け付けませんでした。Nextcloudの「設定」の「セキュリティ」で新しく作成してください。</value>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>サーバーがそのユーザー名またはパスワードを受け付けませんでした。</value>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>アクセスが許可される前に、サインインページが閉じました。</value>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。</value>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service}がKaeriをサインアウトさせました。再びサインインするまで、変更はこの{kind}で待機します。</value>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service}の空き容量がありません。空きを作ってから、もう一度お試しください。</value>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeriはこのフォルダを開けなくなりました。もう一度選んでください。</value>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>{service}と同期できませんでした</value>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>Dropbox内のKaeri専用フォルダ、Apps/Kaeri</value>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>OneDrive内のKaeri専用フォルダ、Apps/Kaeri</value>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>今すぐ同期</value>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>サインアウト</value>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>サインイン</value>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>サインアウトしました。再びサインインするまで、変更はこの{kind}で待機します。</value>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service}がKaeriにアクセスを許可しませんでした。もう一度選んで再試行してください。</value>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>ほかのデバイスで使っているものを選んでください。新しいクラウドフォルダは、復元キーを保存できるスマートフォンかコンピュータで追加します。</value>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>スマートフォンでサインイン</value>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropboxはスマートフォンでサインインします</value>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device}はDropboxにサインイン済みです。このテレビは、ペアリング済みの接続を通じて、そのサインインを使えます。</value>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>{device}のサインインを使う</value>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>テレビでできるDropboxのサインインはありません。スマートフォンでKaeriを開き、設定、デバイス、クラウドフォルダの順に進んで、そこでDropboxにサインインしてください。そのあと、ここでもう一度Dropboxを選んでください。</value>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>サインインしました。フォルダを設定しています</value>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service}がKaeriをサインアウトさせました。選択すると、再びサインインできます。</value>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>サインアウトしました。選択すると、サインインできます。</value>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>{service}からサインアウトしますか?</value>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>このテレビは、{service}経由の同期をやめます。再びサインインするまで、変更はここで待機します。</value>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>接続を待っています。変更はこの{kind}に保管されます。</value>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Googleドライブにサインイン</value>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>またはスキャンしてページを開く</value>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>スマートフォンでこれをスキャンし、Nextcloudのページでアクセスを許可してください。テレビは自動で先に進みます。</value>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>復元キー</value>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>安全な場所に保管してください。すべてのデバイスをなくしても履歴を復元でき、新しいデバイスがクラウドフォルダから参加するときにも使います。</value>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>QRコードで表示</value>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>あとで確認するには、この{kind}のロックを解除して、設定のデバイスを開いてください。</value>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>復元キー</value>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>{date}に作成</value>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>新しいキーを作成</value>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>古いキーは使えなくなり、デバイスは次回の同期で新しいキーに切り替わります。</value>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>復元キーを入力</value>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>{service}には、{count}台のデバイスの履歴が保存されています。同期をオンにしたときに保存したキーで開けます。</value>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>英数字24文字を、4文字ずつに区切ったものです。スペースと大文字小文字は区別しません。</value>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>このキーではこのフォルダを開けません。4文字ずつ確認して、もう一度お試しください。</value>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>復元</value>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>相手のデバイスでKaeriを開き、「別のデバイスから設定」か、設定のデバイスの「コードを表示」を選びます。そのあと、ここにコードを入力してください。</value>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>コードをスキャン</value>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>両方のデバイスが同じWi-Fiに接続している必要があります。</value>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>ペアリング</value>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>代わりにここにコードを表示</value>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>このコードを相手のデバイスに入力してください</value>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>または、スマートフォンのKaeriでスキャンしてください。</value>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>有効期間は2分 · {left}</value>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>スマートフォンでKaeriを開き、設定、デバイス、デバイスを追加の順に進んで、このコードをスキャンするか入力してください。</value>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>{device}とペアリングしました</value>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>履歴を取り込んでいます。その間もKaeriを使えます。</value>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>{device}のサインインをコピー</value>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}。この接続を通じて、デバイスごとに専用のコピーが作られます。</value>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>コードが一致しませんでした。{device}のコードを確認して、もう一度お試しください。</value>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>このコードを表示しているデバイスが見つかりません。両方のデバイスが同じWi-Fiに接続している必要があります。</value>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>このコードは期限切れです。新しいコードを表示してください。</value>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>{device}のどのプロファイルがあなたのものですか?</value>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>この{kind}は、そのプロファイルとだけ同期します。ほかのプロファイルは{device}に残ります。</value>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device}は「テレビで再生」ですでにこのスマートフォンを知っているため、新しいコードなしで同期できます。</value>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>エピソード{n} · {device}の{time}で停止</value>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>{device}の{time}から再開しました</value>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>同期中</value>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>{device}と同期中</value>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>同期のメモ</value>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>{title}のエピソード{n}は視聴済みのままです。{other}は、{device}が視聴を終えたことを知らずに未視聴に戻しました。</value>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>未視聴にする</value>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>メモは7日間残ります。</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>プロファイル</value>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>あなただけ</value>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>プロファイルを使うと、このデバイスを共有する人ごとに、履歴、続きを見る、アカウントを分けられます。プロファイルが1つのときは、選択画面も名前も表示されません。</value>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>プロファイルを追加</value>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>プロファイルごとに、履歴、続きを見る、アカウントが別々になります。このデバイスでは、ソースとダウンロードは共有されたままです。</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>新しいプロファイル</value>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>あなたのプロファイル</value>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>AniListから入力されました。これまで、このデバイスには名前のないプロファイルが1つありました。</value>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>子ども用プロファイル</value>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>アダルト向けの作品は表示されず、ソース、デバイス、トレントの設定は非表示になります。</value>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>子ども用プロファイルでは、ソースとデバイスは非表示で、アダルト向けの作品も表示されません。</value>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>子ども用</value>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>プロファイルを追加</value>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>ソース、ダウンロード、このデバイスの設定は、すべてのプロファイルで共有されます。</value>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>同期先</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>プロファイルを削除</value>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>{name}のプロファイルを削除しますか?</value>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>このデバイスにある{name}の履歴とサインインは削除されます。{name}と同期しているデバイスには、そのまま残ります。</value>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>誰が見ますか?</value>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>起動時に「誰が見ますか?」を表示</value>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。</value>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>プロファイルを切り替え</value>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>プロファイルを管理</value>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>別のデバイスから設定</value>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>Kaeriがすでに入っているデバイスで、設定、デバイス、デバイスを追加の順に開き、このコードを入力するかスキャンしてください。</value>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>代わりにクラウドフォルダから復元</value>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>履歴、設定、プラグインストアを取り込んでいます。すぐにKaeriを使い始められます。</value>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>プラグインストア「{store}」に参加</value>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device}が、この{kind}専用の招待を作成します</value>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>この{kind}内のフォルダ</value>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Nextcloudの「設定」の「セキュリティ」で作成してください。この{kind}に保存されます。</value>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>「テレビで再生」用に{count}台のテレビ</value>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>今日ペアリング</value>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>スマートフォンに入力するコードを表示します</value>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>あなただけです。プロファイルを追加すると、このテレビで履歴、続きを見る、アカウントを分けられます。</value>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>「誰が見ますか?」を開きます</value>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>このテレビのプロファイル</value>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>ファイルとして保存</value>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>QRコード</value>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>コードを表示</value>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>もう一度サインイン</value>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>フォルダを選択</value>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}、プロファイルを切り替え</value>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>ペアリングコード</value>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>スマートフォン</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>タブレット</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>テレビ</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>スマートフォンから設定</value>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>相手のデバイス</value>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>{service}のページが開いています。そこでアクセスを許可すると、Kaeriは自動で先に進みます。</value>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>{service}に接続中</value>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>アクセスが許可されました。サインインを完了しています。</value>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>{service}にKaeriのフォルダを作成し、履歴の最初のコピーを封印しています。</value>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>{service}にサインインできませんでした</value>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>フォルダを設定できませんでした</value>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service}がKaeriにアクセスを許可しませんでした。</value>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service}でサインインが完了しませんでした。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeriは{service}にフォルダを作成できませんでした。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>別のサービスを使う</value>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>クラウドフォルダを削除</value>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>同期から{service}を削除しますか?</value>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>この{kind}の内容はここに残り、近くのペアリング済みデバイスとは同期を続けます。フォルダは封印したコピーとともに{service}に残り、ほかのデバイスでも削除するまで使われます。</value>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>{service}のその他の操作</value>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>使用中</value>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>新しいフォルダの準備ができるまで、{service}を使い続けます。</value>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>どちらでも同期をオンにでき、両方使うこともできます。</value>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>同期では、続きの位置、履歴、設定を、近くまたは選んだクラウドフォルダ経由で、自分のデバイスの間で受け渡します。内容はこの{kind}を出る前に封印されます。</value>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>スマートフォンとペアリングすると、同期がオンになります。そのあと、このテレビもクラウドフォルダに参加できます。</value>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>この作品を読み込めませんでした</value>
@@ -6767,11 +7892,56 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>{status} · {score}/10</value>
   </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>エピソードへ移動…</value>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>エピソードへ移動</value>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>移動</value>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>{first}～{last}</value>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>エピソード、{first}～{last}</value>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>エピソード{number}はありません。この作品は全{last}話です。</value>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>エピソード{number}はまだ公開されていません。最新は{latest}です。</value>
+  </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>トレント</value>
   </data>
   <data name="TorrentsOn" xml:space="preserve">
     <value>トレント：オン</value>
+  </data>
+  <data name="TorrentsOffDetail" xml:space="preserve">
+    <value>初期設定ではオフです。プロキシを経由させない限り、トレントは直接接続します。</value>
+  </data>
+  <data name="TorrentsRisk" xml:space="preserve">
+    <value>トレントの参加者は、あなたのIPアドレスを見ることができます。非公開にするには、トレントの通信をプロキシ経由にしてください。</value>
+  </data>
+  <data name="TorrentsNotAPlugin" xml:space="preserve">
+    <value>トレントはプラグインではなく、Kaeriの機能です。プロキシとシーディングは、設定のソースで設定します。</value>
+  </data>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>トレントの通信をプロキシ経由にする</value>
+  </data>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>トレントの通信が、自分で運用または契約しているSOCKS5プロキシを経由します。オフの間、トレントは直接接続します。</value>
+  </data>
+  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
+    <value>SOCKS5プロキシ（{host}:{port}）経由です。</value>
+  </data>
+  <data name="TorrentsSummaryProxy" xml:space="preserve">
+    <value>SOCKS5プロキシ経由です。</value>
+  </data>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>プロキシを使わず、直接接続しています。</value>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>プロキシのホスト</value>
@@ -6788,6 +7958,9 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>保存済みのパスワードを使う場合は、空欄のままにしてください。</value>
   </data>
+  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
+    <value>新しいプロキシが確認に通るまで、トレントは保存済みのプロキシを使い続けます。</value>
+  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>プロキシには、ホストと、1から65535までのポート番号が必要です。</value>
   </data>
@@ -6797,17 +7970,29 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>プロキシを保存しました</value>
   </data>
+  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
+    <value>プロキシの確認に失敗した</value>
+  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>保存されませんでした。{why}ため、保存済みのプロキシはそのまま残ります。</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>{why}ため、トレントはまだオフです。</value>
   </data>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeriは、トレントの開始前に、プロキシに接続できるかを確認します。確認に失敗している間、トレントは待機します。</value>
+  </data>
+  <data name="TorrentsLastCheck" xml:space="preserve">
+    <value>プロキシの確認</value>
+  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>合格</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>確認中</value>
+  </data>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。</value>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>失敗</value>
@@ -7324,6 +8509,9 @@
   </data>
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>次のエピソード · {seconds}秒後に再生</value>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。</value>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>アップデート</value>

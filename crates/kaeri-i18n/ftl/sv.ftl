@@ -684,6 +684,12 @@ release-pinned = { $name } används för den här titeln.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Det gick inte att spara valet. { $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = Proxykontrollen misslyckades. Torrenter startar när den godkänns.
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Torrenter startar när proxykontrollen godkänns.
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Det där är varken en magnetlänk eller en torrentfil.
 
@@ -698,6 +704,12 @@ torrent-interface-closed = Kaeri stängdes innan torrenterna startade.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Det gick inte att starta torrentsessionen. { $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = Proxyinställningen går inte att använda. { $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = Källor lästes in på nytt. Torrenter startar när proxykontrollen godkänns.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrenterna är av. Sessionen stoppades.
@@ -814,6 +826,15 @@ notice-sign-out-failed = Det gick inte att logga ut från { $tracker }. Försök
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Det gick inte att spara inställningen. { $cause }
 
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Torrenttrafiken går nu via proxyn.
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Torrenter ansluter nu direkt, utan proxy.
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = Det gick inte att kontrollera proxyn. { $cause }
+
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Det gick inte att spara proxyns lösenord. Ange det igen för att försöka spara det. { $reason }
 
@@ -914,6 +935,18 @@ crash-notice = Kaeri stängdes efter ett fel.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri stängdes efter ett fel. Du kan rapportera det under Inställningar, Om.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = Inga titlar matchar de här filtren.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = Planerar är tom.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Offline. Slumpval från sökningen kräver AniList.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Det gick inte att välja en titel just nu. Försök igen om en stund.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Redigera proxy
@@ -1247,6 +1280,9 @@ shortcuts-group-lists = Listor
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Gå till en sektion
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Föregående eller kommande avsnittsintervall
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Tangentbordsgenvägar
 
@@ -1426,6 +1462,27 @@ stores-published-state = Publicerad
 
 # Accessible name of a row's Publish button.
 stores-publish-label = Publicera { $name } { $version }
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = Du kan se den igen i Inställningar, Enheter, efter ditt kontolösenord.
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Visa återställningsnyckeln för Kaeri
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = Profiler
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = Lägg till
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = Välj en mapp
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = Spara som fil
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = Klar
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2150,6 +2207,9 @@ keys-action-filter = Filtrera
 keys-action-filter-search = Sök i filtren
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Överraska mig
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Spela upp eller pausa
 
 # Action label in the help overlay and the command palette.
@@ -2220,6 +2280,18 @@ keys-hint-mark-previous = Markera tidigare
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Filter
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Överraska mig
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Gå till
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Rensa
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Annan
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Synka om
@@ -2389,6 +2461,9 @@ keys-where-episodes = i avsnittstabellen
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = på en annan skärm
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = i Sök under bläddring och i Planerar
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = “{ $action }” i kommandopaletten
 
@@ -2520,6 +2595,21 @@ keys-hint-copy-link = Kopiera länk
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Lämna
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Säg
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Tysta
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Avtysta
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Dölj chatt
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Visa chatt
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Behöver en större terminal
@@ -2826,6 +2916,33 @@ lists-episode-dubbed = Avsn. { $episode } · Dubbat
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score }%
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = film
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = snart
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = dub
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = d{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Avs
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = Dub
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · { $percent }%
 
@@ -3039,6 +3156,9 @@ sources-too-small = Kräver ett större terminalfönster.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Inga källor är tillgängliga
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = Torrenter är av tills { $setting } slås på.
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Källa
 
@@ -3089,6 +3209,9 @@ sources-state-held-back = Hålls tillbaka
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Tilläggsbutiker
+
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = Tillägg för dina egna enheter. Gå med via en inbjudningslänk.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } anslutna
@@ -3142,6 +3265,18 @@ sources-meta-skipped-until = Vilar till { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Testas igen när något behöver den ({ $cause })
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = Proxy { $mark }  Kontrollerar
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = Proxy { $mark }  Godkänd
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = Proxy { $mark }  Kontrollen misslyckades
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = Proxykontrollen misslyckades. Torrenter startar när den godkänns.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Lämnades oförändrad. Ta bort raden i config.toml för att återställa.
@@ -3344,6 +3479,9 @@ settings-label-seed-hours = Delas högst i
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Uppladdningsgräns
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Torrentproxy
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Lagring av token
 
@@ -3419,6 +3557,9 @@ settings-note-download-dir = Tryck på Enter för att skriva en sökväg. Gälle
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Gäller nedladdningar som blir klara efter ändringen.
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = Av som standard för att spara uppladdning. Slå på det för att ge tillbaka till svärmen.
+
 # Note under the after each download row.
 settings-note-download-hook = Tryck på Enter för att skriva ett kommando. Det körs efter varje färdig nedladdning.
 
@@ -3445,6 +3586,12 @@ settings-note-presence-title = Av visar “Tittar på anime” utan att nämna s
 
 # Note under the rich presence row.
 settings-note-presence-rich = Lägger till omslag, en förloppsindikator och en AniList-länk. Kräver att titeln visas.
+
+# Note under the torrent playback row.
+settings-note-torrents = Av som standard. Gäller direkt.
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = Valfritt. Redigera config.toml för att skicka torrenttrafiken via en SOCKS5-proxy.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Håller sedda avsnitt delade medan Kaeri är öppet.
@@ -3971,6 +4118,102 @@ stores-toast-nothing-to-publish = Det finns inga tillägg i tilläggsmappen att 
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = Det är du. En butik behåller alltid sin ägare.
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = datorn
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = Ange en kod
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = Ingen molnmapp
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = Inte synkad än
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = Används
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så sköter Kaeri resten själv.
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = Eller gå till den här adressen själv:
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = Loggar in
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = WebDAV-adress
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = Adressen till mappen på din server, med början i https://.
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = Mapp
+
+# Under the folder path field.
+sync-tui-folder-path-note = Hela sökvägen till en mapp som en annan app håller uppdaterad, till exempel en synkad disk.
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = Användarnamn
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Namnet du loggar in på Nextcloud med.
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = Lösenord
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = Applösenord
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = Kod
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = Adress
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = Skapar en kod
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = Den andra enhetens adress
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = Adressen som den andra enheten visar under sin kod, till exempel 192.168.1.20:47811.
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = Parkopplar
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = Du kan se den igen i Inställningar, Enheter.
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = Lägg till som barnprofil
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = Starta Kaeri igen för att använda profilen för { $name }.
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = Den här mappen innehåller ingen historik att gå med i. Välj en annan mapp.
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = { $service } är inte tillgängligt på den här enheten.
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = Ta bort
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = Visa
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = Stäng av
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = Kopiera
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = Gör fönstret högre för att se QR-koden.
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = Tryck { $key } för att stoppa uppspelningen.
 
@@ -3997,6 +4240,9 @@ tui-together-section = Tillsammans
 
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = länk eller kod
+
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Rader och reaktioner hålls borta från spelaren i alla partyn.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Det där är varken en länk eller en kod för watch party.
@@ -4309,6 +4555,9 @@ action-try-again = Försök igen
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Avbryt
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Gå
 
 # Button that puts a question off until later.
 action-not-now = Inte nu
@@ -4782,6 +5031,12 @@ tv-problem-unpaired = TV:n känner inte längre igen den här enheten. Parkoppla
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } av { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first } och { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }, { $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = Diskussion
@@ -6078,6 +6333,9 @@ onboarding-own-heading = Har du egna media?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Har du en inbjudningslänk?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = Tillägg kommer från tilläggsbutiker. En tilläggsbutik är signerad och ger varje enhet sin egen token, så du går med via en inbjudningslänk från ägaren.
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Prova direkt
 
@@ -6633,6 +6891,128 @@ together-recent-note = De tio senaste, sparade på den här enheten
 # The start sheet's button after a title is picked.
 party-pick-continue = Fortsätt
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Säg något
+
+# Button that sends a chat line.
+party-chat-send = Skicka
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Chatt
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = Vänta { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] Vänta en sekund
+       *[other] Vänta { $seconds } sekunder
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = { $count } till i chatten
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = Rummets server har stängt av chatten
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Meddelanden går via rummets server. Kaeri sparar inga.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Chatten är dold
+
+# Line under it.
+party-chat-hidden-line = Dölj chatt är på i Inställningar, under Uppspelning.
+
+# Button that turns Hide chat off.
+party-chat-show = Visa chatten
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Dölj chatten i watch partyn
+
+# Line under that switch.
+settings-hide-chat-line = Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = Tysta { $name }
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = Avtysta { $name }
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Avtysta
+
+# State on a muted member's row.
+party-member-muted = Tystad
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } är tystad
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Kunde inte skickas
+
+# Button after it, which sends the same text again.
+party-chat-retry = Försök igen
+
+# Button on the TV's controls that opens the four reactions.
+party-react = Reagera
+
+# Label of the laugh reaction button.
+party-react-laugh = Skratta
+
+# Label of the gasp reaction button.
+party-react-gasp = Häpna
+
+# Label of the clap reaction button.
+party-react-clap = Klappa
+
+# Label of the cry reaction button.
+party-react-cry = Gråta
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } skrattade
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } häpnade
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } klappade
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } grät
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line } vid { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } och { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second } och { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second } och { $count } till
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = Du
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = Skickar som { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } säger { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] { $count } tecken kvar
+       *[other] { $count } tecken kvar
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = Nästa
 
@@ -6891,6 +7271,9 @@ player-mark-watch-edges = Titta på kanterna
 # Line in the review with sharing on.
 player-mark-shares = När du sparar delas de här tiderna med AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri hittade de här tiderna i ljudet.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = Ersätter AniSkips { $start } till { $end }, som har rapporterats som fel.
 
@@ -6940,8 +7323,33 @@ player-mark-it = Markera det
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Fråga inte igen
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri hittade det här introt. Stämde kanterna?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri hittade det här outrot. Stämde kanterna?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Ja delar de här tiderna med AniSkip för avsnitt { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Ja
+
+player-found-adjust = Justera
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Sparat. AniSkip får de här tiderna för avsnitt { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri frågar inte om hopptider igen.
+
+player-found-never-how = Du kan slå på det igen i Inställningar.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Dela dina hopptider med AniSkip?
+
+# Body of the sheet.
+player-share-body = AniSkip är en delad lista över intron och outron, driven av egna frivilliga. Andra personers spelare hoppar över tiderna du markerar och de hittade tider du bekräftar.
 
 # What is sent, as a line under the body.
 player-share-sent = Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id som skapats för den här installationen. Inte ditt namn, dina konton eller den källa du tittar från. AniSkip ser din IP-adress för att begränsa skräppost, och dess villkor kräver att du är 13 år eller äldre.
@@ -6957,6 +7365,22 @@ player-skip-from-file = Från filen
 player-skip-yours = Dina
 
 player-skip-from-aniskip = Från AniSkip
+
+player-skip-found = Hittat av Kaeri
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Pausad medan lågenergiläget är på.
+
+player-skip-paused-battery-saver = Pausad medan batterisparläget är på.
+
+player-skip-paused-energy-saver = Pausad medan energisparläget är på.
+
+player-skip-paused-power-saver = Pausad medan strömsparläget är på.
+
+player-skip-paused-storage = Pausad tills 2 GB lagringsutrymme är ledigt.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = Inte tillgängligt i den här versionen av Kaeri.
 
 player-skip-none = Inga än
 
@@ -7459,6 +7883,199 @@ search-available-services = På dina tjänster
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = På { $service }
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+        [one] Ett avsnitt
+       *[other] { $count } avsnitt
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count } avs
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = { $out } av { $total } ute
+
+# The same, short.
+count-out-of-short = { $out } av { $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+        [one] Ett avsnitt ute
+       *[other] { $count } avsnitt ute
+    }
+
+# The same, short.
+count-out-short = { $count } ute
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = Startar { $date }
+
+# The count line of a show that has not started and has no date.
+count-not-out = Inte ute än
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = Avs { $episode } av { $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = Dub
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = Dub { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+        [one] Ett avsnitt
+       *[other] { $count } avsnitt
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = { $out } av { $total } avsnitt ute
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+        [one] Ett avsnitt ute
+       *[other] { $count } avsnitt ute
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = Startar { $date }
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = Avsnitt { $episode } av { $total }
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = dubbat till avsnitt { $through }
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = har en dubbning
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = jan
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = januari
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = feb
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = februari
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = mar
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = mars
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = apr
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = april
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = maj
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = maj
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = jun
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = juni
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = jul
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = juli
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = aug
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = augusti
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = sep
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = september
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = okt
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = oktober
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = nov
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = november
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = dec
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = december
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = Trendar idag
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = Trendar den här veckan
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = Trendar den här månaden
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = Idag
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = Den här veckan
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = Den här månaden
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = Det gick inte att läsa in trenderna för { $period }.
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = Uppdaterad { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = Överraska mig
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = Överraska mig
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = Annan
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Öppnar en slumpad titel från Planerar
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Öppnar en slumpad titel från de här filtren
+
+# Hint of the Another button.
+surprise-another-hint = Öppnar en annan slumpad titel i stället för den här
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = Inga titlar matchar de här filtren.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = Planerar är tom.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Offline. Slumpval från sökningen kräver AniList.
+
 # Title of the dialog that adds a media server.
 servers-add-title = Lägg till en mediaserver
 
@@ -7702,6 +8319,9 @@ settings-group-titles = Titlar
 # Group heading.
 settings-group-playback = Uppspelning
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Watch partyn
+
 # Group heading.
 settings-group-watching = Tittande
 
@@ -7783,8 +8403,35 @@ settings-skip-opening = Hoppa över öppningen automatiskt
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Hoppa över återblickar automatiskt
 
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Hitta hopptider i ljudet
+
+# Line under it.
+settings-find-skips-detail = När AniSkip saknar tider jämför Kaeri ljudet i en series avsnitt, på den här enheten.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Fråga om hopptider
+
+# Line under it.
+settings-ask-was-opening-detail = Efter att du hoppat över ett intro för hand och efter ett hopp som Kaeri hittade
+
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Dela hopptider med AniSkip
+
+# Line under it.
+settings-share-skips-detail = AniSkip är en delad lista över intron och outron som många spelare använder. Den får tiderna du markerar och de hittade tider du bekräftar, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen.
+
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = Hopptider du markerat eller som Kaeri hittat
+
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Rensa hopptiderna du markerat och de som Kaeri hittat? AniSkip behåller de du delat.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Rensa hopptider
+
+# Line under it.
+settings-clear-skips-android-detail = De du markerat och de som Kaeri hittat
 
 # Row: skip filler.
 settings-skip-filler = Hoppa över fyllnadsavsnitt automatiskt
@@ -8106,6 +8753,9 @@ settings-reset = Återställ inställningar
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Återställa inställningar?
 
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = Alla inställningar går tillbaka till standard, torrentproxyn inräknad. Din visningshistorik finns kvar, och den gamla inställningsfilen sparas.
+
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Inställningarna är tillbaka till standard. Den gamla filen sparades som { $file }.
 
@@ -8275,6 +8925,9 @@ source-note-gone = Inte installerad
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Det gick inte att matcha titeln
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = Väntar på proxykontrollen
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Utgåvor
 
@@ -8353,6 +9006,9 @@ sources-detail-not-answering = Svarar inte. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Svarar inte.
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Väntar tills proxykontrollen godkänns.
+
 # Status line: disabled.
 sources-detail-disabled = Av. Den behåller sin plats och provas inte.
 
@@ -8426,6 +9082,9 @@ sources-torrent-source = Torrentuppspelning
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Källaordning
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = Torrenter ingår i Kaeri och är inget tillägg. Proxyn och seedningen ställs in i Inställningar, under Källor.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Källor ställs in på nytt
@@ -8620,6 +9279,9 @@ sources-your-intro = Avsnitt spelas från den första källa som har dem, i den 
 # Heading of the section that lists the plugins.
 sources-section-plugins = Tillägg
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = Öppna kataloger
+
 # Link in the empty state.
 sources-add-demo = Lägg till demon
 
@@ -8631,6 +9293,9 @@ stores-joined = Ansluten
 
 # Title of the empty list.
 stores-empty-title = Inga tilläggsbutiker än
+
+# Line under the empty title.
+stores-empty-detail = Tilläggsbutiker innehåller signerade tillägg och ger varje enhet sin egen token. Gå med i en med inbjudningslänken som ägaren skickar till dig.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.
@@ -9124,6 +9789,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Öppna tilläggsbutiker
 
+# Explainer on the empty plugin stores page.
+stores-what-is = En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med via en inbjudningslänk från ägaren.
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Vad är en tilläggsbutik?
 
@@ -9141,6 +9809,671 @@ stores-qr-warning-device = Skanna den här med den enhet du vill länka. Den gä
 
 # Button that opens the system share sheet for the invite link.
 stores-share = Dela…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så sköter Kaeri resten själv.
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = Logga in på { $service } i webbläsaren
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = datorn
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = Ange en kod
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = Visa
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = Stäng av
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Adress
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Parkoppla med adress
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Återställningsnyckel
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = Användarnamn
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Lösenord
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Serveradress
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Parkopplar
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = din andra enhet
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Lämna adressen tom, så letar Kaeri efter enheten i det här nätverket.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Synk delar var du slutade, din historik och dina inställningar.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Fjärrstyrning
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Redigera
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Namn
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = Mer för { $name }
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = Det gick inte att nå { $store } eller { $device }. Försök igen när båda är online.
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store } godtog inte inbjudan. Be ägaren om en ny.
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device } kan inte bjuda in andra enheter till { $store }. Be ägaren till tilläggsbutikn om en inbjudan.
+
+# Settings row and page title, every platform.
+devices-title = Enheter
+
+# Devices row value while sync is off.
+devices-row-off = Synk av
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = Synkad { $ago }
+
+# Devices row value with the error glyph.
+devices-row-error = Det gick inte att synka
+
+# Group heading over the name.
+devices-this-device = Den här enheten
+
+# Row for this device’s name.
+devices-name = Namn
+
+# Group heading while off.
+sync-group = Synk
+
+# Off state.
+sync-off-title = Synk är av
+
+# Off state.
+sync-off-line = Slå på den för att hålla var du slutade, din historik och dina inställningar likadana på dina enheter.
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = Slå på synk
+
+# Road sheet title.
+sync-road-title = Hur ska dina enheter dela?
+
+# Road sheet row.
+sync-road-nearby = Med en enhet i närheten
+
+# Road sheet row line.
+sync-road-nearby-line = Parkoppla med en annan enhet på samma Wi-Fi. Inget sparas någon annanstans.
+
+# Road sheet row.
+sync-road-cloud = Via en molnmapp
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = En molndisk du redan använder, eller din egen server. Fungerar medan dina enheter är långt ifrån varandra och håller en säkerhetskopia.
+
+# Road sheet footer.
+sync-road-later = Du kan lägga till det andra sättet senare. De flesta använder båda.
+
+# Group heading.
+devices-yours = Dina enheter
+
+# Empty Your devices.
+devices-only-this = Bara den här enheten
+
+# Empty Your devices.
+devices-only-this-line = Parkoppla en till enhet för att dela var du slutade, din historik och dina inställningar.
+
+# Row and sheet title.
+devices-add = Lägg till en enhet
+
+# Device row line past 30 days.
+devices-not-seen = Inte sedd på { $days } dagar
+
+# A device paired only for Play on TV.
+devices-remote-only = Bara fjärrstyrning
+
+# Button on a remote-only TV row.
+devices-also-sync = Synka också med { $device }
+
+# Footer while sync is off.
+devices-paired-tvs-foot = Parkopplad för Spela på TV. En TV som parkopplats som fjärrkontroll får aldrig din historik.
+
+# Switch on a device.
+devices-sync-switch = Synk
+
+# Switch on a TV.
+devices-remote-switch = Fjärrstyrning
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = Synk delar var du slutade, din historik och dina inställningar. Med fjärrstyrning kan den här { $kind } styra { $device }.
+
+# Device page, destructive.
+devices-remove = Ta bort den här enheten
+
+# Alert title.
+devices-remove-alert = Ta bort { $device }?
+
+# Alert message.
+devices-remove-alert-line = { $device } behåller det den har, men får inget nytt från dina andra enheter.
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = Stäng av synk på den här { $kind }
+
+# Alert title.
+sync-turn-off-alert = Stänga av synk på { $device }?
+
+# Alert message.
+sync-turn-off-alert-line = Den här { $kind } slutar dela med dina andra enheter. Allt den har finns kvar här.
+
+# Group heading.
+cloud-group = Molnmapp
+
+# Group footer.
+cloud-foot = Fyller på medan dina enheter är långt ifrån varandra och håller en förseglad säkerhetskopia. Bara dina enheter kan läsa den.
+
+# Row when only the nearby road is set.
+cloud-add = Lägg till en molnmapp
+
+# Picker title.
+cloud-pick-title = Välj en molnmapp
+
+# Picker row line.
+cloud-google-line = En dold mapp för Kaeri i din Drive
+
+# Picker row line.
+cloud-nextcloud-line = Din egen eller en hostad Nextcloud-server
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = En mapp du väljer i iCloud Drive
+
+# Picker group heading.
+cloud-other = Annat
+
+# Picker row.
+cloud-webdav = WebDAV-server
+
+# Picker row line.
+cloud-webdav-line = Valfri server som talar WebDAV
+
+# Picker row line.
+cloud-folder-line = För en mapp som en annan app håller uppdaterad
+
+# Picker footer.
+cloud-pick-foot = Dina enheter lägger en förseglad kopia av sina ändringar i den här mappen. Bara dina enheter kan läsa den, och Kaeri driver ingen egen server.
+
+# Row line while the first write runs.
+cloud-setting-up = Ställer in mappen
+
+# Field label.
+cloud-nextcloud-address = Serveradress
+
+# Field note.
+cloud-nextcloud-address-note = Adressen du öppnar Nextcloud på i en webbläsare.
+
+# Login flow wait.
+cloud-nextcloud-wait-title = Slutför inloggningen på { $host }
+
+# Login flow wait.
+cloud-nextcloud-wait-line = Din Nextcloud-sida är öppen i webbläsaren. Tillåt åtkomst där, så sköter den här rutan resten själv.
+
+# Wait row.
+cloud-waiting = Väntar på { $service }
+
+# Button.
+cloud-open-again = Öppna sidan igen
+
+# Text button.
+cloud-app-password = Använd ett applösenord i stället
+
+# Button.
+cloud-connect = Anslut
+
+# Error.
+cloud-err-offline = Det gick inte att nå { $service }. Kontrollera din anslutning.
+
+# Inline error.
+cloud-err-no-server = Det gick inte att hitta någon Nextcloud-server på { $host }. Kontrollera adressen.
+
+# Inline error.
+cloud-err-app-password = Nextcloud godtog inte det applösenordet. Skapa ett nytt i Nextcloud under Inställningar, Säkerhet.
+
+# Inline error.
+cloud-err-webdav = Servern avvisade användarnamnet eller lösenordet.
+
+# Error, with Open the page again.
+cloud-err-timeout = Inloggningssidan stängdes innan åtkomst hade tillåtits.
+
+# Error.
+cloud-err-other-group = Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp.
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service } loggade ut Kaeri. Dina ändringar väntar på den här { $kind } tills du loggar in igen.
+
+# Status error.
+cloud-err-full = { $service } är fullt. Frigör utrymme där och försök igen.
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeri kan inte öppna mappen längre. Välj den igen.
+
+# Status error title.
+cloud-err-title = Det gick inte att synka med { $service }
+
+# Picker row line.
+cloud-dropbox-line = Kaeris egen mapp i din Dropbox, Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = Kaeris egen mapp i din OneDrive, Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = Synka nu
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = Logga ut
+
+# Cloud group button after signing out.
+cloud-sign-in = Logga in
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = Utloggad. Ändringar väntar på den här { $kind } tills du loggar in igen.
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service } gav inte Kaeri åtkomst. Välj den igen för att försöka på nytt.
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = Välj den som dina andra enheter använder. En ny molnmapp läggs till på en mobil eller dator, där återställningsnyckeln kan sparas.
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = Loggar in på din mobil
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropbox loggar in på din mobil
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device } är inloggad på Dropbox. Den här TV:n kan använda den inloggningen över din parkoppling.
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = Använd inloggningen från { $device }
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = Dropbox har ingen inloggning som en TV kan göra. Öppna Kaeri på din mobil, sedan Inställningar, Enheter, Molnmapp, och logga in på Dropbox där. Välj sedan Dropbox här igen.
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = Inloggad. Ställer in mappen
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service } loggade ut Kaeri. Välj för att logga in igen.
+
+# TV cloud row.
+tv-cloud-signed-out-line = Utloggad. Välj för att logga in.
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = Logga ut från { $service }?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = Den här TV:n slutar synka via { $service }. Ändringar väntar här tills du loggar in igen.
+
+# Status line while offline.
+cloud-offline = Väntar på en anslutning. Ändringar sparas på den här { $kind }.
+
+# TV device flow.
+tv-google-title = Logga in på Google Drive
+
+# TV device flow.
+tv-qr-open-page = Eller skanna för att öppna sidan
+
+# TV Nextcloud.
+tv-nextcloud-line = Skanna det här med din mobil och tillåt åtkomst på din Nextcloud-sida. TV:n sköter resten själv.
+
+# Sheet title.
+rkey-title = Din återställningsnyckel
+
+# Sheet line.
+rkey-line = Förvara den säkert. Den återställer din historik om du förlorar alla dina enheter, och låter en ny enhet gå med från din molnmapp.
+
+# Button.
+rkey-copy = Kopiera
+
+# Text button.
+rkey-qr = Visa som QR-kod
+
+# Sheet footnote.
+rkey-again = Du kan se den igen i Inställningar, Enheter, efter upplåsning av den här { $kind }.
+
+# Devices row.
+rkey-row = Återställningsnyckel
+
+# Devices row value.
+rkey-made = Skapad { $date }
+
+# Row.
+rkey-new = Skapa en ny nyckel
+
+# Footer.
+rkey-new-foot = Den gamla nyckeln slutar fungera, och dina enheter byter till den nya vid sin kommande synk.
+
+# Restore.
+rkey-enter-title = Ange din återställningsnyckel
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+        [one] { $service } innehåller historik från { $count } enhet. Nyckeln du sparade när synkningen slogs på öppnar den.
+       *[other] { $service } innehåller historik från { $count } enheter. Nyckeln du sparade när synkningen slogs på öppnar den.
+    }
+
+# Field note.
+rkey-enter-note = 24 bokstäver och siffror, i grupper om fyra. Mellanslag och versaler spelar ingen roll.
+
+# Inline error.
+rkey-wrong = Den nyckeln öppnar inte den här mappen. Kontrollera varje grupp om fyra och försök igen.
+
+# Button.
+rkey-restore = Återställ
+
+# Add a device.
+pair-enter-line = Öppna Kaeri på den andra enheten och välj Ställ in från en annan enhet, eller Inställningar, Enheter, Visa en kod. Ange sedan koden här.
+
+# Button, phones.
+pair-scan = Skanna koden
+
+# Note.
+pair-same-wifi = Båda enheter måste vara på samma Wi-Fi.
+
+# Button.
+pair-button = Parkoppla
+
+# Text button.
+pair-show-instead = Visa en kod här i stället
+
+# Code screen.
+pair-show-title = Ange den här koden på din andra enhet
+
+# Code screen.
+pair-show-scan = Eller skanna den från Kaeri på din mobil.
+
+# Code screen.
+pair-good-for = Giltig i 2 minuter · { $left }
+
+# TV code screen.
+pair-tv-line = Öppna Kaeri på din mobil, sedan Inställningar, Enheter, Lägg till en enhet, och skanna den här koden eller ange den.
+
+# Success.
+pair-ok = Parkopplad med { $device }
+
+# Success.
+pair-ok-line = Hämtar din historik. Du kan använda Kaeri under tiden.
+
+# Success switch.
+pair-copy-signins = Kopiera inloggningar från { $device }
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }. Varje enhet får sin egen kopia över den här länken.
+
+# Error.
+pair-err-code = Koden stämde inte. Kontrollera koden på { $device } och försök igen.
+
+# Error.
+pair-err-not-found = Det gick inte att hitta den enhet som visar den här koden. Båda enheter måste vara på samma Wi-Fi.
+
+# Error on the showing side.
+pair-err-expired = Koden har gått ut. Visa en ny.
+
+# Profile question.
+pair-which-profile = Vilken profil på { $device } är din?
+
+# Profile question.
+pair-which-profile-line = Den här { $kind } synkar bara med den profilen. De andra stannar på { $device }.
+
+# Footer.
+pair-also-sync-foot = { $device } känner redan igen den här mobilen från Spela på TV, så synk med den behöver ingen ny kod.
+
+# Continue, for a day.
+continue-from-device = Avsnitt { $n } · stoppade vid { $time } på { $device }
+
+# Player, 6 s, with Start over.
+player-resumed-from = Återupptog vid { $time } från { $device }
+
+# Row line, Mac toolbar status.
+sync-syncing = Synkar
+
+# Mac jobs popover.
+sync-syncing-with = Synkar med { $device }
+
+# Device page group.
+sync-notes = Synkanteckningar
+
+# Sync note.
+sync-note-kept-watched = Avsnitt { $n } av { $title } förblir sett. { $other } markerade det som osett utan att veta att { $device } hade sett klart det.
+
+# Sync note action.
+sync-note-undo = Markera som osett
+
+# Footer.
+sync-notes-foot = Anteckningar sparas i 7 dagar.
+
+# Settings row and page.
+profiles-title = Profiler
+
+# Profiles row value with one profile.
+profiles-only-you = Bara du
+
+# Profiles page with one.
+profiles-one-foot = Profiler håller historik, Fortsätt titta och konton åtskilda för personer som delar den här enheten. Med en profil har Kaeri ingen väljare och inga namn.
+
+# Row, sheet title, picker tile.
+profiles-add = Lägg till en profil
+
+# Sheet line.
+profiles-add-line = Varje profil har sin egen historik, sitt eget Fortsätt titta och egna konton. Källor och nedladdningar delas på den här enheten.
+
+# Field label.
+profiles-new = Ny profil
+
+# Field label.
+profiles-yours = Din profil
+
+# Field note when signed in.
+profiles-yours-note = Ifylld från AniList. Hittills hade den här enheten en profil utan namn.
+
+# Switch.
+profiles-kids = Barnprofil
+
+# Switch footer.
+profiles-kids-line = Vuxentitlar hålls borta, och källor, enheter och torrentinställningar är dolda i den.
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = Källor och Enheter är dolda i en barnprofil, och vuxentitlar hålls borta.
+
+# Line under a kids profile.
+profiles-kids-tag = Barn
+
+# Button.
+profiles-add-button = Lägg till profil
+
+# Profiles page footer.
+profiles-shared-foot = Källor, nedladdningar och den här enhetens inställningar delas av alla profiler.
+
+# Profile page row.
+profiles-syncs-with = Synkar med
+
+# Profile page, destructive.
+profiles-delete = Radera profil
+
+# Alert title.
+profiles-delete-alert = Radera profilen för { $name }?
+
+# Alert message.
+profiles-delete-alert-line = Historiken och inloggningarna för { $name } tas bort från den här enheten. Enheter som synkar med { $name } behåller sina.
+
+# TV, and iPad when asked.
+profiles-picker = Vem tittar?
+
+# iPad switch.
+profiles-ask-at-launch = Fråga vem som tittar vid start
+
+# iPad footer.
+profiles-ask-foot = Av som standard. För en iPad som hushållet delar. Kontoraden byter profil när som helst.
+
+# TV Settings.
+profiles-switch = Byt profil
+
+# Account sheet and menus.
+profiles-manage = Hantera profiler
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = Ställ in från en annan enhet
+
+# Code screen from first launch.
+first-setup-line = Öppna Inställningar, Enheter, Lägg till en enhet på en enhet som redan har Kaeri, och ange den här koden eller skanna den.
+
+# Text button.
+first-restore = Återställ från en molnmapp i stället
+
+# Success from first launch.
+first-ok-line = Hämtar din historik, dina inställningar och dina tilläggsbutiker. Du kan börja använda Kaeri nu.
+
+# Success switch.
+first-join-store = Gå med i tilläggsbutik { $store }
+
+# Success switch line.
+first-join-store-line = { $device } skapar en egen inbjudan åt den här { $kind }
+
+# Picker row on a phone or computer.
+cloud-folder = En mapp på den här { $kind }
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Skapa ett i Nextcloud under Inställningar, Säkerhet. Det sparas på den här { $kind }.
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+        [one] En TV för Spela på TV
+       *[other] { $count } TV-apparater för Spela på TV
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = Parkopplad idag
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = Visar en kod att ange på din mobil
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = Bara du. Lägg till en profil för att hålla historik, Fortsätt titta och konton åtskilda på den här TV:n.
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = Öppnar Vem tittar?
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = Profiler på den här TV:n
+
+# Android recovery key sheet, third button.
+rkey-save-file = Spara som fil
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = QR-kod
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = Visa en kod
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = Logga in igen
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = Välj mapp
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }, byt profil
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = Parkopplingskod
+
+device-kind-phone = mobilen
+
+device-kind-tablet = surfplattan
+
+device-kind-tv = TV:n
+
+# TV welcome, text button.
+first-setup-phone = Ställ in från din mobil
+
+# Error naming a device that is not known by name.
+devices-other-device = den andra enheten
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = Sidan för { $service } är öppen. Tillåt åtkomst där, så sköter Kaeri resten själv.
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = Ansluter till { $service }
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Åtkomst tillåten. Slutför inloggningen.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = Skapar mappen för Kaeri i { $service } och förseglar en första kopia av din historik.
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = Det gick inte att logga in på { $service }
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Det gick inte att ställa in mappen
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service } gav inte Kaeri åtkomst.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service } slutförde inte inloggningen. Försök igen om en stund.
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeri kunde inte skapa sin mapp i { $service }. Försök igen om en stund.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Använd en annan tjänst
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Ta bort molnmappen
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = Ta bort { $service } från synk?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = Allt på den här { $kind } stannar här, och parkopplade enheter i närheten synkar vidare. Mappen finns kvar i { $service } med sin förseglade kopia, och dina andra enheter använder den tills du tar bort den på dem också.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Ta bort
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = Mer för { $service }
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = Används
+
+# Picker line under Use another service.
+cloud-switch-foot = { $service } används tills den nya mappen är klar.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = Vilket som helst slår på synk, och du kan använda båda.
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = Synk för över var du slutade, din historik och dina inställningar mellan dina egna enheter, i närheten eller via en molnmapp du väljer. Den förseglas innan den lämnar den här { $kind }.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = Parkoppling med din mobil slår på synk. Sedan kan den här TV:n gå med i din molnmapp.
 
 # Title of the state when a title page could not load.
 title-load-failed = Det gick inte att läsa in den här titeln.
@@ -9438,11 +10771,56 @@ title-fact-tba = Datum tillkännages
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = Gå till avsnitt…
+
+# Title of the Go to episode field.
+episode-go-to-title = Gå till avsnitt
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Gå
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first } till { $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = Avsnitt, { $first } till { $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = Inget avsnitt { $number }. Den här serien har { $last }.
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = Avsnitt { $number } är inte ute än. Det senaste är { $latest }.
+
 # Title of the settings group and the screen.
 torrents-title = Torrenter
 
 # Label and short value for the switch.
 torrents-on = Torrenter är på
+
+# Line under the switch while torrents are off.
+torrents-off-detail = Av som standard. Torrenter ansluter direkt om du inte skickar dem via en proxy.
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = Andra i en torrent kan se din IP-adress. Skicka torrenttrafiken via en proxy för att hålla den privat.
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = Torrenter ingår i Kaeri och är inget tillägg. Proxyn och seedningen ställs in i Inställningar, under Källor.
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Skicka torrenttrafik via en proxy
+
+# Line under the switch.
+torrents-proxy-route-detail = Torrenttrafiken går via en SOCKS5-proxy som du driver eller hyr. Medan det här är av ansluter torrenter direkt.
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = Via en SOCKS5-proxy på { $host }:{ $port }.
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Via en SOCKS5-proxy.
+
+# Summary: no proxy is set.
+torrents-summary-direct = Ansluter direkt, utan proxy.
 
 # Label of the proxy host field.
 torrents-proxy-host = Proxyvärd
@@ -9459,6 +10837,9 @@ torrents-proxy-password = Lösenord
 # Line under the password field.
 torrents-password-keep = Lämna lösenordet tomt för att behålla det sparade.
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = Torrenter fortsätter använda den sparade proxyn tills den nya klarar proxykontrollen.
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proxyn behöver en värd och en port från 1 till 65535.
 
@@ -9468,17 +10849,29 @@ torrents-checking-proxy = Kontrollerar proxyn…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxyn sparades
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = Proxykontrollen misslyckades
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Inte sparad. { $why }, så den sparade proxyn finns kvar.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrenter är fortfarande av. { $why }.
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeri kontrollerar att proxyn går att nå innan torrenter startar. Torrenter väntar medan kontrollen misslyckas.
+
+# Label of the proxy check's result.
+torrents-last-check = Proxykontroll
+
 # Check passed.
 torrents-check-passed = Godkänd
 
 # Check running: the short word.
 torrents-check-running = Kontrollerar
+
+# Check failed: the line.
+torrents-check-failed-line = Proxykontrollen misslyckades. Torrenter startar när den godkänns.
 
 # Short word: the check failed.
 torrents-check-failed = Misslyckades
@@ -9999,6 +11392,9 @@ tv-cast-volume-on-tv = Ställs in på TV:n
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = Nästa · spelas om { $seconds } s
+
+# Line under the paired TVs.
+tv-forget-note = Glömmer du en TV här glömmer den den här enheten också.
 
 # Heading of the update row in settings and about.
 updates-title = Uppdateringar

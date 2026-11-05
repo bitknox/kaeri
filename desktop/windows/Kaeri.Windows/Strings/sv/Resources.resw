@@ -707,6 +707,12 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Det gick inte att spara valet. {reason}</value>
   </data>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>Proxykontrollen misslyckades. Torrenter startar när den godkänns.</value>
+  </data>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>Torrenter startar när proxykontrollen godkänns.</value>
+  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Det där är varken en magnetlänk eller en torrentfil.</value>
   </data>
@@ -721,6 +727,12 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Det gick inte att starta torrentsessionen. {reason}</value>
+  </data>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>Proxyinställningen går inte att använda. {reason}</value>
+  </data>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>Källor lästes in på nytt. Torrenter startar när proxykontrollen godkänns.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrenterna är av. Sessionen stoppades.</value>
@@ -836,6 +848,15 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Det gick inte att spara inställningen. {cause}</value>
   </data>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>Torrenttrafiken går nu via proxyn.</value>
+  </data>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>Torrenter ansluter nu direkt, utan proxy.</value>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>Det gick inte att kontrollera proxyn. {cause}</value>
+  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Det gick inte att spara proxyns lösenord. Ange det igen för att försöka spara det. {reason}</value>
   </data>
@@ -935,6 +956,18 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>Kaeri stängdes efter ett fel. Du kan rapportera det under Inställningar, Om.</value>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>Inga titlar matchar de här filtren.</value>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>Planerar är tom.</value>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>Offline. Slumpval från sökningen kräver AniList.</value>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>Det gick inte att välja en titel just nu. Försök igen om en stund.</value>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Fortsätt titta</value>
   </data>
@@ -964,6 +997,18 @@
   </data>
   <data name="CalendarWatchedSpoken" xml:space="preserve">
     <value>{title}, {episode}, sedd</value>
+  </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>E{episode} ute {ago}</value>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>E{episode} ute {ago} · Dubbat</value>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>E{episode} om {span}</value>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>E{episode} om {span} · Dubbat</value>
   </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>{list} {count}</value>
@@ -1526,6 +1571,21 @@
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>Windows frågar om Kaeri får nå din TV.</value>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>Du kan se den igen i Inställningar, Enheter, med Windows Hello.</value>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Visa återställningsnyckeln för Kaeri</value>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>datorn</value>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>Synka med {device}</value>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>Öppna {device}</value>
+  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>En seeder</value>
   </data>
@@ -1843,6 +1903,9 @@
   </data>
   <data name="ActionCancel" xml:space="preserve">
     <value>Avbryt</value>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>Gå</value>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>Inte nu</value>
@@ -2314,6 +2377,12 @@
   </data>
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>{position} av {duration}</value>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first} och {last}</value>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}, {next}</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskussion</value>
@@ -3593,6 +3662,9 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Har du en inbjudningslänk?</value>
   </data>
+  <data name="OnboardingWhereStores" xml:space="preserve">
+    <value>Tillägg kommer från tilläggsbutiker. En tilläggsbutik är signerad och ger varje enhet sin egen token, så du går med via en inbjudningslänk från ägaren.</value>
+  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Prova direkt</value>
   </data>
@@ -4145,6 +4217,126 @@
   <data name="PartyPickContinue" xml:space="preserve">
     <value>Fortsätt</value>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>Säg något</value>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>Skicka</value>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>Chatt</value>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>Vänta {seconds} s</value>
+  </data>
+  <data name="PartyChatWaitSpoken_one" xml:space="preserve">
+    <value>Vänta en sekund</value>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>Vänta {seconds} sekunder</value>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>{count} till i chatten</value>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>Rummets server har stängt av chatten</value>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>Meddelanden går via rummets server. Kaeri sparar inga.</value>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>Chatten är dold</value>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>Dölj chatt är på i Inställningar, under Uppspelning.</value>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>Visa chatten</value>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>Dölj chatten i watch partyn</value>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.</value>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>Tysta {name}</value>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>Avtysta {name}</value>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>Avtysta</value>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>Tystad</value>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name} är tystad</value>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>Kunde inte skickas</value>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>Försök igen</value>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>Reagera</value>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>Skratta</value>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>Häpna</value>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>Klappa</value>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>Gråta</value>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>{name} skrattade</value>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>{name} häpnade</value>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>{name} klappade</value>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>{name} grät</value>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{line} vid {time}</value>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first} och {second}</value>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}, {second} och {third}</value>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}, {second} och {count} till</value>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>Du</value>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>Skickar som {device}</value>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name} säger {message}</value>
+  </data>
+  <data name="PartyChatLeft_one" xml:space="preserve">
+    <value>{count} tecken kvar</value>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>{count} tecken kvar</value>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>Nästa</value>
   </data>
@@ -4412,6 +4604,9 @@
   <data name="PlayerMarkShares" xml:space="preserve">
     <value>När du sparar delas de här tiderna med AniSkip.</value>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeri hittade de här tiderna i ljudet.</value>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>Ersätter AniSkips {start} till {end}, som har rapporterats som fel.</value>
   </data>
@@ -4463,8 +4658,35 @@
   <data name="PlayerDontAskAgain" xml:space="preserve">
     <value>Fråga inte igen</value>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeri hittade det här introt. Stämde kanterna?</value>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeri hittade det här outrot. Stämde kanterna?</value>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>Ja delar de här tiderna med AniSkip för avsnitt {episode}.</value>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>Justera</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>Sparat. AniSkip får de här tiderna för avsnitt {episode}.</value>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeri frågar inte om hopptider igen.</value>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>Du kan slå på det igen i Inställningar.</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Dela dina hopptider med AniSkip?</value>
+  </data>
+  <data name="PlayerShareBody" xml:space="preserve">
+    <value>AniSkip är en delad lista över intron och outron, driven av egna frivilliga. Andra personers spelare hoppar över tiderna du markerar och de hittade tider du bekräftar.</value>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id som skapats för den här installationen. Inte ditt namn, dina konton eller den källa du tittar från. AniSkip ser din IP-adress för att begränsa skräppost, och dess villkor kräver att du är 13 år eller äldre.</value>
@@ -4483,6 +4705,27 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>Från AniSkip</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Hittat av Kaeri</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>Pausad medan lågenergiläget är på.</value>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>Pausad medan batterisparläget är på.</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>Pausad medan energisparläget är på.</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>Pausad medan strömsparläget är på.</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>Pausad tills 2 GB lagringsutrymme är ledigt.</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>Inte tillgängligt i den här versionen av Kaeri.</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>Inga än</value>
@@ -4985,6 +5228,195 @@
   <data name="SearchLineService" xml:space="preserve">
     <value>På {service}</value>
   </data>
+  <data name="CountEpisodes_one" xml:space="preserve">
+    <value>Ett avsnitt</value>
+  </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>{count} avsnitt</value>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>{count} avs</value>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>{out} av {total} ute</value>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>{out} av {total}</value>
+  </data>
+  <data name="CountOut_one" xml:space="preserve">
+    <value>Ett avsnitt ute</value>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>{count} avsnitt ute</value>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>{count} ute</value>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>Startar {date}</value>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>Inte ute än</value>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>Avs {episode} av {total}</value>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>Dub</value>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>Dub {through}</value>
+  </data>
+  <data name="CountSpokenEpisodes_one" xml:space="preserve">
+    <value>Ett avsnitt</value>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>{count} avsnitt</value>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>{out} av {total} avsnitt ute</value>
+  </data>
+  <data name="CountSpokenOut_one" xml:space="preserve">
+    <value>Ett avsnitt ute</value>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>{count} avsnitt ute</value>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>Startar {date}</value>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>Avsnitt {episode} av {total}</value>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>dubbat till avsnitt {through}</value>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>har en dubbning</value>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>jan</value>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>januari</value>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>feb</value>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>februari</value>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>mar</value>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>mars</value>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>apr</value>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>april</value>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>maj</value>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>maj</value>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>jun</value>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>juni</value>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>jul</value>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>juli</value>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>aug</value>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>augusti</value>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>sep</value>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>september</value>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>okt</value>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>oktober</value>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>nov</value>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>november</value>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>dec</value>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>december</value>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>Trendar idag</value>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>Trendar den här veckan</value>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>Trendar den här månaden</value>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>Idag</value>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>Den här veckan</value>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>Den här månaden</value>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>Det gick inte att läsa in trenderna för {period}.</value>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>Uppdaterad {age}</value>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>Överraska mig</value>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>Överraska mig</value>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>Annan</value>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>Öppnar en slumpad titel från Planerar</value>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>Öppnar en slumpad titel från de här filtren</value>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>Öppnar en annan slumpad titel i stället för den här</value>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>Inga titlar matchar de här filtren.</value>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>Planerar är tom.</value>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>Offline. Slumpval från sökningen kräver AniList.</value>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>Lägg till en mediaserver</value>
   </data>
@@ -5225,6 +5657,9 @@
   <data name="SettingsGroupPlayback" xml:space="preserve">
     <value>Uppspelning</value>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>Watch partyn</value>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>Tittande</value>
   </data>
@@ -5306,8 +5741,35 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Hoppa över återblickar automatiskt</value>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>Hitta hopptider i ljudet</value>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>När AniSkip saknar tider jämför Kaeri ljudet i en series avsnitt, på den här enheten.</value>
+  </data>
+  <data name="SettingsAskWasOpening" xml:space="preserve">
+    <value>Fråga om hopptider</value>
+  </data>
+  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
+    <value>Efter att du hoppat över ett intro för hand och efter ett hopp som Kaeri hittade</value>
+  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Dela hopptider med AniSkip</value>
+  </data>
+  <data name="SettingsShareSkipsDetail" xml:space="preserve">
+    <value>AniSkip är en delad lista över intron och outron som många spelare använder. Den får tiderna du markerar och de hittade tider du bekräftar, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen.</value>
+  </data>
+  <data name="SettingsClearSkips" xml:space="preserve">
+    <value>Hopptider du markerat eller som Kaeri hittat</value>
+  </data>
+  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
+    <value>Rensa hopptiderna du markerat och de som Kaeri hittat? AniSkip behåller de du delat.</value>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>Rensa hopptider</value>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>De du markerat och de som Kaeri hittat</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Hoppa över fyllnadsavsnitt automatiskt</value>
@@ -5627,6 +6089,9 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Återställa inställningar?</value>
   </data>
+  <data name="SettingsResetDetail" xml:space="preserve">
+    <value>Alla inställningar går tillbaka till standard, torrentproxyn inräknad. Din visningshistorik finns kvar, och den gamla inställningsfilen sparas.</value>
+  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Inställningarna är tillbaka till standard. Den gamla filen sparades som {file}.</value>
   </data>
@@ -5795,6 +6260,9 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Det gick inte att matcha titeln</value>
   </data>
+  <data name="SourceNoteHeldBack" xml:space="preserve">
+    <value>Väntar på proxykontrollen</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Utgåvor</value>
   </data>
@@ -5873,6 +6341,9 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Svarar inte.</value>
   </data>
+  <data name="SourcesDetailHeldBack" xml:space="preserve">
+    <value>Väntar tills proxykontrollen godkänns.</value>
+  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Av. Den behåller sin plats och provas inte.</value>
   </data>
@@ -5944,6 +6415,9 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Källaordning</value>
+  </data>
+  <data name="SourcesTorrentsNote" xml:space="preserve">
+    <value>Torrenter ingår i Kaeri och är inget tillägg. Proxyn och seedningen ställs in i Inställningar, under Källor.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Källor ställs in på nytt</value>
@@ -6137,6 +6611,9 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Tillägg</value>
   </data>
+  <data name="SourcesSectionCatalogues" xml:space="preserve">
+    <value>Öppna kataloger</value>
+  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Lägg till demon</value>
   </data>
@@ -6148,6 +6625,9 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Inga tilläggsbutiker än</value>
+  </data>
+  <data name="StoresEmptyDetail" xml:space="preserve">
+    <value>Tilläggsbutiker innehåller signerade tillägg och ger varje enhet sin egen token. Gå med i en med inbjudningslänken som ägaren skickar till dig.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.</value>
@@ -6641,6 +7121,9 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Öppna tilläggsbutiker</value>
   </data>
+  <data name="StoresWhatIs" xml:space="preserve">
+    <value>En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med via en inbjudningslänk från ägaren.</value>
+  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Vad är en tilläggsbutik?</value>
   </data>
@@ -6658,6 +7141,672 @@
   </data>
   <data name="StoresShare" xml:space="preserve">
     <value>Dela…</value>
+  </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Din webbläsare öppnade sidan för {service}. Tillåt åtkomst där, så sköter Kaeri resten själv.</value>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Logga in på {service} i webbläsaren</value>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>datorn</value>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Ange en kod</value>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Visa</value>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Stäng av</value>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>Adress</value>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>Parkoppla med adress</value>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>Återställningsnyckel</value>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>Användarnamn</value>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>Lösenord</value>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>Serveradress</value>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>Parkopplar</value>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>din andra enhet</value>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>Lämna adressen tom, så letar Kaeri efter enheten i det här nätverket.</value>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>Synk delar var du slutade, din historik och dina inställningar.</value>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Fjärrstyrning</value>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Redigera</value>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Namn</value>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>Mer för {name}</value>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>Det gick inte att nå {store} eller {device}. Försök igen när båda är online.</value>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store} godtog inte inbjudan. Be ägaren om en ny.</value>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device} kan inte bjuda in andra enheter till {store}. Be ägaren till tilläggsbutikn om en inbjudan.</value>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>Enheter</value>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>Synk av</value>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>Synkad {ago}</value>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>Det gick inte att synka</value>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>Den här enheten</value>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>Namn</value>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>Synk</value>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>Synk är av</value>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>Slå på den för att hålla var du slutade, din historik och dina inställningar likadana på dina enheter.</value>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>Slå på synk</value>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>Hur ska dina enheter dela?</value>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>Med en enhet i närheten</value>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>Parkoppla med en annan enhet på samma Wi-Fi. Inget sparas någon annanstans.</value>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>Via en molnmapp</value>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>En molndisk du redan använder, eller din egen server. Fungerar medan dina enheter är långt ifrån varandra och håller en säkerhetskopia.</value>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>Du kan lägga till det andra sättet senare. De flesta använder båda.</value>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>Dina enheter</value>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>Bara den här enheten</value>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>Parkoppla en till enhet för att dela var du slutade, din historik och dina inställningar.</value>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>Lägg till en enhet</value>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>Inte sedd på {days} dagar</value>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>Bara fjärrstyrning</value>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>Synka också med {device}</value>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>Parkopplad för Spela på TV. En TV som parkopplats som fjärrkontroll får aldrig din historik.</value>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>Synk</value>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>Fjärrstyrning</value>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>Synk delar var du slutade, din historik och dina inställningar. Med fjärrstyrning kan den här {kind} styra {device}.</value>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>Ta bort den här enheten</value>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>Ta bort {device}?</value>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device} behåller det den har, men får inget nytt från dina andra enheter.</value>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>Stäng av synk på den här {kind}</value>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>Stänga av synk på {device}?</value>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>Den här {kind} slutar dela med dina andra enheter. Allt den har finns kvar här.</value>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>Molnmapp</value>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>Fyller på medan dina enheter är långt ifrån varandra och håller en förseglad säkerhetskopia. Bara dina enheter kan läsa den.</value>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>Lägg till en molnmapp</value>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>Välj en molnmapp</value>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>En dold mapp för Kaeri i din Drive</value>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>Din egen eller en hostad Nextcloud-server</value>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>En mapp du väljer i iCloud Drive</value>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>Annat</value>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>WebDAV-server</value>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>Valfri server som talar WebDAV</value>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>För en mapp som en annan app håller uppdaterad</value>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>Dina enheter lägger en förseglad kopia av sina ändringar i den här mappen. Bara dina enheter kan läsa den, och Kaeri driver ingen egen server.</value>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>Ställer in mappen</value>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>Serveradress</value>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>Adressen du öppnar Nextcloud på i en webbläsare.</value>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>Slutför inloggningen på {host}</value>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>Din Nextcloud-sida är öppen i webbläsaren. Tillåt åtkomst där, så sköter den här rutan resten själv.</value>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>Väntar på {service}</value>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>Öppna sidan igen</value>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>Använd ett applösenord i stället</value>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>Anslut</value>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>Det gick inte att nå {service}. Kontrollera din anslutning.</value>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>Det gick inte att hitta någon Nextcloud-server på {host}. Kontrollera adressen.</value>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloud godtog inte det applösenordet. Skapa ett nytt i Nextcloud under Inställningar, Säkerhet.</value>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>Servern avvisade användarnamnet eller lösenordet.</value>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>Inloggningssidan stängdes innan åtkomst hade tillåtits.</value>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp.</value>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service} loggade ut Kaeri. Dina ändringar väntar på den här {kind} tills du loggar in igen.</value>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service} är fullt. Frigör utrymme där och försök igen.</value>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeri kan inte öppna mappen längre. Välj den igen.</value>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>Det gick inte att synka med {service}</value>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>Kaeris egen mapp i din Dropbox, Apps/Kaeri</value>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>Kaeris egen mapp i din OneDrive, Apps/Kaeri</value>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>Synka nu</value>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>Logga ut</value>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>Logga in</value>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>Utloggad. Ändringar väntar på den här {kind} tills du loggar in igen.</value>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service} gav inte Kaeri åtkomst. Välj den igen för att försöka på nytt.</value>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>Välj den som dina andra enheter använder. En ny molnmapp läggs till på en mobil eller dator, där återställningsnyckeln kan sparas.</value>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>Loggar in på din mobil</value>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropbox loggar in på din mobil</value>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device} är inloggad på Dropbox. Den här TV:n kan använda den inloggningen över din parkoppling.</value>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>Använd inloggningen från {device}</value>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>Dropbox har ingen inloggning som en TV kan göra. Öppna Kaeri på din mobil, sedan Inställningar, Enheter, Molnmapp, och logga in på Dropbox där. Välj sedan Dropbox här igen.</value>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>Inloggad. Ställer in mappen</value>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service} loggade ut Kaeri. Välj för att logga in igen.</value>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>Utloggad. Välj för att logga in.</value>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>Logga ut från {service}?</value>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>Den här TV:n slutar synka via {service}. Ändringar väntar här tills du loggar in igen.</value>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>Väntar på en anslutning. Ändringar sparas på den här {kind}.</value>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Logga in på Google Drive</value>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>Eller skanna för att öppna sidan</value>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>Skanna det här med din mobil och tillåt åtkomst på din Nextcloud-sida. TV:n sköter resten själv.</value>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>Din återställningsnyckel</value>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>Förvara den säkert. Den återställer din historik om du förlorar alla dina enheter, och låter en ny enhet gå med från din molnmapp.</value>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>Kopiera</value>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>Visa som QR-kod</value>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>Du kan se den igen i Inställningar, Enheter, efter upplåsning av den här {kind}.</value>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>Återställningsnyckel</value>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>Skapad {date}</value>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>Skapa en ny nyckel</value>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>Den gamla nyckeln slutar fungera, och dina enheter byter till den nya vid sin kommande synk.</value>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>Ange din återställningsnyckel</value>
+  </data>
+  <data name="RkeyEnterLine_one" xml:space="preserve">
+    <value>{service} innehåller historik från {count} enhet. Nyckeln du sparade när synkningen slogs på öppnar den.</value>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>{service} innehåller historik från {count} enheter. Nyckeln du sparade när synkningen slogs på öppnar den.</value>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>24 bokstäver och siffror, i grupper om fyra. Mellanslag och versaler spelar ingen roll.</value>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>Den nyckeln öppnar inte den här mappen. Kontrollera varje grupp om fyra och försök igen.</value>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>Återställ</value>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>Öppna Kaeri på den andra enheten och välj Ställ in från en annan enhet, eller Inställningar, Enheter, Visa en kod. Ange sedan koden här.</value>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>Skanna koden</value>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>Båda enheter måste vara på samma Wi-Fi.</value>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>Parkoppla</value>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>Visa en kod här i stället</value>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>Ange den här koden på din andra enhet</value>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>Eller skanna den från Kaeri på din mobil.</value>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>Giltig i 2 minuter · {left}</value>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>Öppna Kaeri på din mobil, sedan Inställningar, Enheter, Lägg till en enhet, och skanna den här koden eller ange den.</value>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>Parkopplad med {device}</value>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>Hämtar din historik. Du kan använda Kaeri under tiden.</value>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>Kopiera inloggningar från {device}</value>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}. Varje enhet får sin egen kopia över den här länken.</value>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>Koden stämde inte. Kontrollera koden på {device} och försök igen.</value>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>Det gick inte att hitta den enhet som visar den här koden. Båda enheter måste vara på samma Wi-Fi.</value>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>Koden har gått ut. Visa en ny.</value>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>Vilken profil på {device} är din?</value>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>Den här {kind} synkar bara med den profilen. De andra stannar på {device}.</value>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device} känner redan igen den här mobilen från Spela på TV, så synk med den behöver ingen ny kod.</value>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>Avsnitt {n} · stoppade vid {time} på {device}</value>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>Återupptog vid {time} från {device}</value>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>Synkar</value>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>Synkar med {device}</value>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>Synkanteckningar</value>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>Avsnitt {n} av {title} förblir sett. {other} markerade det som osett utan att veta att {device} hade sett klart det.</value>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>Markera som osett</value>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>Anteckningar sparas i 7 dagar.</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Profiler</value>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>Bara du</value>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>Profiler håller historik, Fortsätt titta och konton åtskilda för personer som delar den här enheten. Med en profil har Kaeri ingen väljare och inga namn.</value>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>Lägg till en profil</value>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>Varje profil har sin egen historik, sitt eget Fortsätt titta och egna konton. Källor och nedladdningar delas på den här enheten.</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>Ny profil</value>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>Din profil</value>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>Ifylld från AniList. Hittills hade den här enheten en profil utan namn.</value>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>Barnprofil</value>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>Vuxentitlar hålls borta, och källor, enheter och torrentinställningar är dolda i den.</value>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>Källor och Enheter är dolda i en barnprofil, och vuxentitlar hålls borta.</value>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>Barn</value>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>Lägg till profil</value>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>Källor, nedladdningar och den här enhetens inställningar delas av alla profiler.</value>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>Synkar med</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Radera profil</value>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>Radera profilen för {name}?</value>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>Historiken och inloggningarna för {name} tas bort från den här enheten. Enheter som synkar med {name} behåller sina.</value>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>Vem tittar?</value>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>Fråga vem som tittar vid start</value>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>Av som standard. För en iPad som hushållet delar. Kontoraden byter profil när som helst.</value>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>Byt profil</value>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>Hantera profiler</value>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>Ställ in från en annan enhet</value>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>Öppna Inställningar, Enheter, Lägg till en enhet på en enhet som redan har Kaeri, och ange den här koden eller skanna den.</value>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>Återställ från en molnmapp i stället</value>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>Hämtar din historik, dina inställningar och dina tilläggsbutiker. Du kan börja använda Kaeri nu.</value>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>Gå med i tilläggsbutik {store}</value>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device} skapar en egen inbjudan åt den här {kind}</value>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>En mapp på den här {kind}</value>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Skapa ett i Nextcloud under Inställningar, Säkerhet. Det sparas på den här {kind}.</value>
+  </data>
+  <data name="DevicesTvsForPlay_one" xml:space="preserve">
+    <value>En TV för Spela på TV</value>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>{count} TV-apparater för Spela på TV</value>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>Parkopplad idag</value>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>Visar en kod att ange på din mobil</value>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>Bara du. Lägg till en profil för att hålla historik, Fortsätt titta och konton åtskilda på den här TV:n.</value>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>Öppnar Vem tittar?</value>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>Profiler på den här TV:n</value>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>Spara som fil</value>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>QR-kod</value>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>Visa en kod</value>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>Logga in igen</value>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>Välj mapp</value>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}, byt profil</value>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>Parkopplingskod</value>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>mobilen</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>surfplattan</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>TV:n</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>Ställ in från din mobil</value>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>den andra enheten</value>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>Sidan för {service} är öppen. Tillåt åtkomst där, så sköter Kaeri resten själv.</value>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>Ansluter till {service}</value>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>Åtkomst tillåten. Slutför inloggningen.</value>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>Skapar mappen för Kaeri i {service} och förseglar en första kopia av din historik.</value>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>Det gick inte att logga in på {service}</value>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>Det gick inte att ställa in mappen</value>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service} gav inte Kaeri åtkomst.</value>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service} slutförde inte inloggningen. Försök igen om en stund.</value>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeri kunde inte skapa sin mapp i {service}. Försök igen om en stund.</value>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>Använd en annan tjänst</value>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>Ta bort molnmappen</value>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>Ta bort {service} från synk?</value>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>Allt på den här {kind} stannar här, och parkopplade enheter i närheten synkar vidare. Mappen finns kvar i {service} med sin förseglade kopia, och dina andra enheter använder den tills du tar bort den på dem också.</value>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>Ta bort</value>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>Mer för {service}</value>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>Används</value>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>{service} används tills den nya mappen är klar.</value>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>Vilket som helst slår på synk, och du kan använda båda.</value>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>Synk för över var du slutade, din historik och dina inställningar mellan dina egna enheter, i närheten eller via en molnmapp du väljer. Den förseglas innan den lämnar den här {kind}.</value>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>Parkoppling med din mobil slår på synk. Sedan kan den här TV:n gå med i din molnmapp.</value>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Det gick inte att läsa in den här titeln.</value>
@@ -6953,11 +8102,56 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>{status} · {score}/10</value>
   </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>Gå till avsnitt…</value>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>Gå till avsnitt</value>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>Gå</value>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>{first} till {last}</value>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>Avsnitt, {first} till {last}</value>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>Inget avsnitt {number}. Den här serien har {last}.</value>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>Avsnitt {number} är inte ute än. Det senaste är {latest}.</value>
+  </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrenter</value>
   </data>
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrenter är på</value>
+  </data>
+  <data name="TorrentsOffDetail" xml:space="preserve">
+    <value>Av som standard. Torrenter ansluter direkt om du inte skickar dem via en proxy.</value>
+  </data>
+  <data name="TorrentsRisk" xml:space="preserve">
+    <value>Andra i en torrent kan se din IP-adress. Skicka torrenttrafiken via en proxy för att hålla den privat.</value>
+  </data>
+  <data name="TorrentsNotAPlugin" xml:space="preserve">
+    <value>Torrenter ingår i Kaeri och är inget tillägg. Proxyn och seedningen ställs in i Inställningar, under Källor.</value>
+  </data>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>Skicka torrenttrafik via en proxy</value>
+  </data>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>Torrenttrafiken går via en SOCKS5-proxy som du driver eller hyr. Medan det här är av ansluter torrenter direkt.</value>
+  </data>
+  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
+    <value>Via en SOCKS5-proxy på {host}:{port}.</value>
+  </data>
+  <data name="TorrentsSummaryProxy" xml:space="preserve">
+    <value>Via en SOCKS5-proxy.</value>
+  </data>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>Ansluter direkt, utan proxy.</value>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Proxyvärd</value>
@@ -6974,6 +8168,9 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Lämna lösenordet tomt för att behålla det sparade.</value>
   </data>
+  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
+    <value>Torrenter fortsätter använda den sparade proxyn tills den nya klarar proxykontrollen.</value>
+  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proxyn behöver en värd och en port från 1 till 65535.</value>
   </data>
@@ -6983,17 +8180,29 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxyn sparades</value>
   </data>
+  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
+    <value>Proxykontrollen misslyckades</value>
+  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Inte sparad. {why}, så den sparade proxyn finns kvar.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrenter är fortfarande av. {why}.</value>
   </data>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeri kontrollerar att proxyn går att nå innan torrenter startar. Torrenter väntar medan kontrollen misslyckas.</value>
+  </data>
+  <data name="TorrentsLastCheck" xml:space="preserve">
+    <value>Proxykontroll</value>
+  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Godkänd</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Kontrollerar</value>
+  </data>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>Proxykontrollen misslyckades. Torrenter startar när den godkänns.</value>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Misslyckades</value>
@@ -7513,6 +8722,9 @@
   </data>
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>Nästa · spelas om {seconds} s</value>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>Glömmer du en TV här glömmer den den här enheten också.</value>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Uppdateringar</value>

@@ -672,6 +672,12 @@ release-pinned = { $name } sẽ được dùng cho tựa này.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Không lưu được lựa chọn đó. { $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Torrent sẽ bắt đầu khi proxy đạt kiểm tra.
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Đây không phải liên kết magnet hay tệp torrent.
 
@@ -686,6 +692,12 @@ torrent-interface-closed = Kaeri đã đóng trước khi torrent bắt đầu.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Không khởi động được phiên torrent. { $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = Không dùng được cài đặt proxy. { $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = Đã tải lại Các nguồn. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrent đang tắt. Phiên đã dừng.
@@ -801,6 +813,15 @@ notice-sign-out-failed = Không đăng xuất được khỏi { $tracker }. Hãy
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Không lưu được cài đặt đó. { $cause }
 
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Lưu lượng torrent giờ đi qua proxy.
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Torrent giờ kết nối trực tiếp, không qua proxy.
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = Không kiểm tra được proxy. { $cause }
+
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. { $reason }
 
@@ -899,6 +920,18 @@ crash-notice = Kaeri đã đóng sau một sự cố.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri đã đóng sau một sự cố. Bạn có thể báo cáo trong Cài đặt, Giới thiệu.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = Không có tựa nào khớp với các bộ lọc này.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = Danh sách Dự định xem đang trống.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Sửa proxy
@@ -1224,6 +1257,9 @@ shortcuts-group-lists = Danh sách
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Chuyển đến một mục
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Nhóm tập trước hoặc sau
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Phím tắt bàn phím
 
@@ -1400,6 +1436,27 @@ stores-published-state = Đã đăng
 
 # Accessible name of a row's Publish button.
 stores-publish-label = Đăng { $name } { $version }
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = Bạn có thể xem lại trong Cài đặt, Các thiết bị, sau khi nhập mật khẩu tài khoản.
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Hiện khóa khôi phục của Kaeri
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = Hồ sơ
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = Thêm
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = Chọn một thư mục
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = Lưu thành tệp
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = Xong
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2116,6 +2173,9 @@ keys-action-filter = Bộ lọc
 keys-action-filter-search = Tìm trong bộ lọc
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Ngẫu nhiên
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Phát hoặc tạm dừng
 
 # Action label in the help overlay and the command palette.
@@ -2186,6 +2246,18 @@ keys-hint-mark-previous = Đánh dấu trước
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Bộ lọc
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Ngẫu nhiên
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Đến tập
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Bỏ
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Tựa khác
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Đồng bộ lại
@@ -2355,6 +2427,9 @@ keys-where-episodes = trong bảng tập
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = ở màn hình khác
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = ở phần duyệt của Tìm kiếm và ở Dự định xem
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = “{ $action }” trong bảng lệnh
 
@@ -2486,6 +2561,21 @@ keys-hint-copy-link = Chép liên kết
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Rời đi
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Nhắn
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Tắt tiếng
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Bật tiếng
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Ẩn trò chuyện
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Hiện trò chuyện
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Cần cửa sổ terminal lớn hơn
@@ -2790,6 +2880,33 @@ lists-episode-dubbed = Tập { $episode }·Lồng tiếng
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score }%
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = phim lẻ
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = sắp có
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = lt
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = lt{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Tập
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = LT
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = Tập { $episode } · { $percent }%
 
@@ -3001,6 +3118,9 @@ sources-too-small = Cần cửa sổ lớn hơn.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Không có các nguồn khả dụng
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = Torrent tắt cho đến khi bật { $setting }.
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Nguồn
 
@@ -3052,6 +3172,9 @@ sources-state-held-back = Bị giữ lại
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Các cửa hàng plugin
 
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = Các plugin cho các các thiết bị của riêng bạn. Tham gia bằng liên kết mời.
+
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } đã tham gia
 
@@ -3102,6 +3225,18 @@ sources-meta-skipped-until = Bỏ qua đến { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Sẽ thử lại ở yêu cầu kế tiếp ({ $cause })
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = Proxy { $mark } Đang kiểm tra
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = Proxy { $mark } Đạt
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = Proxy { $mark } Không đạt
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Giữ nguyên. Xóa dòng trong config.toml để bỏ thiết lập.
@@ -3304,6 +3439,9 @@ settings-label-seed-hours = Chia sẻ tối đa
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Giới hạn tải lên
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Proxy cho torrent
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Lưu trữ token
 
@@ -3379,6 +3517,9 @@ settings-note-download-dir = Nhấn Enter để nhập đường dẫn. Áp dụ
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Áp dụng cho lần tải kế tiếp khi hoàn tất.
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = Mặc định tắt để tiết kiệm băng thông tải lên; bật để chia sẻ lại cho swarm.
+
 # Note under the after each download row.
 settings-note-download-hook = Nhấn Enter để nhập lệnh. Lệnh chạy sau mỗi lần tải xong.
 
@@ -3405,6 +3546,12 @@ settings-note-presence-title = Tắt sẽ hiện “Đang xem anime” mà khôn
 
 # Note under the rich presence row.
 settings-note-presence-rich = Thêm ảnh bìa, thanh tiến độ và liên kết AniList. Cần bật hiện tên phim.
+
+# Note under the torrent playback row.
+settings-note-torrents = Mặc định tắt. Có hiệu lực ngay.
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = Tùy chọn. Sửa config.toml để đưa lưu lượng torrent qua proxy SOCKS5.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Giữ các tập đã xem vẫn được chia sẻ khi Kaeri đang mở.
@@ -3922,6 +4069,102 @@ stores-toast-nothing-to-publish = Không có plugin nào trong thư mục plugin
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = Đó là bạn. Cửa hàng luôn có chủ sở hữu.
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = máy tính
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = Nhập mã
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = Không có thư mục đám mây
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = Chưa đồng bộ
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = Đang dùng
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = Trình duyệt của bạn đã mở trang của { $service }. Hãy cho phép truy cập ở đó, rồi Kaeri sẽ tự làm tiếp.
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = Hoặc tự mở địa chỉ này:
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = Đang đăng nhập
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = Địa chỉ WebDAV
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = Địa chỉ của thư mục trên máy chủ của bạn, bắt đầu bằng https://.
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = Thư mục
+
+# Under the folder path field.
+sync-tui-folder-path-note = Đường dẫn đầy đủ của thư mục mà một ứng dụng khác giữ đồng bộ, chẳng hạn ổ đĩa đồng bộ.
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = Tên người dùng
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Tên bạn dùng để đăng nhập Nextcloud.
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = Mật khẩu
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = Mật khẩu ứng dụng
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = Mã
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = Địa chỉ
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = Đang tạo mã
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = Địa chỉ của thiết bị kia
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = Địa chỉ mà thiết bị kia hiện dưới mã, chẳng hạn 192.168.1.20:47811.
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = Đang ghép nối
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = Bạn có thể xem lại trong Cài đặt, Các thiết bị.
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = Thêm làm hồ sơ trẻ em
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = Hãy mở lại Kaeri để dùng hồ sơ của { $name }.
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = Thư mục này không có lịch sử nào để tham gia. Hãy chọn thư mục khác.
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = { $service } không dùng được trên thiết bị này.
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = Gỡ
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = Hiện
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = Tắt
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = Sao chép
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = Hãy kéo cửa sổ cao hơn để xem mã QR.
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = Nhấn { $key } để dừng phát.
 
@@ -3948,6 +4191,9 @@ tui-together-section = Cùng xem
 
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = liên kết hoặc mã
+
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Tin nhắn và biểu cảm không hiện trên trình phát ở mọi buổi xem.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
@@ -4260,6 +4506,9 @@ action-try-again = Thử lại
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Hủy
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Đi
 
 # Button that puts a question off until later.
 action-not-now = Để sau
@@ -4731,6 +4980,12 @@ tv-problem-unpaired = TV không còn nhận thiết bị này. Hãy ghép nối 
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } trên { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first } và { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }, { $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = Thảo luận
@@ -6013,6 +6268,9 @@ onboarding-own-heading = Có phim của riêng bạn?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Có liên kết mời?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin được ký xác thực và cấp cho mỗi thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Dùng thử ngay
 
@@ -6565,6 +6823,126 @@ together-recent-note = Mười phòng gần nhất, lưu trên thiết bị này
 # The start sheet's button after a title is picked.
 party-pick-continue = Tiếp tục
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Nhắn gì đó
+
+# Button that sends a chat line.
+party-chat-send = Gửi
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Trò chuyện
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = Chờ { $seconds } giây
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+       *[other] Chờ { $seconds } giây
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = { $count } tin nữa
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = Máy chủ của phòng này đã tắt trò chuyện
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Tin nhắn đi qua máy chủ của phòng. Kaeri không lưu tin nào.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Trò chuyện đang ẩn
+
+# Line under it.
+party-chat-hidden-line = Tùy chọn Ẩn trò chuyện đang bật trong Cài đặt, mục Phát.
+
+# Button that turns Hide chat off.
+party-chat-show = Hiện trò chuyện
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Ẩn trò chuyện trong các buổi xem chung
+
+# Line under that switch.
+settings-hide-chat-line = Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = Tắt tiếng { $name }
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = Bật tiếng { $name }
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Bật tiếng
+
+# State on a muted member's row.
+party-member-muted = Đã tắt tiếng
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } đã bị tắt tiếng
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Không gửi được
+
+# Button after it, which sends the same text again.
+party-chat-retry = Thử lại
+
+# Button on the TV's controls that opens the four reactions.
+party-react = Biểu cảm
+
+# Label of the laugh reaction button.
+party-react-laugh = Cười
+
+# Label of the gasp reaction button.
+party-react-gasp = Ngạc nhiên
+
+# Label of the clap reaction button.
+party-react-clap = Vỗ tay
+
+# Label of the cry reaction button.
+party-react-cry = Khóc
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } đã cười
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } đã ngạc nhiên
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } đã vỗ tay
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } đã khóc
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line } lúc { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } và { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second } và { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second } và { $count } người khác
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = Bạn
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = Gửi với tên { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } nói { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+       *[other] Còn { $count } ký tự
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = Tiếp theo
 
@@ -6822,6 +7200,9 @@ player-mark-watch-edges = Xem hai đầu
 # Line in the review with sharing on.
 player-mark-shares = Khi lưu, các mốc này được chia sẻ với AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri tìm thấy các mốc này từ âm thanh.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = Thay mốc { $start } đến { $end } của AniSkip, vốn bị báo là sai.
 
@@ -6871,8 +7252,33 @@ player-mark-it = Đánh dấu
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Đừng hỏi lại
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri đã tìm thấy đoạn mở đầu này. Hai đầu mốc có đúng không?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri đã tìm thấy đoạn kết này. Hai đầu mốc có đúng không?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Chọn Có để chia sẻ các mốc này với AniSkip cho tập { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Có
+
+player-found-adjust = Chỉnh
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Đã lưu. AniSkip nhận các mốc này cho tập { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri sẽ không hỏi về mốc bỏ qua nữa.
+
+player-found-never-how = Bạn có thể bật lại trong Cài đặt.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Chia sẻ mốc bỏ qua của bạn với AniSkip?
+
+# Body of the sheet.
+player-share-body = AniSkip là danh sách chung về đoạn mở đầu và đoạn kết, do các tình nguyện viên của nó vận hành. Trình phát của người khác sẽ bỏ qua các mốc bạn đánh dấu và các mốc tìm thấy mà bạn xác nhận.
 
 # What is sent, as a line under the body.
 player-share-sent = Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên tạo riêng cho bản cài này. Không có tên, tài khoản hay nguồn bạn xem. AniSkip thấy địa chỉ IP của bạn để hạn chế spam, và điều khoản của họ yêu cầu bạn từ 13 tuổi trở lên.
@@ -6888,6 +7294,22 @@ player-skip-from-file = Từ tệp
 player-skip-yours = Của bạn
 
 player-skip-from-aniskip = Từ AniSkip
+
+player-skip-found = Do Kaeri tìm thấy
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Tạm dừng khi chế độ pin yếu đang bật.
+
+player-skip-paused-battery-saver = Tạm dừng khi chế độ tiết kiệm pin đang bật.
+
+player-skip-paused-energy-saver = Tạm dừng khi chế độ tiết kiệm năng lượng đang bật.
+
+player-skip-paused-power-saver = Tạm dừng khi chế độ tiết kiệm điện đang bật.
+
+player-skip-paused-storage = Tạm dừng cho đến khi còn trống 2 GB bộ nhớ.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = Không có trong bản Kaeri này.
 
 player-skip-none = Chưa có
 
@@ -7389,6 +7811,195 @@ search-available-services = Trên dịch vụ của bạn
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = Trên { $service }
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+       *[other] { $count } tập
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count } tập
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = Đã ra { $out } trên { $total } tập
+
+# The same, short.
+count-out-of-short = { $out } trên { $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+       *[other] Đã ra { $count } tập
+    }
+
+# The same, short.
+count-out-short = Ra { $count }
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = Bắt đầu { $date }
+
+# The count line of a show that has not started and has no date.
+count-not-out = Chưa ra mắt
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = Tập { $episode } trên { $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = Lồng tiếng
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = LT { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+       *[other] { $count } tập
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = Đã ra { $out } trên { $total } tập
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+       *[other] Đã ra { $count } tập
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = Bắt đầu { $date }
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = Tập { $episode } trên { $total }
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = lồng tiếng đến tập { $through }
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = có bản lồng tiếng
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = thg 1
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = tháng 1
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = thg 2
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = tháng 2
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = thg 3
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = tháng 3
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = thg 4
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = tháng 4
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = thg 5
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = tháng 5
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = thg 6
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = tháng 6
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = thg 7
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = tháng 7
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = thg 8
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = tháng 8
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = thg 9
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = tháng 9
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = thg 10
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = tháng 10
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = thg 11
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = tháng 11
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = thg 12
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = tháng 12
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = Thịnh hành hôm nay
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = Thịnh hành tuần này
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = Thịnh hành tháng này
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = Hôm nay
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = Tuần này
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = Tháng này
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = Không tải được mục thịnh hành { $period }.
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = Cập nhật { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = Ngẫu nhiên
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = Ngẫu nhiên
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = Tựa khác
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Mở một tựa ngẫu nhiên từ Dự định xem
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Mở một tựa ngẫu nhiên từ các bộ lọc này
+
+# Hint of the Another button.
+surprise-another-hint = Mở một tựa ngẫu nhiên khác thay cho tựa này
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = Không có tựa nào khớp với các bộ lọc này.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = Danh sách Dự định xem đang trống.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.
+
 # Title of the dialog that adds a media server.
 servers-add-title = Thêm máy chủ media
 
@@ -7629,6 +8240,9 @@ settings-group-titles = Tựa
 # Group heading.
 settings-group-playback = Phát
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Các buổi xem chung
+
 # Group heading.
 settings-group-watching = Xem
 
@@ -7710,8 +8324,35 @@ settings-skip-opening = Tự động bỏ qua phần mở đầu
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Tự động bỏ qua phần tóm tắt
 
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Tìm mốc bỏ qua từ âm thanh
+
+# Line under it.
+settings-find-skips-detail = Khi AniSkip chưa có mốc nào, Kaeri so sánh âm thanh giữa các tập của một phim, ngay trên thiết bị này.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Hỏi về mốc bỏ qua
+
+# Line under it.
+settings-ask-was-opening-detail = Sau khi bạn tự bỏ qua đoạn mở đầu, và sau khi bỏ qua một mốc do Kaeri tìm thấy
+
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Chia sẻ mốc bỏ qua với AniSkip
+
+# Line under it.
+settings-share-skips-detail = AniSkip là danh sách chung về đoạn mở đầu và đoạn kết mà nhiều trình phát dùng. Nó nhận các mốc bạn đánh dấu và các mốc tìm thấy mà bạn xác nhận, số MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài đặt này.
+
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = Mốc bỏ qua bạn đã đánh dấu hoặc do Kaeri tìm thấy
+
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Xóa các mốc bỏ qua bạn đã đánh dấu và những mốc do Kaeri tìm thấy? AniSkip vẫn giữ những mốc bạn đã chia sẻ.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Xóa mốc bỏ qua
+
+# Line under it.
+settings-clear-skips-android-detail = Các mốc bạn đã đánh dấu và các mốc do Kaeri tìm thấy
 
 # Row: skip filler.
 settings-skip-filler = Tự động bỏ qua tập độn
@@ -8031,6 +8672,9 @@ settings-reset = Đặt lại cài đặt
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Đặt lại cài đặt?
 
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = Mọi cài đặt trở về mặc định, kể cả proxy cho torrent. Lịch sử xem của bạn được giữ, và tệp cài đặt cũ cũng được giữ lại.
+
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Cài đặt đã về mặc định. Tệp cũ được giữ với tên { $file }.
 
@@ -8199,6 +8843,9 @@ source-note-gone = Chưa cài đặt
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Không khớp được tựa này
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = Đang chờ kiểm tra proxy
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Các bản phát hành
 
@@ -8277,6 +8924,9 @@ sources-detail-not-answering = Không phản hồi. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Không phản hồi.
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Đang chờ cho đến khi proxy đạt kiểm tra.
+
 # Status line: disabled.
 sources-detail-disabled = Đã tắt. Vẫn giữ vị trí nhưng không được thử.
 
@@ -8348,6 +8998,9 @@ sources-torrent-source = Phát torrent
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Thứ tự ưu tiên
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Các nguồn đang được thiết lập lại
@@ -8541,6 +9194,9 @@ sources-your-intro = Tập phim được phát từ nguồn đầu tiên có ch�
 # Heading of the section that lists the plugins.
 sources-section-plugins = Các plugin
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = Danh mục mở
+
 # Link in the empty state.
 sources-add-demo = Thêm bản demo
 
@@ -8552,6 +9208,9 @@ stores-joined = Đã tham gia
 
 # Title of the empty list.
 stores-empty-title = Chưa có các cửa hàng plugin
+
+# Line under the empty title.
+stores-empty-detail = Các cửa hàng plugin giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Hãy tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.
@@ -9040,6 +9699,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Mở các cửa hàng plugin
 
+# Explainer on the empty plugin stores page.
+stores-what-is = Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành các cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Cửa hàng plugin là gì?
 
@@ -9057,6 +9719,669 @@ stores-qr-warning-device = Quét mã này bằng thiết bị bạn muốn liên
 
 # Button that opens the system share sheet for the invite link.
 stores-share = Chia sẻ…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = Trình duyệt của bạn đã mở trang của { $service }. Hãy cho phép truy cập ở đó, rồi Kaeri sẽ tự làm tiếp.
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = Đăng nhập { $service } trong trình duyệt
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = máy tính
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = Nhập mã
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = Hiện
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = Tắt
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Địa chỉ
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Ghép nối bằng địa chỉ
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Khóa khôi phục
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = Tên người dùng
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Mật khẩu
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Địa chỉ máy chủ
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Đang ghép nối
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = thiết bị kia của bạn
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Để trống địa chỉ thì Kaeri sẽ tìm thiết bị trong mạng này.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Đồng bộ chia sẻ chỗ bạn đã xem dở, lịch sử và cài đặt của bạn.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Điều khiển
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Sửa
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Tên
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = Thêm cho { $name }
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = Không kết nối được với { $store } hoặc { $device }. Hãy thử lại khi cả hai đều trực tuyến.
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store } không chấp nhận lời mời. Hãy nhờ chủ của nó gửi lời mời mới.
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device } không thể mời các các thiết bị khác vào { $store }. Hãy nhờ chủ của cửa hàng plugin gửi lời mời.
+
+# Settings row and page title, every platform.
+devices-title = Các thiết bị
+
+# Devices row value while sync is off.
+devices-row-off = Đồng bộ tắt
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = Đã đồng bộ { $ago }
+
+# Devices row value with the error glyph.
+devices-row-error = Không đồng bộ được
+
+# Group heading over the name.
+devices-this-device = Thiết bị này
+
+# Row for this device’s name.
+devices-name = Tên
+
+# Group heading while off.
+sync-group = Đồng bộ
+
+# Off state.
+sync-off-title = Đồng bộ đang tắt
+
+# Off state.
+sync-off-line = Bật lên để giữ chỗ xem dở, lịch sử và cài đặt giống nhau trên các các thiết bị của bạn.
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = Bật đồng bộ
+
+# Road sheet title.
+sync-road-title = Các các thiết bị của bạn nên chia sẻ bằng cách nào?
+
+# Road sheet row.
+sync-road-nearby = Với một thiết bị ở gần
+
+# Road sheet row line.
+sync-road-nearby-line = Ghép nối với một thiết bị khác trong cùng mạng Wi-Fi. Không có gì được lưu ở nơi nào khác.
+
+# Road sheet row.
+sync-road-cloud = Qua thư mục đám mây
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Dùng được khi các các thiết bị ở xa nhau, và giữ một bản sao lưu.
+
+# Road sheet footer.
+sync-road-later = Bạn có thể thêm cách còn lại sau. Hầu hết mọi người dùng cả hai.
+
+# Group heading.
+devices-yours = Các thiết bị của bạn
+
+# Empty Your devices.
+devices-only-this = Chỉ thiết bị này
+
+# Empty Your devices.
+devices-only-this-line = Hãy ghép nối thêm một thiết bị để chia sẻ chỗ xem dở, lịch sử và cài đặt của bạn.
+
+# Row and sheet title.
+devices-add = Thêm một thiết bị
+
+# Device row line past 30 days.
+devices-not-seen = Đã { $days } ngày chưa thấy
+
+# A device paired only for Play on TV.
+devices-remote-only = Chỉ điều khiển
+
+# Button on a remote-only TV row.
+devices-also-sync = Đồng bộ luôn với { $device }
+
+# Footer while sync is off.
+devices-paired-tvs-foot = Đã ghép nối để Phát trên TV. TV được ghép nối làm bộ điều khiển sẽ không nhận lịch sử của bạn.
+
+# Switch on a device.
+devices-sync-switch = Đồng bộ
+
+# Switch on a TV.
+devices-remote-switch = Điều khiển
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = Đồng bộ chia sẻ chỗ bạn đã xem dở, lịch sử và cài đặt của bạn. Điều khiển cho phép { $kind } này điều khiển { $device }.
+
+# Device page, destructive.
+devices-remove = Gỡ thiết bị này
+
+# Alert title.
+devices-remove-alert = Gỡ { $device }?
+
+# Alert message.
+devices-remove-alert-line = { $device } giữ những gì nó đang có, nhưng sẽ không nhận thêm gì từ các các thiết bị khác của bạn.
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = Tắt đồng bộ trên { $kind } này
+
+# Alert title.
+sync-turn-off-alert = Tắt đồng bộ trên { $device }?
+
+# Alert message.
+sync-turn-off-alert-line = { $kind } này ngừng chia sẻ với các các thiết bị khác của bạn. Mọi thứ nó có vẫn ở lại đây.
+
+# Group heading.
+cloud-group = Thư mục đám mây
+
+# Group footer.
+cloud-foot = Bổ sung khi các các thiết bị của bạn ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được.
+
+# Row when only the nearby road is set.
+cloud-add = Thêm thư mục đám mây
+
+# Picker title.
+cloud-pick-title = Chọn thư mục đám mây
+
+# Picker row line.
+cloud-google-line = Một thư mục ẩn của Kaeri trong Drive của bạn
+
+# Picker row line.
+cloud-nextcloud-line = Máy chủ Nextcloud của riêng bạn hoặc loại dùng dịch vụ lưu trữ
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = Một thư mục bạn chọn trong iCloud Drive
+
+# Picker group heading.
+cloud-other = Khác
+
+# Picker row.
+cloud-webdav = Máy chủ WebDAV
+
+# Picker row line.
+cloud-webdav-line = Bất kỳ máy chủ nào hỗ trợ WebDAV
+
+# Picker row line.
+cloud-folder-line = Cho thư mục mà một ứng dụng khác giữ đồng bộ
+
+# Picker footer.
+cloud-pick-foot = Các các thiết bị của bạn giữ một bản sao đã niêm phong các thay đổi trong thư mục này. Chỉ các các thiết bị của bạn đọc được, và Kaeri không chạy máy chủ riêng nào.
+
+# Row line while the first write runs.
+cloud-setting-up = Đang thiết lập thư mục
+
+# Field label.
+cloud-nextcloud-address = Địa chỉ máy chủ
+
+# Field note.
+cloud-nextcloud-address-note = Địa chỉ bạn mở Nextcloud trong trình duyệt.
+
+# Login flow wait.
+cloud-nextcloud-wait-title = Hoàn tất đăng nhập trên { $host }
+
+# Login flow wait.
+cloud-nextcloud-wait-line = Trang Nextcloud của bạn đang mở trong trình duyệt. Hãy cho phép truy cập ở đó, rồi bảng này sẽ tự làm tiếp.
+
+# Wait row.
+cloud-waiting = Đang chờ { $service }
+
+# Button.
+cloud-open-again = Mở lại trang
+
+# Text button.
+cloud-app-password = Dùng mật khẩu ứng dụng
+
+# Button.
+cloud-connect = Kết nối
+
+# Error.
+cloud-err-offline = Không kết nối được với { $service }. Hãy kiểm tra kết nối của bạn.
+
+# Inline error.
+cloud-err-no-server = Không tìm thấy máy chủ Nextcloud tại { $host }. Hãy kiểm tra địa chỉ.
+
+# Inline error.
+cloud-err-app-password = Nextcloud không chấp nhận mật khẩu ứng dụng đó. Hãy tạo mật khẩu mới trong Nextcloud, mục Cài đặt, Bảo mật.
+
+# Inline error.
+cloud-err-webdav = Máy chủ từ chối tên người dùng hoặc mật khẩu đó.
+
+# Error, with Open the page again.
+cloud-err-timeout = Trang đăng nhập đã đóng trước khi truy cập được cho phép.
+
+# Error.
+cloud-err-other-group = Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service } đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên { $kind } này cho đến khi bạn đăng nhập lại.
+
+# Status error.
+cloud-err-full = { $service } đã đầy. Hãy giải phóng bớt dung lượng ở đó rồi thử lại.
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeri không mở được thư mục nữa. Hãy chọn lại.
+
+# Status error title.
+cloud-err-title = Không đồng bộ được với { $service }
+
+# Picker row line.
+cloud-dropbox-line = Thư mục riêng của Kaeri trong Dropbox của bạn, Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = Thư mục riêng của Kaeri trong OneDrive của bạn, Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = Đồng bộ ngay
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = Đăng xuất
+
+# Cloud group button after signing out.
+cloud-sign-in = Đăng nhập
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = Đã đăng xuất. Các thay đổi chờ trên { $kind } này cho đến khi bạn đăng nhập lại.
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service } không cấp quyền truy cập cho Kaeri. Hãy chọn lại để thử lần nữa.
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = Hãy chọn dịch vụ mà các các thiết bị khác của bạn đang dùng. Thư mục đám mây mới được thêm trên điện thoại hoặc máy tính, nơi lưu được khóa khôi phục của nó.
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = Đăng nhập trên điện thoại của bạn
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropbox đăng nhập trên điện thoại của bạn
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device } đã đăng nhập Dropbox. TV này có thể dùng lượt đăng nhập đó qua liên kết đã ghép nối.
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = Dùng lượt đăng nhập của { $device }
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = TV không tự đăng nhập Dropbox được. Trên điện thoại, hãy mở Kaeri, rồi vào Cài đặt, Các thiết bị, Thư mục đám mây và đăng nhập Dropbox ở đó. Sau đó chọn lại Dropbox tại đây.
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = Đã đăng nhập. Đang thiết lập thư mục
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service } đã đăng xuất Kaeri. Chọn để đăng nhập lại.
+
+# TV cloud row.
+tv-cloud-signed-out-line = Đã đăng xuất. Chọn để đăng nhập.
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = Đăng xuất khỏi { $service }?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = TV này ngừng đồng bộ qua { $service }. Các thay đổi chờ ở đây cho đến khi bạn đăng nhập lại.
+
+# Status line while offline.
+cloud-offline = Đang chờ kết nối. Các thay đổi được giữ trên { $kind } này.
+
+# TV device flow.
+tv-google-title = Đăng nhập Google Drive
+
+# TV device flow.
+tv-qr-open-page = Hoặc quét để mở trang
+
+# TV Nextcloud.
+tv-nextcloud-line = Hãy quét mã này bằng điện thoại và cho phép truy cập trên trang Nextcloud của bạn. TV sẽ tự làm tiếp.
+
+# Sheet title.
+rkey-title = Khóa khôi phục của bạn
+
+# Sheet line.
+rkey-line = Hãy cất ở nơi an toàn. Khóa khôi phục lịch sử của bạn nếu bạn mất hết mọi thiết bị, và cho phép một thiết bị mới tham gia từ thư mục đám mây của bạn.
+
+# Button.
+rkey-copy = Sao chép
+
+# Text button.
+rkey-qr = Hiện dưới dạng mã QR
+
+# Sheet footnote.
+rkey-again = Bạn có thể xem lại trong Cài đặt, Các thiết bị, sau khi mở khóa { $kind } này.
+
+# Devices row.
+rkey-row = Khóa khôi phục
+
+# Devices row value.
+rkey-made = Tạo ngày { $date }
+
+# Row.
+rkey-new = Tạo khóa mới
+
+# Footer.
+rkey-new-foot = Khóa cũ sẽ ngừng hoạt động, và các các thiết bị của bạn chuyển sang khóa mới ở lần đồng bộ kế tiếp.
+
+# Restore.
+rkey-enter-title = Nhập khóa khôi phục của bạn
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+       *[other] { $service } đang giữ lịch sử từ { $count } thiết bị. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó.
+    }
+
+# Field note.
+rkey-enter-note = 24 chữ cái và chữ số, chia thành các nhóm bốn. Khoảng trắng và chữ hoa, chữ thường đều không quan trọng.
+
+# Inline error.
+rkey-wrong = Khóa đó không mở được thư mục này. Hãy kiểm tra từng nhóm bốn ký tự rồi thử lại.
+
+# Button.
+rkey-restore = Khôi phục
+
+# Add a device.
+pair-enter-line = Trên thiết bị kia, hãy mở Kaeri rồi chọn Thiết lập từ thiết bị khác, hoặc vào Cài đặt, Các thiết bị, Hiện mã. Sau đó nhập mã vào đây.
+
+# Button, phones.
+pair-scan = Quét mã
+
+# Note.
+pair-same-wifi = Cả hai các thiết bị cần ở cùng một mạng Wi-Fi.
+
+# Button.
+pair-button = Ghép nối
+
+# Text button.
+pair-show-instead = Hiện mã ở đây
+
+# Code screen.
+pair-show-title = Nhập mã này trên thiết bị kia của bạn
+
+# Code screen.
+pair-show-scan = Hoặc quét bằng Kaeri trên điện thoại.
+
+# Code screen.
+pair-good-for = Dùng được trong 2 phút · { $left }
+
+# TV code screen.
+pair-tv-line = Trên điện thoại, hãy mở Kaeri, rồi vào Cài đặt, Các thiết bị, Thêm một thiết bị, và quét hoặc nhập mã này.
+
+# Success.
+pair-ok = Đã ghép nối với { $device }
+
+# Success.
+pair-ok-line = Đang chuyển lịch sử của bạn sang. Trong lúc đó bạn vẫn dùng Kaeri được.
+
+# Success switch.
+pair-copy-signins = Sao chép các lượt đăng nhập từ { $device }
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }. Mỗi thiết bị có bản sao riêng qua liên kết này.
+
+# Error.
+pair-err-code = Mã không khớp. Hãy kiểm tra mã trên { $device } rồi thử lại.
+
+# Error.
+pair-err-not-found = Không tìm thấy thiết bị đang hiện mã này. Cả hai các thiết bị cần ở cùng một mạng Wi-Fi.
+
+# Error on the showing side.
+pair-err-expired = Mã này đã hết hạn. Hãy hiện mã mới.
+
+# Profile question.
+pair-which-profile = Hồ sơ nào trên { $device } là của bạn?
+
+# Profile question.
+pair-which-profile-line = { $kind } này chỉ đồng bộ với hồ sơ đó. Các hồ sơ khác vẫn ở trên { $device }.
+
+# Footer.
+pair-also-sync-foot = { $device } đã biết điện thoại này từ Phát trên TV, nên đồng bộ với nó không cần mã mới.
+
+# Continue, for a day.
+continue-from-device = Tập { $n } · dừng ở { $time } trên { $device }
+
+# Player, 6 s, with Start over.
+player-resumed-from = Đã phát lại từ { $time } trên { $device }
+
+# Row line, Mac toolbar status.
+sync-syncing = Đang đồng bộ
+
+# Mac jobs popover.
+sync-syncing-with = Đang đồng bộ với { $device }
+
+# Device page group.
+sync-notes = Ghi chú đồng bộ
+
+# Sync note.
+sync-note-kept-watched = Tập { $n } của { $title } vẫn được giữ là đã xem. { $other } đã đánh dấu chưa xem mà không biết { $device } đã xem xong tập này.
+
+# Sync note action.
+sync-note-undo = Đánh dấu chưa xem
+
+# Footer.
+sync-notes-foot = Ghi chú được giữ trong 7 ngày.
+
+# Settings row and page.
+profiles-title = Hồ sơ
+
+# Profiles row value with one profile.
+profiles-only-you = Chỉ mình bạn
+
+# Profiles page with one.
+profiles-one-foot = Hồ sơ giúp tách riêng lịch sử, Xem tiếp và tài khoản cho những người dùng chung thiết bị này. Khi chỉ có một hồ sơ, Kaeri không hiện trình chọn hay tên nào.
+
+# Row, sheet title, picker tile.
+profiles-add = Thêm hồ sơ
+
+# Sheet line.
+profiles-add-line = Mỗi hồ sơ có lịch sử, Xem tiếp và tài khoản riêng. Các nguồn và các tệp tải xuống vẫn dùng chung trên thiết bị này.
+
+# Field label.
+profiles-new = Hồ sơ mới
+
+# Field label.
+profiles-yours = Hồ sơ của bạn
+
+# Field note when signed in.
+profiles-yours-note = Điền sẵn từ AniList. Trước đây thiết bị này có một hồ sơ không tên.
+
+# Switch.
+profiles-kids = Hồ sơ trẻ em
+
+# Switch footer.
+profiles-kids-line = Tựa dành cho người lớn bị ẩn, và các nguồn, các thiết bị cùng cài đặt torrent cũng bị ẩn trong hồ sơ này.
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = Các nguồn và Các thiết bị bị ẩn trong hồ sơ trẻ em, và tựa dành cho người lớn cũng bị ẩn.
+
+# Line under a kids profile.
+profiles-kids-tag = Trẻ em
+
+# Button.
+profiles-add-button = Thêm hồ sơ
+
+# Profiles page footer.
+profiles-shared-foot = Các nguồn, tệp tải xuống và cài đặt của thiết bị này được dùng chung cho mọi hồ sơ.
+
+# Profile page row.
+profiles-syncs-with = Đồng bộ với
+
+# Profile page, destructive.
+profiles-delete = Xóa hồ sơ
+
+# Alert title.
+profiles-delete-alert = Xóa hồ sơ của { $name }?
+
+# Alert message.
+profiles-delete-alert-line = Lịch sử và các lượt đăng nhập của { $name } trên thiết bị này sẽ bị xóa. Các Các thiết bị đồng bộ với { $name } vẫn giữ bản của chúng.
+
+# TV, and iPad when asked.
+profiles-picker = Ai đang xem?
+
+# iPad switch.
+profiles-ask-at-launch = Hỏi ai đang xem khi mở ứng dụng
+
+# iPad footer.
+profiles-ask-foot = Mặc định tắt. Dành cho iPad cả nhà dùng chung. Hàng tài khoản cho phép đổi hồ sơ bất cứ lúc nào.
+
+# TV Settings.
+profiles-switch = Đổi hồ sơ
+
+# Account sheet and menus.
+profiles-manage = Quản lý hồ sơ
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = Thiết lập từ thiết bị khác
+
+# Code screen from first launch.
+first-setup-line = Trên một thiết bị đã có Kaeri, hãy mở Cài đặt, Các thiết bị, Thêm một thiết bị, rồi nhập hoặc quét mã này.
+
+# Text button.
+first-restore = Khôi phục từ thư mục đám mây
+
+# Success from first launch.
+first-ok-line = Đang chuyển lịch sử, cài đặt và các cửa hàng plugin của bạn sang. Bạn có thể bắt đầu dùng Kaeri ngay.
+
+# Success switch.
+first-join-store = Tham gia cửa hàng plugin { $store }
+
+# Success switch line.
+first-join-store-line = { $device } tạo lời mời riêng cho { $kind } này
+
+# Picker row on a phone or computer.
+cloud-folder = Một thư mục trên { $kind } này
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Hãy tạo một mật khẩu trong Nextcloud, mục Cài đặt, Bảo mật. Mật khẩu được giữ trên { $kind } này.
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+       *[other] { $count } TV để Phát trên TV
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = Ghép nối hôm nay
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = Hiện một mã để nhập trên điện thoại của bạn
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = Chỉ mình bạn. Hãy thêm hồ sơ để tách riêng lịch sử, Xem tiếp và tài khoản trên TV này.
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = Mở màn hình Ai đang xem?
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = Hồ sơ trên TV này
+
+# Android recovery key sheet, third button.
+rkey-save-file = Lưu thành tệp
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = Mã QR
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = Hiện mã
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = Đăng nhập lại
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = Chọn thư mục
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }, đổi hồ sơ
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = Mã ghép nối
+
+device-kind-phone = điện thoại
+
+device-kind-tablet = máy tính bảng
+
+device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Thiết lập từ điện thoại
+
+# Error naming a device that is not known by name.
+devices-other-device = thiết bị kia
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = Trang của { $service } đang mở. Hãy cho phép truy cập ở đó, rồi Kaeri sẽ tự làm tiếp.
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = Đang kết nối với { $service }
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Đã cho phép truy cập. Đang hoàn tất đăng nhập.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = Đang tạo thư mục của Kaeri trong { $service } và niêm phong bản sao đầu tiên của lịch sử bạn.
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = Không đăng nhập được { $service }
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Không thiết lập được thư mục
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service } không cấp quyền truy cập cho Kaeri.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service } chưa hoàn tất đăng nhập. Hãy thử lại sau ít phút.
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeri không tạo được thư mục trong { $service }. Hãy thử lại sau ít phút.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Dùng dịch vụ khác
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Gỡ thư mục đám mây
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = Gỡ { $service } khỏi đồng bộ?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = Mọi thứ trên { $kind } này vẫn ở lại đây, và các các thiết bị ở gần đã ghép nối vẫn đồng bộ. Thư mục vẫn nằm trong { $service } cùng bản sao đã niêm phong, và các các thiết bị khác của bạn dùng nó cho đến khi bạn gỡ trên chúng.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Gỡ
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = Thêm cho { $service }
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = Đang dùng
+
+# Picker line under Use another service.
+cloud-switch-foot = { $service } vẫn được dùng cho đến khi thư mục mới sẵn sàng.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = Cách nào cũng bật được đồng bộ, và bạn có thể dùng cả hai.
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = Đồng bộ mang chỗ bạn đã xem dở, lịch sử và cài đặt giữa các các thiết bị của chính bạn, ở gần hoặc qua một thư mục đám mây bạn chọn. Dữ liệu được niêm phong trước khi rời { $kind } này.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = Ghép nối với điện thoại sẽ bật đồng bộ. Sau đó TV này có thể tham gia thư mục đám mây của bạn.
 
 # Title of the state when a title page could not load.
 title-load-failed = Không tải được tác phẩm này
@@ -9352,11 +10677,56 @@ title-fact-tba = Chưa công bố
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = Đến tập…
+
+# Title of the Go to episode field.
+episode-go-to-title = Đến tập
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Đi
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first } đến { $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = Tập, từ { $first } đến { $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = Không có tập { $number }. Phim này có { $last } tập.
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = Tập { $number } chưa ra mắt. Tập mới nhất là { $latest }.
+
 # Title of the settings group and the screen.
 torrents-title = Torrent
 
 # Label and short value for the switch.
 torrents-on = Đang bật
+
+# Line under the switch while torrents are off.
+torrents-off-detail = Mặc định tắt. Torrent kết nối trực tiếp trừ khi bạn đưa chúng qua proxy.
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = Những người khác trong một torrent có thể thấy địa chỉ IP của bạn. Để giữ kín, hãy đưa lưu lượng torrent qua proxy.
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Đưa lưu lượng torrent qua proxy
+
+# Line under the switch.
+torrents-proxy-route-detail = Lưu lượng torrent đi qua proxy SOCKS5 do bạn tự chạy hoặc thuê. Khi tùy chọn này tắt, torrent kết nối trực tiếp.
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = Qua proxy SOCKS5 tại { $host }:{ $port }.
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Qua proxy SOCKS5.
+
+# Summary: no proxy is set.
+torrents-summary-direct = Kết nối trực tiếp, không qua proxy.
 
 # Label of the proxy host field.
 torrents-proxy-host = Máy chủ proxy
@@ -9373,6 +10743,9 @@ torrents-proxy-password = Mật khẩu
 # Line under the password field.
 torrents-password-keep = Để trống mật khẩu để giữ mật khẩu đã lưu.
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = Torrent tiếp tục dùng proxy đã lưu cho đến khi proxy mới đạt kiểm tra.
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proxy cần có máy chủ và cổng từ 1 đến 65535.
 
@@ -9382,17 +10755,29 @@ torrents-checking-proxy = Đang kiểm tra proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Đã lưu proxy
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = Kiểm tra proxy không đạt
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Chưa lưu. { $why }, nên proxy đã lưu vẫn được giữ.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent vẫn tắt. { $why }.
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeri kiểm tra xem có kết nối được với proxy không trước khi torrent bắt đầu. Torrent chờ trong lúc kiểm tra còn không đạt.
+
+# Label of the proxy check's result.
+torrents-last-check = Kiểm tra proxy
+
 # Check passed.
 torrents-check-passed = Đạt
 
 # Check running: the short word.
 torrents-check-running = Đang kiểm tra
+
+# Check failed: the line.
+torrents-check-failed-line = Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.
 
 # Short word: the check failed.
 torrents-check-failed = Thất bại
@@ -9912,6 +11297,9 @@ tv-cast-volume-on-tv = Chỉnh trên TV
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = Tiếp theo · phát sau { $seconds } s
+
+# Line under the paired TVs.
+tv-forget-note = Quên một TV ở đây thì TV đó cũng quên thiết bị này.
 
 # Heading of the update row in settings and about.
 updates-title = Cập nhật

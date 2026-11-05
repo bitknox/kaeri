@@ -672,6 +672,12 @@ release-pinned = { $name } akan dipakai untuk judul ini.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Pilihan itu tidak bisa disimpan. { $reason }
 
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.
+
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Torrent mulai setelah pemeriksaan proxy lolos.
+
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Itu bukan tautan magnet atau berkas torrent.
 
@@ -686,6 +692,12 @@ torrent-interface-closed = Kaeri ditutup sebelum torrent mulai.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Tidak bisa memulai sesi torrent. { $reason }
+
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = Pengaturan proxy tidak dapat dipakai. { $reason }
+
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = Sumber-sumber dimuat ulang. Torrent mulai setelah pemeriksaan proxy lolos.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrent dimatikan. Sesinya dihentikan.
@@ -801,6 +813,15 @@ notice-sign-out-failed = Tidak dapat keluar dari { $tracker }. Coba lagi. { $rea
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Tidak dapat menyimpan pengaturan itu. { $cause }
 
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Lalu lintas torrent kini melewati proxy.
+
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Torrent kini terhubung langsung, tanpa proxy.
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = Proxy tidak dapat diperiksa. { $cause }
+
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. { $reason }
 
@@ -899,6 +920,18 @@ crash-notice = Kaeri tertutup karena masalah.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri tertutup karena masalah. Anda bisa melaporkannya di Pengaturan, Tentang.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = Tidak ada judul yang cocok dengan filter ini.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = Daftar rencana kosong.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Sedang offline. Pilihan dari pencarian memerlukan AniList.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Ubah proxy
@@ -1224,6 +1257,9 @@ shortcuts-group-lists = Daftar
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Buka bagian dengan nomor
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Rentang episode sebelumnya atau selanjutnya
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Pintasan keyboard
 
@@ -1400,6 +1436,27 @@ stores-published-state = Diterbitkan
 
 # Accessible name of a row's Publish button.
 stores-publish-label = Terbitkan { $name } { $version }
+
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = Anda bisa melihatnya lagi di Pengaturan, Perangkat, setelah memasukkan kata sandi akun.
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = Tampilkan kunci pemulihan Kaeri
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = Profil
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = Tambah
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = Pilih folder
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = Simpan sebagai berkas
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = Selesai
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -2116,6 +2173,9 @@ keys-action-filter = Filter
 keys-action-filter-search = Cari filter
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Kejutkan saya
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Putar atau jeda
 
 # Action label in the help overlay and the command palette.
@@ -2186,6 +2246,18 @@ keys-hint-mark-previous = Tandai sebelumnya
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Filter
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Kejutkan
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Ke
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Hapus
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Lainnya
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Sinkron ulang
@@ -2355,6 +2427,9 @@ keys-where-episodes = di tabel episode
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = di layar lain
 
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = di jelajah Pencarian dan di Rencana
+
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = “{ $action }” di palet perintah
 
@@ -2486,6 +2561,21 @@ keys-hint-copy-link = Salin tautan
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Keluar
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Tulis
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Bisukan
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Suarakan
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Sembunyikan chat
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Tampilkan chat
 
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Butuh terminal yang lebih besar
@@ -2790,6 +2880,33 @@ lists-episode-dubbed = E{ $episode } · Berdubbing
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score }%
 
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = film
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = segera
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = dub
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = d{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Eps
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = Dub
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · { $percent }%
 
@@ -3001,6 +3118,9 @@ sources-too-small = Perlu terminal yang lebih besar.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Tidak ada sumber-sumber yang tersedia
 
+# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
+sources-torrents-off = Torrent nonaktif sampai { $setting } diaktifkan.
+
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Sumber
 
@@ -3052,6 +3172,9 @@ sources-state-held-back = Ditahan
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Toko-toko plugin
 
+# Under the heading when no { -plugin-store } is joined or the list has not arrived.
+sources-stores-invite = Plugin-plugin untuk perangkat Anda sendiri. Gabung dengan tautan undangan.
+
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } bergabung
 
@@ -3102,6 +3225,18 @@ sources-meta-skipped-until = Dilewati sampai { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Dicoba lagi pada permintaan berikutnya ({ $cause })
+
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = Proxy { $mark }  Memeriksa
+
+# Header chip when the proxy check passed.
+sources-proxy-passed = Proxy { $mark }  Lolos
+
+# Header chip when the proxy check failed.
+sources-proxy-failed = Proxy { $mark }  Pemeriksaan gagal
+
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Tidak diubah. Hapus baris di config.toml untuk mengosongkan pengaturan ini.
@@ -3304,6 +3439,9 @@ settings-label-seed-hours = Seed paling lama
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Batas unggah
 
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Proxy torrent
+
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Penyimpanan token
 
@@ -3379,6 +3517,9 @@ settings-note-download-dir = Tekan Enter untuk mengetik lokasi. Berlaku untuk un
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Berlaku untuk unduhan berikutnya yang selesai.
 
+# Note under the keep seeding row.
+settings-note-keep-seeding = Nonaktif secara bawaan untuk menghemat unggahan; aktifkan untuk berbagi kembali ke swarm.
+
 # Note under the after each download row.
 settings-note-download-hook = Tekan Enter untuk mengetik perintah. Perintah dijalankan setelah setiap unduhan selesai.
 
@@ -3405,6 +3546,12 @@ settings-note-presence-title = Nonaktif menampilkan “Sedang menonton anime” 
 
 # Note under the rich presence row.
 settings-note-presence-rich = Menambahkan sampul, bilah kemajuan, dan tautan AniList. Perlu judul ditampilkan.
+
+# Note under the torrent playback row.
+settings-note-torrents = Nonaktif secara bawaan. Berlaku seketika.
+
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = Opsional. Ubah config.toml untuk mengarahkan lalu lintas torrent lewat proxy SOCKS5.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Menjaga episode yang sudah ditonton tetap seeding selama Kaeri terbuka.
@@ -3922,6 +4069,102 @@ stores-toast-nothing-to-publish = Tidak ada plugin-plugin di direktori plugin An
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = Itu Anda. Toko selalu mempertahankan pemiliknya.
 
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = komputer
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = Masukkan kode
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = Tanpa folder cloud
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = Belum pernah disinkronkan
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = Dipakai
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = Browser Anda membuka halaman { $service }. Izinkan akses di sana, lalu Kaeri berjalan dengan sendirinya.
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = Atau buka alamat ini sendiri:
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = Sedang masuk
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = Alamat WebDAV
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = Alamat folder di server Anda, diawali https://.
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = Folder
+
+# Under the folder path field.
+sync-tui-folder-path-note = Path lengkap folder yang dijaga aplikasi lain, misalnya drive yang disinkronkan.
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = Nama pengguna
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = Nama yang Anda pakai untuk masuk ke Nextcloud.
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = Kata sandi
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = Kata sandi aplikasi
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = Kode
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = Alamat
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = Membuat kode
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = Alamat perangkat satunya
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = Alamat yang ditampilkan perangkat satunya di bawah kodenya, misalnya 192.168.1.20:47811.
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = Memasangkan
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = Anda bisa melihatnya lagi di Pengaturan, Perangkat.
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = Tambahkan sebagai profil anak
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = Mulai Kaeri lagi untuk memakai profil { $name }.
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = Folder ini tidak berisi riwayat untuk digabungi. Pilih folder lain.
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = { $service } tidak tersedia di perangkat ini.
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = Hapus
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = Tampilkan
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = Matikan
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = Salin
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = Perbesar tinggi jendela untuk melihat kode QR.
+
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = Tekan { $key } untuk menghentikan pemutaran.
 
@@ -3948,6 +4191,9 @@ tui-together-section = Nonton bareng
 
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = tautan atau kode
+
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Pesan dan reaksi tidak muncul di pemutar di semua sesi.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Itu bukan tautan atau kode nonton bareng.
@@ -4260,6 +4506,9 @@ action-try-again = Coba lagi
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Batal
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Ke
 
 # Button that puts a question off until later.
 action-not-now = Nanti saja
@@ -4731,6 +4980,12 @@ tv-problem-unpaired = TV tidak lagi mengenali perangkat ini. Pasangkan lagi.
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = { $position } dari { $duration }
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = { $first } dan { $last }
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = { $list }, { $next }
 
 # Menu item that opens an episode's discussion.
 discussion-open = Diskusi
@@ -6013,6 +6268,9 @@ onboarding-own-heading = Punya media sendiri?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Punya tautan undangan?
 
+# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
+onboarding-where-stores = Plugin-plugin berasal dari toko-toko plugin. Toko plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
+
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Coba sekarang
 
@@ -6565,6 +6823,126 @@ together-recent-note = Sepuluh terakhir, disimpan di perangkat ini
 # The start sheet's button after a title is picked.
 party-pick-continue = Lanjutkan
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Tulis pesan
+
+# Button that sends a chat line.
+party-chat-send = Kirim
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Obrolan
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = Tunggu { $seconds } dtk
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+       *[other] Tunggu { $seconds } detik
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = { $count } lagi di chat
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = Obrolan dimatikan di server ruangan ini
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Pesan lewat server ruangan. Kaeri tidak menyimpannya.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Obrolan disembunyikan
+
+# Line under it.
+party-chat-hidden-line = Sembunyikan obrolan aktif di Pengaturan, bagian Pemutaran.
+
+# Button that turns Hide chat off.
+party-chat-show = Tampilkan obrolan
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Sembunyikan obrolan di nonton bareng
+
+# Line under that switch.
+settings-hide-chat-line = Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = Bisukan { $name }
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = Aktifkan suara { $name }
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Suarakan
+
+# State on a muted member's row.
+party-member-muted = Dibisukan
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } dibisukan
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Gagal terkirim
+
+# Button after it, which sends the same text again.
+party-chat-retry = Coba lagi
+
+# Button on the TV's controls that opens the four reactions.
+party-react = Beri reaksi
+
+# Label of the laugh reaction button.
+party-react-laugh = Tertawa
+
+# Label of the gasp reaction button.
+party-react-gasp = Terkejut
+
+# Label of the clap reaction button.
+party-react-clap = Tepuk tangan
+
+# Label of the cry reaction button.
+party-react-cry = Menangis
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } tertawa
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } terkejut
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } bertepuk tangan
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } menangis
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line } pada { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } dan { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second }, dan { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second }, dan { $count } lainnya
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = Anda
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = Dikirim sebagai { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } berkata { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+       *[other] Sisa { $count } karakter
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = Berikutnya
 
@@ -6822,6 +7200,9 @@ player-mark-watch-edges = Lihat bagian tepinya
 # Line in the review with sharing on.
 player-mark-shares = Saat disimpan, waktu ini dibagikan ke AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri menemukan waktu ini dari audio.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = Menggantikan { $start } sampai { $end } dari AniSkip, yang dilaporkan salah.
 
@@ -6871,8 +7252,33 @@ player-mark-it = Tandai
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Jangan tanya lagi
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri menemukan pembukaan ini. Apakah batasnya sudah tepat?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri menemukan penutup ini. Apakah batasnya sudah tepat?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Ya akan membagikan waktu ini ke AniSkip untuk episode { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Ya
+
+player-found-adjust = Sesuaikan
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Tersimpan. AniSkip menerima waktu ini untuk episode { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri tidak akan bertanya lagi soal waktu lewati.
+
+player-found-never-how = Anda bisa mengaktifkannya lagi di Pengaturan.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Bagikan waktu lewati Anda ke AniSkip?
+
+# Body of the sheet.
+player-share-body = AniSkip adalah daftar pembukaan dan penutup bersama yang dikelola relawannya sendiri. Pemutar orang lain melewati waktu yang Anda tandai dan waktu temuan yang Anda konfirmasi.
 
 # What is sent, as a line under the body.
 player-share-sent = Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak yang dibuat untuk instalasi ini. Bukan nama Anda, akun Anda, atau sumber tempat Anda menonton. AniSkip melihat alamat IP Anda untuk membatasi spam, dan ketentuannya mensyaratkan usia 13 tahun ke atas.
@@ -6888,6 +7294,22 @@ player-skip-from-file = Dari berkas
 player-skip-yours = Milik Anda
 
 player-skip-from-aniskip = Dari AniSkip
+
+player-skip-found = Ditemukan oleh Kaeri
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Dijeda selama Mode Daya Rendah aktif.
+
+player-skip-paused-battery-saver = Dijeda selama penghemat baterai aktif.
+
+player-skip-paused-energy-saver = Dijeda selama penghemat energi aktif.
+
+player-skip-paused-power-saver = Dijeda selama penghemat daya aktif.
+
+player-skip-paused-storage = Dijeda sampai penyimpanan kosong 2 GB.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = Tidak tersedia di build Kaeri ini.
 
 player-skip-none = Belum ada
 
@@ -7389,6 +7811,195 @@ search-available-services = Di layanan Anda
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = Di { $service }
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+       *[other] { $count } episode
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = { $count } eps
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = { $out }/{ $total } tayang
+
+# The same, short.
+count-out-of-short = { $out }/{ $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+       *[other] { $count } episode tayang
+    }
+
+# The same, short.
+count-out-short = { $count } tayang
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = Mulai { $date }
+
+# The count line of a show that has not started and has no date.
+count-not-out = Belum tayang
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = Eps { $episode } dari { $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = Dub
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = Dub { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+       *[other] { $count } episode
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = { $out } dari { $total } episode sudah tayang
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+       *[other] { $count } episode sudah tayang
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = Mulai { $date }
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = Episode { $episode } dari { $total }
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = Berdubbing sampai episode { $through }
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = punya dub
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = Jan
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = Januari
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = Feb
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = Februari
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = Mar
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = Maret
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = Apr
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = April
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = Mei
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = Mei
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = Jun
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = Juni
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = Jul
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = Juli
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = Agu
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = Agustus
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = Sep
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = September
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = Okt
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = Oktober
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = Nov
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = November
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = Des
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = Desember
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = Tren hari ini
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = Tren minggu ini
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = Tren bulan ini
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = Hari ini
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = Minggu ini
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = Bulan ini
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = Tren { $period } tidak dapat dimuat.
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = Diperbarui { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = Kejutkan saya
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = Kejutkan Saya
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = Yang lain
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Membuka judul acak dari Rencana
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Membuka judul acak dari filter ini
+
+# Hint of the Another button.
+surprise-another-hint = Membuka judul acak lain sebagai ganti yang ini
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = Tidak ada judul yang cocok dengan filter ini.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = Daftar rencana kosong.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Sedang offline. Pilihan dari pencarian memerlukan AniList.
+
 # Title of the dialog that adds a media server.
 servers-add-title = Tambah server media
 
@@ -7629,6 +8240,9 @@ settings-group-titles = Judul
 # Group heading.
 settings-group-playback = Pemutaran
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Nonton bareng
+
 # Group heading.
 settings-group-watching = Menonton
 
@@ -7710,8 +8324,35 @@ settings-skip-opening = Lewati pembukaan otomatis
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Lewati rekap otomatis
 
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Cari waktu lewati dari audio
+
+# Line under it.
+settings-find-skips-detail = Saat AniSkip tidak punya waktu, Kaeri membandingkan audio antar episode sebuah serial, di perangkat ini.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Tanya soal waktu lewati
+
+# Line under it.
+settings-ask-was-opening-detail = Setelah Anda melewati pembukaan secara manual, dan setelah lewatan yang ditemukan Kaeri
+
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Bagikan waktu lewati ke AniSkip
+
+# Line under it.
+settings-share-skips-detail = AniSkip adalah daftar pembukaan dan penutup bersama yang dipakai banyak pemutar. Ia menerima waktu yang Anda tandai dan waktu temuan yang Anda konfirmasi, nomor MyAnimeList serial itu, episode, dan id acak untuk instalasi ini.
+
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = Waktu lewati yang Anda tandai atau ditemukan Kaeri
+
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Hapus waktu lewati yang Anda tandai dan yang ditemukan Kaeri? AniSkip tetap menyimpan yang sudah Anda bagikan.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Hapus waktu lewati
+
+# Line under it.
+settings-clear-skips-android-detail = Yang Anda tandai dan yang ditemukan Kaeri
 
 # Row: skip filler.
 settings-skip-filler = Lewati filler otomatis
@@ -8031,6 +8672,9 @@ settings-reset = Atur ulang pengaturan
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Atur ulang pengaturan?
 
+# Line under it. The old settings file is moved aside, not deleted.
+settings-reset-detail = Semua pengaturan kembali ke bawaan, termasuk proxy torrent. Riwayat tontonan tetap ada, dan berkas pengaturan lama disimpan.
+
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Pengaturan sudah kembali ke bawaan. Berkas lama disimpan sebagai { $file }.
 
@@ -8199,6 +8843,9 @@ source-note-gone = Tidak terpasang
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Tidak bisa mencocokkan judul ini
 
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = Menunggu pemeriksaan proxy
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Rilis
 
@@ -8277,6 +8924,9 @@ sources-detail-not-answering = Tidak merespons. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Tidak merespons.
 
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Menunggu sampai pemeriksaan proxy lolos.
+
 # Status line: disabled.
 sources-detail-disabled = Mati. Posisinya tetap, dan tidak dicoba.
 
@@ -8348,6 +8998,9 @@ sources-torrent-source = Pemutaran torrent
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Urutan Sumber
+
+# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
+sources-torrents-note = Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Sumber-sumber sedang disiapkan ulang
@@ -8541,6 +9194,9 @@ sources-your-intro = Episode diputar dari sumber pertama yang memilikinya, denga
 # Heading of the section that lists the plugins.
 sources-section-plugins = Plugin-plugin
 
+# Section heading: Internet Archive collections and PeerTube channels.
+sources-section-catalogues = Katalog terbuka
+
 # Link in the empty state.
 sources-add-demo = Tambah demo
 
@@ -8552,6 +9208,9 @@ stores-joined = Sudah bergabung
 
 # Title of the empty list.
 stores-empty-title = Belum ada toko-toko plugin
+
+# Line under the empty title.
+stores-empty-detail = Toko-toko plugin menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Bergabunglah dengan tautan undangan dari pemiliknya.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.
@@ -9040,6 +9699,9 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Buka toko-toko plugin
 
+# Explainer on the empty plugin stores page.
+stores-what-is = Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Ia menawarkan sumber-sumber sebagai plugin-plugin. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
+
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Apa itu toko plugin?
 
@@ -9057,6 +9719,669 @@ stores-qr-warning-device = Pindai ini dengan perangkat yang ingin Anda tautkan. 
 
 # Button that opens the system share sheet for the invite link.
 stores-share = Bagikan…
+
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = Browser Anda membuka halaman { $service }. Izinkan akses di sana, lalu Kaeri berjalan dengan sendirinya.
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = Masuk ke { $service } di browser Anda
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = komputer
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = Masukkan kode
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = Tampilkan
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = Matikan
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Alamat
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Pasangkan lewat alamat
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Kunci pemulihan
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = Nama pengguna
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Kata sandi
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Alamat server
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Memasangkan
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = perangkat Anda yang lain
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Kosongkan alamat dan Kaeri akan mencari perangkat itu di jaringan ini.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Sinkronisasi membagikan posisi terakhir Anda, riwayat, dan pengaturan.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Remote
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Ubah
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Nama
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = Opsi lain untuk { $name }
+
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = Tidak dapat menjangkau { $store } atau { $device }. Coba lagi saat keduanya online.
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = { $store } tidak menerima undangan itu. Minta yang baru dari pemiliknya.
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = { $device } tidak dapat mengundang perangkat lain ke { $store }. Minta undangan dari pemilik toko plugin.
+
+# Settings row and page title, every platform.
+devices-title = Perangkat
+
+# Devices row value while sync is off.
+devices-row-off = Sinkronisasi mati
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = Disinkronkan { $ago }
+
+# Devices row value with the error glyph.
+devices-row-error = Gagal menyinkronkan
+
+# Group heading over the name.
+devices-this-device = Perangkat ini
+
+# Row for this device’s name.
+devices-name = Nama
+
+# Group heading while off.
+sync-group = Sinkronisasi
+
+# Off state.
+sync-off-title = Sinkronisasi mati
+
+# Off state.
+sync-off-line = Aktifkan agar posisi terakhir, riwayat, dan pengaturan Anda sama di semua perangkat.
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = Aktifkan sinkronisasi
+
+# Road sheet title.
+sync-road-title = Bagaimana perangkat Anda berbagi?
+
+# Road sheet row.
+sync-road-nearby = Dengan perangkat di dekat
+
+# Road sheet row line.
+sync-road-nearby-line = Pasangkan dengan perangkat lain di Wi-Fi yang sama. Tidak ada yang disimpan di tempat lain.
+
+# Road sheet row.
+sync-road-cloud = Lewat folder cloud
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.
+
+# Road sheet footer.
+sync-road-later = Anda bisa menambah cara lainnya nanti. Kebanyakan orang memakai keduanya.
+
+# Group heading.
+devices-yours = Perangkat Anda
+
+# Empty Your devices.
+devices-only-this = Hanya perangkat ini
+
+# Empty Your devices.
+devices-only-this-line = Pasangkan perangkat lain untuk berbagi posisi terakhir, riwayat, dan pengaturan Anda.
+
+# Row and sheet title.
+devices-add = Tambah perangkat
+
+# Device row line past 30 days.
+devices-not-seen = Tidak terlihat selama { $days } hari
+
+# A device paired only for Play on TV.
+devices-remote-only = Hanya remote
+
+# Button on a remote-only TV row.
+devices-also-sync = Sinkronkan juga dengan { $device }
+
+# Footer while sync is off.
+devices-paired-tvs-foot = Dipasangkan untuk Putar di TV. TV yang dipasangkan sebagai remote tidak pernah menerima riwayat Anda.
+
+# Switch on a device.
+devices-sync-switch = Sinkronisasi
+
+# Switch on a TV.
+devices-remote-switch = Remote
+
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = Sinkronisasi membagikan posisi terakhir, riwayat, dan pengaturan Anda. Remote membuat { $kind } ini bisa mengendalikan { $device }.
+
+# Device page, destructive.
+devices-remove = Hapus perangkat ini
+
+# Alert title.
+devices-remove-alert = Hapus { $device }?
+
+# Alert message.
+devices-remove-alert-line = { $device } tetap menyimpan datanya, tetapi tidak menerima apa pun yang baru dari perangkat Anda yang lain.
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = Matikan sinkronisasi di { $kind } ini
+
+# Alert title.
+sync-turn-off-alert = Matikan sinkronisasi di { $device }?
+
+# Alert message.
+sync-turn-off-alert-line = { $kind } ini berhenti berbagi dengan perangkat Anda yang lain. Semua yang dimilikinya tetap di sini.
+
+# Group heading.
+cloud-group = Folder cloud
+
+# Group footer.
+cloud-foot = Melengkapi saat perangkat Anda berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.
+
+# Row when only the nearby road is set.
+cloud-add = Tambah folder cloud
+
+# Picker title.
+cloud-pick-title = Pilih folder cloud
+
+# Picker row line.
+cloud-google-line = Folder Kaeri tersembunyi di Drive Anda
+
+# Picker row line.
+cloud-nextcloud-line = Server Nextcloud milik Anda atau yang di-hosting
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = Folder pilihan Anda di iCloud Drive
+
+# Picker group heading.
+cloud-other = Lainnya
+
+# Picker row.
+cloud-webdav = Server WebDAV
+
+# Picker row line.
+cloud-webdav-line = Server apa pun yang mendukung WebDAV
+
+# Picker row line.
+cloud-folder-line = Untuk folder yang dijaga aplikasi lain
+
+# Picker footer.
+cloud-pick-foot = perangkat Anda menyimpan salinan tersegel perubahannya di folder ini. Hanya perangkat Anda yang dapat membacanya, dan Kaeri tidak menjalankan server sendiri.
+
+# Row line while the first write runs.
+cloud-setting-up = Menyiapkan folder
+
+# Field label.
+cloud-nextcloud-address = Alamat server
+
+# Field note.
+cloud-nextcloud-address-note = Alamat yang Anda buka di browser untuk Nextcloud.
+
+# Login flow wait.
+cloud-nextcloud-wait-title = Selesaikan proses masuk di { $host }
+
+# Login flow wait.
+cloud-nextcloud-wait-line = Halaman Nextcloud Anda terbuka di browser. Izinkan akses di sana, lalu lembar ini berjalan dengan sendirinya.
+
+# Wait row.
+cloud-waiting = Menunggu { $service }
+
+# Button.
+cloud-open-again = Buka halaman lagi
+
+# Text button.
+cloud-app-password = Pakai kata sandi aplikasi
+
+# Button.
+cloud-connect = Hubungkan
+
+# Error.
+cloud-err-offline = Tidak dapat menjangkau { $service }. Periksa koneksi Anda.
+
+# Inline error.
+cloud-err-no-server = Server Nextcloud tidak ditemukan di { $host }. Periksa alamatnya.
+
+# Inline error.
+cloud-err-app-password = Nextcloud tidak menerima kata sandi aplikasi itu. Buat yang baru di Nextcloud, Pengaturan, Keamanan.
+
+# Inline error.
+cloud-err-webdav = Server menolak nama pengguna atau kata sandi itu.
+
+# Error, with Open the page again.
+cloud-err-timeout = Halaman masuk tertutup sebelum akses diizinkan.
+
+# Error.
+cloud-err-other-group = Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.
+
+# Status error, with Sign in again.
+cloud-err-signed-out = { $service } mengeluarkan Kaeri. Perubahan Anda menunggu di { $kind } ini sampai Anda masuk lagi.
+
+# Status error.
+cloud-err-full = { $service } penuh. Kosongkan sebagian ruang di sana, lalu coba lagi.
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = Kaeri tidak dapat membuka folder itu lagi. Pilih lagi.
+
+# Status error title.
+cloud-err-title = Tidak dapat menyinkronkan dengan { $service }
+
+# Picker row line.
+cloud-dropbox-line = Folder Kaeri di Dropbox Anda, Apps/Kaeri
+
+# Picker row line.
+cloud-onedrive-line = Folder Kaeri di OneDrive Anda, Apps/Kaeri
+
+# Cloud group button.
+cloud-sync-now = Sinkronkan sekarang
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = Keluar
+
+# Cloud group button after signing out.
+cloud-sign-in = Masuk
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = Sudah keluar. Perubahan menunggu di { $kind } ini sampai Anda masuk lagi.
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = { $service } tidak memberi Kaeri akses. Pilih lagi untuk mencoba.
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = Pilih yang dipakai perangkat Anda yang lain. Folder cloud baru ditambahkan di ponsel atau komputer, tempat kunci pemulihannya bisa disimpan.
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = Masuk lewat ponsel Anda
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = Dropbox masuk lewat ponsel Anda
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = { $device } sudah masuk ke Dropbox. TV ini dapat memakai proses masuk itu lewat tautan pemasangan Anda.
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = Pakai proses masuk { $device }
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = Dropbox tidak punya proses masuk yang bisa dilakukan di TV. Di ponsel Anda, buka Kaeri, lalu Pengaturan, Perangkat, Folder cloud, dan masuk ke Dropbox di sana. Lalu pilih Dropbox lagi di sini.
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = Sudah masuk. Menyiapkan folder
+
+# TV cloud row.
+tv-cloud-revoked-line = { $service } mengeluarkan Kaeri. Pilih untuk masuk lagi.
+
+# TV cloud row.
+tv-cloud-signed-out-line = Sudah keluar. Pilih untuk masuk.
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = Keluar dari { $service }?
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = TV ini berhenti menyinkronkan lewat { $service }. Perubahan menunggu di sini sampai Anda masuk lagi.
+
+# Status line while offline.
+cloud-offline = Menunggu koneksi. Perubahan disimpan di { $kind } ini.
+
+# TV device flow.
+tv-google-title = Masuk ke Google Drive
+
+# TV device flow.
+tv-qr-open-page = Atau pindai untuk membuka halaman
+
+# TV Nextcloud.
+tv-nextcloud-line = Pindai ini dengan ponsel Anda dan izinkan akses di halaman Nextcloud Anda. TV berjalan dengan sendirinya.
+
+# Sheet title.
+rkey-title = Kunci pemulihan Anda
+
+# Sheet line.
+rkey-line = Simpan di tempat aman. Kunci ini memulihkan riwayat Anda jika Anda kehilangan semua perangkat, dan membuat perangkat baru bisa bergabung dari folder cloud Anda.
+
+# Button.
+rkey-copy = Salin
+
+# Text button.
+rkey-qr = Tampilkan sebagai kode QR
+
+# Sheet footnote.
+rkey-again = Anda bisa melihatnya lagi di Pengaturan, Perangkat, setelah membuka kunci { $kind } ini.
+
+# Devices row.
+rkey-row = Kunci pemulihan
+
+# Devices row value.
+rkey-made = Dibuat { $date }
+
+# Row.
+rkey-new = Buat kunci baru
+
+# Footer.
+rkey-new-foot = Kunci lama berhenti berlaku, dan perangkat Anda beralih ke yang baru pada sinkronisasi selanjutnya.
+
+# Restore.
+rkey-enter-title = Masukkan kunci pemulihan Anda
+
+# Restore.
+rkey-enter-line =
+    { $count ->
+       *[other] { $service } menyimpan riwayat dari { $count } perangkat. Kunci yang Anda simpan saat sinkronisasi diaktifkan akan membukanya.
+    }
+
+# Field note.
+rkey-enter-note = 24 huruf dan angka, dalam kelompok empat. Spasi dan huruf besar kecil tidak berpengaruh.
+
+# Inline error.
+rkey-wrong = Kunci itu tidak membuka folder ini. Periksa setiap kelompok empat dan coba lagi.
+
+# Button.
+rkey-restore = Pulihkan
+
+# Add a device.
+pair-enter-line = Di perangkat satunya, buka Kaeri dan pilih Siapkan dari perangkat lain, atau Pengaturan, Perangkat, Tampilkan kode. Lalu masukkan kodenya di sini.
+
+# Button, phones.
+pair-scan = Pindai kode
+
+# Note.
+pair-same-wifi = Kedua perangkat harus ada di Wi-Fi yang sama.
+
+# Button.
+pair-button = Pasangkan
+
+# Text button.
+pair-show-instead = Tampilkan kode di sini
+
+# Code screen.
+pair-show-title = Masukkan kode ini di perangkat Anda yang lain
+
+# Code screen.
+pair-show-scan = Atau pindai dari Kaeri di ponsel Anda.
+
+# Code screen.
+pair-good-for = Berlaku 2 menit · { $left }
+
+# TV code screen.
+pair-tv-line = Di ponsel Anda, buka Kaeri, lalu Pengaturan, Perangkat, Tambah perangkat, dan pindai kode ini atau masukkan.
+
+# Success.
+pair-ok = Terpasang dengan { $device }
+
+# Success.
+pair-ok-line = Memindahkan riwayat Anda. Anda tetap bisa memakai Kaeri selagi menunggu.
+
+# Success switch.
+pair-copy-signins = Salin data masuk dari { $device }
+
+# Success switch line.
+pair-copy-signins-line = { $trackers }. Setiap perangkat mendapat salinannya sendiri lewat tautan ini.
+
+# Error.
+pair-err-code = Kode itu tidak cocok. Periksa kode di { $device } dan coba lagi.
+
+# Error.
+pair-err-not-found = Tidak menemukan perangkat yang menampilkan kode ini. Kedua perangkat harus ada di Wi-Fi yang sama.
+
+# Error on the showing side.
+pair-err-expired = Kode ini sudah habis masa berlakunya. Tampilkan kode baru.
+
+# Profile question.
+pair-which-profile = Profil mana di { $device } yang milik Anda?
+
+# Profile question.
+pair-which-profile-line = { $kind } ini hanya disinkronkan dengan profil itu. Yang lain tetap di { $device }.
+
+# Footer.
+pair-also-sync-foot = { $device } sudah mengenal ponsel ini dari Putar di TV, jadi menyinkronkannya tidak perlu kode baru.
+
+# Continue, for a day.
+continue-from-device = Episode { $n } · berhenti di { $time } pada { $device }
+
+# Player, 6 s, with Start over.
+player-resumed-from = Dilanjutkan di { $time } dari { $device }
+
+# Row line, Mac toolbar status.
+sync-syncing = Menyinkronkan
+
+# Mac jobs popover.
+sync-syncing-with = Menyinkronkan dengan { $device }
+
+# Device page group.
+sync-notes = Catatan sinkronisasi
+
+# Sync note.
+sync-note-kept-watched = Episode { $n } dari { $title } tetap ditandai sudah ditonton. { $other } menandainya belum ditonton tanpa tahu { $device } sudah selesai menontonnya.
+
+# Sync note action.
+sync-note-undo = Tandai belum ditonton
+
+# Footer.
+sync-notes-foot = Catatan disimpan selama 7 hari.
+
+# Settings row and page.
+profiles-title = Profil
+
+# Profiles row value with one profile.
+profiles-only-you = Hanya Anda
+
+# Profiles page with one.
+profiles-one-foot = Profil menyimpan riwayat, lanjutkan menonton, dan akun terpisah untuk orang-orang yang memakai perangkat ini bersama. Dengan satu profil, Kaeri tidak menampilkan pemilih maupun nama.
+
+# Row, sheet title, picker tile.
+profiles-add = Tambah profil
+
+# Sheet line.
+profiles-add-line = Setiap profil menyimpan riwayat, lanjutkan menonton, dan akunnya sendiri. Sumber-sumber dan unduhan tetap dipakai bersama di perangkat ini.
+
+# Field label.
+profiles-new = Profil baru
+
+# Field label.
+profiles-yours = Profil Anda
+
+# Field note when signed in.
+profiles-yours-note = Diisi dari AniList. Sampai sekarang perangkat ini punya satu profil tanpa nama.
+
+# Switch.
+profiles-kids = Profil anak
+
+# Switch footer.
+profiles-kids-line = Judul dewasa tidak ditampilkan, dan sumber-sumber, perangkat, serta pengaturan torrent disembunyikan di dalamnya.
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = Sumber-sumber dan Perangkat disembunyikan di profil anak, dan judul dewasa tidak ditampilkan.
+
+# Line under a kids profile.
+profiles-kids-tag = Anak
+
+# Button.
+profiles-add-button = Tambah profil
+
+# Profiles page footer.
+profiles-shared-foot = Sumber-sumber, unduhan, dan pengaturan perangkat ini dipakai bersama oleh setiap profil.
+
+# Profile page row.
+profiles-syncs-with = Disinkronkan dengan
+
+# Profile page, destructive.
+profiles-delete = Hapus profil
+
+# Alert title.
+profiles-delete-alert = Hapus profil { $name }?
+
+# Alert message.
+profiles-delete-alert-line = Riwayat dan data masuk profil { $name } di perangkat ini dihapus. Perangkat yang tersinkron dengan { $name } tetap menyimpan miliknya.
+
+# TV, and iPad when asked.
+profiles-picker = Siapa yang menonton?
+
+# iPad switch.
+profiles-ask-at-launch = Tanya siapa yang menonton saat dibuka
+
+# iPad footer.
+profiles-ask-foot = Nonaktif secara bawaan. Untuk iPad yang dipakai bersama satu rumah. Baris akun bisa mengganti profil kapan saja.
+
+# TV Settings.
+profiles-switch = Ganti profil
+
+# Account sheet and menus.
+profiles-manage = Kelola profil
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = Siapkan dari perangkat lain
+
+# Code screen from first launch.
+first-setup-line = Di perangkat yang sudah memakai Kaeri, buka Pengaturan, Perangkat, Tambah perangkat, lalu masukkan kode ini atau pindai.
+
+# Text button.
+first-restore = Pulihkan dari folder cloud saja
+
+# Success from first launch.
+first-ok-line = Memindahkan riwayat, pengaturan, dan toko-toko plugin Anda. Anda bisa mulai memakai Kaeri sekarang.
+
+# Success switch.
+first-join-store = Gabung ke toko plugin { $store }
+
+# Success switch line.
+first-join-store-line = { $device } menjadikan { $kind } ini undangannya sendiri
+
+# Picker row on a phone or computer.
+cloud-folder = Folder di { $kind } ini
+
+# Field note under the app password, on Android.
+cloud-app-password-note = Buat di Nextcloud, Pengaturan, Keamanan. Disimpan di { $kind } ini.
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+       *[other] { $count } TV untuk Putar di TV
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = Dipasangkan hari ini
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = Menampilkan kode untuk dimasukkan di ponsel Anda
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = Hanya Anda. Tambah profil untuk memisahkan riwayat, lanjutkan menonton, dan akun di TV ini.
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = Membuka Siapa yang menonton?
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = Profil di TV ini
+
+# Android recovery key sheet, third button.
+rkey-save-file = Simpan sebagai berkas
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = Kode QR
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = Tampilkan kode
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = Masuk lagi
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = Pilih folder
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = { $name }, ganti profil
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = Kode pemasangan
+
+device-kind-phone = ponsel
+
+device-kind-tablet = tablet
+
+device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Siapkan dari ponsel Anda
+
+# Error naming a device that is not known by name.
+devices-other-device = perangkat satunya
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = Halaman { $service } terbuka. Izinkan akses di sana, lalu Kaeri berjalan dengan sendirinya.
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = Menghubungkan ke { $service }
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Akses diizinkan. Menyelesaikan proses masuk.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = Membuat folder Kaeri di { $service } dan menyegel salinan pertama riwayat Anda.
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = Tidak dapat masuk ke { $service }
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Tidak dapat menyiapkan folder
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = { $service } tidak memberi Kaeri akses.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = { $service } tidak menyelesaikan proses masuk. Coba lagi sebentar lagi.
+
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = Kaeri tidak dapat membuat foldernya di { $service }. Coba lagi sebentar lagi.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Pakai layanan lain
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Hapus folder cloud
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = Hapus { $service } dari sinkronisasi?
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = Semua yang ada di { $kind } ini tetap di sini, dan perangkat terpasang di dekat tetap tersinkron. Folder tetap ada di { $service } beserta salinan tersegelnya, dan perangkat Anda yang lain memakainya sampai Anda menghapusnya di sana juga.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Hapus
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = Opsi lain untuk { $service }
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = Dipakai
+
+# Picker line under Use another service.
+cloud-switch-foot = { $service } tetap dipakai sampai folder baru siap.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = Salah satunya mengaktifkan sinkronisasi, dan Anda bisa memakai keduanya.
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = Sinkronisasi membawa posisi terakhir, riwayat, dan pengaturan Anda di antara perangkat Anda sendiri, di dekat atau lewat folder cloud pilihan Anda. Datanya disegel sebelum keluar dari { $kind } ini.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = Memasangkan dengan ponsel Anda mengaktifkan sinkronisasi. Lalu TV ini bisa bergabung ke folder cloud Anda.
 
 # Title of the state when a title page could not load.
 title-load-failed = Judul ini tidak dapat dimuat
@@ -9352,11 +10677,56 @@ title-fact-tba = Akan diumumkan
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = { $status } · { $score }/10
 
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = Ke episode…
+
+# Title of the Go to episode field.
+episode-go-to-title = Ke episode
+
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Ke
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = { $first } sampai { $last }
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = Episode, { $first } sampai { $last }
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = Tidak ada episode { $number }. Serial ini punya { $last }.
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = Episode { $number } belum tayang. Yang terbaru adalah { $latest }.
+
 # Title of the settings group and the screen.
 torrents-title = Torrent
 
 # Label and short value for the switch.
 torrents-on = Torrent aktif
+
+# Line under the switch while torrents are off.
+torrents-off-detail = Nonaktif secara bawaan. Torrent terhubung langsung kecuali Anda mengarahkannya lewat proxy.
+
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = Orang lain di sebuah torrent dapat melihat alamat IP Anda. Agar tetap privat, arahkan lalu lintas torrent lewat proxy.
+
+# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
+torrents-not-a-plugin = Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.
+
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Arahkan lalu lintas torrent lewat proxy
+
+# Line under the switch.
+torrents-proxy-route-detail = Lalu lintas torrent melewati proxy SOCKS5 yang Anda jalankan atau sewa. Selama ini nonaktif, torrent terhubung langsung.
+
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = Lewat proxy SOCKS5 di { $host }:{ $port }.
+
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Lewat proxy SOCKS5.
+
+# Summary: no proxy is set.
+torrents-summary-direct = Terhubung langsung, tanpa proxy.
 
 # Label of the proxy host field.
 torrents-proxy-host = Host proksi
@@ -9373,6 +10743,9 @@ torrents-proxy-password = Kata sandi
 # Line under the password field.
 torrents-password-keep = Kosongkan kata sandi untuk mempertahankan yang tersimpan.
 
+# Line under the proxy form: what happens while the new proxy is checked.
+torrents-proxy-keeps-saved = Torrent tetap memakai proxy yang tersimpan sampai proxy baru lolos pemeriksaan.
+
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proksi memerlukan host dan port dari 1 sampai 65535.
 
@@ -9382,17 +10755,29 @@ torrents-checking-proxy = Memeriksa proksi…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proksi disimpan
 
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = Pemeriksaan proxy gagal
+
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Tidak tersimpan. { $why }, jadi proksi yang tersimpan tetap dipakai.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent masih nonaktif. { $why }.
 
+# Under the proxy form: what the app checks.
+torrents-check-note = Kaeri memeriksa bahwa proxy dapat dijangkau sebelum torrent mulai. Torrent menunggu selama pemeriksaan itu gagal.
+
+# Label of the proxy check's result.
+torrents-last-check = Pemeriksaan proxy
+
 # Check passed.
 torrents-check-passed = Lolos
 
 # Check running: the short word.
 torrents-check-running = Memeriksa
+
+# Check failed: the line.
+torrents-check-failed-line = Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.
 
 # Short word: the check failed.
 torrents-check-failed = Gagal
@@ -9912,6 +11297,9 @@ tv-cast-volume-on-tv = Atur di TV
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = Berikutnya · diputar dalam { $seconds } d
+
+# Line under the paired TVs.
+tv-forget-note = Jika Anda melupakan TV di sini, TV itu juga melupakan perangkat ini.
 
 # Heading of the update row in settings and about.
 updates-title = Pembaruan

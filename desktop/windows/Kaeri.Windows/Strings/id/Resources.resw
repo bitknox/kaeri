@@ -671,6 +671,12 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Pilihan itu tidak bisa disimpan. {reason}</value>
   </data>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.</value>
+  </data>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>Torrent mulai setelah pemeriksaan proxy lolos.</value>
+  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Itu bukan tautan magnet atau berkas torrent.</value>
   </data>
@@ -685,6 +691,12 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Tidak bisa memulai sesi torrent. {reason}</value>
+  </data>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>Pengaturan proxy tidak dapat dipakai. {reason}</value>
+  </data>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>Sumber-sumber dimuat ulang. Torrent mulai setelah pemeriksaan proxy lolos.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrent dimatikan. Sesinya dihentikan.</value>
@@ -797,6 +809,15 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Tidak dapat menyimpan pengaturan itu. {cause}</value>
   </data>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>Lalu lintas torrent kini melewati proxy.</value>
+  </data>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>Torrent kini terhubung langsung, tanpa proxy.</value>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>Proxy tidak dapat diperiksa. {cause}</value>
+  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. {reason}</value>
   </data>
@@ -890,6 +911,18 @@
   <data name="CrashNoticeTv" xml:space="preserve">
     <value>Kaeri tertutup karena masalah. Anda bisa melaporkannya di Pengaturan, Tentang.</value>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>Tidak ada judul yang cocok dengan filter ini.</value>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>Daftar rencana kosong.</value>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>Sedang offline. Pilihan dari pencarian memerlukan AniList.</value>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.</value>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Lanjutkan menonton</value>
   </data>
@@ -916,6 +949,18 @@
   </data>
   <data name="CalendarWatchedSpoken" xml:space="preserve">
     <value>{title}, {episode}, sudah ditonton</value>
+  </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>E{episode} tayang {ago}</value>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>E{episode} tayang {ago} · Berdubbing</value>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>E{episode} dalam {span}</value>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>E{episode} dalam {span} · Berdubbing</value>
   </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>{list} {count}</value>
@@ -1454,6 +1499,21 @@
   <data name="TvCastFirewallAhead" xml:space="preserve">
     <value>Windows akan meminta izin agar Kaeri bisa menjangkau TV Anda.</value>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>Anda bisa melihatnya lagi di Pengaturan, Perangkat, dengan Windows Hello.</value>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Tampilkan kunci pemulihan Kaeri</value>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>Sinkronkan dengan {device}</value>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>Buka {device}</value>
+  </data>
   <data name="SourcePickerSeeders_other" xml:space="preserve">
     <value>{count} seeder</value>
   </data>
@@ -1768,6 +1828,9 @@
   </data>
   <data name="ActionCancel" xml:space="preserve">
     <value>Batal</value>
+  </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>Ke</value>
   </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>Nanti saja</value>
@@ -2233,6 +2296,12 @@
   </data>
   <data name="PlayerPositionSpoken" xml:space="preserve">
     <value>{position} dari {duration}</value>
+  </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first} dan {last}</value>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}, {next}</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskusi</value>
@@ -3470,6 +3539,9 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Punya tautan undangan?</value>
   </data>
+  <data name="OnboardingWhereStores" xml:space="preserve">
+    <value>Plugin-plugin berasal dari toko-toko plugin. Toko plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</value>
+  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Coba sekarang</value>
   </data>
@@ -4013,6 +4085,120 @@
   <data name="PartyPickContinue" xml:space="preserve">
     <value>Lanjutkan</value>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>Tulis pesan</value>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>Kirim</value>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>Obrolan</value>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>Tunggu {seconds} dtk</value>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>Tunggu {seconds} detik</value>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>{count} lagi di chat</value>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>Obrolan dimatikan di server ruangan ini</value>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>Pesan lewat server ruangan. Kaeri tidak menyimpannya.</value>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>Obrolan disembunyikan</value>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>Sembunyikan obrolan aktif di Pengaturan, bagian Pemutaran.</value>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>Tampilkan obrolan</value>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>Sembunyikan obrolan di nonton bareng</value>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.</value>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>Bisukan {name}</value>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>Aktifkan suara {name}</value>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>Suarakan</value>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>Dibisukan</value>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name} dibisukan</value>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>Gagal terkirim</value>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>Coba lagi</value>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>Beri reaksi</value>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>Tertawa</value>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>Terkejut</value>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>Tepuk tangan</value>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>Menangis</value>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>{name} tertawa</value>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>{name} terkejut</value>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>{name} bertepuk tangan</value>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>{name} menangis</value>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{line} pada {time}</value>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first} dan {second}</value>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}, {second}, dan {third}</value>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}, {second}, dan {count} lainnya</value>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>Anda</value>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>Dikirim sebagai {device}</value>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name} berkata {message}</value>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>Sisa {count} karakter</value>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>Berikutnya</value>
   </data>
@@ -4277,6 +4463,9 @@
   <data name="PlayerMarkShares" xml:space="preserve">
     <value>Saat disimpan, waktu ini dibagikan ke AniSkip.</value>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeri menemukan waktu ini dari audio.</value>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>Menggantikan {start} sampai {end} dari AniSkip, yang dilaporkan salah.</value>
   </data>
@@ -4328,8 +4517,35 @@
   <data name="PlayerDontAskAgain" xml:space="preserve">
     <value>Jangan tanya lagi</value>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeri menemukan pembukaan ini. Apakah batasnya sudah tepat?</value>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeri menemukan penutup ini. Apakah batasnya sudah tepat?</value>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>Ya akan membagikan waktu ini ke AniSkip untuk episode {episode}.</value>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>Ya</value>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>Sesuaikan</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>Tersimpan. AniSkip menerima waktu ini untuk episode {episode}.</value>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeri tidak akan bertanya lagi soal waktu lewati.</value>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>Anda bisa mengaktifkannya lagi di Pengaturan.</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Bagikan waktu lewati Anda ke AniSkip?</value>
+  </data>
+  <data name="PlayerShareBody" xml:space="preserve">
+    <value>AniSkip adalah daftar pembukaan dan penutup bersama yang dikelola relawannya sendiri. Pemutar orang lain melewati waktu yang Anda tandai dan waktu temuan yang Anda konfirmasi.</value>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak yang dibuat untuk instalasi ini. Bukan nama Anda, akun Anda, atau sumber tempat Anda menonton. AniSkip melihat alamat IP Anda untuk membatasi spam, dan ketentuannya mensyaratkan usia 13 tahun ke atas.</value>
@@ -4348,6 +4564,27 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>Dari AniSkip</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Ditemukan oleh Kaeri</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>Dijeda selama Mode Daya Rendah aktif.</value>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>Dijeda selama penghemat baterai aktif.</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>Dijeda selama penghemat energi aktif.</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>Dijeda selama penghemat daya aktif.</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>Dijeda sampai penyimpanan kosong 2 GB.</value>
+  </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>Tidak tersedia di build Kaeri ini.</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>Belum ada</value>
@@ -4847,6 +5084,183 @@
   <data name="SearchLineService" xml:space="preserve">
     <value>Di {service}</value>
   </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>{count} episode</value>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>{count} eps</value>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>{out}/{total} tayang</value>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>{out}/{total}</value>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>{count} episode tayang</value>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>{count} tayang</value>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>Mulai {date}</value>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>Belum tayang</value>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>Eps {episode} dari {total}</value>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>Dub</value>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>Dub {through}</value>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>{count} episode</value>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>{out} dari {total} episode sudah tayang</value>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>{count} episode sudah tayang</value>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>Mulai {date}</value>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>Episode {episode} dari {total}</value>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>Berdubbing sampai episode {through}</value>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>punya dub</value>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>Jan</value>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>Januari</value>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>Feb</value>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>Februari</value>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>Mar</value>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>Maret</value>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>Apr</value>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>April</value>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>Mei</value>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>Mei</value>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>Jun</value>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>Juni</value>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>Jul</value>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>Juli</value>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>Agu</value>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>Agustus</value>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>Sep</value>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>September</value>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>Okt</value>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>Oktober</value>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>Nov</value>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>November</value>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>Des</value>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>Desember</value>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>Tren hari ini</value>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>Tren minggu ini</value>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>Tren bulan ini</value>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>Hari ini</value>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>Minggu ini</value>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>Bulan ini</value>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>Tren {period} tidak dapat dimuat.</value>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>Diperbarui {age}</value>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>Kejutkan saya</value>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>Kejutkan Saya</value>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>Yang lain</value>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>Membuka judul acak dari Rencana</value>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>Membuka judul acak dari filter ini</value>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>Membuka judul acak lain sebagai ganti yang ini</value>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>Tidak ada judul yang cocok dengan filter ini.</value>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>Daftar rencana kosong.</value>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>Sedang offline. Pilihan dari pencarian memerlukan AniList.</value>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>Tambah server media</value>
   </data>
@@ -5078,6 +5492,9 @@
   <data name="SettingsGroupPlayback" xml:space="preserve">
     <value>Pemutaran</value>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>Nonton bareng</value>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>Menonton</value>
   </data>
@@ -5159,8 +5576,35 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Lewati rekap otomatis</value>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>Cari waktu lewati dari audio</value>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>Saat AniSkip tidak punya waktu, Kaeri membandingkan audio antar episode sebuah serial, di perangkat ini.</value>
+  </data>
+  <data name="SettingsAskWasOpening" xml:space="preserve">
+    <value>Tanya soal waktu lewati</value>
+  </data>
+  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
+    <value>Setelah Anda melewati pembukaan secara manual, dan setelah lewatan yang ditemukan Kaeri</value>
+  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Bagikan waktu lewati ke AniSkip</value>
+  </data>
+  <data name="SettingsShareSkipsDetail" xml:space="preserve">
+    <value>AniSkip adalah daftar pembukaan dan penutup bersama yang dipakai banyak pemutar. Ia menerima waktu yang Anda tandai dan waktu temuan yang Anda konfirmasi, nomor MyAnimeList serial itu, episode, dan id acak untuk instalasi ini.</value>
+  </data>
+  <data name="SettingsClearSkips" xml:space="preserve">
+    <value>Waktu lewati yang Anda tandai atau ditemukan Kaeri</value>
+  </data>
+  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
+    <value>Hapus waktu lewati yang Anda tandai dan yang ditemukan Kaeri? AniSkip tetap menyimpan yang sudah Anda bagikan.</value>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>Hapus waktu lewati</value>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>Yang Anda tandai dan yang ditemukan Kaeri</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Lewati filler otomatis</value>
@@ -5474,6 +5918,9 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Atur ulang pengaturan?</value>
   </data>
+  <data name="SettingsResetDetail" xml:space="preserve">
+    <value>Semua pengaturan kembali ke bawaan, termasuk proxy torrent. Riwayat tontonan tetap ada, dan berkas pengaturan lama disimpan.</value>
+  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Pengaturan sudah kembali ke bawaan. Berkas lama disimpan sebagai {file}.</value>
   </data>
@@ -5639,6 +6086,9 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Tidak bisa mencocokkan judul ini</value>
   </data>
+  <data name="SourceNoteHeldBack" xml:space="preserve">
+    <value>Menunggu pemeriksaan proxy</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Rilis</value>
   </data>
@@ -5717,6 +6167,9 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Tidak merespons.</value>
   </data>
+  <data name="SourcesDetailHeldBack" xml:space="preserve">
+    <value>Menunggu sampai pemeriksaan proxy lolos.</value>
+  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Mati. Posisinya tetap, dan tidak dicoba.</value>
   </data>
@@ -5782,6 +6235,9 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Urutan Sumber</value>
+  </data>
+  <data name="SourcesTorrentsNote" xml:space="preserve">
+    <value>Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Sumber-sumber sedang disiapkan ulang</value>
@@ -5972,6 +6428,9 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Plugin-plugin</value>
   </data>
+  <data name="SourcesSectionCatalogues" xml:space="preserve">
+    <value>Katalog terbuka</value>
+  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Tambah demo</value>
   </data>
@@ -5983,6 +6442,9 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Belum ada toko-toko plugin</value>
+  </data>
+  <data name="StoresEmptyDetail" xml:space="preserve">
+    <value>Toko-toko plugin menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Bergabunglah dengan tautan undangan dari pemiliknya.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.</value>
@@ -6461,6 +6923,9 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Buka toko-toko plugin</value>
   </data>
+  <data name="StoresWhatIs" xml:space="preserve">
+    <value>Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Ia menawarkan sumber-sumber sebagai plugin-plugin. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</value>
+  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Apa itu toko plugin?</value>
   </data>
@@ -6478,6 +6943,666 @@
   </data>
   <data name="StoresShare" xml:space="preserve">
     <value>Bagikan…</value>
+  </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Browser Anda membuka halaman {service}. Izinkan akses di sana, lalu Kaeri berjalan dengan sendirinya.</value>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Masuk ke {service} di browser Anda</value>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>komputer</value>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Masukkan kode</value>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Tampilkan</value>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Matikan</value>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>Alamat</value>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>Pasangkan lewat alamat</value>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>Kunci pemulihan</value>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>Nama pengguna</value>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>Kata sandi</value>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>Alamat server</value>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>Memasangkan</value>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>perangkat Anda yang lain</value>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>Kosongkan alamat dan Kaeri akan mencari perangkat itu di jaringan ini.</value>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>Sinkronisasi membagikan posisi terakhir Anda, riwayat, dan pengaturan.</value>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Remote</value>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Ubah</value>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Nama</value>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>Opsi lain untuk {name}</value>
+  </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>Tidak dapat menjangkau {store} atau {device}. Coba lagi saat keduanya online.</value>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store} tidak menerima undangan itu. Minta yang baru dari pemiliknya.</value>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device} tidak dapat mengundang perangkat lain ke {store}. Minta undangan dari pemilik toko plugin.</value>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>Perangkat</value>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>Sinkronisasi mati</value>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>Disinkronkan {ago}</value>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>Gagal menyinkronkan</value>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>Perangkat ini</value>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>Nama</value>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>Sinkronisasi</value>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>Sinkronisasi mati</value>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>Aktifkan agar posisi terakhir, riwayat, dan pengaturan Anda sama di semua perangkat.</value>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>Aktifkan sinkronisasi</value>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>Bagaimana perangkat Anda berbagi?</value>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>Dengan perangkat di dekat</value>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>Pasangkan dengan perangkat lain di Wi-Fi yang sama. Tidak ada yang disimpan di tempat lain.</value>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>Lewat folder cloud</value>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.</value>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>Anda bisa menambah cara lainnya nanti. Kebanyakan orang memakai keduanya.</value>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>Perangkat Anda</value>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>Hanya perangkat ini</value>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>Pasangkan perangkat lain untuk berbagi posisi terakhir, riwayat, dan pengaturan Anda.</value>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>Tambah perangkat</value>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>Tidak terlihat selama {days} hari</value>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>Hanya remote</value>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>Sinkronkan juga dengan {device}</value>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>Dipasangkan untuk Putar di TV. TV yang dipasangkan sebagai remote tidak pernah menerima riwayat Anda.</value>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>Sinkronisasi</value>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>Remote</value>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>Sinkronisasi membagikan posisi terakhir, riwayat, dan pengaturan Anda. Remote membuat {kind} ini bisa mengendalikan {device}.</value>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>Hapus perangkat ini</value>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>Hapus {device}?</value>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device} tetap menyimpan datanya, tetapi tidak menerima apa pun yang baru dari perangkat Anda yang lain.</value>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>Matikan sinkronisasi di {kind} ini</value>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>Matikan sinkronisasi di {device}?</value>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>{kind} ini berhenti berbagi dengan perangkat Anda yang lain. Semua yang dimilikinya tetap di sini.</value>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>Folder cloud</value>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>Melengkapi saat perangkat Anda berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.</value>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>Tambah folder cloud</value>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>Pilih folder cloud</value>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>Folder Kaeri tersembunyi di Drive Anda</value>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>Server Nextcloud milik Anda atau yang di-hosting</value>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>Folder pilihan Anda di iCloud Drive</value>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>Lainnya</value>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>Server WebDAV</value>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>Server apa pun yang mendukung WebDAV</value>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>Untuk folder yang dijaga aplikasi lain</value>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>perangkat Anda menyimpan salinan tersegel perubahannya di folder ini. Hanya perangkat Anda yang dapat membacanya, dan Kaeri tidak menjalankan server sendiri.</value>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>Menyiapkan folder</value>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>Alamat server</value>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>Alamat yang Anda buka di browser untuk Nextcloud.</value>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>Selesaikan proses masuk di {host}</value>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>Halaman Nextcloud Anda terbuka di browser. Izinkan akses di sana, lalu lembar ini berjalan dengan sendirinya.</value>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>Menunggu {service}</value>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>Buka halaman lagi</value>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>Pakai kata sandi aplikasi</value>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>Hubungkan</value>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>Tidak dapat menjangkau {service}. Periksa koneksi Anda.</value>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>Server Nextcloud tidak ditemukan di {host}. Periksa alamatnya.</value>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloud tidak menerima kata sandi aplikasi itu. Buat yang baru di Nextcloud, Pengaturan, Keamanan.</value>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>Server menolak nama pengguna atau kata sandi itu.</value>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>Halaman masuk tertutup sebelum akses diizinkan.</value>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.</value>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service} mengeluarkan Kaeri. Perubahan Anda menunggu di {kind} ini sampai Anda masuk lagi.</value>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service} penuh. Kosongkan sebagian ruang di sana, lalu coba lagi.</value>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeri tidak dapat membuka folder itu lagi. Pilih lagi.</value>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>Tidak dapat menyinkronkan dengan {service}</value>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>Folder Kaeri di Dropbox Anda, Apps/Kaeri</value>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>Folder Kaeri di OneDrive Anda, Apps/Kaeri</value>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>Sinkronkan sekarang</value>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>Keluar</value>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>Masuk</value>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>Sudah keluar. Perubahan menunggu di {kind} ini sampai Anda masuk lagi.</value>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service} tidak memberi Kaeri akses. Pilih lagi untuk mencoba.</value>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>Pilih yang dipakai perangkat Anda yang lain. Folder cloud baru ditambahkan di ponsel atau komputer, tempat kunci pemulihannya bisa disimpan.</value>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>Masuk lewat ponsel Anda</value>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropbox masuk lewat ponsel Anda</value>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device} sudah masuk ke Dropbox. TV ini dapat memakai proses masuk itu lewat tautan pemasangan Anda.</value>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>Pakai proses masuk {device}</value>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>Dropbox tidak punya proses masuk yang bisa dilakukan di TV. Di ponsel Anda, buka Kaeri, lalu Pengaturan, Perangkat, Folder cloud, dan masuk ke Dropbox di sana. Lalu pilih Dropbox lagi di sini.</value>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>Sudah masuk. Menyiapkan folder</value>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service} mengeluarkan Kaeri. Pilih untuk masuk lagi.</value>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>Sudah keluar. Pilih untuk masuk.</value>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>Keluar dari {service}?</value>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>TV ini berhenti menyinkronkan lewat {service}. Perubahan menunggu di sini sampai Anda masuk lagi.</value>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>Menunggu koneksi. Perubahan disimpan di {kind} ini.</value>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Masuk ke Google Drive</value>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>Atau pindai untuk membuka halaman</value>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>Pindai ini dengan ponsel Anda dan izinkan akses di halaman Nextcloud Anda. TV berjalan dengan sendirinya.</value>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>Kunci pemulihan Anda</value>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>Simpan di tempat aman. Kunci ini memulihkan riwayat Anda jika Anda kehilangan semua perangkat, dan membuat perangkat baru bisa bergabung dari folder cloud Anda.</value>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>Salin</value>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>Tampilkan sebagai kode QR</value>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>Anda bisa melihatnya lagi di Pengaturan, Perangkat, setelah membuka kunci {kind} ini.</value>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>Kunci pemulihan</value>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>Dibuat {date}</value>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>Buat kunci baru</value>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>Kunci lama berhenti berlaku, dan perangkat Anda beralih ke yang baru pada sinkronisasi selanjutnya.</value>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>Masukkan kunci pemulihan Anda</value>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
+    <value>{service} menyimpan riwayat dari {count} perangkat. Kunci yang Anda simpan saat sinkronisasi diaktifkan akan membukanya.</value>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>24 huruf dan angka, dalam kelompok empat. Spasi dan huruf besar kecil tidak berpengaruh.</value>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>Kunci itu tidak membuka folder ini. Periksa setiap kelompok empat dan coba lagi.</value>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>Pulihkan</value>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>Di perangkat satunya, buka Kaeri dan pilih Siapkan dari perangkat lain, atau Pengaturan, Perangkat, Tampilkan kode. Lalu masukkan kodenya di sini.</value>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>Pindai kode</value>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>Kedua perangkat harus ada di Wi-Fi yang sama.</value>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>Pasangkan</value>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>Tampilkan kode di sini</value>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>Masukkan kode ini di perangkat Anda yang lain</value>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>Atau pindai dari Kaeri di ponsel Anda.</value>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>Berlaku 2 menit · {left}</value>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>Di ponsel Anda, buka Kaeri, lalu Pengaturan, Perangkat, Tambah perangkat, dan pindai kode ini atau masukkan.</value>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>Terpasang dengan {device}</value>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>Memindahkan riwayat Anda. Anda tetap bisa memakai Kaeri selagi menunggu.</value>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>Salin data masuk dari {device}</value>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}. Setiap perangkat mendapat salinannya sendiri lewat tautan ini.</value>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>Kode itu tidak cocok. Periksa kode di {device} dan coba lagi.</value>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>Tidak menemukan perangkat yang menampilkan kode ini. Kedua perangkat harus ada di Wi-Fi yang sama.</value>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>Kode ini sudah habis masa berlakunya. Tampilkan kode baru.</value>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>Profil mana di {device} yang milik Anda?</value>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>{kind} ini hanya disinkronkan dengan profil itu. Yang lain tetap di {device}.</value>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device} sudah mengenal ponsel ini dari Putar di TV, jadi menyinkronkannya tidak perlu kode baru.</value>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>Episode {n} · berhenti di {time} pada {device}</value>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>Dilanjutkan di {time} dari {device}</value>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>Menyinkronkan</value>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>Menyinkronkan dengan {device}</value>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>Catatan sinkronisasi</value>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>Episode {n} dari {title} tetap ditandai sudah ditonton. {other} menandainya belum ditonton tanpa tahu {device} sudah selesai menontonnya.</value>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>Tandai belum ditonton</value>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>Catatan disimpan selama 7 hari.</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Profil</value>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>Hanya Anda</value>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>Profil menyimpan riwayat, lanjutkan menonton, dan akun terpisah untuk orang-orang yang memakai perangkat ini bersama. Dengan satu profil, Kaeri tidak menampilkan pemilih maupun nama.</value>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>Tambah profil</value>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>Setiap profil menyimpan riwayat, lanjutkan menonton, dan akunnya sendiri. Sumber-sumber dan unduhan tetap dipakai bersama di perangkat ini.</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>Profil baru</value>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>Profil Anda</value>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>Diisi dari AniList. Sampai sekarang perangkat ini punya satu profil tanpa nama.</value>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>Profil anak</value>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>Judul dewasa tidak ditampilkan, dan sumber-sumber, perangkat, serta pengaturan torrent disembunyikan di dalamnya.</value>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>Sumber-sumber dan Perangkat disembunyikan di profil anak, dan judul dewasa tidak ditampilkan.</value>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>Anak</value>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>Tambah profil</value>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>Sumber-sumber, unduhan, dan pengaturan perangkat ini dipakai bersama oleh setiap profil.</value>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>Disinkronkan dengan</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Hapus profil</value>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>Hapus profil {name}?</value>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>Riwayat dan data masuk profil {name} di perangkat ini dihapus. Perangkat yang tersinkron dengan {name} tetap menyimpan miliknya.</value>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>Siapa yang menonton?</value>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>Tanya siapa yang menonton saat dibuka</value>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>Nonaktif secara bawaan. Untuk iPad yang dipakai bersama satu rumah. Baris akun bisa mengganti profil kapan saja.</value>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>Ganti profil</value>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>Kelola profil</value>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>Siapkan dari perangkat lain</value>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>Di perangkat yang sudah memakai Kaeri, buka Pengaturan, Perangkat, Tambah perangkat, lalu masukkan kode ini atau pindai.</value>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>Pulihkan dari folder cloud saja</value>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>Memindahkan riwayat, pengaturan, dan toko-toko plugin Anda. Anda bisa mulai memakai Kaeri sekarang.</value>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>Gabung ke toko plugin {store}</value>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device} menjadikan {kind} ini undangannya sendiri</value>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>Folder di {kind} ini</value>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Buat di Nextcloud, Pengaturan, Keamanan. Disimpan di {kind} ini.</value>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>{count} TV untuk Putar di TV</value>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>Dipasangkan hari ini</value>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>Menampilkan kode untuk dimasukkan di ponsel Anda</value>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>Hanya Anda. Tambah profil untuk memisahkan riwayat, lanjutkan menonton, dan akun di TV ini.</value>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>Membuka Siapa yang menonton?</value>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>Profil di TV ini</value>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>Simpan sebagai berkas</value>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>Kode QR</value>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>Tampilkan kode</value>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>Masuk lagi</value>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>Pilih folder</value>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}, ganti profil</value>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>Kode pemasangan</value>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>ponsel</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>tablet</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>TV</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>Siapkan dari ponsel Anda</value>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>perangkat satunya</value>
+  </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>Halaman {service} terbuka. Izinkan akses di sana, lalu Kaeri berjalan dengan sendirinya.</value>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>Menghubungkan ke {service}</value>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>Akses diizinkan. Menyelesaikan proses masuk.</value>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>Membuat folder Kaeri di {service} dan menyegel salinan pertama riwayat Anda.</value>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>Tidak dapat masuk ke {service}</value>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>Tidak dapat menyiapkan folder</value>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service} tidak memberi Kaeri akses.</value>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service} tidak menyelesaikan proses masuk. Coba lagi sebentar lagi.</value>
+  </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeri tidak dapat membuat foldernya di {service}. Coba lagi sebentar lagi.</value>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>Pakai layanan lain</value>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>Hapus folder cloud</value>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>Hapus {service} dari sinkronisasi?</value>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>Semua yang ada di {kind} ini tetap di sini, dan perangkat terpasang di dekat tetap tersinkron. Folder tetap ada di {service} beserta salinan tersegelnya, dan perangkat Anda yang lain memakainya sampai Anda menghapusnya di sana juga.</value>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>Hapus</value>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>Opsi lain untuk {service}</value>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>Dipakai</value>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>{service} tetap dipakai sampai folder baru siap.</value>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>Salah satunya mengaktifkan sinkronisasi, dan Anda bisa memakai keduanya.</value>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>Sinkronisasi membawa posisi terakhir, riwayat, dan pengaturan Anda di antara perangkat Anda sendiri, di dekat atau lewat folder cloud pilihan Anda. Datanya disegel sebelum keluar dari {kind} ini.</value>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>Memasangkan dengan ponsel Anda mengaktifkan sinkronisasi. Lalu TV ini bisa bergabung ke folder cloud Anda.</value>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Judul ini tidak dapat dimuat</value>
@@ -6767,11 +7892,56 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>{status} · {score}/10</value>
   </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>Ke episode…</value>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>Ke episode</value>
+  </data>
+  <data name="EpisodeGoToGo" xml:space="preserve">
+    <value>Ke</value>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>{first} sampai {last}</value>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>Episode, {first} sampai {last}</value>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>Tidak ada episode {number}. Serial ini punya {last}.</value>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>Episode {number} belum tayang. Yang terbaru adalah {latest}.</value>
+  </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>
   </data>
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrent aktif</value>
+  </data>
+  <data name="TorrentsOffDetail" xml:space="preserve">
+    <value>Nonaktif secara bawaan. Torrent terhubung langsung kecuali Anda mengarahkannya lewat proxy.</value>
+  </data>
+  <data name="TorrentsRisk" xml:space="preserve">
+    <value>Orang lain di sebuah torrent dapat melihat alamat IP Anda. Agar tetap privat, arahkan lalu lintas torrent lewat proxy.</value>
+  </data>
+  <data name="TorrentsNotAPlugin" xml:space="preserve">
+    <value>Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</value>
+  </data>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>Arahkan lalu lintas torrent lewat proxy</value>
+  </data>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>Lalu lintas torrent melewati proxy SOCKS5 yang Anda jalankan atau sewa. Selama ini nonaktif, torrent terhubung langsung.</value>
+  </data>
+  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
+    <value>Lewat proxy SOCKS5 di {host}:{port}.</value>
+  </data>
+  <data name="TorrentsSummaryProxy" xml:space="preserve">
+    <value>Lewat proxy SOCKS5.</value>
+  </data>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>Terhubung langsung, tanpa proxy.</value>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Host proksi</value>
@@ -6788,6 +7958,9 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Kosongkan kata sandi untuk mempertahankan yang tersimpan.</value>
   </data>
+  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
+    <value>Torrent tetap memakai proxy yang tersimpan sampai proxy baru lolos pemeriksaan.</value>
+  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proksi memerlukan host dan port dari 1 sampai 65535.</value>
   </data>
@@ -6797,17 +7970,29 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proksi disimpan</value>
   </data>
+  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
+    <value>Pemeriksaan proxy gagal</value>
+  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Tidak tersimpan. {why}, jadi proksi yang tersimpan tetap dipakai.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent masih nonaktif. {why}.</value>
   </data>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeri memeriksa bahwa proxy dapat dijangkau sebelum torrent mulai. Torrent menunggu selama pemeriksaan itu gagal.</value>
+  </data>
+  <data name="TorrentsLastCheck" xml:space="preserve">
+    <value>Pemeriksaan proxy</value>
+  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Lolos</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Memeriksa</value>
+  </data>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.</value>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Gagal</value>
@@ -7324,6 +8509,9 @@
   </data>
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>Berikutnya · diputar dalam {seconds} d</value>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>Jika Anda melupakan TV di sini, TV itu juga melupakan perangkat ini.</value>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Pembaruan</value>
