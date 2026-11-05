@@ -41,7 +41,7 @@ struct SyncSheetFrame<Content: View, Bottom: View>: View {
             VStack(alignment: .leading, spacing: 16) { content }
                 .padding(.top, 14)
             HStack(spacing: 10) {
-                Spacer()
+                Spacer(minLength: 0)
                 bottom
             }
             .padding(.top, 20)
