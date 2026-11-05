@@ -466,6 +466,22 @@ pub fn pop_more() {
     }
 }
 
+/// For a shot: the open More menu's popover with where it sits in `window`, to draw on top of
+/// the window, which leaves a popover's own surface out.
+#[cfg(feature = "fixtures")]
+pub fn shot_more_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    let button = MORE.with_borrow(|m| m.as_ref().and_then(|w| w.upgrade()))?;
+    let popover = button.popover()?;
+    if !popover.is_visible() {
+        return None;
+    }
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
+        .clamp(0.0, (window.width() as f32 - width).max(0.0));
+    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
 /// The cloud row's More button: Use another service, Sign out for a cloud drive and, apart
 /// below them, Remove cloud folder, which asks first.
 fn more_menu(

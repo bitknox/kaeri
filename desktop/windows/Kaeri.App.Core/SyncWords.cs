@@ -198,7 +198,8 @@ public static class SyncWords
         {
             SyncProblem.SignInDenied => (signIn, T.CloudErrDeniedShort(name)),
             SyncProblem.SignInExpired => (signIn, T.CloudErrTimeout),
-            _ when finishing => (T.CloudErrSetupTitle, text),
+            SyncProblem.Unreachable => (signIn, T.CloudErrOffline(name)),
+            _ when finishing => (T.CloudErrSetupTitle, T.CloudErrSetupOther(name)),
             _ => (signIn, T.CloudErrSigninOther(name)),
         };
     }

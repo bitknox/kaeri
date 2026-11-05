@@ -301,6 +301,8 @@ static partial class SyncDialogs
         public bool Done;
         /// <summary>When the browser came back, and when Connecting or Setting up was put on screen.</summary>
         public DateTime? Returned, Shown;
+        /// <summary>A returning state (Connecting or Setting up) has arrived, shown yet or not.</summary>
+        public bool Returning;
         public CancellationTokenSource? Pending;
     }
 
@@ -361,6 +363,9 @@ static partial class SyncDialogs
         var returning = stage is Phase.Connecting or Phase.SettingUp;
         p.Pending?.Cancel();
         p.Pending = null;
+        p.Returning = returning;
+        if (returning)
+            Buttons(p);
         if (stage == Phase.Browser)
         {
             p.Returned = null;
@@ -467,7 +472,7 @@ static partial class SyncDialogs
     }
 
     /// <summary>Cancel is dimmed: the browser came back and the token fetch cannot be stopped half way.</summary>
-    static bool Dimmed(PickerParts p) => p.Pages.Showing == "wait" && p.State is Phase.Connecting or Phase.SettingUp;
+    static bool Dimmed(PickerParts p) => p.Pages.Showing == "wait" && (p.Returning || p.State is Phase.Connecting or Phase.SettingUp);
 
     /// <summary>Cancel by the person: a sign-in under way stops quietly and the picker is back as it was.</summary>
     static void CancelStep(PickerParts p)

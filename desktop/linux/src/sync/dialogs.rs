@@ -411,6 +411,12 @@ fn stage_to(
         if stage == Stage::Browser {
             *pace = Pace::default();
         } else {
+            if returning {
+                // The browser has come back: Cancel and closing are dead from here on, shown
+                // state or not.
+                p.cancel.set_sensitive(false);
+                p.dialog.set_can_close(false);
+            }
             pace.returned.get_or_insert_with(Instant::now);
         }
         let mut delay = Duration::ZERO;
@@ -604,8 +610,17 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str, in_use: Option<SyncFolderKind>) -> 
     progress.append(&wait_title);
     progress.append(&wait_line);
     progress.append(&open_again);
-    let failed = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    // The error line, with its vermilion glyph, on the content column's left edge.
+    let failed = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    failed.set_halign(gtk::Align::Fill);
+    failed.set_hexpand(true);
+    let fail_glyph = gtk::Image::from_icon_name("dialog-error-symbolic");
+    fail_glyph.add_css_class("error");
+    fail_glyph.set_valign(gtk::Align::Start);
+    fail_glyph.set_accessible_role(gtk::AccessibleRole::Presentation);
     let fail_line = line("");
+    fail_line.set_hexpand(true);
+    failed.append(&fail_glyph);
     failed.append(&fail_line);
     let key_slot = gtk::Box::new(gtk::Orientation::Vertical, 12);
     let body = crossfade_stack();
@@ -753,11 +768,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str, in_use: Option<SyncFolderKind>) -> 
         _ => vec![list_nav.clone()],
     };
     nav.replace(&pages);
-    let dialog = adw::Dialog::builder()
-        .content_width(480)
-        .follows_content_size(true)
-        .child(&nav)
-        .build();
+    let dialog = adw::Dialog::builder().content_width(480).child(&nav).build();
     dialog.set_title(&t::cloud_pick_title());
     list_cancel.connect_clicked({
         let d = dialog.clone();
@@ -839,7 +850,7 @@ fn line_centered() -> gtk::Label {
 
 /// A page of the picker's navigation: its own header bar over `body`, and its Cancel button. The
 /// list has Cancel at the start, which closes the dialog; a pushed page has the back button, and
-/// Cancel at the end. `pushed` is `Some(true)` for a form, whose back button stays, and
+/// Cancel at the end (the wait: at the start). `pushed` is `Some(true)` for a form, whose back button stays, and
 /// `Some(false)` for the wait, which only Cancel leaves. The wait gives its header a title that
 /// crossfades and a primary button (Try again, Done) beside Cancel.
 fn nav_page(
@@ -860,7 +871,13 @@ fn nav_page(
             if let Some(primary) = primary {
                 header.pack_end(primary);
             }
-            header.pack_end(&cancel);
+            // The wait keeps Cancel at the start, where the list has it, and Try again or Done
+            // at the end; a form keeps its back button at the start and Cancel at the end.
+            if back {
+                header.pack_end(&cancel);
+            } else {
+                header.pack_start(&cancel);
+            }
             header.set_show_back_button(back);
         }
     }
@@ -968,11 +985,10 @@ fn choose(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
 
 /// The title and the line of a failed cloud sign-in: a refusal, a page that timed out, or any
 /// other failure before the folder (the details go to Messages) say the sign-in failed; one
-/// after it says the folder could not be set up.
+/// after it says the folder could not be set up. The engine's own words go to Messages.
 fn sign_in_error(
     problem: &SyncProblem,
     service: &SyncFolderKind,
-    text: &str,
     p: &Picker,
 ) -> (String, String) {
     let name = service_name(service);
@@ -980,7 +996,10 @@ fn sign_in_error(
     match problem {
         SyncProblem::SignInDenied { .. } => (signin, t::cloud_err_denied_short(&name)),
         SyncProblem::SignInExpired { .. } => (signin, t::cloud_err_timeout()),
-        _ if p.pace.borrow().finishing => (t::cloud_err_setup_title(), text.to_owned()),
+        SyncProblem::Unreachable => (signin, t::cloud_err_offline(&name)),
+        _ if p.pace.borrow().finishing => {
+            (t::cloud_err_setup_title(), t::cloud_err_setup_other(&name))
+        }
         _ => (signin, t::cloud_err_signin_other(&name)),
     }
 }
@@ -1927,7 +1946,7 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                                 | SyncFolderKind::OneDrive),
                             ) => {
                                 // The error is said in the dialog, with Try again.
-                                let error = sign_in_error(problem, &kind, &text, &p);
+                                let error = sign_in_error(problem, &kind, &p);
                                 stage_to(&p, &kind, Stage::Error, None, Some(error));
                             }
                             _ => {
