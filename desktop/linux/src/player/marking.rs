@@ -41,7 +41,7 @@ fn log_name(prompt: SkipPrompt) -> String {
             format!("found {kind:?} saved, episode {episode}") // i18n-skip
         }
         SkipPrompt::FoundNever => "found, never ask".into(), // i18n-skip
-        SkipPrompt::Share => "share skip times".into(), // i18n-skip
+        SkipPrompt::Share => "share skip times".into(),      // i18n-skip
     }
 }
 
