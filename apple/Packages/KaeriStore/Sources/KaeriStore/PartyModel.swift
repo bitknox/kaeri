@@ -290,6 +290,11 @@ public final class PartyModel {
             chat.apply(event)
         case .partyForm(let form):
             self.form = form
+            // The start sheet's server step, up before the form came: what the form knows.
+            if picking != nil {
+                if pickServer.isEmpty { pickServer = form.recentServers.first ?? "" }
+                if pickName.isEmpty { pickName = form.name }
+            }
             if !filled {
                 filled = true
                 server = form.recentServers.first ?? ""

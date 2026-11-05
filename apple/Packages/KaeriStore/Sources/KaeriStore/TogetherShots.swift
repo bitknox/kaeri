@@ -17,9 +17,9 @@ public enum TogetherScene: String, CaseIterable, Sendable {
     case placeLook = "place-look"
     /// The place while in a party: its block at the top.
     case placeParty = "place-party"
-    /// Start a party: What are you watching?
+    /// Start a party the first time, with nothing picked: Choose a server.
     case pick
-    /// The first time: Choose a server.
+    /// Watch together on a title page the first time: Choose a server.
     case pickServer = "pick-server"
     /// An invite opened: looking in, before joining.
     case lobbyInvited = "lobby-invited"
@@ -146,7 +146,9 @@ extension PartyModel {
                 ], marks: [], failed: nil)))
             }
         case .pick:
-            picking = .title
+            pickServer = ""
+            pickName = ""
+            picking = .server(nil)
         case .pickServer:
             pickServer = ""
             pickName = ""
