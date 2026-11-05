@@ -1489,6 +1489,15 @@ class AppStore(
         send(Command.Party(PartyCommand.Lobby(server, room, name, PartyEpisode(id, episode))))
     }
 
+    /**
+     * Start a party in [room] on [server] with nothing picked: once in, Play on any episode picks
+     * it for the room.
+     */
+    fun startParty(server: String, room: String, name: String?) {
+        party.asked()
+        send(Command.Party(PartyCommand.Lobby(server, room, name, null)))
+    }
+
     fun partyReady(ready: Boolean) {
         send(Command.PartyReady(ready))
     }
@@ -1517,7 +1526,7 @@ class AppStore(
         send(Command.Party(PartyCommand.StartAnyway))
     }
 
-    /** Change the room's episode for everyone: Change episode, and Watch something else. */
+    /** Change the room's episode for everyone. In a party, Play anywhere does this through the engine. */
     fun changePartyEpisode(id: AnilistId, episode: String) {
         send(Command.Party(PartyCommand.ChangeEpisode(id, episode)))
     }

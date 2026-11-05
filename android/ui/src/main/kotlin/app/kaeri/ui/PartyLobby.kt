@@ -117,7 +117,12 @@ internal fun PartyLobbyScreen() {
     val failure by party.failure.collectAsStateWithLifecycle()
     val joining by party.joining.collectAsStateWithLifecycle()
     val titles by store.titles.entries.collectAsStateWithLifecycle()
-    var picking by remember { mutableStateOf(false) }
+    // Picking for the room is browsing: while the party is on, Play on any episode anywhere picks
+    // it for the room. The lobby closes onto Home, or Search, with the party bar under it.
+    fun browse(destination: Destination = Destination.Home) {
+        navigator.back()
+        navigator.go(destination)
+    }
     val room = view
     val target = lobby?.target
     val glimpse = target?.let { glimpses[app.kaeri.store.RoomKey(it.server, it.room)] }
@@ -170,7 +175,7 @@ internal fun PartyLobbyScreen() {
             LobbyBanner(facts.entry, room, onBack = {
                 if (room == null) store.closePartyLobby()
                 navigator.back()
-            }, onPick = { picking = true })
+            }, onPick = { browse() })
             Column(Modifier.padding(horizontal = 16.dp)) {
                 Text(facts.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 20.dp))
                 when {
@@ -182,15 +187,15 @@ internal fun PartyLobbyScreen() {
                     room != null -> {
                         Text(Strings.partyRoomNothing(context), style = ShowTitle.page.copy(fontSize = 24.sp, lineHeight = 32.sp), modifier = Modifier.padding(top = 4.dp))
                         PartyHaze(Strings.partyRoomNothingLine(context), Modifier.padding(top = 2.dp))
-                        FilledTonalButton(onClick = { picking = true }, modifier = Modifier.padding(top = 12.dp).height(40.dp)) {
+                        FilledTonalButton(onClick = { browse() }, modifier = Modifier.padding(top = 12.dp).height(40.dp)) {
                             Text(stringResource(R.string.party_room_pick))
                         }
                     }
                 }
                 facts.note?.let { PartyHaze(it, Modifier.padding(top = 8.dp)) }
                 if (room != null) {
-                    RoomMatch(room, onPick = { picking = true })
-                    SourcesLine(room, noSource?.reason?.text(context), lastOut, onPick = { picking = true })
+                    RoomMatch(room, onPick = { browse(Destination.Search) })
+                    SourcesLine(room, noSource?.reason?.text(context), lastOut, onPick = { browse() })
                     ConnectionLine(room.connection)
                 } else {
                     when (val seen = glimpse) {
@@ -217,7 +222,6 @@ internal fun PartyLobbyScreen() {
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
-    if (picking) PartyPickSheet(onDismiss = { picking = false }, changing = room != null, onStarted = { picking = false })
 }
 
 /** How the room's episode was found here, when it was not by its tag. */

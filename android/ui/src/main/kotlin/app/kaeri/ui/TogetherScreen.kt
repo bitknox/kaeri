@@ -120,11 +120,37 @@ internal fun TogetherScreen() {
     val glimpses by party.glimpses.collectAsStateWithLifecycle()
     var field by rememberSaveable { mutableStateOf("") }
     var problem by remember { mutableStateOf<String?>(null) }
-    var picking by remember { mutableStateOf(false) }
+    val form by party.form.collectAsStateWithLifecycle()
+    var askServer by remember { mutableStateOf(false) }
+    // The room Start a party made: its lobby opens once the room answers.
+    var startedRoom by remember { mutableStateOf<String?>(null) }
     val clipboard = LocalClipboard.current
     val snackbars = LocalSnackbars.current
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) { store.loadPartyRooms() }
+    LaunchedEffect(Unit) {
+        store.loadPartyRooms()
+        store.loadPartyForm()
+    }
+    LaunchedEffect(startedRoom, view?.room) {
+        if (startedRoom != null && view?.room == startedRoom) {
+            startedRoom = null
+            navigator.open(LOBBY_ROUTE)
+        }
+    }
+    // Nothing is asked about what to watch: in the room, Play on any episode picks it. The first
+    // time, Choose a server comes first.
+    fun start() {
+        val shown = form
+        val server = shown?.recentServers?.firstOrNull()
+        if (shown != null && server != null) {
+            store.startParty(server, shown.room, null)
+            startedRoom = shown.room
+            // A new name for the next room.
+            store.loadPartyForm()
+        } else {
+            askServer = true
+        }
+    }
     fun join() {
         val target = store.openParty(field)
         if (target == null) {
@@ -151,13 +177,13 @@ internal fun TogetherScreen() {
             }
             val startLabel = stringResource(R.string.together_start)
             if (current == null) {
-                Button(onClick = { picking = true }, modifier = Modifier.height(40.dp)) {
+                Button(onClick = { start() }, modifier = Modifier.height(40.dp)) {
                     Icon(Icons.People, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(startLabel)
                 }
             } else {
-                FilledTonalButton(onClick = { picking = true }, modifier = Modifier.height(40.dp)) {
+                FilledTonalButton(onClick = { start() }, modifier = Modifier.height(40.dp)) {
                     Icon(Icons.People, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(startLabel)
@@ -226,9 +252,10 @@ internal fun TogetherScreen() {
             }
         }
     }
-    if (picking) PartyPickSheet(onDismiss = { picking = false }, onStarted = {
-        picking = false
-        navigator.open(LOBBY_ROUTE)
+    if (askServer) PartyStartSheet(onDismiss = { askServer = false }, onStarted = { room ->
+        askServer = false
+        startedRoom = room
+        store.loadPartyForm()
     })
 }
 
@@ -248,10 +275,11 @@ private fun InPartyBlock(view: PartyView, members: List<PartyMember>, onLeave: (
         }
         Column(Modifier.weight(1f)) {
             Text(entry?.showTitle ?: episode?.title.orEmpty(), style = ShowTitle.row, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val line = if (episode != null && (view.playing || view.episode != null || !members.isEmpty())) {
-                Strings.togetherInPartyLine(context, episode.episode, count, ready)
-            } else {
-                Strings.partyBarIdle(context)
+            val line = when {
+                // Nothing picked yet: Play anywhere picks for the room.
+                episode == null -> Strings.partyBarPick(context)
+                view.playing || view.episode != null || !members.isEmpty() -> Strings.togetherInPartyLine(context, episode.episode, count, ready)
+                else -> Strings.partyBarIdle(context)
             }
             PartyHaze(line, maxLines = 2)
         }
@@ -366,7 +394,12 @@ internal fun PartyBar(hidden: Boolean) {
         val (ready, count) = PartyModel.counts(members)
         val title = entry?.showTitle ?: episode?.title
         val heading = if (title != null && episode != null) Strings.partyBarTitle(context, title, episode.episode) else Strings.togetherInParty(context)
-        val counted = if (party.playing && party.episode == null) Strings.partyBarIdle(context) else Strings.partyBarLine(context, count, ready)
+        val counted = when {
+            // Nothing picked yet: Play anywhere picks for the room.
+            episode == null -> Strings.partyBarPick(context)
+            party.playing && party.episode == null -> Strings.partyBarIdle(context)
+            else -> Strings.partyBarLine(context, count, ready)
+        }
         // A new line in the room takes the count's place for 4 s, and gives it back.
         val conversation by store.party.conversation.collectAsStateWithLifecycle()
         val chatHidden by store.party.hideChat.collectAsStateWithLifecycle()
