@@ -22,6 +22,7 @@ search-statuses-count = { $count ->
 search-leave-out = Исключить
 search-include = Включить
 search-filters-help = Теги, длительность, оценка, происхождение и где смотреть
+search-all-filters = Все фильтры
 search-filters-set = Задано: { $count }
 search-sort-by = Сортировка
 search-clear-all = Сбросить всё

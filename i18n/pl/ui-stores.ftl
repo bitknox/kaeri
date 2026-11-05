@@ -1,6 +1,6 @@
 stores-joined = Dołączono
 stores-empty-title = Nie masz jeszcze { -plugin-store-pl }
-stores-empty-detail = { -plugin-store-cap-pl } prowadzą osoby, które znasz. Dołącz do jednego z nich linkiem z zaproszeniem od właściciela.
+stores-empty-detail = { -plugin-store-cap-pl } przechowują podpisane { -plugin-pl } i dają każdemu urządzeniu własny token. Dołącz do jednego linkiem z zaproszenia od jego właściciela.
 stores-intro = { -plugin-cap-pl } dodają { -source-pl }. Każda z nich pokazuje hosty, z którymi się łączy, zanim ją zainstalujesz.
 stores-not-from-app = { -plugin-cap-pl } pochodzą od osoby, która prowadzi { -plugin-store }, nie od { -app-name }. Możesz opuścić { -plugin-store } w każdej chwili.
 stores-join-owner-responsible = { $owner } prowadzi ten { -plugin-store } i wybrał jego { -plugin-pl }. { -app-name } ich nie tworzył, nie sprawdzał ani nie zatwierdzał.
@@ -185,7 +185,7 @@ stores-offers-plugins = { $count ->
    *[other] { -plugin-cap-pl }: { $count }
  }
 notice-open-stores = Otwórz { -plugin-store-pl }
-stores-what-is = { -plugin-store-cap } to mały serwer, który prowadzi jedna osoba dla zaproszonych ludzi. Oferuje { -source-pl } jako { -plugin-pl }. { -app-name } nie prowadzi żadnych sklepów z wtyczkami ani ich nie wymienia, więc dołączasz do jednego przez link z zaproszeniem od właściciela.
+stores-what-is = { -plugin-store-cap } to mały serwer, który przechowuje podpisane { -plugin-pl } i daje każdemu urządzeniu własny token. Oferuje { -source-pl } jako { -plugin-pl }. { -app-name } nie prowadzi żadnych sklepów z wtyczkami i żadnych nie wymienia, więc dołączasz do jednego linkiem z zaproszenia od jego właściciela.
 stores-what-is-link = Czym jest { -plugin-store }?
 stores-invite-rules = Link z zaproszeniem działa raz, dla jednej osoby, przez siedem dni. Jeśli twój wygasł, poproś właściciela sklepu o nowy.
 stores-qr-label = Kod QR linku z zaproszeniem
