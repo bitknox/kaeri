@@ -1,6 +1,6 @@
 stores-joined = Entrou
 stores-empty-title = Ainda não há { -plugin-store-pl }
-stores-empty-detail = { -plugin-store-cap-pl } são mantidas por pessoas que você conhece. Entre em uma com o link de convite que o dono enviar para você.
+stores-empty-detail = { -plugin-store-cap-pl } guardam { -plugin-pl } assinados e dão a cada { -device } o seu próprio token. Entre em uma com o link de convite que o dono dela enviar.
 stores-intro = { -plugin-cap-pl } adicionam { -source-pl }. Cada um lista os endereços com que se conecta antes que você o instale.
 stores-not-from-app = { -plugin-cap-pl } vêm do dono da { -plugin-store }, e não do { -app-name }. Você pode sair de uma { -plugin-store } a qualquer momento.
 stores-join-owner-responsible = { $owner } mantém esta { -plugin-store } e escolheu os { -plugin-pl } dela. O { -app-name } não os criou, não os revisou nem os aprovou.
@@ -180,7 +180,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 notice-open-stores = Abrir { -plugin-store-pl }
-stores-what-is = Uma { -plugin-store } é um pequeno servidor mantido por uma pessoa para quem ela convida. Ela oferece { -source-pl } como { -plugin-pl }. O { -app-name } não mantém { -plugin-store-pl } e não lista nenhuma, então você entra em uma com um link de convite do dono.
+stores-what-is = Uma { -plugin-store } é um servidor pequeno que guarda { -plugin-pl } assinados e dá a cada { -device } o seu próprio token. Ela oferece { -source-pl } como { -plugin-pl }. O { -app-name } não administra { -plugin-store-pl } nem lista nenhuma, então você entra em uma com um link de convite do dono dela.
 stores-what-is-link = O que é uma { -plugin-store }?
 stores-invite-rules = Um link de convite vale uma vez, para uma pessoa, e dura sete dias. Peça um novo ao dono da { -plugin-store } se o seu expirou.
 stores-qr-label = Código QR do link de convite

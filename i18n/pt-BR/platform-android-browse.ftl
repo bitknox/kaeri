@@ -22,3 +22,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } comentários · pausa o vídeo
  }
 player-more-discussion-pauses = Pausa o vídeo
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, qualquer
+search-pill-all-set = Todos os filtros, { $count } definidos
+search-pill-clear = Limpar todos os filtros

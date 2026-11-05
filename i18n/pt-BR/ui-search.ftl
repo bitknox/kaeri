@@ -90,3 +90,78 @@ search-available-all = Todos
 search-available-here = Reproduz aqui
 search-available-services = Nos seus serviços
 search-line-service = Em { $service }
+count-episodes = { $count ->
+    [one] { $count } episódio
+    [many] { $count } de episódios
+   *[other] { $count } episódios
+ }
+count-episodes-short = { $count } ep.
+count-out-of = { $out } de { $total } lançados
+count-out-of-short = { $out } de { $total }
+count-out = { $count ->
+    [one] { $count } episódio lançado
+    [many] { $count } de eps. lançados
+   *[other] { $count } eps. lançados
+ }
+count-out-short = { $count } lanç.
+count-starts = Começa em { $date }
+count-not-out = Ainda não lançado
+count-next-of = Ep. { $episode } de { $total }
+count-dub = Dub.
+count-dub-through = Dub. { $through }
+count-spoken-episodes = { $count ->
+    [one] { $count } episódio
+    [many] { $count } de episódios
+   *[other] { $count } episódios
+ }
+count-spoken-out-of = { $out } de { $total } episódios lançados
+count-spoken-out = { $count ->
+    [one] { $count } episódio lançado
+    [many] { $count } de episódios lançados
+   *[other] { $count } episódios lançados
+ }
+count-spoken-starts = Começa em { $date }
+count-spoken-next-of = Episódio { $episode } de { $total }
+count-spoken-dub-through = { -dubbed } até o episódio { $through }
+count-spoken-dub = tem dublagem
+date-month-jan-short = jan
+date-month-jan-long = janeiro
+date-month-feb-short = fev
+date-month-feb-long = fevereiro
+date-month-mar-short = mar
+date-month-mar-long = março
+date-month-apr-short = abr
+date-month-apr-long = abril
+date-month-may-short = mai
+date-month-may-long = maio
+date-month-jun-short = jun
+date-month-jun-long = junho
+date-month-jul-short = jul
+date-month-jul-long = julho
+date-month-aug-short = ago
+date-month-aug-long = agosto
+date-month-sep-short = set
+date-month-sep-long = setembro
+date-month-oct-short = out
+date-month-oct-long = outubro
+date-month-nov-short = nov
+date-month-nov-long = novembro
+date-month-dec-short = dez
+date-month-dec-long = dezembro
+trending-today = Em alta hoje
+trending-week = Em alta na semana
+trending-month = Em alta no mês
+trending-choice-today = Hoje
+trending-choice-week = Esta semana
+trending-choice-month = Este mês
+trending-failed = Não foi possível carregar o que está em alta { $period }.
+trending-updated = Atualizado { $age }
+surprise-me = Me surpreenda
+surprise-me-menu = Me surpreenda
+surprise-another = Outro
+surprise-hint-planning = Abre um título aleatório de Planejado
+surprise-hint-filters = Abre um título aleatório destes filtros
+surprise-another-hint = Abre outro título aleatório no lugar deste
+surprise-empty-filters = Nenhum título corresponde a estes filtros.
+surprise-empty-planning = A lista Planejado está vazia.
+surprise-offline = Sem conexão. As sugestões da pesquisa precisam do AniList.

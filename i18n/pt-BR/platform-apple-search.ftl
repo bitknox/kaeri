@@ -19,6 +19,7 @@ search-statuses-count = { $count ->
 search-leave-out = Excluir
 search-include = Incluir
 search-filters-help = Tags, tamanho, nota, origem e onde assistir
+search-all-filters = Todos os filtros
 search-filters-set = { $count } ativos
 search-sort-by = Ordenar por
 search-clear-all = Limpar tudo

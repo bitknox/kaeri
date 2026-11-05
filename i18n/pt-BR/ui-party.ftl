@@ -185,3 +185,49 @@ party-in-the-room = Na sala
 party-here-count = { $count } aqui
 together-recent-note = As últimas dez, guardadas neste { -device }
 party-pick-continue = { -proceed-cap }
+party-chat-field = Diga algo
+party-chat-send = Enviar
+party-chat-title = Chat
+party-chat-wait = Aguarde { $seconds } s
+party-chat-wait-spoken = { $seconds ->
+    [one] Aguarde { $seconds } segundo
+    [many] Aguarde { $seconds } de segundos
+   *[other] Aguarde { $seconds } segundos
+ }
+party-chat-more = Mais { $count } no chat
+party-chat-off = O servidor desta sala está com o chat desativado
+party-chat-privacy = As mensagens passam pelo servidor da sala. O { -app-name } não guarda nenhuma.
+party-chat-hidden = O chat está oculto
+party-chat-hidden-line = Ocultar chat está ativado em Configurações, em Reprodução.
+party-chat-show = Mostrar chat
+settings-hide-chat = Ocultar chat nas { -watch-party-pl }
+settings-hide-chat-line = As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo some. A lista de pessoas continua mostrando quem está na sala.
+party-mute = Silenciar { $name }
+party-unmute = Reativar { $name }
+party-unmute-short = Reativar
+party-member-muted = Silenciado
+party-muted-line = { $name } está silenciado
+party-chat-not-sent = Não enviada
+party-chat-retry = Tentar de novo
+party-react = Reagir
+party-react-laugh = Risada
+party-react-gasp = Susto
+party-react-clap = Palmas
+party-react-cry = Choro
+party-reacted-laugh = Risada de { $name }
+party-reacted-gasp = Susto de { $name }
+party-reacted-clap = Palmas de { $name }
+party-reacted-cry = Choro de { $name }
+party-reacted-at = { $line } aos { $time }
+party-names-two = { $first } e { $second }
+party-names-three = { $first }, { $second } e { $third }
+party-names-others = { $first }, { $second } e mais { $count }
+party-chat-you = Você
+party-sends-as = Envia como { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } diz { $message }
+party-chat-left = { $count ->
+    [one] Resta { $count } caractere
+    [many] Restam { $count } de caracteres
+   *[other] Restam { $count } caracteres
+ }

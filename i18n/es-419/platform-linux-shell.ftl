@@ -12,6 +12,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · Sincronizado
 shortcuts-group-lists = Listas
 shortcuts-go-to-section = Ir a una sección
+shortcuts-episode-ranges = Rango de episodios anterior o próximo
 shortcuts-show = Atajos de teclado
 shortcuts-close-window = Cerrar la ventana
 shortcuts-quit = Salir
