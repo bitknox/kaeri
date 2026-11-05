@@ -389,18 +389,12 @@ fun TvSyncHost() {
     val shown = signIn
     val step = shown?.step
     // A refused or lapsed code stays on its own page, with the reason and a fresh code to ask for.
-    var lastCode by remember { mutableStateOf<Pair<SyncFolderKind, SyncSignInStep.Code>?>(null) }
-    LaunchedEffect(shown, problem) {
-        when {
-            shown != null && step is SyncSignInStep.Code -> lastCode = shown.service to step
-            shown == null && problem == null -> lastCode = null
-        }
-    }
+    val lastCode by store.sync.lastCode.collectAsStateWithLifecycle()
     val failed = problem?.takeIf { shown == null && it.endsSetUp() }
     when {
         copied != null -> PairOkPage(copied!!)
         shown != null && step is SyncSignInStep.Code -> CloudCodePage(shown.service, step, null)
-        failed != null && lastCode != null -> CloudCodePage(lastCode!!.first, lastCode!!.second, failed)
+        failed != null && lastCode != null -> lastCode?.let { (service, code) -> CloudCodePage(service, code, failed) }
         shown != null && step is SyncSignInStep.Page -> NextcloudQrPage(step)
         sheet == SyncSheet.KEY -> DropboxPhonePage(status)
         sheet == SyncSheet.CODE || sheet == SyncSheet.ADD -> PairCodePage()

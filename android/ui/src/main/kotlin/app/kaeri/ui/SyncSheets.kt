@@ -216,7 +216,7 @@ internal fun CloudPickerSheet() {
         }
         val current = inUse?.let { cloudName(it).ifEmpty { Strings.cloudFolder(context, kind) } }
         SheetText(
-            if (current != null) Strings.cloudSwitchFoot(context, current) else stringResource(R.string.cloud_pick_foot),
+            if (current != null) "${Strings.cloudSwitchFoot(context, current)} ${stringResource(R.string.cloud_pick_foot)}" else stringResource(R.string.cloud_pick_foot),
             Modifier.padding(top = 16.dp),
         )
         SheetButtons { QuietButton(stringResource(R.string.action_cancel), onClick = close) }
@@ -673,7 +673,7 @@ internal fun FlowSheet(
     holdsInput: Boolean = false,
     form: @Composable () -> Unit,
 ) {
-    SettingsSheet(onDismiss = onDismiss, tall = true, holdsInput = holdsInput || flow.shown != null, dismissible = flow.dismissible) {
+    SettingsSheet(onDismiss = onDismiss, tall = true, full = flow.shown is SignInPhase.Key, holdsInput = holdsInput || flow.shown != null, dismissible = flow.dismissible) {
         Crossfade(
             targetState = flow.shown,
             animationSpec = Motion.standard(),
@@ -731,11 +731,11 @@ private fun SignInPhaseContent(phase: SignInPhase, canCancel: Boolean, onCancel:
             val service = cloudName(phase.service).ifEmpty { Strings.cloudFolder(context, kindWord()) }
             SheetTitle(if (phase.afterSignIn) stringResource(R.string.cloud_err_setup_title) else Strings.cloudErrSigninTitle(context, service))
             SheetProblem(
-                when (val problem = phase.problem) {
+                when (phase.problem) {
                     is SyncProblem.SignInDenied -> Strings.cloudErrDeniedShort(context, service)
                     is SyncProblem.SignInExpired -> stringResource(R.string.cloud_err_timeout)
                     SyncProblem.Unreachable -> Strings.cloudErrOffline(context, service)
-                    is SyncProblem.Other -> if (phase.afterSignIn) problem.v1 else Strings.cloudErrSigninOther(context, service)
+                    is SyncProblem.Other -> if (phase.afterSignIn) Strings.cloudErrSetupOther(context, service) else Strings.cloudErrSigninOther(context, service)
                     else -> Strings.cloudErrSigninOther(context, service)
                 },
                 Modifier.padding(top = 4.dp),
