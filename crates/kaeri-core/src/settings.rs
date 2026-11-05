@@ -133,8 +133,13 @@ fn drop_legacy_vpn(
     src: &str,
     path: &Path,
 ) -> Result<(), crate::Error> {
+    // Looked up through `TableLike`, which only reads: `Item::get_mut` plants an empty
+    // `Item::None` for a key that is not there, and the write after this one then finds
+    // `torrent` taken by something that is not a table.
     let torrent = doc
+        .as_table_mut()
         .get_mut("providers")
+        .and_then(toml_edit::Item::as_table_like_mut)
         .and_then(|providers| providers.get_mut("torrent"))
         .and_then(toml_edit::Item::as_table_like_mut);
     let Some(torrent) = torrent else { return Ok(()) };
@@ -179,6 +184,10 @@ fn set_in(
         let entry = node
             .entry(segment)
             .or_insert_with(|| toml_edit::Item::Table(toml_edit::Table::new()));
+        // An `Item::None` holds a key's place without a value, so it is as good as absent.
+        if entry.is_none() {
+            *entry = toml_edit::Item::Table(toml_edit::Table::new());
+        }
         node = entry.as_table_mut().ok_or_else(|| {
             crate::Error::Config(format!(
                 "cannot set {}.{key}: {segment} is not a table in {}",
@@ -427,6 +436,22 @@ mod tests {
             "value did not land in the right table"
         );
         assert!(config.trackers.enabled.is_empty(), "the other table was disturbed");
+    }
+
+    #[test]
+    fn torrents_turn_on_beside_a_providers_table_without_one() {
+        // `[providers]` with an order and no `[providers.torrent]` is the file of anyone who
+        // reordered their sources, and turning torrents on there was refused.
+        let dir = temp_dir("beside-providers");
+        let paths = paths_in(&dir);
+        std::fs::write(&paths.config_file, "[providers]\norder = [\"plugins\"]\n").unwrap();
+
+        write_key(&paths, &["providers", "torrent"], "enabled", SettingValue::Bool(true))
+            .unwrap();
+
+        let config = crate::config::Config::load(&paths).unwrap();
+        assert!(config.providers.torrent.enabled);
+        assert_eq!(config.providers.order, ["plugins"]);
     }
 
     #[test]
