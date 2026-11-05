@@ -70,6 +70,9 @@ impl Inspector for WasmInspector {
                 "the plugin was built for an older plugin interface; rebuild this plugin"
                     .to_owned()
             }
+            kaeri_plugin::PluginError::NeedsNewerKaeri { world, .. } => {
+                format!("the plugin was made for {world}, which this store does not take yet")
+            }
             kaeri_plugin::PluginError::Deadline { .. } => {
                 "the plugin took too long to describe itself".to_owned()
             }

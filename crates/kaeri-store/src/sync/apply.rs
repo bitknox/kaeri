@@ -456,6 +456,9 @@ impl Store {
             let mut report = Applied::default();
             let mut have: BTreeMap<String, u64> = BTreeMap::new();
             let mut titles: BTreeSet<u32> = BTreeSet::new();
+            if log::meta(tx, HELD_UNKNOWN)?.is_some() {
+                apply_held(tx, now_secs, &mut report, &mut titles)?;
+            }
             for op in ops {
                 let held = match have.get(&op.device) {
                     Some(h) => *h,
@@ -481,14 +484,27 @@ impl Store {
                 have.insert(op.device.clone(), op.seq);
                 let json = serde_json::to_string(&op.body)
                     .map_err(|source| crate::StoreError::Encode { what: "sync op", source })?;
+                let known = op.body.is_known();
                 tx.execute(
                     "INSERT INTO sync_op (device, seq, stamp, body, received)
-                     VALUES (?1, ?2, ?3, ?4, 1)",
-                    params![op.device, op.seq as i64, op.stamp as i64, json],
+                     VALUES (?1, ?2, ?3, ?4, ?5)",
+                    params![
+                        op.device,
+                        op.seq as i64,
+                        op.stamp as i64,
+                        json,
+                        if known { RECEIVED } else { RECEIVED_UNKNOWN }
+                    ],
                 )?;
                 log::raise_hlc(tx, op.stamp)?;
-                apply_one(tx, &op, now_secs, &mut report, &mut titles)?;
-                report.ops += 1;
+                if known {
+                    apply_one(tx, &op, now_secs, &mut report, &mut titles)?;
+                    report.ops += 1;
+                } else {
+                    // Held, so it is relayed and its number counts, but a newer version applies it.
+                    log::set_meta(tx, HELD_UNKNOWN, "1")?;
+                    report.unknown += 1;
+                }
             }
             for id in &titles {
                 refresh_title(tx, *id)?;
@@ -626,6 +642,48 @@ fn parse_key(key: &str) -> Option<(u32, &str)> {
     Some((id.parse().ok()?, rest))
 }
 
+/// `sync_op.received` for an op another device made, applied here.
+const RECEIVED: i64 = 1;
+/// `sync_op.received` for an op another device made whose kind this version did not know when it
+/// arrived: held and relayed, but not applied.
+const RECEIVED_UNKNOWN: i64 = 2;
+/// Set in `sync_meta` while ops of [`RECEIVED_UNKNOWN`] are held.
+const HELD_UNKNOWN: &str = "held_unknown";
+
+/// Apply the held ops that arrived as unknown and whose kind this version knows: what a device
+/// received before it was updated to a version that knows them. The rest stay held.
+fn apply_held(
+    tx: &Transaction<'_>,
+    now_secs: i64,
+    report: &mut Applied,
+    titles: &mut BTreeSet<u32>,
+) -> Result<()> {
+    let held: Vec<Op> = {
+        let mut stmt = tx.prepare(
+            "SELECT device, seq, stamp, body FROM sync_op WHERE received = ?1
+              ORDER BY device, seq",
+        )?;
+        stmt.query_map([RECEIVED_UNKNOWN], log::row_to_op)?.collect::<rusqlite::Result<_>>()?
+    };
+    let mut still = 0;
+    for op in held {
+        if !op.body.is_known() {
+            still += 1;
+            continue;
+        }
+        apply_one(tx, &op, now_secs, report, titles)?;
+        tx.execute(
+            "UPDATE sync_op SET received = ?1 WHERE device = ?2 AND seq = ?3",
+            params![RECEIVED, op.device, op.seq as i64],
+        )?;
+        report.ops += 1;
+    }
+    if still == 0 {
+        tx.execute("DELETE FROM sync_meta WHERE key = ?1", [HELD_UNKNOWN])?;
+    }
+    Ok(())
+}
+
 fn apply_one(
     tx: &Transaction<'_>,
     op: &Op,
@@ -635,7 +693,7 @@ fn apply_one(
 ) -> Result<()> {
     let at_of = |stamp: Stamp| op::secs_of_stamp(stamp);
     match &op.body {
-        OpBody::Noop => {}
+        OpBody::Noop | OpBody::Unknown(_) => {}
         OpBody::Watch {
             anilist_id,
             episode,

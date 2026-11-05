@@ -119,6 +119,11 @@ pub enum PluginError {
         ABI_MAJOR
     )]
     OutdatedAbi { path: String, found: String },
+    /// The plugin was made for a newer Kaeri: for a plugin world this host does not have, such as
+    /// `kaeri:books`, or for a later major of the provider ABI. Nothing is wrong with it; this
+    /// app needs an update to use it.
+    #[error("{path}: made for {world}, which needs a newer version of Kaeri")]
+    NeedsNewerKaeri { path: String, world: String },
 }
 
 /// The major version of the plugin ABI this host speaks: the major of the WIT package in
@@ -126,32 +131,55 @@ pub enum PluginError {
 /// with a message that says to rebuild it.
 pub const ABI_MAJOR: u64 = 3;
 
-/// The ABI version a component was built for, if it was built for another major than this host's.
+/// Why a component cannot be linked against this host's ABI, when it cannot.
+enum AbiProblem {
+    /// Built for an older major of the provider ABI: the version it names.
+    Outdated(String),
+    /// Made for a newer Kaeri: the world it names, as `kaeri:books@1.0.0`.
+    Newer(String),
+}
+
+/// Whether a component was built for this host's ABI, and why not when it was not.
 ///
 /// Read from the names the component imports and exports (`kaeri:provider/host@3.0.0`)
-/// before anything is linked, so an old plugin gets a clear answer instead of a linker error
-/// that names an interface nobody asked about.
-fn outdated_abi(
+/// before anything is linked, so a plugin for another version gets a clear answer instead of a
+/// linker error that names an interface nobody asked about. A `kaeri:` package other than
+/// `provider` is a world of a newer version, as is a later provider major.
+fn abi_problem(
     component: &wasmtime::component::Component,
     engine: &wasmtime::Engine,
-) -> Option<String> {
+) -> Option<AbiProblem> {
     let ty = component.component_type();
     let names = ty
         .imports(engine)
         .map(|(name, _)| name.to_owned())
         .chain(ty.exports(engine).map(|(name, _)| name.to_owned()));
+    let mut outdated = None;
     for name in names {
-        let Some(rest) = name.strip_prefix("kaeri:provider/") else { continue };
+        let Some(rest) = name.strip_prefix("kaeri:") else { continue };
+        let package = rest.split(['/', '@']).next().unwrap_or_default();
         let version = rest.split_once('@').map_or("", |(_, v)| v);
-        if version.split('.').next().and_then(|m| m.parse::<u64>().ok()) != Some(ABI_MAJOR) {
-            return Some(if version.is_empty() {
-                "unknown".to_owned()
+        let world = || {
+            if version.is_empty() {
+                format!("kaeri:{package}")
             } else {
-                version.to_owned()
-            });
+                format!("kaeri:{package}@{version}")
+            }
+        };
+        if package != "provider" {
+            return Some(AbiProblem::Newer(world()));
+        }
+        match version.split('.').next().and_then(|m| m.parse::<u64>().ok()) {
+            Some(ABI_MAJOR) => {}
+            Some(major) if major > ABI_MAJOR => return Some(AbiProblem::Newer(world())),
+            _ => {
+                outdated.get_or_insert_with(|| {
+                    if version.is_empty() { "unknown".to_owned() } else { version.to_owned() }
+                });
+            }
         }
     }
-    None
+    outdated.map(AbiProblem::Outdated)
 }
 
 impl PluginError {
@@ -166,7 +194,9 @@ impl PluginError {
                 ProviderError::Parse(format!("plugin trapped: {message}"))
             }
             Self::Load { message, .. } => ProviderError::Other(message.clone()),
-            Self::OutdatedAbi { .. } => ProviderError::Other(self.to_string()),
+            Self::OutdatedAbi { .. } | Self::NeedsNewerKaeri { .. } => {
+                ProviderError::Other(self.to_string())
+            }
         }
     }
 
@@ -493,8 +523,14 @@ impl PluginHost {
             .map_err(|e| fail(e.to_string()))?;
         tracing::info!(elapsed = ?started.elapsed(), plugin = %path.display(), "component compiled");
 
-        if let Some(found) = outdated_abi(&component, &self.engine) {
-            return Err(PluginError::OutdatedAbi { path: display, found });
+        match abi_problem(&component, &self.engine) {
+            Some(AbiProblem::Outdated(found)) => {
+                return Err(PluginError::OutdatedAbi { path: display, found });
+            }
+            Some(AbiProblem::Newer(world)) => {
+                return Err(PluginError::NeedsNewerKaeri { path: display, world });
+            }
+            None => {}
         }
 
         let mut linker = wasmtime::component::Linker::new(&self.engine);

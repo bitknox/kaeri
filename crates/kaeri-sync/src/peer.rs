@@ -104,6 +104,7 @@ where
                     applied.ops += a.ops;
                     applied.duplicates += a.duplicates;
                     applied.gaps += a.gaps;
+                    applied.unknown += a.unknown;
                     applied.effects.extend(a.effects);
                     applied.notes.extend(a.notes);
                     applied.titles.extend(a.titles);
