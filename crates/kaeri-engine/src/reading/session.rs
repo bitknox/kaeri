@@ -7,6 +7,8 @@
 //! on the end page or when the next chapter opens. Times come from the engine's clock; the
 //! timers run on the runtime and come back as [`Internal::Reader`] wakes.
 
+mod novel;
+
 use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
@@ -20,7 +22,7 @@ use kaeri_model::{
     eink::{EinkProfile, ScreenFacts},
     event::Event,
     reader::{
-        Leaf, NoNext, OpenAt, ReadDirection, ReadPlace, ReaderAction, ReaderCommand,
+        Leaf, NoNext, NovelPos, OpenAt, ReadDirection, ReadPlace, ReaderAction, ReaderCommand,
         ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key, ReaderSettingsView,
         ReaderSurface, ReaderView, StripPos, TurnHow,
     },
@@ -57,6 +59,8 @@ pub struct Cx<'a> {
     pub tx: &'a Outbox,
     pub screen: Screen,
     pub eink: Option<EinkProfile>,
+    /// The system web view's major version, where the app said it (Android).
+    pub webview: Option<u32>,
 }
 
 impl Cx<'_> {
@@ -94,6 +98,21 @@ pub struct Reader {
     pub facts: Option<ScreenFacts>,
     /// The profile from those facts and the person's answers.
     pub eink: Option<EinkProfile>,
+    /// An open waiting for a source to list the work's chapters.
+    listing: Option<Listing>,
+    /// The novels' cache was emptied of an earlier run's files.
+    novels_cleared: bool,
+}
+
+/// An open whose chapters come from a source.
+#[derive(Debug)]
+struct Listing {
+    id: u64,
+    work: WorkId,
+    chapter: Option<ChapterId>,
+    at: OpenAt,
+    surface: ReaderSurface,
+    slot: novel::Listed,
 }
 
 impl std::fmt::Debug for Reader {
@@ -142,6 +161,14 @@ pub struct Session {
     flush_pending: bool,
     dirty: bool,
     last_write: Option<Instant>,
+    /// The novel open in the web view.
+    novel: Option<novel::Open>,
+    /// Where the next novel chapter opens.
+    restore: Option<NovelPos>,
+    /// What a chapter opened off the actor gave.
+    prepared: novel::Slot,
+    /// "Resumed at page N" waits for a novel's first page.
+    novel_resumed: bool,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -181,7 +208,8 @@ impl Reader {
         tx: &'a Outbox,
     ) -> Cx<'a> {
         let screen = Screen::new(self.eink.as_ref(), config.handheld());
-        Cx { config, services, tx, screen, eink: self.eink.clone() }
+        let webview = self.facts.as_ref().and_then(|f| f.webview);
+        Cx { config, services, tx, screen, eink: self.eink.clone(), webview }
     }
 
     /// The e-ink profile again, from the facts and the answers kept in `reading.eink`.
@@ -273,7 +301,9 @@ impl Reader {
             .filter(|s| Some(s.id) == session || Some(&s.work) == work.as_ref())
         {
             s.layers = cx.layers(s.medium, Some(s.work.as_str()));
-            if settings::relays(key) {
+            if s.novel.is_some() {
+                s.restyle(cx);
+            } else if settings::relays(key) {
                 let page = s.page().unwrap_or(0);
                 s.lay_out(cx, &pages, page);
             }
@@ -287,6 +317,10 @@ impl Reader {
             if let Some(pages) = &self.pages {
                 pages.close(s.id);
             }
+            cx.services.novels.remove(s.id);
+            let _ = std::fs::remove_dir_all(
+                novel::cache_dir(&cx.services.paths.cache_dir).join(format!("{}-fixed", s.id)),
+            );
         }
     }
 
@@ -299,14 +333,66 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         self.close(cx);
+        self.listing = None;
+        if !std::mem::replace(&mut self.novels_cleared, true) {
+            // An earlier run's files: session numbers start again each run.
+            let _ = std::fs::remove_dir_all(novel::cache_dir(&cx.services.paths.cache_dir));
+        }
         self.next += 1;
         let id = self.next;
+        let chapters = shelf::chapters(&cx.services.store, work.as_str());
+        if chapters.is_empty()
+            && let Some(slot) = novel::list(cx, id, &work)
+        {
+            self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+            return;
+        }
+        self.open_with(cx, id, work, chapters, chapter, at, surface);
+    }
+
+    /// A source listed the chapters an open waited for.
+    fn listed(&mut self, cx: &mut Cx<'_>, session: u64) {
+        let Some(listing) = self.listing.take_if(|l| l.id == session) else { return };
+        let listed = listing.slot.lock().ok().and_then(|mut s| s.take());
+        match listed {
+            Some(Ok(chapters)) if !chapters.is_empty() => {
+                let Listing { id, work, chapter, at, surface, .. } = listing;
+                self.open_with(cx, id, work, chapters, chapter, at, surface);
+            }
+            Some(Err(failure)) => {
+                let _ = cx.tx.send(Event::Reading(ReadingEvent::Failed {
+                    about: ReadingAbout::Reader,
+                    failure,
+                }));
+            }
+            _ => {
+                let _ = cx.tx.send(Event::Reading(ReadingEvent::Failed {
+                    about: ReadingAbout::Reader,
+                    failure: ReadingFailure::NotFound,
+                }));
+            }
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn open_with(
+        &mut self,
+        cx: &mut Cx<'_>,
+        id: u64,
+        work: WorkId,
+        chapters: Vec<ShelfChapter>,
+        chapter: Option<ChapterId>,
+        at: OpenAt,
+        surface: ReaderSurface,
+    ) {
         let store = &cx.services.store;
-        let chapters = shelf::chapters(store, work.as_str());
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
         let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
+            (Some(other), _) if other != "manga" && other != "comic" => {
+                Medium::parse(other).unwrap_or(Medium::Manga)
+            }
             _ => Medium::Manga,
         };
         let Some((index, page, resumed)) =
@@ -320,6 +406,15 @@ impl Reader {
             return;
         };
         let layers = cx.layers(medium, Some(work.as_str()));
+        // A novel opens at its kept text position, or the one asked for.
+        let restore = match &at {
+            OpenAt::Place { place } if place.chapter == chapters[index].id => {
+                place.novel.clone()
+            }
+            OpenAt::Resume => novel::kept_novel(cx, &work, &chapters[index].id),
+            _ => None,
+        };
+        let resumed = resumed || (matches!(at, OpenAt::Resume) && restore.is_some());
         let start = match &at {
             OpenAt::Place { place } if place.chapter == chapters[index].id => place.clone(),
             _ => place(&work, &chapters[index].id, Some(page)),
@@ -362,6 +457,10 @@ impl Reader {
             flush_pending: false,
             dirty: false,
             last_write: None,
+            novel: None,
+            restore,
+            prepared: Arc::default(),
+            novel_resumed: false,
         };
         let pages = self.pages(cx);
         session.lay_out(cx, &pages, page);
@@ -370,10 +469,16 @@ impl Reader {
 
     /// A timer ran out or the worker laid a chapter out.
     pub fn wake(&mut self, cx: &mut Cx<'_>, session: u64, wake: ReaderWake) {
+        if wake == ReaderWake::Listed {
+            self.listed(cx, session);
+            return;
+        }
         let pages = self.pages(cx);
         let Some(s) = self.session.as_mut().filter(|s| s.id == session) else { return };
         match wake {
             ReaderWake::Laid => s.laid_out(cx, &pages),
+            ReaderWake::Prepared(n) => s.prepared_now(cx, &pages, n),
+            ReaderWake::Listed => {}
             ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx),
             ReaderWake::Flush(n) if n == s.flush_timer => {
                 s.flush_pending = false;
@@ -484,6 +589,28 @@ fn start_of(
 }
 
 impl Session {
+    /// What `Opened` says of the open chapter.
+    fn view(&self, cx: &Cx<'_>) -> ReaderView {
+        let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
+        ReaderView {
+            session: self.id,
+            work: self.work.clone(),
+            title: self.title.clone(),
+            medium: self.medium,
+            chapter: self.chapter().row(&marks),
+            mode: self.mode,
+            direction: self.direction,
+            start: self.start.clone(),
+            next: self.chapters.get(self.at + 1).map(|c| c.row(&marks)),
+            previous: self
+                .at
+                .checked_sub(1)
+                .and_then(|i| self.chapters.get(i))
+                .map(|c| c.row(&marks)),
+            settings: Some(cx.settings_view(self.medium, Some(&self.work))),
+        }
+    }
+
     fn chapter(&self) -> &ShelfChapter {
         &self.chapters[self.at]
     }
@@ -567,16 +694,12 @@ impl Session {
     fn lay_out(&mut self, cx: &Cx<'_>, pages: &Pages, page: u32) {
         self.generation += 1;
         let chapter = self.chapter().clone();
-        if chapter.is_text() {
-            // Novels open in the novel reader, which serves the book itself.
-            let failure = ReadingFailure::Unsupported { extension: "epub".into() };
-            let _ = cx.tx.send(Event::Reading(ReadingEvent::Failed {
-                about: ReadingAbout::Reader,
-                failure,
-            }));
+        self.start.page = Some(page);
+        if novel::prepares(&chapter) {
+            // Opened off the actor: a novel goes to the web view, pictures to the worker.
+            self.prepare(cx, &chapter);
             return;
         }
-        self.start.page = Some(page);
         pages.open(OpenJob {
             session: self.id,
             generation: self.generation,
@@ -640,25 +763,7 @@ impl Session {
         }
         if !self.opened {
             self.opened = true;
-            let marks = store.read_marks(self.work.as_str()).unwrap_or_default();
-            let view = ReaderView {
-                session: self.id,
-                work: self.work.clone(),
-                title: self.title.clone(),
-                medium: self.medium,
-                chapter: self.chapter().row(&marks),
-                mode: self.mode,
-                direction: self.direction,
-                start: self.start.clone(),
-                next: self.chapters.get(self.at + 1).map(|c| c.row(&marks)),
-                previous: self
-                    .at
-                    .checked_sub(1)
-                    .and_then(|i| self.chapters.get(i))
-                    .map(|c| c.row(&marks)),
-                settings: Some(cx.settings_view(self.medium, Some(&self.work))),
-            };
-            cx.send(ReaderEvent::Opened(Box::new(view)));
+            cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
         }
         let mut leaves = self.leaves.clone();
         leaves.push(Leaf { index: leaves.len() as u32, parts: Vec::new(), end_page: true });
@@ -695,6 +800,10 @@ impl Session {
                     self.wait_to_read(cx);
                 }
             }
+            C::Surface { surface, .. } if self.novel.is_some() => {
+                self.surface = surface;
+                self.restyle(cx);
+            }
             C::Surface { surface, .. } => {
                 self.surface = surface;
                 let page = self.page().unwrap_or(0);
@@ -721,7 +830,8 @@ impl Session {
                     .find(|k| k.chapter == chapter.as_str() && !k.read)
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
-                self.open_chapter(cx, pages, index, page);
+                let novel = novel::kept_novel(cx, &self.work, &chapter);
+                self.open_chapter(cx, pages, index, page, novel);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.take() {
@@ -729,7 +839,8 @@ impl Session {
                 }
             }
             C::StartOver { .. } => {
-                let start = place(&self.work, &self.chapter().id, Some(0));
+                let mut start = place(&self.work, &self.chapter().id, Some(0));
+                start.novel = self.novel_start();
                 self.go_to(cx, pages, start);
             }
             C::GoBack { .. } => {
@@ -738,7 +849,7 @@ impl Session {
                 }
             }
             C::NovelAt { .. } | C::NovelCounted { .. } | C::FixedRendered { .. } => {
-                tracing::debug!("novel reports wait for the novel reader");
+                self.novel_report(cx, command)
             }
             other => tracing::debug!(command = ?other, "a report for another chapter"),
         }
@@ -842,14 +953,27 @@ impl Session {
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
         event.strip_image = here.strip.map(|s| s.image);
         event.strip_offset = here.strip.map(|s| f64::from(s.offset));
+        event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
         event.source_id = Some("local".into());
         if let Err(e) = cx.services.store.record_read(&event, Vec::new()) {
             tracing::warn!(error = %e, "the reading place was not kept");
         }
     }
 
-    fn open_chapter(&mut self, cx: &mut Cx<'_>, pages: &Pages, index: usize, page: u32) {
+    fn open_chapter(
+        &mut self,
+        cx: &mut Cx<'_>,
+        pages: &Pages,
+        index: usize,
+        page: u32,
+        novel: Option<NovelPos>,
+    ) {
         self.flush(cx);
+        if self.novel.take().is_some() {
+            cx.services.novels.remove(self.id);
+        }
+        self.restore = novel;
+        self.novel_resumed = false;
         self.at = index;
         self.opened = false;
         self.read_fired = false;
@@ -865,7 +989,7 @@ impl Session {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
         } else if let Some(index) = self.chapters.iter().position(|c| c.id == to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0));
+            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone());
         }
     }
 
@@ -893,7 +1017,15 @@ impl Session {
         };
         let mine = self.page().unwrap_or(0);
         let page = theirs.last_page.unwrap_or(0);
-        let further = index > self.at || (index == self.at && page > mine);
+        let their_pos = theirs.novel_pos.as_deref().and_then(NovelPos::decode);
+        let my_pos = self.place.as_ref().and_then(|p| p.novel.clone());
+        let further_here = match (&their_pos, &my_pos) {
+            // Novels compare by the text position: page numbers differ between screens.
+            (Some(theirs), Some(mine)) => theirs > mine,
+            (Some(_), None) if self.novel.is_some() => true,
+            _ => page > mine,
+        };
+        let further = index > self.at || (index == self.at && further_here);
         if theirs.read || !further {
             return;
         }
@@ -906,7 +1038,8 @@ impl Session {
             .place
             .clone()
             .unwrap_or_else(|| place(&self.work, &self.chapter().id, Some(mine)));
-        let to = place(&self.work, &self.chapters[index].id, Some(page));
+        let mut to = place(&self.work, &self.chapters[index].id, Some(page));
+        to.novel = their_pos;
         let label = self.chapters[index].label.clone();
         self.moved_back = Some(back.clone());
         self.go_to(cx, pages, to.clone());
@@ -954,6 +1087,8 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod novels;
+
     const WORK: &str = "a:4242";
 
     /// A comic archive of `pages` portrait pages, each a flat grey of its own.
@@ -1000,6 +1135,32 @@ mod tests {
 
     /// A reader over a work of two three-page chapters in a folder.
     fn harness(store: Store) -> Harness {
+        harness_of(store, "manga", |books| {
+            (1..=2)
+                .map(|n| {
+                    let path = books.join(format!("Chapter {n}.cbz"));
+                    cbz(&path, 3);
+                    ShelfFile {
+                        path: path.display().to_string(),
+                        chapter: None,
+                        label: format!("Chapter {n}"),
+                        volume: None,
+                        number_milli: Some(n * 1000),
+                        format: "cbz".into(),
+                        pages: Some(3),
+                        comicinfo: None,
+                    }
+                })
+                .collect()
+        })
+    }
+
+    /// A reader over a work of `medium` whose folder `files` fills.
+    fn harness_of(
+        store: Store,
+        medium: &str,
+        files: impl FnOnce(&Path) -> Vec<ShelfFile>,
+    ) -> Harness {
         let dir = tempfile::tempdir().unwrap();
         let books = dir.path().join("books");
         std::fs::create_dir_all(&books).unwrap();
@@ -1007,24 +1168,12 @@ mod tests {
             id: "s1".into(),
             folder: books.display().to_string(),
             name: "The Lantern Keeper".into(),
-            medium: "manga".into(),
+            medium: medium.into(),
             work: Some(WORK.into()),
             state: "matched".into(),
         };
         store.put_local_series(&series).unwrap();
-        for n in 1..=2 {
-            let path = books.join(format!("Chapter {n}.cbz"));
-            cbz(&path, 3);
-            let file = ShelfFile {
-                path: path.display().to_string(),
-                chapter: None,
-                label: format!("Chapter {n}"),
-                volume: None,
-                number_milli: Some(n * 1000),
-                format: "cbz".into(),
-                pages: Some(3),
-                comicinfo: None,
-            };
+        for file in files(&books) {
             store.put_local_file("s1", &file, 1, 1).unwrap();
         }
         let paths = Paths {

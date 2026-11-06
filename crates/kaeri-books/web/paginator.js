@@ -32,6 +32,8 @@
   'use strict';
   if (window.top !== window) return; // Chromium runs document-start scripts in frames too
   if (window.kaeriReader) return;
+  // Only a book's documents: a host's user script also meets about:blank and its own pages.
+  if (!/^(kaeri-book:|https:\/\/appassets\.androidplatform\.net\/book\/)/.test(location.href)) return;
 
   var CSS = "__KAERI_CSS__";
   var SHY = /­/g;
@@ -119,7 +121,8 @@
   }
 
   function fixedSize() {
-    var meta = document.querySelector('meta[name="viewport"]');
+    // The engine renames the book's viewport and serves one as wide as the window.
+    var meta = document.querySelector('meta[name="kaeri-viewport"]');
     var c = meta ? meta.getAttribute('content') || '' : '';
     var w = /width\s*=\s*(\d+)/.exec(c), h = /height\s*=\s*(\d+)/.exec(c);
     if (w && h) return { w: +w[1], h: +h[1] };
@@ -146,7 +149,7 @@
     state.scrolled = S.mode === 'scrolled' && !state.vertical && !S.fixed;
     state.rtl = !state.vertical && getComputedStyle(h).direction === 'rtl';
     state.axis = state.vertical || state.scrolled ? 'y' : 'x';
-    var W = window.innerWidth;
+    var W = vw();
     var cols = columns(W);
     var margin = S.margin;
     // The column is capped near 720 px and about 75 characters a line (40 for CJK): wider
@@ -190,8 +193,8 @@
   function fit() {
     var size = fixedSize(), h = document.documentElement;
     if (!size) return;
-    var s = Math.min(window.innerWidth / size.w, window.innerHeight / size.h);
-    var x = (window.innerWidth - size.w * s) / 2, y = (window.innerHeight - size.h * s) / 2;
+    var s = Math.min(vw() / size.w, vh() / size.h);
+    var x = (vw() - size.w * s) / 2, y = (vh() - size.h * s) / 2;
     state.fixedScale = s;
     h.style.setProperty('width', size.w + 'px');
     h.style.setProperty('height', size.h + 'px');
@@ -202,11 +205,16 @@
   // ---- Geometry -----------------------------------------------------------------------
 
   function scroller() { return document.scrollingElement || document.documentElement; }
-  function pitch() { return state.axis === 'y' ? window.innerHeight : window.innerWidth; }
+  // The layout viewport. innerWidth is the visual one, which mobile Chrome widens to show
+  // the columns overflowing to the side.
+  function vw() { return document.documentElement.clientWidth || window.innerWidth; }
+  function vh() { return document.documentElement.clientHeight || window.innerHeight; }
+
+  function pitch() { return state.axis === 'y' ? vh() : vw(); }
   // Where a client rect starts along the reading axis, in document pixels.
   function along(r) {
     if (state.axis === 'y') return r.top + window.scrollY;
-    if (state.rtl) return window.innerWidth - r.right - window.scrollX;
+    if (state.rtl) return vw() - r.right - window.scrollX;
     return r.left + window.scrollX;
   }
   function pageAt(px) { return Math.floor((px + 0.5) / pitch()); }
@@ -377,13 +385,13 @@
   function goTo(p, how) { show(p); return turned(how || 'jump'); }
 
   function next(how) {
-    if (state.scrolled) { window.scrollBy(0, Math.round(window.innerHeight * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled) { window.scrollBy(0, Math.round(vh() * 0.9)); return settle(how || 'key'); }
     if (state.page + 1 >= state.pages) { post({ type: 'end', spine: S.spine }); return null; }
     return goTo(state.page + 1, how || 'turn');
   }
 
   function prev(how) {
-    if (state.scrolled) { window.scrollBy(0, -Math.round(window.innerHeight * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled) { window.scrollBy(0, -Math.round(vh() * 0.9)); return settle(how || 'key'); }
     if (state.page <= 0) { post({ type: 'start', spine: S.spine }); return null; }
     return goTo(state.page - 1, how || 'turn');
   }
@@ -491,7 +499,7 @@
     }
     var sel = document.getSelection();
     if (sel && !sel.isCollapsed) return;
-    post({ type: 'tap', x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight });
+    post({ type: 'tap', x: e.clientX / vw(), y: e.clientY / vh() });
   }, true);
 
   var KEYS = { ArrowLeft: 1, ArrowRight: 1, ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, ' ': 1, Home: 1, End: 1 };

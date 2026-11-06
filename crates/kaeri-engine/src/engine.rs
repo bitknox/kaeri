@@ -91,6 +91,8 @@ pub struct Engine {
     /// reports are read off its socket: not behind the commands waiting, nor held up by an
     /// engine winding down, which waits on the player for the episode's last position.
     hosted: Arc<HostedPlayers>,
+    /// The novels open in a web view, read by its scheme handler without the actor.
+    novels: Arc<crate::reading::novel::NovelBooks>,
     /// Jobs numbered so far, here as well as in the actor so [`Self::send`] can say at once
     /// which number the actor will announce. The actor numbers the jobs it starts on its own
     /// from the same count: see [`Jobs`].
@@ -330,6 +332,7 @@ impl Engine {
                     party: Default::default(),
                     skip_find: Default::default(),
                     book_plugins: Default::default(),
+                    novels: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
@@ -371,6 +374,7 @@ impl Engine {
         services.servers.join_chain(&services.registry, &config);
         services.local.put_source(&services.registry, &config.providers.order);
         let hosted = Arc::clone(&services.hosted);
+        let novels = Arc::clone(&services.novels);
         #[cfg(feature = "cast")]
         let casts = Arc::clone(&services.casts);
 
@@ -584,6 +588,7 @@ impl Engine {
             stops: stops_tx,
             jobs,
             hosted,
+            novels,
             #[cfg(feature = "cast")]
             casts,
             this_device,
@@ -591,6 +596,17 @@ impl Engine {
             sent: AtomicU64::new(0),
         };
         Ok((engine, EventStream { launch, checking, live }))
+    }
+
+    /// A web view's request for a file of the open novel: the scheme handler's answer, read on
+    /// the caller's thread. `None` for a URL that is no book's.
+    pub fn book_resource(&self, url: &str) -> Option<kaeri_model::reader::BookResource> {
+        self.novels.resource(url)
+    }
+
+    /// The open novels, for a scheme handler that keeps them apart from the engine.
+    pub fn novels(&self) -> Arc<crate::reading::novel::NovelBooks> {
+        Arc::clone(&self.novels)
     }
 
     /// Hand the engine a command, and say which job it starts, for work someone waits on.

@@ -53,6 +53,11 @@ pub enum ReaderWake {
     ReadRule(u64),
     /// The place's write, held back to one a second, by its number.
     Flush(u64),
+    /// A novel or a source's chapter was opened off the actor, for the session's layout of this
+    /// generation.
+    Prepared(u64),
+    /// A source listed the work's chapters for an open waiting on them.
+    Listed,
 }
 
 /// One item of the engine side's inbox, in the order it was sent.

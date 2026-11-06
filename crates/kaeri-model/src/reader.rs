@@ -583,6 +583,88 @@ pub struct NovelOpenView {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub fixed_layout: bool,
     pub support: NovelSupport,
+    /// The book's documents in spine order; [`NovelPos::spine`] indexes this. The host turns
+    /// to the next linear one on the paginator's `end` and the previous on `start`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub spine: Vec<NovelSpineItem>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub toc: Vec<NovelTocEntry>,
+    /// The paginator's settings as JSON, for `kaeriReader.configure`. The engine also serves
+    /// each document with them, so a host only needs this for a live change.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub style: String,
+    /// What a whole-volume page count is kept under: the book, the settings and the viewport.
+    /// A [`ReaderCommand::NovelCounted`] names it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub count_key: String,
+    /// The pages of each spine document, counted before under `count_key`; empty when the
+    /// hidden web view should count.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub counted: Vec<u32>,
+    /// E-ink, fixed layout: the folder the app renders page `n` into as `<n>.png` before it
+    /// sends [`ReaderCommand::FixedRendered`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub render_dir: Option<String>,
+}
+
+/// One document of a novel's spine.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NovelSpineItem {
+    /// Its scheme URL.
+    pub url: String,
+    /// Out of the reading flow (notes, pop-ups): reached by links only.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub linear: bool,
+}
+
+/// One line of a novel's contents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NovelTocEntry {
+    pub label: String,
+    /// The scheme URL, with the fragment it points at.
+    pub url: String,
+    /// The spine document it is in.
+    pub spine: u32,
+    /// 0 for the top level.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub depth: u32,
+}
+
+/// What a book's scheme handler answers the web view with.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct BookResource {
+    pub status: u16,
+    pub mime: String,
+    /// The content security policy and the other headers to send; `Content-Type` included.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub headers: Vec<crate::playback::HttpHeader>,
+    pub body: BookBody,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum BookBody {
+    Bytes {
+        data: Vec<u8>,
+    },
+    /// Images inside a novel arrive as files.
+    File {
+        path: String,
+    },
+}
+
+/// What every host injects into a novel's web view.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NovelAssets {
+    /// The paginator, with the stylesheet inside: one user script.
+    pub script: String,
+    pub stylesheet: String,
+    /// The policy every book response carries, for hosts that set it themselves too.
+    pub csp: String,
 }
 
 /// Why the end page names no next chapter.
@@ -767,6 +849,15 @@ pub enum ReaderEvent {
     },
     /// In place of leaves, for text chapters and EPUBs.
     NovelOpen(NovelOpenView),
+    /// A novel's settings changed, or its screen did: pass `style` to
+    /// `kaeriReader.configure`. The place is kept; counts under the old key no longer apply.
+    NovelStyle {
+        session: u64,
+        style: String,
+        count_key: String,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        counted: Vec<u32>,
+    },
     /// The read rule fired for a chapter.
     ChapterRead {
         work: WorkId,

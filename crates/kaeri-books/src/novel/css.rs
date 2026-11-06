@@ -189,7 +189,8 @@ impl Scan<'_> {
             self.i += 1;
             if lower == "url" {
                 self.url();
-            } else if REFUSED_FUNCTIONS.contains(&lower.as_str()) || lower.contains("expression")
+            } else if REFUSED_FUNCTIONS.contains(&lower.as_str())
+                || lower.contains("expression")
             {
                 self.skip_to(')');
                 self.i += 1;
@@ -341,7 +342,7 @@ impl Scan<'_> {
         self.out.push_str("\")");
         if !media.is_empty() {
             self.out.push(' ');
-            self.out.push_str(&media);
+            self.out.push_str(media);
         }
         self.out.push(';');
     }
@@ -505,15 +506,15 @@ mod tests {
 
     #[test]
     fn book_urls_stay_and_remote_ones_go() {
-        assert_eq!(
-            c("p{background:url(../img/a.png)}"),
-            "p{background:url(\"../img/a.png\")}"
-        );
+        assert_eq!(c("p{background:url(../img/a.png)}"), "p{background:url(\"../img/a.png\")}");
         assert_eq!(c("p{background:url( 'https://x.example/a.png' )}"), "p{background:none}");
         assert_eq!(c("p{background:url(//x.example/a.png)}"), "p{background:none}");
         assert_eq!(c("p{background:URL(/abs.png)}"), "p{background:none}");
         assert_eq!(c("p{background:url(javascript:alert(1))}"), "p{background:none}");
-        assert_eq!(c("p{background:url(data:image/png;base64,AAAA)}"), "p{background:url(\"data:image/png;base64,AAAA\")}");
+        assert_eq!(
+            c("p{background:url(data:image/png;base64,AAAA)}"),
+            "p{background:url(\"data:image/png;base64,AAAA\")}"
+        );
         assert_eq!(c("p{background:url(data:text/html,x)}"), "p{background:none}");
     }
 
@@ -537,7 +538,10 @@ mod tests {
     #[test]
     fn code_and_bare_string_urls_are_refused() {
         assert_eq!(c("p{width:expression(alert(1))}"), "p{width:none}");
-        assert_eq!(c("p{background:image-set('https://x.example/a.png' 1x)}"), "p{background:none}");
+        assert_eq!(
+            c("p{background:image-set('https://x.example/a.png' 1x)}"),
+            "p{background:none}"
+        );
         assert_eq!(c("p{behavior:url(a.htc);color:red}"), "p{color:red}");
         assert_eq!(c("p{-moz-binding:url(x.xml#b)}"), "p{}");
     }
@@ -553,8 +557,14 @@ mod tests {
 
     #[test]
     fn vertical_modes_are_found() {
-        assert_eq!(vertical_mode("html{-epub-writing-mode: vertical-rl}"), Some(super::super::Flow::VerticalRl));
-        assert_eq!(vertical_mode("body{writing-mode:vertical-lr;}"), Some(super::super::Flow::VerticalLr));
+        assert_eq!(
+            vertical_mode("html{-epub-writing-mode: vertical-rl}"),
+            Some(super::super::Flow::VerticalRl)
+        );
+        assert_eq!(
+            vertical_mode("body{writing-mode:vertical-lr;}"),
+            Some(super::super::Flow::VerticalLr)
+        );
         assert_eq!(vertical_mode("body{writing-mode:horizontal-tb}"), None);
     }
 }

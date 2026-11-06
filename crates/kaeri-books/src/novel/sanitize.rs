@@ -24,8 +24,22 @@ const XML_NS: &str = "http://www.w3.org/XML/1998/namespace";
 
 /// HTML elements left out with everything inside them.
 const DROP_HTML: &[&str] = &[
-    "script", "noscript", "template", "iframe", "frame", "frameset", "object", "embed",
-    "applet", "base", "portal", "fencedframe", "input", "select", "textarea", "keygen",
+    "script",
+    "noscript",
+    "template",
+    "iframe",
+    "frame",
+    "frameset",
+    "object",
+    "embed",
+    "applet",
+    "base",
+    "portal",
+    "fencedframe",
+    "input",
+    "select",
+    "textarea",
+    "keygen",
     "dialog",
 ];
 
@@ -35,15 +49,35 @@ const UNWRAP_HTML: &[&str] = &["form"];
 /// SVG elements left out: scripts, and animations that can set an attribute (an `href`) to
 /// anything.
 const DROP_SVG: &[&str] = &[
-    "script", "set", "animate", "animateMotion", "animateTransform", "animateColor", "discard",
-    "handler", "listener",
+    "script",
+    "set",
+    "animate",
+    "animateMotion",
+    "animateTransform",
+    "animateColor",
+    "discard",
+    "handler",
+    "listener",
 ];
 
 /// Attributes dropped wherever they are.
 const DROP_ATTRS: &[&str] = &[
-    "srcdoc", "ping", "target", "formaction", "action", "autofocus", "autoplay", "srcset",
-    "imagesrcset", "sizes", "http-equiv", "nonce", "contenteditable", "popover",
-    "popovertarget", "attributionsrc",
+    "srcdoc",
+    "ping",
+    "target",
+    "formaction",
+    "action",
+    "autofocus",
+    "autoplay",
+    "srcset",
+    "imagesrcset",
+    "sizes",
+    "http-equiv",
+    "nonce",
+    "contenteditable",
+    "popover",
+    "popovertarget",
+    "attributionsrc",
 ];
 
 /// HTML attributes that load what they name.
@@ -57,8 +91,29 @@ const NO_HYPHENS: &[&str] = &[
 
 /// Block elements that start a new paragraph when a document is rebuilt from its text.
 const BLOCKS: &[&str] = &[
-    "p", "div", "br", "h1", "h2", "h3", "h4", "h5", "h6", "li", "tr", "blockquote", "section",
-    "article", "aside", "header", "footer", "figure", "figcaption", "hr", "dt", "dd", "pre",
+    "p",
+    "div",
+    "br",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "li",
+    "tr",
+    "blockquote",
+    "section",
+    "article",
+    "aside",
+    "header",
+    "footer",
+    "figure",
+    "figcaption",
+    "hr",
+    "dt",
+    "dd",
+    "pre",
     "table",
 ];
 
@@ -108,11 +163,17 @@ pub struct Document {
 
 impl Document {
     /// The document with the reader's settings in a `<meta name="kaeri-setup">`, which the
-    /// paginator reads before its first layout. In `<head>`, so element paths in `<body>`
-    /// never change.
+    /// paginator reads before its first layout, and a viewport as wide as the window that does
+    /// not zoom (WebKit and Android lay a page without one out 980 pixels wide; the text size
+    /// is a setting, not a pinch). In `<head>`, so element paths
+    /// in `<body>` never change.
     pub fn served(&self, setup: &str) -> String {
         let Some(at) = self.head else { return self.text.clone() };
-        let meta = format!("<meta name=\"kaeri-setup\" content=\"{}\"/>", escape_attr(setup));
+        let meta = format!(
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no\"/>\
+             <meta name=\"kaeri-setup\" content=\"{}\"/>",
+            escape_attr(setup)
+        );
         let mut out = String::with_capacity(self.text.len() + meta.len());
         out.push_str(&self.text[..at]);
         out.push_str(&meta);
@@ -129,7 +190,14 @@ impl Document {
             why.as_str()
         );
         let head = text.find("<head>").map(|p| p + "<head>".len());
-        Document { text, head, failed: Some(why), rebuilt: false, flow: None, stylesheets: Vec::new() }
+        Document {
+            text,
+            head,
+            failed: Some(why),
+            rebuilt: false,
+            flow: None,
+            stylesheets: Vec::new(),
+        }
     }
 }
 
@@ -196,6 +264,9 @@ pub fn stylesheet(text: &str, path: &str, limits: &Limits) -> String {
     let urls = |u: &str| path::resolve(path, u, depth).is_some();
     css::clean(text, &urls)
 }
+
+/// What a book's own `<meta name="viewport">` is renamed to: its size, for fixed layout.
+const BOOK_VIEWPORT: &str = "kaeri-viewport";
 
 /// Kaeri's stylesheet, linked from text chapters; the engine serves it beside them.
 pub const READER_CSS: &str = "_kaeri/reader.css";
@@ -296,7 +367,8 @@ impl Walk<'_> {
         self.out.push_str(&name);
         declarations(&mut self.out, n);
         for a in n.attributes() {
-            let Some(value) = self.attribute(local, html, svg, a.namespace(), a.name(), a.value())
+            let Some(value) =
+                self.attribute(local, html, svg, a.namespace(), a.name(), a.value())
             else {
                 continue;
             };
@@ -326,7 +398,9 @@ impl Walk<'_> {
         }
         let is_head = html && local == "head";
         let needs_head = is_root_html
-            && !n.children().any(|c| c.is_element() && is_html(c) && c.tag_name().name() == "head");
+            && !n
+                .children()
+                .any(|c| c.is_element() && is_html(c) && c.tag_name().name() == "head");
         if n.first_child().is_none() && !is_head && !needs_head {
             if html && !VOID.contains(&local) {
                 self.out.push_str(&format!("></{name}>"));
@@ -372,7 +446,8 @@ impl Walk<'_> {
             return;
         }
         let Some(href) = n.attribute("href") else { return };
-        let Some(target) = path::resolve(self.clean.path, href, self.clean.limits.max_path_depth)
+        let Some(target) =
+            path::resolve(self.clean.path, href, self.clean.limits.max_path_depth)
         else {
             return;
         };
@@ -406,6 +481,15 @@ impl Walk<'_> {
         let plain = ns.is_none();
         if plain && DROP_ATTRS.contains(&name.to_ascii_lowercase().as_str()) {
             return None;
+        }
+        if html
+            && element == "meta"
+            && plain
+            && name == "name"
+            && value.trim().eq_ignore_ascii_case("viewport")
+        {
+            // The window is the reader's: a fixed-layout page's size is kept for the paginator.
+            return Some(BOOK_VIEWPORT.to_owned());
         }
         if plain && name.eq_ignore_ascii_case("style") {
             let depth = self.clean.limits.max_path_depth;
@@ -552,7 +636,8 @@ mod tests {
 
     fn clean_with(src: &str, lang: Option<&str>, soft: bool) -> Document {
         let limits = Limits::default();
-        let clean = Clean { path: "OEBPS/text/c1.xhtml", lang, soft_hyphens: soft, limits: &limits };
+        let clean =
+            Clean { path: "OEBPS/text/c1.xhtml", lang, soft_hyphens: soft, limits: &limits };
         document(src.as_bytes(), &clean)
     }
 
@@ -598,12 +683,38 @@ mod tests {
     fn hostile_content_is_left_out() {
         let out = clean(HOSTILE);
         for bad in [
-            "x.example/\"", "refresh", "Content-Security", "<base", "x.example/a.css",
-            "prefetch", "<script", "__pwned", "onload", "onclick", "onerror", "javascript",
-            "JaVaScRiPt", "x.example/s.png", "x.example/b.png", "x.example/i.css",
-            "x.example/r.png", "srcset", "<iframe", "srcdoc", "<object", "<embed", "<input",
-            "formaction", "action=", "x.example/v.mp4", "autoplay", "<set", "<animate",
-            "xml:base", "a comment", "<?pi",
+            "x.example/\"",
+            "refresh",
+            "Content-Security",
+            "<base",
+            "x.example/a.css",
+            "prefetch",
+            "<script",
+            "__pwned",
+            "onload",
+            "onclick",
+            "onerror",
+            "javascript",
+            "JaVaScRiPt",
+            "x.example/s.png",
+            "x.example/b.png",
+            "x.example/i.css",
+            "x.example/r.png",
+            "srcset",
+            "<iframe",
+            "srcdoc",
+            "<object",
+            "<embed",
+            "<input",
+            "formaction",
+            "action=",
+            "x.example/v.mp4",
+            "autoplay",
+            "<set",
+            "<animate",
+            "xml:base",
+            "a comment",
+            "<?pi",
         ] {
             assert!(!out.contains(bad), "{bad} in {out}");
         }
@@ -629,26 +740,62 @@ mod tests {
 
     #[test]
     fn the_setup_goes_in_the_head_and_the_body_is_untouched() {
-        let d = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>One</p></body></html>", None, false);
+        let d = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>One</p></body></html>",
+            None,
+            false,
+        );
         let served = d.served("{\"size\":18,\"q\":\"<&>\"}");
         let doc = reparse(&served);
         let head = doc.descendants().find(|n| n.has_tag_name((XHTML_NS, "head"))).unwrap();
-        let meta = head.first_element_child().unwrap();
+        let mut metas = head.children().filter(|n| n.is_element());
+        let viewport = metas.next().unwrap();
+        assert_eq!(
+            viewport.attribute("content"),
+            Some(
+                "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
+            )
+        );
+        let meta = metas.next().unwrap();
         assert_eq!(meta.attribute("name"), Some("kaeri-setup"));
         assert_eq!(meta.attribute("content"), Some("{\"size\":18,\"q\":\"<&>\"}"));
         let body = doc.descendants().find(|n| n.has_tag_name((XHTML_NS, "body"))).unwrap();
         assert_eq!(body.first_element_child().unwrap().text(), Some("One"));
         // A head that was there gets it first too.
-        let d = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>T</title></head><body/></html>", None, false);
-        assert!(d.served("{}").contains("<head><meta name=\"kaeri-setup\" content=\"{}\"/><title>T</title>"));
+        let d = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>T</title><meta name=\"viewport\" content=\"width=1200, height=1600\"/></head><body/></html>",
+            None,
+            false,
+        );
+        let served = d.served("{}");
+        assert!(
+            served.contains("<meta name=\"kaeri-setup\" content=\"{}\"/><title>T</title>"),
+            "{served}"
+        );
+        // The book's own viewport is kept by another name, for a fixed-layout page's size.
+        assert!(
+            served.contains(
+                "<meta name=\"kaeri-viewport\" content=\"width=1200, height=1600\"/>"
+            ),
+            "{served}"
+        );
+        assert_eq!(served.matches("name=\"viewport\"").count(), 1, "{served}");
     }
 
     #[test]
     fn html_entities_and_sloppy_markup_still_read() {
-        let d = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>A&nbsp;b &mdash; c</p></body></html>", None, false);
+        let d = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>A&nbsp;b &mdash; c</p></body></html>",
+            None,
+            false,
+        );
         assert!(!d.rebuilt && d.failed.is_none());
         assert!(d.text.contains("A\u{a0}b \u{2014} c"), "{}", d.text);
-        let d = clean_with("<html><body><p>One<br>two<p>Three &amp; four<script>x()</script></body></html>", None, false);
+        let d = clean_with(
+            "<html><body><p>One<br>two<p>Three &amp; four<script>x()</script></body></html>",
+            None,
+            false,
+        );
         assert!(d.rebuilt, "{}", d.text);
         assert!(d.text.contains("<p>One</p><p>two</p><p>Three &amp; four</p>"), "{}", d.text);
         assert!(!d.text.contains("x()"));
@@ -664,7 +811,8 @@ mod tests {
         let d = clean_with(&deep, None, false);
         assert!(d.rebuilt && d.text.contains("<p>deep text</p>"), "{}", &d.text[..200]);
         let limits = Limits { max_xml_bytes: 1000, ..Limits::default() };
-        let clean = Clean { path: "a.xhtml", lang: Some("en"), soft_hyphens: false, limits: &limits };
+        let clean =
+            Clean { path: "a.xhtml", lang: Some("en"), soft_hyphens: false, limits: &limits };
         let big = format!("<html><body><p>{}</p></body></html>", "x".repeat(2000));
         let d = document(big.as_bytes(), &clean);
         assert_eq!(d.failed, Some(Failed::TooLarge));
@@ -677,44 +825,78 @@ mod tests {
     #[test]
     fn text_chapters_are_wrapped_and_cleaned() {
         let limits = Limits::default();
-        let clean = Clean { path: "text/3.xhtml", lang: Some("en"), soft_hyphens: false, limits: &limits };
-        let d = text_chapter("<p>The tower&nbsp;stood.</p><img src=\"https://x.example/a.png\"/><script>x()</script>", "Chapter 3", &clean);
+        let clean = Clean {
+            path: "text/3.xhtml",
+            lang: Some("en"),
+            soft_hyphens: false,
+            limits: &limits,
+        };
+        let d = text_chapter(
+            "<p>The tower&nbsp;stood.</p><img src=\"https://x.example/a.png\"/><script>x()</script>",
+            "Chapter 3",
+            &clean,
+        );
         let doc = reparse(&d.text);
         assert_eq!(doc.root_element().attribute("lang"), Some("en"));
         assert!(d.text.contains("<title>Chapter 3</title>"));
         assert!(d.text.contains("<p>The tower\u{a0}stood.</p>"), "{}", d.text);
         assert!(!d.text.contains("x.example") && !d.text.contains("script"));
         // A whole page from a source gives its body.
-        let d = text_chapter("<html><head><title>x</title></head><body><p>Only this</p></body></html>", "T", &clean);
+        let d = text_chapter(
+            "<html><head><title>x</title></head><body><p>Only this</p></body></html>",
+            "T",
+            &clean,
+        );
         assert!(d.text.contains("<body><p>Only this</p></body>"), "{}", d.text);
     }
 
     #[test]
     fn languages_and_vertical_styles_are_noticed() {
-        let d = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"ja\"><head><style>html{-epub-writing-mode:vertical-rl}</style></head><body><p>塔</p></body></html>", Some("en"), false);
+        let d = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"ja\"><head><style>html{-epub-writing-mode:vertical-rl}</style></head><body><p>塔</p></body></html>",
+            Some("en"),
+            false,
+        );
         assert_eq!(d.flow, Some(Flow::VerticalRl));
         let doc = reparse(&d.text);
         assert_eq!(doc.root_element().attribute((XML_NS, "lang")), Some("ja"));
-        assert_eq!(doc.root_element().attribute("lang"), None, "its own language is kept as written");
+        assert_eq!(
+            doc.root_element().attribute("lang"),
+            None,
+            "its own language is kept as written"
+        );
     }
 
     #[cfg(feature = "hyphenation")]
     #[test]
     fn soft_hyphens_go_into_prose_only() {
-        let d = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>extraordinarily</p><pre>extraordinarily</pre><p xml:lang=\"ja\">extraordinarily</p><p><ruby>lantern<rt>extraordinarily</rt></ruby></p></body></html>", Some("en"), true);
+        let d = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>extraordinarily</p><pre>extraordinarily</pre><p xml:lang=\"ja\">extraordinarily</p><p><ruby>lantern<rt>extraordinarily</rt></ruby></p></body></html>",
+            Some("en"),
+            true,
+        );
         let doc = reparse(&d.text);
-        let texts: Vec<&str> = doc.descendants().filter(|n| n.is_text()).filter_map(|n| n.text()).collect();
+        let texts: Vec<&str> =
+            doc.descendants().filter(|n| n.is_text()).filter_map(|n| n.text()).collect();
         assert!(texts[0].contains('\u{AD}'), "{texts:?}");
         assert!(texts[1..].iter().all(|t| !t.contains('\u{AD}')), "{texts:?}");
-        let off = clean_with("<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>extraordinarily</p></body></html>", Some("en"), false);
+        let off = clean_with(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><p>extraordinarily</p></body></html>",
+            Some("en"),
+            false,
+        );
         assert!(!off.text.contains('\u{AD}'));
     }
 
     #[test]
     fn standalone_svg_is_cleaned() {
         let limits = Limits::default();
-        let clean = Clean { path: "img/a.svg", lang: None, soft_hyphens: true, limits: &limits };
+        let clean =
+            Clean { path: "img/a.svg", lang: None, soft_hyphens: true, limits: &limits };
         let out = svg(br#"<svg xmlns="http://www.w3.org/2000/svg" onload="x()"><script>x()</script><rect width="1" height="1"/></svg>"#, &clean).unwrap();
-        assert!(!out.contains("script") && !out.contains("onload") && out.contains("<rect"), "{out}");
+        assert!(
+            !out.contains("script") && !out.contains("onload") && out.contains("<rect"),
+            "{out}"
+        );
     }
 }

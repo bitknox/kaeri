@@ -354,9 +354,27 @@ impl Worker {
                     originals.push(bytes.and_then(|b| keep_original(&dir, i, &b)));
                 }
             }
-            Book::Epub(_) => {
-                return self
-                    .fail(&job, ReadingFailure::Unsupported { extension: "epub".into() });
+            Book::Epub(mut epub) => {
+                // A manga made into an EPUB: every spine item one picture. Anything with text
+                // is a novel, which the session serves to the web view instead.
+                let Some(images) = epub.image_pages() else {
+                    return self
+                        .fail(&job, ReadingFailure::Unsupported { extension: "epub".into() });
+                };
+                info_rtl =
+                    epub.package().direction.map(|d| d == kaeri_books::epub::Direction::Rtl);
+                for (i, page) in images.iter().enumerate() {
+                    use kaeri_books::epub::PageSpread;
+                    kinds.push(match page.spread {
+                        Some(PageSpread::Center) => layout::PageKind::Spread,
+                        _ if i == 0 && epub.cover().is_some_and(|c| c.path == page.path) => {
+                            layout::PageKind::Cover
+                        }
+                        _ => layout::PageKind::Story,
+                    });
+                    let bytes = epub.resource(&page.path).ok().map(|r| r.data);
+                    originals.push(bytes.and_then(|b| keep_original(&dir, i, &b)));
+                }
             }
         }
         let shapes: Vec<(u32, u32)> = originals
@@ -586,7 +604,11 @@ fn pdf_pages(
     Ok(pages)
 }
 
-fn failure_of(e: &kaeri_books::BookError, path: String, format: String) -> ReadingFailure {
+pub(crate) fn failure_of(
+    e: &kaeri_books::BookError,
+    path: String,
+    format: String,
+) -> ReadingFailure {
     use kaeri_books::FailureKind as K;
     match e.reading_failure() {
         K::FileMissing => ReadingFailure::FileMissing { path },

@@ -7,6 +7,7 @@
 //! shapes, and the rest are logged and dropped.
 
 pub(crate) mod eink;
+pub mod novel;
 pub(crate) mod pages;
 pub(crate) mod session;
 pub(crate) mod settings;

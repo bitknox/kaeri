@@ -104,6 +104,8 @@ pub struct Services {
     pub book_plugins: crate::book_plugins::BookPlugins,
     /// The registry of book sources: folders, servers and plugins.
     pub book_sources: crate::read_sources::BookSources,
+    /// The novels open in a web view, which its scheme handler reads from any thread.
+    pub novels: Arc<crate::reading::novel::NovelBooks>,
     /// How many player windows the playbacks opened, for a test that counts them.
     #[cfg(feature = "testing")]
     pub windows: Option<Arc<std::sync::atomic::AtomicUsize>>,
@@ -183,6 +185,7 @@ impl Services {
             party: Default::default(),
             skip_find: Default::default(),
             book_plugins: Default::default(),
+            novels: Default::default(),
             book_sources,
             #[cfg(feature = "testing")]
             windows: None,

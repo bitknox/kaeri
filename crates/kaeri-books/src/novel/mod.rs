@@ -13,7 +13,9 @@ mod hyphen;
 mod sanitize;
 
 pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
-pub use sanitize::{Clean, Document, Failed, READER_CSS, document, stylesheet, svg, text_chapter};
+pub use sanitize::{
+    Clean, Document, Failed, READER_CSS, document, stylesheet, svg, text_chapter,
+};
 
 /// The paginator as written, with a placeholder where [`script`] puts the stylesheet.
 const PAGINATOR: &str = include_str!("../../web/paginator.js");

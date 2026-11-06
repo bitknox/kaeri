@@ -298,6 +298,9 @@ pub fn set(
         }
         SettingScope::Medium | SettingScope::Device => {
             config.write(paths, &table(key, medium), key.name(), to_setting(value))?;
+            // The open reader reads the settings in effect: the file's now.
+            let reading = config.saved().reading.clone();
+            config.effective_mut().reading = reading;
         }
     }
     Ok(())

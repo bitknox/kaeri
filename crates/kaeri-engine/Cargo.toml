@@ -89,6 +89,11 @@ reqwest.workspace = true
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1.1", features = ["fs"] }
 
+# Soft hyphens for novels where the web view has no hyphenation of its own (WebView2,
+# WebKitGTK). WebKit and Chrome hyphenate from the system.
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+kaeri-books = { workspace = true, features = ["hyphenation"] }
+
 [dev-dependencies]
 tempfile = "3"
 # Comic archives of generated pages, for the reader's tests.
