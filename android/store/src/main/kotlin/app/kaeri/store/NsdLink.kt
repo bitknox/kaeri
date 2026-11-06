@@ -1,8 +1,9 @@
 // DNS-SD through the system's NsdManager on every Android the apps run on. Android 14 calls back
 // on the executor it is given and follows a found service through each change to it. Below 14
 // the older calls are used, with their callbacks moved onto that same executor, and a found
-// service is resolved once, one resolve at a time across the app, since a second resolve while
-// one runs fails there.
+// service is resolved one resolve at a time across the app, since a second resolve while one runs
+// fails there. Nothing tells those versions that a service moved, so it is resolved again when
+// discovery finds it again and when a connection to it failed (NsdRelook).
 
 package app.kaeri.store
 
@@ -24,8 +25,49 @@ class NsdResolved(val name: String, val addresses: List<String>, val port: Int, 
     }
 }
 
-/** What follows one found service: unfollowed with [NsdLink.unfollow]. */
-class NsdFollowing internal constructor(internal val stop: () -> Unit)
+/**
+ * What follows one found service: unfollowed with [NsdLink.unfollow]. [relook] resolves it again
+ * below Android 14; from 14 the system follows it and there is nothing to do.
+ */
+class NsdFollowing internal constructor(internal val stop: () -> Unit, internal val relook: () -> Unit = {})
+
+/** A browse that can resolve what it found again, as after a connection to one of them failed. */
+interface NsdRelook {
+    fun relook()
+}
+
+/**
+ * The services a browse follows, by name, on the browse's executor. Below Android 14 a name found
+ * again is resolved again, and [relook] resolves every one again; from 14 both do nothing more,
+ * as the system follows each through its changes.
+ */
+class NsdFollows : NsdRelook {
+    private val following = mutableMapOf<String, NsdFollowing>()
+
+    /** [name] was found: followed with [follow] the first time, resolved again after. */
+    fun found(name: String, follow: () -> NsdFollowing) {
+        val held = following[name]
+        if (held != null) {
+            held.relook()
+            return
+        }
+        runCatching(follow).onSuccess { following[name] = it }
+    }
+
+    fun lost(name: String) {
+        val held = following.remove(name) ?: return
+        runCatching { held.stop() }
+    }
+
+    /** Stop following every one, as the browse stops. */
+    fun clear() {
+        for (name in following.keys.toList()) lost(name)
+    }
+
+    override fun relook() {
+        for (held in following.values.toList()) held.relook()
+    }
+}
 
 /** The calls the browsers and the sync network make, on whichever Android this is. */
 class NsdLink(private val nsd: NsdManager, private val executor: Executor) {
@@ -77,7 +119,7 @@ class NsdLink(private val nsd: NsdManager, private val executor: Executor) {
                 override fun onServiceInfoCallbackUnregistered() {}
             }
             nsd.registerServiceInfoCallback(info, executor, callback)
-            return NsdFollowing { runCatching { nsd.unregisterServiceInfoCallback(callback) } }
+            return NsdFollowing(stop = { runCatching { nsd.unregisterServiceInfoCallback(callback) } })
         }
         // Answered on the executor, which the resolve's own callbacks move to.
         val request = Resolves.Request(info) { resolved, error ->
@@ -89,7 +131,7 @@ class NsdLink(private val nsd: NsdManager, private val executor: Executor) {
                 if (addresses.isNotEmpty() && resolved.port != 0) found(NsdResolved.of(resolved, addresses))
             }
         }
-        Resolves.queue.add(request) { item, done ->
+        val resolving = Resolving(Resolves.queue, request) { item, done ->
             val listener = object : NsdManager.ResolveListener {
                 override fun onServiceResolved(resolved: NsdServiceInfo) = executor.execute { done(resolved, 0) }
                 override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) = executor.execute { done(null, errorCode) }
@@ -98,7 +140,8 @@ class NsdLink(private val nsd: NsdManager, private val executor: Executor) {
             runCatching { nsd.resolveService(item.info, listener) }
                 .onFailure { done(null, NsdManager.FAILURE_INTERNAL_ERROR) }
         }
-        return NsdFollowing { Resolves.queue.remove(request) }
+        resolving.resolve()
+        return NsdFollowing(stop = resolving::stop, relook = resolving::resolve)
     }
 
     fun unfollow(following: NsdFollowing) = following.stop()
@@ -121,6 +164,27 @@ internal object Resolves {
 }
 
 /**
+ * One found service's resolves below Android 14: one at once, another each time [resolve] is
+ * called, unless one of it already waits or runs, which answers for both; none after [stop].
+ */
+internal class Resolving<T : Any, R>(
+    private val queue: ResolveQueue<T, R>,
+    private val item: T,
+    private val start: (T, (R?, Int) -> Unit) -> Unit,
+) {
+    private var stopped = false
+
+    fun resolve() {
+        if (!stopped && !queue.has(item)) queue.add(item, start)
+    }
+
+    fun stop() {
+        stopped = true
+        queue.remove(item)
+    }
+}
+
+/**
  * Items resolved one at a time: the next starts once the last answered. One taken off while it
  * waits never starts; one taken off while it runs answers no one. Used from one thread.
  */
@@ -139,6 +203,9 @@ internal class ResolveQueue<T : Any, R>(private val answer: (T, R?, Int) -> Unit
         waiting.removeAll { it.first === item }
         if (running === item) dropped = true
     }
+
+    /** Whether [item] waits or runs and has not been taken off. */
+    fun has(item: T): Boolean = (running === item && !dropped) || waiting.any { it.first === item }
 
     /** Whether nothing runs or waits. */
     val idle: Boolean get() = running == null && waiting.isEmpty()

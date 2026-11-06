@@ -57,4 +57,48 @@ class ResolveQueueTest {
         assertEquals(listOf("a" to "a.local"), answered)
         assertEquals(listOf("a", "b"), started)
     }
+
+    // One found service below Android 14, resolved again when it is found again or a connection
+    // to it failed.
+
+    private fun resolving(item: String) = Resolving(queue, item) { it, done ->
+        started += it
+        pending[it] = done
+    }
+
+    @Test
+    fun a_service_is_resolved_again_once_the_last_resolve_answered() {
+        val tv = resolving("tv")
+        tv.resolve()
+        pending.getValue("tv")("10.0.0.5", 0)
+        tv.resolve()
+        pending.getValue("tv")("10.0.0.9", 0)
+        assertEquals(listOf("tv", "tv"), started)
+        assertEquals(listOf("tv" to "10.0.0.5", "tv" to "10.0.0.9"), answered)
+    }
+
+    @Test
+    fun asking_again_while_a_resolve_waits_or_runs_adds_none() {
+        add("other")
+        val tv = resolving("tv")
+        tv.resolve()
+        tv.resolve()
+        pending.getValue("other")("other.local", 0)
+        tv.resolve()
+        assertEquals(listOf("other", "tv"), started)
+        pending.getValue("tv")("10.0.0.5", 0)
+        assertTrue(queue.idle)
+    }
+
+    @Test
+    fun a_service_no_longer_followed_is_not_resolved_again() {
+        val tv = resolving("tv")
+        tv.resolve()
+        tv.stop()
+        pending.getValue("tv")("10.0.0.5", 0)
+        tv.resolve()
+        assertEquals(listOf("tv"), started)
+        assertEquals(emptyList<Pair<String, String?>>(), answered)
+        assertTrue(queue.idle)
+    }
 }

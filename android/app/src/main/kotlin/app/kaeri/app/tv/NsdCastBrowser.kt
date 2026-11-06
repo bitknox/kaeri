@@ -8,7 +8,8 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
-import app.kaeri.store.NsdFollowing
+import app.kaeri.store.NsdFollows
+import app.kaeri.store.NsdRelook
 import app.kaeri.store.NsdLink
 import java.util.concurrent.Executor
 import app.kaeri.engine.ffi.FfiCastBrowser
@@ -19,19 +20,19 @@ import app.kaeri.engine.ffi.FfiTxtPair
  * A Cast browse for the engine's sender. The engine starts it while the picker is up and stops it
  * after; nothing runs between, so it costs nothing while Play on TV is not being chosen.
  */
-class NsdCastBrowser(context: Context) : FfiCastBrowser {
+class NsdCastBrowser(context: Context) : FfiCastBrowser, NsdRelook {
     private val main: Executor = context.mainExecutor
     private val nsd = context.getSystemService(NsdManager::class.java)?.let { NsdLink(it, main) }
 
     private var discovery: NsdManager.DiscoveryListener? = null
-    private val following = mutableMapOf<String, NsdFollowing>()
+    private val follows = NsdFollows()
 
     override fun start(sink: FfiCastSink) = main.execute {
         if (discovery != null || nsd == null) return@execute
         val listener = object : NsdManager.DiscoveryListener {
             override fun onServiceFound(info: NsdServiceInfo) = follow(info, sink)
             override fun onServiceLost(info: NsdServiceInfo) {
-                unfollow(info.serviceName)
+                follows.lost(info.serviceName)
                 sink.lost(info.serviceName)
             }
             override fun onDiscoveryStarted(serviceType: String) {}
@@ -50,15 +51,16 @@ class NsdCastBrowser(context: Context) : FfiCastBrowser {
         val listener = discovery ?: return@execute
         discovery = null
         runCatching { nsd?.stopDiscovery(listener) }
-        for (name in following.keys.toList()) unfollow(name)
+        follows.clear()
     }
 
     /** Follow a service found for what it resolves to, and each change to it, until it goes. */
     private fun follow(info: NsdServiceInfo, sink: FfiCastSink) = main.execute {
         val nsd = nsd ?: return@execute
-        if (discovery == null || info.serviceName in following) return@execute
-        runCatching {
-            following[info.serviceName] = nsd.follow(
+        if (discovery == null) return@execute
+        // Found again: below Android 14 it is resolved again, as it may have moved.
+        follows.found(info.serviceName) {
+            nsd.follow(
                 info,
                 found = { resolved ->
                     val txt = resolved.attributes.map { (key, value) -> FfiTxtPair(key, value?.decodeToString().orEmpty()) }
@@ -67,13 +69,11 @@ class NsdCastBrowser(context: Context) : FfiCastBrowser {
                 lost = { sink.lost(info.serviceName) },
                 failed = { Log.w(TAG, "a Cast TV did not resolve: $it") },
             )
-        }.onFailure { following.remove(info.serviceName) }
+        }
     }
 
-    private fun unfollow(name: String) {
-        val following = following.remove(name) ?: return
-        runCatching { nsd?.unfollow(following) }
-    }
+    /** Resolve every service found again, below Android 14, as after a connection to one failed. */
+    override fun relook() = main.execute { follows.relook() }
 
     companion object {
         private const val TAG = "kaeri"

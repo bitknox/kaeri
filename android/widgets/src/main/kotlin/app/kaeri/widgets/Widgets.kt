@@ -99,7 +99,8 @@ object Widgets {
     /**
      * Make the picker's previews again from the record, at most once a day: they show the
      * viewer's own titles once there is a record, and the sign-in step before. Generated
-     * previews are Android 15's; before it the picker shows the app's icon.
+     * previews are Android 15's; before it the picker shows previewImage, the widgets drawn
+     * from made-up titles.
      */
     suspend fun publishPreviews(context: Context, preferences: SharedPreferences = context.getSharedPreferences("widgets", Context.MODE_PRIVATE)) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return

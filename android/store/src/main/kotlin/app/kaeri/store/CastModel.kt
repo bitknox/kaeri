@@ -217,6 +217,7 @@ class CastModel(
                     sender?.cast(key, request.id, request.episode, request.from)?.let(::EngineCastLink)
                 } catch (e: FfiTvException) {
                     _problem.value = TvRemoteModel.words(e)
+                    TvRemoteModel.relookAfter(e, this.browser)
                     null
                 }
             }
@@ -314,8 +315,10 @@ class CastModel(
             }
             // Stopped by the viewer, here or from the notification.
             notice == null -> end()
-            // Failed or lost: the card says so until it is dismissed.
+            // Failed or lost: the card says so until it is dismissed. The TV may have moved, which
+            // a browse below Android 14 finds only by resolving it again.
             else -> {
+                (browser as? NsdRelook)?.relook()
                 cards?.cancel()
                 cards = null
                 over = link

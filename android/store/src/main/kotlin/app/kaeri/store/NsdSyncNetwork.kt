@@ -14,13 +14,13 @@ import app.kaeri.engine.ffi.FfiSyncSink
 import app.kaeri.engine.ffi.FfiSyncTxt
 import java.util.concurrent.Executor
 
-class NsdSyncNetwork(context: Context) : FfiSyncNetwork {
+class NsdSyncNetwork(context: Context) : FfiSyncNetwork, NsdRelook {
     private val main: Executor = context.mainExecutor
     private val nsd = context.getSystemService(NsdManager::class.java)?.let { NsdLink(it, main) }
 
     private val registrations = mutableMapOf<String, NsdManager.RegistrationListener>()
     private var discovery: NsdManager.DiscoveryListener? = null
-    private val following = mutableMapOf<String, NsdFollowing>()
+    private val follows = NsdFollows()
 
     override fun advertise(advert: FfiSyncAdvert) = main.execute {
         val nsd = nsd ?: return@execute
@@ -57,7 +57,7 @@ class NsdSyncNetwork(context: Context) : FfiSyncNetwork {
         val listener = object : NsdManager.DiscoveryListener {
             override fun onServiceFound(info: NsdServiceInfo) = follow(info, sink)
             override fun onServiceLost(info: NsdServiceInfo) {
-                unfollow(info.serviceName)
+                follows.lost(info.serviceName)
                 sink.lost(info.serviceName)
             }
             override fun onDiscoveryStarted(serviceType: String) {}
@@ -76,14 +76,15 @@ class NsdSyncNetwork(context: Context) : FfiSyncNetwork {
         val listener = discovery ?: return@execute
         discovery = null
         runCatching { nsd?.stopDiscovery(listener) }
-        for (name in following.keys.toList()) unfollow(name)
+        follows.clear()
     }
 
     private fun follow(info: NsdServiceInfo, sink: FfiSyncSink) = main.execute {
         val nsd = nsd ?: return@execute
-        if (discovery == null || info.serviceName in following) return@execute
-        runCatching {
-            following[info.serviceName] = nsd.follow(
+        if (discovery == null) return@execute
+        // Found again: below Android 14 it is resolved again, as it may have moved.
+        follows.found(info.serviceName) {
+            nsd.follow(
                 info,
                 found = { resolved ->
                     val txt = resolved.attributes.map { (key, value) -> FfiSyncTxt(key, value?.decodeToString().orEmpty()) }
@@ -92,13 +93,11 @@ class NsdSyncNetwork(context: Context) : FfiSyncNetwork {
                 lost = { sink.lost(info.serviceName) },
                 failed = { Log.w(TAG, "a sync device did not resolve: $it") },
             )
-        }.onFailure { following.remove(info.serviceName) }
+        }
     }
 
-    private fun unfollow(name: String) {
-        val following = following.remove(name) ?: return
-        runCatching { nsd?.unfollow(following) }
-    }
+    /** Resolve every service found again, below Android 14, as after a connection to one failed. */
+    override fun relook() = main.execute { follows.relook() }
 
     companion object {
         private const val TAG = "kaeri"
