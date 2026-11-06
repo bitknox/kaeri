@@ -400,7 +400,7 @@ public sealed partial class MainWindow : Window
                     ShowToast(InfoBarSeverity.Success, T.UpdatesUpdated(Updater.Current));
                 else
                     ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(restarted.Version), T.UpdatesOpenAbout,
-                        () => ContentFrame.Navigate(typeof(SettingsPage), "about", new SuppressNavigationTransitionInfo()));
+                        () => OpenSettings("about"));
             });
 #if KAERI_TESTING
         // --show=update: a newer release with this machine's installer, as the engine's check
@@ -707,9 +707,22 @@ public sealed partial class MainWindow : Window
         AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
     }
 
-    /// <summary>Settings open on one pane, such as Profiles from the account flyout.</summary>
-    internal void OpenSettings(string pane) =>
+    /// <summary>
+    /// Settings open on one pane, such as Profiles from the account flyout. With Settings already
+    /// open, the pane changes there: no second Settings page, and no Back step to the same page.
+    /// </summary>
+    internal void OpenSettings(string pane)
+    {
+        if (ContentFrame.Content is SettingsPage open)
+        {
+            open.ShowPane(pane);
+            selecting = true;
+            Nav.SelectedItem = pane == "accounts" ? AccountItem : Nav.SettingsItem;
+            selecting = false;
+            return;
+        }
         ContentFrame.Navigate(typeof(SettingsPage), pane, new SuppressNavigationTransitionInfo());
+    }
 
     void OnNavInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -835,7 +848,7 @@ public sealed partial class MainWindow : Window
     {
         if (Player.Showing)
             Player.Close();
-        Navigate("settings", pane);
+        OpenSettings(pane);
     }
 
     /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+9 do.</summary>
@@ -926,7 +939,7 @@ public sealed partial class MainWindow : Window
         else if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             if (tag == "account")
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
             else if (tag == "search")
             {
                 // Search in the sidebar, as on the Mac: the page with what the box holds, and the
@@ -1460,13 +1473,13 @@ public sealed partial class MainWindow : Window
             case Link.Accounts:
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Auth auth:
                 ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback));
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Download download:
                 // A finished download plays, from its title's page; otherwise Downloads, where it is.
