@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -220,16 +221,17 @@ fun PhoneReader(
             }
         }
 
-        // Notices sit over the foot of the page while the chrome is away.
+        // Notices sit at the top centre while the chrome is away, and Back to page in the bottom
+        // leading corner, as the board has them.
         val notice = state.notice
         if (notice != null && !chrome) {
             if (notice.notice.action == NoticeAction.BACK_TO) {
-                BackToPage(notice.notice.msg.text(context), Modifier.align(Alignment.TopCenter)) {
+                BackToPage(notice.notice.msg.text(context), Modifier.align(Alignment.BottomStart)) {
                     session.backTo()
                     session.dismissNotice(notice.id)
                 }
             } else {
-                NoticePlate(notice, Modifier.align(Alignment.BottomCenter)) { action ->
+                NoticePlate(notice, Modifier.align(Alignment.TopCenter)) { action ->
                     when (action) {
                         NoticeAction.START_OVER -> session.startOver()
                         NoticeAction.BACK_TO -> session.backTo()
@@ -359,17 +361,18 @@ private fun ThumbGroup(
 private fun NoticePlate(notice: app.kaeri.reader.ShownNotice, modifier: Modifier, onAction: (NoticeAction) -> Unit) {
     val context = LocalContext.current
     val action = notice.notice.action
+    // A capsule, 44 dp tall at least, over the page: solid, so the words behind never show through.
     Row(
         modifier
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(16.dp)
-            .fillMaxWidth()
-            .background(Chrome.plate, RoundedCornerShape(14.dp))
-            .border(1.dp, Chrome.rule, RoundedCornerShape(14.dp))
-            .padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(top = 28.dp, start = 16.dp, end = 16.dp)
+            .heightIn(min = 44.dp)
+            .background(Chrome.plate, RoundedCornerShape(22.dp))
+            .border(1.dp, Chrome.rule, RoundedCornerShape(22.dp))
+            .padding(start = 18.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(notice.notice.msg.text(context), color = Chrome.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(notice.notice.msg.text(context), color = Chrome.text, fontSize = 14.sp, modifier = Modifier.weight(1f, fill = false))
         if (action != null) {
             val words = when (action) {
                 NoticeAction.START_OVER -> Strings.readerNoticeStartOver(context)
@@ -386,13 +389,15 @@ private fun NoticePlate(notice: app.kaeri.reader.ShownNotice, modifier: Modifier
 private fun BackToPage(words: String, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(top = 12.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(start = 16.dp, bottom = 40.dp)
+            .heightIn(min = 40.dp)
             .clip(RoundedCornerShape(50))
             .background(Chrome.plate)
             .border(1.dp, Chrome.rule, RoundedCornerShape(50))
             .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(words, color = Chrome.accent, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
