@@ -233,6 +233,7 @@ public sealed partial class SettingsPage : Page
         // The same pane again: what changed while away reaches its cards in place.
         if (was >= 0 && Panes.SelectedIndex == was)
             Show();
+        ReadyPanes();
     }
 
     /// <summary>Opens a pane on this page, as navigation does and as the window asks while Settings is already open.</summary>
@@ -342,6 +343,24 @@ public sealed partial class SettingsPage : Page
             return;
         }
         held = false;
+        if (!same)
+        {
+            if (shownPane is { } left && Keeps(left) && shapeDrawn is not null)
+                kept[left] = Save(shapeDrawn);
+            if (kept.Remove(pane.Name, out var again) && again.Shape == shape)
+            {
+                guardClock.Stop();
+                Load(again, cards: true);
+                shownPane = pane.Name;
+                shapeDrawn = shape;
+                State.Done();
+                Refresh();
+                if (hiddenGroup is not null)
+                    FillHidden();
+                CardScroll.ChangeView(null, 0, null, disableAnimation: true);
+                return;
+            }
+        }
         var offset = CardScroll.VerticalOffset;
         var focus = same ? Ui.MarkFocus(Cards) : null;
         Build();
@@ -394,6 +413,100 @@ public sealed partial class SettingsPage : Page
         parts.Add(ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is not null);
         parts.Add(settings.SubtitleStyle is null);
         return Drawn.Fingerprint(parts);
+    }
+
+    /// <summary>
+    /// The settings panes built once and kept, so going back to one shows it at once with its
+    /// values brought up to date in place. Accounts, Devices, Profiles, About and Sources draw
+    /// from live state of their own each time and are built on each visit.
+    /// </summary>
+    static bool Keeps(string name) => name is "general" or "playback" or "downloads" or "notifications" or "integrations" or "advanced";
+
+    readonly Dictionary<string, Built> kept = [];
+    /// <summary>While a pane is built ahead, off the screen.</summary>
+    bool readying;
+
+    /// <summary>A pane's cards and what the page holds of them.</summary>
+    sealed record Built(
+        string Shape,
+        UIElement[] Children,
+        Action[] Refresh,
+        SettingsCard? Guard,
+        SettingsCard? Protect,
+        StackPanel? SavedMark,
+        StackPanel? TvGroup,
+        string? TvsDrawn,
+        SettingsCard? Conflicts,
+        StackPanel? HiddenGroup,
+        TextBlock? HiddenNone,
+        KeyValuePair<uint, FrameworkElement>[] HiddenRows);
+
+    Built Save(string shape) => new(shape, [.. Cards.Children], [.. refresh], guardCard, protectCard, savedMark, tvGroup, tvsDrawn,
+        conflictsCard, hiddenGroup, hiddenNone, [.. hiddenRows]);
+
+    void Load(Built b, bool cards)
+    {
+        if (cards)
+        {
+            Cards.Children.Clear();
+            foreach (var child in b.Children)
+                Cards.Children.Add(child);
+        }
+        refresh.Clear();
+        refresh.AddRange(b.Refresh);
+        (guardCard, protectCard, savedMark, tvGroup, tvsDrawn, conflictsCard) = (b.Guard, b.Protect, b.SavedMark, b.TvGroup, b.TvsDrawn, b.Conflicts);
+        (hiddenGroup, hiddenNone) = (b.HiddenGroup, b.HiddenNone);
+        hiddenRows.Clear();
+        foreach (var (id, row) in b.HiddenRows)
+            hiddenRows[id] = row;
+    }
+
+    /// <summary>
+    /// Once Settings is up, the other panes are built one at a time while the app is idle, into a
+    /// panel off the screen, so the first visit to each is as quick as a later one.
+    /// </summary>
+    void ReadyPanes()
+    {
+        if (narrow || ctx.Known.Settings is null)
+            return;
+        var next = PaneList.FirstOrDefault(p => Keeps(p.Name) && p.Name != shownPane && !kept.ContainsKey(p.Name));
+        if (next is null)
+            return;
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
+        {
+            await Task.Delay(120);
+            if (Frame?.Content != this || narrow || kept.ContainsKey(next.Name) || next.Name == shownPane || Ui.TypingIn(Cards))
+                return;
+            var onScreen = Save(shapeDrawn ?? "");
+            var (showing, panel) = (pane, Cards);
+            var wasQuiet = quiet;
+            readying = true;
+            try
+            {
+                pane = next;
+                Cards = new StackPanel { Spacing = 4 };
+                refresh.Clear();
+                Build();
+                var made = Save(Shape());
+                // The cards wait outside any panel, to be put back into the page's own.
+                Cards.Children.Clear();
+                kept[next.Name] = made;
+            }
+            finally
+            {
+                readying = false;
+                (pane, Cards) = (showing, panel);
+                Load(onScreen, cards: false);
+                quiet = wasQuiet;
+                State.Done();
+                if (guardCard is not null)
+                {
+                    ShowProxyCheck();
+                    guardClock.Start();
+                }
+            }
+            ReadyPanes();
+        });
     }
 
     void Build()
@@ -497,7 +610,8 @@ public sealed partial class SettingsPage : Page
                     ShowHidden();
                 State.Done();
 #if KAERI_TESTING
-                Demo();
+                if (!readying)
+                    Demo();
 #endif
                 break;
         }
