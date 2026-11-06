@@ -1523,7 +1523,6 @@
     <string name="together_line">各自が自分のソースからエピソードを再生します。サーバーは再生位置をそろえるだけです。</string>
     <string name="together_people_button">一緒に見る</string>
     <string name="together_start">同時視聴を始める</string>
-    <string name="together_start_line">視聴中の作品を選び、リンクまたはコードで友達を招待します。</string>
     <string name="together_join">同時視聴に参加</string>
     <string name="together_join_line">友達の招待リンクを貼り付けるか、教えてもらったコードを入力してください。</string>
     <string name="together_join_field">リンクまたはコード</string>

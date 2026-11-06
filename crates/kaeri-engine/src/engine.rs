@@ -2251,6 +2251,103 @@ mod tests {
         )));
     }
 
+    /// A room someone else picked and started, joined from its lobby without saying ready:
+    /// this device opens the room's episode and joins in.
+    #[cfg(feature = "party")]
+    #[tokio::test]
+    async fn a_room_someone_else_plays_opens_the_player_without_waiting_for_ready() {
+        use kaeri_model::party::{PartyCommand, PartyStartKind};
+        use kaeri_party::fake::{FakeOptions, FakeServer};
+
+        let dir = tempfile::tempdir().unwrap();
+        let (engine, mut events) = quiet_engine(dir.path()).await;
+        events.launch().await;
+        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
+        let room = "lark-3vd8-pq2m";
+        let mika = server.member(room, "Mika");
+        mika.set_playlist(&["Natsukaze Relay, episode 9 [anilist:104321:9]"]);
+        mika.set_index(0);
+        mika.open("Natsukaze Relay, episode 9 [anilist:104321:9]", 1440.0);
+
+        engine.send(Command::Party(PartyCommand::Lobby {
+            server: server.address(),
+            room: room.into(),
+            name: Some("Ada".into()),
+            pick: None,
+        }));
+        seen_until(&mut events, |e| {
+            matches!(e, Event::PartyState(view) if view.room_episode.as_ref().is_some_and(|r| r.id.is_some()))
+        })
+        .await;
+        // Paused, the lobby waits.
+        let seen =
+            seen_until(&mut events, |e| matches!(e, Event::PartyMembers(m) if m.len() == 2))
+                .await;
+        assert!(!seen.iter().any(|e| matches!(e, Event::PartyStarted { .. })), "{seen:?}");
+
+        mika.play();
+        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyStarted { .. })).await;
+        assert!(
+            seen.iter().any(|e| matches!(
+                e,
+                Event::PartyStarted { id, episode, kind: PartyStartKind::Rejoin }
+                    if id.get() == 104_321 && episode == "9"
+            )),
+            "{seen:?}"
+        );
+    }
+
+    /// A play anywhere in the app while in a party picks that episode for the room, rather
+    /// than playing it alone; the room's own episode is not picked again.
+    #[cfg(feature = "party")]
+    #[tokio::test]
+    async fn a_play_while_in_a_party_picks_the_episode_for_the_room() {
+        use kaeri_core::ids::AnilistId;
+        use kaeri_party::fake::{FakeOptions, FakeServer};
+
+        let dir = tempfile::tempdir().unwrap();
+        let (engine, mut events) = quiet_engine(dir.path()).await;
+        events.launch().await;
+        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
+        let room = "wren-5kt2-hb7c";
+        let _mika = server.member(room, "Mika");
+        engine.send(Command::PartyJoin {
+            server: server.address(),
+            room: room.into(),
+            name: Some("Ada".into()),
+        });
+        seen_until(&mut events, |e| matches!(e, Event::PartyJoined(_))).await;
+
+        engine.send(Command::play(AnilistId::new(104_321), "9"));
+        let picked = |e: &Event| {
+            matches!(e, Event::PartyState(view) if view.room_episode.as_ref().is_some_and(|r| {
+                r.id.map(AnilistId::get) == Some(104_321) && r.episode == "9"
+            }))
+        };
+        let seen = seen_until(&mut events, picked).await;
+        assert!(!seen.iter().any(|e| matches!(e, Event::PlaybackStaged { .. })), "{seen:?}");
+        for _ in 0..50 {
+            if server.room(room).is_some_and(|r| !r.playlist.is_empty()) {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        let kept = server.room(room).expect("the room exists");
+        assert!(kept.playlist[0].ends_with("[anilist:104321:9]"), "{:?}", kept.playlist);
+
+        // The same episode again changes nothing in the room, and still plays nothing alone.
+        engine.send(Command::play(AnilistId::new(104_321), "9"));
+        let seen = seen_until(&mut events, |e| matches!(e, Event::JobDone(_))).await;
+        assert!(!seen.iter().any(|e| matches!(e, Event::PlaybackStaged { .. })), "{seen:?}");
+        assert_eq!(server.room(room).unwrap().playlist, kept.playlist);
+
+        // Out of the party, a play is this device's own again.
+        engine.send(Command::PartyLeave);
+        seen_until(&mut events, |e| matches!(e, Event::PartyLeft { .. })).await;
+        engine.send(Command::play(AnilistId::new(104_321), "9"));
+        seen_until(&mut events, |e| matches!(e, Event::PlaybackStaged { .. })).await;
+    }
+
     /// A device that starts a party writes the playlist the others read: this episode and the
     /// next, in the name every Kaeri player reports.
     #[cfg(feature = "party")]

@@ -49,15 +49,13 @@ public enum TogetherLook: Equatable, Sendable {
 
 /// The start sheet's step.
 public enum TogetherPick: Equatable, Sendable, Identifiable {
-    /// What are you watching?
-    case title
-    /// The first time only: the server and the name, for this pick.
-    case server(PartyEpisode)
+    /// The first time only: the server and the name, for this pick, or for a room with nothing
+    /// picked yet (`nil`), where Play on any episode picks for the room.
+    case server(PartyEpisode?)
 
     public var id: String {
         switch self {
-        case .title: "title" // i18n-skip
-        case .server(let pick): "server \(pick.id) \(pick.episode)"
+        case .server(let pick): pick.map { "server \($0.id) \($0.episode)" } ?? "server" // i18n-skip
         }
     }
 }
@@ -167,15 +165,15 @@ extension PartyModel {
 
     // MARK: Start
 
-    /// Start a party: What are you watching?
+    /// Start a party with nothing picked: the server the first time, then the lobby, which says
+    /// nothing is open yet. In the room, Play on any episode picks it for the room.
     public func beginStart() {
-        if form == nil { send(.loadPartyForm) }
-        picking = .title
+        start(nil)
     }
 
-    /// Watch together on a title page, or a pick in the sheet: the server the first time, then
-    /// the lobby.
-    public func start(_ pick: PartyEpisode) {
+    /// Watch together on a title page (`pick`), or Start a party (`nil`): the server the first
+    /// time, then the lobby.
+    public func start(_ pick: PartyEpisode?) {
         if form == nil { send(.loadPartyForm) }
         if let server = form?.recentServers.first, !server.isEmpty, let form, !form.name.isEmpty {
             picking = nil
@@ -201,16 +199,11 @@ extension PartyModel {
             && !pickName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
-    /// Back, on the server step.
-    public func backToTitles() {
-        picking = .title
-    }
-
     public func cancelStart() {
         picking = nil
     }
 
-    private func startLobby(server: String, name: String, pick: PartyEpisode) {
+    private func startLobby(server: String, name: String, pick: PartyEpisode?) {
         if party != nil { send(.partyLeave) }
         let room = form?.room ?? roomFallback()
         lobby = TogetherRoom(server: server, room: room)
@@ -236,8 +229,7 @@ extension PartyModel {
         send(.party(.openPlayer))
     }
 
-    /// Change episode, Pick what to watch and Watch something else: the room's playlist, for
-    /// everyone.
+    /// The room's playlist, for everyone.
     public func changeEpisode(_ pick: PartyEpisode) {
         picking = nil
         lastOut = nil
@@ -256,10 +248,6 @@ extension PartyModel {
         noSource = PartyNoSourceAsk(id: id, episode: room.episode, why: why, reason: reason)
         chooseSource()
     }
-
-    /// Change episode and Watch something else open the start sheet on its titles, and its pick
-    /// changes the room's episode instead of starting a party.
-    public var changingEpisode: Bool { inLobbyRoom && picking != nil }
 
     /// What the lobby says plays: the room's own, or what looking in found, or the link's words.
     public var lobbyEpisode: PartyRoomEpisode? {

@@ -167,6 +167,21 @@ extension Navigator {
         if section != .together { section = .together }
     }
 
+    /// Pick what to watch, Watch something else and Change episode, in the room: Home to browse,
+    /// where Play on any episode picks it for the room. The party stays, and on iPhone and iPad
+    /// its bar says so; the Mac, with no bar, says it once as a notice.
+    func browseForRoom(store: AppStore) {
+        store.party.lobbyShown = false
+        store.party.placeShown = false
+        #if os(iOS)
+        phoneSettings = nil
+        paths[.home] = []
+        #else
+        store.say(L.partyBarPick)
+        #endif
+        if section != .home { section = .home }
+    }
+
     /// An invite's title, over the section on screen, unless it is the page there.
     func showInvitedTitle(_ id: AnilistId) {
         #if os(iOS)

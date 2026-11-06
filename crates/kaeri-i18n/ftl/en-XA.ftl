@@ -6444,6 +6444,9 @@ party-joining = [Ĵöîñîñĝ { $room } öñ { $server }…~~~~~~]
 # Line on the form when no episode is playing yet.
 party-form-nothing = [Ŵĥàţ'š þļàýîñĝ ñöŵ þļàýš ŵîţĥ ţĥé ŕööɱ.~~~~~~~~~~~~]
 
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = [Öñçé ýöü'ŕé îñ, þŕéšš Þļàý öñ àñý éþîšöðé ţö ŵàţçĥ îţ ŵîţĥ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~]
+
 # Line naming the episode of the form.
 party-form-episode-of = [Éþîšöðé { $episode } öƒ { $title }~~~~~~]
 
@@ -6596,7 +6599,7 @@ together-people-button = [Ŵàţçĥ ţöĝéţĥéŕ~~~~~]
 together-start = [Šţàŕţ à þàŕţý~~~~]
 
 # Line under Start a party.
-together-start-line = [Þîçķ šöɱéţĥîñĝ ýöü'ŕé ŵàţçĥîñĝ, ţĥéñ îñṽîţé ƒŕîéñðš ŵîţĥ à ļîñķ öŕ à çöðé.~~~~~~~~~~~~~~~~~~~~~~~]
+together-start-line = [Öþéñ à ŕööɱ àñð îñṽîţé ƒŕîéñðš ŵîţĥ à ļîñķ öŕ à çöðé, ţĥéñ þŕéšš Þļàý öñ ŵĥàţ ýöü ŵàñţ ţö ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading of the field that joins a watch party.
 together-join = [Ĵöîñ à þàŕţý~~~~]
@@ -6806,6 +6809,9 @@ party-bar-line = [{ $count } îñ ţĥé ŕööɱ · { $ready } ŕéàðý~~~~~~
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = [Îñ ţĥé ŕööɱ · ñöţĥîñĝ þļàýîñĝ ƒöŕ ýöü~~~~~~~~~~~~]
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = [Þŕéšš Þļàý öñ àñý éþîšöðé ţö ŵàţçĥ îţ ŵîţĥ ţĥé ŕööɱ~~~~~~~~~~~~~~~~]
 
 # Notice in the player when someone pauses.
 party-paused-by = [Þàüšéð ƀý { $name }~~~~]

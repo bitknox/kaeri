@@ -2891,6 +2891,8 @@
     <string name="party_joining">Joining %1$s on %2$s…</string>
     <!-- Line on the form when no episode is playing yet. -->
     <string name="party_form_nothing">What\'s playing now plays with the room.</string>
+    <!-- Line on the form that starts a party with nothing picked yet. -->
+    <string name="party_form_pick_later">Once you\'re in, press Play on any episode to watch it with the room.</string>
     <!-- Line naming the episode of the form. -->
     <string name="party_form_episode_of">Episode %1$d of %2$s</string>
     <!-- Line naming the episode of the form when the show has no name. -->
@@ -2993,7 +2995,7 @@
     <!-- Button that starts a watch party from the place. The one amber button there. -->
     <string name="together_start">Start a party</string>
     <!-- Line under Start a party. -->
-    <string name="together_start_line">Pick something you\'re watching, then invite friends with a link or a code.</string>
+    <string name="together_start_line">Open a room and invite friends with a link or a code, then press Play on what you want to watch.</string>
     <!-- Heading of the field that joins a watch party. -->
     <string name="together_join">Join a party</string>
     <!-- Line under Join a party. -->
@@ -3134,6 +3136,8 @@
     <string name="party_bar_line">%1$d in the room · %2$d ready</string>
     <!-- Second line of the bar when nothing plays for you. -->
     <string name="party_bar_idle">In the room · nothing playing for you</string>
+    <!-- Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room. -->
+    <string name="party_bar_pick">Press Play on any episode to watch it with the room</string>
     <!-- Notice in the player when someone pauses. -->
     <string name="party_paused_by">Paused by %1$s</string>
     <!-- Notice in the player when someone plays. -->

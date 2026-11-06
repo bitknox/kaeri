@@ -1627,7 +1627,6 @@
     <string name="together_line">Chacun lit l’épisode depuis ses propres sources. Le serveur ne fait que vous garder synchronisés.</string>
     <string name="together_people_button">Regarder ensemble</string>
     <string name="together_start">Lancer un visionnage</string>
-    <string name="together_start_line">Choisissez ce que vous regardez, puis invitez vos amis avec un lien ou un code.</string>
     <string name="together_join">Rejoindre un visionnage</string>
     <string name="together_join_line">Collez le lien d’invitation d’un ami, ou saisissez le code qu’il vous donne.</string>
     <string name="together_join_field">Lien ou code</string>

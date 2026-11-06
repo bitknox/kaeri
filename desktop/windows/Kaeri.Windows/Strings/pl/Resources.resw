@@ -4175,9 +4175,6 @@
   <data name="TogetherStart" xml:space="preserve">
     <value>Zacznij oglądać razem</value>
   </data>
-  <data name="TogetherStartLine" xml:space="preserve">
-    <value>Wybierz coś, co oglądasz, i zaproś znajomych linkiem lub kodem.</value>
-  </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>Dołącz do oglądania</value>
   </data>

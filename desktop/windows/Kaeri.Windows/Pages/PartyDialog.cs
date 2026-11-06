@@ -29,6 +29,9 @@ sealed class PartyDialog
 
         /// <summary>From an invite link: its room, on its server, with its episode.</summary>
         public sealed record Invite(PartyInvite Link) : For;
+
+        /// <summary>From Watch together's Start party: a room with nothing picked yet.</summary>
+        public sealed record Room : For;
     }
 
     readonly Ctx ctx;
@@ -193,7 +196,7 @@ sealed class PartyDialog
         };
         episode.Text = ep is { } x
             ? ctx.Known.Entry(x.Id) is { } entry ? T.EpisodeLabelOf(x.Number, entry.Title) : T.EpisodeLabel(x.Number)
-            : T.PartyFormNothing;
+            : what is For.Room ? T.PartyFormPickLater : T.PartyFormNothing;
     }
 
     void Fill(PartyForm form)
@@ -289,6 +292,8 @@ sealed class PartyDialog
                         ctx.Send(new Command.PlayParty(ep.Id, ep.Number));
                     else if (what is For.Invite inv)
                         ctx.Send(new Command.PlayParty(inv.Link.Id, inv.Link.Episode));
+                    else if (what is For.Room)
+                        ctx.Go("together");
                     dialog.Hide();
                     return;
                 case Event.PartyLeft left when joining:

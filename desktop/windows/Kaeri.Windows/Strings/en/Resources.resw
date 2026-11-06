@@ -5019,6 +5019,10 @@
     <value>What's playing now plays with the room.</value>
     <comment>Line on the form when no episode is playing yet.</comment>
   </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>Once you're in, press Play on any episode to watch it with the room.</value>
+    <comment>Line on the form that starts a party with nothing picked yet.</comment>
+  </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>Episode {episode} of {title}</value>
     <comment>Line naming the episode of the form.</comment>
@@ -5220,7 +5224,7 @@
     <comment>Button that starts a watch party from the place. The one amber button there.</comment>
   </data>
   <data name="TogetherStartLine" xml:space="preserve">
-    <value>Pick something you're watching, then invite friends with a link or a code.</value>
+    <value>Open a room and invite friends with a link or a code, then press Play on what you want to watch.</value>
     <comment>Line under Start a party.</comment>
   </data>
   <data name="TogetherJoin" xml:space="preserve">
@@ -5498,6 +5502,10 @@
   <data name="PartyBarIdle" xml:space="preserve">
     <value>In the room · nothing playing for you</value>
     <comment>Second line of the bar when nothing plays for you.</comment>
+  </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>Press Play on any episode to watch it with the room</value>
+    <comment>Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.</comment>
   </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>Paused by {name}</value>

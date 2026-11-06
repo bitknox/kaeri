@@ -6529,9 +6529,6 @@ together-people-button = Cùng xem
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Tạo phòng
 
-# Line under Start a party.
-together-start-line = Chọn phim bạn đang xem, rồi mời bạn bè bằng liên kết hoặc mã.
-
 # Heading of the field that joins a watch party.
 together-join = Vào phòng
 

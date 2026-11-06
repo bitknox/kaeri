@@ -6661,9 +6661,6 @@ together-people-button = Assistir juntos
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Iniciar sessão em grupo
 
-# Line under Start a party.
-together-start-line = Escolha algo que você está assistindo e convide amigos com um link ou um código.
-
 # Heading of the field that joins a watch party.
 together-join = Entrar numa sessão em grupo
 
