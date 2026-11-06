@@ -19,7 +19,7 @@
         </Grid.ColumnDefinitions>
         <TextBlock Text="{x:Bind app:T.SettingsTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
         <!-- Finds a setting by its name, in any pane, as the Mac's Search settings. -->
-        <AutoSuggestBox x:Name="Find" Grid.Column="1" Width="280" VerticalAlignment="Center" QueryIcon="Find"
+        <AutoSuggestBox x:Name="Find" Grid.Column="1" Width="280" TabIndex="1" VerticalAlignment="Center" QueryIcon="Find"
                         PlaceholderText="{x:Bind app:T.SettingsSearch}" AutomationProperties.Name="{x:Bind app:T.SettingsSearch}"
                         TextChanged="OnFindChanged" QuerySubmitted="OnFindSubmitted" />
       </Grid>
@@ -33,7 +33,7 @@
         <ColumnDefinition x:Name="PaneColumn" Width="200" />
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
-      <ListView x:Name="Panes" SelectionMode="Single" SelectionChanged="OnPaneChanged" ItemClick="OnPaneClicked" IsItemClickEnabled="True"
+      <ListView x:Name="Panes" TabIndex="0" SelectionMode="Single" SelectionChanged="OnPaneChanged" ItemClick="OnPaneClicked" IsItemClickEnabled="True"
                 Margin="-12,0,0,0" AutomationProperties.Name="{x:Bind app:T.SettingsPanesLabel}" />
       <ScrollViewer x:Name="CardScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto">
         <!-- One width for every pane, up to 760, so the cards never change width between panes or
