@@ -37,6 +37,14 @@ static class HoverPreview
     /// <summary>The video's width: 384 by 216, over YouTube's 356 by 200 floor.</summary>
     internal const double Width = 384;
 
+    /// <summary>
+    /// How long after the wheel no preview starts. Covers pass under a still pointer while the page
+    /// scrolls, and each would otherwise open a preview at the next pause, for the next notch to close.
+    /// </summary>
+    static readonly TimeSpan Scrolled = TimeSpan.FromMilliseconds(700);
+    static DateTime wheeledAt = DateTime.MinValue;
+    static UIElement? heard;
+
     static readonly ConditionalWeakTable<FrameworkElement, Resting> targets = [];
     static Open? open;
 
@@ -65,6 +73,7 @@ static class HoverPreview
             if (targets.TryGetValue(at, out var resting))
                 Show(at, resting.Id());
         });
+        target.Loaded += (_, _) => HearWheel(target);
         target.PointerEntered += (_, e) => Resume(target, state, e);
         target.PointerMoved += (_, e) =>
         {
@@ -87,11 +96,27 @@ static class HoverPreview
         target.Unloaded += (_, _) => state.Timer.Stop();
     }
 
+    /// <summary>Every wheel in the window, handled or not, marks the page as scrolling.</summary>
+    static void HearWheel(FrameworkElement target)
+    {
+        if (target.XamlRoot?.Content is not UIElement root || root == heard)
+            return;
+        heard?.RemoveHandler(UIElement.PointerWheelChangedEvent, (PointerEventHandler)OnWheel);
+        heard = root;
+        root.AddHandler(UIElement.PointerWheelChangedEvent, (PointerEventHandler)OnWheel, true);
+    }
+
+    static void OnWheel(object sender, PointerRoutedEventArgs e) => wheeledAt = DateTime.UtcNow;
+
     /// <summary>The pointer is at a new resting place: wait out the dwell again.</summary>
     static void Resume(FrameworkElement target, Resting state, PointerRoutedEventArgs e)
     {
         state.Anchor = e.GetCurrentPoint(target).Position;
         state.Timer!.Stop();
+        // The page is scrolling under the pointer: a cover arriving there is not one pointed at.
+        // The pointer moving once the page is still starts the dwell, as PointerMoved calls here.
+        if (DateTime.UtcNow - wheeledAt < Scrolled)
+            return;
         state.Timer.Interval = DateTime.UtcNow - closedAt < Scanning ? NextDwell : Dwell;
         // A touch has no hover; a pen or a mouse does.
         if (e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Touch)
