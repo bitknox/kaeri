@@ -173,7 +173,7 @@ static class HoverPreview
         readonly Popup popup = new() { IsLightDismissEnabled = false, ShouldConstrainToRootBounds = true };
         readonly Border card;
         readonly StackPanel words;
-        bool closing;
+        bool closing, playing;
         readonly TrailerStage? stage;
         readonly DispatcherQueueTimer leave;
         readonly Button sound = new();
@@ -303,6 +303,7 @@ static class HoverPreview
                 stage.Size(video.Width, video.Height);
                 stage.Showing += shown =>
                 {
+                    playing = shown;
                     soundOn = false;
                     sound.IsHitTestVisible = shown;
                     if (shown)
@@ -442,6 +443,13 @@ static class HoverPreview
             stage?.Stop();
             if (!popup.IsOpen)
                 return;
+            // A trailer's video does not fade with the card and would stand alone as it went:
+            // a card that played one closes at once.
+            if (playing)
+            {
+                popup.IsOpen = false;
+                return;
+            }
             card.IsHitTestVisible = false;
             var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(card);
             var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
