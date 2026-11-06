@@ -210,8 +210,12 @@ sealed partial class HomeShelf : Grid
 
     readonly ItemsRepeater repeater;
     readonly Button previous, next;
-    readonly StackPanel heading = new() { Orientation = Orientation.Horizontal, Spacing = 12 };
-    readonly TextBlock lead, title, aside;
+    /// <summary>
+    /// One line: the lead, the title in the show font, what follows it, then the small aside. As
+    /// one block its spaces keep their width, and it is cut short before the link.
+    /// </summary>
+    readonly TextBlock heading;
+    readonly Run lead = new(), title = new(), tail = new(), aside = new();
     readonly HyperlinkButton viewAll;
     readonly double cardWidth;
     bool inside;
@@ -233,14 +237,26 @@ sealed partial class HomeShelf : Grid
         var head = new Grid { Margin = new Thickness(0, 0, 0, 12) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        lead = new TextBlock { FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Bottom, TextWrapping = TextWrapping.NoWrap };
-        title = new TextBlock { FontSize = 20, LineHeight = 28, FontFamily = Ui.Res<FontFamily>("ShowFont"), FontWeight = FontWeights.Bold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Bottom };
-        aside = new TextBlock { Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Bottom, TextWrapping = TextWrapping.NoWrap };
-        var words = new StackPanel { Orientation = Orientation.Horizontal };
-        words.Children.Add(lead);
-        words.Children.Add(title);
-        heading.Children.Add(words);
-        heading.Children.Add(aside);
+        heading = new TextBlock
+        {
+            FontSize = 20,
+            LineHeight = 28,
+            FontWeight = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            TextWrapping = TextWrapping.NoWrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxLines = 1,
+            Margin = new Thickness(0, 0, 12, 0),
+        };
+        title.FontFamily = Ui.Res<FontFamily>("ShowFont");
+        title.FontWeight = FontWeights.Bold;
+        aside.FontSize = 14;
+        aside.FontWeight = FontWeights.Normal;
+        aside.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
+        heading.Inlines.Add(lead);
+        heading.Inlines.Add(title);
+        heading.Inlines.Add(tail);
+        heading.Inlines.Add(aside);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
         head.Children.Add(heading);
         viewAll = new HyperlinkButton { Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Bottom };
@@ -345,13 +361,14 @@ sealed partial class HomeShelf : Grid
     /// <summary>Takes the section as the engine now has it. Cards that left fade out first when <paramref name="leaving"/> names them.</summary>
     public void Update(HomeSection section, SeasonYear? season, IReadOnlyCollection<uint> leaving)
     {
-        var heading_ = HomeWording.Heading(section);
-        lead.Text = heading_.Lead;
-        title.Text = heading_.Title;
-        title.Visibility = heading_.Title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        var words = HomeWording.Heading(section);
         var small = HomeWording.Aside(section, season);
-        aside.Text = small ?? "";
-        aside.Visibility = small is null ? Visibility.Collapsed : Visibility.Visible;
+        lead.Text = words.Lead;
+        title.Text = words.Title;
+        tail.Text = words.Tail;
+        // An em space keeps the aside apart from the heading, as the gap between two blocks did.
+        aside.Text = small is null ? "" : " " + small;
+        AutomationProperties.SetName(heading, small is null ? words.ToString() : $"{words}, {small}");
         var all = HomeWording.ViewAll(section);
         viewAll.Content = all is null ? null : new StackPanel
         {
