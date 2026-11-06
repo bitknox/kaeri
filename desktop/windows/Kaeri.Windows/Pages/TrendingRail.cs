@@ -1,6 +1,7 @@
 using Kaeri.App;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Kaeri.Windows.Pages;
@@ -61,7 +62,18 @@ sealed class TrendingRail : StackPanel
         }
         heading.Flyout = menu;
         head.Children.Add(heading);
-        var all = new HyperlinkButton { Content = T.SearchSeeAll, VerticalAlignment = VerticalAlignment.Center };
+        var all = new HyperlinkButton
+        {
+            Style = Ui.Res<Style>("HeadingLinkStyle"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 4,
+                Children = { new TextBlock { Text = T.SearchSeeAll }, new FontIcon { Glyph = "", FontSize = 10 } },
+            },
+        };
+        AutomationProperties.SetName(all, T.SearchSeeAll);
         all.Click += (_, _) => this.seeAll(period);
         Grid.SetColumn(all, 1);
         head.Children.Add(all);
