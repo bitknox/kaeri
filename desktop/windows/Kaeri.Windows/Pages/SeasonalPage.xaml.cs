@@ -104,9 +104,8 @@ public sealed partial class SeasonalPage : Page
     {
         var shown = entries
             .Where(e => keep.Length == 0 || e.Format is { } f && keep.Contains(f.ToUpperInvariant()))
-            .Select(e => new CoverItem(e).Load(ctx.Art))
             .ToList();
-        Grid.Covers = shown;
+        Grid.Show(shown);
         if (shown.Count > 0)
             State.Done();
         else if (answered)

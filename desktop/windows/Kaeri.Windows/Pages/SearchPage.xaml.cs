@@ -210,7 +210,7 @@ public sealed partial class SearchPage : Page
         // Not answered yet: what shows stays until the answer.
         if (entries.Length == 0 && list is not (ContentList.Entries or ContentList.Empty or ContentList.Failed))
             return;
-        Grid.Covers = [.. entries.Select(e => new CoverItem(e).Load(ctx.Art))];
+        Grid.Show(entries);
         if (entries.Length > 0)
             State.Done();
         else if (list is ContentList.Failed f)
