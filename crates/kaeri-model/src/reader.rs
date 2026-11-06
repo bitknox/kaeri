@@ -105,7 +105,7 @@ pub struct Leaf {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct LeafPart {
-    /// The page's number in the chapter, from 0.
+    /// The page's number in the chapter, from 0. For a strip cut on e-ink, the cut's number.
     pub page: u32,
     pub kind: PageKind,
     /// `None` until the page lands; [`ReaderEvent::PageReady`] fills it.
@@ -116,6 +116,17 @@ pub struct LeafPart {
     /// A spread turned on its side on a single-page screen.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rotate: bool,
+    /// One half of a spread split on a single-page screen: the file holds only that half.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub half: Option<PageHalf>,
+}
+
+/// Which half of a split spread a part shows, as it lies on the page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum PageHalf {
+    Left,
+    Right,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -744,6 +755,8 @@ pub enum ReaderEvent {
         session: u64,
         chapter: ChapterId,
         page: u32,
+        /// The half of a split spread this file holds.
+        half: Option<PageHalf>,
         file: PageFile,
     },
     PageFailed {
@@ -774,6 +787,13 @@ pub enum ReaderEvent {
         back: ReadPlace,
     },
     Settings(ReaderSettingsView),
+    /// Show this place in the open chapter: Back to page, Start over, Go back, or a place
+    /// another device reached. A place in another chapter comes as [`ReaderEvent::Opened`]
+    /// instead.
+    GoTo {
+        session: u64,
+        place: ReadPlace,
+    },
     /// After closing, or when the work was removed under the reader.
     Closed {
         session: u64,

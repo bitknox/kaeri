@@ -277,11 +277,15 @@ mod tests {
         };
         use kaeri_model::{
             book_sources::{BookServerFailure, BookSourceCommand, BookSourceEvent, FolderRef},
-            eink::{EinkCounter, EinkPaint, EinkPolicy, Panel},
+            eink::{
+                EinkCounter, EinkMatch, EinkPaint, EinkPolicy, EinkProfile, NovelSupport,
+                Panel, VendorFamily,
+            },
             medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
             reader::{
-                OpenAt, ReaderCommand, ReaderEvent, ReaderSettingKey, ReaderSurface,
-                ReaderValue, SettingScope, StripPos,
+                Leaf, LeafPart, OpenAt, PageEncoding, PageFile, PageHalf, PageKind,
+                PixelFormat, ReadPlace, ReaderCommand, ReaderEvent, ReaderSettingKey,
+                ReaderSurface, ReaderValue, SettingScope, StripPos, UnitRect,
             },
             reading::{
                 DownloadPick, LibrarySegmentRead, ReadSearchQuery, ReadingAbout,
@@ -366,6 +370,55 @@ mod tests {
             about: ReadingAbout::Home,
             failure: ReadingFailure::ReadingOff,
         }));
+        let half = LeafPart {
+            page: 3,
+            kind: PageKind::Spread,
+            file: None,
+            place: UnitRect::WHOLE,
+            rotate: false,
+            half: Some(PageHalf::Right),
+        };
+        crosses_intact(Event::Reader(ReaderEvent::Leaves {
+            session: 7,
+            chapter: chapter.clone(),
+            leaves: vec![Leaf { index: 3, parts: vec![half], end_page: false }],
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::PageReady {
+            session: 7,
+            chapter: chapter.clone(),
+            page: 3,
+            half: Some(PageHalf::Right),
+            file: PageFile {
+                path: "/cache/pages/a.raw".into(),
+                encoding: PageEncoding::Raw { format: PixelFormat::Gray8, stride: 1264 },
+                width: 1264,
+                height: 1680,
+                crop: None,
+                colour: false,
+                bytes: 1264 * 1680,
+            },
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::GoTo {
+            session: 7,
+            place: ReadPlace {
+                work: work.clone(),
+                chapter: chapter.clone(),
+                page: Some(7),
+                strip: None,
+                novel: None,
+            },
+        }));
+        crosses_intact(Event::Reading(ReadingEvent::Eink(EinkProfile {
+            eink: EinkMatch::Sure,
+            panel: Panel::Kaleido3,
+            ppi: 300,
+            family: VendorFamily::Onyx,
+            refresh_hook: true,
+            page_buttons: true,
+            colour_sure: true,
+            novels: NovelSupport::Full,
+            policy: Some(EinkPolicy::defaults(Panel::Kaleido3)),
+        })));
         crosses_intact(Event::Reader(ReaderEvent::ChapterRead { work, chapter }));
         crosses_intact(Event::BookSources(BookSourceEvent::ServerFailed {
             step: ServerStep::Address,

@@ -58,6 +58,10 @@ pub struct EinkProfile {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub colour_sure: bool,
     pub novels: NovelSupport,
+    /// The refresh rule with this device's Refresh settings; `None` on a screen that is not
+    /// e-ink. Sent again whenever one of those settings changes.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub policy: Option<EinkPolicy>,
 }
 
 /// Whether the screen is e-ink. Unsure asks "Is this an e-ink screen?" first.
