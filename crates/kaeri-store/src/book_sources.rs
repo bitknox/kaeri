@@ -129,13 +129,22 @@ impl Store {
         at: i64,
     ) -> Result<()> {
         self.with_tx(|tx| {
-            let kept: Vec<(String, Option<String>, String, u8, Option<String>)> = {
+            let kept: Vec<LocalSeries> = {
                 let mut stmt = tx.prepare(
                     "SELECT id, work, state, confidence, reason
                        FROM book_local_series WHERE folder = ?1",
                 )?;
                 stmt.query_map([folder], |r| {
-                    Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?))
+                    Ok(LocalSeries {
+                        id: r.get(0)?,
+                        folder: folder.to_owned(),
+                        name: String::new(),
+                        medium: String::new(),
+                        work: r.get(1)?,
+                        state: r.get(2)?,
+                        confidence: r.get(3)?,
+                        reason: r.get(4)?,
+                    })
                 })?
                 .collect::<std::result::Result<_, _>>()?
             };
@@ -146,10 +155,10 @@ impl Store {
             )?;
             tx.execute("DELETE FROM book_local_series WHERE folder = ?1", [folder])?;
             for (s, files) in series {
-                let old = kept.iter().find(|k| k.0 == s.id);
+                let old = kept.iter().find(|k| k.id == s.id);
                 let (work, state, confidence, reason) = match old {
-                    Some((_, work, state, confidence, reason)) if state != "unmatched" => {
-                        (work.clone(), state.clone(), *confidence, reason.clone())
+                    Some(k) if k.state != "unmatched" => {
+                        (k.work.clone(), k.state.clone(), k.confidence, k.reason.clone())
                     }
                     _ => (s.work.clone(), s.state.clone(), s.confidence, s.reason.clone()),
                 };

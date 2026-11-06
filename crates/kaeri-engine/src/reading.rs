@@ -6,17 +6,17 @@
 //! shapes until the parts that fill them land; the rest are logged and dropped.
 
 use kaeri_model::{
-    book_sources::{BookSourceCommand, BookSourceEvent, BookSourcesView},
+    book_sources::BookSourceCommand,
     event::Event,
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
     reader::{ReaderCommand, ReaderEvent, ReaderSettingsView},
     reading::{
-        BookDownloadsView, FeedView, ReadingAbout, ReadingCommand, ReadingEvent,
-        ReadingFailure, ReadingHomeView, UpdatesView,
+        BookDownloadsView, FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand,
+        ReadingEvent, ReadingFailure, ReadingHomeView, UpdatesView,
     },
 };
 
-use kaeri_core::settings::SettingValue;
+use kaeri_core::{books::WorkId, settings::SettingValue};
 use kaeri_store::sync::kinds;
 
 use crate::{outbox::Outbox, services::Services, state::EngineState};
@@ -165,7 +165,12 @@ pub(crate) fn medium(
 }
 
 /// A reading command.
-pub(crate) fn reading(state: &ReadingState, command: ReadingCommand, tx: &Outbox) {
+pub(crate) fn reading(
+    state: &ReadingState,
+    services: &Services,
+    command: ReadingCommand,
+    tx: &Outbox,
+) {
     let about = command.about();
     if !state.available {
         return off(about, tx);
@@ -181,20 +186,22 @@ pub(crate) fn reading(state: &ReadingState, command: ReadingCommand, tx: &Outbox
         ReadingCommand::LoadLibrary { segment } => {
             ReadingEvent::Library { segment, tiles: Vec::new() }
         }
-        ReadingCommand::Search { query } => ReadingEvent::Search {
-            query,
-            page: 0,
-            tiles: Vec::new(),
-            has_more: false,
-            other_scope: None,
-        },
-        ReadingCommand::SearchMore { query, page } => ReadingEvent::Search {
-            query,
-            page,
-            tiles: Vec::new(),
-            has_more: false,
-            other_scope: None,
-        },
+        ReadingCommand::Search { query } => return search(services, query, 0, tx),
+        ReadingCommand::SearchMore { query, page } => return search(services, query, page, tx),
+        ReadingCommand::LoadChapters { work, edition } => {
+            return chapters(services, work, edition, tx);
+        }
+        ReadingCommand::ChooseEdition { work, source_id, version_label, language } => {
+            let pref = kaeri_store::reading::EditionPref { source_id, version_label, language };
+            if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
+                tracing::warn!(error = %e, "the edition choice was not kept");
+            }
+            return chapters(services, work, Some(pref.source_id), tx);
+        }
+        ReadingCommand::MarkRead { work, chapters: ids, read } => {
+            mark_read(services, work, ids, read);
+            return;
+        }
         ReadingCommand::LoadDownloads => ReadingEvent::Downloads(BookDownloadsView::default()),
         ReadingCommand::LoadExportTargets => ReadingEvent::ExportTargets(Vec::new()),
         ReadingCommand::LoadFeed => ReadingEvent::Feed(FeedView::default()),
@@ -204,6 +211,81 @@ pub(crate) fn reading(state: &ReadingState, command: ReadingCommand, tx: &Outbox
         }
     };
     let _ = tx.send(Event::Reading(event));
+}
+
+/// Search the book sources, page by page. A page holds what the sources gave: they are asked
+/// once, on the first page, and the rest is answered empty.
+fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
+    if page > 0 {
+        let _ = tx.send(Event::Reading(ReadingEvent::Search {
+            query,
+            page,
+            tiles: Vec::new(),
+            has_more: false,
+            other_scope: None,
+        }));
+        return;
+    }
+    let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
+    let plugins = services.book_plugins.clone();
+    tokio::spawn(async move {
+        sources.adopt_plugins(&plugins);
+        let tiles = sources.search(&query.text, query.medium, now).await;
+        let _ = tx.send(Event::Reading(ReadingEvent::Search {
+            query,
+            page: 0,
+            tiles,
+            has_more: false,
+            other_scope: None,
+        }));
+    });
+}
+
+fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Outbox) {
+    let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
+    let plugins = services.book_plugins.clone();
+    tokio::spawn(async move {
+        sources.adopt_plugins(&plugins);
+        let event = match sources.chapters(&work, edition.as_deref(), now).await {
+            Ok((edition, volumes)) => {
+                ReadingEvent::Chapters { work, edition, volumes, failure: None }
+            }
+            Err(failure) => ReadingEvent::Chapters {
+                work,
+                edition: None,
+                volumes: Vec::new(),
+                failure: Some(failure),
+            },
+        };
+        let _ = tx.send(Event::Reading(event));
+    });
+}
+
+/// The person's own mark is kept first; the server is told after, and a refusal there is only
+/// logged.
+fn mark_read(
+    services: &Services,
+    work: WorkId,
+    ids: Vec<kaeri_core::books::ChapterId>,
+    read: bool,
+) {
+    let now = services.clock.now();
+    if read {
+        for id in &ids {
+            let mut event =
+                kaeri_store::reading::ReadEvent::new(work.as_str(), id.as_str(), now);
+            event.completed = true;
+            if let Err(e) = services.store.record_read(&event, Vec::new()) {
+                tracing::warn!(error = %e, "a read mark was not kept");
+            }
+        }
+    } else {
+        let chapters: Vec<String> = ids.iter().map(|c| c.as_str().to_owned()).collect();
+        if let Err(e) = services.store.unread(work.as_str(), &chapters) {
+            tracing::warn!(error = %e, "an unread mark was not kept");
+        }
+    }
+    services.book_sources.report(&work, ids, read, now);
 }
 
 /// A reader command.
@@ -233,25 +315,19 @@ pub(crate) fn book_sources(
     if !state.available {
         return off(ReadingAbout::Sources, tx);
     }
-    match command {
-        BookSourceCommand::Load => {
-            let _ =
-                tx.send(Event::BookSources(BookSourceEvent::View(book_sources_view(services))));
-        }
-        other => tracing::debug!(command = ?other, "book source command not handled yet"),
-    }
-}
-
-/// The Sources screen's book sources. Plugins only, until folders and servers land, in the
-/// order of their ids.
-fn book_sources_view(services: &Services) -> BookSourcesView {
-    let origins = services.stores.origins();
-    let plugins = services.book_plugins.rows(|id| match origins.get(id) {
+    let stores = services.stores.clone();
+    let name_of = move |id: &str| match stores.origins().get(id) {
         Some((kaeri_model::sources::ProviderOrigin::Store { name, .. }, _)) => name.clone(),
         _ => None,
-    });
-    let order = plugins.iter().map(|row| row.id.clone()).collect();
-    BookSourcesView { plugins, order, ..BookSourcesView::default() }
+    };
+    crate::read_sources::command(
+        &services.book_sources,
+        &services.book_plugins,
+        name_of,
+        command,
+        services.clock.now(),
+        tx,
+    );
 }
 
 fn off(about: ReadingAbout, tx: &Outbox) {

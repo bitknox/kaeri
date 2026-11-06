@@ -84,6 +84,9 @@ pub fn apply_effects(
                     let _ = tx.send(Event::Medium(engine.reading.view()));
                 }
             }
+            kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF => {
+                services.book_sources.apply_effect(&kind, &key, value.as_deref());
+            }
             // Stores are read from the log when asked: see `stores_to_join`.
             _ => {}
         }

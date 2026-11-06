@@ -3238,6 +3238,8 @@ dependencies = [
  "image",
  "jiff",
  "kaeri-audio-tap",
+ "kaeri-books",
+ "kaeri-bookserver",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",

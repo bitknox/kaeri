@@ -53,6 +53,11 @@ impl BookPlugins {
         plugins.sort_by(|a, b| a.manifest().id.cmp(&b.manifest().id));
     }
 
+    /// Take a plugin out, for one that was removed while the app runs.
+    pub fn remove(&self, id: &str) {
+        self.write().retain(|p| p.manifest().id != id);
+    }
+
     /// The plugin with this id.
     pub fn get(&self, id: &str) -> Option<Arc<WasmBookSource>> {
         self.read().iter().find(|p| p.manifest().id == id).cloned()

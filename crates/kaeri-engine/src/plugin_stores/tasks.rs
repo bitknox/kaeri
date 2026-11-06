@@ -31,6 +31,7 @@ pub struct StoreTaskContext {
     store: kaeri_store::Store,
     /// Where an installed book source goes, while reading is available.
     books: Option<crate::book_plugins::BookPlugins>,
+    book_sources: crate::read_sources::BookSources,
     tx: Outbox,
 }
 
@@ -181,6 +182,11 @@ impl StoreTaskContext {
         match self.stores.remove(&plugin).await {
             Ok(()) => {
                 self.registry.remove(&plugin);
+                // A book plugin stops being asked at once, with no restart.
+                if let Some(books) = &self.books {
+                    books.remove(&plugin);
+                }
+                self.book_sources.unload(&plugin);
                 // Titles on screen were listed with it: the engine lists them again.
                 let _ = self.tx.internal(crate::outbox::Internal::SourcesReordered);
                 self.send(Event::Providers(data::provider_rows(&self.registry, &self.stores)));
@@ -430,6 +436,7 @@ pub fn store_task<W, F>(
         host: services.host.clone(),
         store: services.store.clone(),
         books: engine.reading.available.then(|| services.book_plugins.clone()),
+        book_sources: services.book_sources.clone(),
         tx: tx.clone(),
     };
     tokio::spawn(async move {
