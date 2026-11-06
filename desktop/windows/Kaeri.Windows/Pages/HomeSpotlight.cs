@@ -235,11 +235,15 @@ public sealed partial class HomeSpotlight : Grid
             text.Margin = new Thickness(0, side ? 0 : 16, 0, 0);
             if (!side)
                 art.HorizontalAlignment = HorizontalAlignment.Left;
+            // Stacked, as on phones: the main action full width, the others in a row under it.
+            buttons.Full = !side;
+            buttons.HorizontalAlignment = side ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         }
 
         void SizeArt(double width)
         {
-            var w = wide ? Math.Min(HomeWording.ArtMaxWidth, Math.Round(width * HomeWording.ArtShare)) : Math.Min(HomeWording.ArtMaxWidth, width);
+            // Stacked, the art takes the column's whole width, with nothing beside it.
+            var w = wide ? Math.Min(HomeWording.ArtMaxWidth, Math.Round(width * HomeWording.ArtShare)) : Math.Round(width);
             if (w <= 0 || Math.Abs(art.Width - w) < 0.5)
                 return;
             art.Width = w;
@@ -412,7 +416,20 @@ sealed partial class ActionRow : Panel
 {
     public double Spacing { get; set; } = 10;
 
-    bool stacked;
+    /// <summary>The stacked spotlight's layout: the first button the row's whole width, the rest under it.</summary>
+    public bool Full
+    {
+        get => full;
+        set
+        {
+            if (full == value)
+                return;
+            full = value;
+            InvalidateMeasure();
+        }
+    }
+
+    bool stacked, full;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -434,6 +451,12 @@ sealed partial class ActionRow : Panel
             shown++;
         }
         var row = firstWidth + (shown > 1 ? Spacing + restWidth : 0);
+        if (full && !double.IsInfinity(availableSize.Width))
+        {
+            stacked = shown > 1;
+            var width = Math.Max(availableSize.Width, Math.Max(firstWidth, restWidth));
+            return new Size(width, firstHeight + (stacked ? Spacing + restHeight : 0));
+        }
         stacked = shown > 1 && row > availableSize.Width;
         return stacked
             ? new Size(Math.Max(firstWidth, restWidth), firstHeight + Spacing + restHeight)
@@ -452,7 +475,8 @@ sealed partial class ActionRow : Panel
                 continue;
             }
             var size = child.DesiredSize;
-            child.Arrange(new Rect(x, y, size.Width, size.Height));
+            var width = full && index == 0 ? finalSize.Width : size.Width;
+            child.Arrange(new Rect(x, y, width, size.Height));
             if (stacked && index == 0)
             {
                 x = 0;
