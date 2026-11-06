@@ -184,6 +184,9 @@ public sealed partial class PlayerView : UserControl
     /// <summary>True while the player is on screen: from Open, and no longer once it starts fading away.</summary>
     public bool Showing => shown;
 
+    /// <summary>While the player closes from the mini player.</summary>
+    public bool Closing { get; private set; }
+
     bool shown;
 
     /// <summary>What the last close left on screen to clear once its fade is over, or at the next open.</summary>
@@ -297,7 +300,13 @@ public sealed partial class PlayerView : UserControl
         ShowPointer();
         ClosePreview();
         if (mini)
+        {
+            // The window leaves the mini player as the player closes, and so does not go back to
+            // full screen on the way.
+            Closing = true;
             MiniRequested?.Invoke(false);
+            Closing = false;
+        }
         SetMini(false);
         still.Reset();
         click.Stop();

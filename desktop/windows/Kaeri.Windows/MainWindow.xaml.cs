@@ -1356,10 +1356,15 @@ public sealed partial class MainWindow : Window
     }
 
     RectInt32? beforeMini;
+    /// <summary>How the window was before the mini player: maximised, full screen or neither.</summary>
+    bool miniFromMaximised, miniFromFullscreen;
+    /// <summary>Where the mini player was last, so it opens there and at that size again.</summary>
+    RectInt32? lastMini;
 
     /// <summary>
     /// The mini player: the window as a small one that stays on top of the others, the video and
-    /// its few controls in it, and the way back to where the window was.
+    /// its few controls in it, and the way back to the window as it was, maximised and full
+    /// screen included. It opens where and at the size it was last left.
     /// </summary>
     void Mini(bool on)
     {
@@ -1368,19 +1373,36 @@ public sealed partial class MainWindow : Window
             return;
         if (on)
         {
-            if (AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
+            miniFromFullscreen = AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
+            if (miniFromFullscreen)
                 Fullscreen(false);
+            miniFromMaximised = AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized };
+            // A maximised window keeps its restored place: the size it goes back to when it is
+            // made smaller again.
+            if (miniFromMaximised && AppWindow.Presenter is OverlappedPresenter maximised)
+                maximised.Restore();
             beforeMini = new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
             AppWindow.SetPresenter(AppWindowPresenterKind.CompactOverlay);
-            var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
-            AppWindow.Resize(new SizeInt32((int)(480 * scale), (int)(270 * scale)));
+            if (lastMini is { } at)
+                AppWindow.MoveAndResize(at);
+            else
+            {
+                var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
+                AppWindow.Resize(new SizeInt32((int)(480 * scale), (int)(270 * scale)));
+            }
         }
         else
         {
+            lastMini = new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
             AppWindow.SetPresenter(AppWindowPresenterKind.Default);
             if (beforeMini is { } was)
                 AppWindow.MoveAndResize(was);
             beforeMini = null;
+            if (miniFromMaximised && AppWindow.Presenter is OverlappedPresenter overlapped)
+                overlapped.Maximize();
+            else if (miniFromFullscreen && !Player.Closing)
+                Fullscreen(true);
+            miniFromMaximised = miniFromFullscreen = false;
         }
     }
 
