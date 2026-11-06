@@ -1205,6 +1205,31 @@ pub fn reading_ago_years(years: i64) -> String {
     text("reading-ago-years", &[("years", Arg::Int(years))])
 }
 
+/// The tracker took the series off its list.
+pub fn reading_removed_from(tracker: &str) -> String {
+    text("reading-removed-from", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker's list did not hold the series, so there was nothing to remove.
+pub fn reading_removed_not_there(tracker: &str) -> String {
+    text("reading-removed-not-there", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The app never learned which of the tracker's entries this series is, so it asked nothing.
+pub fn reading_removed_unmatched(tracker: &str) -> String {
+    text("reading-removed-unmatched", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker could not take the series off. The reason follows.
+pub fn reading_removed_failed(tracker: &str) -> String {
+    text("reading-removed-failed", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Why a removal failed: the tracker turned the sign-in away.
+pub fn reading_removed_sign_in(tracker: &str) -> String {
+    text("reading-removed-sign-in", &[("tracker", Arg::Text(tracker))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])

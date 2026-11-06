@@ -289,6 +289,30 @@ pub struct TrackerReadRow {
     pub split_note: Option<Msg>,
 }
 
+/// What taking a series off one tracker's list came to.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ListRemoval {
+    pub tracker: String,
+    pub outcome: ListRemovalOutcome,
+    /// In words, as parts the app joins with " · ": "Removed from AniList", "Still on your
+    /// Kitsu list · You're offline. ...".
+    pub line: Vec<Msg>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ListRemovalOutcome {
+    Removed,
+    /// The list did not hold it.
+    NotOnList,
+    /// Which entry it is on that tracker was never learned, so nothing was asked.
+    Unmatched,
+    Failed {
+        failure: ReadingFailure,
+    },
+}
+
 /// How a work is matched on a tracker.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
@@ -1076,6 +1100,11 @@ pub enum ReadingCommand {
         tracker: String,
         keep_local: bool,
     },
+    /// Take the series off every signed-in tracker's list and off the person's lists here.
+    /// Answered with [`ReadingEvent::RemovedFromLists`].
+    RemoveFromLists {
+        work: WorkId,
+    },
     /// The password goes to the sign-in call once and is dropped. Answered with the tracker
     /// sign-in events shows use.
     ConnectMangaUpdates {
@@ -1155,6 +1184,7 @@ impl ReadingCommand {
             Self::LoadTracking { .. }
             | Self::ChooseMapping { .. }
             | Self::ResolveConflict { .. }
+            | Self::RemoveFromLists { .. }
             | Self::ConnectMangaUpdates { .. } => ReadingAbout::Tracking,
             Self::Download { .. }
             | Self::DownloadCancel { .. }
@@ -1216,6 +1246,11 @@ pub enum ReadingEvent {
     Tracking {
         work: WorkId,
         rows: Vec<TrackerReadRow>,
+    },
+    /// One result per signed-in tracker that keeps a reading list.
+    RemovedFromLists {
+        work: WorkId,
+        results: Vec<ListRemoval>,
     },
     Downloads(BookDownloadsView),
     NewChapters(Vec<NewChapter>),

@@ -170795,6 +170795,66 @@
         }
       }
     },
+    "reading-removed-failed" : {
+      "comment" : "The tracker could not take the series off. The reason follows. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still on your %1$@ list"
+          }
+        }
+      }
+    },
+    "reading-removed-from" : {
+      "comment" : "The tracker took the series off its list. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed from %1$@"
+          }
+        }
+      }
+    },
+    "reading-removed-not-there" : {
+      "comment" : "The tracker's list did not hold the series, so there was nothing to remove. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wasn't on your %1$@ list"
+          }
+        }
+      }
+    },
+    "reading-removed-sign-in" : {
+      "comment" : "Why a removal failed: the tracker turned the sign-in away. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to %1$@ again, then try once more."
+          }
+        }
+      }
+    },
+    "reading-removed-unmatched" : {
+      "comment" : "The app never learned which of the tracker's entries this series is, so it asked nothing. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not matched on %1$@, so nothing changed there"
+          }
+        }
+      }
+    },
     "reading-row-downloaded" : {
       "comment" : "A chapter row's state: it is kept on this device to read offline.",
       "extractionState" : "manual",

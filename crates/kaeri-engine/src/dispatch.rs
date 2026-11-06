@@ -500,6 +500,15 @@ pub(crate) fn dispatch(
         }) if engine.reading.available => {
             crate::read_tracking::resolve(services, work, &tracker, keep_local, tx)
         }
+        Command::Reading(kaeri_model::reading::ReadingCommand::RemoveFromLists { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::remove_from_lists(services, work.clone(), tx);
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            crate::read_catalog::series::header(&kit, ask, &work, tx);
+            crate::read_tracking::load(services, work, tx);
+        }
         Command::Reading(kaeri_model::reading::ReadingCommand::ConnectMangaUpdates {
             username,
             password,

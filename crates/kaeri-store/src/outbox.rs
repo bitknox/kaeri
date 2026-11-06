@@ -213,6 +213,14 @@ impl Store {
         })
     }
 
+    /// Drop every reading op still waiting for any tracker about one title: it came off the
+    /// lists, and a queued status or count would put it back. Says how many went.
+    pub fn forget_read_ops(&self, anilist_id: kaeri_core::ids::AnilistId) -> Result<usize> {
+        self.with_personal(|c| {
+            Ok(c.execute("DELETE FROM read_outbox WHERE anilist_id = ?1", [anilist_id.get()])?)
+        })
+    }
+
     /// Reading ops waiting for a tracker, or for all of them.
     pub fn read_outbox_depth(&self, tracker_id: Option<&str>) -> Result<u32> {
         self.with_personal(|c| {
@@ -564,6 +572,28 @@ mod tests {
         let own = TrackOp::SetProgress { anilist_id: AnilistId::own(3), episode: 2 };
         assert_eq!(store.enqueue("anilist", &own, 0).unwrap(), None);
         assert!(store.enqueue("anilist", &progress(1), 0).unwrap().is_some());
+    }
+
+    #[test]
+    fn forgetting_a_title_drops_its_reading_ops_for_every_tracker_and_no_other() {
+        let store = Store::open_in_memory().unwrap();
+        let (gone, kept) = (AnilistId::new(900_401), AnilistId::new(900_402));
+        let read =
+            |id, chapter| TrackOp::SetReadProgress { anilist_id: id, chapter, volume: None };
+        let status = TrackOp::SetReadStatus {
+            anilist_id: gone,
+            status: WatchStatus::Current,
+            rereading: false,
+            at: 1,
+        };
+        for tracker in ["anilist", "mangaupdates"] {
+            store.enqueue(tracker, &read(gone, 4), 1).unwrap();
+            store.enqueue(tracker, &status, 1).unwrap();
+            store.enqueue(tracker, &read(kept, 2), 1).unwrap();
+        }
+        assert_eq!(store.forget_read_ops(gone).unwrap(), 4);
+        assert_eq!(store.read_outbox("anilist").unwrap(), [read(kept, 2)]);
+        assert_eq!(store.read_outbox_depth(None).unwrap(), 2);
     }
 
     #[test]

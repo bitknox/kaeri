@@ -389,6 +389,11 @@ public static class MsgText
         ReadingMsg.ReadingAgoWeeks x => T.ReadingAgoWeeks(x.Weeks),
         ReadingMsg.ReadingAgoMonths x => T.ReadingAgoMonths(x.Months),
         ReadingMsg.ReadingAgoYears x => T.ReadingAgoYears(x.Years),
+        ReadingMsg.ReadingRemovedFrom x => T.ReadingRemovedFrom(x.Tracker),
+        ReadingMsg.ReadingRemovedNotThere x => T.ReadingRemovedNotThere(x.Tracker),
+        ReadingMsg.ReadingRemovedUnmatched x => T.ReadingRemovedUnmatched(x.Tracker),
+        ReadingMsg.ReadingRemovedFailed x => T.ReadingRemovedFailed(x.Tracker),
+        ReadingMsg.ReadingRemovedSignIn x => T.ReadingRemovedSignIn(x.Tracker),
         _ => message.ToString() ?? "",
     };
 

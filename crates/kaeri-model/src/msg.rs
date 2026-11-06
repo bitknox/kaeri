@@ -1355,6 +1355,16 @@ pub enum ReadingMsg {
     ReadingAgoMonths { months: i64 },
     /// A chapter row: when it was read or came out, in years.
     ReadingAgoYears { years: i64 },
+    /// The tracker took the series off its list.
+    ReadingRemovedFrom { tracker: String },
+    /// The tracker's list did not hold the series, so there was nothing to remove.
+    ReadingRemovedNotThere { tracker: String },
+    /// The app never learned which of the tracker's entries this series is, so it asked nothing.
+    ReadingRemovedUnmatched { tracker: String },
+    /// The tracker could not take the series off. The reason follows.
+    ReadingRemovedFailed { tracker: String },
+    /// Why a removal failed: the tracker turned the sign-in away.
+    ReadingRemovedSignIn { tracker: String },
 }
 
 impl ReadingMsg {
@@ -1447,6 +1457,11 @@ impl ReadingMsg {
             Self::ReadingAgoWeeks { .. } => "reading-ago-weeks",
             Self::ReadingAgoMonths { .. } => "reading-ago-months",
             Self::ReadingAgoYears { .. } => "reading-ago-years",
+            Self::ReadingRemovedFrom { .. } => "reading-removed-from",
+            Self::ReadingRemovedNotThere { .. } => "reading-removed-not-there",
+            Self::ReadingRemovedUnmatched { .. } => "reading-removed-unmatched",
+            Self::ReadingRemovedFailed { .. } => "reading-removed-failed",
+            Self::ReadingRemovedSignIn { .. } => "reading-removed-sign-in",
         }
     }
 
@@ -1539,6 +1554,11 @@ impl ReadingMsg {
             Self::ReadingAgoWeeks { weeks } => vec![("weeks", Value::Int(*weeks))],
             Self::ReadingAgoMonths { months } => vec![("months", Value::Int(*months))],
             Self::ReadingAgoYears { years } => vec![("years", Value::Int(*years))],
+            Self::ReadingRemovedFrom { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedNotThere { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedUnmatched { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedFailed { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedSignIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
         }
     }
 }

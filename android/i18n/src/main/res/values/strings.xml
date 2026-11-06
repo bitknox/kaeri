@@ -533,6 +533,16 @@
         <item quantity="one">1 year ago</item>
         <item quantity="other">%1$d years ago</item>
     </plurals>
+    <!-- The tracker took the series off its list. -->
+    <string name="reading_removed_from">Removed from %1$s</string>
+    <!-- The tracker's list did not hold the series, so there was nothing to remove. -->
+    <string name="reading_removed_not_there">Wasn\'t on your %1$s list</string>
+    <!-- The app never learned which of the tracker's entries this series is, so it asked nothing. -->
+    <string name="reading_removed_unmatched">Not matched on %1$s, so nothing changed there</string>
+    <!-- The tracker could not take the series off. The reason follows. -->
+    <string name="reading_removed_failed">Still on your %1$s list</string>
+    <!-- Why a removal failed: the tracker turned the sign-in away. -->
+    <string name="reading_removed_sign_in">Sign in to %1$s again, then try once more.</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->

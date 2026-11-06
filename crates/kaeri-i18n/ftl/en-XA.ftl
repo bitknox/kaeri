@@ -788,6 +788,21 @@ reading-ago-years =
        *[other] [{ $years } ýéàŕš àĝö~~~~]
     }
 
+# The tracker took the series off its list.
+reading-removed-from = [Ŕéɱöṽéð ƒŕöɱ { $tracker }~~~~~]
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = [Ŵàšñ'ţ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = [Ñöţ ɱàţçĥéð öñ { $tracker }, šö ñöţĥîñĝ çĥàñĝéð ţĥéŕé~~~~~~~~~~~~~~]
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = [Šţîļļ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = [Šîĝñ îñ ţö { $tracker } àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 

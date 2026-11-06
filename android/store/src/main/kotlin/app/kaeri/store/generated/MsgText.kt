@@ -392,6 +392,11 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingAgoWeeks -> Strings.readingAgoWeeks(context, this.weeks.toInt())
         is ReadingMsg.ReadingAgoMonths -> Strings.readingAgoMonths(context, this.months.toInt())
         is ReadingMsg.ReadingAgoYears -> Strings.readingAgoYears(context, this.years.toInt())
+        is ReadingMsg.ReadingRemovedFrom -> Strings.readingRemovedFrom(context, this.tracker)
+        is ReadingMsg.ReadingRemovedNotThere -> Strings.readingRemovedNotThere(context, this.tracker)
+        is ReadingMsg.ReadingRemovedUnmatched -> Strings.readingRemovedUnmatched(context, this.tracker)
+        is ReadingMsg.ReadingRemovedFailed -> Strings.readingRemovedFailed(context, this.tracker)
+        is ReadingMsg.ReadingRemovedSignIn -> Strings.readingRemovedSignIn(context, this.tracker)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

@@ -969,6 +969,31 @@ public enum L {
         Self.format("reading-ago-years", fallback: "%1$lld years ago", years)
     }
 
+    /// The tracker took the series off its list.
+    public static func readingRemovedFrom(tracker: String) -> String {
+        Self.format("reading-removed-from", fallback: "Removed from %1$@", tracker)
+    }
+
+    /// The tracker's list did not hold the series, so there was nothing to remove.
+    public static func readingRemovedNotThere(tracker: String) -> String {
+        Self.format("reading-removed-not-there", fallback: "Wasn't on your %1$@ list", tracker)
+    }
+
+    /// The app never learned which of the tracker's entries this series is, so it asked nothing.
+    public static func readingRemovedUnmatched(tracker: String) -> String {
+        Self.format("reading-removed-unmatched", fallback: "Not matched on %1$@, so nothing changed there", tracker)
+    }
+
+    /// The tracker could not take the series off. The reason follows.
+    public static func readingRemovedFailed(tracker: String) -> String {
+        Self.format("reading-removed-failed", fallback: "Still on your %1$@ list", tracker)
+    }
+
+    /// Why a removal failed: the tracker turned the sign-in away.
+    public static func readingRemovedSignIn(tracker: String) -> String {
+        Self.format("reading-removed-sign-in", fallback: "Sign in to %1$@ again, then try once more.", tracker)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)

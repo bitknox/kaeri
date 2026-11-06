@@ -425,3 +425,27 @@ reading-ago-years = { $years ->
     [one] 1 year ago
    *[other] { $years } years ago
  }
+
+## Remove from lists
+## One line per tracker after the person takes a series off their lists. A failed line is
+## followed by its reason as the next part, joined with " · ".
+
+# The tracker took the series off its list.
+# @arg tracker: text
+reading-removed-from = Removed from { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+# @arg tracker: text
+reading-removed-not-there = Wasn't on your { $tracker } list
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+# @arg tracker: text
+reading-removed-unmatched = Not matched on { $tracker }, so nothing changed there
+
+# The tracker could not take the series off. The reason follows.
+# @arg tracker: text
+reading-removed-failed = Still on your { $tracker } list
+
+# Why a removal failed: the tracker turned the sign-in away.
+# @arg tracker: text
+reading-removed-sign-in = Sign in to { $tracker } again, then try once more.

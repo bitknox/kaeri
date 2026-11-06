@@ -391,6 +391,11 @@ extension ReadingMsg {
         case .readingAgoWeeks(let weeks): L.readingAgoWeeks(weeks: Int(weeks))
         case .readingAgoMonths(let months): L.readingAgoMonths(months: Int(months))
         case .readingAgoYears(let years): L.readingAgoYears(years: Int(years))
+        case .readingRemovedFrom(let tracker): L.readingRemovedFrom(tracker: tracker)
+        case .readingRemovedNotThere(let tracker): L.readingRemovedNotThere(tracker: tracker)
+        case .readingRemovedUnmatched(let tracker): L.readingRemovedUnmatched(tracker: tracker)
+        case .readingRemovedFailed(let tracker): L.readingRemovedFailed(tracker: tracker)
+        case .readingRemovedSignIn(let tracker): L.readingRemovedSignIn(tracker: tracker)
         }
     }
 }

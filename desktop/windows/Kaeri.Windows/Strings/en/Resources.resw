@@ -1063,6 +1063,26 @@
     <value>{years} years ago</value>
     <comment>A chapter row: when it was read or came out, in years.</comment>
   </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>Removed from {tracker}</value>
+    <comment>The tracker took the series off its list.</comment>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>Wasn't on your {tracker} list</value>
+    <comment>The tracker's list did not hold the series, so there was nothing to remove.</comment>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>Not matched on {tracker}, so nothing changed there</value>
+    <comment>The app never learned which of the tracker's entries this series is, so it asked nothing.</comment>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>Still on your {tracker} list</value>
+    <comment>The tracker could not take the series off. The reason follows.</comment>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>Sign in to {tracker} again, then try once more.</value>
+    <comment>Why a removal failed: the tracker turned the sign-in away.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

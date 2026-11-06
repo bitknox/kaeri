@@ -969,6 +969,26 @@ object Strings {
     fun readingAgoYears(context: Context, years: Int): String =
         context.resources.getQuantityString(R.plurals.reading_ago_years, years, years)
 
+    /** The tracker took the series off its list. */
+    fun readingRemovedFrom(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_from, tracker)
+
+    /** The tracker's list did not hold the series, so there was nothing to remove. */
+    fun readingRemovedNotThere(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_not_there, tracker)
+
+    /** The app never learned which of the tracker's entries this series is, so it asked nothing. */
+    fun readingRemovedUnmatched(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_unmatched, tracker)
+
+    /** The tracker could not take the series off. The reason follows. */
+    fun readingRemovedFailed(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_failed, tracker)
+
+    /** Why a removal failed: the tracker turned the sign-in away. */
+    fun readingRemovedSignIn(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_sign_in, tracker)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)

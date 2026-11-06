@@ -735,6 +735,21 @@ public static partial class T
     /// <summary>A chapter row: when it was read or came out, in years.</summary>
     public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The tracker took the series off its list.</summary>
+    public static string ReadingRemovedFrom(string tracker) => Fill(Get("ReadingRemovedFrom"), ("tracker", tracker));
+
+    /// <summary>The tracker's list did not hold the series, so there was nothing to remove.</summary>
+    public static string ReadingRemovedNotThere(string tracker) => Fill(Get("ReadingRemovedNotThere"), ("tracker", tracker));
+
+    /// <summary>The app never learned which of the tracker's entries this series is, so it asked nothing.</summary>
+    public static string ReadingRemovedUnmatched(string tracker) => Fill(Get("ReadingRemovedUnmatched"), ("tracker", tracker));
+
+    /// <summary>The tracker could not take the series off. The reason follows.</summary>
+    public static string ReadingRemovedFailed(string tracker) => Fill(Get("ReadingRemovedFailed"), ("tracker", tracker));
+
+    /// <summary>Why a removal failed: the tracker turned the sign-in away.</summary>
+    public static string ReadingRemovedSignIn(string tracker) => Fill(Get("ReadingRemovedSignIn"), ("tracker", tracker));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -10191,6 +10206,11 @@ public static partial class T
         ["ReadingAgoMonths_other"] = "{months} months ago",
         ["ReadingAgoYears_one"] = "1 year ago",
         ["ReadingAgoYears_other"] = "{years} years ago",
+        ["ReadingRemovedFrom"] = "Removed from {tracker}",
+        ["ReadingRemovedNotThere"] = "Wasn't on your {tracker} list",
+        ["ReadingRemovedUnmatched"] = "Not matched on {tracker}, so nothing changed there",
+        ["ReadingRemovedFailed"] = "Still on your {tracker} list",
+        ["ReadingRemovedSignIn"] = "Sign in to {tracker} again, then try once more.",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
