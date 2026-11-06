@@ -72,17 +72,21 @@ static class IdleScenario
         foreach (var (cover, i) in covers.Select((c, i) => (c, i)))
         {
             var r = cover.BoundingRectangle;
-            await Feel.Film(run, $"hover card: rest on cover {i + 1}", () => Task.Delay(1200),
-                async () =>
+            // The clock starts as the pointer comes onto the cover, in steps as a real one does,
+            // so "first" is the time from arriving to the card showing: the dwell and the build.
+            var y = r.Top + r.Height / 3;
+            await Feel.Film(run, $"hover card: rest on cover {i + 1}", async () =>
                 {
-                    // A real pointer arrives in steps: the cover hears it enter, then move, then rest.
-                    var at = new Point(r.Left + r.Width / 2, r.Top + r.Height / 3);
-                    Mouse.MoveTo(new Point(at.X - 30, at.Y));
-                    for (var step = 0; step < 6; step++)
+                    for (var step = 0; step < 8; step++)
                     {
-                        Native.Nudge(5, 0);
+                        Native.Nudge(8, 0);
                         await Task.Delay(16);
                     }
+                },
+                () =>
+                {
+                    Mouse.MoveTo(new Point(r.Left - 24, y));
+                    return Task.CompletedTask;
                 }, 3000);
         }
         var w = run.Window.BoundingRectangle;
