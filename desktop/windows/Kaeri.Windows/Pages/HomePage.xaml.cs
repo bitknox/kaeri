@@ -252,14 +252,13 @@ public sealed partial class HomePage : Page, IPageKeys
     {
         if (element is not HomeShelf shelf)
         {
-            // This week is drawn again in its place, only when what it shows has changed.
+            // This week changes in place, and only when what it shows has changed.
             var key = WeekKey(section);
             if (element.Tag as string == key)
                 return;
-            var at = Shelves.Children.IndexOf(element);
-            var again = Make(section, home);
-            Shelves.Children[at] = again;
-            shown[section.Kind] = again;
+            element.Tag = key;
+            if (element is HomeWeek week)
+                week.Update(section);
             return;
         }
         var now = section.Items.Select(i => i.Entry.Id).ToHashSet();
@@ -612,7 +611,7 @@ public sealed partial class HomePage : Page, IPageKeys
         return menu;
     }
 
-    void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
+    internal void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
     {
         menu.Items.Clear();
         var item = card.Item;
