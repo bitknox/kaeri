@@ -681,9 +681,13 @@ object Strings {
     fun readerBackToPage(context: Context, page: Int): String =
         context.getString(R.string.reader_back_to_page, page)
 
-    /** A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet. */
+    /** A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message. */
     fun readerMoved(context: Context, chapter: String, page: Int, device: String): String =
         context.getString(R.string.reader_moved, chapter, page, device)
+
+    /** The same notice for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumber(context: Context, chapter: String, page: Int, device: String): String =
+        context.getString(R.string.reader_moved_number, chapter, page, device)
 
     /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
     fun readerDetectedRightToLeft(context: Context): String =

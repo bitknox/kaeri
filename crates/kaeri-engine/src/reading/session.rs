@@ -1045,9 +1045,24 @@ impl Session {
         self.moved_back = Some(back.clone());
         self.go_to(cx, pages, to.clone());
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device: name.clone(), back });
-        let msg =
-            ReadingMsg::ReaderMoved { chapter: label, page: i64::from(page) + 1, device: name };
+        let msg = moved_msg(&label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
+    }
+}
+
+/// The Moved notice for a chapter's label. A label that is only a number, with or without a
+/// chapter word (`14`, `14.5`, `Chapter 14`), reads "chapter 14"; any other label is shown whole.
+fn moved_msg(label: &str, page: i64, device: String) -> ReadingMsg {
+    let lower = label.trim().to_lowercase();
+    let rest = ["chapter", "chap.", "chap", "ch.", "ch"]
+        .iter()
+        .find_map(|w| lower.strip_prefix(w))
+        .map_or(lower.as_str(), |r| r.trim_start_matches([' ', '.', ':', '#']));
+    match kaeri_core::books::ChapterNumber::parse(rest) {
+        Some(number) => {
+            ReadingMsg::ReaderMovedNumber { chapter: number.to_string(), page, device }
+        }
+        None => ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device },
     }
 }
 
@@ -1073,6 +1088,28 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn moved_notice_names_the_chapter_once() {
+        let moved = |label: &str| moved_msg(label, 6, "Desk".into());
+        let number = |n: &str| ReadingMsg::ReaderMovedNumber {
+            chapter: n.into(),
+            page: 6,
+            device: "Desk".into(),
+        };
+        assert_eq!(moved("Chapter 14"), number("14"));
+        assert_eq!(moved("14.5"), number("14.5"));
+        assert_eq!(moved("Ch. 3"), number("3"));
+        assert_eq!(
+            moved("The Long Night"),
+            ReadingMsg::ReaderMoved {
+                chapter: "The Long Night".into(),
+                page: 6,
+                device: "Desk".into()
+            }
+        );
+        assert!(matches!(moved("Chapter 14: The Night"), ReadingMsg::ReaderMoved { .. }));
+    }
+
     use std::{io::Write as _, path::Path, sync::Arc};
 
     use kaeri_core::config::{Config, Paths};
@@ -1565,8 +1602,8 @@ mod tests {
         assert_eq!(moved, Some(("2".into(), Some(2), "Desk".into(), Some(1))));
         assert_eq!(
             notices(&said),
-            [ReadingMsg::ReaderMoved {
-                chapter: "Chapter 2".into(),
+            [ReadingMsg::ReaderMovedNumber {
+                chapter: "2".into(),
                 page: 3,
                 device: "Desk".into()
             }]

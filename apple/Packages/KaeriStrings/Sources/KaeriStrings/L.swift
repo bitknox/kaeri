@@ -689,9 +689,14 @@ public enum L {
         Self.format("reader-back-to-page", fallback: "Back to page %1$lld", page)
     }
 
-    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
     public static func readerMoved(chapter: String, page: Int, device: String) -> String {
-        Self.format("reader-moved", fallback: "Moved to chapter %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
+        Self.format("reader-moved", fallback: "Moved to %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
+    }
+
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumber(chapter: String, page: Int, device: String) -> String {
+        Self.format("reader-moved-number", fallback: "Moved to chapter %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
     }
 
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
