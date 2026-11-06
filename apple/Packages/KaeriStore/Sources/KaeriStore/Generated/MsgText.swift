@@ -320,6 +320,7 @@ extension ReadingMsg {
         case .readerResumed(let page): L.readerResumed(page: Int(page))
         case .readerBackToPage(let page): L.readerBackToPage(page: Int(page))
         case .readerMoved(let chapter, let page, let device): L.readerMoved(chapter: chapter, page: Int(page), device: device)
+        case .readerMovedNumber(let chapter, let page, let device): L.readerMovedNumber(chapter: chapter, page: Int(page), device: device)
         case .readerDetectedRightToLeft: L.readerDetectedRightToLeft
         case .readerDetectedLeftToRight: L.readerDetectedLeftToRight
         case .readerDetectedStrip: L.readerDetectedStrip

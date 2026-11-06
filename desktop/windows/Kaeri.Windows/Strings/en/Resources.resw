@@ -744,8 +744,12 @@
     <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
   </data>
   <data name="ReaderMoved" xml:space="preserve">
+    <value>Moved to {chapter}, page {page}, where {device} stopped</value>
+    <comment>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.</comment>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
     <value>Moved to chapter {chapter}, page {page}, where {device} stopped</value>
-    <comment>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.</comment>
+    <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
     <value>Right to left, detected</value>

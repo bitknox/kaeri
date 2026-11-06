@@ -519,8 +519,11 @@ public static partial class T
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.</summary>
+    /// <summary>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.</summary>
     public static string ReaderMoved(string chapter, long page, string device) => Fill(Get("ReaderMoved"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumber(string chapter, long page, string device) => Fill(Get("ReaderMovedNumber"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
 
     /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
     public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
@@ -8977,7 +8980,8 @@ public static partial class T
         ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
         ["ReaderResumed"] = "Resumed at page {page}",
         ["ReaderBackToPage"] = "Back to page {page}",
-        ["ReaderMoved"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
+        ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
+        ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
         ["ReaderDetectedRightToLeft"] = "Right to left, detected",
         ["ReaderDetectedLeftToRight"] = "Left to right, detected",
         ["ReaderDetectedStrip"] = "Long strip, detected",
