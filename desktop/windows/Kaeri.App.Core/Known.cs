@@ -278,6 +278,15 @@ public sealed class Known
 
     public string? PartyLookFailure { get; private set; }
 
+    /// <summary>
+    /// A room opened from an invite, a code or Rejoin, looked into and not joined yet: the lobby
+    /// shows what it watches and who is there, with Join. Null once joined or let go.
+    /// </summary>
+    public (string Server, string Room)? PartyLooking { get; set; }
+
+    /// <summary>The room finished its last episode out (and when the next airs): Ready would replay it. Gone when the room moves on.</summary>
+    public Event.PartyLastOut? PartyLastOut { get; private set; }
+
     /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
     public PartyConversation? PartyChat { get; private set; }
 
@@ -564,9 +573,19 @@ public sealed class Known
                     PartyChatState = null;
                 }
                 Party = j.V1;
+                if (PartyLooking is { } looked && looked.Server == j.V1.Server && looked.Room == j.V1.Room)
+                    PartyLooking = null;
                 break;
             case Event.PartyState p:
+                if (Party?.RoomEpisode is { } before && p.V1.RoomEpisode is { } after && (before.Episode != after.Episode || before.Id != after.Id))
+                    PartyLastOut = null;
                 Party = p.V1;
+                break;
+            case Event.PartyLastOut last:
+                PartyLastOut = last;
+                break;
+            case Event.PartyStarted:
+                PartyLastOut = null;
                 break;
             case Event.PartyMembers m:
                 PartyMembers = m.V1;
@@ -585,6 +604,7 @@ public sealed class Known
                 break;
             case Event.PartyLeft:
                 Party = null;
+                PartyLastOut = null;
                 PartyMembers = null;
                 PartyChat = null;
                 PartyChatState = null;
