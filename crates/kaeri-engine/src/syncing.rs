@@ -71,6 +71,15 @@ const SIGN_IN: &str = "signin:";
 const RECOVERY_MADE: &str = "engine.recovery_made";
 /// `1` while the folder says the group holds back from this device (its Sync switch is off).
 const HELD: &str = "engine.held";
+/// `1` once a pass or another device said the group removed this device: setting sync up or
+/// joining again then starts over under a new id.
+const REMOVED: &str = "engine.removed";
+/// `1` while a rotation the person asked for (removing a device, a new recovery key) waits for
+/// a pass that reaches the folder; that pass shows the new recovery key.
+const ROTATE: &str = "engine.rotate";
+/// A recovery key this device showed this recently, then replaced by another device's rotation,
+/// is shown again with its replacement, as when two removals ran at once.
+const SHOWN_LATELY: i64 = 3_600;
 /// What kind of device this is, as the app said: [`SyncDeviceKind::word`].
 const KIND: &str = "engine.kind";
 /// This device's remote key as the app said: `tv:<hex>` or `phone:<hex>`.
@@ -177,11 +186,6 @@ fn problem(e: &SyncError) -> SyncProblem {
     problem_in(None, e)
 }
 
-/// `e` as a problem in the folder this device syncs with.
-fn problem_at(services: &Ctx, e: &SyncError) -> SyncProblem {
-    problem_in(saved_folder(services).map(|f| f.kind).as_ref(), e)
-}
-
 /// `e` as a problem, in the cloud drive `kind` names when it is one: a refused sign-in is fixed
 /// by signing in again.
 fn problem_in(kind: Option<&SyncFolderKind>, e: &SyncError) -> SyncProblem {
@@ -197,7 +201,16 @@ fn problem_in(kind: Option<&SyncFolderKind>, e: &SyncError) -> SyncProblem {
         SyncError::NoGroup => SyncProblem::NoGroup,
         SyncError::GroupExists => SyncProblem::GroupExists,
         SyncError::Folder(_) | SyncError::Network(_) => SyncProblem::Unreachable,
-        other => SyncProblem::Other(other.to_string()),
+        other => SyncProblem::Other(error_text(other)),
+    }
+}
+
+/// An error in words for the status's error line, in the person's language where it is one
+/// they act on.
+fn error_text(e: &SyncError) -> String {
+    match e {
+        SyncError::Removed => kaeri_i18n::t::sync_device_removed(),
+        other => other.to_string(),
     }
 }
 
@@ -558,6 +571,9 @@ async fn start_in(
             return fail(services, tx, p);
         }
     };
+    if let Err(p) = start_over_if_removed(services, Some(&*target)).await {
+        return fail(services, tx, p);
+    }
     let enabled = services.store.sync_device().ok().flatten().is_some();
     let id = device_id(services);
     match settle(services, tx, target, &folder, &id).await {
@@ -597,6 +613,61 @@ fn leave_nothing(services: &Ctx, folder: &SyncFolderSpec, problem: Option<&SyncP
 /// carries on; else a new one.
 fn device_id(services: &Ctx) -> String {
     services.store.sync_device_kept().ok().flatten().unwrap_or_else(keys::new_device_id)
+}
+
+/// Whether the group removed this device, as a pass or another device said, or as the log has
+/// it.
+fn removed_here(services: &Ctx) -> bool {
+    if services.store.sync_meta_get(REMOVED).ok().flatten().as_deref() == Some("1") {
+        return true;
+    }
+    let Some(id) = services.store.sync_device_kept().ok().flatten() else { return false };
+    services
+        .store
+        .sync_peers()
+        .unwrap_or_default()
+        .iter()
+        .any(|(d, _, _, gone)| *gone && *d == id)
+}
+
+/// A device the group removed starts over before it sets sync up or joins again: a new id, new
+/// keys and no group, with everything it holds kept, so it joins as a new device rather than
+/// under the id the group removed for good. `folder`, when given, is asked too, for a device
+/// removed while it was away.
+async fn start_over_if_removed(
+    services: &Ctx,
+    folder: Option<&dyn FolderTarget>,
+) -> Result<(), SyncProblem> {
+    let mut removed = removed_here(services);
+    if !removed
+        && let (Some(folder), Some(id)) =
+            (folder, services.store.sync_device_kept().ok().flatten())
+    {
+        removed = FolderRoad::is_removed(folder, "", &id).await.unwrap_or(false);
+    }
+    if removed { start_over(services) } else { Ok(()) }
+}
+
+fn start_over(services: &Ctx) -> Result<(), SyncProblem> {
+    services.syncing.set_road(None);
+    stop_inviting(services);
+    services
+        .store
+        .sync_new_device(&keys::new_device_id())
+        .map_err(|e| SyncProblem::Other(e.to_string()))?;
+    // The old id's keys go with it: its X25519 key, its key for nearby sessions, the group's.
+    for id in [KEYRING, RECOVERY, SEED, LAN_KEY] {
+        let _ = services.sync.tokens.clear(id);
+    }
+    for key in [FOLDER, LAST, ERROR, PROBLEM, HELD, REMOVED, ROTATE] {
+        let _ = services.store.sync_meta_set(key, "");
+    }
+    let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+    let _ = services.store.sync_meta_clear(ROAD_META);
+    tracing::info!(
+        "this device was removed from its sync group and starts over under a new id"
+    );
+    Ok(())
 }
 
 /// The road to a folder this device is about to sync through. A folder holding the group with
@@ -690,6 +761,9 @@ async fn join_in(
         Err(Ended::Cancelled) => return say_status(services, tx),
         Err(Ended::Problem(p)) => return fail(services, tx, p),
     };
+    if let Err(p) = start_over_if_removed(services, Some(&*target)).await {
+        return fail(services, tx, p);
+    }
     let enabled = services.store.sync_device().ok().flatten().is_some();
     let id = device_id(services);
     let key = device_key(services);
@@ -873,10 +947,14 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
         return;
     }
     say_status(services, tx);
+    let asked = services.store.sync_meta_get(ROTATE).ok().flatten().as_deref() == Some("1");
     let outcome = match road_of(services).await {
-        Ok(road) => road.sync().await.map(|report| (road, report)).map_err(|e| {
+        Ok(road) => road.sync_rotating(asked).await.map(|report| (road, report)).map_err(|e| {
+            if matches!(e, SyncError::Removed) {
+                let _ = services.store.sync_meta_set(REMOVED, "1");
+            }
             let kind = saved_folder(services).map(|f| f.kind);
-            (problem_in(kind.as_ref(), &e), e.to_string())
+            (problem_in(kind.as_ref(), &e), error_text(&e))
         }),
         Err(p) => Err((p.clone(), describe(&p))),
     };
@@ -889,6 +967,7 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
         }
         Ok((road, report)) => {
             keep_ring(services, &road.keyring());
+            take_recovery(services, tx, &report, asked);
             let _ = services.store.sync_meta_set(HELD, "");
             let _ = services.store.sync_meta_set(LAST, &kaeri_store::now().to_string());
             let _ = services.store.sync_meta_set(ERROR, "");
@@ -910,6 +989,40 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
         }
     }
     say_status(services, tx);
+}
+
+/// Keep the recovery key a pass made, or found opening the folder, when it is not the one held:
+/// a rotation here or on another device replaced it. It is shown when this device rotated, as
+/// the person asked or because the key had reached a removed device, since the key they saved
+/// stops working; and when the key it replaces was made or shown here lately, as when two
+/// removals ran at once and the other one's key is the group's.
+fn take_recovery(services: &Ctx, tx: &Outbox, report: &FolderReport, asked: bool) {
+    if asked && report.rotated.is_some() {
+        let _ = services.store.sync_meta_set(ROTATE, "");
+    }
+    let Some(new) = report.recovery.clone().or_else(|| report.rotated.clone()) else { return };
+    if recovery_key(services).as_ref() == Some(&new) {
+        return;
+    }
+    let now = kaeri_store::now();
+    let lately = services
+        .store
+        .sync_meta_get(RECOVERY_MADE)
+        .ok()
+        .flatten()
+        .and_then(|v| v.parse::<i64>().ok())
+        .is_some_and(|at| now - at < SHOWN_LATELY);
+    let _ = services.sync.tokens.set(RECOVERY, &new.to_text());
+    let show = report.rotated.is_some() || lately;
+    if show {
+        let _ = services.store.sync_meta_set(RECOVERY_MADE, &now.to_string());
+    } else {
+        // Made on another device: when is not known.
+        let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+    }
+    if show {
+        let _ = tx.send(Event::SyncRecoveryKey(new.to_text()));
+    }
 }
 
 fn carry_out(services: &Ctx, tx: &Outbox, report: FolderReport) {
@@ -941,7 +1054,8 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     }
     // The cloud drives' sign-ins go with the group.
     cloud::forget_all(services);
-    for key in [FOLDER, NAME, LAST, ERROR, PROBLEM, HELD] {
+    // `REMOVED` stays: a removed device that leaves still starts over when it joins again.
+    for key in [FOLDER, NAME, LAST, ERROR, PROBLEM, HELD, ROTATE] {
         let _ = services.store.sync_meta_set(key, "");
     }
     let _ = services.store.sync_meta_remove(RECOVERY_MADE);
@@ -1001,24 +1115,19 @@ pub fn sign_out(services: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
     say_status(services, tx);
 }
 
-/// Remove another device and rotate the group key so it reads nothing written from now on.
-///
-/// A recovery key that another device has replaced since no longer opens the folder, and this
-/// device forgets it: the removal stands, as on a device that never held the key, and the
-/// device that holds the new key is the one that can rotate.
+/// Remove another device. The removal goes in the log, and the pass that follows rotates: a new
+/// group key and a new recovery key, so the removed device reads nothing written from then on,
+/// even with the recovery key it knew. The new recovery key is shown when the pass makes it, at
+/// once or, with the folder out of reach, on the first pass that reaches it. No old recovery key
+/// is needed, so any device in the group can remove one.
 pub async fn remove_device(services: &Ctx, tx: &Outbox, device: &str) {
     if let Err(e) = services.store.sync_device_remove(device) {
         return fail(services, tx, SyncProblem::Other(e.to_string()));
     }
-    if let (Ok(road), Some(recovery)) = (road_of(services).await, recovery_key(services)) {
-        match road.rotate_group_key(&recovery).await {
-            Ok(ring) => keep_ring(services, &ring),
-            Err(SyncError::WrongRecoveryKey) => {
-                let _ = services.sync.tokens.clear(RECOVERY);
-                let _ = services.store.sync_meta_remove(RECOVERY_MADE);
-            }
-            Err(e) => return fail(services, tx, problem_at(services, &e)),
-        }
+    // Nearby too: no session with it from here.
+    let _ = lan::forget(&services.store, device);
+    if saved_folder(services).is_some() {
+        let _ = services.store.sync_meta_set(ROTATE, "1");
     }
     pass(services, tx).await;
 }
@@ -1027,21 +1136,14 @@ fn recovery_key(services: &Ctx) -> Option<RecoveryKey> {
     services.sync.tokens.get(RECOVERY).ok().and_then(|t| RecoveryKey::parse(&t).ok())
 }
 
-/// Make a new recovery key; the old one stops working at once.
+/// Make a new recovery key, rotating the group key with it: the old one stops working at once,
+/// and the other devices learn the new one on their next pass. The pass that makes it shows it.
 pub async fn new_recovery_key(services: &Ctx, tx: &Outbox) {
-    let road = match road_of(services).await {
-        Ok(road) => road,
-        Err(p) => return fail(services, tx, p),
-    };
-    match road.new_recovery_key().await {
-        Ok(recovery) => {
-            let _ = services.sync.tokens.set(RECOVERY, &recovery.to_text());
-            let _ =
-                services.store.sync_meta_set(RECOVERY_MADE, &kaeri_store::now().to_string());
-            let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
-        }
-        Err(e) => fail(services, tx, problem_at(services, &e)),
+    if let Err(p) = road_of(services).await {
+        return fail(services, tx, p);
     }
+    let _ = services.store.sync_meta_set(ROTATE, "1");
+    pass(services, tx).await;
 }
 
 /// Say the recovery key again, for the sheet behind the device's lock.
@@ -1201,6 +1303,9 @@ fn lan_me(services: &Ctx) -> Option<Me> {
 /// Turn sync on for a device that pairs before it has any folder: a group of its own, which the
 /// other device's history then joins.
 fn enable_for_pairing(services: &Ctx, device_name: &str) -> Result<(), SyncProblem> {
+    if removed_here(services) {
+        start_over(services)?;
+    }
     if services.store.sync_device().ok().flatten().is_some() {
         return Ok(());
     }
@@ -1345,15 +1450,38 @@ fn pair_failed(
     fail(services, tx, words);
 }
 
+/// The other device says the group removed this one: it starts over under a new id, and the
+/// caller tries once more as that new device.
+fn removed_by_peer(services: &Ctx, device_name: &str) -> Result<(), SyncProblem> {
+    let _ = services.store.sync_meta_set(REMOVED, "1");
+    enable_for_pairing(services, device_name)
+}
+
 /// Pair with the device showing `code` at `address`, then swap histories.
 pub async fn pair(services: &Ctx, tx: &Outbox, device_name: String, address: &str, code: &str) {
     if let Err(p) = enable_for_pairing(services, &device_name) {
         return fail(services, tx, p);
     }
-    let (Some(me), Ok(addr)) = (lan_me(services), address_of(address)) else {
-        return fail(services, tx, SyncProblem::Other("could not reach that device".into()));
+    let mut again = true;
+    let dialed = loop {
+        let (Some(me), Ok(addr)) = (lan_me(services), address_of(address)) else {
+            return fail(
+                services,
+                tx,
+                SyncProblem::Other("could not reach that device".into()),
+            );
+        };
+        match lan::dial(&me, &services.store, addr, Some(code), None).await {
+            Err(SyncError::Removed) if again => {
+                again = false;
+                if let Err(p) = removed_by_peer(services, &device_name) {
+                    return fail(services, tx, p);
+                }
+            }
+            other => break other,
+        }
     };
-    match lan::dial(&me, &services.store, addr, Some(code), None).await {
+    match dialed {
         Ok(report) => {
             carry_out_peer(services, tx, &report).await;
             say_status(services, tx);
@@ -1376,26 +1504,37 @@ pub async fn pair_with_code(services: &Ctx, tx: &Outbox, device_name: String, co
     if let Err(p) = enable_for_pairing(services, &device_name) {
         return fail(services, tx, p);
     }
-    let Some(me) = lan_me(services) else {
-        return fail(services, tx, SyncProblem::Other("no key for this device".into()));
-    };
     let mut wrong: Vec<String> = Vec::new();
-    for peer in showing_codes(services, &me).await {
-        for addr in &peer.addresses {
-            match lan::dial(&me, &services.store, *addr, Some(code), None).await {
-                Ok(report) => {
-                    carry_out_peer(services, tx, &report).await;
-                    return say_status(services, tx);
+    let mut again = true;
+    'over: loop {
+        let Some(me) = lan_me(services) else {
+            return fail(services, tx, SyncProblem::Other("no key for this device".into()));
+        };
+        for peer in showing_codes(services, &me).await {
+            for addr in &peer.addresses {
+                match lan::dial(&me, &services.store, *addr, Some(code), None).await {
+                    Ok(report) => {
+                        carry_out_peer(services, tx, &report).await;
+                        return say_status(services, tx);
+                    }
+                    Err(SyncError::WrongCode) => {
+                        wrong.push(peer.instance.clone());
+                        break;
+                    }
+                    Err(SyncError::NoCode) => break,
+                    Err(SyncError::Removed) if again => {
+                        again = false;
+                        if let Err(p) = removed_by_peer(services, &device_name) {
+                            return fail(services, tx, p);
+                        }
+                        continue 'over;
+                    }
+                    // Another of its addresses may answer.
+                    Err(_) => {}
                 }
-                Err(SyncError::WrongCode) => {
-                    wrong.push(peer.instance.clone());
-                    break;
-                }
-                Err(SyncError::NoCode) => break,
-                // Another of its addresses may answer.
-                Err(_) => {}
             }
         }
+        break;
     }
     if wrong.is_empty() {
         let words = SyncProblem::Unreachable;
@@ -1641,6 +1780,10 @@ pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str)
             true
         }
         Err(e) => {
+            if matches!(e, SyncError::Removed) {
+                let _ = services.store.sync_meta_set(REMOVED, "1");
+                let _ = services.store.sync_meta_set(ERROR, &error_text(&e));
+            }
             fail(services, tx, problem(&e));
             false
         }
