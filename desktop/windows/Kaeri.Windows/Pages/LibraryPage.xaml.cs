@@ -92,7 +92,9 @@ public sealed partial class LibraryPage : Page
         else if (shown is ContentList.Entries or ContentList.Empty)
             State.Empty(States.Unavailable(T.LibraryListEmpty(Segments.First(x => x.Segment == segment).Name.ToLower(System.Globalization.CultureInfo.CurrentCulture)), T.LibraryListEmptyDetail));
         else
-            State.WaitKeeping(showing: false);
+            // The lists come from this device's store, usually within a frame or two: the
+            // usual 600 ms of silence, so a quick answer is one change, not plates then covers.
+            State.Wait();
     }
 
     void OnListChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs e)
