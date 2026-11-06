@@ -55,6 +55,8 @@ fn stand_in(id: &str, version: &str) -> Vec<u8> {
         version: version.into(),
         allowed_hosts: vec!["api.example".into()],
         translations: vec!["sub".into()],
+        kind: None,
+        media: Vec::new(),
     };
     manifest::stamp(&wasm, &info).unwrap()
 }

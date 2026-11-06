@@ -1198,6 +1198,8 @@ mod tests {
             sha256: String::new(),
             size: 0,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 
