@@ -142,6 +142,9 @@ dependencies {
     implementation(project(":ui"))
     implementation(project(":player-ui"))
     implementation(project(":widgets"))
+    // Reading's surface and the e-ink pieces: the screen's facts go to the engine from the start.
+    implementation(project(":reader"))
+    implementation(project(":eink"))
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.process)

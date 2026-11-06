@@ -99,10 +99,19 @@ internal object Flavour {
     /** The application, for what the casting scenes' made-up TVs say. */
     private var appContext: Context? = null
 
+    /**
+     * What the e-ink detection is told of a wide colour gamut in place of the display's answer.
+     * An emulator has none, so the colour question's scene says it has one, as an unknown colour
+     * panel would.
+     */
+    var wideColourGamut: Boolean? = null
+        private set
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
         appContext = context.applicationContext
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
+        wideColourGamut = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) true else null
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
