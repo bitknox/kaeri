@@ -428,6 +428,7 @@ fn facts(book: &Book) -> Facts {
                 info: None,
             }
         }
+        #[cfg(feature = "pdf")]
         Book::Pdf(pdf) => Facts {
             format: Format::Pdf,
             pages: u32::try_from(pdf.page_count()).ok(),
