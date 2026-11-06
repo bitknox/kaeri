@@ -11638,6 +11638,11 @@ pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
     text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
 }
 
+/// Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+pub fn player_start_pin_missed(name: &str, episode: &str) -> String {
+    text("player-start-pin-missed", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
 /// Detail line when a source failed and the next is asked.
 pub fn player_start_miss_failed(name: &str) -> String {
     text("player-start-miss-failed", &[("name", Arg::Text(name))])

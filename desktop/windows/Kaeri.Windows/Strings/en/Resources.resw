@@ -6111,6 +6111,10 @@
     <value>{name} doesn't have episode {episode}</value>
     <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} doesn't have episode {episode} yet. Playing from the next source.</value>
+    <comment>Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.</comment>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} didn't answer</value>
     <comment>Detail line when a source failed and the next is asked.</comment>

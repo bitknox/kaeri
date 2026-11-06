@@ -4520,6 +4520,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} não tem o episódio {episode}</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} ainda não tem o episódio {episode}. Reproduzindo da próxima fonte.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} não respondeu</value>
   </data>

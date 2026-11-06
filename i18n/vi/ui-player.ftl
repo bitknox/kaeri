@@ -14,6 +14,7 @@ player-start-place = { -source } { $place } trên { $total }
 player-start-pinned = Lựa chọn của bạn cho phim này
 player-start-miss-no-match = { $name } không có phim này
 player-start-miss-no-episode = { $name } không có tập { $episode }
+player-start-pin-missed = { $name } chưa có tập { $episode }. Đang phát từ { -source } khác.
 player-start-miss-failed = { $name } không phản hồi
 player-start-miss-timed-out = { $name } mất quá nhiều thời gian
 player-start-miss-skipped = Bạn đã bỏ qua { $name }

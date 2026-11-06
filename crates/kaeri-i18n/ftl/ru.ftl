@@ -7198,6 +7198,9 @@ player-start-miss-no-match = У { $name } нет этого шоу
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = У { $name } нет серии { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = У { $name } пока нет серии { $episode }. Воспроизведение из следующего источник.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } не ответил
 

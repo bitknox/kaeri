@@ -7128,6 +7128,9 @@ player-start-miss-no-match = { $name } no tiene esta serie
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } no tiene el episodio { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } aún no tiene el episodio { $episode }. Se reproduce desde otra fuente.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } no respondió
 

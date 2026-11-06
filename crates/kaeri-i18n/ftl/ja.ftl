@@ -6988,6 +6988,9 @@ player-start-miss-no-match = { $name }にはこの作品がありません
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name }にはエピソード { $episode } がありません
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name }にはまだエピソード { $episode } がありません。次のソースから再生します。
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name }から応答がありませんでした
 

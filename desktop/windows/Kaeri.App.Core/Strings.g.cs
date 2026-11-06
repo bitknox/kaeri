@@ -4425,6 +4425,9 @@ public static partial class T
     /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
     public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
 
+    /// <summary>Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.</summary>
+    public static string PlayerStartPinMissed(string name, string episode) => Fill(Get("PlayerStartPinMissed"), ("name", name), ("episode", episode));
+
     /// <summary>Detail line when a source failed and the next is asked.</summary>
     public static string PlayerStartMissFailed(string name) => Fill(Get("PlayerStartMissFailed"), ("name", name));
 
@@ -10412,6 +10415,7 @@ public static partial class T
         ["PlayerStartPinned"] = "Your pick for this show",
         ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
         ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
+        ["PlayerStartPinMissed"] = "{name} doesn't have episode {episode} yet. Playing from the next source.",
         ["PlayerStartMissFailed"] = "{name} didn't answer",
         ["PlayerStartMissTimedOut"] = "{name} took too long",
         ["PlayerStartMissSkipped"] = "You skipped {name}",

@@ -1736,6 +1736,7 @@
     <string name="player_start_pinned">Ditt val för den här serien</string>
     <string name="player_start_miss_no_match">%1$s har inte den här serien</string>
     <string name="player_start_miss_no_episode">%1$s har inte avsnitt %2$s</string>
+    <string name="player_start_pin_missed">%1$s har inte avsnitt %2$s än. Spelar från en annan källa.</string>
     <string name="player_start_miss_failed">%1$s svarade inte</string>
     <string name="player_start_miss_timed_out">%1$s tog för lång tid</string>
     <string name="player_start_miss_skipped">Du hoppade över %1$s</string>

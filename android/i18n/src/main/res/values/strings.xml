@@ -3445,6 +3445,8 @@
     <string name="player_start_miss_no_match">%1$s doesn\'t have this show</string>
     <!-- Detail line when a source has the show and not the episode. The episode is its label. -->
     <string name="player_start_miss_no_episode">%1$s doesn\'t have episode %2$s</string>
+    <!-- Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it. -->
+    <string name="player_start_pin_missed">%1$s doesn\'t have episode %2$s yet. Playing from the next source.</string>
     <!-- Detail line when a source failed and the next is asked. -->
     <string name="player_start_miss_failed">%1$s didn\'t answer</string>
     <!-- Detail line when a source took too long and the next is asked. -->

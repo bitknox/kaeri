@@ -4244,6 +4244,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} không có tập {episode}</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} chưa có tập {episode}. Đang phát từ nguồn khác.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} không phản hồi</value>
   </data>
