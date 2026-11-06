@@ -34,7 +34,7 @@ static class Feel
     /// Films <paramref name="act"/>: the pointer is moved by <paramref name="aim"/> first and left to
     /// settle, so a hover is not counted, then the moment <paramref name="act"/> starts is time zero.
     /// </summary>
-    public static async Task Film(Run run, string label, Func<Task> act, Func<Task>? aim = null, int longestMs = 4000, string? note = null)
+    public static async Task Film(Run run, string label, Func<Task> act, Func<Task>? aim = null, int longestMs = 4000, string? note = null, bool wheel = false)
     {
         dir = Path.Combine(run.Options.Out, run.Name);
         Directory.CreateDirectory(dir);
@@ -101,10 +101,48 @@ static class Feel
         if (bursts.Count > 0)
             Keep(bursts[^1][^1].Full, "settled");
         var later = bursts.Skip(1).Sum(b => b.Max(f => f.Change));
+        // A scroll that moves in steps changes few frames, each by a lot; a smooth one changes
+        // many frames a little at a time.
+        var moved = timeline.Where(f => f.Change >= Changed).ToList();
+        if (wheel && moved.Count > 0)
+            note = string.Create(CultureInfo.InvariantCulture,
+                $"{moved.Count} frames moved, largest step {moved.Max(f => f.Change):P0}, median step {moved.Select(f => f.Change).Order().ElementAt(moved.Count / 2):P0}, frames {string.Join(" ", moved.Select(f => $"{f.Ms:0}:{f.Change:P0}"))}");
         filmed.Add(new(label, bursts.FirstOrDefault()?[0].Ms, lastChange < 0 ? 0 : lastChange, bursts.Count, later, timeline.Count, [.. shots], note));
         foreach (var frame in timeline)
             frame.Full?.Dispose();
         Console.WriteLine($"   {label}: first {(bursts.Count > 0 ? $"{bursts[0][0].Ms:0} ms" : "none")}, settled {lastChange:0} ms, {bursts.Count} burst(s), {timeline.Count} frames");
+    }
+
+    /// <summary>
+    /// A way out and back, such as a title opened and Back: the window before <paramref name="trip"/>
+    /// and after it, compared. A place kept differs by little more than the pointer's hover.
+    /// </summary>
+    public static async Task Kept(Run run, string label, Func<Task> trip)
+    {
+        dir = Path.Combine(run.Options.Out, run.Name);
+        Directory.CreateDirectory(dir);
+        var aside = new Point(run.Window.BoundingRectangle.Left + 8, run.Window.BoundingRectangle.Bottom - 8);
+        Mouse.MoveTo(aside);
+        await Task.Delay(800);
+        var area = run.Window.BoundingRectangle;
+        using var before = Grab(area);
+        await trip();
+        Mouse.MoveTo(aside);
+        await Task.Delay(1500);
+        using var after = Grab(area);
+        using var a = Shrink(before);
+        using var b = Shrink(after);
+        var differ = Differ(a, b);
+        var shots = new List<string>();
+        foreach (var (image, what) in new[] { (before, "kept-before"), (after, "kept-after") })
+        {
+            var name = $"feel-{++shot:D3}-{what}.png";
+            image.Save(Path.Combine(dir, name), ImageFormat.Png);
+            shots.Add(name);
+        }
+        var note = string.Create(CultureInfo.InvariantCulture, $"after the trip, {differ:P1} of the window differs from before it");
+        filmed.Add(new(label, null, 0, 0, differ, 0, [.. shots], note));
+        Console.WriteLine($"   {label}: {note}");
     }
 
     /// <summary>A click on <paramref name="target"/>, filmed.</summary>
