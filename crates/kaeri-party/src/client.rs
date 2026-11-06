@@ -528,6 +528,9 @@ impl Membership {
             return (self.lost(&error), false);
         }
         let server = self.options.server.clone();
+        // What the server says before its welcome: a Syncplay server sends the room's playlist
+        // and this member's ready state first, and they are the room's as much as what follows.
+        let mut early = Vec::new();
         let answered = timeout(ANSWER, async {
             loop {
                 match next_line(&mut reader, &mut partial).await {
@@ -544,6 +547,7 @@ impl Membership {
                                 _ => {}
                             }
                         }
+                        early.push(line);
                     }
                     Ok(None) => {
                         return Err(End::Lost(format!("{server} closed the connection")));
@@ -596,6 +600,11 @@ impl Membership {
             self.outbox.push(wire::set_ready(true, true));
         }
         self.outbox.push(wire::list());
+        for line in &early {
+            if let Some(end) = self.on_line(line) {
+                return (end, true);
+            }
+        }
 
         let mut heard = Instant::now();
         loop {
