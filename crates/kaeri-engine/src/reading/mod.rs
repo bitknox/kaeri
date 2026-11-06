@@ -21,8 +21,8 @@ use kaeri_model::{
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
     reader::ReaderCommand,
     reading::{
-        BookDownloadsView, FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand,
-        ReadingEvent, ReadingFailure, ReadingHomeView, UpdatesView,
+        FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
+        ReadingHomeView, UpdatesView,
     },
 };
 
@@ -138,9 +138,11 @@ pub(crate) fn medium(
     let answer = match command {
         MediumCommand::Load => None,
         MediumCommand::Choose { answer, delete_downloads } if open => {
-            if delete_downloads {
-                // No chapters are downloaded until downloads land.
-                tracing::debug!("no chapter downloads to delete");
+            if delete_downloads && !answer.reads() {
+                // Reading is the medium turned off: its downloads go.
+                let lent = crate::downloads::books::Lent::of(services, tx);
+                let gone = services.book_sources.downloads.delete_all(&lent);
+                tracing::debug!(gone, "chapter downloads deleted with the medium");
             }
             Some(answer)
         }
@@ -212,10 +214,18 @@ pub(crate) fn reading(
             return chapters(services, work, Some(pref.source_id), tx);
         }
         ReadingCommand::MarkRead { work, chapters: ids, read } => {
-            mark_read(services, work, ids, read);
+            mark_read(services, work, ids, read, tx);
             return;
         }
-        ReadingCommand::LoadDownloads => ReadingEvent::Downloads(BookDownloadsView::default()),
+        ReadingCommand::LoadDownloads => {
+            ReadingEvent::Downloads(services.book_sources.downloads.view(&services.store))
+        }
+        ReadingCommand::Download { .. }
+        | ReadingCommand::DownloadCancel { .. }
+        | ReadingCommand::DownloadDelete { .. }
+        | ReadingCommand::DownloadNew => {
+            return downloads(engine, services, command, tx);
+        }
         ReadingCommand::LoadExportTargets => ReadingEvent::ExportTargets(Vec::new()),
         ReadingCommand::LoadFeed => ReadingEvent::Feed(FeedView::default()),
         other => {
@@ -224,6 +234,42 @@ pub(crate) fn reading(
         }
     };
     let _ = tx.send(Event::Reading(event));
+}
+
+/// A download command: the queue is set up from the config and the network first, so what it
+/// does follows what the person last chose.
+fn downloads(
+    engine: &mut EngineState,
+    services: &Services,
+    command: ReadingCommand,
+    tx: &Outbox,
+) {
+    use crate::downloads::books::{Lent, Setup};
+    let queue = services.book_sources.downloads.clone();
+    queue.configure(Setup::of(
+        engine.phase,
+        engine.network,
+        engine.config.effective(),
+        engine.reading.edition,
+    ));
+    let lent = Lent::of(services, tx);
+    match command {
+        ReadingCommand::Download { work, pick } => {
+            tokio::spawn(async move { queue.download(&lent, work, pick).await });
+        }
+        ReadingCommand::DownloadCancel { work, chapters } => {
+            queue.cancel(&lent, &work, &chapters)
+        }
+        ReadingCommand::DownloadDelete { work, chapters } => {
+            queue.delete(&lent, &work, &chapters);
+        }
+        ReadingCommand::DownloadNew => {
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            tokio::spawn(async move { queue.download_new(&kit, ask, &lent).await });
+        }
+        _ => {}
+    }
 }
 
 /// Search the book sources, page by page. A page holds what the sources gave: they are asked
@@ -281,6 +327,7 @@ fn mark_read(
     work: WorkId,
     ids: Vec<kaeri_core::books::ChapterId>,
     read: bool,
+    tx: &Outbox,
 ) {
     let now = services.clock.now();
     if read {
@@ -297,6 +344,10 @@ fn mark_read(
         if let Err(e) = services.store.unread(work.as_str(), &chapters) {
             tracing::warn!(error = %e, "an unread mark was not kept");
         }
+    }
+    if read {
+        let lent = crate::downloads::books::Lent::of(services, tx);
+        services.book_sources.downloads.sweep(&lent, Some(work.as_str()));
     }
     services.book_sources.report(&work, ids, read, now);
 }

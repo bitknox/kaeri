@@ -768,6 +768,7 @@ impl Session {
         if !self.opened {
             self.opened = true;
             cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
+            self.downloads_follow(cx, false);
         }
         let mut leaves = self.leaves.clone();
         leaves.push(Leaf { index: leaves.len() as u32, parts: Vec::new(), end_page: true });
@@ -936,6 +937,15 @@ impl Session {
         self.dirty = false;
         let _ = cx.tx.send(Event::ProgressQueued);
         cx.send(ReaderEvent::ChapterRead { work: self.work.clone(), chapter });
+        self.downloads_follow(cx, true);
+    }
+
+    /// The chapter was opened, or counts as read: downloads keep the next ones ready and let go
+    /// of what is read.
+    pub(super) fn downloads_follow(&self, cx: &Cx<'_>, finished: bool) {
+        let lent = crate::downloads::books::Lent::of(cx.services, cx.tx);
+        let id = self.chapter().id.clone();
+        cx.services.book_sources.downloads.read_moved(&lent, &self.work, &id, finished);
     }
 
     fn note_place(&mut self, cx: &Cx<'_>) {

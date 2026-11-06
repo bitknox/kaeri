@@ -406,6 +406,7 @@ impl Session {
         if !self.opened {
             self.opened = true;
             cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
+            self.downloads_follow(cx, false);
         }
         cx.send(ReaderEvent::NovelOpen(view));
     }
