@@ -93,6 +93,9 @@ pub struct EngineOptions {
     /// for a test, whose answer should not depend on the machine it runs on.
     #[cfg(feature = "testing")]
     pub free_space: Option<u64>,
+    /// A book source put in the registry beside the built-in ones: a test's fake.
+    #[cfg(feature = "testing")]
+    pub book_source: Option<std::sync::Arc<dyn kaeri_core::traits::BookSource>>,
 }
 
 impl EngineOptions {
@@ -132,6 +135,8 @@ impl EngineOptions {
             cloud_test: None,
             #[cfg(feature = "testing")]
             free_space: None,
+            #[cfg(feature = "testing")]
+            book_source: None,
         }
     }
 }

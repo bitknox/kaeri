@@ -60,6 +60,7 @@ object SettingsCatalog {
         SettingKey.SYNCPLAY, SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.ASK_WAS_OPENING, SettingKey.SHARE_SKIP_TIMES, SettingKey.SPOILER_PROTECTION,
         SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.TORRENTS_ON_CELLULAR, SettingKey.EPISODE_NOTIFICATIONS,
         SettingKey.ADULT_TITLES, SettingKey.EPISODE_DISCUSSIONS, SettingKey.COMMENT_IMAGES,
+        SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING,
     )
 
     /** The settings with two states, on and off, that a switch shows. */

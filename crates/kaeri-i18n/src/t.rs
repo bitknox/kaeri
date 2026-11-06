@@ -14125,6 +14125,21 @@ pub fn settings_torrents_cellular() -> String {
     text("settings-torrents-cellular", &[])
 }
 
+/// Row: whether chapter downloads run on a mobile connection.
+pub fn settings_chapter_downloads_cellular() -> String {
+    text("settings-chapter-downloads-cellular", &[])
+}
+
+/// Row: keep the next chapters of what you read downloaded.
+pub fn settings_keep_chapters_ready() -> String {
+    text("settings-keep-chapters-ready", &[])
+}
+
+/// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+pub fn settings_delete_after_reading() -> String {
+    text("settings-delete-after-reading", &[])
+}
+
 /// Row: seeding after watching.
 pub fn settings_seed_after() -> String {
     text("settings-seed-after", &[])

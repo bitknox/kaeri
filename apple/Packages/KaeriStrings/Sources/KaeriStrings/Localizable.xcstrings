@@ -188273,6 +188273,18 @@
         }
       }
     },
+    "settings-chapter-downloads-cellular" : {
+      "comment" : "Row: whether chapter downloads run on a mobile connection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter downloads on mobile data"
+          }
+        }
+      }
+    },
     "settings-check-updates" : {
       "comment" : "Row: check for updates.",
       "extractionState" : "manual",
@@ -190601,6 +190613,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xem"
+          }
+        }
+      }
+    },
+    "settings-delete-after-reading" : {
+      "comment" : "Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete chapters after reading"
           }
         }
       }
@@ -193857,6 +193881,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiện thẻ lớn hơn có trailer khi bạn trỏ chuột vào ảnh bìa."
+          }
+        }
+      }
+    },
+    "settings-keep-chapters-ready" : {
+      "comment" : "Row: keep the next chapters of what you read downloaded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep next chapters ready"
           }
         }
       }

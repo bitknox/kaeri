@@ -8794,6 +8794,15 @@ settings-wifi-only-detail = [Ðöŵñļöàðš ŵàîţ ƒöŕ Ŵî-Ƒî~~~~~~~
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = [Ţöŕŕéñţš öñ ɱöƀîļé ðàţà~~~~~~~]
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = [Çĥàþţéŕ ðöŵñļöàðš öñ ɱöƀîļé ðàţà~~~~~~~~~~]
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = [Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~]
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]
+
 # Row: seeding after watching.
 settings-seed-after = [Šééð àƒţéŕ ŵàţçĥîñĝ~~~~~~]
 

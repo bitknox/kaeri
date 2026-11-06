@@ -210,6 +210,8 @@ pub struct BookSources {
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
+    /// The chapters downloaded for reading and the queue that fetches them.
+    pub downloads: crate::downloads::books::BookDownloads,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -236,10 +238,17 @@ impl BookSources {
             removed: Arc::default(),
             undo: Arc::default(),
             catalog: crate::read_catalog::Memory::default(),
+            downloads: crate::downloads::books::BookDownloads::new(
+                paths.data_dir.join("book-downloads"),
+            ),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
         this
+    }
+
+    pub(crate) fn store(&self) -> &Store {
+        &self.store
     }
 
     /// The order and the off switches as kept, and every server signed in to.
@@ -980,6 +989,9 @@ impl BookSources {
             .into_iter()
             .map(|c| (c.chapter.clone(), c))
             .collect();
+        let downloads = self.downloads.states(&self.store, work.as_str());
+        let bookmarks: HashSet<String> =
+            self.store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let mut groups: Vec<VolumeGroup> = Vec::new();
         for chapter in &chapters {
             let id = chapter.key(restarts).id();
@@ -992,6 +1004,8 @@ impl BookSources {
                 None => ChapterReadState::Unread,
             };
             let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
+            let download = downloads.get(id.as_str()).cloned();
+            let bookmarked = bookmarks.contains(id.as_str());
             let row = ChapterRow {
                 id,
                 label: chapter.number_raw.clone(),
@@ -1002,9 +1016,9 @@ impl BookSources {
                 published: chapter.published,
                 pages: chapter.page_count,
                 new_chapter: false,
-                download: None,
+                download,
                 versions: 1,
-                bookmarked: false,
+                bookmarked,
                 version_label: chapter.version_label.clone(),
                 read_at,
             };
