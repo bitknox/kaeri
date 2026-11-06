@@ -190,12 +190,12 @@ fn notice(
 }
 
 fn after(tx: &Outbox, wait: Duration, session: u64, wake: ReaderWake) {
-    let weak = tx.downgrade();
+    // Holds the sender it was lent: the engine keeps none between one piece of work and the
+    // next, so a weak one would be closed before the timer ran.
+    let tx = tx.clone();
     tokio::spawn(async move {
         tokio::time::sleep(wait).await;
-        if let Some(tx) = weak.upgrade() {
-            let _ = tx.internal(Internal::Reader { session, wake });
-        }
+        let _ = tx.internal(Internal::Reader { session, wake });
     });
 }
 
