@@ -327,6 +327,20 @@ fn mal(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, Va
             }
             (200, json!({ "status": entry.status }))
         }
+        ("DELETE", p) if p.starts_with("/manga/") && p.ends_with("/my_list_status") => {
+            let id: u32 = p
+                .trim_start_matches("/manga/")
+                .trim_end_matches("/my_list_status")
+                .parse()
+                .unwrap_or(0);
+            let before = state.mal.len();
+            state.mal.retain(|e| e.id != id);
+            if state.mal.len() == before {
+                (404, json!({ "error": "not_found" }))
+            } else {
+                (200, json!([]))
+            }
+        }
         _ => (404, json!({})),
     }
 }
@@ -401,6 +415,16 @@ fn kitsu(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, 
                     (200, json!({ "data": { "id": id } }))
                 }
                 None => (404, json!({ "errors": [{ "title": "not found" }] })),
+            }
+        }
+        ("DELETE", p) if p.starts_with("/library-entries/") => {
+            let id = p.trim_start_matches("/library-entries/");
+            let before = state.kitsu.len();
+            state.kitsu.retain(|e| e.entry_id != id);
+            if state.kitsu.len() == before {
+                (404, json!({ "errors": [{ "title": "not found" }] }))
+            } else {
+                (200, json!({}))
             }
         }
         _ => (404, json!({})),

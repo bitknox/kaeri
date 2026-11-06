@@ -306,6 +306,17 @@ fn answer(state: &Mutex<State>, request: &Request) -> (u16, Value) {
             }
             (200, json!({ "status": "success" }))
         }
+        ("POST", "/lists/series/delete") => {
+            let gone: Vec<u64> = request
+                .body
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_u64)
+                .collect();
+            state.items.retain(|i| !gone.contains(&i.series));
+            (200, json!({ "status": "success" }))
+        }
         ("PUT", p) if p.starts_with("/series/") && p.ends_with("/rating") => {
             let id: u64 = p
                 .trim_start_matches("/series/")

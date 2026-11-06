@@ -7,7 +7,7 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
 };
 use std::{
     sync::atomic::{AtomicU64, Ordering},
@@ -440,6 +440,12 @@ impl Tracker for AniListTracker {
                 score: row.score,
             })
             .collect())
+    }
+
+    async fn remove_read(&self, id: AnilistId) -> Result<ReadRemoval, kaeri_core::Error> {
+        let removed = self.client.remove_read_entry(id).await.map_err(to_core);
+        self.changed();
+        Ok(if removed? { ReadRemoval::Removed } else { ReadRemoval::NotOnList })
     }
 
     async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
