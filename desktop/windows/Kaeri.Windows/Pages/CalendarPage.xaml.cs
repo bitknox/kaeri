@@ -766,6 +766,7 @@ public sealed partial class CalendarPage : Page
         var banner = new Grid { CornerRadius = new CornerRadius(6), Background = new CoverItem(b.Entry).Placeholder };
         var image = new Image { Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         banner.Children.Add(image);
+        ArtFade.Watch(image);
         ctx.Art.Bind(b.Entry.BannerUrl ?? b.Entry.CoverUrl, s => image.Source = s);
         return banner;
     }

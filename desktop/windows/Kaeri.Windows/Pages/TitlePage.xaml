@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Kaeri.Windows.Pages"
     xmlns:s="using:Kaeri.App"
+    xmlns:k="using:Kaeri.Windows"
     Background="{ThemeResource GroundBrush}">
   <Grid x:Name="Shell" SizeChanged="OnShellSized">
     <Grid.ColumnDefinitions>
@@ -43,7 +44,7 @@
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="8" VerticalAlignment="Bottom">
-              <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+              <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
               <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleLargeStyle}" />
@@ -198,7 +199,7 @@
                       </Grid.ContextFlyout>
                       <Grid Width="{x:Bind StillWidth, Mode=OneWay}" Height="{x:Bind StillHeight, Mode=OneWay}" Grid.RowSpan="{x:Bind StillRowSpan, Mode=OneWay}"
                             VerticalAlignment="Top" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
-                        <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+                        <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
                         <!-- A still the viewer has not asked to see, blurred; a reveal clears it. -->
                         <Border Background="{ThemeResource SpoilerBrush}" Opacity="{x:Bind BlurOpacity, Mode=OneWay}" IsHitTestVisible="False">
                           <Border.OpacityTransition>
