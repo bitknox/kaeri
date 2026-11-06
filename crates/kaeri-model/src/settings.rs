@@ -101,6 +101,13 @@ pub enum SettingKey {
     DownloadsOnCellular,
     /// Whether chapter downloads run over a cellular connection.
     ChapterDownloadsOnCellular,
+    /// Whether this computer serves its downloads and folders as an OPDS catalogue on the home
+    /// network, while Kaeri runs. Desktop builds only.
+    OpdsFeed,
+    /// The password e-readers sign in to the feed with; never shown back.
+    OpdsPassword,
+    /// The port the feed listens on; empty picks a free one.
+    OpdsPort,
     /// Whether the next chapters of what you read are kept downloaded. Unset follows the
     /// build: on for the e-reader, off elsewhere.
     KeepChaptersReady,
@@ -324,6 +331,9 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => (&["reading"], "downloads_on_cellular"),
             Self::KeepChaptersReady => (&["reading"], "keep_chapters_ready"),
             Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
+            Self::OpdsFeed => (&["reading", "feed"], "on"),
+            Self::OpdsPassword => (&["reading", "feed"], "password_set"),
+            Self::OpdsPort => (&["reading", "feed"], "port"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
             Self::MpvOptions => (&["playback"], "mpv_args"),
@@ -351,6 +361,8 @@ impl SettingKey {
                 | Self::SyncplayServer
                 | Self::SyncplayRoom
                 | Self::MpvOptions
+                | Self::OpdsPassword
+                | Self::OpdsPort
         )
     }
 
@@ -454,6 +466,11 @@ impl SettingKey {
             Self::DeleteAfterReading => {
                 to.reading.delete_after_reading = from.reading.delete_after_reading;
             }
+            Self::OpdsFeed => to.reading.feed.on = from.reading.feed.on,
+            Self::OpdsPassword => {
+                to.reading.feed.password_set = from.reading.feed.password_set;
+            }
+            Self::OpdsPort => to.reading.feed.port = from.reading.feed.port,
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
             }
@@ -517,6 +534,7 @@ impl SettingKey {
             | Self::ChapterDownloadsOnCellular
             | Self::KeepChaptersReady
             | Self::DeleteAfterReading => "downloads",
+            Self::OpdsFeed | Self::OpdsPassword | Self::OpdsPort => "downloads",
             Self::Torrents
             | Self::TorrentProxy
             | Self::SeedRatio
@@ -597,6 +615,9 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => "chapter downloads on cellular",
             Self::KeepChaptersReady => "keep chapters ready",
             Self::DeleteAfterReading => "delete after reading",
+            Self::OpdsFeed => "share on this network",
+            Self::OpdsPassword => "feed password",
+            Self::OpdsPort => "feed port",
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
@@ -960,6 +981,7 @@ pub fn step(
             V::Bool(!effective.reading.keep_chapters_ready.unwrap_or(false))
         }
         SettingKey::DeleteAfterReading => V::Bool(!effective.reading.delete_after_reading),
+        SettingKey::OpdsFeed => V::Bool(!effective.reading.feed.on),
         SettingKey::TorrentsOnCellular => V::Bool(!effective.providers.torrent.on_cellular),
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
@@ -1012,6 +1034,8 @@ pub fn step(
         | SettingKey::DownloadHook
         | SettingKey::SyncplayServer
         | SettingKey::SyncplayRoom
+        | SettingKey::OpdsPassword
+        | SettingKey::OpdsPort
         | SettingKey::TorrentProxy
         | SettingKey::TokenStorage
         | SettingKey::SourceOrder
@@ -1156,6 +1180,21 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         }
         (SettingKey::DeleteAfterReading, V::Bool(on)) => {
             config.reading.delete_after_reading = *on;
+        }
+        (SettingKey::OpdsFeed, V::Bool(on)) => config.reading.feed.on = *on,
+        (SettingKey::OpdsPassword, V::Str(password)) => {
+            config.reading.feed.password_set = !password.trim().is_empty();
+        }
+        (SettingKey::OpdsPort, V::Str(port)) => {
+            let port = port.trim();
+            config.reading.feed.port = if port.is_empty() || port == "0" {
+                None
+            } else {
+                match port.parse::<u16>() {
+                    Ok(n) if n >= 1024 => Some(n),
+                    _ => return false,
+                }
+            };
         }
         (SettingKey::EpisodeNotifications, V::Bool(on)) => config.notifications.episodes = *on,
         (SettingKey::AdultTitles, V::Bool(on)) => config.meta.adult = *on,
@@ -1344,6 +1383,15 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             on_off(effective.reading.keep_chapters_ready.unwrap_or(false))
         }
         SettingKey::DeleteAfterReading => on_off(effective.reading.delete_after_reading),
+        SettingKey::OpdsFeed => on_off(effective.reading.feed.on),
+        // The password is never read back.
+        SettingKey::OpdsPassword => {
+            if effective.reading.feed.password_set { "set" } else { "not set" }.into()
+        }
+        SettingKey::OpdsPort => match effective.reading.feed.port.filter(|p| *p != 0) {
+            Some(port) => port.to_string(),
+            None => "automatic".into(),
+        },
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
@@ -1452,6 +1500,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::ChapterDownloadsOnCellular => c.reading.downloads_on_cellular,
         S::KeepChaptersReady => c.reading.keep_chapters_ready.unwrap_or(false),
         S::DeleteAfterReading => c.reading.delete_after_reading,
+        S::OpdsFeed => c.reading.feed.on,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
@@ -1508,6 +1557,14 @@ fn text(effective: &Config, key: SettingKey) -> String {
         SettingKey::DownloadHook => effective.downloads.on_complete.clone().unwrap_or_default(),
         SettingKey::SyncplayServer => effective.syncplay.server.clone(),
         SettingKey::SyncplayRoom => effective.syncplay.room.clone().unwrap_or_default(),
+        // Typing a new password starts empty: the old one is not shown.
+        SettingKey::OpdsPort => effective
+            .reading
+            .feed
+            .port
+            .filter(|p| *p != 0)
+            .map(|p| p.to_string())
+            .unwrap_or_default(),
         SettingKey::MpvOptions => effective.playback.mpv_args.join("\n"),
         _ => String::new(),
     }

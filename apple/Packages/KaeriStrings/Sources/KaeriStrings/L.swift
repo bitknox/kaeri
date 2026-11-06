@@ -876,6 +876,26 @@ public enum L {
     /// A search filter: books from Taiwan.
     public static var readingOriginTaiwan: String { string("reading-origin-taiwan", fallback: "Taiwan") }
 
+    /// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+    public static var exportDeviceOther: String { string("export-device-other", fallback: "Other e-reader") }
+
+    /// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+    public static var exportDeviceEink6: String { string("export-device-eink-6", fallback: "E-ink, 6 inch") }
+
+    /// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+    public static var exportDeviceEink7: String { string("export-device-eink-7", fallback: "E-ink, 7 inch") }
+
+    /// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+    public static var exportDeviceColourEink: String { string("export-device-colour-eink", fallback: "Colour e-ink, 7 inch") }
+
+    /// Send to e-reader: a device class, a colour tablet.
+    public static var exportDeviceTablet: String { string("export-device-tablet", fallback: "Tablet") }
+
+    /// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+    public static func exportChapter(chapter: String) -> String {
+        Self.format("export-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)
@@ -9061,6 +9081,15 @@ public enum L {
 
     /// Button that restores the default subtitle style.
     public static var settingsSubsReset: String { string("settings-subs-reset", fallback: "Reset subtitle style") }
+
+    /// Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+    public static var settingsOpdsFeed: String { string("settings-opds-feed", fallback: "Share on this network") }
+
+    /// Row: the password e-readers ask for before they browse the shared catalogue.
+    public static var settingsOpdsPassword: String { string("settings-opds-password", fallback: "Feed password") }
+
+    /// Row: the port the shared catalogue listens on. Empty picks a free one.
+    public static var settingsOpdsPort: String { string("settings-opds-port", fallback: "Feed port") }
 
     /// Title of the screen or section that lists sources.
     public static var sourcesTitle: String { string("sources-title", fallback: "Sources") }

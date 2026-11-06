@@ -947,6 +947,30 @@
     <value>[Ţàîŵàñ~~]</value>
     <comment>A search filter: books from Taiwan.</comment>
   </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>[Öţĥéŕ é-ŕéàðéŕ~~~~~]</value>
+    <comment>Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.</comment>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>[É-îñķ, 6 îñçĥ~~~~]</value>
+    <comment>Send to e-reader: a device class, a grey e-ink screen of about 6 inches.</comment>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>[É-îñķ, 7 îñçĥ~~~~]</value>
+    <comment>Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.</comment>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>[Çöļöüŕ é-îñķ, 7 îñçĥ~~~~~~]</value>
+    <comment>Send to e-reader: a device class, a colour e-ink screen of about 7 inches.</comment>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>[Ţàƀļéţ~~]</value>
+    <comment>Send to e-reader: a device class, a colour tablet.</comment>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -8667,6 +8691,18 @@
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>[Ŕéšéţ šüƀţîţļé šţýļé~~~~~~]</value>
     <comment>Button that restores the default subtitle style.</comment>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>[Šĥàŕé öñ ţĥîš ñéţŵöŕķ~~~~~~~]</value>
+    <comment>Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.</comment>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>[Ƒééð þàššŵöŕð~~~~]</value>
+    <comment>Row: the password e-readers ask for before they browse the shared catalogue.</comment>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>[Ƒééð þöŕţ~~~]</value>
+    <comment>Row: the port the shared catalogue listens on. Empty picks a free one.</comment>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>[Šöüŕçéš~~~]</value>

@@ -21,7 +21,7 @@ use kaeri_model::{
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
     reader::ReaderCommand,
     reading::{
-        FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
+        ReadSearchQuery, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
         ReadingHomeView, UpdatesView,
     },
 };
@@ -237,8 +237,6 @@ pub(crate) fn reading(
         | ReadingCommand::DownloadNew => {
             return downloads(engine, services, command, tx);
         }
-        ReadingCommand::LoadExportTargets => ReadingEvent::ExportTargets(Vec::new()),
-        ReadingCommand::LoadFeed => ReadingEvent::Feed(FeedView::default()),
         other => {
             tracing::debug!(?about, command = ?other, "reading command not handled yet");
             return;
@@ -434,7 +432,7 @@ pub(crate) fn book_sources(
     );
 }
 
-fn off(about: ReadingAbout, tx: &Outbox) {
+pub(crate) fn off(about: ReadingAbout, tx: &Outbox) {
     let failure = ReadingFailure::ReadingOff;
     let _ = tx.send(Event::Reading(ReadingEvent::Failed { about, failure }));
 }

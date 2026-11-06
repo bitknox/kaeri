@@ -296,3 +296,28 @@ reading-origin-china = China
 # A search filter: books from Taiwan.
 # @max 16
 reading-origin-taiwan = Taiwan
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+# @max 28
+export-device-other = Other e-reader
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+# @max 28
+export-device-eink-6 = E-ink, 6 inch
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+# @max 28
+export-device-eink-7 = E-ink, 7 inch
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+# @max 28
+export-device-colour-eink = Colour e-ink, 7 inch
+
+# Send to e-reader: a device class, a colour tablet.
+# @max 28
+export-device-tablet = Tablet
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+# @arg chapter: text
+# @max 24
+export-chapter = Chapter { $chapter }

@@ -212,6 +212,11 @@ pub struct BookSources {
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
     pub downloads: crate::downloads::books::BookDownloads,
+    /// The sends to e-readers under way.
+    pub exports: crate::export::Exports,
+    /// The OPDS feed, on the desktop builds.
+    #[cfg(feature = "opds-feed")]
+    pub feed: crate::export::feed::Feed,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -241,6 +246,9 @@ impl BookSources {
             downloads: crate::downloads::books::BookDownloads::new(
                 paths.data_dir.join("book-downloads"),
             ),
+            exports: crate::export::Exports::new(paths.data_dir.join("exports")),
+            #[cfg(feature = "opds-feed")]
+            feed: crate::export::feed::Feed::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();

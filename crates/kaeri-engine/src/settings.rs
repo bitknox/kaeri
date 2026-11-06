@@ -67,6 +67,20 @@ pub fn set_setting(
             kaeri_core::settings::SettingValue::Int(now),
         );
     }
+    // The port is typed as text and kept as a number; empty is 0, which the config reads as
+    // "pick a free one".
+    let value = match (key, value) {
+        (SettingKey::OpdsPort, kaeri_core::settings::SettingValue::Str(port)) => {
+            kaeri_core::settings::SettingValue::Int(port.trim().parse().unwrap_or(0))
+        }
+        // The password goes to the secure store; the file keeps only that one is set.
+        (SettingKey::OpdsPassword, kaeri_core::settings::SettingValue::Str(password)) => {
+            let set = crate::export::keep_password(services, &password);
+            engine.config.effective_mut().reading.feed.password_set = set;
+            kaeri_core::settings::SettingValue::Bool(set)
+        }
+        (_, value) => value,
+    };
     write_setting(table, file_key, value, engine, services, tx);
     // The TV picker's Chromecast group comes and goes with its row.
     #[cfg(feature = "cast")]

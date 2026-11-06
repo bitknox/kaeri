@@ -695,6 +695,24 @@ reading-origin-china = China
 # A search filter: books from Taiwan.
 reading-origin-taiwan = Taiwan
 
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = Other e-reader
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 inch
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 inch
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = Colour e-ink, 7 inch
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Tablet
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Chapter { $chapter }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
 
@@ -9193,6 +9211,15 @@ settings-subs-styled-strip-detail = Every line shows as plain dialogue at the bo
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Reset subtitle style
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Share on this network
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Feed password
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Feed port
 
 # Title of the screen or section that lists sources.
 sources-title = Sources

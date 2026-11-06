@@ -140,7 +140,7 @@ pub struct Wanted {
 }
 
 /// Why a fetch ended without a file.
-enum Stop {
+pub(crate) enum Stop {
     Failed(ReadingFailure),
     /// The person took it out of the queue.
     Cancelled,
@@ -654,27 +654,50 @@ impl BookDownloads {
         store: &Store,
         row: &BookDownload,
     ) -> Result<Fetched, Stop> {
+        let wanted = || Self::wanted(store, row);
+        let progress = |done: u32, total: u32| {
+            let _ = store.book_download_progress(row.id, done, Some(total), lent.clock.now());
+            self.publish_progress(store, &lent.tx);
+        };
+        let job = Fetching {
+            work: WorkId::new(row.work.clone()),
+            chapter: ChapterId::new(row.chapter.clone()),
+            source_id: row.source_id.clone(),
+            stem: self.file_stem(row),
+            wanted: &wanted,
+            progress: &progress,
+        };
+        self.fetch_with(lent, &job).await
+    }
+
+    /// Fetch one chapter into a file at `job.stem`, with the sources, the free-space floor and
+    /// the Wi-Fi rule a queued download has. What the fetch is for is the caller's: a queued
+    /// download keeps the file as a download, a send removes it once its files are written.
+    pub(crate) async fn fetch_with(
+        &self,
+        lent: &Lent,
+        job: &Fetching<'_>,
+    ) -> Result<Fetched, Stop> {
         let now = lent.clock.now();
         if self.free().is_some_and(|free| free < KEEP_FREE) {
             return Err(ReadingFailure::DiskFull.into());
         }
         lent.sources.adopt_plugins(&lent.plugins);
-        let work = WorkId::new(row.work.clone());
-        let chapter = ChapterId::new(row.chapter.clone());
+        let (work, chapter) = (&job.work, &job.chapter);
         let mut opened = lent
             .sources
-            .open(&work, &chapter, Some(&row.source_id), now)
+            .open(work, chapter, Some(&job.source_id), now)
             .await
             .map_err(Stop::Failed)?;
-        if !Self::wanted(store, row) {
+        if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
-        let stem = self.file_stem(row);
+        let stem = job.stem.clone();
         if let Some(dir) = stem.parent() {
             std::fs::create_dir_all(dir).map_err(|e| Stop::Failed(io_failure(&e, dir)))?;
         }
         let part = part_of(&stem);
-        let source = row.source_id.clone();
+        let source = job.source_id.clone();
         match std::mem::replace(&mut opened.content, ChapterContent::Text(String::new())) {
             ChapterContent::Images(pages) => {
                 let total = u32::try_from(pages.len()).unwrap_or(u32::MAX);
@@ -690,7 +713,7 @@ impl BookDownloads {
                     if self.setup().hold {
                         return Err(Stop::Held);
                     }
-                    if !Self::wanted(store, row) {
+                    if !(job.wanted)() {
                         return Err(Stop::Cancelled);
                     }
                     if self.free().is_some_and(|free| free < KEEP_FREE) {
@@ -703,13 +726,7 @@ impl BookDownloads {
                         .map_err(Stop::Failed)?;
                     cbz.add_page(&bytes)
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
-                    let _ = store.book_download_progress(
-                        row.id,
-                        index + 1,
-                        Some(total),
-                        lent.clock.now(),
-                    );
-                    self.publish_progress(store, &lent.tx);
+                    (job.progress)(index + 1, total);
                 }
                 let mut out =
                     cbz.finish().map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
@@ -720,7 +737,7 @@ impl BookDownloads {
             ChapterContent::Text(body) => {
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
-                let label = row.chapter.clone();
+                let label = job.chapter.as_str().to_owned();
                 let meta = kaeri_books::write::BookMeta {
                     title: label.clone(),
                     language: "und".to_owned(),
@@ -759,10 +776,24 @@ impl BookDownloads {
     }
 }
 
-struct Fetched {
-    path: PathBuf,
-    pages: Option<u32>,
-    bytes: u64,
+/// What one fetch is for and asks while it runs.
+pub(crate) struct Fetching<'a> {
+    pub work: WorkId,
+    pub chapter: ChapterId,
+    pub source_id: String,
+    /// The file's path without its extension, which the fetch picks from what it got.
+    pub stem: PathBuf,
+    /// Whether the fetch is still wanted: false once it was taken out of the queue or the send
+    /// was cancelled.
+    pub wanted: &'a (dyn Fn() -> bool + Send + Sync),
+    /// Told `(pages done, pages total)` after each page.
+    pub progress: &'a (dyn Fn(u32, u32) + Send + Sync),
+}
+
+pub(crate) struct Fetched {
+    pub(crate) path: PathBuf,
+    pub(crate) pages: Option<u32>,
+    pub(crate) bytes: u64,
 }
 
 fn finish(part: &Path, to: &Path, pages: Option<u32>) -> Result<Fetched, Stop> {
@@ -778,7 +809,7 @@ fn part_of(stem: &Path) -> PathBuf {
 }
 
 /// A name that is safe in any file system and tells different ids apart.
-fn safe(id: &str) -> String {
+pub(crate) fn safe(id: &str) -> String {
     let mut out = String::with_capacity(id.len());
     for ch in id.chars() {
         if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
@@ -839,7 +870,7 @@ fn state_of(d: &BookDownload, wifi: bool) -> ChapterDownloadState {
     }
 }
 
-fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
+pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
     let id = ChapterId::new(d.chapter.clone());
     let key = id.key();
     let number = key.as_ref().and_then(|k| k.range()).map(|r| r.to_string());
@@ -898,7 +929,7 @@ fn decode(text: &str) -> ReadingFailure {
 }
 
 /// A work's chapters in reading order, and the source they come from.
-async fn ordered_chapters(
+pub(crate) async fn ordered_chapters(
     sources: &BookSources,
     work: &WorkId,
     now: i64,

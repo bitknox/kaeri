@@ -1309,6 +1309,18 @@ pub enum ReadingMsg {
     ReadingOriginChina,
     /// A search filter: books from Taiwan.
     ReadingOriginTaiwan,
+    /// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+    ExportDeviceOther,
+    /// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+    ExportDeviceEink6,
+    /// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+    ExportDeviceEink7,
+    /// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+    ExportDeviceColourEink,
+    /// Send to e-reader: a device class, a colour tablet.
+    ExportDeviceTablet,
+    /// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+    ExportChapter { chapter: String },
 }
 
 impl ReadingMsg {
@@ -1378,6 +1390,12 @@ impl ReadingMsg {
             Self::ReadingOriginKorea => "reading-origin-korea",
             Self::ReadingOriginChina => "reading-origin-china",
             Self::ReadingOriginTaiwan => "reading-origin-taiwan",
+            Self::ExportDeviceOther => "export-device-other",
+            Self::ExportDeviceEink6 => "export-device-eink-6",
+            Self::ExportDeviceEink7 => "export-device-eink-7",
+            Self::ExportDeviceColourEink => "export-device-colour-eink",
+            Self::ExportDeviceTablet => "export-device-tablet",
+            Self::ExportChapter { .. } => "export-chapter",
         }
     }
 
@@ -1447,6 +1465,12 @@ impl ReadingMsg {
             Self::ReadingOriginKorea => Vec::new(),
             Self::ReadingOriginChina => Vec::new(),
             Self::ReadingOriginTaiwan => Vec::new(),
+            Self::ExportDeviceOther => Vec::new(),
+            Self::ExportDeviceEink6 => Vec::new(),
+            Self::ExportDeviceEink7 => Vec::new(),
+            Self::ExportDeviceColourEink => Vec::new(),
+            Self::ExportDeviceTablet => Vec::new(),
+            Self::ExportChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
         }
     }
 }
