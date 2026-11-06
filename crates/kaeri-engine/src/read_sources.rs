@@ -208,6 +208,8 @@ pub struct BookSources {
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
+    /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
+    pub catalog: crate::read_catalog::Memory,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -233,6 +235,7 @@ impl BookSources {
             scanning: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
+            catalog: crate::read_catalog::Memory::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -814,7 +817,7 @@ async fn sign_in(
 
 impl BookSources {
     /// The editions a work has: every source holding a series matched to it.
-    fn editions(
+    pub(crate) fn editions(
         &self,
         work: &kaeri_core::books::WorkId,
     ) -> Vec<kaeri_model::reading::BookEditionRow> {
@@ -823,16 +826,19 @@ impl BookSources {
         let mut seen = HashSet::new();
         refs.into_iter()
             .filter(|(source, _)| seen.insert(source.clone()))
-            .filter_map(|(source, _)| {
+            .filter_map(|(source, series)| {
                 let manifest = self.registry.manifest(&source)?;
+                // What the source listed last time, from the chapter cache.
+                let kept =
+                    crate::read_catalog::chapters::summary(&self.store, &source, &series);
                 Some(kaeri_model::reading::BookEditionRow {
                     preferred: preferred.as_ref().is_some_and(|p| p.source_id == source),
                     source_id: source,
                     source_name: manifest.name,
-                    language: None,
-                    version_label: None,
-                    chapters: 0,
-                    latest: None,
+                    language: kept.language,
+                    version_label: kept.version_label,
+                    chapters: kept.chapters,
+                    latest: kept.latest,
                 })
             })
             .collect()
@@ -856,7 +862,7 @@ pub struct Opened {
     pub content: ChapterContent,
 }
 
-fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
+pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
     match error {
         ProviderError::NotFound => ReadingFailure::NotFound,
         ProviderError::Unavailable(_) => {
@@ -933,7 +939,11 @@ impl BookSources {
 
     /// Which source and series reference a work is read from: the chosen edition, the person's
     /// preference, or the first source in their order that holds it.
-    fn edition_of(&self, work: &WorkId, edition: Option<&str>) -> Option<(String, String)> {
+    pub(crate) fn edition_of(
+        &self,
+        work: &WorkId,
+        edition: Option<&str>,
+    ) -> Option<(String, String)> {
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         let wanted = edition.map(str::to_owned).or_else(|| {
             self.store.edition_pref(work.as_str()).ok().flatten().map(|p| p.source_id)
@@ -961,6 +971,7 @@ impl BookSources {
             .chapters(&source, &series, &BookHints::default(), now)
             .await
             .map_err(|e| failure(&source, &e))?;
+        crate::read_catalog::chapters::keep(&self.store, &source, &series, &chapters, now);
         let restarts = restarts_per_volume(&chapters);
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self
             .store

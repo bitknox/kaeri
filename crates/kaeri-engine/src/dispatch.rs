@@ -440,7 +440,9 @@ pub(crate) fn dispatch(
         Command::LoadDetail(id) => {
             // Another title's page: the episode names looked up for the one left stop.
             engine.names.leave_for(id);
-            spawn(job, services, tx, move |lent| load_detail(lent, id))
+            // "Also a book" shows only to someone who both watches and reads.
+            let both = engine.reading.answer() == kaeri_model::medium::KaeriIsFor::Both;
+            spawn(job, services, tx, move |lent| load_detail(lent, id, both))
         }
         Command::LoadCards { ids } => {
             spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
@@ -453,6 +455,18 @@ pub(crate) fn dispatch(
             play_trailer(url, title, job, engine, services, tx)
         }
         Command::OpenExternal { url } => open_external(url, services, tx),
+
+        // Reading's catalogue and Fix this match for a book folder: see `read_catalog`. The
+        // rest of reading is further down.
+        Command::Reading(command) if crate::read_catalog::handles(&command) => {
+            crate::read_catalog::command(engine, services, command, tx)
+        }
+        Command::BookSources(kaeri_model::book_sources::BookSourceCommand::FindMatch {
+            group,
+            query,
+        }) if engine.reading.available => {
+            crate::read_catalog::find_match(engine, services, group, query, tx)
+        }
 
         // The licensed services: kept in the database, with no job.
         Command::Licensed(command) => licensed_command(command, services, tx),

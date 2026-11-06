@@ -1030,6 +1030,7 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
     read(READING_NOVEL, "3", now - DAY, &|e| {
         e.novel_pos = Some("3/0.4.1/120".into());
     });
+    seed_reading_catalog(store, now);
     match scene {
         FfiScene::ReadingSeries | FfiScene::ReaderMangaRtl => {
             let _ =
@@ -1066,6 +1067,76 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
         ),
         _ => {}
     }
+}
+
+/// What reading's catalogue kept for [`FfiScene::ReadingHome`] and its kin: which folder series
+/// each work is, the chapters each listed last, how often they come out, and the reading lists.
+/// The books themselves come from the fake AniList.
+fn seed_reading_catalog(store: &Store, now: i64) {
+    use kaeri_store::book_catalog::BookRhythm;
+    const DAY: i64 = 24 * 3_600;
+    let warn = |e: kaeri_store::StoreError| {
+        tracing::warn!(error = %e, "a reading scene's catalogue was not seeded");
+    };
+    // In the chapter cache's own JSON, which the engine reads back.
+    let chapter = |n: i64, published: i64, seen_at: Option<i64>, title: Option<&str>| {
+        let optional = |v: Option<String>| v.unwrap_or_else(|| "null".into());
+        format!(
+            r#"{{"id":"{n}","source_ref":"c-{n}","label":"Chapter {n}","number":"{n}","title":{},"language":"en","published":{published},"seen_at":{}}}"#,
+            optional(title.map(|t| format!("\"{t}\""))),
+            optional(seen_at.map(|at| at.to_string())),
+        )
+    };
+    // The manga comes out weekly; chapter 15 two hours ago, seen on the last check.
+    let manga: Vec<_> = (1..=15)
+        .map(|n| {
+            let newest = n == 15;
+            let seen = newest.then_some(now - 3_600);
+            chapter(
+                n,
+                now - 2 * 3_600 - (15 - n) * 7 * DAY,
+                seen,
+                newest.then_some("The Far Shore"),
+            )
+        })
+        .collect();
+    // The novel, a part a month.
+    let novel: Vec<_> =
+        (1..=5).map(|n| chapter(n, now - DAY - (5 - n) * 30 * DAY, None, None)).collect();
+    // The strip, weekly, the newest three days ago.
+    let strip: Vec<_> =
+        (1..=8).map(|n| chapter(n, now - 3 * DAY - (8 - n) * 7 * DAY, None, None)).collect();
+    for (work, series, list) in [
+        (READING_MANGA, "fx-lantern", manga),
+        (READING_NOVEL, "fx-orchard", novel),
+        (READING_STRIP, "fx-kites", strip),
+    ] {
+        let _ = store
+            .set_book_match("folders", series, work, 100, true, false, now - 40 * DAY)
+            .map_err(warn);
+        let json = format!("[{}]", list.join(","));
+        let _ = store.put_book_chapters("folders", series, &json, now - 3_600).map_err(warn);
+    }
+    for (work, last) in [(READING_MANGA, now - 2 * 3_600), (READING_STRIP, now - 3 * DAY)] {
+        let rhythm = BookRhythm {
+            weekday: None,
+            every_days: Some(7),
+            last_published: Some(last),
+            checked_at: now - 3_600,
+        };
+        let _ = store.set_book_rhythm(work, &rhythm).map_err(warn);
+    }
+    for (work, status) in [
+        (READING_MANGA, "reading"),
+        (READING_STRIP, "reading"),
+        ("a:900304", "planning"),
+        ("a:900306", "planning"),
+        ("a:900307", "completed"),
+    ] {
+        let _ = store.set_read_status(work, Some(status), now - DAY).map_err(warn);
+    }
+    let _ =
+        store.set_meta_text("read:updates:checked", &(now - 3_600).to_string()).map_err(warn);
 }
 
 /// The profiles [`FfiScene::Profiles`] keeps, Alex last used.

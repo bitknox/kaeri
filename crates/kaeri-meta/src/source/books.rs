@@ -60,6 +60,23 @@ impl Meta {
         Ok(pages)
     }
 
+    /// [`Self::books`], with how many shows match a term: see
+    /// [`crate::AniList::books_and_shows`].
+    pub async fn books_and_shows(
+        &self,
+        asks: &[BookAsk],
+        shows: Option<(&str, Option<bool>)>,
+    ) -> Result<(Vec<Page<Book>>, Option<u32>)> {
+        let (pages, count) = self.weathered(self.anilist.books_and_shows(asks, shows)).await?;
+        let now = kaeri_store::now();
+        for page in &pages {
+            for book in &page.items {
+                self.keep_book(book, None, now);
+            }
+        }
+        Ok((pages, count))
+    }
+
     /// Books by id, in the order asked, each kept.
     pub async fn books_many(&self, ids: &[AnilistId]) -> Result<Vec<Book>> {
         if ids.is_empty() {

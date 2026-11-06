@@ -14,3 +14,10 @@ pub fn eink_paint(policy: EinkPolicy, counter: EinkCounter, paint: EinkPaint) ->
 pub fn eink_policy_defaults(panel: Panel) -> EinkPolicy {
     EinkPolicy::defaults(panel)
 }
+
+/// What reading's search filters choose from: the formats, the countries, the statuses, the
+/// sorts and the genres, fixed, so the filters show before anything loads.
+#[uniffi::export]
+pub fn read_filters() -> kaeri_model::reading::ReadFilters {
+    kaeri_model::reading::read_filters()
+}

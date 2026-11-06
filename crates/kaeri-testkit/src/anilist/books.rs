@@ -41,6 +41,11 @@ fn listed(book: &Value) -> Value {
 }
 
 fn one(books: &[Value], document: &str, vars: &Value) -> Value {
+    // The count of shows a reading search carries beside its books: the fake has none to
+    // count in a books request.
+    if document.contains("type: ANIME") {
+        return json!({ "Page": { "pageInfo": { "total": 0 }, "media": [] } });
+    }
     if document.contains("Media(id:") {
         return json!({ "Media": book(books, &vars["id"]).cloned() });
     }

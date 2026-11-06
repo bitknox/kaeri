@@ -235,6 +235,18 @@ impl Book {
         shows
     }
 
+    /// What it is about, as plain text, with what AniList marks a spoiler left out.
+    pub fn synopsis(&self) -> Option<String> {
+        let raw = self.description.as_deref()?;
+        let text = super::model::spoiler_runs(raw)
+            .into_iter()
+            .filter(|(_, spoiler)| !spoiler)
+            .map(|(run, _)| super::model::plain_text(run))
+            .collect::<String>();
+        let text = text.trim();
+        (!text.is_empty()).then(|| text.to_owned())
+    }
+
     /// The books people who liked this one rated highest, best first.
     pub fn recommended(&self) -> Vec<AnilistId> {
         self.recommendations
@@ -250,13 +262,13 @@ impl Book {
 /// One part of a request for books: a browse page, or books by id (at most fifty).
 #[derive(Debug, Clone, PartialEq)]
 pub enum BookAsk {
-    Browse { term: String, filter: BrowseFilter, page: u32, per_page: u32 },
+    Browse { term: String, filter: Box<BrowseFilter>, page: u32, per_page: u32 },
     Ids(Vec<AnilistId>),
 }
 
 impl BookAsk {
     pub fn browse(term: &str, filter: &BrowseFilter, page: u32, per_page: u32) -> Self {
-        Self::Browse { term: term.to_owned(), filter: filter.clone(), page, per_page }
+        Self::Browse { term: term.to_owned(), filter: Box::new(filter.clone()), page, per_page }
     }
 
     /// The query of one `Page` root for this part, with its variables named for the arguments.
@@ -303,6 +315,24 @@ pub fn book_page(
     (document, serde_json::Value::Object(variables))
 }
 
+/// How many shows match `term`, as one `Page` root.
+pub fn show_count(term: &str, adult: Option<bool>) -> (String, serde_json::Value) {
+    let mut declared = vec!["$search: String"];
+    let mut media_args = vec!["type: ANIME", "search: $search"];
+    let mut variables = serde_json::json!({ "search": term });
+    if let Some(adult) = adult {
+        declared.push("$isAdult: Boolean");
+        media_args.push("isAdult: $isAdult");
+        variables["isAdult"] = serde_json::json!(adult);
+    }
+    let document = format!(
+        "query ({}) {{ Page(perPage: 1) {{ pageInfo {{ total }} media({}) {{ id }} }} }}",
+        declared.join(", "),
+        media_args.join(", "),
+    );
+    (document, variables)
+}
+
 /// One book with what its page shows.
 pub fn book_by_id() -> String {
     let detail = BOOK_DETAIL_FIELDS.replace("BOOK_LINK", BOOK_LINK);
@@ -332,9 +362,26 @@ impl AniList {
     /// Several parts in one request, each answered as a page in the order asked. Books asked
     /// by id come in the order asked too, and without the ones AniList does not have.
     pub async fn books(&self, asks: &[BookAsk]) -> Result<Vec<Page<Book>>> {
-        let parts: Vec<_> = asks.iter().map(BookAsk::part).collect();
-        let answers = self.execute_together(&parts).await?;
-        Ok(asks
+        Ok(self.books_and_shows(asks, None).await?.0)
+    }
+
+    /// [`Self::books`], with how many shows match a term in the same request: Search's count
+    /// in the other scope. `shows` is the term and the adult filter.
+    pub async fn books_and_shows(
+        &self,
+        asks: &[BookAsk],
+        shows: Option<(&str, Option<bool>)>,
+    ) -> Result<(Vec<Page<Book>>, Option<u32>)> {
+        let mut parts: Vec<_> = asks.iter().map(BookAsk::part).collect();
+        if let Some((term, adult)) = shows {
+            parts.push(show_count(term, adult));
+        }
+        let mut answers = self.execute_together(&parts).await?;
+        let count = match shows {
+            Some(_) => answers.pop().and_then(|a| a["Page"]["pageInfo"]["total"].as_u64()),
+            None => None,
+        };
+        let pages = asks
             .iter()
             .zip(answers)
             .map(|(ask, answer)| {
@@ -344,7 +391,8 @@ impl AniList {
                 }
                 page
             })
-            .collect())
+            .collect();
+        Ok((pages, count.and_then(|c| u32::try_from(c).ok())))
     }
 
     /// Pages of several browses in one request.
