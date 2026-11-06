@@ -105,6 +105,8 @@ public sealed partial class PlayerView
     }
 
     /// <summary>The panel as its states have it, faded in and out (fade-in, fade-out); values change in place.</summary>
+    bool statsWaitingFading;
+
     void ShowStats()
     {
         if (stats.View() is not { } view)
@@ -117,7 +119,18 @@ public sealed partial class PlayerView
             Motion.Hide(StatsLayer);
             return;
         }
-        StatsWaiting.Visibility = view.WaitingLine ? Visibility.Visible : Visibility.Collapsed;
+        // The waiting line's room is kept from the dashes on, and the line fades into it at 4 s,
+        // so the rows under it never move a line down while the stream is awaited.
+        var awaiting = !view.CanCopy;
+        StatsWaiting.Visibility = awaiting ? Visibility.Visible : Visibility.Collapsed;
+        if (!awaiting)
+            StatsWaiting.Opacity = 0;
+        else if (Math.Abs(StatsWaiting.Opacity - (view.WaitingLine ? 1 : 0)) > 0.01 && !statsWaitingFading)
+        {
+            statsWaitingFading = true;
+            Motion.FadeTo(StatsWaiting, view.WaitingLine ? 1 : 0, view.WaitingLine ? Motion.FadeInTime : Motion.FadeOutTime);
+            _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => statsWaitingFading = false));
+        }
         StatsCopy.IsEnabled = view.CanCopy;
         if (view.Copied && StatsCopy.FocusState != FocusState.Unfocused)
             Focus(FocusState.Programmatic);

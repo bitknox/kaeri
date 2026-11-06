@@ -73,6 +73,12 @@
             <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+            <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. First
+                 in the row, so a TV found mid-episode fades in without moving the buttons after it. -->
+            <Button x:Name="TvButton" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayOnTv" Visibility="Collapsed"
+                    ToolTipService.ToolTip="{x:Bind app:T.TvPlayOn}" AutomationProperties.Name="{x:Bind app:T.TvPlayOn}">
+              <FontIcon Glyph="&#xE7F4;" FontSize="16" />
+            </Button>
             <!-- In a party with chat: the four reactions, before the people. Filled in code. -->
             <StackPanel x:Name="Reactions" Orientation="Horizontal" Spacing="2" Margin="0,0,6,0" Visibility="Collapsed" />
             <!-- Watch party: the form that starts a party, or the party's panel once in one. -->
@@ -83,11 +89,6 @@
                 <Ellipse x:Name="PartyDot" Width="6" Height="6" Fill="{ThemeResource TextFillColorPrimaryBrush}"
                          HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-5,0" Opacity="0" />
               </Grid>
-            </Button>
-            <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. -->
-            <Button x:Name="TvButton" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayOnTv" Visibility="Collapsed"
-                    ToolTipService.ToolTip="{x:Bind app:T.TvPlayOn}" AutomationProperties.Name="{x:Bind app:T.TvPlayOn}">
-              <FontIcon Glyph="&#xE7F4;" FontSize="16" />
             </Button>
             <Button x:Name="TracksButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerSubtitlesAndAudio}">
               <FontIcon Glyph="&#xE7F0;" FontSize="16" />
@@ -289,7 +290,7 @@
           </Button>
         </Grid>
         <TextBlock x:Name="StatsWaiting" Grid.Row="1" Text="{x:Bind app:T.PlayerStatsWaiting}" Style="{StaticResource HazeBodyStyle}"
-                   FontSize="13" LineHeight="20" Margin="0,0,10,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+                   FontSize="13" LineHeight="20" Margin="0,0,10,0" Visibility="Collapsed" Opacity="0" AutomationProperties.LiveSetting="Polite" />
         <!-- Label and value: the labels' column as wide as its longest label, each value on one
              line in tabular figures, so a second's new figures change in place without moving. -->
         <ScrollViewer x:Name="StatsScroll" Grid.Row="2" Margin="0,8,0,0" Padding="0,0,10,0"
@@ -406,9 +407,30 @@
       <!-- What the player says on the video, in one column in the top leading corner: an alert
            first, briefly, then the party's chat lines under it, three at most, and the fold. -->
       <StackPanel x:Name="ChatColumn" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0" Spacing="6">
+        <!-- "Resumed at 12:04 · Start over" for the first 6 s of a resumed episode. -->
+        <Border x:Name="ResumeNote" Visibility="Collapsed" HorizontalAlignment="Left" Height="32" Padding="14,0"
+                Background="{ThemeResource RaisedBrush}" CornerRadius="16">
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <TextBlock x:Name="ResumeLine" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" AutomationProperties.LiveSetting="Polite" />
+            <Button x:Name="ResumeStartOver" AllowFocusOnInteraction="False" Content="{x:Bind app:T.PlayerStartOver}" Click="OnStartOver"
+                    Padding="0" MinHeight="0" MinWidth="0" Background="Transparent" BorderThickness="0" FontWeight="SemiBold"
+                    Foreground="{ThemeResource AmberBrush}" VerticalAlignment="Center">
+              <Button.Resources>
+                <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="Transparent" />
+                <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AmberBrush" />
+                <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AmberBrush" />
+              </Button.Resources>
+            </Button>
+          </StackPanel>
+        </Border>
         <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left"
                 Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
-          <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+          <!-- Two lines in one place: a newer alert crossfades over the one up. -->
+          <Grid>
+            <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+            <TextBlock x:Name="AlertTextB" TextWrapping="WrapWholeWords" MaxWidth="480" Opacity="0" AutomationProperties.LiveSetting="Assertive" />
+          </Grid>
         </Border>
         <StackPanel x:Name="ChatLines" Spacing="6" />
         <Button x:Name="ChatFold" Visibility="Collapsed" Click="OnChatFold" Padding="16,10" MinHeight="40" CornerRadius="8"
