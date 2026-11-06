@@ -60,8 +60,11 @@
     <Setter Property="Margin" Value="0,0,0,0" />
   </Style>
 
-  <!-- A section on a page: Subtitle 20/28. -->
-  <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}" />
+  <!-- A section on a page: Subtitle 20/28, with 12 between it and what it heads. Home's shelves,
+       This week, Trending, the title page's Episodes and the discussion pane all use it. -->
+  <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}">
+    <Setter Property="LineHeight" Value="28" />
+  </Style>
 
   <!-- A link that is not the main action: at the end of a heading (View all, Full calendar, See all,
        with a chevron), and Show or the watched fold on a title page. Silk and semibold, as the spec

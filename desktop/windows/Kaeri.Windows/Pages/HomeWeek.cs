@@ -43,7 +43,7 @@ sealed partial class HomeWeek : Grid
         var head = new Grid { Margin = new Thickness(0, 0, 0, 12) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        title = new TextBlock { FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold };
+        title = new TextBlock { Style = Ui.Res<Style>("SectionTitleStyle"), TextWrapping = TextWrapping.NoWrap };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
         head.Children.Add(title);
         link = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle") };

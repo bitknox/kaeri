@@ -335,9 +335,7 @@ sealed partial class HomeShelf : Grid
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         heading = new TextBlock
         {
-            FontSize = 20,
-            LineHeight = 28,
-            FontWeight = FontWeights.SemiBold,
+            Style = Ui.Res<Style>("SectionTitleStyle"),
             VerticalAlignment = VerticalAlignment.Bottom,
             TextWrapping = TextWrapping.NoWrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
