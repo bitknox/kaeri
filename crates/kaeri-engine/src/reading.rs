@@ -224,17 +224,34 @@ pub(crate) fn reader(state: &ReadingState, command: ReaderCommand, tx: &Outbox) 
 }
 
 /// A book source command.
-pub(crate) fn book_sources(state: &ReadingState, command: BookSourceCommand, tx: &Outbox) {
+pub(crate) fn book_sources(
+    state: &ReadingState,
+    services: &Services,
+    command: BookSourceCommand,
+    tx: &Outbox,
+) {
     if !state.available {
         return off(ReadingAbout::Sources, tx);
     }
     match command {
         BookSourceCommand::Load => {
-            let view = BookSourcesView::default();
-            let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
+            let _ =
+                tx.send(Event::BookSources(BookSourceEvent::View(book_sources_view(services))));
         }
         other => tracing::debug!(command = ?other, "book source command not handled yet"),
     }
+}
+
+/// The Sources screen's book sources. Plugins only, until folders and servers land, in the
+/// order of their ids.
+fn book_sources_view(services: &Services) -> BookSourcesView {
+    let origins = services.stores.origins();
+    let plugins = services.book_plugins.rows(|id| match origins.get(id) {
+        Some((kaeri_model::sources::ProviderOrigin::Store { name, .. }, _)) => name.clone(),
+        _ => None,
+    });
+    let order = plugins.iter().map(|row| row.id.clone()).collect();
+    BookSourcesView { plugins, order, ..BookSourcesView::default() }
 }
 
 fn off(about: ReadingAbout, tx: &Outbox) {

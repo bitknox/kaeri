@@ -1456,6 +1456,8 @@ fn two_stores() -> Vec<StoreRow> {
         version: version.into(),
         hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
         status,
+        books: false,
+        media: Vec::new(),
     };
     vec![
         StoreRow {
@@ -2331,6 +2333,8 @@ fn publish_pick(s: &mut Screen) {
         version: version.into(),
         hosts: vec![format!("{id}.example")],
         published: published.map(Into::into),
+        books: false,
+        media: Vec::new(),
     };
     s.apply(Event::LocalPlugins {
         store: "aaaa".into(),
@@ -2429,6 +2433,8 @@ fn open_link_confirm(s: &mut Screen) {
                 version: "1.4.0".into(),
                 hosts: vec!["api.yamabiko.example".into()],
                 status: StorePluginStatus::Installed,
+                books: false,
+                media: Vec::new(),
             },
             StorePluginRow {
                 id: "hotaru".into(),
@@ -2436,6 +2442,8 @@ fn open_link_confirm(s: &mut Screen) {
                 version: "0.3.0".into(),
                 hosts: vec!["subs.example".into()],
                 status: StorePluginStatus::Available,
+                books: false,
+                media: Vec::new(),
             },
         ],
         open: true,

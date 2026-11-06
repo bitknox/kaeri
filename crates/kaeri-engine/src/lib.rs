@@ -96,6 +96,7 @@ pub mod aniskip;
 pub mod artwork;
 pub mod autoplay;
 pub mod background;
+pub mod book_plugins;
 pub mod cache;
 #[cfg(feature = "cast")]
 pub mod cast;

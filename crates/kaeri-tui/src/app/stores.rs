@@ -670,6 +670,8 @@ mod tests {
             version: "2.0.0".into(),
             hosts: vec!["api.example".into()],
             status,
+            books: false,
+            media: Vec::new(),
         }
     }
 
@@ -1034,6 +1036,8 @@ mod tests {
             version: "1.0.0".into(),
             hosts: Vec::new(),
             published: None,
+            books: false,
+            media: Vec::new(),
         };
         // An answer for another store is not offered here.
         a.apply(Event::LocalPlugins { store: "other".into(), plugins: vec![local.clone()] });

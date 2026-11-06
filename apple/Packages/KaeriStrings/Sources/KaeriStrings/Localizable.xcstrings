@@ -231499,6 +231499,18 @@
         }
       }
     },
+    "store-takes-no-books" : {
+      "comment" : "Error: a book source cannot be published to a store whose server is too old to list book sources. Argument 1: store (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ doesn't list book sources yet. Its owner can update the plugin store to add them."
+          }
+        }
+      }
+    },
     "store-token-missing" : {
       "comment" : "Error: the store was joined once, but this device has no saved token for it. Argument 1: store (Text).",
       "extractionState" : "manual",

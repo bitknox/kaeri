@@ -1632,6 +1632,8 @@ mod tests {
                 version: "1.4.0".into(),
                 hosts: vec!["api.example".into()],
                 status: kaeri_model::stores::StorePluginStatus::OtherStore("Theirs".into()),
+                books: true,
+                media: vec![kaeri_core::media::Medium::Manga],
             }],
             open: true,
             anonymous: true,

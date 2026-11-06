@@ -100,6 +100,8 @@ pub struct Services {
     pub party: crate::playback::seat::PartyHub,
     /// Whether skip times are found from the audio, and why not.
     pub skip_find: Arc<crate::skip_find::SkipFind>,
+    /// The book source plugins loaded, while reading is available.
+    pub book_plugins: crate::book_plugins::BookPlugins,
     /// How many player windows the playbacks opened, for a test that counts them.
     #[cfg(feature = "testing")]
     pub windows: Option<Arc<std::sync::atomic::AtomicUsize>>,
@@ -172,6 +174,7 @@ impl Services {
             fixture_route: false,
             party: Default::default(),
             skip_find: Default::default(),
+            book_plugins: Default::default(),
             #[cfg(feature = "testing")]
             windows: None,
             #[cfg(feature = "cast")]

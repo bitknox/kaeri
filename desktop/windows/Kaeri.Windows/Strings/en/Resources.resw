@@ -1027,6 +1027,10 @@
     <value>{plugin} is no longer in the plugin folder.</value>
     <comment>Error: a plugin to publish is no longer in the plugin folder.</comment>
   </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>{store} doesn't list book sources yet. Its owner can update the plugin store to add them.</value>
+    <comment>Error: a book source cannot be published to a store whose server is too old to list book sources.</comment>
+  </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>This device joined {store} with its link. Paste the same link on the other device.</value>
     <comment>Error: an invite for another device cannot be made from a device that joined with the open link.</comment>
