@@ -133,7 +133,16 @@ public sealed partial class MainWindow : Window
             Ctx.Guarded("the window", () => Heard(batch));
             ctx.Heard(batch);
         };
-        session.Stopped += () => { if (!closing) Close(); };
+        session.Stopped += () =>
+        {
+            if (closing)
+                return;
+            // The engine stopped on its own: a window that says so, with Open again, rather than
+            // the app vanishing.
+            stoppedWindow = StartFailedWindow.Stopped();
+            stoppedWindow.Activate();
+            CloseNow();
+        };
 
         player = StartPlayer(engine);
         Player.Attach(ctx, player);
@@ -1444,6 +1453,9 @@ public sealed partial class MainWindow : Window
         args.Handled = true;
         ShowOpenLink();
     }
+
+    /// <summary>The window that says the engine stopped, kept while it is up.</summary>
+    static StartFailedWindow? stoppedWindow;
 
     JoinStoreDialog? joining;
     string? fixtureInvite;
