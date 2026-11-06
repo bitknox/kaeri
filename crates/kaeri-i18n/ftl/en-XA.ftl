@@ -7061,6 +7061,9 @@ player-start-miss-no-match = [{ $name } ðöéšñ'ţ ĥàṽé ţĥîš šĥö�
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = [{ $name } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~~]
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = [{ $name } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode } ýéţ. Þļàýîñĝ ƒŕöɱ ţĥé ñéẋţ šöüŕçé.~~~~~~~~~~~~~~~~~~~]
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = [{ $name } ðîðñ'ţ àñšŵéŕ~~~~~~]
 

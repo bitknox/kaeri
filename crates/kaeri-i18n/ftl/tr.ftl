@@ -7061,6 +7061,9 @@ player-start-miss-no-match = { $name } bu diziye sahip değil
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } bölüm { $episode } için yok
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } henüz { $episode }. bölüme sahip değil. Başka bir kaynak ile oynatılıyor.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } yanıt vermedi
 

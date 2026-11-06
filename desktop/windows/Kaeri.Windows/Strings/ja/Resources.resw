@@ -4247,6 +4247,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name}にはエピソード {episode} がありません</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name}にはまだエピソード {episode} がありません。次のソースから再生します。</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name}から応答がありませんでした</value>
   </data>

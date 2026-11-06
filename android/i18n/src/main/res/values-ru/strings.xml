@@ -1849,6 +1849,7 @@
     <string name="player_start_pinned">Ваш выбор для этого шоу</string>
     <string name="player_start_miss_no_match">У %1$s нет этого шоу</string>
     <string name="player_start_miss_no_episode">У %1$s нет серии %2$s</string>
+    <string name="player_start_pin_missed">У %1$s пока нет серии %2$s. Воспроизведение из следующего источник.</string>
     <string name="player_start_miss_failed">%1$s не ответил</string>
     <string name="player_start_miss_timed_out">%1$s отвечал слишком долго</string>
     <string name="player_start_miss_skipped">Вы пропустили %1$s</string>

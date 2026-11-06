@@ -154037,6 +154037,90 @@
         }
       }
     },
+    "player-start-pin-missed" : {
+      "comment" : "Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it. Argument 1: name (Text). Argument 2: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat Folge %2$@ noch nicht. Es läuft über die nächste Quelle."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ doesn't have episode %2$@ yet. Playing from the next source."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ aún no tiene el episodio %2$@. Se reproduce desde otra fuente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ n'a pas encore l'épisode %2$@. Lecture depuis la source suivante."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ belum punya episode %2$@. Diputar dari sumber lain."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ non ha ancora l'episodio %2$@. Riproduzione dalla fonte successiva."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@にはまだエピソード %2$@ がありません。次のソースから再生します。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ nie ma jeszcze odcinka %2$@. Odtwarzanie z kolejnego źródło."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ainda não tem o episódio %2$@. Reproduzindo da próxima fonte."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У %1$@ пока нет серии %2$@. Воспроизведение из следующего источник."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ har inte avsnitt %2$@ än. Spelar från en annan källa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ henüz %2$@. bölüme sahip değil. Başka bir kaynak ile oynatılıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ chưa có tập %2$@. Đang phát từ nguồn khác."
+          }
+        }
+      }
+    },
     "player-start-pinned" : {
       "comment" : "Detail line while the source asked is the one the show is pinned to.",
       "extractionState" : "manual",

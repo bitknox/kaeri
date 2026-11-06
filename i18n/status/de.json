@@ -14397,6 +14397,12 @@
     "by": "agent",
     "at": "2026-11-03"
   },
+  "player-start-pin-missed": {
+    "source": "7007050f7b4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-05"
+  },
   "player-start-pinned": {
     "source": "c2fc18d45f4a",
     "state": "draft",

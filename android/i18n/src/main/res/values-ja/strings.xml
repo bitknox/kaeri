@@ -1681,6 +1681,7 @@
     <string name="player_start_pinned">この作品で選んだもの</string>
     <string name="player_start_miss_no_match">%1$sにはこの作品がありません</string>
     <string name="player_start_miss_no_episode">%1$sにはエピソード %2$s がありません</string>
+    <string name="player_start_pin_missed">%1$sにはまだエピソード %2$s がありません。次のソースから再生します。</string>
     <string name="player_start_miss_failed">%1$sから応答がありませんでした</string>
     <string name="player_start_miss_timed_out">%1$sの応答に時間がかかりすぎました</string>
     <string name="player_start_miss_skipped">%1$sをスキップしました</string>

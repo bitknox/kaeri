@@ -6337,6 +6337,11 @@ public enum L {
         Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
     }
 
+    /// Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+    public static func playerStartPinMissed(name: String, episode: String) -> String {
+        Self.format("player-start-pin-missed", fallback: "%1$@ doesn't have episode %2$@ yet. Playing from the next source.", name, episode)
+    }
+
     /// Detail line when a source failed and the next is asked.
     public static func playerStartMissFailed(name: String) -> String {
         Self.format("player-start-miss-failed", fallback: "%1$@ didn't answer", name)

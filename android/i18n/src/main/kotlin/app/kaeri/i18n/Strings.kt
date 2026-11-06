@@ -6277,6 +6277,10 @@ object Strings {
     fun playerStartMissNoEpisode(context: Context, name: String, episode: String): String =
         context.getString(R.string.player_start_miss_no_episode, name, episode)
 
+    /** Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it. */
+    fun playerStartPinMissed(context: Context, name: String, episode: String): String =
+        context.getString(R.string.player_start_pin_missed, name, episode)
+
     /** Detail line when a source failed and the next is asked. */
     fun playerStartMissFailed(context: Context, name: String): String =
         context.getString(R.string.player_start_miss_failed, name)

@@ -1737,6 +1737,7 @@
     <string name="player_start_pinned">Bu dizi için seçimin</string>
     <string name="player_start_miss_no_match">%1$s bu diziye sahip değil</string>
     <string name="player_start_miss_no_episode">%1$s bölüm %2$s için yok</string>
+    <string name="player_start_pin_missed">%1$s henüz %2$s. bölüme sahip değil. Başka bir kaynak ile oynatılıyor.</string>
     <string name="player_start_miss_failed">%1$s yanıt vermedi</string>
     <string name="player_start_miss_timed_out">%1$s çok uzun sürdü</string>
     <string name="player_start_miss_skipped">%1$s atlandı</string>

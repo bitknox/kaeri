@@ -14,6 +14,7 @@ player-start-place = { -source } { $place } из { $total }
 player-start-pinned = Ваш выбор для этого шоу
 player-start-miss-no-match = У { $name } нет этого шоу
 player-start-miss-no-episode = У { $name } нет серии { $episode }
+player-start-pin-missed = У { $name } пока нет серии { $episode }. Воспроизведение из следующего { -source }.
 player-start-miss-failed = { $name } не ответил
 player-start-miss-timed-out = { $name } отвечал слишком долго
 player-start-miss-skipped = Вы пропустили { $name }

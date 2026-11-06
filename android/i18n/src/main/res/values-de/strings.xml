@@ -1737,6 +1737,7 @@
     <string name="player_start_pinned">Deine Wahl für diese Serie</string>
     <string name="player_start_miss_no_match">%1$s hat diese Serie nicht</string>
     <string name="player_start_miss_no_episode">%1$s hat Folge %2$s nicht</string>
+    <string name="player_start_pin_missed">%1$s hat Folge %2$s noch nicht. Es läuft über die nächste Quelle.</string>
     <string name="player_start_miss_failed">%1$s hat nicht geantwortet</string>
     <string name="player_start_miss_timed_out">%1$s hat zu lange gebraucht</string>
     <string name="player_start_miss_skipped">Du hast %1$s übersprungen</string>
