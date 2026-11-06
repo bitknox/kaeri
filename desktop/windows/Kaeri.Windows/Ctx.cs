@@ -62,10 +62,13 @@ sealed class Ctx
     /// <paramref name="page"/> hears every batch from now until the frame leaves it; then
     /// <paramref name="leave"/> runs, once. The frame's leaving is the signal rather than
     /// Unloaded, which a page left before it loaded never raises: such a page would stay in
-    /// memory as a listener for the rest of the run.
+    /// memory as a listener for the rest of the run. A page the frame keeps for Back calls this
+    /// on each visit; while it already hears, a second call changes nothing.
     /// </summary>
     public void Hear(Microsoft.UI.Xaml.FrameworkElement page, Action<IReadOnlyList<Event>> heard, Action? leave = null)
     {
+        if (leaving.ContainsKey(page))
+            return;
         Batch += heard;
         var gone = false;
         void Leave()

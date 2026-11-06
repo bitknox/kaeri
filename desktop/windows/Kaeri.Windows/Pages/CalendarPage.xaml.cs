@@ -63,13 +63,8 @@ public sealed partial class CalendarPage : Page
             page.Show();
         });
         minute = Timers.Weak(this, TimeSpan.FromSeconds(20), true, static page => page.Tick());
-        // Heard from the start: what arrives before the page is loaded is not missed.
-        ctx.Hear(this, Heard, () =>
-        {
-            silence.Stop();
-            activity.Stop();
-            minute.Stop();
-        });
+        // The frame keeps the page for Back and the next visit: the week, the filter and the scroll stay.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
     string TodayTip => T.CalendarTodayTooltip("Ctrl+T");
@@ -77,6 +72,13 @@ public sealed partial class CalendarPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before anything is asked, until the frame moves on.
+        ctx.Hear(this, Heard, () =>
+        {
+            silence.Stop();
+            activity.Stop();
+            minute.Stop();
+        });
         rows = ctx.Known.ListRows(new ContentFor.Calendar());
         loaded = ctx.Known.Lists.TryGetValue(new ContentFor.Calendar(), out var list) && list is ContentList.Entries or ContentList.Empty || rows.Length > 0;
         if (!loaded)
@@ -179,12 +181,26 @@ public sealed partial class CalendarPage : Page
             var left = TimeSpan.FromMilliseconds(300) - (DateTimeOffset.UtcNow - placeholdersSince);
             if (left > TimeSpan.Zero)
                 await Task.Delay(left);
-            Show();
-            Motion.FadeIn(Days, Motion.Standard);
         }
-        else
+        // Plates on screen give way to the days without a blank between; a page that only
+        // fills weeks not shown changes nothing on screen.
+        if (!plated)
+        {
             Show();
+            return;
+        }
+        // The days come up through what stood there from half strength, never from nothing.
+        var before = shownKey;
+        Show();
+        if (shownKey != before && Motion.Enabled)
+        {
+            Days.Opacity = 0.5;
+            Motion.FadeTo(Days, 1, Motion.Standard);
+        }
     }
+
+    /// <summary>Whether the days drawn last hold placeholder plates.</summary>
+    bool plated;
 
     long Now => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
@@ -255,6 +271,7 @@ public sealed partial class CalendarPage : Page
         if (key == shownKey)
             return;
         shownKey = key;
+        plated = false;
         Days.Children.Clear();
         Days.ColumnDefinitions.Clear();
         Days.RowDefinitions.Clear();
@@ -363,7 +380,9 @@ public sealed partial class CalendarPage : Page
             }
             else if (plan.Pending[i])
             {
-                if (placeholders && !plan.Failed(i))
+                // A week moved to while its page is on the way: plates at once, in the cells'
+                // own size, so the week that slides in is never blank.
+                if (!plan.Failed(i))
                     for (var p = 0; p < (i % 3) + 1; p++)
                         column.Children.Add(CellPlaceholder());
             }
@@ -583,9 +602,12 @@ public sealed partial class CalendarPage : Page
                 section.Children.Add(DayHeading(day, today));
                 if (plan.Failed(i))
                     section.Children.Add(Failure(plan.PastSide[i] ? T.CalendarLoadEarlierFailed : T.CalendarLoadLaterFailed));
-                else if (placeholders)
+                else
+                {
                     section.Children.Add(States.Rows(1, 96, 54));
-                else if (slow)
+                    plated = true;
+                }
+                if (slow && !plan.Failed(i))
                     section.Children.Add(Activity(plan.PastSide[i] ? T.CalendarLoadingEarlier : T.CalendarLoadingLater));
                 list.Children.Add(section);
                 continue;
@@ -597,7 +619,10 @@ public sealed partial class CalendarPage : Page
             if (!loaded)
             {
                 if (placeholders)
+                {
                     body.Children.Add(States.Rows(1, 96, 54));
+                    plated = true;
+                }
             }
             else if (broadcasts.Count == 0)
             {
@@ -640,8 +665,9 @@ public sealed partial class CalendarPage : Page
     }
 
     /// <summary>A cell while its week loads: the banner, then the time, the title and the line, where they will stand.</summary>
-    static StackPanel CellPlaceholder()
+    StackPanel CellPlaceholder()
     {
+        plated = true;
         var cell = new StackPanel { Spacing = 8 };
         cell.Children.Add(Wide(new Border { CornerRadius = new CornerRadius(6), Background = Ui.Res<Brush>("RaisedBrush") }));
         var lines = new StackPanel { Spacing = 4 };

@@ -1,3 +1,4 @@
+using Kaeri.App;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,11 +24,17 @@ public sealed partial class CoverGrid : UserControl
         }
     }
 
-    /// <summary>The covers, replaced whole.</summary>
+    /// <summary>
+    /// The covers, replaced whole. The same titles with the same words leave the grid as it is,
+    /// so an answer that changes nothing (a sync, a reload on a visit) moves nothing, and focus,
+    /// an open menu and the art already shown stay.
+    /// </summary>
     internal IReadOnlyList<CoverItem> Covers
     {
         set
         {
+            if (Items.ItemsSource is IReadOnlyList<CoverItem> shown && Alike(shown, value))
+                return;
             Items.ItemsSource = value;
 #if KAERI_TESTING
             // --show=hover: the first cover's preview open, as if the pointer rested on it.
@@ -43,6 +50,21 @@ public sealed partial class CoverGrid : UserControl
 #endif
         }
     }
+
+    static bool Alike(IReadOnlyList<CoverItem> a, IReadOnlyList<CoverItem> b)
+    {
+        if (a.Count != b.Count)
+            return false;
+        for (var i = 0; i < a.Count; i++)
+        {
+            if (!a[i].Entry.Equals(b[i].Entry) || a[i].Caption != b[i].Caption || a[i].Count != b[i].Count)
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>Whether the grid shows any covers now.</summary>
+    internal bool HasCovers => Items.ItemsSource is IReadOnlyList<CoverItem> { Count: > 0 };
 
 #if KAERI_TESTING
     bool previewed;
@@ -92,7 +114,12 @@ public sealed partial class CoverGrid : UserControl
 
     void OnPlan(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is CoverItem item)
-            Ctx.Current.Send(new Command.SetStatus(item.Id, LibrarySegment.Planning));
+        if ((sender as FrameworkElement)?.Tag is not CoverItem item)
+            return;
+        // The engine only queues the change for the tracker: the status is set here at once, and said.
+        var ctx = Ctx.Current;
+        ctx.Send(new Command.SetStatus(item.Id, LibrarySegment.Planning));
+        ctx.Known.SetStatus(item.Id, LibrarySegment.Planning);
+        ctx.Window.Say(T.LibraryAddedPlanning);
     }
 }
