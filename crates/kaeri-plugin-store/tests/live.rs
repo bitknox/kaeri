@@ -31,6 +31,15 @@ fn client() -> StoreClient {
 
 /// A component that is nothing but a manifest and enough padding to need three parts.
 fn stand_in(id: &str, version: &str) -> Vec<u8> {
+    stand_in_of(id, version, None)
+}
+
+/// The same, as a book source of manga.
+fn book_stand_in(id: &str, version: &str) -> Vec<u8> {
+    stand_in_of(id, version, Some(manifest::KIND_BOOKS))
+}
+
+fn stand_in_of(id: &str, version: &str, kind: Option<&str>) -> Vec<u8> {
     let mut wasm = b"\0asm\x0d\x00\x01\x00".to_vec();
     let padding = vec![b'x'; PART_SIZE as usize * 2 + 4_321];
     let name = b"padding";
@@ -54,9 +63,9 @@ fn stand_in(id: &str, version: &str) -> Vec<u8> {
         name: format!("{id} stand-in"),
         version: version.into(),
         allowed_hosts: vec!["api.example".into()],
-        translations: vec!["sub".into()],
-        kind: None,
-        media: Vec::new(),
+        translations: if kind.is_some() { Vec::new() } else { vec!["sub".into()] },
+        kind: kind.map(Into::into),
+        media: if kind.is_some() { vec!["manga".into()] } else { Vec::new() },
     };
     manifest::stamp(&wasm, &info).unwrap()
 }
@@ -102,6 +111,7 @@ async fn a_whole_journey_against_a_running_store() {
     let key = owner_invite.key;
 
     // Publish in parts, then read it back in ranges.
+    let stand_ins = std::env::var_os("KAERI_TEST_PLUGIN").is_none();
     let wasm = match std::env::var("KAERI_TEST_PLUGIN") {
         Ok(path) => std::fs::read(path).unwrap(),
         Err(_) => stand_in("live-test", "1.0.0"),
@@ -113,6 +123,24 @@ async fn a_whole_journey_against_a_running_store() {
     let listed = index.plugin(&entry.id).unwrap();
     let bytes = client.download(&base, &owner.token, listed).await.unwrap();
     assert_eq!(bytes, wasm, "the download is what was published");
+    assert!(!listed.is_books(), "a show source is listed with no kind: {listed:?}");
+
+    // A book source, on a store that says it lists them: listed with its kind and media.
+    let book = if info.books && stand_ins {
+        let book =
+            client.publish(&base, &owner.token, book_stand_in("live-books", "1.0.0")).await;
+        let book = book.unwrap();
+        assert!(book.is_books(), "{book:?}");
+        assert_eq!(book.media, ["manga"]);
+        let index = client.index(&base, &owner.token, &key, 0).await.unwrap();
+        let listed = index.plugin("live-books").expect("the book source is listed");
+        assert!(listed.is_books() && listed.media == ["manga"], "{listed:?}");
+        Some(book)
+    } else {
+        eprintln!("skipping book sources: this store does not list them, or runs plugins");
+        None
+    };
+    let index = client.index(&base, &owner.token, &key, 0).await.unwrap();
 
     // Someone new joins, sees it, and is removed.
     let invite = client
@@ -271,5 +299,8 @@ async fn a_whole_journey_against_a_running_store() {
 
     // Leave it tidy for another run's eyes: withdraw the plugin.
     client.unpublish(&base, &owner.token, &entry.id).await.unwrap();
+    if let Some(book) = book {
+        client.unpublish(&base, &owner.token, &book.id).await.unwrap();
+    }
     eprintln!("journey complete");
 }
