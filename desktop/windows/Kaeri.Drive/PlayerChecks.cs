@@ -96,6 +96,7 @@ static partial class PlayerChecks
             Front(run);
             Move(volume);
             await Task.Delay(200);
+            Act(run, "volume button: open");
             Button(down: true);
             Button(down: false);
             await Task.Delay(900);
@@ -104,6 +105,7 @@ static partial class PlayerChecks
             Shot(run, "09-volume-open");
             Move(thumb);
             await Task.Delay(200);
+            Act(run, "volume line: press");
             Button(down: true);
             for (var i = 0; i <= 20; i++)
             {
@@ -112,11 +114,13 @@ static partial class PlayerChecks
             }
             await Task.Delay(500);
             Shot(run, "10-volume-held");
+            Act(run, "volume line: release");
             Button(down: false);
             await Task.Delay(800);
             Shot(run, "11-volume-after");
             // The button again closes the flyout; Esc would reach the player if it had gone.
             Move(volume);
+            Act(run, "volume button: close");
             Button(down: true);
             Button(down: false);
             await Task.Delay(600);
@@ -128,6 +132,7 @@ static partial class PlayerChecks
             await Task.Delay(300);
             Move(Line(0.93));
             await Task.Delay(300);
+            Act(run, "seek line: click at 93%");
             Button(down: true);
             Button(down: false);
             await Task.Delay(1200);
@@ -139,6 +144,10 @@ static partial class PlayerChecks
             Shot(run, "14-ending-16s");
         });
     }
+
+    /// <summary>What the scenario did when, on the wall clock in UTC as the app's log has it, in actions.txt.</summary>
+    static void Act(Run run, string what) =>
+        File.AppendAllText(Path.Combine(run.Options.Out, run.Name, "actions.txt"), $"{DateTime.UtcNow:HH:mm:ss.fff} {what}{Environment.NewLine}");
 
     static bool PlayerLoaded(string marks)
     {
