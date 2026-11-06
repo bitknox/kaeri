@@ -188,7 +188,7 @@ sealed partial class CommentRow
         };
         flyout.Opening += (_, _) => FillMenu();
         menu.Flyout.Opening += (_, _) => FillMenu();
-        card.OpacityTransition = new ScalarTransition { Duration = TimeSpan.FromMilliseconds(200) };
+        card.OpacityTransition = new ScalarTransition { Duration = Motion.Quick };
         if (Motion.Enabled)
             Motion.QuickOpacity(card);
         AutomationProperties.SetAccessibilityView(Replies, AccessibilityView.Content);
@@ -595,8 +595,8 @@ sealed partial class CommentRow
             {
                 if (animate && Motion.Enabled)
                 {
-                    text.OpacityTransition ??= new ScalarTransition { Duration = TimeSpan.FromMilliseconds(150) };
-                    bar.OpacityTransition ??= new ScalarTransition { Duration = TimeSpan.FromMilliseconds(150) };
+                    text.OpacityTransition ??= new ScalarTransition { Duration = Motion.Quick };
+                    bar.OpacityTransition ??= new ScalarTransition { Duration = Motion.Quick };
                 }
                 text.Opacity = open ? 1 : 0;
                 bar.Opacity = open ? 0.55 : 1;
