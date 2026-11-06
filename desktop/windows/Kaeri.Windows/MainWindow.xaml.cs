@@ -604,6 +604,8 @@ public sealed partial class MainWindow : Window
                     break;
                 case Event.Settings:
                     CrashGuard.Follow(SettingsCatalog.IsOn(ctx.Known.Setting(SettingKey.SaveCrashReports)));
+                    // Motion off in Settings reduces motion, as Windows' own Animation effects off does.
+                    Motion.Chosen = ctx.Known.Setting(SettingKey.Motion) is not { } motion || SettingsCatalog.IsOn(motion);
                     RememberWhere();
                     break;
                 case Event.TitlesChanged:
