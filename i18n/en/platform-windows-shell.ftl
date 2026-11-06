@@ -200,3 +200,49 @@ engine-stopped-detail = The part of the app that does the work has stopped. Open
 # @only windows
 # @max 24
 engine-stopped-open-again = Open again
+
+## The title bar's status: where sync stands, and what is running.
+
+# The status in the title bar while the main tracker is synced.
+# @only windows
+# @arg tracker: text
+# @max 32
+titlebar-synced = { $tracker } synced
+
+# The status while the tracker's last pull failed.
+# @only windows
+# @arg tracker: text
+# @max 32
+titlebar-not-synced = { $tracker } not synced
+
+# The status while the tracker refused the sign-in and needs it again.
+# @only windows
+# @arg tracker: text
+# @max 32
+titlebar-sign-in-again = Sign in to { $tracker } again
+
+# Help text of the status button, for Narrator.
+# @only windows
+titlebar-status-hint = Shows what is running
+
+# The status flyout's line while no work is running.
+# @only windows
+titlebar-nothing-running = Nothing is running.
+
+# Button in the status flyout that opens the Devices pane of Settings.
+# @only windows
+# @max 24
+titlebar-open-devices = Open { -device-cap-pl }
+
+# Title of the list of every notice this run, and the button that opens it.
+# @only windows
+# @max 24
+messages-title = Messages
+
+# The list of notices while there are none yet.
+# @only windows
+messages-none = No messages yet
+
+# Name of the dot before a notice that was an alert, for Narrator.
+# @only windows
+messages-alert = Problem

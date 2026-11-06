@@ -88,13 +88,19 @@ sealed class AccountCard
                 buttons.Add((T.AccountsSignIn, SignIn));
         }
         var busy = signingIn && state is not { Connected: true, NeedsReauth: false };
-        var key = $"{description}|{busy}|{string.Join("|", buttons.Select(b => b.Text))}"; // i18n-skip
+        // The line changes in place ("Synced 2 min ago" moves on by itself); the buttons are made
+        // again only when which buttons there are changes, so one under the pointer stays.
+        if (card.Description as string != description)
+            card.Description = description;
+        if (ring.IsActive != busy)
+        {
+            ring.IsActive = busy;
+            ring.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        }
+        var key = string.Join("|", buttons.Select(b => b.Text)); // i18n-skip
         if (key == drawn)
             return;
         drawn = key;
-        card.Description = description;
-        ring.IsActive = busy;
-        ring.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         actions.Children.Clear();
         foreach (var (text, act) in buttons)
         {

@@ -40,15 +40,25 @@ public sealed partial class SettingsPage
     {
         var status = ctx.Known.SyncGroup ?? NoSync;
         var now = Now;
-        var words = new List<object?> { SyncWords.Bare(status), status.Syncing, status.RecoveryKey, status.RecoveryKeyMade, ctx.Tv.Available };
+        // A pass starting or ending, and a device's or the folder's line, change in place: they
+        // are not part of the key, so a sync pass never redraws the pane.
+        var words = new List<object?> { SyncWords.Bare(status), status.RecoveryKey, status.RecoveryKeyMade, ctx.Tv.Available };
         foreach (var device in status.Devices.Where(d => !d.ThisDevice))
-            words.Add((device.Id, device.Name, device.Kind, device.RemoteKey is null, SyncWords.DeviceLine(device, now, ctx.Tv.Paired.Any(tv => tv.Name == device.Name))));
+            words.Add((device.Id, device.Name, device.Kind, device.RemoteKey is null));
         foreach (var note in status.Notes)
             words.Add((note, ctx.Known.Entries.TryGetValue(note.AnilistId, out var entry) ? entry.Title : ""));
         if (status.Folder is { } folder)
-            words.Add((folder.Kind, folder.Account, SyncWords.State(status, now, SyncDialogs.ByHand)));
+            words.Add((folder.Kind, folder.Account, CloudButtons(SyncWords.State(status, now, SyncDialogs.ByHand))));
         return Drawn.Fingerprint(words);
     }
+
+    /// <summary>Which buttons and title the cloud card has for a state: what redraws it, where its line alone does not.</summary>
+    static string CloudButtons(CloudState state) => state switch
+    {
+        CloudState.Problem problem => $"problem {problem.Fix}", // i18n-skip
+        CloudState.SignedOut => "signed out", // i18n-skip
+        _ => "",
+    };
 
     void ShowDevices()
     {
@@ -191,6 +201,20 @@ public sealed partial class SettingsPage
         };
         if (Marked(line, mark) is { } described)
             card.Description = described;
+        var drawn = (line, mark);
+        refresh.Add(() =>
+        {
+            if (Device(device.Id) is not { } now)
+                return;
+            var said = SyncWords.DeviceLine(now, Now, ctx.Tv.Paired.Any(tv => tv.Name == now.Name));
+            if (said == drawn)
+                return;
+            drawn = said;
+            if (Marked(said.Item1, said.Item2) is { } again)
+                card.Description = again;
+            else
+                card.ClearValue(SettingsCard.DescriptionProperty);
+        });
         AutomationProperties.SetName(card, T.DevicesOpenName(device.Name));
         card.Click += (_, _) => SyncDialogs.DevicePage(Device(device.Id) ?? device);
         return card;
@@ -279,7 +303,7 @@ public sealed partial class SettingsPage
         }
         var service = SyncWords.ServiceName(folder.Kind);
         var state = SyncWords.State(status, Now, SyncDialogs.ByHand);
-        var (line, mark) = state switch
+        static (string, SyncMark) Line(CloudState state, SyncFolderView folder) => state switch
         {
             CloudState.Synced synced => (folder.Account is { } account ? $"{synced.Line} · {account}" : synced.Line, SyncMark.Water),
             CloudState.Syncing => (T.SyncSyncing, SyncMark.Water),
@@ -287,6 +311,8 @@ public sealed partial class SettingsPage
             CloudState.Problem problem => (problem.Line, SyncMark.Vermilion),
             _ => (T.CloudOffline(SyncWords.Kind), SyncMark.Amber),
         };
+        var (line, mark) = Line(state, folder);
+        Button? syncNow = null;
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         switch (state)
         {
@@ -304,7 +330,7 @@ public sealed partial class SettingsPage
                 buttons.Children.Add(choose);
                 break;
             default:
-                var now = new Button { Content = T.CloudSyncNow, IsEnabled = !status.Syncing };
+                var now = syncNow = new Button { Content = T.CloudSyncNow, IsEnabled = !status.Syncing };
                 now.Click += (_, _) => ctx.Send(new Command.SyncFolderNow());
                 buttons.Children.Add(now);
                 break;
@@ -320,6 +346,22 @@ public sealed partial class SettingsPage
             card.Description = described;
         AutomationProperties.SetName(card, $"{card.Header}, {line}");
         Cards.Children.Add(card);
+        // A pass starting or ending changes the line and Sync now in place.
+        var drawn = (line, mark);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.SyncGroup is not { Folder: { } nowFolder } nowStatus)
+                return;
+            if (syncNow is not null && syncNow.IsEnabled == nowStatus.Syncing)
+                syncNow.IsEnabled = !nowStatus.Syncing;
+            var said = Line(SyncWords.State(nowStatus, Now, SyncDialogs.ByHand), nowFolder);
+            if (said == drawn)
+                return;
+            drawn = said;
+            if (Marked(said.Item1, said.Item2) is { } again)
+                card.Description = again;
+            AutomationProperties.SetName(card, $"{card.Header}, {said.Item1}");
+        });
     }
 
     /// <summary>

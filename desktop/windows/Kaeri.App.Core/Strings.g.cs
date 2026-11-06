@@ -1236,6 +1236,33 @@ public static partial class T
     /// <summary>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</summary>
     public static string SettingsLanguageRestart => Get("SettingsLanguageRestart");
 
+    /// <summary>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</summary>
+    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
+
+    /// <summary>Button in Accounts that opens the list of differences.</summary>
+    public static string SettingsDifferencesReview => Get("SettingsDifferencesReview");
+
+    /// <summary>The box at the top of Settings that finds a setting by its name.</summary>
+    public static string SettingsSearch => Get("SettingsSearch");
+
+    /// <summary>Note under the download quality row.</summary>
+    public static string SettingsQualityDetailWindows => Get("SettingsQualityDetailWindows");
+
+    /// <summary>Note under the merge subtitles row.</summary>
+    public static string SettingsMergeSubtitlesDetailWindows => Get("SettingsMergeSubtitlesDetailWindows");
+
+    /// <summary>Note under the keep seeding row.</summary>
+    public static string SettingsKeepSeedingDetailWindows => Get("SettingsKeepSeedingDetailWindows");
+
+    /// <summary>Note under the switch for episode discussions.</summary>
+    public static string SettingsDiscussionsNoteWindows => Get("SettingsDiscussionsNoteWindows");
+
+    /// <summary>Note under the switch that loads images in comments.</summary>
+    public static string SettingsCommentImagesNoteWindows => Get("SettingsCommentImagesNoteWindows");
+
+    /// <summary>Button beside the download folder: picks another folder.</summary>
+    public static string SettingsFolderBrowse => Get("SettingsFolderBrowse");
+
     /// <summary>The notification area icon's balloon, the first time the window closes with downloads running: its title.</summary>
     public static string TrayStillDownloading => Get("TrayStillDownloading");
 
@@ -1364,6 +1391,33 @@ public static partial class T
 
     /// <summary>Button in that window: opens the app again.</summary>
     public static string EngineStoppedOpenAgain => Get("EngineStoppedOpenAgain");
+
+    /// <summary>The status in the title bar while the main tracker is synced.</summary>
+    public static string TitlebarSynced(string tracker) => Fill(Get("TitlebarSynced"), ("tracker", tracker));
+
+    /// <summary>The status while the tracker's last pull failed.</summary>
+    public static string TitlebarNotSynced(string tracker) => Fill(Get("TitlebarNotSynced"), ("tracker", tracker));
+
+    /// <summary>The status while the tracker refused the sign-in and needs it again.</summary>
+    public static string TitlebarSignInAgain(string tracker) => Fill(Get("TitlebarSignInAgain"), ("tracker", tracker));
+
+    /// <summary>Help text of the status button, for Narrator.</summary>
+    public static string TitlebarStatusHint => Get("TitlebarStatusHint");
+
+    /// <summary>The status flyout's line while no work is running.</summary>
+    public static string TitlebarNothingRunning => Get("TitlebarNothingRunning");
+
+    /// <summary>Button in the status flyout that opens the Devices pane of Settings.</summary>
+    public static string TitlebarOpenDevices => Get("TitlebarOpenDevices");
+
+    /// <summary>Title of the list of every notice this run, and the button that opens it.</summary>
+    public static string MessagesTitle => Get("MessagesTitle");
+
+    /// <summary>The list of notices while there are none yet.</summary>
+    public static string MessagesNone => Get("MessagesNone");
+
+    /// <summary>Name of the dot before a notice that was an alert, for Narrator.</summary>
+    public static string MessagesAlert => Get("MessagesAlert");
 
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
@@ -9146,6 +9200,16 @@ public static partial class T
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
         ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
         ["SettingsLanguageRestart"] = "Restart",
+        ["SettingsDifferences_one"] = "One title differs from {tracker}",
+        ["SettingsDifferences_other"] = "{count} titles differ from {tracker}",
+        ["SettingsDifferencesReview"] = "Review",
+        ["SettingsSearch"] = "Search settings",
+        ["SettingsQualityDetailWindows"] = "Higher takes the best version a source offers, and more space.",
+        ["SettingsMergeSubtitlesDetailWindows"] = "Subtitles stay with the episode wherever the file goes.",
+        ["SettingsKeepSeedingDetailWindows"] = "A download that keeps seeding stays in Kaeri's cache, not the download folder.",
+        ["SettingsDiscussionsNoteWindows"] = "Reads the comments on AniList's forum thread for episodes you have watched.",
+        ["SettingsCommentImagesNoteWindows"] = "Each image loads from the site that hosts it, which sees your IP address.",
+        ["SettingsFolderBrowse"] = "Browse…",
         ["TrayStillDownloading"] = "Kaeri is still downloading",
         ["TrayWhere"] = "It's in the notification area.",
         ["TrayOpen"] = "Open Kaeri",
@@ -9192,6 +9256,15 @@ public static partial class T
         ["EngineStoppedTitle"] = "Kaeri stopped working",
         ["EngineStoppedDetail"] = "The part of the app that does the work has stopped. Open Kaeri again to carry on.",
         ["EngineStoppedOpenAgain"] = "Open again",
+        ["TitlebarSynced"] = "{tracker} synced",
+        ["TitlebarNotSynced"] = "{tracker} not synced",
+        ["TitlebarSignInAgain"] = "Sign in to {tracker} again",
+        ["TitlebarStatusHint"] = "Shows what is running",
+        ["TitlebarNothingRunning"] = "Nothing is running.",
+        ["TitlebarOpenDevices"] = "Open Devices",
+        ["MessagesTitle"] = "Messages",
+        ["MessagesNone"] = "No messages yet",
+        ["MessagesAlert"] = "Problem",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",

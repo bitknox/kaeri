@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
     readonly Taskbar? taskbar;
     readonly MediaControls? media;
     Tray? tray;
+    readonly ShellStatus status;
     bool selecting, played, closing, askedClose, firstRun;
 
     public MainWindow(Options options)
@@ -114,6 +115,9 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+        // Where sync stands and what is running, at the title bar's end.
+        status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
+        AppTitleBar.RightHeader = status;
 #if KAERI_TESTING
         // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
         session.Known.ForcedPause = options.Show switch
@@ -131,6 +135,7 @@ public sealed partial class MainWindow : Window
             Ctx.Guarded("the player", () => Player.Heard(batch));
             Ctx.Guarded("the media controls", () => media?.Heard(batch));
             Ctx.Guarded("the window", () => Heard(batch));
+            Ctx.Guarded("the status", () => status.Heard(batch));
             ctx.Heard(batch);
         };
         session.Stopped += () =>
@@ -261,6 +266,7 @@ public sealed partial class MainWindow : Window
         var narrow = width < 760;
         SearchBox.MinWidth = narrow ? 140 : 320;
         AppTitleBar.Title = narrow ? "" : T.AppName;
+        status?.Fit(width < 1120);
     }
 
     /// <summary>
@@ -516,6 +522,69 @@ public sealed partial class MainWindow : Window
                 ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
                 ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
             });
+        // --show=jobs[-open]: two jobs past 600 ms, one held up on a wait, as the engine would say
+        // them; -open opens the status flyout. --show=messages: a notice and an alert, then Messages.
+        if (options.Show is "jobs" or "jobs-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2000);
+                ctx.Inject(new Event.JobStarted(9_100_001, "checking sources")); // i18n-skip
+                await Task.Delay(400);
+                ctx.Inject(new Event.JobStarted(9_100_002, "syncing with AniList")); // i18n-skip
+                await Task.Delay(1200);
+                ctx.Inject(new Event.JobNote(9_100_002, new Msg.StatusWaitingForRedirect("AniList"), TimeSpan.FromSeconds(12)));
+                if (options.Show == "jobs-open")
+                    status.Open();
+                await Task.Delay(6000);
+                ctx.Inject(new Event.JobDone(9_100_001));
+                await Task.Delay(3000);
+                ctx.Inject(new Event.JobDone(9_100_002));
+            });
+        // --show=conflicts[-open]: two titles that differ from AniList, as a pull would find them,
+        // under Accounts' AniList card; -open opens the list to settle them.
+        if (options.Show is "conflicts" or "conflicts-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                (uint Id, string Title)[] titles = [(910_001, "Stardust Wayfarer"), (910_002, "The Steel Gardener")]; // i18n-skip
+                ctx.Inject(new Event.Conflicts([.. titles.Select((t, i) => new ConflictRow(t.Id, t.Title, i == 0 ? "progress" : "score", i == 0 ? "7" : "8", i == 0 ? "5" : "6"))])); // i18n-skip
+                if (options.Show == "conflicts-open")
+                {
+                    await Task.Delay(1000);
+                    await Sync.ConflictsDialog.Show(ctx, Root.XamlRoot);
+                }
+            });
+        // --show=hidden: three hidden titles in Settings › General, for Restore to take away one by one.
+        if (options.Show == "hidden")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(3000);
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                ctx.Inject(new Event.HiddenTitles(
+                [
+                    new HiddenTitle(new Entry(920_001, "Lantern Harbor", Genres: [], AvailableOn: []), HiddenAt: now - 3 * 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_002, "Moss and Iron", Genres: [], AvailableOn: []), UntilAirs: true, HiddenAt: now - 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_003, "The Quiet Orbit", Genres: [], AvailableOn: [])), // i18n-skip
+                ]));
+            });
+        if (options.Show == "messages")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                // Heard by the window as the engine's own notices are, so they show and are kept.
+                void Notice(NoticeKind kind, Msg msg)
+                {
+                    Event[] said = [new Event.Toast(new Notice(kind, "", Msg: msg))];
+                    Heard(said);
+                    ctx.Heard(said);
+                }
+                await Task.Delay(1500);
+                Notice(NoticeKind.Info, new Msg.StatusWaitingForRedirect("AniList")); // i18n-skip
+                Notice(NoticeKind.Alert, new Msg.NoticeSignInFailed("Kitsu", "invalid credentials")); // i18n-skip
+                await Task.Delay(1000);
+                ShowMessages();
+                await Task.Delay(2000);
+                Notice(NoticeKind.Info, new Msg.NoticeSignInNotWaiting("AniList")); // i18n-skip
+            });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
@@ -671,12 +740,14 @@ public sealed partial class MainWindow : Window
                     break;
                 // A cast's reason is on its card, and someone taking the TV has its own notice.
                 case Event.Toast t when TvWords.OnCastCard(t.V1.Msg):
+                    Keep(t.V1);
                     break;
                 case Event.LicensedReturn back:
                     ShowReturn(back.V1);
                     break;
                 // A start that failed says why on its own screen, not in a notice over it.
-                case Event.Toast { V1.Kind: NoticeKind.Alert } when Player.IsStarting:
+                case Event.Toast { V1.Kind: NoticeKind.Alert } quiet when Player.IsStarting:
+                    Keep(quiet.V1);
                     break;
                 case Event.Toast t when !Lines.SettingSaved(t.V1):
                     ShowToast(t.V1);
@@ -746,9 +817,9 @@ public sealed partial class MainWindow : Window
         var cloud = ctx.Known.SyncGroup is { Problem: SyncProblem.SignInNeeded needed } && !Sync.SyncDialogs.ByHand
             ? T.CloudErrSignedOut(SyncWords.ServiceName(needed.Service), SyncWords.Kind)
             : null;
-        AccountText.Text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
-        AccountDot.Visibility = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
-        AccountAlert.Visibility = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
+        var text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
+        var dot = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
+        var alert = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
         var tip = cloud is not null && !reauth ? cloud
             : anilist is null ? T.LibrarySignedOutAction
             : reauth ? T.AccountsStateExpired(Tracker)
@@ -757,12 +828,24 @@ public sealed partial class MainWindow : Window
         // With two or more profiles the item names the one in use and opens the flyout to switch.
         if (ProfileWords.Active(ctx.Known.Profiles) is { } active)
         {
-            AccountText.Text = active.Name;
+            text = active.Name;
             tip = T.ProfilesAvatarDesc(active.Name);
         }
-        AccountItem.SelectsOnInvoked = !ProfileWords.Picking(ctx.Known.Profiles);
-        ToolTipService.SetToolTip(AccountItem, tip);
-        AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
+        // Each sync event lands here: only what changed is set, so the pane's foot never redraws.
+        if (AccountText.Text != text)
+            AccountText.Text = text;
+        if (AccountDot.Visibility != dot)
+            AccountDot.Visibility = dot;
+        if (AccountAlert.Visibility != alert)
+            AccountAlert.Visibility = alert;
+        var picks = !ProfileWords.Picking(ctx.Known.Profiles);
+        if (AccountItem.SelectsOnInvoked != picks)
+            AccountItem.SelectsOnInvoked = picks;
+        if (ToolTipService.GetToolTip(AccountItem) as string != tip)
+            ToolTipService.SetToolTip(AccountItem, tip);
+        var named = T.AccountsPaneName(tip);
+        if (AutomationProperties.GetName(AccountItem) != named)
+            AutomationProperties.SetName(AccountItem, named);
     }
 
     /// <summary>
@@ -806,6 +889,12 @@ public sealed partial class MainWindow : Window
     /// <summary>A plain notice of the app's own: Matching automatically again.</summary>
     public void Say(string text) => ShowToast(InfoBarSeverity.Informational, text);
 
+    /// <summary>A notice said elsewhere than the notice bar still goes to Messages.</summary>
+    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now);
+
+    /// <summary>Ctrl+Shift+L and the status flyout: every notice this run.</summary>
+    internal void ShowMessages() => Messages.Show(ctx, Root.XamlRoot);
+
     void ShowToast(Notice notice)
     {
         var text = notice.Msg?.Text() ?? "";
@@ -833,6 +922,7 @@ public sealed partial class MainWindow : Window
     {
         var shown = ++toastShown;
         var alert = severity == InfoBarSeverity.Warning;
+        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now);
         // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
@@ -1230,7 +1320,11 @@ public sealed partial class MainWindow : Window
         if (Player.Showing)
             return;
         args.Handled = true;
-        SearchBox.Focus(FocusState.Keyboard);
+        // On Settings, Ctrl+F finds a setting, as the Mac's toolbar field does there.
+        if (ContentFrame.Content is SettingsPage settings)
+            settings.FocusFind();
+        else
+            SearchBox.Focus(FocusState.Keyboard);
     }
 
     // The player over the window.
@@ -1750,6 +1844,7 @@ public sealed partial class MainWindow : Window
         // Ctrl+/ is the slash key on US layouts only; F1 opens the list on every layout.
         Key((VirtualKey)0xBF, VirtualKeyModifiers.Control, ShowShortcuts);
         Key(VirtualKey.F1, VirtualKeyModifiers.None, ShowShortcuts, inPlayer: true);
+        Key(VirtualKey.L, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ShowMessages);
         // The mouse's back button, as Alt+Left.
         Root.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
@@ -1823,6 +1918,7 @@ public sealed partial class MainWindow : Window
         Line(T.ContinueHide, "Delete");
         Line(T.ShortcutsContextMenu, T.ShortcutsKeysMenu("Shift+F10"));
         Line(T.ShortcutsTitle, "Ctrl+/");
+        Line(T.MessagesTitle, "Ctrl+Shift+L");
         Section(T.SettingsGroupPlayer);
         Line(T.ShortcutsPlayPause, "Space, K");
         Line(T.ShortcutsSeek, "Left, Right");

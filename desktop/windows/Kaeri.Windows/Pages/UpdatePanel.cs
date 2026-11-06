@@ -77,10 +77,10 @@ sealed class UpdatePanel : StackPanel
         var status = ctx.Known.Update;
         var release = updater.Release;
         var installer = updater.Installer;
-        line.Text = Updates.Line(status, state, ctx.Known.Offline, installer is not null);
-        if (line.Text != said)
+        var words = Updates.Line(status, state, ctx.Known.Offline, installer is not null);
+        if (words != said)
         {
-            said = line.Text;
+            said = line.Text = words;
             // Read out when the step changes, not with each megabyte.
             if (state.Step != UpdateStep.Downloading)
                 FrameworkElementAutomationPeer.FromElement(line)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
@@ -91,9 +91,14 @@ sealed class UpdatePanel : StackPanel
         bar.IsIndeterminate = checking || state.Step is UpdateStep.Verifying or UpdateStep.Installing || state.Fraction is null;
         bar.Value = state.Fraction ?? 0;
 
-        notes.Text = release?.Notes ?? "";
-        notesTitle.Text = release is null ? "" : T.UpdatesNotesTitle(release.Version);
-        notesBlock.Visibility = release is { Notes.Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
+        if (notes.Text != (release?.Notes ?? ""))
+            notes.Text = release?.Notes ?? "";
+        var heading = release is null ? "" : T.UpdatesNotesTitle(release.Version);
+        if (notesTitle.Text != heading)
+            notesTitle.Text = heading;
+        var shown = release is { Notes.Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
+        if (notesBlock.Visibility != shown)
+            notesBlock.Visibility = shown;
 
         switch (state.Step)
         {
@@ -136,9 +141,15 @@ sealed class UpdatePanel : StackPanel
 
     static void Fill(Button button, (string Text, Action? Act, bool Accent) what, ref Action? on)
     {
-        button.Content = what.Text;
-        button.IsEnabled = what.Act is not null;
-        button.Style = what.Accent ? Ui.Res<Style>("AccentButtonStyle") : null;
+        // Set only when it differs: a download's progress lands here with each step, and a style
+        // set again re-templates the button under the pointer.
+        if (button.Content as string != what.Text)
+            button.Content = what.Text;
+        if (button.IsEnabled != (what.Act is not null))
+            button.IsEnabled = what.Act is not null;
+        var style = what.Accent ? Ui.Res<Style>("AccentButtonStyle") : null;
+        if (button.Style != style)
+            button.Style = style;
         on = what.Act;
     }
 

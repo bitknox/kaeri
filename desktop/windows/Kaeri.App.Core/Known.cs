@@ -294,6 +294,26 @@ public sealed class Known
     public PartyChatState? PartyChatState { get; private set; }
 
     /// <summary>The AniList account, when signed in.</summary>
+    /// <summary>The engine's jobs running now, for the title bar's status.</summary>
+    public Jobs Jobs { get; } = new();
+
+    /// <summary>Every notice said this run, newest first, for Messages.</summary>
+    public NoticeLog Messages { get; } = new();
+
+    /// <summary>What the last library pull found different from the tracker, less those settled here since.</summary>
+    public List<ConflictRow> Conflicts { get; } = [];
+
+    /// <summary>Raised when the differences change, by a pull or by one settled here.</summary>
+    public event Action? ConflictsChanged;
+
+    /// <summary>Settles one difference by keeping a side: the row goes at once, as the engine sends no new list.</summary>
+    public Command Resolve(uint id, bool keepLocal)
+    {
+        Conflicts.RemoveAll(c => c.AnilistId == id);
+        ConflictsChanged?.Invoke();
+        return new Command.ResolveConflict(id, keepLocal);
+    }
+
     public SyncState? Anilist => Sync.TryGetValue("anilist", out var s) && s.Connected ? s : null;
 
     /// <summary>Episodes downloading or waiting to, and those seeding: what closing the window stops.</summary>
@@ -327,8 +347,14 @@ public sealed class Known
 
     public void Take(Event e)
     {
+        Jobs.Take(e, DateTimeOffset.UtcNow);
         switch (e)
         {
+            case Event.Conflicts conflicts:
+                Conflicts.Clear();
+                Conflicts.AddRange(conflicts.V1);
+                ConflictsChanged?.Invoke();
+                break;
             case Event.Content c:
                 // One key per search, whichever instance of its query asked it.
                 var key = c.View is ContentFor.Search && !Lists.ContainsKey(c.View)
