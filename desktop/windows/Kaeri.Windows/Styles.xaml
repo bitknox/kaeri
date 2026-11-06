@@ -141,7 +141,7 @@
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="VerticalContentAlignment" Value="Top" />
     <Setter Property="UseSystemFocusVisuals" Value="True" />
-    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">

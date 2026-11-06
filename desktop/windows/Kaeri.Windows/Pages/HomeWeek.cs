@@ -224,7 +224,7 @@ sealed partial class HomeWeek : Grid
                 var cover = new CoverItem(now.Entry).Load(Ctx.Current.Art);
                 if (row.Children.Count > 1)
                     row.Children.RemoveAt(0);
-                row.Children.Insert(0, HomeArt.Make(cover, 44, 66, 4, false));
+                row.Children.Insert(0, HomeArt.Make(cover, 44, 66, Art.Radius(44), false));
                 card = new HomeCard(now, cover, "", "");
             }
             else if (card is { } c)

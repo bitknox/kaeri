@@ -170,7 +170,7 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
         var width = wide ? HomeWording.CardWidth : HomeWording.PosterWidth;
         var height = wide ? HomeWording.CardHeight : HomeWording.PosterHeight;
         var stack = new StackPanel { Width = width };
-        stack.Children.Add(HomeArt.Make(card.Cover, width, height, 4, wide));
+        stack.Children.Add(HomeArt.Make(card.Cover, width, height, Art.Radius(width), wide));
         Border? track = null, fill = null;
         if (wide)
         {

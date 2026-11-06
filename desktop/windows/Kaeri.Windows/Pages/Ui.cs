@@ -109,8 +109,7 @@ static class Ui
         {
             Width = width,
             Height = height,
-            // Small thumbnails round at 6, covers above 40 wide at 8.
-            CornerRadius = new CornerRadius(width > 40 ? 8 : 6),
+            CornerRadius = Art.Corner(width),
             Background = Res<Brush>("RaisedBrush"),
             Child = image,
         };

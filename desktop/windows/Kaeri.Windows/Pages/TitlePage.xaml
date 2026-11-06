@@ -43,7 +43,7 @@
               <ColumnDefinition Width="120" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="8" VerticalAlignment="Bottom">
+            <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="{x:Bind k:Art.Corner(120)}" VerticalAlignment="Bottom">
               <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
@@ -198,7 +198,7 @@
                         </MenuFlyout>
                       </Grid.ContextFlyout>
                       <Grid Width="{x:Bind StillWidth, Mode=OneWay}" Height="{x:Bind StillHeight, Mode=OneWay}" Grid.RowSpan="{x:Bind StillRowSpan, Mode=OneWay}"
-                            VerticalAlignment="Top" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
+                            VerticalAlignment="Top" CornerRadius="{x:Bind k:Art.Corner(StillWidth), Mode=OneWay}" Background="{ThemeResource RaisedBrush}">
                         <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
                         <!-- A still the viewer has not asked to see, blurred; a reveal clears it. -->
                         <Border Background="{ThemeResource SpoilerBrush}" Opacity="{x:Bind BlurOpacity, Mode=OneWay}" IsHitTestVisible="False">

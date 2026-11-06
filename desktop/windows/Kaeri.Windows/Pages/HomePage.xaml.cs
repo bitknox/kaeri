@@ -364,12 +364,12 @@ public sealed partial class HomePage : Page, IPageKeys
         {
             if (shape == HomeShape.Week)
             {
-                row.Children.Add(States.Plate(150, 66, 4));
+                row.Children.Add(States.Plate(150, 66, Art.Radius(44)));
                 continue;
             }
             var width = shape == HomeShape.Card ? HomeWording.CardWidth : HomeWording.PosterWidth;
             var card = new StackPanel { Width = width };
-            card.Children.Add(States.Plate(width, shape == HomeShape.Card ? HomeWording.CardHeight : HomeWording.PosterHeight, 4));
+            card.Children.Add(States.Plate(width, shape == HomeShape.Card ? HomeWording.CardHeight : HomeWording.PosterHeight, Art.Radius(width)));
             if (shape == HomeShape.Card)
                 card.Children.Add(new Border { Height = 9 });
             card.Children.Add(new Border { Height = 8 });

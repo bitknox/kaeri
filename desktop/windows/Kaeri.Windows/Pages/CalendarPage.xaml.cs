@@ -25,6 +25,8 @@ namespace Kaeri.Windows.Pages;
 public sealed partial class CalendarPage : Page
 {
     const double WeekWidth = 760;
+    /// <summary>The agenda's banner, the narrowest here, so every banner takes the cover rule's corner for it.</summary>
+    const double BannerNarrowest = 96;
 
     readonly Ctx ctx = Ctx.Current;
     readonly TimeZoneInfo zone = TimeZoneInfo.Local;
@@ -715,7 +717,7 @@ public sealed partial class CalendarPage : Page
     {
         plated = true;
         var cell = new StackPanel { Spacing = 8 };
-        cell.Children.Add(Wide(new Border { CornerRadius = new CornerRadius(6), Background = Ui.Res<Brush>("RaisedBrush") }));
+        cell.Children.Add(Wide(new Border { CornerRadius = Art.Corner(BannerNarrowest), Background = Ui.Res<Brush>("RaisedBrush") }));
         var lines = new StackPanel { Spacing = 4 };
         lines.Children.Add(States.Plate(40, 12, 3));
         lines.Children.Add(States.Plate(90, 12, 3));
@@ -791,7 +793,7 @@ public sealed partial class CalendarPage : Page
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         var banner = Banner(b);
-        banner.Width = 96;
+        banner.Width = BannerNarrowest;
         banner.Height = 54;
         banner.VerticalAlignment = VerticalAlignment.Top;
         grid.Children.Add(banner);
@@ -812,7 +814,7 @@ public sealed partial class CalendarPage : Page
     /// <summary>The show's banner, or its cover where it has none, filling a rounded plate of its colour.</summary>
     Grid Banner(Broadcast b)
     {
-        var banner = new Grid { CornerRadius = new CornerRadius(6), Background = new CoverItem(b.Entry).Placeholder };
+        var banner = new Grid { CornerRadius = Art.Corner(BannerNarrowest), Background = new CoverItem(b.Entry).Placeholder };
         var image = new Image { Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         banner.Children.Add(image);
         ArtFade.Watch(image);

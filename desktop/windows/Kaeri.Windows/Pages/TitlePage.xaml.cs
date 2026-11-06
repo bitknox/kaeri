@@ -419,7 +419,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         var page = new StackPanel { Spacing = 20 };
         page.Children.Add(new Border { Height = band, Background = Ui.Res<Brush>("RaisedBrush") });
         var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, -120 - 20, 36, 0) };
-        head.Children.Add(States.Plate(120, 180, 8));
+        head.Children.Add(States.Plate(120, 180, Kaeri.Windows.Art.Radius(120)));
         var bars = new StackPanel { Spacing = 10, VerticalAlignment = VerticalAlignment.Bottom };
         bars.Children.Add(States.Plate(320, 28, 4));
         bars.Children.Add(States.Plate(200, 14, 3));
