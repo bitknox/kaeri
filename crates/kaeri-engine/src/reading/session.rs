@@ -13,7 +13,7 @@ use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
-    config::WebtoonMode,
+    config::{SendProgressAfter, WebtoonMode},
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -160,6 +160,9 @@ pub struct Session {
     /// The place before another device moved the reader, for Go back.
     moved_back: Option<ReadPlace>,
     read_fired: bool,
+    /// A chapter read that the trackers hear of when the reader closes, when progress is sent
+    /// then.
+    unsent: Option<(ChapterId, i64)>,
     end_page_said: bool,
     read_timer: u64,
     flush_timer: u64,
@@ -319,6 +322,12 @@ impl Reader {
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
             s.flush(cx);
+            // Progress held for the close goes now: the furthest chapter read this time.
+            if let Some((chapter, at)) = s.unsent.take()
+                && !queue_trackers(cx, &s.work, &chapter, at).is_empty()
+            {
+                let _ = cx.tx.send(Event::ProgressQueued);
+            }
             if let Some(pages) = &self.pages {
                 pages.close(s.id);
             }
@@ -465,6 +474,7 @@ impl Reader {
             back_to: None,
             moved_back: None,
             read_fired: false,
+            unsent: None,
             end_page_said: false,
             read_timer: 0,
             flush_timer: 0,
@@ -967,7 +977,13 @@ impl Session {
         event.page = self.pages_total.checked_sub(1);
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
         event.source_id = Some("local".into());
-        let queued_for = queue_trackers(cx, &self.work, &chapter, at);
+        let queued_for = match cx.config.effective().reading.send_progress_after {
+            SendProgressAfter::Chapter => queue_trackers(cx, &self.work, &chapter, at),
+            SendProgressAfter::Close => {
+                self.unsent = Some((chapter.clone(), at));
+                Vec::new()
+            }
+        };
         if let Err(e) = cx.services.store.record_read(&event, queued_for) {
             tracing::warn!(error = %e, "a read chapter was not kept");
         }
@@ -1233,7 +1249,12 @@ mod tests {
 
     /// A reader over a work of two three-page chapters in a folder.
     fn harness(store: Store) -> Harness {
-        harness_of(store, "manga", |books| {
+        harness_of(store, "manga", two_chapters)
+    }
+
+    /// Two chapters of three pages in a folder.
+    fn two_chapters(books: &Path) -> Vec<ShelfFile> {
+        {
             (1..=2)
                 .map(|n| {
                     let path = books.join(format!("Chapter {n}.cbz"));
@@ -1250,7 +1271,7 @@ mod tests {
                     }
                 })
                 .collect()
-        })
+        }
     }
 
     /// A reader over a work of `medium` whose folder `files` fills.
@@ -1269,7 +1290,26 @@ mod tests {
         files: impl FnOnce(&Path) -> Vec<ShelfFile>,
         decoder: Option<Arc<dyn crate::host::PageDecoder>>,
     ) -> Harness {
+        harness_signed(store, medium, files, decoder, false)
+    }
+
+    /// As [`harness_on`], signed in to AniList when `signed_in`, so a read chapter queues
+    /// progress for it. Nothing is sent: the client is offline.
+    fn harness_signed(
+        store: Store,
+        medium: &str,
+        files: impl FnOnce(&Path) -> Vec<ShelfFile>,
+        decoder: Option<Arc<dyn crate::host::PageDecoder>>,
+        signed_in: bool,
+    ) -> Harness {
         let dir = tempfile::tempdir().unwrap();
+        if signed_in {
+            let tokens = kaeri_track::TokenStore::with_backend(
+                dir.path().join("tokens"),
+                kaeri_track::secret::Backend::File,
+            );
+            tokens.set("anilist", "token").unwrap();
+        }
         let books = dir.path().join("books");
         std::fs::create_dir_all(&books).unwrap();
         let series = LocalSeries {
@@ -1289,7 +1329,10 @@ mod tests {
             data_dir: dir.path().join("data"),
             cache_dir: dir.path().join("cache"),
         };
-        let config = Config::default();
+        let mut config = Config::default();
+        if signed_in {
+            config.trackers.enabled.push("anilist".into());
+        }
         let http = HttpClient::offline(&config.network).unwrap();
         let mut host = QuietHost::in_dir(&dir.path().join("tokens"));
         if let Some(decoder) = decoder {
@@ -1534,6 +1577,42 @@ mod tests {
         assert!(
             notices(&said).is_empty() && notices(&h.drain()).is_empty(),
             "nothing to resume"
+        );
+    }
+
+    #[tokio::test]
+    async fn progress_set_to_go_on_close_waits_for_the_reader_to_close() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness_signed(store, "manga", two_chapters, None, true);
+        h.config.effective_mut().reading.send_progress_after = SendProgressAfter::Close;
+        assert_eq!(
+            crate::tracking::commands::signed_in_reading_tracker_ids(&h.services.sync),
+            ["anilist"]
+        );
+        let queued = |h: &Harness| h.services.store.read_outbox("anilist").unwrap();
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
+        assert!(h.kept("1").unwrap().read);
+        assert!(queued(&h).is_empty(), "read here at once, told to the trackers on close");
+
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let ops = queued(&h);
+        assert!(
+            matches!(ops.as_slice(), [TrackOp::SetReadProgress { chapter: 1, .. }]),
+            "{ops:?}"
+        );
+
+        // The default tells them as each chapter is read.
+        h.config.effective_mut().reading.send_progress_after = SendProgressAfter::Chapter;
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
+        let ops = queued(&h);
+        assert!(
+            ops.iter().any(|op| matches!(op, TrackOp::SetReadProgress { chapter: 2, .. })),
+            "chapter 2 queued before the close: {ops:?}"
         );
     }
 
