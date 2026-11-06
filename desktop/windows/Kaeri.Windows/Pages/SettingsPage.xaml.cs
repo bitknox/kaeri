@@ -946,18 +946,28 @@ public sealed partial class SettingsPage : Page
             }
             case SettingControl.Text:
             {
+                // mpv's options are one to a line: a box that takes several, where Enter starts the
+                // next line and leaving the box saves them. The box gives its lines with \r.
+                var lines = row.Key == K.MpvOptions;
                 var text = SettingsCatalog.TypedText(row) ?? "";
-                var box = new TextBox { Text = text, MinWidth = 220, PlaceholderText = T.SettingsNotSet };
+                var box = new TextBox { Text = text, MinWidth = lines ? 320 : 220, PlaceholderText = T.SettingsNotSet };
+                if (lines)
+                {
+                    box.AcceptsReturn = true;
+                    box.TextWrapping = TextWrapping.Wrap;
+                    box.MinHeight = 96;
+                }
                 Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                string Typed() => box.Text.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
                 void Commit()
                 {
-                    if (!quiet && box.Text.Trim() != text)
-                        ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Str(box.Text.Trim())));
+                    if (!quiet && Typed() != text.Trim())
+                        ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Str(Typed())));
                 }
                 box.LostFocus += (_, _) => Commit();
                 box.KeyDown += (_, e) =>
                 {
-                    if (e.Key == global::Windows.System.VirtualKey.Enter)
+                    if (e.Key == global::Windows.System.VirtualKey.Enter && !lines)
                         Commit();
                 };
                 control = box;
