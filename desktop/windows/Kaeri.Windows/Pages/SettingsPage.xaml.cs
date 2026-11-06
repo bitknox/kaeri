@@ -392,7 +392,12 @@ public sealed partial class SettingsPage : Page
                     if (pane.Name == "playback" && group == "player")
                     {
                         var clear = new Button { Content = T.PlayerSkipClear };
-                        clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
+                        // Asks first, as the Mac does: what Kaeri found is gone with it.
+                        clear.Click += async (_, _) =>
+                        {
+                            if (await Ui.Confirm(XamlRoot, T.SettingsClearSkips, T.SettingsClearSkipsConfirm, T.PlayerSkipClear))
+                                ctx.Send(new Command.ClearSkipMarks());
+                        };
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
                         Cards.Children.Add(HideChatCard());
                     }
