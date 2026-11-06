@@ -223,6 +223,15 @@ settings-wifi-only-detail = Downloads wait for Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Torrents on mobile data
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Chapter downloads on mobile data
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Keep next chapters ready
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Delete chapters after reading
+
 # Row: seeding after watching.
 # @allow proceed
 settings-seed-after = Seed after watching

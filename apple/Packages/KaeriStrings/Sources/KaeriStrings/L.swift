@@ -8644,6 +8644,15 @@ public enum L {
     /// Row: torrents on a mobile connection.
     public static var settingsTorrentsCellular: String { string("settings-torrents-cellular", fallback: "Torrents on mobile data") }
 
+    /// Row: whether chapter downloads run on a mobile connection.
+    public static var settingsChapterDownloadsCellular: String { string("settings-chapter-downloads-cellular", fallback: "Chapter downloads on mobile data") }
+
+    /// Row: keep the next chapters of what you read downloaded.
+    public static var settingsKeepChaptersReady: String { string("settings-keep-chapters-ready", fallback: "Keep next chapters ready") }
+
+    /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+    public static var settingsDeleteAfterReading: String { string("settings-delete-after-reading", fallback: "Delete chapters after reading") }
+
     /// Row: seeding after watching.
     public static var settingsSeedAfter: String { string("settings-seed-after", fallback: "Seed after watching") }
 

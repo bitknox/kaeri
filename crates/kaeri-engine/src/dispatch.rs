@@ -681,6 +681,7 @@ pub(crate) fn dispatch(
                 reader.background(&cx);
             }
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
@@ -689,6 +690,7 @@ pub(crate) fn dispatch(
             services.connection.send_replace(offline);
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
@@ -1194,8 +1196,14 @@ pub(crate) async fn handle_internal(
     }
     match message {
         // What runs on cellular may have changed with it.
-        Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
-        Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::SettingsSaved => {
+            crate::phases::settings_saved(engine, tx);
+            crate::downloads::books::resume(engine, services, tx);
+        }
+        Internal::LetGo => {
+            ahead::let_go(engine, services, tx);
+            crate::downloads::books::launched(engine, services, tx);
+        }
         Internal::Reader { session, wake } => {
             let EngineState { config, reader, .. } = engine;
             let mut cx = reader.cx(config, services, tx);
@@ -1205,6 +1213,8 @@ pub(crate) async fn handle_internal(
             let EngineState { config, reader, .. } = engine;
             let mut cx = reader.cx(config, services, tx);
             reader.synced(&mut cx);
+            let lent = crate::downloads::books::Lent::of(services, tx);
+            services.book_sources.downloads.sweep(&lent, None);
         }
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();

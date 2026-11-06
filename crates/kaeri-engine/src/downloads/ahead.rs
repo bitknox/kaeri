@@ -148,6 +148,12 @@ impl Ahead {
         Self(Arc::new(Inner { on, free, ..Inner::default() }))
     }
 
+    /// Whether this engine does background download work: keep next here, and the same for
+    /// chapter downloads, which a still frame or a test's engine leaves to what it is sent.
+    pub(crate) fn on(&self) -> bool {
+        self.0.on
+    }
+
     /// Take in what `event` says of which shows a source lists: a table listed from AniList's
     /// data alone puts its show among the unlisted, and one a source listed takes it out. An
     /// empty table says neither.

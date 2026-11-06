@@ -187,6 +187,26 @@ pub fn download_delete(id: i64, services: &Services, tx: &Outbox) {
     let _ = tx.send(Event::Toast(note));
 }
 
+/// Remove every episode download and its file, as when watching is turned off and the person
+/// asked for its downloads to go. Unfinished ones are cancelled, the rest deleted.
+pub fn download_delete_all(services: &Services, tx: &Outbox) -> usize {
+    let Services { store, .. } = services;
+    let rows = store.downloads().unwrap_or_default();
+    let gone = rows.len();
+    for row in rows {
+        if row.state == kaeri_store::DownloadState::Done {
+            let _ = store.remove_download(row.id);
+            if let Some(path) = row.path {
+                let _ = std::fs::remove_file(path);
+            }
+        } else {
+            cancel(store, row.id);
+        }
+    }
+    downloads::publish_now(store, tx);
+    gone
+}
+
 /// Clear the finished downloads from the list.
 pub fn download_clear_completed(services: &Services, tx: &Outbox) {
     let Services { store, .. } = services;

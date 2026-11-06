@@ -236,6 +236,11 @@ pub enum FfiScene {
     ReaderStrip,
     /// [`Self::ReadingHome`] for the novel in the reader, at its place in chapter 3.
     ReaderNovel,
+    /// [`Self::ReadingHome`] with keeping chapters ready on and the Downloads screen filled:
+    /// the manga's chapter 14 downloaded, 15 downloading (6 of 20 pages) and 16 and 17 queued,
+    /// all three kept ready, the novel's chapter 4 downloaded, and the strip's chapter 2 failed
+    /// for being offline. The queue stays as seeded, the engine fetching nothing by itself.
+    ReadingDownloads,
     /// [`Self::ReadingHome`] with the manga read further on Kim's iPad a minute ago: chapter 14
     /// at page 5, for "Moved to where you were on Kim's iPad".
     ReaderMoved,
@@ -402,6 +407,7 @@ impl FfiScene {
             | Self::ReadingJoinAsk
             | Self::ReadingHome
             | Self::ReadingSeries
+            | Self::ReadingDownloads
             | Self::ReaderMangaRtl
             | Self::ReaderStrip
             | Self::ReaderNovel
@@ -809,6 +815,9 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
         FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),
         FfiScene::ReadingJoinAsk => "[reading]\nkaeri_is_for = \"watch\"\n".to_owned(),
+        FfiScene::ReadingDownloads => {
+            "[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n".to_owned()
+        }
         FfiScene::ReadingHome
         | FfiScene::ReadingSeries
         | FfiScene::ReaderMangaRtl
@@ -930,6 +939,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         FfiScene::ReadingJoinAsk => seed_reading_join(store, now),
         FfiScene::ReadingHome
         | FfiScene::ReadingSeries
+        | FfiScene::ReadingDownloads
         | FfiScene::ReaderMangaRtl
         | FfiScene::ReaderStrip
         | FfiScene::ReaderNovel
@@ -1095,6 +1105,7 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
                 let _ = store.set_bookmark(READING_MANGA, "7", true, now - DAY);
             }
         }
+        FfiScene::ReadingDownloads => seed_book_downloads(store, now),
         FfiScene::ReaderStrip => {
             let _ = store.set_series_setting(READING_STRIP, "mode", Some("strip"), true, now);
             read(READING_STRIP, "2", now - 600, &|e| {
@@ -1122,6 +1133,52 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
             }],
         ),
         _ => {}
+    }
+}
+
+/// The queue of [`FfiScene::ReadingDownloads`], written as the engine writes it. The files are
+/// not there: the Downloads screen shows rows, and nothing opens them.
+fn seed_book_downloads(store: &Store, now: i64) {
+    use kaeri_store::book_downloads::BookDownloadAsk;
+    let ask = |work: &'static str, chapter: &'static str, keep_ready: bool| {
+        let ask = BookDownloadAsk {
+            work,
+            chapter,
+            source_id: "fixture-books",
+            version_label: None,
+            keep_ready,
+        };
+        if let Err(e) = store.queue_book_download(&ask, now - 600) {
+            tracing::warn!(error = %e, "a reading scene's download was not seeded");
+        }
+        store.book_download(work, chapter).ok().flatten().map(|row| row.id)
+    };
+    let warn = |e: kaeri_store::StoreError| {
+        tracing::warn!(error = %e, "a reading scene's download was not seeded");
+    };
+    // The titles the Downloads screen names the series by, as the catalogue keeps them.
+    for (work, medium, title) in [
+        (READING_MANGA, "manga", "The Lantern Ferry"),
+        (READING_NOVEL, "novel", "The Glass Orchard"),
+        (READING_STRIP, "manga", "Paper Kites Over Juniper Row"),
+    ] {
+        store.seed_book_work(work, medium, None, None, title, now).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_MANGA, "14", false) {
+        let path = "/data/book-downloads/a~3a900301/14.cbz";
+        store.book_download_done(id, path, Some(20), 9_400_000, now - 500).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_MANGA, "15", true) {
+        store.book_download_progress(id, 6, Some(20), now - 60).unwrap_or_else(warn);
+    }
+    ask(READING_MANGA, "16", true);
+    ask(READING_MANGA, "17", true);
+    if let Some(id) = ask(READING_NOVEL, "4", false) {
+        let path = "/data/book-downloads/a~3a900302/4.epub";
+        store.book_download_done(id, path, None, 1_200_000, now - 400).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_STRIP, "2", false) {
+        store.book_download_failed(id, "offline", now - 300).unwrap_or_else(warn);
     }
 }
 

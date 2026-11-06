@@ -8136,6 +8136,18 @@
     <value>Torrents on mobile data</value>
     <comment>Row: torrents on a mobile connection.</comment>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>Chapter downloads on mobile data</value>
+    <comment>Row: whether chapter downloads run on a mobile connection.</comment>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>Keep next chapters ready</value>
+    <comment>Row: keep the next chapters of what you read downloaded.</comment>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>Delete chapters after reading</value>
+    <comment>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</comment>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>Seed after watching</value>
     <comment>Row: seeding after watching.</comment>

@@ -4731,6 +4731,12 @@
     <string name="settings_wifi_only_detail">Downloads wait for Wi-Fi</string>
     <!-- Row: torrents on a mobile connection. -->
     <string name="settings_torrents_cellular">Torrents on mobile data</string>
+    <!-- Row: whether chapter downloads run on a mobile connection. -->
+    <string name="settings_chapter_downloads_cellular">Chapter downloads on mobile data</string>
+    <!-- Row: keep the next chapters of what you read downloaded. -->
+    <string name="settings_keep_chapters_ready">Keep next chapters ready</string>
+    <!-- Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. -->
+    <string name="settings_delete_after_reading">Delete chapters after reading</string>
     <!-- Row: seeding after watching. -->
     <string name="settings_seed_after">Seed after watching</string>
     <!-- Row: longest time to seed. -->
