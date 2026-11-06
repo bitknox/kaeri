@@ -571,7 +571,6 @@ pub struct NovelOpenView {
     pub restore: Option<NovelPos>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub fixed_layout: bool,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub support: NovelSupport,
 }
 

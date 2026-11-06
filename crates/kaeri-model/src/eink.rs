@@ -57,7 +57,6 @@ pub struct EinkProfile {
     /// False: pictures stay in colour and the amber accent waits for a yes.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub colour_sure: bool,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub novels: NovelSupport,
 }
 
