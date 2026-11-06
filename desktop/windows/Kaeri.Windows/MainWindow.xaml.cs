@@ -545,6 +545,19 @@ public sealed partial class MainWindow : Window
                     await Sync.ConflictsDialog.Show(ctx, Root.XamlRoot);
                 }
             });
+        // --show=hidden: three hidden titles in Settings › General, for Restore to take away one by one.
+        if (options.Show == "hidden")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(3000);
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                ctx.Inject(new Event.HiddenTitles(
+                [
+                    new HiddenTitle(new Entry(920_001, "Lantern Harbor", Genres: [], AvailableOn: []), HiddenAt: now - 3 * 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_002, "Moss and Iron", Genres: [], AvailableOn: []), UntilAirs: true, HiddenAt: now - 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_003, "The Quiet Orbit", Genres: [], AvailableOn: [])), // i18n-skip
+                ]));
+            });
         if (options.Show == "messages")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {

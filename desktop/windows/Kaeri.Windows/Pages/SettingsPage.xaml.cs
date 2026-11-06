@@ -1224,7 +1224,8 @@ public sealed partial class SettingsPage : Page
             if (await ctx.Window.PickFolder() is { Length: > 0 } picked && picked != path.Text)
                 ctx.Send(new Command.SetSetting(K.DownloadDir, new SettingValue.Str(picked)));
         };
-        var open = new Button { Content = T.DownloadsOpenFolder };
+        // Only a folder that is there opens; the engine's own place has words, not a path.
+        var open = new Button { Content = T.DownloadsOpenFolder, IsEnabled = Directory.Exists(path.Text) };
         open.Click += async (_, _) =>
         {
             try
@@ -1248,6 +1249,7 @@ public sealed partial class SettingsPage : Page
             {
                 path.Text = shown;
                 ToolTipService.SetToolTip(path, shown);
+                open.IsEnabled = Directory.Exists(shown);
             }
         };
         return line;
