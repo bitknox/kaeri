@@ -39,6 +39,10 @@ rules=(
   # engine, a player or an HTTP stack.
   "kaeri-party|$terminal"
   "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|reqwest|hyper) "
+  # Book files as untrusted bytes: parsing only, so no network, no async runtime and no engine.
+  # Fetching books is kaeri-bookserver's and the engine's.
+  "kaeri-books|$terminal"
+  "kaeri-books|^(kaeri-engine|kaeri-net|reqwest|hyper|tokio) "
   "kaeri-tui|^kaeri-engine "
   # The reader's image pipeline: pixels in, pixels out, run on the engine's prefetch worker.
   # No runtime, socket, database or FFI, no thread pool of its own, and no other Kaeri crate.
