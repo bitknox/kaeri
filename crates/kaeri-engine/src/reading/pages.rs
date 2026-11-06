@@ -35,7 +35,7 @@ use kaeri_pages::{
     strip::{StripCut, StripOptions},
 };
 
-use crate::outbox::{Internal, ReaderWake, WeakOutbox};
+use crate::outbox::{Internal, Outbox, ReaderWake};
 
 /// How long a book may take to open before the chapter fails.
 pub const OPEN_BUDGET: Duration = Duration::from_secs(8);
@@ -91,6 +91,8 @@ pub struct OpenJob {
     /// The page to make first.
     pub start_page: u32,
     pub shared: Shared,
+    /// A way to answer, held while the worker has pages to make.
+    pub out: Outbox,
 }
 
 #[derive(Debug)]
@@ -101,11 +103,13 @@ enum Job {
         session: u64,
         generation: u64,
         leaves: Vec<u32>,
+        out: Outbox,
     },
     /// Make this page again: its file went missing.
     Again {
         session: u64,
         page: u32,
+        out: Outbox,
     },
     Close {
         session: u64,
@@ -119,11 +123,11 @@ pub struct Pages {
 }
 
 impl Pages {
-    pub fn start(cache: PathBuf, out: WeakOutbox) -> Self {
+    pub fn start(cache: PathBuf) -> Self {
         let (jobs, rx) = mpsc::channel();
         let spawned = std::thread::Builder::new()
             .name("kaeri-pages".into())
-            .spawn(move || Worker::new(cache, out).run(rx));
+            .spawn(move || Worker::new(cache).run(rx));
         if let Err(e) = spawned {
             tracing::error!(error = %e, "the page worker did not start");
         }
@@ -134,12 +138,12 @@ impl Pages {
         let _ = self.jobs.send(Job::Open(Box::new(job)));
     }
 
-    pub fn want(&self, session: u64, generation: u64, leaves: Vec<u32>) {
-        let _ = self.jobs.send(Job::Want { session, generation, leaves });
+    pub fn want(&self, session: u64, generation: u64, leaves: Vec<u32>, out: &Outbox) {
+        let _ = self.jobs.send(Job::Want { session, generation, leaves, out: out.clone() });
     }
 
-    pub fn again(&self, session: u64, page: u32) {
-        let _ = self.jobs.send(Job::Again { session, page });
+    pub fn again(&self, session: u64, page: u32, out: &Outbox) {
+        let _ = self.jobs.send(Job::Again { session, page, out: out.clone() });
     }
 
     pub fn close(&self, session: u64) {
@@ -188,25 +192,27 @@ struct Chapter {
 
 struct Worker {
     cache: PathBuf,
-    out: WeakOutbox,
+    /// The engine's way to answer, lent with each job and let go once the queue is empty, so
+    /// an engine with nothing outstanding can go idle.
+    out: Option<Outbox>,
     open: Option<Chapter>,
     /// One book opens at a time; a stuck open keeps this until it finishes.
     opening: Arc<AtomicBool>,
 }
 
 impl Worker {
-    fn new(cache: PathBuf, out: WeakOutbox) -> Self {
-        Self { cache, out, open: None, opening: Arc::new(AtomicBool::new(false)) }
+    fn new(cache: PathBuf) -> Self {
+        Self { cache, out: None, open: None, opening: Arc::new(AtomicBool::new(false)) }
     }
 
     fn send(&self, event: ReaderEvent) {
-        if let Some(out) = self.out.upgrade() {
+        if let Some(out) = &self.out {
             let _ = out.send(Event::Reader(event));
         }
     }
 
     fn wake(&self, session: u64) {
-        if let Some(out) = self.out.upgrade() {
+        if let Some(out) = &self.out {
             let _ = out.internal(Internal::Reader { session, wake: ReaderWake::Laid });
         }
     }
@@ -233,13 +239,20 @@ impl Worker {
                 }
             }
             self.make_next();
+            if self.open.as_ref().is_none_or(|c| c.queue.is_empty()) {
+                self.out = None;
+            }
         }
     }
 
     fn take(&mut self, job: Job) {
         match job {
-            Job::Open(job) => self.open_chapter(*job),
-            Job::Want { session, generation, leaves } => {
+            Job::Open(job) => {
+                self.out = Some(job.out.clone());
+                self.open_chapter(*job)
+            }
+            Job::Want { session, generation, leaves, out } => {
+                self.out = Some(out);
                 let mut held = Vec::new();
                 if let Some(c) = self
                     .open
@@ -253,7 +266,8 @@ impl Worker {
                     self.send(event);
                 }
             }
-            Job::Again { session, page } => {
+            Job::Again { session, page, out } => {
+                self.out = Some(out);
                 if let Some(c) = self.open.as_mut().filter(|c| c.session == session) {
                     c.sent.retain(|(p, _)| *p != page);
                     if let Some(leaf) =
