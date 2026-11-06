@@ -396,6 +396,22 @@ extension ReadingMsg {
         case .readingRemovedUnmatched(let tracker): L.readingRemovedUnmatched(tracker: tracker)
         case .readingRemovedFailed(let tracker): L.readingRemovedFailed(tracker: tracker)
         case .readingRemovedSignIn(let tracker): L.readingRemovedSignIn(tracker: tracker)
+        case .readingMissNoSeries: L.readingMissNoSeries
+        case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
+        case .readingMissDown: L.readingMissDown
+        case .readingDlParts(let count): L.readingDlParts(count: Int(count))
+        case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
+        case .readingDlRead(let count): L.readingDlRead(count: Int(count))
+        case .readingDlChapter(let chapter): L.readingDlChapter(chapter: chapter)
+        case .readingDlPages(let done, let total): L.readingDlPages(done: Int(done), total: Int(total))
+        case .readingDlMoreQueued(let count): L.readingDlMoreQueued(count: Int(count))
+        case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
+        case .readingDlWaitsWifi: L.readingDlWaitsWifi
+        case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
+        case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
+        case .readingEstimateWifi: L.readingEstimateWifi
+        case .readingEstimateMobile: L.readingEstimateMobile
+        case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
         }
     }
 }

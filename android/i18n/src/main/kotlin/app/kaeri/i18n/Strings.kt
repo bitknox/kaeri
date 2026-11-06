@@ -989,6 +989,70 @@ object Strings {
     fun readingRemovedSignIn(context: Context, tracker: String): String =
         context.getString(R.string.reading_removed_sign_in, tracker)
 
+    /** The source answered the search and has no series by the series' names. */
+    fun readingMissNoSeries(context: Context): String =
+        context.getString(R.string.reading_miss_no_series)
+
+    /** The source has failed every ask since this time of day, in the person's zone. */
+    fun readingMissDownSince(context: Context, time: String): String =
+        context.getString(R.string.reading_miss_down_since, time)
+
+    /** The source has failed every ask, since a time on another day or not known. */
+    fun readingMissDown(context: Context): String =
+        context.getString(R.string.reading_miss_down)
+
+    /** How many parts of a light novel are downloaded. */
+    fun readingDlParts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_parts, count, count)
+
+    /** What the downloads take up on this device. */
+    fun readingDlSize(context: Context, size: String): String =
+        context.getString(R.string.reading_dl_size, size)
+
+    /** How many of the downloaded chapters are read, which Delete read clears. */
+    fun readingDlRead(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_read, count)
+
+    /** The chapter downloading now. */
+    fun readingDlChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_chapter, chapter)
+
+    /** How far the chapter downloading now has come. */
+    fun readingDlPages(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_dl_pages, done, total)
+
+    /** Chapters waiting their turn after the one downloading. */
+    fun readingDlMoreQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_more_queued, count)
+
+    /** Chapters waiting their turn, none downloaded yet. */
+    fun readingDlQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_queued, count)
+
+    /** Chapters that wait for Wi-Fi to download. */
+    fun readingDlWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_dl_waits_wifi)
+
+    /** A chapter that failed. The reason follows as the next part. */
+    fun readingDlFailed(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_failed, chapter)
+
+    /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
+    fun readingEstimateSize(context: Context, size: String): String =
+        context.getString(R.string.reading_estimate_size, size)
+
+    /** The chapters download only on Wi-Fi, as the settings say. */
+    fun readingEstimateWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_wifi)
+
+    /** The device is on mobile data, and the settings let chapters download on it. */
+    fun readingEstimateMobile(context: Context): String =
+        context.getString(R.string.reading_estimate_mobile)
+
+    /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
+    fun readingEstimateWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_waits_wifi)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)

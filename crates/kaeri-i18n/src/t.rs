@@ -1230,6 +1230,86 @@ pub fn reading_removed_sign_in(tracker: &str) -> String {
     text("reading-removed-sign-in", &[("tracker", Arg::Text(tracker))])
 }
 
+/// The source answered the search and has no series by the series' names.
+pub fn reading_miss_no_series() -> String {
+    text("reading-miss-no-series", &[])
+}
+
+/// The source has failed every ask since this time of day, in the person's zone.
+pub fn reading_miss_down_since(time: &str) -> String {
+    text("reading-miss-down-since", &[("time", Arg::Text(time))])
+}
+
+/// The source has failed every ask, since a time on another day or not known.
+pub fn reading_miss_down() -> String {
+    text("reading-miss-down", &[])
+}
+
+/// How many parts of a light novel are downloaded.
+pub fn reading_dl_parts(count: i64) -> String {
+    text("reading-dl-parts", &[("count", Arg::Int(count))])
+}
+
+/// What the downloads take up on this device.
+pub fn reading_dl_size(size: &str) -> String {
+    text("reading-dl-size", &[("size", Arg::Text(size))])
+}
+
+/// How many of the downloaded chapters are read, which Delete read clears.
+pub fn reading_dl_read(count: i64) -> String {
+    text("reading-dl-read", &[("count", Arg::Int(count))])
+}
+
+/// The chapter downloading now.
+pub fn reading_dl_chapter(chapter: &str) -> String {
+    text("reading-dl-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How far the chapter downloading now has come.
+pub fn reading_dl_pages(done: i64, total: i64) -> String {
+    text("reading-dl-pages", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Chapters waiting their turn after the one downloading.
+pub fn reading_dl_more_queued(count: i64) -> String {
+    text("reading-dl-more-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters waiting their turn, none downloaded yet.
+pub fn reading_dl_queued(count: i64) -> String {
+    text("reading-dl-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters that wait for Wi-Fi to download.
+pub fn reading_dl_waits_wifi() -> String {
+    text("reading-dl-waits-wifi", &[])
+}
+
+/// A chapter that failed. The reason follows as the next part.
+pub fn reading_dl_failed(chapter: &str) -> String {
+    text("reading-dl-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+pub fn reading_estimate_size(size: &str) -> String {
+    text("reading-estimate-size", &[("size", Arg::Text(size))])
+}
+
+/// The chapters download only on Wi-Fi, as the settings say.
+pub fn reading_estimate_wifi() -> String {
+    text("reading-estimate-wifi", &[])
+}
+
+/// The device is on mobile data, and the settings let chapters download on it.
+pub fn reading_estimate_mobile() -> String {
+    text("reading-estimate-mobile", &[])
+}
+
+/// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+pub fn reading_estimate_waits_wifi() -> String {
+    text("reading-estimate-waits-wifi", &[])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])

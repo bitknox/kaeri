@@ -1365,6 +1365,38 @@ pub enum ReadingMsg {
     ReadingRemovedFailed { tracker: String },
     /// Why a removal failed: the tracker turned the sign-in away.
     ReadingRemovedSignIn { tracker: String },
+    /// The source answered the search and has no series by the series' names.
+    ReadingMissNoSeries,
+    /// The source has failed every ask since this time of day, in the person's zone.
+    ReadingMissDownSince { time: String },
+    /// The source has failed every ask, since a time on another day or not known.
+    ReadingMissDown,
+    /// How many parts of a light novel are downloaded.
+    ReadingDlParts { count: i64 },
+    /// What the downloads take up on this device.
+    ReadingDlSize { size: Size },
+    /// How many of the downloaded chapters are read, which Delete read clears.
+    ReadingDlRead { count: i64 },
+    /// The chapter downloading now.
+    ReadingDlChapter { chapter: String },
+    /// How far the chapter downloading now has come.
+    ReadingDlPages { done: i64, total: i64 },
+    /// Chapters waiting their turn after the one downloading.
+    ReadingDlMoreQueued { count: i64 },
+    /// Chapters waiting their turn, none downloaded yet.
+    ReadingDlQueued { count: i64 },
+    /// Chapters that wait for Wi-Fi to download.
+    ReadingDlWaitsWifi,
+    /// A chapter that failed. The reason follows as the next part.
+    ReadingDlFailed { chapter: String },
+    /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+    ReadingEstimateSize { size: Size },
+    /// The chapters download only on Wi-Fi, as the settings say.
+    ReadingEstimateWifi,
+    /// The device is on mobile data, and the settings let chapters download on it.
+    ReadingEstimateMobile,
+    /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+    ReadingEstimateWaitsWifi,
 }
 
 impl ReadingMsg {
@@ -1462,6 +1494,22 @@ impl ReadingMsg {
             Self::ReadingRemovedUnmatched { .. } => "reading-removed-unmatched",
             Self::ReadingRemovedFailed { .. } => "reading-removed-failed",
             Self::ReadingRemovedSignIn { .. } => "reading-removed-sign-in",
+            Self::ReadingMissNoSeries => "reading-miss-no-series",
+            Self::ReadingMissDownSince { .. } => "reading-miss-down-since",
+            Self::ReadingMissDown => "reading-miss-down",
+            Self::ReadingDlParts { .. } => "reading-dl-parts",
+            Self::ReadingDlSize { .. } => "reading-dl-size",
+            Self::ReadingDlRead { .. } => "reading-dl-read",
+            Self::ReadingDlChapter { .. } => "reading-dl-chapter",
+            Self::ReadingDlPages { .. } => "reading-dl-pages",
+            Self::ReadingDlMoreQueued { .. } => "reading-dl-more-queued",
+            Self::ReadingDlQueued { .. } => "reading-dl-queued",
+            Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
+            Self::ReadingDlFailed { .. } => "reading-dl-failed",
+            Self::ReadingEstimateSize { .. } => "reading-estimate-size",
+            Self::ReadingEstimateWifi => "reading-estimate-wifi",
+            Self::ReadingEstimateMobile => "reading-estimate-mobile",
+            Self::ReadingEstimateWaitsWifi => "reading-estimate-waits-wifi",
         }
     }
 
@@ -1559,6 +1607,22 @@ impl ReadingMsg {
             Self::ReadingRemovedUnmatched { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::ReadingRemovedFailed { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::ReadingRemovedSignIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingMissNoSeries => Vec::new(),
+            Self::ReadingMissDownSince { time } => vec![("time", Value::Text(time.clone()))],
+            Self::ReadingMissDown => Vec::new(),
+            Self::ReadingDlParts { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlSize { size } => vec![("size", Value::Size(*size))],
+            Self::ReadingDlRead { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingDlPages { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
+            Self::ReadingDlMoreQueued { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlQueued { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlWaitsWifi => Vec::new(),
+            Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
+            Self::ReadingEstimateWifi => Vec::new(),
+            Self::ReadingEstimateMobile => Vec::new(),
+            Self::ReadingEstimateWaitsWifi => Vec::new(),
         }
     }
 }

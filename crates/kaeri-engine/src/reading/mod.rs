@@ -266,6 +266,8 @@ pub(crate) fn reading(
         ReadingCommand::Download { .. }
         | ReadingCommand::DownloadCancel { .. }
         | ReadingCommand::DownloadDelete { .. }
+        | ReadingCommand::DownloadDeleteRead { .. }
+        | ReadingCommand::EstimateDownload { .. }
         | ReadingCommand::DownloadNew => {
             return downloads(engine, services, command, tx);
         }
@@ -305,6 +307,18 @@ fn downloads(
         }
         ReadingCommand::DownloadDelete { work, chapters } => {
             queue.delete(&lent, &work, &chapters);
+        }
+        ReadingCommand::DownloadDeleteRead { work } => {
+            queue.delete_read(&lent, &work);
+        }
+        ReadingCommand::EstimateDownload { work, pick } => {
+            let kit = crate::read_catalog::Kit::of(services);
+            let (edition, volumes) = crate::read_catalog::series::kept_volumes(&kit, &work);
+            let rows = crate::downloads::books::flatten(volumes);
+            let source = edition.map(|e| e.source_id);
+            let estimate =
+                queue.estimate(&services.store, &work, pick, &rows, source.as_deref());
+            let _ = tx.send(Event::Reading(ReadingEvent::DownloadEstimate(estimate)));
         }
         ReadingCommand::DownloadNew => {
             let ask = crate::read_catalog::Ask::of(engine, services);

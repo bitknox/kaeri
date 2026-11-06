@@ -449,3 +449,77 @@ reading-removed-failed = Still on your { $tracker } list
 # Why a removal failed: the tracker turned the sign-in away.
 # @arg tracker: text
 reading-removed-sign-in = Sign in to { $tracker } again, then try once more.
+
+## Not found in
+## Read from lists the sources that were searched for a series without a match, each with why.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = No series with this name
+
+# The source has failed every ask since this time of day, in the person's zone.
+# @arg time: text
+reading-miss-down-since = Not answering since { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Not answering
+
+## Downloads by series
+## Each series on Downloads gets one line: "6 chapters · 214 MB · 2 read", or while one downloads
+## "Chapter 42 · 12 of 19 pages · 2 more queued". The Reading section's total uses the first two
+## parts: "38 chapters · 1.1 GB". Parts are joined with " · ".
+
+# How many parts of a light novel are downloaded.
+# @arg count: int
+reading-dl-parts = { $count ->
+    [one] 1 part
+   *[other] { $count } parts
+ }
+
+# What the downloads take up on this device.
+# @arg size: bytes
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+# @arg count: int
+reading-dl-read = { $count } read
+
+# The chapter downloading now.
+# @arg chapter: text
+reading-dl-chapter = Chapter { $chapter }
+
+# How far the chapter downloading now has come.
+# @arg done: int
+# @arg total: int
+reading-dl-pages = { $done } of { $total } pages
+
+# Chapters waiting their turn after the one downloading.
+# @arg count: int
+reading-dl-more-queued = { $count } more queued
+
+# Chapters waiting their turn, none downloaded yet.
+# @arg count: int
+reading-dl-queued = { $count } queued
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = waits for Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+# @arg chapter: text
+reading-dl-failed = Chapter { $chapter } couldn't download
+
+## Download estimate
+## Above the Download button when choosing chapters: "About 62 MB · over Wi-Fi".
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded
+# before.
+# @arg size: bytes
+reading-estimate-size = About { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = over Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = over mobile data
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = waits for Wi-Fi

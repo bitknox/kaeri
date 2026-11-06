@@ -738,13 +738,10 @@ pub fn command(
             this.set_off(&id, off);
             publish();
         }
-        BookSourceCommand::LoadForWork { work } => {
-            let _ = tx.send(Event::BookSources(BookSourceEvent::ForWork {
-                editions: this.editions(&work),
-                work,
-                asking: false,
-            }));
-        }
+        // The catalogue answers these: see `read_catalog::editions`.
+        BookSourceCommand::LoadForWork { .. }
+        | BookSourceCommand::SearchSourceForWork { .. }
+        | BookSourceCommand::ChooseSourceSeries { .. } => {}
     }
 }
 

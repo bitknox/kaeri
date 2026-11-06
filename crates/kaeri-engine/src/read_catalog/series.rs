@@ -113,7 +113,10 @@ pub fn versions(kit: &Kit, work: WorkId, chapter: ChapterId, tx: &Outbox) {
 }
 
 /// The edition's chapters as last kept, grouped by volume.
-fn kept_volumes(kit: &Kit, work: &WorkId) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
+pub(crate) fn kept_volumes(
+    kit: &Kit,
+    work: &WorkId,
+) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
     let Some((source, _, list)) = chapters::of_work(&kit.sources, &kit.store, work) else {
         return (None, Vec::new());
     };
@@ -282,7 +285,7 @@ fn fill(kit: &Kit, ask: Ask, view: &mut SeriesView, kept: &KeptBook) {
 }
 
 /// A work AniList does not list: its folder's name.
-fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
+pub(crate) fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
     kit.store
         .local_book_series()
         .ok()?
@@ -291,7 +294,7 @@ fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
         .map(|s| s.name)
 }
 
-fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
+pub(crate) fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
     kit.store
         .local_book_series()
         .ok()

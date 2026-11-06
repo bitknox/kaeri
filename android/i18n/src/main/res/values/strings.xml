@@ -543,6 +543,41 @@
     <string name="reading_removed_failed">Still on your %1$s list</string>
     <!-- Why a removal failed: the tracker turned the sign-in away. -->
     <string name="reading_removed_sign_in">Sign in to %1$s again, then try once more.</string>
+    <!-- The source answered the search and has no series by the series' names. -->
+    <string name="reading_miss_no_series">No series with this name</string>
+    <!-- The source has failed every ask since this time of day, in the person's zone. -->
+    <string name="reading_miss_down_since">Not answering since %1$s</string>
+    <!-- The source has failed every ask, since a time on another day or not known. -->
+    <string name="reading_miss_down">Not answering</string>
+    <!-- How many parts of a light novel are downloaded. -->
+    <plurals name="reading_dl_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$d parts</item>
+    </plurals>
+    <!-- What the downloads take up on this device. -->
+    <string name="reading_dl_size">%1$s</string>
+    <!-- How many of the downloaded chapters are read, which Delete read clears. -->
+    <string name="reading_dl_read">%1$d read</string>
+    <!-- The chapter downloading now. -->
+    <string name="reading_dl_chapter">Chapter %1$s</string>
+    <!-- How far the chapter downloading now has come. -->
+    <string name="reading_dl_pages">%1$d of %2$d pages</string>
+    <!-- Chapters waiting their turn after the one downloading. -->
+    <string name="reading_dl_more_queued">%1$d more queued</string>
+    <!-- Chapters waiting their turn, none downloaded yet. -->
+    <string name="reading_dl_queued">%1$d queued</string>
+    <!-- Chapters that wait for Wi-Fi to download. -->
+    <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
+    <!-- A chapter that failed. The reason follows as the next part. -->
+    <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
+    <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
+    <string name="reading_estimate_size">About %1$s</string>
+    <!-- The chapters download only on Wi-Fi, as the settings say. -->
+    <string name="reading_estimate_wifi">over Wi-Fi</string>
+    <!-- The device is on mobile data, and the settings let chapters download on it. -->
+    <string name="reading_estimate_mobile">over mobile data</string>
+    <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
+    <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->

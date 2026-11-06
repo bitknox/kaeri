@@ -750,6 +750,54 @@ public static partial class T
     /// <summary>Why a removal failed: the tracker turned the sign-in away.</summary>
     public static string ReadingRemovedSignIn(string tracker) => Fill(Get("ReadingRemovedSignIn"), ("tracker", tracker));
 
+    /// <summary>The source answered the search and has no series by the series' names.</summary>
+    public static string ReadingMissNoSeries => Get("ReadingMissNoSeries");
+
+    /// <summary>The source has failed every ask since this time of day, in the person's zone.</summary>
+    public static string ReadingMissDownSince(string time) => Fill(Get("ReadingMissDownSince"), ("time", time));
+
+    /// <summary>The source has failed every ask, since a time on another day or not known.</summary>
+    public static string ReadingMissDown => Get("ReadingMissDown");
+
+    /// <summary>How many parts of a light novel are downloaded.</summary>
+    public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What the downloads take up on this device.</summary>
+    public static string ReadingDlSize(string size) => Fill(Get("ReadingDlSize"), ("size", size));
+
+    /// <summary>How many of the downloaded chapters are read, which Delete read clears.</summary>
+    public static string ReadingDlRead(long count) => Fill(Get("ReadingDlRead"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The chapter downloading now.</summary>
+    public static string ReadingDlChapter(string chapter) => Fill(Get("ReadingDlChapter"), ("chapter", chapter));
+
+    /// <summary>How far the chapter downloading now has come.</summary>
+    public static string ReadingDlPages(long done, long total) => Fill(Get("ReadingDlPages"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn after the one downloading.</summary>
+    public static string ReadingDlMoreQueued(long count) => Fill(Get("ReadingDlMoreQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn, none downloaded yet.</summary>
+    public static string ReadingDlQueued(long count) => Fill(Get("ReadingDlQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters that wait for Wi-Fi to download.</summary>
+    public static string ReadingDlWaitsWifi => Get("ReadingDlWaitsWifi");
+
+    /// <summary>A chapter that failed. The reason follows as the next part.</summary>
+    public static string ReadingDlFailed(string chapter) => Fill(Get("ReadingDlFailed"), ("chapter", chapter));
+
+    /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
+    public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
+
+    /// <summary>The chapters download only on Wi-Fi, as the settings say.</summary>
+    public static string ReadingEstimateWifi => Get("ReadingEstimateWifi");
+
+    /// <summary>The device is on mobile data, and the settings let chapters download on it.</summary>
+    public static string ReadingEstimateMobile => Get("ReadingEstimateMobile");
+
+    /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
+    public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -10217,6 +10265,23 @@ public static partial class T
         ["ReadingRemovedUnmatched"] = "Not matched on {tracker}, so nothing changed there",
         ["ReadingRemovedFailed"] = "Still on your {tracker} list",
         ["ReadingRemovedSignIn"] = "Sign in to {tracker} again, then try once more.",
+        ["ReadingMissNoSeries"] = "No series with this name",
+        ["ReadingMissDownSince"] = "Not answering since {time}",
+        ["ReadingMissDown"] = "Not answering",
+        ["ReadingDlParts_one"] = "1 part",
+        ["ReadingDlParts_other"] = "{count} parts",
+        ["ReadingDlSize"] = "{size}",
+        ["ReadingDlRead"] = "{count} read",
+        ["ReadingDlChapter"] = "Chapter {chapter}",
+        ["ReadingDlPages"] = "{done} of {total} pages",
+        ["ReadingDlMoreQueued"] = "{count} more queued",
+        ["ReadingDlQueued"] = "{count} queued",
+        ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
+        ["ReadingEstimateSize"] = "About {size}",
+        ["ReadingEstimateWifi"] = "over Wi-Fi",
+        ["ReadingEstimateMobile"] = "over mobile data",
+        ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",

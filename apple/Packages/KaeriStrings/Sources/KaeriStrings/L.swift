@@ -994,6 +994,74 @@ public enum L {
         Self.format("reading-removed-sign-in", fallback: "Sign in to %1$@ again, then try once more.", tracker)
     }
 
+    /// The source answered the search and has no series by the series' names.
+    public static var readingMissNoSeries: String { string("reading-miss-no-series", fallback: "No series with this name") }
+
+    /// The source has failed every ask since this time of day, in the person's zone.
+    public static func readingMissDownSince(time: String) -> String {
+        Self.format("reading-miss-down-since", fallback: "Not answering since %1$@", time)
+    }
+
+    /// The source has failed every ask, since a time on another day or not known.
+    public static var readingMissDown: String { string("reading-miss-down", fallback: "Not answering") }
+
+    /// How many parts of a light novel are downloaded.
+    public static func readingDlParts(count: Int) -> String {
+        Self.format("reading-dl-parts", fallback: "%1$lld parts", count)
+    }
+
+    /// What the downloads take up on this device.
+    public static func readingDlSize(size: String) -> String {
+        Self.format("reading-dl-size", fallback: "%1$@", size)
+    }
+
+    /// How many of the downloaded chapters are read, which Delete read clears.
+    public static func readingDlRead(count: Int) -> String {
+        Self.format("reading-dl-read", fallback: "%1$lld read", count)
+    }
+
+    /// The chapter downloading now.
+    public static func readingDlChapter(chapter: String) -> String {
+        Self.format("reading-dl-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// How far the chapter downloading now has come.
+    public static func readingDlPages(done: Int, total: Int) -> String {
+        Self.format("reading-dl-pages", fallback: "%1$lld of %2$lld pages", done, total)
+    }
+
+    /// Chapters waiting their turn after the one downloading.
+    public static func readingDlMoreQueued(count: Int) -> String {
+        Self.format("reading-dl-more-queued", fallback: "%1$lld more queued", count)
+    }
+
+    /// Chapters waiting their turn, none downloaded yet.
+    public static func readingDlQueued(count: Int) -> String {
+        Self.format("reading-dl-queued", fallback: "%1$lld queued", count)
+    }
+
+    /// Chapters that wait for Wi-Fi to download.
+    public static var readingDlWaitsWifi: String { string("reading-dl-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// A chapter that failed. The reason follows as the next part.
+    public static func readingDlFailed(chapter: String) -> String {
+        Self.format("reading-dl-failed", fallback: "Chapter %1$@ couldn't download", chapter)
+    }
+
+    /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+    public static func readingEstimateSize(size: String) -> String {
+        Self.format("reading-estimate-size", fallback: "About %1$@", size)
+    }
+
+    /// The chapters download only on Wi-Fi, as the settings say.
+    public static var readingEstimateWifi: String { string("reading-estimate-wifi", fallback: "over Wi-Fi") }
+
+    /// The device is on mobile data, and the settings let chapters download on it.
+    public static var readingEstimateMobile: String { string("reading-estimate-mobile", fallback: "over mobile data") }
+
+    /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+    public static var readingEstimateWaitsWifi: String { string("reading-estimate-waits-wifi", fallback: "waits for Wi-Fi") }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)

@@ -1083,6 +1083,74 @@
     <value>[Šîĝñ îñ ţö {tracker} àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]</value>
     <comment>Why a removal failed: the tracker turned the sign-in away.</comment>
   </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>[Ñö šéŕîéš ŵîţĥ ţĥîš ñàɱé~~~~~~~~]</value>
+    <comment>The source answered the search and has no series by the series' names.</comment>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>[Ñöţ àñšŵéŕîñĝ šîñçé {time}~~~~~~~]</value>
+    <comment>The source has failed every ask since this time of day, in the person's zone.</comment>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>[Ñöţ àñšŵéŕîñĝ~~~~]</value>
+    <comment>The source has failed every ask, since a time on another day or not known.</comment>
+  </data>
+  <data name="ReadingDlParts_one" xml:space="preserve">
+    <value>[1 þàŕţ~~]</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>[{count} þàŕţš~~~]</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>[{size}~]</value>
+    <comment>What the downloads take up on this device.</comment>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>[{count} ŕéàð~~~]</value>
+    <comment>How many of the downloaded chapters are read, which Delete read clears.</comment>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>The chapter downloading now.</comment>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>[{done} öƒ {total} þàĝéš~~~~~]</value>
+    <comment>How far the chapter downloading now has come.</comment>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>[{count} ɱöŕé ƣüéüéð~~~~~]</value>
+    <comment>Chapters waiting their turn after the one downloading.</comment>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>[{count} ƣüéüéð~~~]</value>
+    <comment>Chapters waiting their turn, none downloaded yet.</comment>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
+    <comment>Chapters that wait for Wi-Fi to download.</comment>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]</value>
+    <comment>A chapter that failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>[Åƀöüţ {size}~~~]</value>
+    <comment>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</comment>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>[öṽéŕ Ŵî-Ƒî~~~]</value>
+    <comment>The chapters download only on Wi-Fi, as the settings say.</comment>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>[öṽéŕ ɱöƀîļé ðàţà~~~~~]</value>
+    <comment>The device is on mobile data, and the settings let chapters download on it.</comment>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
+    <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

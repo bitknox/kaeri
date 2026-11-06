@@ -803,6 +803,58 @@ reading-removed-failed = [Šţîļļ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
 # Why a removal failed: the tracker turned the sign-in away.
 reading-removed-sign-in = [Šîĝñ îñ ţö { $tracker } àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]
 
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = [Ñö šéŕîéš ŵîţĥ ţĥîš ñàɱé~~~~~~~~]
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = [Ñöţ àñšŵéŕîñĝ šîñçé { $time }~~~~~~~]
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = [Ñöţ àñšŵéŕîñĝ~~~~]
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] [1 þàŕţ~~]
+       *[other] [{ $count } þàŕţš~~~]
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = [{ $size }~]
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = [{ $count } ŕéàð~~~]
+
+# The chapter downloading now.
+reading-dl-chapter = [Çĥàþţéŕ { $chapter }~~~~]
+
+# How far the chapter downloading now has come.
+reading-dl-pages = [{ $done } öƒ { $total } þàĝéš~~~~~]
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = [{ $count } ɱöŕé ƣüéüéð~~~~~]
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = [{ $count } ƣüéüéð~~~]
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = [Åƀöüţ { $size }~~~]
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = [öṽéŕ Ŵî-Ƒî~~~]
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = [öṽéŕ ɱöƀîļé ðàţà~~~~~]
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 

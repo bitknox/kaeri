@@ -170457,6 +170457,184 @@
         }
       }
     },
+    "reading-dl-chapter" : {
+      "comment" : "The chapter downloading now. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@"
+          }
+        }
+      }
+    },
+    "reading-dl-failed" : {
+      "comment" : "A chapter that failed. The reason follows as the next part. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ couldn't download"
+          }
+        }
+      }
+    },
+    "reading-dl-more-queued" : {
+      "comment" : "Chapters waiting their turn after the one downloading. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more queued"
+          }
+        }
+      }
+    },
+    "reading-dl-pages" : {
+      "comment" : "How far the chapter downloading now has come. Argument 1: done (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld pages"
+          }
+        }
+      }
+    },
+    "reading-dl-parts" : {
+      "comment" : "How many parts of a light novel are downloaded. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 part"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld parts"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-dl-queued" : {
+      "comment" : "Chapters waiting their turn, none downloaded yet. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld queued"
+          }
+        }
+      }
+    },
+    "reading-dl-read" : {
+      "comment" : "How many of the downloaded chapters are read, which Delete read clears. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld read"
+          }
+        }
+      }
+    },
+    "reading-dl-size" : {
+      "comment" : "What the downloads take up on this device. Argument 1: size (Bytes).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@"
+          }
+        }
+      }
+    },
+    "reading-dl-waits-wifi" : {
+      "comment" : "Chapters that wait for Wi-Fi to download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waits for Wi-Fi"
+          }
+        }
+      }
+    },
+    "reading-estimate-mobile" : {
+      "comment" : "The device is on mobile data, and the settings let chapters download on it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "over mobile data"
+          }
+        }
+      }
+    },
+    "reading-estimate-size" : {
+      "comment" : "How much the chosen chapters will take, from their pages and the size of pages downloaded before. Argument 1: size (Bytes).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %1$@"
+          }
+        }
+      }
+    },
+    "reading-estimate-waits-wifi" : {
+      "comment" : "The device is on mobile data and the chapters wait until it's on Wi-Fi.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waits for Wi-Fi"
+          }
+        }
+      }
+    },
+    "reading-estimate-wifi" : {
+      "comment" : "The chapters download only on Wi-Fi, as the settings say.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "over Wi-Fi"
+          }
+        }
+      }
+    },
     "reading-failed-blocked" : {
       "comment" : "Why a chapter or a list could not load: the source refused. The reason comes from the source. Argument 1: source (Text). Argument 2: reason (Text).",
       "extractionState" : "manual",
@@ -170729,6 +170907,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoon"
+          }
+        }
+      }
+    },
+    "reading-miss-down" : {
+      "comment" : "The source has failed every ask, since a time on another day or not known.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not answering"
+          }
+        }
+      }
+    },
+    "reading-miss-down-since" : {
+      "comment" : "The source has failed every ask since this time of day, in the person's zone. Argument 1: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not answering since %1$@"
+          }
+        }
+      }
+    },
+    "reading-miss-no-series" : {
+      "comment" : "The source answered the search and has no series by the series' names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No series with this name"
           }
         }
       }

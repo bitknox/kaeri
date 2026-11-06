@@ -517,6 +517,21 @@ pub(crate) fn dispatch(
         }
         Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
         Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
+        // Read from and "Not found in" search with the catalogue's names for the work.
+        Command::BookSources(
+            command @ (kaeri_model::book_sources::BookSourceCommand::LoadForWork { .. }
+            | kaeri_model::book_sources::BookSourceCommand::SearchSourceForWork {
+                ..
+            }
+            | kaeri_model::book_sources::BookSourceCommand::ChooseSourceSeries {
+                ..
+            }),
+        ) if engine.reading.available => crate::read_catalog::editions::command(
+            &crate::read_catalog::Kit::of(services),
+            crate::read_catalog::Ask::of(engine, services),
+            command,
+            tx,
+        ),
         Command::BookSources(command) => {
             crate::reading::book_sources(&engine.reading, services, command, tx)
         }

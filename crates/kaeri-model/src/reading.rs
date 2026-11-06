@@ -626,12 +626,48 @@ pub struct BookDownloadRow {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct StorageMeter {
+    /// The bytes of every downloaded chapter, for the storage summary beside the shows'.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub used: u64,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub free: u64,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub chapters: u32,
+    /// Of `used`, what chapters already read take up.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub read_bytes: u64,
+}
+
+/// One series on Downloads: what it has here and how it stands.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct BookDownloadSeries {
+    pub work: WorkId,
+    pub title: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover: Option<String>,
+    /// Chapters downloaded.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chapters: u32,
+    /// What its files take up, partly downloaded ones included.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub bytes: u64,
+    /// Downloaded chapters already read and not bookmarked: what Delete read clears.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub read: u32,
+    /// Chapters queued, waiting or downloading.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub queued: u32,
+    /// Chapters that failed; Retry asks for them again.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub failed: Vec<ChapterId>,
+    /// "6 chapters · 214 MB · 2 read", "Chapter 42 · 12 of 19 pages · 2 more queued", or the
+    /// failure and its cause. Parts joined with " · ".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
+    /// While a chapter downloads, how far: 0 to 1, for the ring.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress: Option<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -640,6 +676,24 @@ pub struct BookDownloadsView {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rows: Vec<BookDownloadRow>,
     pub meter: StorageMeter,
+    /// The rows by series, the one downloading first, then by when each last changed.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub series: Vec<BookDownloadSeries>,
+    /// The Reading section's total: "38 chapters · 1.1 GB". Empty with nothing downloaded.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub total: Vec<Msg>,
+}
+
+/// What downloading a choice of chapters will take: "About 62 MB · over Wi-Fi".
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DownloadEstimate {
+    pub work: WorkId,
+    pub pick: DownloadPick,
+    /// The chosen chapters not downloaded yet.
+    pub chapters: u32,
+    pub bytes: u64,
+    pub line: Vec<Msg>,
 }
 
 /// A chapter the background check found, for the chapters notification channel.
@@ -1123,6 +1177,16 @@ pub enum ReadingCommand {
         work: WorkId,
         chapters: Vec<ChapterId>,
     },
+    /// Delete read: the downloads of a series' read chapters, bookmarked ones spared.
+    DownloadDeleteRead {
+        work: WorkId,
+    },
+    /// What downloading `pick` will take, from what is kept, without asking the source.
+    /// Answered with [`ReadingEvent::DownloadEstimate`].
+    EstimateDownload {
+        work: WorkId,
+        pick: DownloadPick,
+    },
     LoadDownloads,
     LoadExportTargets,
     /// [`ReadingEvent::ExportProgress`], then [`ReadingEvent::ExportReady`].
@@ -1189,6 +1253,8 @@ impl ReadingCommand {
             Self::Download { .. }
             | Self::DownloadCancel { .. }
             | Self::DownloadDelete { .. }
+            | Self::DownloadDeleteRead { .. }
+            | Self::EstimateDownload { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
             Self::LoadExportTargets | Self::Prepare { .. } => ReadingAbout::Export,
             Self::LoadFeed | Self::SetFeed { .. } => ReadingAbout::Feed,
@@ -1257,6 +1323,7 @@ pub enum ReadingEvent {
         results: Vec<ListRemoval>,
     },
     Downloads(BookDownloadsView),
+    DownloadEstimate(DownloadEstimate),
     NewChapters(Vec<NewChapter>),
     ExportTargets(Vec<ExportTarget>),
     ExportProgress {

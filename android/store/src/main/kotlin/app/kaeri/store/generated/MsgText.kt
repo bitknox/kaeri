@@ -397,6 +397,22 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingRemovedUnmatched -> Strings.readingRemovedUnmatched(context, this.tracker)
         is ReadingMsg.ReadingRemovedFailed -> Strings.readingRemovedFailed(context, this.tracker)
         is ReadingMsg.ReadingRemovedSignIn -> Strings.readingRemovedSignIn(context, this.tracker)
+        is ReadingMsg.ReadingMissNoSeries -> Strings.readingMissNoSeries(context)
+        is ReadingMsg.ReadingMissDownSince -> Strings.readingMissDownSince(context, this.time)
+        is ReadingMsg.ReadingMissDown -> Strings.readingMissDown(context)
+        is ReadingMsg.ReadingDlParts -> Strings.readingDlParts(context, this.count.toInt())
+        is ReadingMsg.ReadingDlSize -> Strings.readingDlSize(context, sizeText(context, this.size))
+        is ReadingMsg.ReadingDlRead -> Strings.readingDlRead(context, this.count.toInt())
+        is ReadingMsg.ReadingDlChapter -> Strings.readingDlChapter(context, this.chapter)
+        is ReadingMsg.ReadingDlPages -> Strings.readingDlPages(context, this.done.toInt(), this.total.toInt())
+        is ReadingMsg.ReadingDlMoreQueued -> Strings.readingDlMoreQueued(context, this.count.toInt())
+        is ReadingMsg.ReadingDlQueued -> Strings.readingDlQueued(context, this.count.toInt())
+        is ReadingMsg.ReadingDlWaitsWifi -> Strings.readingDlWaitsWifi(context)
+        is ReadingMsg.ReadingDlFailed -> Strings.readingDlFailed(context, this.chapter)
+        is ReadingMsg.ReadingEstimateSize -> Strings.readingEstimateSize(context, sizeText(context, this.size))
+        is ReadingMsg.ReadingEstimateWifi -> Strings.readingEstimateWifi(context)
+        is ReadingMsg.ReadingEstimateMobile -> Strings.readingEstimateMobile(context)
+        is ReadingMsg.ReadingEstimateWaitsWifi -> Strings.readingEstimateWaitsWifi(context)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

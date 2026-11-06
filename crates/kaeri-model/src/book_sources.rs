@@ -7,8 +7,9 @@
 use kaeri_core::{books::WorkId, ids::AnilistId, media::Medium};
 
 use crate::{
+    Msg,
     local::MatchChoice,
-    reading::BookEditionRow,
+    reading::{BookEditionRow, ReadingFailure},
     servers::{ServerFailure, ServerStep},
     stores::Secret,
 };
@@ -206,9 +207,23 @@ pub enum BookSourceCommand {
         id: String,
         off: bool,
     },
-    /// Which of your sources have the work, asked only when someone opens the series.
+    /// Which of your sources have the work, asked only when someone opens the series. The
+    /// sources without it are searched by the work's titles, and the ones still without it are
+    /// listed as missing.
     LoadForWork {
         work: WorkId,
+    },
+    /// "Search there": look for the work in one source by words the person typed.
+    SearchSourceForWork {
+        work: WorkId,
+        source_id: String,
+        query: String,
+    },
+    /// The person picked one of a source's series as this work. The editions are sent again.
+    ChooseSourceSeries {
+        work: WorkId,
+        source_id: String,
+        series_ref: String,
     },
 }
 
@@ -220,6 +235,7 @@ impl BookSourceCommand {
             Self::CheckServer { .. } => "checking the server".into(),
             Self::SignIn { .. } => "signing in to the server".into(),
             Self::LoadForWork { .. } => "asking your sources".into(),
+            Self::SearchSourceForWork { .. } => "searching the source".into(),
             _ => return None,
         })
     }
@@ -258,5 +274,43 @@ pub enum BookSourceEvent {
         work: WorkId,
         editions: Vec<BookEditionRow>,
         asking: bool,
+        /// "Not found in": the sources searched without a match, in the person's order.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        missing: Vec<SourceMiss>,
     },
+    /// What one source found for "Search there". `failure` when it could not be asked.
+    SourceSeries {
+        work: WorkId,
+        source_id: String,
+        query: String,
+        choices: Vec<SourceSeriesChoice>,
+        failure: Option<ReadingFailure>,
+    },
+}
+
+/// A source that was searched for a work and has no series for it.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceMiss {
+    pub source_id: String,
+    pub source_name: String,
+    /// Why: "No series with this name", "Not answering since 10:12".
+    pub reason: Msg,
+}
+
+/// One of a source's series, offered for "Search there".
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceSeriesChoice {
+    pub series_ref: String,
+    pub title: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub year: Option<u32>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub language: Option<String>,
+    /// How close its title is to the work's, 0 to 100.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub confidence: u8,
 }

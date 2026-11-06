@@ -254,10 +254,13 @@ fn setup_follows_the_network_the_config_and_the_edition() {
     let on = |network, config: &Config| {
         Setup::of(AppState::Foreground, network, config, AppEdition::Full)
     };
-    assert_eq!(on(wifi, &config), Setup::default());
+    assert_eq!(on(wifi, &config), Setup { wifi_only: true, ..Setup::default() });
     assert_eq!((on(cell, &config).hold, on(cell, &config).wifi), (true, true));
+    assert!(!on(cell, &config).mobile, "held for Wi-Fi, so nothing comes over mobile data");
     config.reading.downloads_on_cellular = true;
     assert!(!on(cell, &config).hold);
+    assert!(on(cell, &config).mobile && !on(cell, &config).wifi_only);
+    assert!(!on(wifi, &config).mobile);
     let low = Network { constrained: true, ..Network::default() };
     assert!(on(low, &config).hold && on(low, &config).wifi);
     let offline = Network { offline: true, ..Network::default() };
@@ -503,4 +506,124 @@ fn ids_with_slashes_make_safe_distinct_file_names() {
     assert_eq!(safe("a:900501"), "a~3a900501");
     assert_ne!(safe("v2/1"), safe("v2_1"));
     assert!(!safe("x/-/extra").contains('/'));
+}
+
+fn msg_ids(parts: &[kaeri_model::Msg]) -> Vec<&'static str> {
+    parts.iter().map(kaeri_model::Msg::id).collect()
+}
+
+#[tokio::test]
+async fn each_series_says_what_it_takes_and_delete_read_spares_bookmarks() {
+    let kit = kit(&["1", "2", "3", "4"]);
+    let work = WorkId::new(WORK);
+    kit.queue.download(&kit.lent, work.clone(), DownloadPick::NextUnread { n: 3 }).await;
+    kit.settle().await;
+    kit.store().set_bookmark(WORK, "2", true, 3).unwrap();
+    kit.read("1", 10);
+    kit.read("2", 11);
+
+    let view = kit.queue.view(kit.store());
+    let [series] = view.series.as_slice() else { panic!("one series: {:?}", view.series) };
+    assert_eq!((series.chapters, series.read, series.queued), (3, 1, 0), "the bookmark stays");
+    assert_eq!(series.bytes, view.meter.used, "every byte is the one series'");
+    assert_eq!(series.title, "The Lantern Ferry");
+    assert_eq!(
+        msg_ids(&series.line),
+        ["reading-chapters", "reading-dl-size", "reading-dl-read"]
+    );
+    let one = view.meter.used / 3;
+    assert!(view.meter.read_bytes >= 2 * one - 2 && view.meter.read_bytes < view.meter.used);
+    assert_eq!(msg_ids(&view.total), ["reading-chapters", "reading-dl-size"]);
+
+    // Delete read: the read chapter goes whatever the settings say, the bookmarked one stays.
+    assert_eq!(kit.queue.delete_read(&kit.lent, &work), 1);
+    let left: Vec<_> = kit.states().into_iter().map(|(c, _)| c).collect();
+    assert_eq!(left, ["2", "3"]);
+    let view = kit.queue.view(kit.store());
+    assert_eq!(msg_ids(&view.series[0].line), ["reading-chapters", "reading-dl-size"]);
+}
+
+#[test]
+fn a_series_waiting_or_failing_says_so_in_its_line() {
+    let kit = kit(&["1", "2"]);
+    let store = kit.store();
+    let ask = |chapter| BookDownloadAsk {
+        work: WORK,
+        chapter,
+        source_id: "shelf",
+        version_label: None,
+        keep_ready: false,
+    };
+    store.queue_book_download(&ask("1"), 1).unwrap();
+    store.queue_book_download(&ask("2"), 1).unwrap();
+    kit.setup(Setup { hold: true, wifi: true, ..Setup::default() });
+    let view = kit.queue.view(store);
+    assert_eq!(msg_ids(&view.series[0].line), ["reading-dl-queued", "reading-dl-waits-wifi"]);
+    assert_eq!(view.series[0].queued, 2);
+    assert!(view.total.is_empty(), "nothing downloaded yet");
+
+    let row = store.book_download(WORK, "2").unwrap().unwrap();
+    store.book_download_failed(row.id, &encode(&ReadingFailure::Offline), 2).unwrap();
+    let view = kit.queue.view(store);
+    assert_eq!(msg_ids(&view.series[0].line), ["reading-dl-failed", "reading-failed-offline"]);
+    assert_eq!(view.series[0].failed, ids(&["2"]), "Retry asks for these again");
+}
+
+fn listed(id: &str, pages: Option<u32>) -> ChapterRow {
+    ChapterRow {
+        id: ChapterId::new(id),
+        label: id.into(),
+        state: ChapterReadState::Unread,
+        number: Some(id.into()),
+        title: None,
+        volume: None,
+        published: None,
+        pages,
+        new_chapter: false,
+        download: None,
+        versions: 1,
+        bookmarked: false,
+        version_label: None,
+        read_at: None,
+        line: Vec::new(),
+    }
+}
+
+#[tokio::test]
+async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_network() {
+    let kit = kit(&["1", "2", "3"]);
+    let work = WorkId::new(WORK);
+    let rows = [listed("1", Some(10)), listed("2", None), listed("3", Some(40))];
+    let pick = DownloadPick::Chapters { ids: ids(&["1", "2", "3"]) };
+
+    // Nothing downloaded before: the usual page.
+    kit.setup(Setup { wifi_only: true, ..Setup::default() });
+    let first = kit.queue.estimate(kit.store(), &work, pick.clone(), &rows, Some("shelf"));
+    assert_eq!(first.chapters, 3);
+    assert_eq!(
+        first.bytes,
+        (10 + 20 + 40) * 350_000,
+        "a chapter of unknown length is 20 pages"
+    );
+    assert_eq!(msg_ids(&first.line), ["reading-estimate-size", "reading-estimate-wifi"]);
+
+    // Chapter 1 downloaded, three pages: its pages set the size, and it costs nothing more.
+    kit.queue
+        .download(&kit.lent, work.clone(), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    let done = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    let page = done.bytes / 3;
+    kit.setup(Setup { mobile: true, ..Setup::default() });
+    let next = kit.queue.estimate(kit.store(), &work, pick.clone(), &rows, Some("shelf"));
+    assert_eq!(next.chapters, 2);
+    assert_eq!(next.bytes, (3 + 40) * page, "an unknown length is the usual length here");
+    assert_eq!(msg_ids(&next.line), ["reading-estimate-size", "reading-estimate-mobile"]);
+
+    kit.setup(Setup { hold: true, wifi: true, wifi_only: true, ..Setup::default() });
+    let waiting = kit.queue.estimate(kit.store(), &work, pick, &rows, Some("shelf"));
+    assert_eq!(msg_ids(&waiting.line)[1], "reading-estimate-waits-wifi");
+    let none = DownloadPick::Chapters { ids: ids(&["1"]) };
+    let nothing = kit.queue.estimate(kit.store(), &work, none, &rows, Some("shelf"));
+    assert_eq!((nothing.chapters, nothing.bytes, nothing.line.len()), (0, 0, 0));
 }
