@@ -16,7 +16,7 @@ use kaeri_core::{
     },
     error::ProviderError,
     media::{Medium, Origin, ReadingFormat},
-    traits::BookSource,
+    traits::{BookSource, PageError},
 };
 
 use crate::{
@@ -113,6 +113,18 @@ impl BookSource for WasmBookSource {
     async fn health_check(&self) -> Result<(), ProviderError> {
         // `describe`, which needs no network, as for show sources.
         self.plugin.describe().await.map(|_| ()).map_err(|e: PluginError| e.as_provider_error())
+    }
+
+    async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+        let response =
+            self.plugin.fetch_page(&page.url, &page.headers).await.map_err(|e| match e {
+                host::HostError::Denied(reason) => PageError::Failed(ProviderError::Blocked(reason)),
+                other => PageError::Failed(ProviderError::Other(other.to_string())),
+            })?;
+        match response.status {
+            200..=299 => Ok(response.body),
+            status => Err(PageError::Status(status)),
+        }
     }
 }
 
