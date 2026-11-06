@@ -809,6 +809,140 @@
     <string name="cast_settings_torrents">Torrents while casting</string>
     <!-- Settings, Sources: under the row above. -->
     <string name="cast_settings_torrents_note">Lets a TV with Chromecast built in play torrents. This device sends the episode for as long as it plays.</string>
+    <!-- Under a page that is still loading after four seconds. -->
+    <string name="reader_page_loading">Loading page %1$d</string>
+    <!-- Heading where a page could not be loaded. -->
+    <string name="reader_page_failed">Couldn\'t load page %1$d</string>
+    <!-- Under the failed page's reason on a phone: turning on skips the missing page. -->
+    <string name="reader_page_failed_swipe">Swipe to go on without it.</string>
+    <!-- Button that loads a failed page again. -->
+    <string name="reader_try_again">Try again</string>
+    <!-- Button that goes on past a page that could not be loaded. -->
+    <string name="reader_skip_page">Skip page</string>
+    <!-- What a screen reader says for the page on screen. -->
+    <string name="reader_page_of">Page %1$d of %2$d</string>
+    <!-- What a screen reader says for two pages side by side. -->
+    <string name="reader_pages_of">Pages %1$d and %2$d of %3$d</string>
+    <!-- A screen reader action, and the label of the tap zone that turns forward. -->
+    <string name="reader_action_next">Next page</string>
+    <!-- A screen reader action, and the label of the tap zone that turns back. -->
+    <string name="reader_action_previous">Previous page</string>
+    <!-- A screen reader action, and the label of the tap zone in the middle that shows the reader's controls. -->
+    <string name="reader_action_controls">Controls</string>
+    <!-- Under Next page on the e-ink tap zone guide, for a book read right to left. -->
+    <string name="eink_zone_next_rtl">Tap, or swipe right</string>
+    <!-- Under Next page on the e-ink tap zone guide, for a book read left to right. -->
+    <string name="eink_zone_next_ltr">Tap, or swipe left</string>
+    <!-- Under Controls on the e-ink tap zone guide. -->
+    <string name="eink_zone_tap">Tap</string>
+    <!-- The page number in the page's margin on an e-ink screen. -->
+    <string name="eink_folio_one">%1$d of %2$d</string>
+    <!-- The page numbers in the margin when two pages show side by side. -->
+    <string name="eink_folio_two">%1$d and %2$d of %3$d</string>
+    <!-- Under the series title in the e-ink reader's top bar. The chapter is its number, such as 12. -->
+    <string name="eink_chapter_titled">Chapter %1$s · %2$s</string>
+    <!-- Under the series title when the chapter has no title of its own. -->
+    <string name="eink_chapter">Chapter %1$s</string>
+    <!-- Button in the e-ink reader's top bar that lists the chapters. -->
+    <string name="eink_contents">Contents</string>
+    <!-- Button that goes back out of the reader. -->
+    <string name="eink_back">Back</string>
+    <!-- Under the page number in the e-ink reader's bottom bar. -->
+    <plurals name="eink_pages_left">
+        <item quantity="one">One page left in chapter</item>
+        <item quantity="other">%1$d pages left in chapter</item>
+    </plurals>
+    <!-- Button in the e-ink reader's bottom bar. -->
+    <string name="eink_next_chapter">Next chapter</string>
+    <!-- Button in the e-ink reader's bottom bar. -->
+    <string name="eink_previous_chapter">Previous chapter</string>
+    <!-- Button in the e-ink reader's bottom bar that opens the reader's settings. -->
+    <string name="eink_settings">Settings</string>
+    <!-- Button that asks the e-ink screen for a full refresh, to clear what earlier pages left behind. -->
+    <string name="eink_clean_screen">Clean screen</string>
+    <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
+    <string name="eink_end_of_chapter">End of chapter %1$s</string>
+    <!-- On the page between chapters, once the chapter counts as read. -->
+    <string name="eink_counted_read">Counted as read</string>
+    <!-- Small heading above the next chapter on the page between chapters. -->
+    <string name="eink_end_next">Next</string>
+    <!-- The next chapter's length on the page between chapters. -->
+    <plurals name="eink_end_pages">
+        <item quantity="one">One page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- How the next chapter reads, on the page between chapters. -->
+    <string name="eink_reads_rtl">right to left</string>
+    <!-- How the next chapter reads, on the page between chapters. -->
+    <string name="eink_reads_ltr">left to right</string>
+    <!-- How the next chapter reads, on the page between chapters. -->
+    <string name="eink_reads_strip">long strip</string>
+    <!-- The next chapter is downloaded, on the page between chapters. -->
+    <string name="eink_on_device">on this device</string>
+    <!-- The main button on the page between chapters. -->
+    <string name="eink_continue_to">Continue to chapter %1$s</string>
+    <!-- Button on the page between chapters that leaves the reader for the series page. -->
+    <string name="eink_back_to_series">Back to series</string>
+    <!-- Line at the foot of the page between chapters. -->
+    <string name="eink_turn_to_continue">Turn the page to continue</string>
+    <!-- Heading on the page between chapters when no source has the next chapter yet. -->
+    <string name="eink_next_missing">Chapter %1$s isn\'t in your sources yet</string>
+    <!-- Heading on the page between chapters when the next chapter is not out. -->
+    <string name="eink_next_not_out">The next chapter isn\'t out yet</string>
+    <!-- Heading on the page between chapters when every chapter out so far is read. -->
+    <string name="eink_caught_up">You\'re caught up</string>
+    <!-- Line under those headings. -->
+    <string name="eink_checks_again">Kaeri checks your sources again when you open Updates or this series. It will show under New chapters.</string>
+    <!-- Heading on the page between chapters when the series has no more chapters. -->
+    <string name="eink_finished">That was the last chapter</string>
+    <!-- Line under it. -->
+    <string name="eink_finished_line">The series is finished.</string>
+    <!-- Heading on the page between chapters when the next chapter needs a connection. -->
+    <string name="eink_next_offline">Not on this device, and you\'re offline</string>
+    <!-- Line under it. -->
+    <string name="eink_next_offline_line">Connect to Wi-Fi to load it, or open something already here.</string>
+    <!-- Button on the page between chapters that opens the downloads. -->
+    <string name="eink_open_downloads">Open downloads</string>
+    <!-- The one line an e-ink screen shows while a chapter loads. -->
+    <string name="eink_loading_chapter">Loading chapter %1$s</string>
+    <!-- Under a failed page on an e-ink screen. -->
+    <string name="eink_page_failed_details">The details are in More, under Messages.</string>
+    <!-- Heading of the question asked when the device may have an e-ink screen. -->
+    <string name="eink_ask_title">Is this an e-ink screen?</string>
+    <!-- Line under it. -->
+    <string name="eink_ask_body">Kaeri found signs of an e-ink screen but couldn\'t confirm it. The e-ink layout pages instead of scrolling, never animates and asks the screen to clear itself when it needs to.</string>
+    <!-- The answer that turns the e-ink layout on. -->
+    <string name="eink_ask_yes">Use the e-ink layout</string>
+    <!-- The answer that keeps the phone layout. -->
+    <string name="eink_ask_no">Keep the standard layout</string>
+    <!-- Foot of the e-ink question. -->
+    <string name="eink_ask_later">You can change this later in Settings, under Screen.</string>
+    <!-- Heading of the question asked when an e-ink screen may or may not show colour. -->
+    <string name="eink_colour_title">Does this screen show colour?</string>
+    <!-- Line under it, above four coloured squares. -->
+    <string name="eink_colour_body">Kaeri couldn\'t tell from this device. Look at the four squares.</string>
+    <!-- What a screen reader says for the four squares. -->
+    <string name="eink_colour_squares">Four squares: red, green, blue and amber</string>
+    <!-- Line under the squares. -->
+    <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Screen.</string>
+    <!-- The answer for a colour screen. -->
+    <string name="eink_colour_yes">I see colour</string>
+    <!-- The answer for a grey screen. -->
+    <string name="eink_colour_no">Only greys</string>
+    <!-- Leaves the colour question unanswered. -->
+    <string name="eink_colour_skip">Skip</string>
+    <!-- Shown after the colour question was skipped. -->
+    <string name="eink_colour_skipped">Skipped, pictures stay in colour, which a grey screen shows as greys.</string>
+    <!-- A one-line hint on e-readers whose page buttons may be set to something other than Volume. -->
+    <string name="eink_page_keys_hint">Set the page buttons to Volume in the device\'s settings to turn pages.</string>
+    <!-- Beside a dot on a chapter or series that is new since it was last opened. -->
+    <string name="eink_new">New</string>
+    <!-- The action on the notice that says a chapter opened where it was left: back to its first page. -->
+    <string name="reader_notice_start_over">Start over</string>
+    <!-- The action on the notice that says another device read further: back to where this one was. -->
+    <string name="reader_notice_go_back">Go back</string>
+    <!-- The action on the notice that says how a series was detected to read: change it. -->
+    <string name="reader_notice_change">Change</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->

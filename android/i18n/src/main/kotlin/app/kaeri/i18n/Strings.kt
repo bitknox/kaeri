@@ -1521,6 +1521,262 @@ object Strings {
     fun castSettingsTorrentsNote(context: Context): String =
         context.getString(R.string.cast_settings_torrents_note)
 
+    /** Under a page that is still loading after four seconds. */
+    fun readerPageLoading(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_loading, page)
+
+    /** Heading where a page could not be loaded. */
+    fun readerPageFailed(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_failed, page)
+
+    /** Under the failed page's reason on a phone: turning on skips the missing page. */
+    fun readerPageFailedSwipe(context: Context): String =
+        context.getString(R.string.reader_page_failed_swipe)
+
+    /** Button that loads a failed page again. */
+    fun readerTryAgain(context: Context): String =
+        context.getString(R.string.reader_try_again)
+
+    /** Button that goes on past a page that could not be loaded. */
+    fun readerSkipPage(context: Context): String =
+        context.getString(R.string.reader_skip_page)
+
+    /** What a screen reader says for the page on screen. */
+    fun readerPageOf(context: Context, page: Int, pages: Int): String =
+        context.getString(R.string.reader_page_of, page, pages)
+
+    /** What a screen reader says for two pages side by side. */
+    fun readerPagesOf(context: Context, first: Int, second: Int, pages: Int): String =
+        context.getString(R.string.reader_pages_of, first, second, pages)
+
+    /** A screen reader action, and the label of the tap zone that turns forward. */
+    fun readerActionNext(context: Context): String =
+        context.getString(R.string.reader_action_next)
+
+    /** A screen reader action, and the label of the tap zone that turns back. */
+    fun readerActionPrevious(context: Context): String =
+        context.getString(R.string.reader_action_previous)
+
+    /** A screen reader action, and the label of the tap zone in the middle that shows the reader's controls. */
+    fun readerActionControls(context: Context): String =
+        context.getString(R.string.reader_action_controls)
+
+    /** Under Next page on the e-ink tap zone guide, for a book read right to left. */
+    fun einkZoneNextRtl(context: Context): String =
+        context.getString(R.string.eink_zone_next_rtl)
+
+    /** Under Next page on the e-ink tap zone guide, for a book read left to right. */
+    fun einkZoneNextLtr(context: Context): String =
+        context.getString(R.string.eink_zone_next_ltr)
+
+    /** Under Controls on the e-ink tap zone guide. */
+    fun einkZoneTap(context: Context): String =
+        context.getString(R.string.eink_zone_tap)
+
+    /** The page number in the page's margin on an e-ink screen. */
+    fun einkFolioOne(context: Context, page: Int, pages: Int): String =
+        context.getString(R.string.eink_folio_one, page, pages)
+
+    /** The page numbers in the margin when two pages show side by side. */
+    fun einkFolioTwo(context: Context, first: Int, second: Int, pages: Int): String =
+        context.getString(R.string.eink_folio_two, first, second, pages)
+
+    /** Under the series title in the e-ink reader's top bar. The chapter is its number, such as 12. */
+    fun einkChapterTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.eink_chapter_titled, chapter, title)
+
+    /** Under the series title when the chapter has no title of its own. */
+    fun einkChapter(context: Context, chapter: String): String =
+        context.getString(R.string.eink_chapter, chapter)
+
+    /** Button in the e-ink reader's top bar that lists the chapters. */
+    fun einkContents(context: Context): String =
+        context.getString(R.string.eink_contents)
+
+    /** Button that goes back out of the reader. */
+    fun einkBack(context: Context): String =
+        context.getString(R.string.eink_back)
+
+    /** Under the page number in the e-ink reader's bottom bar. */
+    fun einkPagesLeft(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_pages_left, count, count)
+
+    /** Button in the e-ink reader's bottom bar. */
+    fun einkNextChapter(context: Context): String =
+        context.getString(R.string.eink_next_chapter)
+
+    /** Button in the e-ink reader's bottom bar. */
+    fun einkPreviousChapter(context: Context): String =
+        context.getString(R.string.eink_previous_chapter)
+
+    /** Button in the e-ink reader's bottom bar that opens the reader's settings. */
+    fun einkSettings(context: Context): String =
+        context.getString(R.string.eink_settings)
+
+    /** Button that asks the e-ink screen for a full refresh, to clear what earlier pages left behind. */
+    fun einkCleanScreen(context: Context): String =
+        context.getString(R.string.eink_clean_screen)
+
+    /** Top line of the page between chapters. The chapter is its number, such as 12. */
+    fun einkEndOfChapter(context: Context, chapter: String): String =
+        context.getString(R.string.eink_end_of_chapter, chapter)
+
+    /** On the page between chapters, once the chapter counts as read. */
+    fun einkCountedRead(context: Context): String =
+        context.getString(R.string.eink_counted_read)
+
+    /** Small heading above the next chapter on the page between chapters. */
+    fun einkEndNext(context: Context): String =
+        context.getString(R.string.eink_end_next)
+
+    /** The next chapter's length on the page between chapters. */
+    fun einkEndPages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_end_pages, count, count)
+
+    /** How the next chapter reads, on the page between chapters. */
+    fun einkReadsRtl(context: Context): String =
+        context.getString(R.string.eink_reads_rtl)
+
+    /** How the next chapter reads, on the page between chapters. */
+    fun einkReadsLtr(context: Context): String =
+        context.getString(R.string.eink_reads_ltr)
+
+    /** How the next chapter reads, on the page between chapters. */
+    fun einkReadsStrip(context: Context): String =
+        context.getString(R.string.eink_reads_strip)
+
+    /** The next chapter is downloaded, on the page between chapters. */
+    fun einkOnDevice(context: Context): String =
+        context.getString(R.string.eink_on_device)
+
+    /** The main button on the page between chapters. */
+    fun einkContinueTo(context: Context, chapter: String): String =
+        context.getString(R.string.eink_continue_to, chapter)
+
+    /** Button on the page between chapters that leaves the reader for the series page. */
+    fun einkBackToSeries(context: Context): String =
+        context.getString(R.string.eink_back_to_series)
+
+    /** Line at the foot of the page between chapters. */
+    fun einkTurnToContinue(context: Context): String =
+        context.getString(R.string.eink_turn_to_continue)
+
+    /** Heading on the page between chapters when no source has the next chapter yet. */
+    fun einkNextMissing(context: Context, chapter: String): String =
+        context.getString(R.string.eink_next_missing, chapter)
+
+    /** Heading on the page between chapters when the next chapter is not out. */
+    fun einkNextNotOut(context: Context): String =
+        context.getString(R.string.eink_next_not_out)
+
+    /** Heading on the page between chapters when every chapter out so far is read. */
+    fun einkCaughtUp(context: Context): String =
+        context.getString(R.string.eink_caught_up)
+
+    /** Line under those headings. */
+    fun einkChecksAgain(context: Context): String =
+        context.getString(R.string.eink_checks_again)
+
+    /** Heading on the page between chapters when the series has no more chapters. */
+    fun einkFinished(context: Context): String =
+        context.getString(R.string.eink_finished)
+
+    /** Line under it. */
+    fun einkFinishedLine(context: Context): String =
+        context.getString(R.string.eink_finished_line)
+
+    /** Heading on the page between chapters when the next chapter needs a connection. */
+    fun einkNextOffline(context: Context): String =
+        context.getString(R.string.eink_next_offline)
+
+    /** Line under it. */
+    fun einkNextOfflineLine(context: Context): String =
+        context.getString(R.string.eink_next_offline_line)
+
+    /** Button on the page between chapters that opens the downloads. */
+    fun einkOpenDownloads(context: Context): String =
+        context.getString(R.string.eink_open_downloads)
+
+    /** The one line an e-ink screen shows while a chapter loads. */
+    fun einkLoadingChapter(context: Context, chapter: String): String =
+        context.getString(R.string.eink_loading_chapter, chapter)
+
+    /** Under a failed page on an e-ink screen. */
+    fun einkPageFailedDetails(context: Context): String =
+        context.getString(R.string.eink_page_failed_details)
+
+    /** Heading of the question asked when the device may have an e-ink screen. */
+    fun einkAskTitle(context: Context): String =
+        context.getString(R.string.eink_ask_title)
+
+    /** Line under it. */
+    fun einkAskBody(context: Context): String =
+        context.getString(R.string.eink_ask_body)
+
+    /** The answer that turns the e-ink layout on. */
+    fun einkAskYes(context: Context): String =
+        context.getString(R.string.eink_ask_yes)
+
+    /** The answer that keeps the phone layout. */
+    fun einkAskNo(context: Context): String =
+        context.getString(R.string.eink_ask_no)
+
+    /** Foot of the e-ink question. */
+    fun einkAskLater(context: Context): String =
+        context.getString(R.string.eink_ask_later)
+
+    /** Heading of the question asked when an e-ink screen may or may not show colour. */
+    fun einkColourTitle(context: Context): String =
+        context.getString(R.string.eink_colour_title)
+
+    /** Line under it, above four coloured squares. */
+    fun einkColourBody(context: Context): String =
+        context.getString(R.string.eink_colour_body)
+
+    /** What a screen reader says for the four squares. */
+    fun einkColourSquares(context: Context): String =
+        context.getString(R.string.eink_colour_squares)
+
+    /** Line under the squares. */
+    fun einkColourHint(context: Context): String =
+        context.getString(R.string.eink_colour_hint)
+
+    /** The answer for a colour screen. */
+    fun einkColourYes(context: Context): String =
+        context.getString(R.string.eink_colour_yes)
+
+    /** The answer for a grey screen. */
+    fun einkColourNo(context: Context): String =
+        context.getString(R.string.eink_colour_no)
+
+    /** Leaves the colour question unanswered. */
+    fun einkColourSkip(context: Context): String =
+        context.getString(R.string.eink_colour_skip)
+
+    /** Shown after the colour question was skipped. */
+    fun einkColourSkipped(context: Context): String =
+        context.getString(R.string.eink_colour_skipped)
+
+    /** A one-line hint on e-readers whose page buttons may be set to something other than Volume. */
+    fun einkPageKeysHint(context: Context): String =
+        context.getString(R.string.eink_page_keys_hint)
+
+    /** Beside a dot on a chapter or series that is new since it was last opened. */
+    fun einkNew(context: Context): String =
+        context.getString(R.string.eink_new)
+
+    /** The action on the notice that says a chapter opened where it was left: back to its first page. */
+    fun readerNoticeStartOver(context: Context): String =
+        context.getString(R.string.reader_notice_start_over)
+
+    /** The action on the notice that says another device read further: back to where this one was. */
+    fun readerNoticeGoBack(context: Context): String =
+        context.getString(R.string.reader_notice_go_back)
+
+    /** The action on the notice that says how a series was detected to read: change it. */
+    fun readerNoticeChange(context: Context): String =
+        context.getString(R.string.reader_notice_change)
+
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
         context.getString(R.string.tv_pair_request_held, phone, code)
