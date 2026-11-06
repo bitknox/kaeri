@@ -46,6 +46,8 @@ impl ShelfChapter {
             download: None,
             versions: 1,
             bookmarked: false,
+            version_label: None,
+            read_at: None,
         }
     }
 }
