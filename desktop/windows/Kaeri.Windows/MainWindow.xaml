@@ -114,7 +114,7 @@
     <!-- What the engine says in passing: marked watched, a sync failed. Bottom centre, as the
          board has it, and over the player, so a notice said while an episode plays is seen. -->
     <InfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="480"
-             HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24"
+             HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24,0,24,16"
              AutomationProperties.LiveSetting="Polite"
              PointerEntered="OnToastPointerEntered" PointerExited="OnToastPointerExited">
       <!-- Every notice on the raised surface: an alert differs by its vermilion mark only. -->
