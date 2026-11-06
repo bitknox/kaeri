@@ -26,9 +26,16 @@
       <ListView x:Name="Panes" SelectionMode="Single" SelectionChanged="OnPaneChanged" ItemClick="OnPaneClicked" IsItemClickEnabled="True"
                 Margin="-12,0,0,0" AutomationProperties.Name="{x:Bind app:T.SettingsPanesLabel}" />
       <ScrollViewer x:Name="CardScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto">
-        <local:StateHost x:Name="State" Padding="0,0,12,24" MaxWidth="760" HorizontalAlignment="Left">
-          <StackPanel x:Name="Cards" Spacing="4" />
-        </local:StateHost>
+        <!-- One width for every pane, up to 760, so the cards never change width between panes or
+             as what they say changes. -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MaxWidth="760" />
+          </Grid.ColumnDefinitions>
+          <local:StateHost x:Name="State" Padding="0,0,12,24">
+            <StackPanel x:Name="Cards" Spacing="4" />
+          </local:StateHost>
+        </Grid>
       </ScrollViewer>
     </Grid>
   </Grid>

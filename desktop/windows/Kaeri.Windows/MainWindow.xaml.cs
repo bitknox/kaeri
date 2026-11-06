@@ -531,6 +531,20 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(3000);
                 ctx.Inject(new Event.JobDone(9_100_002));
             });
+        // --show=conflicts[-open]: two titles that differ from AniList, as a pull would find them,
+        // under Accounts' AniList card; -open opens the list to settle them.
+        if (options.Show is "conflicts" or "conflicts-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                var titles = ctx.Known.Entries.Values.Take(2).ToArray();
+                ctx.Inject(new Event.Conflicts([.. titles.Select((t, i) => new ConflictRow(t.Id, t.Title, i == 0 ? "progress" : "score", i == 0 ? "7" : "8", i == 0 ? "5" : "6"))])); // i18n-skip
+                if (options.Show == "conflicts-open")
+                {
+                    await Task.Delay(1000);
+                    await Sync.ConflictsDialog.Show(ctx, Root.XamlRoot);
+                }
+            });
         if (options.Show == "messages")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
