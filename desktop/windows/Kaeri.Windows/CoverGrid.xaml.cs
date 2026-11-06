@@ -137,7 +137,7 @@ public sealed partial class CoverGrid : UserControl
             {
                 menu.Items.Clear();
                 if (container.DataContext is CoverItem item)
-                    Fill(menu, item);
+                    Fill(menu, item.Entry);
             };
             container.ContextFlyout = menu;
         }
@@ -154,14 +154,14 @@ public sealed partial class CoverGrid : UserControl
     /// The title menu, as on the Mac: Open, the list status with the current one checked (Add to
     /// Planning while the title is on no list), and Open on AniList.
     /// </summary>
-    static void Fill(MenuFlyout menu, CoverItem item)
+    internal static void Fill(MenuFlyout menu, Entry entry)
     {
         var ctx = Ctx.Current;
-        var id = item.Id;
+        var id = entry.Id;
         var open = new MenuFlyoutItem { Text = T.TitleOpen, Icon = new FontIcon { Glyph = "" } };
         open.Click += (_, _) => ctx.OpenTitle(id);
         menu.Items.Add(open);
-        var status = ctx.Known.Entry(id)?.ListStatus ?? item.Entry.ListStatus;
+        var status = ctx.Known.Entry(id)?.ListStatus ?? entry.ListStatus;
         if (status is null)
         {
             var plan = new MenuFlyoutItem { Text = T.LibraryAddPlanning, Icon = new FontIcon { Glyph = "" } };
@@ -183,6 +183,18 @@ public sealed partial class CoverGrid : UserControl
         var anilist = new MenuFlyoutItem { Text = T.TitleOpenAnilist, Icon = new FontIcon { Glyph = "" } };
         anilist.Click += (_, _) => ctx.Send(new Command.OpenExternal($"https://anilist.co/anime/{id}"));
         menu.Items.Add(anilist);
+    }
+
+    /// <summary>The title menu for any button that stands for a title, made as it opens.</summary>
+    internal static MenuFlyout Menu(Func<Entry> entry)
+    {
+        var menu = new MenuFlyout();
+        menu.Opening += (_, _) =>
+        {
+            menu.Items.Clear();
+            Fill(menu, entry());
+        };
+        return menu;
     }
 
     /// <summary>The engine only queues the change for the tracker: the status is set here at once, and said.</summary>

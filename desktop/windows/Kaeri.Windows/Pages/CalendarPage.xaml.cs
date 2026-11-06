@@ -750,6 +750,8 @@ public sealed partial class CalendarPage : Page
         var button = BroadcastButton();
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
+        // The title menu, as on a cover and on the Mac.
+        button.ContextFlyout = CoverGrid.Menu(() => b.Entry);
         if (b.Watched)
         {
             // Watched: one quiet line, a dub still marked.
@@ -794,6 +796,7 @@ public sealed partial class CalendarPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(now, zone));
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
+        button.ContextFlyout = CoverGrid.Menu(() => b.Entry);
         return button;
     }
 
@@ -888,20 +891,56 @@ public sealed partial class CalendarPage : Page
         Pick(sender.SelectedItem?.Tag as string == "mine");
     }
 
-    /// <summary>Moves to a week with the old one sliding out: one width on the standard token, towards the side it went.</summary>
-    void Go(int to)
+    /// <summary>
+    /// Moves to a week with both weeks moving together, one width on the standard token towards
+    /// the side it went: the old week, kept as a picture, slides out as the new one slides in,
+    /// so the area is never bare between them. The new week starts at its top.
+    /// </summary>
+    async void Go(int to)
     {
         var step = Math.Sign(to - week);
         if (step == 0)
             return;
+        var width = (float)Scroll.ActualWidth;
+        Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap? before = null;
+        if (Motion.Enabled && width > 0 && Scroll.ActualHeight > 0)
+        {
+            try
+            {
+                before = new Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap();
+                await before.RenderAsync(Scroll);
+            }
+            catch (Exception)
+            {
+                before = null;
+            }
+        }
         week = to;
         Show();
+        Scroll.ChangeView(null, 0, null, true);
         Motion.FadeIn(WeekTitle, Motion.Standard);
-        var width = (float)Scroll.ActualWidth;
         if (!Motion.Enabled || width <= 0)
         {
             Motion.FadeIn(Days, Motion.Standard);
             return;
+        }
+        if (before is not null && Scroll.Parent is Grid host)
+        {
+            // The old week's picture, clipped to the scroller's place, leaves the other way.
+            var ghost = new Image { Source = before, Width = Scroll.ActualWidth, Height = Scroll.ActualHeight, Stretch = Stretch.Fill, IsHitTestVisible = false };
+            var frame = new Border
+            {
+                Child = ghost,
+                IsHitTestVisible = false,
+                Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, Scroll.ActualWidth, Scroll.ActualHeight) },
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(frame, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            Grid.SetRow(frame, Grid.GetRow(Scroll));
+            host.Children.Add(frame);
+            ghost.TranslationTransition = new Vector3Transition { Duration = Motion.Standard };
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ghost.Translation = new Vector3(-step * width, 0, 0));
+            _ = Task.Delay(Motion.Standard + TimeSpan.FromMilliseconds(100)).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => host.Children.Remove(frame)));
         }
         Days.TranslationTransition = null;
         Days.Translation = new Vector3(step * width, 0, 0);
