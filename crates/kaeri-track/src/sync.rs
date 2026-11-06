@@ -334,6 +334,222 @@ fn apply(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------------------------
+// Reading
+
+/// Where the chapters and volumes last sent to a tracker for a work are remembered.
+fn pushed_read_key(tracker_id: &str, anilist_id: kaeri_core::ids::AnilistId) -> String {
+    format!("pushed_read:{tracker_id}:{}", anilist_id.get())
+}
+
+/// Forget what reading has sent to a tracker, when its account may have changed.
+pub fn forget_pushed_read(store: &Store, tracker_id: &str) {
+    if let Err(e) = store.clear_meta_prefix(&format!("pushed_read:{tracker_id}:")) {
+        tracing::warn!(tracker = tracker_id, error = %e, "could not forget sent reading");
+    }
+}
+
+fn last_pushed_read(
+    store: &Store,
+    tracker_id: &str,
+    anilist_id: kaeri_core::ids::AnilistId,
+) -> Result<Option<(u32, Option<u32>)>, kaeri_store::StoreError> {
+    let text = store.get_meta_text(&pushed_read_key(tracker_id, anilist_id))?;
+    Ok(text.and_then(|text| {
+        let (chapters, volumes) = text.split_once('/')?;
+        Some((chapters.parse().ok()?, volumes.parse().ok()))
+    }))
+}
+
+fn remember_pushed_read(
+    store: &Store,
+    tracker_id: &str,
+    anilist_id: kaeri_core::ids::AnilistId,
+    chapters: u32,
+    volumes: Option<u32>,
+) -> Result<(), kaeri_store::StoreError> {
+    let (held_chapters, held_volumes) =
+        last_pushed_read(store, tracker_id, anilist_id)?.unwrap_or((0, None));
+    let (chapters, volumes) = (chapters.max(held_chapters), volumes.max(held_volumes));
+    let text = format!("{chapters}/{}", volumes.map_or_else(String::new, |v| v.to_string()));
+    store.set_meta_text(&pushed_read_key(tracker_id, anilist_id), &text)?;
+    // Told to the other devices (a no-op with sync off), so none of them sends it again.
+    store.sync_read_mark(tracker_id, anilist_id.get(), chapters, volumes)
+}
+
+/// The work id a reading list entry is kept under.
+pub fn read_work(anilist_id: kaeri_core::ids::AnilistId) -> String {
+    format!("a:{}", anilist_id.get())
+}
+
+/// A reading status as the store names it, as a tracker's status and whether it is a reread.
+pub fn read_status_from_name(name: &str) -> Option<(kaeri_core::traits::WatchStatus, bool)> {
+    use kaeri_core::traits::WatchStatus as W;
+    Some(match name {
+        "reading" => (W::Current, false),
+        "planning" => (W::Planning, false),
+        "completed" => (W::Completed, false),
+        "paused" => (W::Paused, false),
+        "dropped" => (W::Dropped, false),
+        "rereading" => (W::Current, true),
+        // Files of the person's own are on no tracker.
+        _ => return None,
+    })
+}
+
+/// Send what the reading outbox holds for one tracker: [`drain`] for manga and novels.
+///
+/// Holds an op back when the tracker cannot name the work yet, and waits out the tracker's own
+/// pacing inside its push, so a tracker that spaces its writes is not failed for it.
+pub async fn drain_read(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+) -> Result<DrainReport, kaeri_store::StoreError> {
+    let id = tracker.id();
+    let mut report = DrainReport::default();
+    if !tracker.is_authenticated() || !tracker.serves_reading() {
+        report.remaining = store.read_outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+    if let Some(until) = store.get_meta_i64(&reauth_hold_key(id))?
+        && now < until
+    {
+        report.needs_reauth = true;
+        report.remaining = store.read_outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+    let mut claimed = store.claim_ready_read(id, now, DRAIN_BATCH)?;
+    if claimed.is_empty() {
+        return Ok(report);
+    }
+    let (sendable, unaddressable): (Vec<_>, Vec<_>) =
+        claimed.drain(..).partition(|entry| tracker.can_address(&entry.op));
+    for entry in &unaddressable {
+        store.defer_read(entry.id, "no id for this work on this tracker yet", None)?;
+    }
+    report.deferred = unaddressable.len() as u32;
+    if sendable.is_empty() {
+        report.remaining = store.read_outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+    let ops: Vec<_> = sendable.iter().map(|entry| entry.op.clone()).collect();
+    match tracker.push_read(&ops).await {
+        Ok(ignored) => {
+            for entry in &sendable {
+                store.complete_read(entry.id)?;
+                if let kaeri_core::traits::TrackOp::SetReadProgress {
+                    anilist_id,
+                    chapter,
+                    volume,
+                } = entry.op
+                {
+                    remember_pushed_read(store, id, anilist_id, chapter, volume)?;
+                }
+                if ignored.contains(&entry.op.anilist_id()) {
+                    report.ignored += 1;
+                } else {
+                    report.sent += 1;
+                }
+            }
+        }
+        Err(kaeri_core::Error::Auth(message)) => {
+            report.needs_reauth = true;
+            store.set_meta_i64(&reauth_hold_key(id), now + REAUTH_HOLD_SECS)?;
+            tracing::warn!(tracker = id, %message, "tracker rejected our credentials; holding reading");
+        }
+        Err(error) => {
+            let message = error.to_string();
+            for entry in &sendable {
+                store.fail_read(entry.id, &message, now)?;
+            }
+            report.failed = sendable.len() as u32;
+            tracing::warn!(tracker = id, %message, "reading push failed; backing off");
+        }
+    }
+    report.remaining = store.read_outbox_depth(Some(id))?;
+    Ok(report)
+}
+
+/// Pull the manga and novel list and reconcile it: [`pull`] for reading.
+pub async fn pull_read(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+    last_pull_at: i64,
+) -> Result<PullReport, kaeri_core::Error> {
+    if !tracker.is_authenticated() || !tracker.serves_reading() {
+        return Ok(PullReport::default());
+    }
+    let remote = tracker.pull_read_library().await?;
+    reconcile_read(store, tracker.id(), &remote, now, last_pull_at)
+}
+
+/// The merge half of [`pull_read`], for a list already fetched.
+pub fn reconcile_read(
+    store: &Store,
+    id: &str,
+    remote: &[kaeri_core::traits::TrackedReadEntry],
+    now: i64,
+    last_pull_at: i64,
+) -> Result<PullReport, kaeri_core::Error> {
+    let stored = |e: kaeri_store::StoreError| kaeri_core::Error::Store(e.to_string());
+    let mut report = PullReport { seen: remote.len() as u32, ..PullReport::default() };
+    for entry in remote {
+        let work = read_work(entry.anilist_id);
+        let local = local_read_state(store, &work).map_err(stored)?;
+        let local = merge::ReadLocal {
+            last_pushed: last_pushed_read(store, id, entry.anilist_id).map_err(stored)?,
+            ..local
+        };
+        let pending = store.pending_read_progress(id, entry.anilist_id).map_err(stored)?;
+        let merged = merge::reconcile_read_at(&local, entry, pending, last_pull_at);
+        for op in &merged.push {
+            if store.enqueue(id, op, now).map_err(stored)?.is_some() {
+                report.queued += 1;
+            }
+        }
+        if let Some((chapters, volumes)) = merged.adopt {
+            let volume = volumes.map(|v| v.to_string());
+            store
+                .adopt_read(&work, &chapters.to_string(), volume.as_deref(), now)
+                .map_err(stored)?;
+            report.adopted += 1;
+        }
+        report.conflicts.extend(merged.conflicts);
+    }
+    tracing::info!(
+        tracker = id,
+        seen = report.seen,
+        queued = report.queued,
+        adopted = report.adopted,
+        conflicts = report.conflicts.len(),
+        "reading list reconciled"
+    );
+    Ok(report)
+}
+
+/// The local view of one work, from the reading log and the person's list choices.
+pub fn local_read_state(
+    store: &Store,
+    work: &str,
+) -> Result<merge::ReadLocal, kaeri_store::StoreError> {
+    let (chapters, volumes) = store.read_progress(work)?;
+    let (status, score) = store.read_status(work)?;
+    let at = store.read_status_at(work)?;
+    let named = status.as_deref().and_then(read_status_from_name);
+    Ok(merge::ReadLocal {
+        chapters,
+        volumes,
+        status: named.map(|(status, _)| status),
+        rereading: named.is_some_and(|(_, rereading)| rereading),
+        status_at: named.and(at),
+        score: score.map(|s| s as f32),
+        score_at: score.and(at),
+        last_pushed: None,
+    })
+}
+
 /// Build the local view of one title from the watch log.
 ///
 /// Progress is the highest regular episode completed, the same figure [`queue_progress`]
