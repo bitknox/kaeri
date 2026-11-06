@@ -460,6 +460,9 @@ public final class ReaderModel {
         case .endPage(let session, let next, let why, _):
             guard session == self.session else { return }
             end = ReaderEnd(next: next, why: why)
+        case .nextPreview, .opening:
+            // The Android reader's end page preview and opening screen; this reader has neither.
+            break
         case .notice(let notice):
             show(notice)
         case .moved(let session, _, _, _):
