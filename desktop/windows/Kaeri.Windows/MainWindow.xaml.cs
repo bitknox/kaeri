@@ -786,9 +786,9 @@ public sealed partial class MainWindow : Window
         var cloud = ctx.Known.SyncGroup is { Problem: SyncProblem.SignInNeeded needed } && !Sync.SyncDialogs.ByHand
             ? T.CloudErrSignedOut(SyncWords.ServiceName(needed.Service), SyncWords.Kind)
             : null;
-        AccountText.Text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
-        AccountDot.Visibility = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
-        AccountAlert.Visibility = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
+        var text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
+        var dot = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
+        var alert = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
         var tip = cloud is not null && !reauth ? cloud
             : anilist is null ? T.LibrarySignedOutAction
             : reauth ? T.AccountsStateExpired(Tracker)
@@ -797,12 +797,24 @@ public sealed partial class MainWindow : Window
         // With two or more profiles the item names the one in use and opens the flyout to switch.
         if (ProfileWords.Active(ctx.Known.Profiles) is { } active)
         {
-            AccountText.Text = active.Name;
+            text = active.Name;
             tip = T.ProfilesAvatarDesc(active.Name);
         }
-        AccountItem.SelectsOnInvoked = !ProfileWords.Picking(ctx.Known.Profiles);
-        ToolTipService.SetToolTip(AccountItem, tip);
-        AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
+        // Each sync event lands here: only what changed is set, so the pane's foot never redraws.
+        if (AccountText.Text != text)
+            AccountText.Text = text;
+        if (AccountDot.Visibility != dot)
+            AccountDot.Visibility = dot;
+        if (AccountAlert.Visibility != alert)
+            AccountAlert.Visibility = alert;
+        var picks = !ProfileWords.Picking(ctx.Known.Profiles);
+        if (AccountItem.SelectsOnInvoked != picks)
+            AccountItem.SelectsOnInvoked = picks;
+        if (ToolTipService.GetToolTip(AccountItem) as string != tip)
+            ToolTipService.SetToolTip(AccountItem, tip);
+        var named = T.AccountsPaneName(tip);
+        if (AutomationProperties.GetName(AccountItem) != named)
+            AutomationProperties.SetName(AccountItem, named);
     }
 
     /// <summary>
