@@ -1842,6 +1842,7 @@ mod tests {
             format: "cbz".into(),
             pages: Some(1),
             comicinfo: None,
+            source: None,
         }]
     }
 
