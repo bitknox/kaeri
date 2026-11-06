@@ -17,7 +17,14 @@ sealed class WelcomeDialog
 {
     readonly Ctx ctx;
     readonly ContentDialog dialog;
-    readonly StackPanel body = new() { Spacing = 12, MinWidth = 480, MaxWidth = 520 };
+    readonly StackPanel body = new() { Spacing = 12 };
+    /// <summary>
+    /// One size for every page, as the Mac's sheet is, so the dialog does not grow and move between
+    /// them; a page taller than it scrolls. The Welcome page has no title, so its box takes the
+    /// title's room too.
+    /// </summary>
+    readonly ScrollViewer frame = new() { Width = 500, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    const double PageHeight = 440, TitleRoom = 40;
     readonly TextBox invite = new() { PlaceholderText = T.StoresInviteLinkHint, AcceptsReturn = false };
     readonly TextBlock problem = Ui.Text("", "HazeCaptionStyle");
     readonly Button join = new() { Content = T.OnboardingJoin, MinWidth = 72, IsEnabled = false };
@@ -45,7 +52,8 @@ sealed class WelcomeDialog
                 JoinNow();
             }
         };
-        dialog = new ContentDialog { XamlRoot = root, Content = body };
+        frame.Content = body;
+        dialog = new ContentDialog { XamlRoot = root, Content = frame };
         dialog.PrimaryButtonClick += OnPrimary;
         dialog.SecondaryButtonClick += OnSecondary;
         Show(0);
@@ -68,6 +76,8 @@ sealed class WelcomeDialog
     {
         page = to;
         body.Children.Clear();
+        frame.Height = to == 0 ? PageHeight + TitleRoom : PageHeight;
+        frame.ChangeView(null, 0, null, true);
         dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
         dialog.SecondaryButtonText = "";
         dialog.CloseButtonText = "";
