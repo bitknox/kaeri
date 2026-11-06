@@ -10,6 +10,7 @@ Later decisions win where they disagree with this text:
 - Copy, 1 November 2026: the legal line is "Kaeri doesn't host any shows. You add your own sources." In the apps it appears only in About, beside Legal and contact. Three notices stay where a choice is made: the plugin warning (`plugin-risk-warning`), the store owner line (`stores-join-owner-responsible`) and the torrent playback sharing note. No other screen carries a legal line.
 - Home, 31 October 2026: Home replaces Continue as the first section, as the Home section below sets out. Patterns F1 and A1 on the canvas now read: only the viewer's own next thing sits above their queue, or a plainly labelled popular pick when they have none.
 - Android TV, Windows and Linux follow the same principles, states, motion tokens and copy rules through their own platform's controls. Their own notes are `docs/desktop-*.md`.
+- Desktop apps, 6 November 2026: Windows and Linux are good apps on their own system, not copies of the Mac app. They share this spec's behaviour, states and copy, and Kaeri's identity: the palette, show titles in Zen Kaku Gothic New, cover art, Nagare and the spacing. Their controls, window chrome, menus, flyouts, dialogs, focus visuals, keyboard conventions, scrollbars and system motion are the platform's own. The Mac sets the bar for polish, not the look: nothing jumps, a click answers at once, what changes moves, and one element looks the same everywhere. Where Windows or Linux has a convention and the Mac does it differently, the app follows its own platform.
 
 ## Principles
 
@@ -186,6 +187,8 @@ Transitions are cited here by id: T1 to T9 on iPhone and iPad, M1 to M5 on Mac.
 | fade-out | `.easeIn(duration: 0.3)` | Player controls hiding |
 | linear | `.linear(duration: n)` | Countdowns only (Up next 8 s) |
 | system | The platform's own | Navigation push and zoom, sheets, menus, tab bar, window open, full screen |
+
+On Windows and Linux the tokens keep their roles and timing, with the platform's easing in place of springs. The system row is the platform's own motion: on Windows, Fluent's page transitions, `ContentDialog`, flyouts and menus, the navigation selection indicator and connected animations.
 
 Reduce Motion: zoom and matched geometry become crossfades (standard), parallax and the banner stretch are off, the player dismiss drag fades instead of scaling, and draw-on becomes an instant change. Numeric text and fades stay.
 
