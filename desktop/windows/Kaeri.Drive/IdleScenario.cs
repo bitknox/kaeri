@@ -57,6 +57,46 @@ static class IdleScenario
         Console.WriteLine(report.ToString());
     }
 
+    /// <summary>The pointer resting on a cover in Seasonal, filmed: the card should grow from the cover, and leave when the pointer does.</summary>
+    public static async Task HoverCard(Run run)
+    {
+        await FeelScenario.Go(run, "Seasonal");
+        await Task.Delay(1500);
+        // The card opens only in the window in front: a click on the page's title makes sure.
+        var front = run.Window.BoundingRectangle;
+        Native.SetForegroundWindow(run.Hwnd);
+        Mouse.MoveTo(new Point(front.Left + 320, front.Top + 92));
+        Mouse.Click();
+        await Task.Delay(500);
+        var covers = run.Covers().Where(c => Run.Safe(() => c.BoundingRectangle) is { } r && r.Height > r.Width * 1.2).Take(3).ToArray();
+        foreach (var (cover, i) in covers.Select((c, i) => (c, i)))
+        {
+            var r = cover.BoundingRectangle;
+            await Feel.Film(run, $"hover card: rest on cover {i + 1}", () => Task.Delay(1200),
+                async () =>
+                {
+                    // A real pointer arrives in steps: the cover hears it enter, then move, then rest.
+                    var at = new Point(r.Left + r.Width / 2, r.Top + r.Height / 3);
+                    Mouse.MoveTo(new Point(at.X - 30, at.Y));
+                    for (var step = 0; step < 6; step++)
+                    {
+                        Native.Nudge(5, 0);
+                        await Task.Delay(16);
+                    }
+                }, 3000);
+        }
+        var w = run.Window.BoundingRectangle;
+        await Feel.Film(run, "hover card: pointer leaves", async () =>
+        {
+            for (var step = 0; step < 10; step++)
+            {
+                Native.Nudge(0, 60);
+                await Task.Delay(16);
+            }
+        }, null, 2000);
+        Feel.Write(Path.Combine(run.Options.Out));
+    }
+
     static string Id(AutomationElement e) => string.Join(".", Run.Safe(() => e.Properties.RuntimeId.ValueOrDefault) ?? []);
 
     static Dictionary<string, string> Elements(Run run)
@@ -86,6 +126,11 @@ static class IdleScenario
         Mouse.MoveTo(new Point(w.Left + 8, w.Bottom - 8));
         await Task.Delay(3000);
         var before = Elements(run);
+        // Where each element of the page stands, to read layout from (Home's shelves and gaps).
+        File.WriteAllLines(Path.Combine(dir, $"idle-{page}-rects.txt"), run.Window.FindAllDescendants()
+            .Select(e => (Type: Run.Safe(() => e.ControlType.ToString()), Name: Run.Safe(() => e.Name), Rect: Run.Safe(() => e.BoundingRectangle)))
+            .Where(e => e.Rect.Width > 0 && run.Inside(e.Rect))
+            .Select(e => $"{e.Rect.Top - w.Top},{e.Rect.Bottom - w.Top},{e.Rect.Left - w.Left},{e.Rect.Width} {e.Type} {e.Name}"));
         var area = run.Window.BoundingRectangle;
         var previous = Grab(area);
         var changed = 0;

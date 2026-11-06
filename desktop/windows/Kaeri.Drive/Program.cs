@@ -58,9 +58,10 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     // The browsing screens left alone while the engine sends its events (IdleScenario.cs). By name only.
     ("idle", IdleScenario.All, "watching", false),
     ("idle-real", IdleScenario.All, "", false),
+    ("hover-card", IdleScenario.HoverCard, "watching", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "idle" or "idle-real"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "idle" or "idle-real" or "hover-card"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -952,6 +953,12 @@ static partial class Native
     /// </summary>
     public static void Wheel(int notches, bool sideways = false) =>
         mouse_event(sideways ? 0x01000u : 0x0800u, 0, 0, unchecked((uint)(notches * 120)), 0);
+
+    /// <summary>
+    /// A relative move as the mouse makes it, through the input queue: moving the cursor by
+    /// position alone does not reach WinUI's pointer events, so nothing hears it enter.
+    /// </summary>
+    public static void Nudge(int dx, int dy) => mouse_event(0x0001u, dx, dy, 0, 0);
 
     /// <summary>The window's size, its top left kept.</summary>
     public static void Size(nint hwnd, int w, int h) => SetWindowPos(hwnd, 0, 0, 0, w, h, 0x0002 | 0x0004 | 0x0010);
