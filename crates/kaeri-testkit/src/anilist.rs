@@ -160,7 +160,7 @@ impl Operation {
             Self::TrendWeek
         } else if has("mediaTrends(") {
             Self::TrendMonthCandidates
-        } else if has("trends(date_greater") {
+        } else if has("trends(sort: DATE_DESC") {
             Self::TrendSeries
         } else if has("media(id_in:") && has("recommendations(") {
             Self::Recommended
@@ -1429,9 +1429,12 @@ fn respond(
                 .filter_map(|id| {
                     let at = trend_titles(catalogue).iter().position(|t| *t == id)?;
                     let mut card = clock.media(catalogue.listed_with_links(id)?);
-                    // The later a title is in the catalogue, the more a month gives it.
+                    // The later a title is in the catalogue, the more a month gives it; the rows
+                    // are the last three days, newest first, as AniList dates them.
                     let nodes: Vec<Value> = (0..3)
-                        .map(|day| json!({ "date": day, "trending": (at as u64 + 1) * 10 }))
+                        .map(|day| {
+                            json!({ "date": clock.now - day * 86_400, "trending": (at as u64 + 1) * 10 })
+                        })
                         .collect();
                     card["trends"] = json!({ "nodes": nodes });
                     Some(card)

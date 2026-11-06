@@ -318,19 +318,18 @@ public sealed class StartScreen(uint id, string episode, double? resume)
         return string.Join(Join, facts);
     }
 
-    /// <summary>What Skip would say now, when there is another source or stream to skip to.</summary>
+    /// <summary>
+    /// What Skip would say now, when there is another source to skip to. Only while the sources
+    /// are asked: once a stream is opening the engine has handed it to the player, whose session
+    /// lets a skip go, so the button would do nothing (audit D4; the engine could take it on).
+    /// </summary>
     string? SkipLabel(TimeSpan at)
     {
         if (Since(at, rungAt) < SkipAfter)
             return null;
-        string? Source() => asking is { } a && a.Place < a.Total ? T.PlayerStartSkipSource(a.Name) : null;
-        return shown.Phase switch
-        {
-            StartPhase.Asking or StartPhase.Peers => Source(),
-            StartPhase.Opening or StartPhase.Another or StartPhase.Buffering =>
-                stream is { } s && s.Attempt < s.Total ? T.PlayerStartSkipStream : Source(),
-            _ => null,
-        };
+        return shown.Phase is StartPhase.Asking or StartPhase.Peers && asking is { } a && a.Place < a.Total
+            ? T.PlayerStartSkipSource(a.Name)
+            : null;
     }
 
     List<StartButton> Buttons(TimeSpan at)

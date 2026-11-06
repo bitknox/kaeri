@@ -463,6 +463,9 @@ struct Membership {
     ignoring_server: u32,
     /// A change made while another was still on its way, sent once that one is taken in.
     held: Option<Change>,
+    /// This connection wrote the playlist: what comes back named for this member is its echo.
+    /// Before that, it is the room's playlist from an earlier connection under the same name.
+    wrote_playlist: bool,
     outbox: Vec<Value>,
 }
 
@@ -496,6 +499,7 @@ impl Membership {
             ignoring_client: 0,
             ignoring_server: 0,
             held: None,
+            wrote_playlist: false,
             outbox: Vec::new(),
         }
     }
@@ -524,6 +528,9 @@ impl Membership {
             return (self.lost(&error), false);
         }
         let server = self.options.server.clone();
+        // What the server says before its welcome: a Syncplay server sends the room's playlist
+        // and this member's ready state first, and they are the room's as much as what follows.
+        let mut early = Vec::new();
         let answered = timeout(ANSWER, async {
             loop {
                 match next_line(&mut reader, &mut partial).await {
@@ -540,6 +547,7 @@ impl Membership {
                                 _ => {}
                             }
                         }
+                        early.push(line);
                     }
                     Ok(None) => {
                         return Err(End::Lost(format!("{server} closed the connection")));
@@ -560,6 +568,7 @@ impl Membership {
         self.room = hello.room.unwrap_or_else(|| self.options.room.clone());
         self.members.clear();
         self.playlist = Playlist::default();
+        self.wrote_playlist = false;
         self.features = hello.features;
         self.listed = false;
         self.all_ready = false;
@@ -591,6 +600,11 @@ impl Membership {
             self.outbox.push(wire::set_ready(true, true));
         }
         self.outbox.push(wire::list());
+        for line in &early {
+            if let Some(end) = self.on_line(line) {
+                return (end, true);
+            }
+        }
 
         let mut heard = Instant::now();
         loop {
@@ -849,10 +863,12 @@ impl Membership {
                     self.outbox.push(wire::list());
                 }
                 // This member's own writes come back named for them: they are applied already,
-                // and taking them in again could undo a later one still on its way.
+                // and taking them in again could undo a later one still on its way. The room's
+                // playlist as a new connection finds it may carry this name too, written by the
+                // connection before: that one is the room's, and taken in.
                 SetItem::Playlist { user: Some(user), .. }
                 | SetItem::PlaylistIndex { user: Some(user), .. }
-                    if user == self.me => {}
+                    if user == self.me && self.wrote_playlist => {}
                 SetItem::Playlist { user, files } => {
                     let index = self.playlist.index.filter(|i| *i < files.len());
                     let by = user.or(self.playlist.by.take());
@@ -929,6 +945,7 @@ impl Membership {
     /// Write the playlist to the room and keep it as the room has it from now.
     fn write_playlist(&mut self, files: Vec<String>, index: usize) {
         let index = index.min(files.len().saturating_sub(1));
+        self.wrote_playlist = true;
         if self.playlist.files != files {
             self.outbox.push(wire::set_playlist(&files));
         }

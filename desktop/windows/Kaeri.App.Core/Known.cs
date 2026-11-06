@@ -67,6 +67,19 @@ public sealed class Known
     public HashSet<TrendPeriod> TrendingFailed { get; } = [];
     public Dictionary<string, SyncState> Sync { get; } = [];
 
+    /// <summary>
+    /// Sign-ins started here and not over yet: the tracker, with the engine's job for the step
+    /// under way, or none while the person is in the browser. Signed in, or the job ending
+    /// without it, takes the tracker out.
+    /// </summary>
+    public Dictionary<string, ulong?> SigningIn { get; } = [];
+
+    /// <summary>When each signed-in tracker was last seen synced, with nothing waiting and nothing failed.</summary>
+    public Dictionary<string, DateTimeOffset> SyncedAt { get; } = [];
+
+    /// <summary>A sign-in to <paramref name="tracker"/> was asked for, as <paramref name="job"/>.</summary>
+    public void SignInStarted(string tracker, ulong? job) => SigningIn[tracker] = job;
+
     /// <summary>Sync between the person's own devices, as the engine last said; null before it has.</summary>
     public SyncStatus? SyncGroup { get; set; }
 
@@ -190,8 +203,35 @@ public sealed class Known
     /// <summary>Titles restored from Settings in this run, until the engine sends the list again.</summary>
     public HashSet<uint> RestoredHere { get; } = [];
 
-    /// <summary>Titles dismissed from Home in this run, until the engine's next Home: so a late send cannot bring one back first.</summary>
+    /// <summary>
+    /// Titles dismissed from Home in this run, until a Home from the engine without them: so a
+    /// send that crossed the dismissal cannot bring one back. Home is drawn without them.
+    /// </summary>
     public HashSet<uint> DismissedHere { get; } = [];
+
+    /// <summary>
+    /// A title put on a list here, ahead of the tracker's word: the engine queues the change for
+    /// the tracker and answers with the outbox's depth only, so the title's status and the
+    /// Library's lists take it now, as the Mac's title cache does. The title moves to the front
+    /// of its new list, where the tracker's last-updated order puts it.
+    /// </summary>
+    public void SetStatus(uint id, LibrarySegment segment)
+    {
+        var entry = Entries.GetValueOrDefault(id);
+        if (entry is not null)
+            Entries[id] = entry = entry with { ListStatus = segment };
+        foreach (var (view, list) in Lists.ToList())
+        {
+            if (view is not ContentFor.Library { V1: var s } || list is not (ContentList.Entries or ContentList.Empty))
+                continue;
+            var rows = list is ContentList.Entries some ? some.V1 : [];
+            var without = rows.Where(e => e.Id != id).ToArray();
+            if (s == segment && entry is not null)
+                Lists[view] = new ContentList.Entries([entry, .. without]);
+            else if (without.Length != rows.Length)
+                Lists[view] = without.Length == 0 ? new ContentList.Empty() : new ContentList.Entries(without);
+        }
+    }
 
     /// <summary>A suggestion was put on Planning here: its button is gone until the engine says otherwise.</summary>
     public void PlannedFromUpNext(uint id) =>
@@ -200,7 +240,10 @@ public sealed class Known
     /// <summary>Whether the engine has sent <c>UpNext</c> since the page asked, even an empty group.</summary>
     public bool UpNextSent { get; set; }
 
-    /// <summary>Titles hidden from Continue in this run, until the engine's next list.</summary>
+    /// <summary>
+    /// Titles hidden from Continue in this run, until the engine's next list or a Home whose
+    /// Continue no longer holds them. Home's Continue and spotlight are drawn without them.
+    /// </summary>
     public HashSet<uint> HiddenFromContinue { get; } = [];
 
     /// <summary>The engine has no network path: from <c>Connectivity</c>, fed by the window's network watch.</summary>
@@ -235,6 +278,15 @@ public sealed class Known
 
     public string? PartyLookFailure { get; private set; }
 
+    /// <summary>
+    /// A room opened from an invite, a code or Rejoin, looked into and not joined yet: the lobby
+    /// shows what it watches and who is there, with Join. Null once joined or let go.
+    /// </summary>
+    public (string Server, string Room)? PartyLooking { get; set; }
+
+    /// <summary>The room finished its last episode out (and when the next airs): Ready would replay it. Gone when the room moves on.</summary>
+    public Event.PartyLastOut? PartyLastOut { get; private set; }
+
     /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
     public PartyConversation? PartyChat { get; private set; }
 
@@ -242,6 +294,26 @@ public sealed class Known
     public PartyChatState? PartyChatState { get; private set; }
 
     /// <summary>The AniList account, when signed in.</summary>
+    /// <summary>The engine's jobs running now, for the title bar's status.</summary>
+    public Jobs Jobs { get; } = new();
+
+    /// <summary>Every notice said this run, newest first, for Messages.</summary>
+    public NoticeLog Messages { get; } = new();
+
+    /// <summary>What the last library pull found different from the tracker, less those settled here since.</summary>
+    public List<ConflictRow> Conflicts { get; } = [];
+
+    /// <summary>Raised when the differences change, by a pull or by one settled here.</summary>
+    public event Action? ConflictsChanged;
+
+    /// <summary>Settles one difference by keeping a side: the row goes at once, as the engine sends no new list.</summary>
+    public Command Resolve(uint id, bool keepLocal)
+    {
+        Conflicts.RemoveAll(c => c.AnilistId == id);
+        ConflictsChanged?.Invoke();
+        return new Command.ResolveConflict(id, keepLocal);
+    }
+
     public SyncState? Anilist => Sync.TryGetValue("anilist", out var s) && s.Connected ? s : null;
 
     /// <summary>Episodes downloading or waiting to, and those seeding: what closing the window stops.</summary>
@@ -275,8 +347,14 @@ public sealed class Known
 
     public void Take(Event e)
     {
+        Jobs.Take(e, DateTimeOffset.UtcNow);
         switch (e)
         {
+            case Event.Conflicts conflicts:
+                Conflicts.Clear();
+                Conflicts.AddRange(conflicts.V1);
+                ConflictsChanged?.Invoke();
+                break;
             case Event.Content c:
                 // One key per search, whichever instance of its query asked it.
                 var key = c.View is ContentFor.Search && !Lists.ContainsKey(c.View)
@@ -308,7 +386,16 @@ public sealed class Known
                 break;
             case Event.Home home:
                 Home = home.V1;
-                DismissedHere.Clear();
+                // The engine has the removal once a Home comes without the title; until then a
+                // send that crossed it still holds the title, and Home leaves it out.
+                var held = home.V1.Sections.SelectMany(s => s.Items).Select(i => i.Entry.Id).ToHashSet();
+                if (home.V1.Spotlight is { } shown)
+                    held.Add(shown.Entry.Id);
+                DismissedHere.RemoveWhere(id => !held.Contains(id));
+                var continuing = home.V1.Sections.Where(s => s.Kind == SectionKind.Continue).SelectMany(s => s.Items).Select(i => i.Entry.Id).ToHashSet();
+                if (home.V1.Spotlight is { Case: SpotlightCase.Continuing } going)
+                    continuing.Add(going.Entry.Id);
+                HiddenFromContinue.RemoveWhere(id => !continuing.Contains(id));
                 if (home.V1.Spotlight is { } spot)
                     Entries[spot.Entry.Id] = Merge(Fixed(spot.Entry), local: false);
                 foreach (var section in home.V1.Sections)
@@ -346,6 +433,15 @@ public sealed class Known
             case Event.Progress p:
                 if (Entries.TryGetValue(p.Id, out var known))
                     Entries[p.Id] = known with { Progress = p.ProgressValue, Resume = p.Resume };
+                // The episodes' watched state comes with it, as the Mac's title cache takes it:
+                // the table is patched, with no new listing.
+                if (p.EpisodesValue.Length > 0 && Episodes.TryGetValue(p.Id, out var table))
+                {
+                    var marks = p.EpisodesValue.GroupBy(e => e.Number).ToDictionary(g => g.Key, g => g.Last());
+                    Episodes[p.Id] = [.. table.Select(row => marks.TryGetValue(row.Number, out var mark)
+                        ? row with { Watched = mark.Watched, Completed = mark.Completed, SpoilerAhead = mark.SpoilerAhead }
+                        : row)];
+                }
                 break;
             case Event.LastAired aired:
                 foreach (var title in aired.V1)
@@ -385,6 +481,26 @@ public sealed class Known
                 break;
             case Event.Sync s:
                 Sync[s.V1.Tracker] = s.V1;
+                if (s.V1 is { Connected: true, NeedsReauth: false })
+                    SigningIn.Remove(s.V1.Tracker);
+                // Synced as the Mac counts it: an outcome, nothing waiting and no failed pull.
+                if (!s.V1.Connected)
+                    SyncedAt.Remove(s.V1.Tracker);
+                else if (s.V1.Last is not null && s.V1.Outbox == 0 && s.V1.PullError is null)
+                    SyncedAt[s.V1.Tracker] = DateTimeOffset.UtcNow;
+                break;
+            case Event.Authorize authorize when SigningIn.ContainsKey(authorize.Tracker):
+                // In the browser now: the job that opened it ends, the sign-in goes on.
+                SigningIn[authorize.Tracker] = null;
+                break;
+            case Event.DeviceCode { V1: null }:
+                // A code's sign-in is over, however it ended.
+                SigningIn.Remove("simkl");
+                SigningIn.Remove("trakt");
+                break;
+            case Event.JobDone done:
+                foreach (var tracker in SigningIn.Where(p => p.Value == done.V1).Select(p => p.Key).ToList())
+                    SigningIn.Remove(tracker);
                 break;
             case Event.SyncStatus group:
                 // A pass that works clears the problem, except those only a dialog can answer.
@@ -483,9 +599,19 @@ public sealed class Known
                     PartyChatState = null;
                 }
                 Party = j.V1;
+                if (PartyLooking is { } looked && looked.Server == j.V1.Server && looked.Room == j.V1.Room)
+                    PartyLooking = null;
                 break;
             case Event.PartyState p:
+                if (Party?.RoomEpisode is { } before && p.V1.RoomEpisode is { } after && (before.Episode != after.Episode || before.Id != after.Id))
+                    PartyLastOut = null;
                 Party = p.V1;
+                break;
+            case Event.PartyLastOut last:
+                PartyLastOut = last;
+                break;
+            case Event.PartyStarted:
+                PartyLastOut = null;
                 break;
             case Event.PartyMembers m:
                 PartyMembers = m.V1;
@@ -504,6 +630,7 @@ public sealed class Known
                 break;
             case Event.PartyLeft:
                 Party = null;
+                PartyLastOut = null;
                 PartyMembers = null;
                 PartyChat = null;
                 PartyChatState = null;

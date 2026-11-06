@@ -198,6 +198,25 @@ async fn an_owner_publishes_and_a_member_installs_a_real_plugin() {
     assert_eq!(loaded.manifest().id, ID);
     assert_eq!(loaded.manifest().allowed_hosts, entry.allowed_hosts);
 
+    // The owner publishes a newer version: the member's next refresh offers it as an update,
+    // and installing it replaces the file in place. The newer version is the same plugin with
+    // the version its code reports moved on, as a rebuild after a version bump would be.
+    let next = next_version(&original);
+    std::fs::write(owner_paths.plugin_dir().join(format!("{ID}.wasm")), &next).unwrap();
+    let newer = owner.publish(&joined.id, ID).await.unwrap();
+    assert_eq!(newer.version, "0.1.1");
+    let rows = member.refresh().await.unwrap();
+    assert_eq!(
+        rows[0].plugins[0].status,
+        StorePluginStatus::Update { from: entry.version.clone(), new_hosts: vec![] },
+        "the member is offered the update"
+    );
+    let (updated, same_path) = member.install(&joined.id, ID).await.unwrap();
+    assert_eq!((updated.version.as_str(), &same_path), ("0.1.1", &path));
+    let reloaded = host.load(&path).await.unwrap();
+    assert_eq!(reloaded.manifest().version, "0.1.1");
+    assert_eq!(member.rows().unwrap()[0].plugins[0].status, StorePluginStatus::Installed);
+
     // The owner removes them: their next refresh says so, and what they installed stays.
     let (members, _) = owner.members(&joined.id).await.unwrap();
     let alex = members.iter().find(|m| m.name == "Alex").unwrap();
@@ -206,6 +225,21 @@ async fn an_owner_publishes_and_a_member_installs_a_real_plugin() {
     assert_eq!(rows[0].state, StoreState::Revoked);
     assert!(path.exists());
     assert!(member.install(&joined.id, ID).await.is_err(), "no more downloads");
+}
+
+/// The reference plugin as a rebuild after its version moved from 0.1.0 to 0.1.1 would be: the
+/// version its manifest reports is the one string that changes.
+fn next_version(component: &[u8]) -> Vec<u8> {
+    let at: Vec<usize> = component
+        .windows(5)
+        .enumerate()
+        .filter(|(_, w)| *w == b"0.1.0")
+        .map(|(i, _)| i)
+        .collect();
+    assert_eq!(at.len(), 1, "the reference plugin names its version once, as 0.1.0");
+    let mut next = component.to_vec();
+    next[at[0] + 4] = b'1';
+    next
 }
 
 #[tokio::test]

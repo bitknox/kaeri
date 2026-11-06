@@ -1751,6 +1751,10 @@
     <value>{parts} · {percent}% match</value>
     <comment>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</comment>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>Searching as you type is paused for a moment, to stay within AniList's limits. Press Enter to search now.</value>
+    <comment>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</comment>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>Editing your comment</value>
     <comment>Line above the field while the viewer edits their own comment.</comment>
@@ -2031,6 +2035,50 @@
     <value>Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Restart</value>
+    <comment>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</comment>
+  </data>
+  <data name="SettingsDifferences_one" xml:space="preserve">
+    <value>One title differs from {tracker}</value>
+    <comment>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</comment>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>{count} titles differ from {tracker}</value>
+    <comment>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</comment>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>Review</value>
+    <comment>Button in Accounts that opens the list of differences.</comment>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>Search settings</value>
+    <comment>The box at the top of Settings that finds a setting by its name.</comment>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>Higher takes the best version a source offers, and more space.</value>
+    <comment>Note under the download quality row.</comment>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>Subtitles stay with the episode wherever the file goes.</value>
+    <comment>Note under the merge subtitles row.</comment>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>A download that keeps seeding stays in Kaeri's cache, not the download folder.</value>
+    <comment>Note under the keep seeding row.</comment>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>Reads the comments on AniList's forum thread for episodes you have watched.</value>
+    <comment>Note under the switch for episode discussions.</comment>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>Each image loads from the site that hosts it, which sees your IP address.</value>
+    <comment>Note under the switch that loads images in comments.</comment>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>Browse…</value>
+    <comment>Button beside the download folder: picks another folder.</comment>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeri is still downloading</value>
     <comment>The notification area icon's balloon, the first time the window closes with downloads running: its title.</comment>
@@ -2202,6 +2250,54 @@
   <data name="StartFailedQuit" xml:space="preserve">
     <value>Quit</value>
     <comment>Button in that window: closes it and the app.</comment>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeri stopped working</value>
+    <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>The part of the app that does the work has stopped. Open Kaeri again to carry on.</value>
+    <comment>Line under that title: what happened and what to do.</comment>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>Open again</value>
+    <comment>Button in that window: opens the app again.</comment>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>{tracker} synced</value>
+    <comment>The status in the title bar while the main tracker is synced.</comment>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>{tracker} not synced</value>
+    <comment>The status while the tracker's last pull failed.</comment>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>Sign in to {tracker} again</value>
+    <comment>The status while the tracker refused the sign-in and needs it again.</comment>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>Shows what is running</value>
+    <comment>Help text of the status button, for Narrator.</comment>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>Nothing is running.</value>
+    <comment>The status flyout's line while no work is running.</comment>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>Open Devices</value>
+    <comment>Button in the status flyout that opens the Devices pane of Settings.</comment>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>Messages</value>
+    <comment>Title of the list of every notice this run, and the button that opens it.</comment>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>No messages yet</value>
+    <comment>The list of notices while there are none yet.</comment>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>Problem</value>
+    <comment>Name of the dot before a notice that was an alert, for Narrator.</comment>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, episode {episode}</value>
@@ -9987,6 +10083,10 @@
     <value>Sign in to {service} in your browser</value>
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</value>
+    <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
+  </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>computer</value>
     <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
@@ -11463,6 +11563,10 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>Choose a torrent file</value>
     <comment>Button: choose a torrent file from the device.</comment>
+  </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeri couldn't read that link or file.</value>
+    <comment>Line under the field when the link or file could not be read, and the engine gave no reason.</comment>
   </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>Is this {title}, episode {episode}?</value>

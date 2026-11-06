@@ -23549,6 +23549,18 @@
         }
       }
     },
+    "cloud-close-carries-on" : {
+      "comment" : "Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready."
+          }
+        }
+      }
+    },
     "cloud-connect" : {
       "comment" : "Button.",
       "extractionState" : "manual",
@@ -114493,6 +114505,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bật phát torrent"
+          }
+        }
+      }
+    },
+    "opened-unreadable" : {
+      "comment" : "Line under the field when the link or file could not be read, and the engine gave no reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri couldn't read that link or file."
           }
         }
       }

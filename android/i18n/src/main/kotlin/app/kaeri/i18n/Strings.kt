@@ -11013,6 +11013,10 @@ object Strings {
     fun cloudBrowserTitle(context: Context, service: String): String =
         context.getString(R.string.cloud_browser_title, service)
 
+    /** Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running. */
+    fun cloudCloseCarriesOn(context: Context): String =
+        context.getString(R.string.cloud_close_carries_on)
+
     /** Word for this device in sentences such as “Turn off sync on this computer”. */
     fun deviceKindComputer(context: Context): String =
         context.getString(R.string.device_kind_computer)
@@ -12473,6 +12477,10 @@ object Strings {
     /** Button: choose a torrent file from the device. */
     fun openedChooseFile(context: Context): String =
         context.getString(R.string.opened_choose_file)
+
+    /** Line under the field when the link or file could not be read, and the engine gave no reason. */
+    fun openedUnreadable(context: Context): String =
+        context.getString(R.string.opened_unreadable)
 
     /** The question once the link's name matched a title and an episode. */
     fun openedConfirm(context: Context, title: String, episode: String): String =

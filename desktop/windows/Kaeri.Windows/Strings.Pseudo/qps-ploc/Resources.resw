@@ -1751,6 +1751,10 @@
     <value>[{parts} · {percent}% ɱàţçĥ~~~~~]</value>
     <comment>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</comment>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>[Šéàŕçĥîñĝ àš ýöü ţýþé îš þàüšéð ƒöŕ à ɱöɱéñţ, ţö šţàý ŵîţĥîñ ÅñîĻîšţ'š ļîɱîţš. Þŕéšš Éñţéŕ ţö šéàŕçĥ ñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</comment>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>[Éðîţîñĝ ýöüŕ çöɱɱéñţ~~~~~~]</value>
     <comment>Line above the field while the viewer edits their own comment.</comment>
@@ -2031,6 +2035,50 @@
     <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš ÞÇ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>[Ŕéšţàŕţ~~~]</value>
+    <comment>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</comment>
+  </data>
+  <data name="SettingsDifferences_one" xml:space="preserve">
+    <value>[Öñé ţîţļé ðîƒƒéŕš ƒŕöɱ {tracker}~~~~~~~~]</value>
+    <comment>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</comment>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>[{count} ţîţļéš ðîƒƒéŕ ƒŕöɱ {tracker}~~~~~~~~]</value>
+    <comment>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</comment>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>[Ŕéṽîéŵ~~]</value>
+    <comment>Button in Accounts that opens the list of differences.</comment>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>[Šéàŕçĥ šéţţîñĝš~~~~~]</value>
+    <comment>The box at the top of Settings that finds a setting by its name.</comment>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>[Ĥîĝĥéŕ ţàķéš ţĥé ƀéšţ ṽéŕšîöñ à šöüŕçé öƒƒéŕš, àñð ɱöŕé šþàçé.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the download quality row.</comment>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>[Šüƀţîţļéš šţàý ŵîţĥ ţĥé éþîšöðé ŵĥéŕéṽéŕ ţĥé ƒîļé ĝöéš.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the merge subtitles row.</comment>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>[Å ðöŵñļöàð ţĥàţ ķééþš šééðîñĝ šţàýš îñ Ķàéŕî'š çàçĥé, ñöţ ţĥé ðöŵñļöàð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the keep seeding row.</comment>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>[Ŕéàðš ţĥé çöɱɱéñţš öñ ÅñîĻîšţ'š ƒöŕüɱ ţĥŕéàð ƒöŕ éþîšöðéš ýöü ĥàṽé ŵàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the switch for episode discussions.</comment>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>[Éàçĥ îɱàĝé ļöàðš ƒŕöɱ ţĥé šîţé ţĥàţ ĥöšţš îţ, ŵĥîçĥ šééš ýöüŕ ÎÞ àððŕéšš.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the switch that loads images in comments.</comment>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>[Ɓŕöŵšé…~~~]</value>
+    <comment>Button beside the download folder: picks another folder.</comment>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>[Ķàéŕî îš šţîļļ ðöŵñļöàðîñĝ~~~~~~~~]</value>
     <comment>The notification area icon's balloon, the first time the window closes with downloads running: its title.</comment>
@@ -2202,6 +2250,54 @@
   <data name="StartFailedQuit" xml:space="preserve">
     <value>[Ǫüîţ~~]</value>
     <comment>Button in that window: closes it and the app.</comment>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>[Ķàéŕî šţöþþéð ŵöŕķîñĝ~~~~~~~]</value>
+    <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>[Ţĥé þàŕţ öƒ ţĥé àþþ ţĥàţ ðöéš ţĥé ŵöŕķ ĥàš šţöþþéð. Öþéñ Ķàéŕî àĝàîñ ţö çàŕŕý öñ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that title: what happened and what to do.</comment>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>[Öþéñ àĝàîñ~~~]</value>
+    <comment>Button in that window: opens the app again.</comment>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>[{tracker} šýñçéð~~~]</value>
+    <comment>The status in the title bar while the main tracker is synced.</comment>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>[{tracker} ñöţ šýñçéð~~~~~]</value>
+    <comment>The status while the tracker's last pull failed.</comment>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {tracker} àĝàîñ~~~~~~]</value>
+    <comment>The status while the tracker refused the sign-in and needs it again.</comment>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>[Šĥöŵš ŵĥàţ îš ŕüññîñĝ~~~~~~~]</value>
+    <comment>Help text of the status button, for Narrator.</comment>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>[Ñöţĥîñĝ îš ŕüññîñĝ.~~~~~~]</value>
+    <comment>The status flyout's line while no work is running.</comment>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>[Öþéñ Ðéṽîçéš~~~~]</value>
+    <comment>Button in the status flyout that opens the Devices pane of Settings.</comment>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>[Ṁéššàĝéš~~~]</value>
+    <comment>Title of the list of every notice this run, and the button that opens it.</comment>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>[Ñö ɱéššàĝéš ýéţ~~~~~]</value>
+    <comment>The list of notices while there are none yet.</comment>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>[Þŕöƀļéɱ~~~]</value>
+    <comment>Name of the dot before a notice that was an alert, for Narrator.</comment>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>[{title}, éþîšöðé {episode}~~~~~]</value>
@@ -9987,6 +10083,10 @@
     <value>[Šîĝñ îñ ţö {service} îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]</value>
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
+  </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>[çöɱþüţéŕ~~~]</value>
     <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
@@ -11463,6 +11563,10 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>[Çĥööšé à ţöŕŕéñţ ƒîļé~~~~~~~]</value>
     <comment>Button: choose a torrent file from the device.</comment>
+  </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŕéàð ţĥàţ ļîñķ öŕ ƒîļé.~~~~~~~~~~~~]</value>
+    <comment>Line under the field when the link or file could not be read, and the engine gave no reason.</comment>
   </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>[Îš ţĥîš {title}, éþîšöðé {episode}?~~~~~~~~]</value>

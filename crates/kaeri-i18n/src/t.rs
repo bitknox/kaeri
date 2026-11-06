@@ -16385,6 +16385,11 @@ pub fn cloud_browser_title(service: &str) -> String {
     text("cloud-browser-title", &[("service", Arg::Text(service))])
 }
 
+/// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+pub fn cloud_close_carries_on() -> String {
+    text("cloud-close-carries-on", &[])
+}
+
 /// Word for this device in sentences such as “Turn off sync on this computer”.
 pub fn device_kind_computer() -> String {
     text("device-kind-computer", &[])
@@ -18210,6 +18215,11 @@ pub fn opened_paste_placeholder() -> String {
 /// Button: choose a torrent file from the device.
 pub fn opened_choose_file() -> String {
     text("opened-choose-file", &[])
+}
+
+/// Line under the field when the link or file could not be read, and the engine gave no reason.
+pub fn opened_unreadable() -> String {
+    text("opened-unreadable", &[])
 }
 
 /// The question once the link's name matched a title and an episode.

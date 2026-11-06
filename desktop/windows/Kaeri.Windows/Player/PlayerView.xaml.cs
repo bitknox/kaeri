@@ -34,13 +34,12 @@ public sealed partial class PlayerView : UserControl
     readonly DispatcherQueueTimer tick;
     readonly DispatcherQueueTimer idle;
     nint bound;
-    bool paused, fromPlayer, overBar, menuOpen, keepControls;
+    bool paused, fromPlayer, overBar, keepControls;
     double position, duration, volume = 100;
     Coming? upNext;
     PlayerUi.Menus? menus;
     /// <summary>The file's audio and subtitle tracks, as mpv last listed them.</summary>
     FfiTrack[] tracks = [];
-    string tracksSeen = "";
 #if KAERI_TESTING
     bool tracksHeld;
 #endif
@@ -69,7 +68,6 @@ public sealed partial class PlayerView : UserControl
     Undoable? undo;
     string startingEpisode = "", playingEpisode = "";
     double speed = 1, mutedFrom, wheelSeek;
-    bool volumeFlash;
     string timelineStatus = "";
 
     static readonly double[] Speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -92,7 +90,7 @@ public sealed partial class PlayerView : UserControl
         click = DispatcherQueue.GetForCurrentThread().CreateTimer();
         click.Interval = TimeSpan.FromMilliseconds(GetDoubleClickTime());
         click.IsRepeating = false;
-        click.Tick += (_, _) => Send(new PlayerCommand.TogglePause());
+        click.Tick += (_, _) => TogglePause();
         flash = DispatcherQueue.GetForCurrentThread().CreateTimer();
         flash.Interval = TimeSpan.FromMilliseconds(1200);
         flash.IsRepeating = false;
@@ -121,10 +119,78 @@ public sealed partial class PlayerView : UserControl
         idle.Tick += (_, _) => HideControlsIfIdle();
         // A slider takes its pointer events: the preview listens even to the handled ones.
         Timeline.AddHandler(PointerMovedEvent, new PointerEventHandler(OnTimelinePointerMoved), true);
+        Root.AddHandler(PointerMovedEvent, new PointerEventHandler(OnPointerMoved), true);
+        Timeline.AddHandler(PointerPressedEvent, new PointerEventHandler(OnTimelinePressed), true);
+        Timeline.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnTimelineReleased), true);
+        Timeline.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(OnTimelineReleased), true);
+        VolumeSlider.AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => volumeDragging = true), true);
+        VolumeSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) => volumeDragging = false), true);
+        VolumeSlider.AddHandler(PointerCaptureLostEvent, new PointerEventHandler((_, _) => volumeDragging = false), true);
+        // The party's reaction moments stand on the corner's card, whatever its height.
+        Corner.SizeChanged += (_, _) => LiftCorner();
+        AddHandler(PreviewKeyDownEvent, new KeyEventHandler(OnPreviewKey), true);
+        ContextRequested += OnVideoContext;
+        LosingFocus += OnLosingFocus;
     }
 
-    /// <summary>True while the player is on screen.</summary>
-    public bool Showing => Visibility == Visibility.Visible;
+    /// <summary>
+    /// While the player is up the keyboard stays in it: a click on a control that takes no focus
+    /// would otherwise hand it to the page underneath, whose list then scrolls on Space and the
+    /// arrows instead of the player hearing them. A menu, a flyout or a dialog, in their popups,
+    /// still take it.
+    /// </summary>
+    void OnLosingFocus(UIElement sender, LosingFocusEventArgs e)
+    {
+        // Only a click's: a flyout, a dialog or the window moving focus on purpose is let be,
+        // as cancelling theirs fails inside XAML (E_INVALIDARG, with no stack).
+        if (!Showing || e.FocusState != FocusState.Pointer || e.NewFocusedElement is not DependencyObject next
+            || Within(next, this) || InPopup(next))
+            return;
+        e.TryCancel();
+    }
+
+    bool InPopup(DependencyObject element)
+    {
+        for (var at = element; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at is Popup)
+                return true;
+        if (XamlRoot is null)
+            return false;
+        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot))
+            if (popup.Child is { } child && Within(element, child))
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Space is play and pause, also with the keyboard on a bar button or the seek line, which
+    /// would otherwise press the button or step the line. Enter still presses a focused button.
+    /// </summary>
+    void OnPreviewKey(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Space || e.Handled || !Showing || Typing() || still.Asking)
+            return;
+        if (XamlRoot is null || FocusManager.GetFocusedElement(XamlRoot) is not Control focused || focused is not (ButtonBase or Slider))
+            return;
+        if (!Within(focused, Chrome) && !Within(focused, Corner))
+            return;
+        e.Handled = true;
+        if (e.KeyStatus.WasKeyDown)
+            return;
+        ShowControls();
+        TogglePause();
+    }
+
+    /// <summary>True while the player is on screen: from Open, and no longer once it starts fading away.</summary>
+    public bool Showing => shown;
+
+    bool shown;
+
+    /// <summary>What the last close left on screen to clear once its fade is over, or at the next open.</summary>
+    Action? closing;
+
+    /// <summary>A file plays on screen, past its starting screen: in a party, its seat hears the room's notices.</summary>
+    internal bool Playing => Showing && pictureSeen;
 
     /// <summary>Fullscreen asked for: by F, the button or the engine.</summary>
     internal event Action<bool?>? FullscreenRequested;
@@ -165,7 +231,20 @@ public sealed partial class PlayerView : UserControl
             return;
         // Where focus was, for the way back when the player closes.
         returnFocus = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Control;
+        // A close still fading: what it left is cleared now, under the new opening.
+        if (closing is { } left)
+        {
+            closing = null;
+            left();
+        }
+        shown = true;
+        // The player comes in over the page on the fade-in token, and leaves on fade-out.
+        // Its root fades: an animation on the view itself, just made visible, does not run.
+        if (Visibility != Visibility.Visible)
+            Root.Opacity = 0;
         Visibility = Visibility.Visible;
+        IsHitTestVisible = true;
+        Motion.Video(Root, true);
         still.Reset();
         ShowControls();
         LiftSubtitles(animated: false);
@@ -201,6 +280,14 @@ public sealed partial class PlayerView : UserControl
     {
         if (!Showing)
             return;
+        closedByHost = false;
+        verdictWait?.Stop();
+        // The next session's mpv starts at its normal speed.
+        speed = 1;
+        scrubbing = null;
+        seekTarget = null;
+        pauseAsked = null;
+        upNextStill = null;
         discussion?.Close();
         marking = null;
         skipPrompt = null;
@@ -214,26 +301,50 @@ public sealed partial class PlayerView : UserControl
         SetMini(false);
         still.Reset();
         click.Stop();
-        Visibility = Visibility.Collapsed;
-        foreach (var layer in new UIElement[] { StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, Flash, StatsLayer, ChatFieldSlot, TickLabel })
-            Motion.Set(layer, false);
-        ChatClear();
+        shown = false;
+        // The screen as it was fades away, as one picture, and nothing takes a click meanwhile;
+        // its layers are cleared once it has gone, or under the next opening.
+        IsHitTestVisible = false;
+        closing = ClearLayers;
+        Motion.Video(Root, false, () =>
+        {
+            if (shown)
+                return;
+            Visibility = Visibility.Collapsed;
+            if (closing is { } left)
+            {
+                closing = null;
+                left();
+            }
+        });
+        bufferingSince.Reset();
+        bufferingShown = false;
         // Kept up for the next playback, which waits for its own figures.
         stats.Restart();
         statsUp = false;
         startingShown = skipShown = stallShown = upNextShown = false;
         EndStart();
         start = null;
-        cornerCard = null;
         undo = null;
         upNext = null;
+        resumedAt = null;
         thumbnails = null;
         thumbs = null;
         timelineMarks = [];
         buffered = [];
-        DrawTimeline();
         DropSubtitleLift();
         ShowingChanged?.Invoke(false);
+    }
+
+    /// <summary>The closed player's layers, cleared for the next opening.</summary>
+    void ClearLayers()
+    {
+        foreach (var layer in new UIElement[] { BufferingRing, StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, ResumeNote, Flash, StatsLayer, ChatFieldSlot, TickLabel })
+            Motion.Set(layer, false);
+        alertUp = false;
+        ChatClear();
+        cornerCard = null;
+        DrawTimeline();
     }
 
     internal void Heard(FfiPlayerEvent e)
@@ -241,20 +352,48 @@ public sealed partial class PlayerView : UserControl
         switch (e)
         {
             case FfiPlayerEvent.Opened o:
+                closedByHost = false;
+                muted = false;
                 Open();
                 if (o.FullscreenValue)
                     FullscreenRequested?.Invoke(true);
                 break;
             case FfiPlayerEvent.Closed:
-                Hide();
+                HostClosed();
                 break;
             case FfiPlayerEvent.Fullscreen f:
                 FullscreenRequested?.Invoke(f.On);
                 break;
             case FfiPlayerEvent.State s:
-                ShowState(s.StateValue);
+                TakeState(s.StateValue);
                 break;
         }
+    }
+
+    /// <summary>The newest state mpv reported that the view has not drawn yet.</summary>
+    FfiPlayerState? stateWaiting;
+
+    /// <summary>
+    /// mpv reports a whole state for each property that changes, about once a frame while playing.
+    /// The newest waits for one turn of the UI thread and is drawn once, so states that queued up
+    /// behind a click or a layout are drawn as one, not each in turn.
+    /// </summary>
+    void TakeState(FfiPlayerState state)
+    {
+        var queued = stateWaiting is not null;
+        stateWaiting = state;
+        if (queued)
+            return;
+        if (!DispatcherQueue.TryEnqueue(DrawWaitingState))
+            DrawWaitingState();
+    }
+
+    void DrawWaitingState()
+    {
+        if (stateWaiting is not { } state)
+            return;
+        stateWaiting = null;
+        ShowState(state);
     }
 
     internal void Heard(IReadOnlyList<Event> batch)
@@ -269,6 +408,15 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlaybackStaged s when !Showing:
                     HeardStart(e);
                     Staged(s);
+                    break;
+                case Event.PlaybackStaged:
+                    // A newer play is being found behind the one on screen (N, an episode
+                    // picked, a roll-on): closing the player must stop it too.
+                    stagedAhead = true;
+                    HeardStart(e);
+                    break;
+                case Event.PlaybackEnded { Failure: null, RollingOn: false } when closedByHost && Showing:
+                    Hide();
                     break;
                 case Event.PlaybackEnded { Failure: null } when findingFor is not null:
                     // Over before the player opened, with no failure for the starting screen to
@@ -324,19 +472,193 @@ public sealed partial class PlayerView : UserControl
     /// and from the engine when the viewer changed it. The note shows once the change is in.</summary>
     void TookVolume(double level)
     {
+        // Reached, or mpv settled somewhere else (a step it clamped): the asked level goes.
+        if (volumeAsked is { } asked && (Math.Abs(asked - level) < 0.01 || volumeSince.Elapsed > TimeSpan.FromSeconds(1)))
+            volumeAsked = null;
+        mpvVolume = level;
+        ShowVolume();
+    }
+
+    /// <summary>The volume asked for last while mpv has not reported it yet, as the Mac's volumeAsked.</summary>
+    double? volumeAsked;
+    readonly Stopwatch volumeSince = new();
+    double mpvVolume = 100;
+    bool volumeDragging;
+
+    /// <summary>
+    /// Step the volume by <paramref name="by"/> from where it shows, held to 0 and 100 (or above
+    /// that when mpv already is). The line shows the step at once, mpv's report after.
+    /// </summary>
+    void StepVolume(double by, bool flash = true)
+    {
+        still.Input();
+        if (muted)
+            Mute();
+        var from = volumeAsked ?? mpvVolume;
+        var to = Math.Round(Math.Clamp(from + by, 0, Math.Max(100, from)));
+        if (to == from)
+            return;
+        volumeAsked = to;
+        volumeSince.Restart();
+        Send(new PlayerCommand.Volume(to - from));
+        ShowVolume();
+        if (flash)
+            ShowFlash(to <= 0 ? T.PlayerMuted : T.PlayerVolumeLevel(Wording.Percent(to)));
+    }
+
+    void ShowVolume()
+    {
+        var level = volumeAsked ?? mpvVolume;
         if (level == volume)
             return;
         volume = level;
-        fromPlayer = true;
-        VolumeSlider.Value = Math.Clamp(volume, 0, 100);
-        fromPlayer = false;
-        VolumeIcon.Glyph = volume <= 0 ? "" : "";
-        AutomationProperties.SetName(VolumeButton, volume <= 0 ? T.PlayerVolumeMuted : T.PlayerVolume);
-        if (volumeFlash)
+        // A drag keeps the thumb under the pointer.
+        if (!volumeDragging)
         {
-            volumeFlash = false;
-            ShowFlash(volume <= 0 ? T.PlayerMuted : T.PlayerVolumeLevel(Wording.Percent(Math.Round(volume))));
+            fromPlayer = true;
+            VolumeSlider.Value = Math.Clamp(volume, 0, 100);
+            fromPlayer = false;
         }
+        ShowMuted();
+    }
+
+    /// <summary>Play or pause, shown at once: the glyph does not wait for mpv's answer.</summary>
+    void TogglePause()
+    {
+        var to = !paused;
+        Send(new PlayerCommand.TogglePause());
+        if (!pictureSeen)
+            return;
+        pauseAsked = to;
+        pauseSince.Restart();
+        ShowPaused(to);
+        if (to)
+            ShowControls();
+    }
+
+    bool? pauseAsked;
+    readonly Stopwatch pauseSince = new();
+    bool pausedShown;
+
+    /// <summary>The play/pause button's glyph, name and tooltip, touched only when it changes, so its open tooltip stays.</summary>
+    void ShowPaused(bool now)
+    {
+        paused = now;
+        if (now == pausedShown && PlayPauseIcon.Glyph.Length > 0)
+            return;
+        pausedShown = now;
+        PlayPauseIcon.Glyph = now ? "" : "";
+        AutomationProperties.SetName(PlayPause, now ? T.ActionPlay : T.ActionPause);
+        ToolTipService.SetToolTip(PlayPause, T.TooltipWithKey(now ? T.ActionPlay : T.ActionPause, "Space"));
+    }
+
+    // Scrubbing: the line follows the pointer, mpv follows with keyframe seeks, and the release
+    // lands with an exact one (native-ux.md, scrubbing).
+
+    /// <summary>The drag's time while the seek line is held.</summary>
+    double? scrubbing;
+    double? scrubSent;
+    /// <summary>Where a click, a key or a release sent the playhead, until mpv has landed there.</summary>
+    double? seekTarget;
+    readonly Stopwatch seekSince = new();
+    bool timelineSettling;
+
+    void OnTimelinePressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (duration <= 0 || !e.GetCurrentPoint(Timeline).Properties.IsLeftButtonPressed && e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse)
+            return;
+        // Pressed on the thumb where it is: nothing to seek yet.
+        var at = Timeline.Value;
+        scrubbing = at;
+        scrubSent = Math.Abs(at - position) < 1 ? at : null;
+        scrubSeeked = false;
+        scrubByMouse = e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse;
+        ShowControls();
+        Scrub(at);
+    }
+
+    bool scrubSeeked, scrubByMouse;
+
+    void OnTimelineReleased(object sender, PointerRoutedEventArgs e) => EndScrub();
+
+    /// <summary>
+    /// A mouse drag whose release never reached the line (a quick click can end in the slider's
+    /// thumb without a release here): ended once the button is up, so the line is never held.
+    /// </summary>
+    void EndScrubIfLetGo()
+    {
+        if (scrubbing is not null && scrubByMouse && (GetAsyncKeyState(0x01) & 0x8000) == 0)
+            EndScrub();
+    }
+
+    [LibraryImport("user32.dll")]
+    private static partial short GetAsyncKeyState(int key);
+
+    void EndScrub()
+    {
+        if (scrubbing is not { } at)
+            return;
+        scrubbing = null;
+        scrubSent = null;
+        if (scrubSeeked || Math.Abs(at - position) >= 1)
+            SeekTo(at);
+        ShowControls();
+    }
+
+    /// <summary>A keyframe seek for each half second the drag moves, straight to mpv: it drops what it can't keep up with. Not in a party, where each would reach the room as a seek.</summary>
+    void Scrub(double seconds)
+    {
+        scrubbing = seconds;
+        ShowClocks();
+        ShowPlayed();
+        if (InParty || player is not { } p || duration <= 0)
+            return;
+        if (scrubSent is { } sent && Math.Abs(sent - seconds) < 0.5)
+            return;
+        ulong now;
+        lock (loads)
+            now = playback;
+        if (now == 0)
+            return;
+        scrubSent = seconds;
+        scrubSeeked = true;
+        p.Apply(now, [new PlayerOp.Set("percent-pos", new MpvValue.Double(Math.Clamp(seconds / duration * 100, 0, 100)))]);
+    }
+
+    /// <summary>An exact seek the viewer asked for: the line holds there until mpv lands.</summary>
+    void SeekTo(double seconds)
+    {
+        if (duration <= 0)
+            return;
+        seekTarget = Math.Clamp(seconds, 0, duration);
+        seekSince.Restart();
+        if (upNext is not null)
+            upNext.Sought = true;
+        // Restarted here as well as when the engine's seek reaches mpv, so mpv's first report
+        // from the new place never finds the countdown spent.
+        Sought(seekTarget.Value);
+        SendControl(new PlayerCommand.SeekTo(seekTarget.Value));
+        HoldLine();
+    }
+
+    /// <summary>The thumb and the clocks at the time asked for, before mpv has answered.</summary>
+    void HoldLine()
+    {
+        ShowClocks();
+        fromPlayer = true;
+        Timeline.Value = Math.Min(Shown, Timeline.Maximum);
+        fromPlayer = false;
+    }
+
+    /// <summary>A command for the playback on screen: once the next episode has taken over, the engine lets it go rather than carrying it there.</summary>
+    void SendControl(PlayerCommand command, bool quiet = false)
+    {
+        ulong now;
+        lock (loads)
+            now = playback;
+        if (!quiet)
+            still.Input();
+        ctx?.Send(now == 0 ? new Command.Player(command) : new Command.Control(now, command));
     }
 
     /// <summary>The title staged and waiting on a source, before the player itself has said anything.</summary>
@@ -350,6 +672,7 @@ public sealed partial class PlayerView : UserControl
     void Staged(Event.PlaybackStaged s)
     {
         closedWhileFinding = false;
+        stagedAhead = false;
         Open();
         findingFor = s.Id;
         pictureSeen = false;
@@ -374,7 +697,12 @@ public sealed partial class PlayerView : UserControl
                 }
                 // Up since Play was pressed (Staged): the same screen goes on, its clock too.
                 var fromStaged = findingFor == s.Id;
+                // A start over a picture (N, an episode picked, a source switched): the screen
+                // fades in over the last frame rather than popping over it.
+                startOverPicture = Showing && pictureSeen;
                 findingFor = null;
+                stagedAhead = false;
+                closedByHost = false;
                 Open();
                 still.Started();
                 pictureSeen = false;
@@ -418,6 +746,15 @@ public sealed partial class PlayerView : UserControl
                 }
                 undo = null;
                 UpdateCorner();
+                if (resumedAt is not null)
+                    HideResumeNote();
+                // The last file's marks, buffered stretches and length are not this one's.
+                timelineMarks = [];
+                buffered = [];
+                seekTarget = null;
+                duration = 0;
+                position = 0;
+                DrawTimeline();
                 break;
             case PlayerUi.Episode ep:
                 playingEpisode = ep.Number;
@@ -447,11 +784,24 @@ public sealed partial class PlayerView : UserControl
                 break;
             case PlayerUi.UpNext next:
                 UpNextTitle.Text = Lines.EpisodeNamed(next.Next.Number, next.Next.Title);
-                // In a party everyone moves on together: the countdown always runs, with no Play now or Cancel.
-                upNext = new Coming(next.Auto || InParty, next.EndingAt, InParty ? Math.Max(10, next.Countdown) : next.Countdown);
-                UpNextStill.Source = null;
+                var card = new Coming(next.Next.Number, next.Auto, next.EndingAt, next.Countdown);
+                // Said again for the same episode (once its still is fetched): what the viewer did
+                // with the card stays, and so does the still.
+                if (upNext is { } before && before.Number == card.Number)
+                {
+                    card.Cancelled = before.Cancelled;
+                    card.Played = before.Played;
+                    card.RestartedAt = before.RestartedAt;
+                    card.Sought = before.Sought;
+                }
+                upNext = card;
                 UpNextStillFrame.Visibility = next.Next.Thumbnail is null ? Visibility.Collapsed : Visibility.Visible;
-                ctx?.Art.Bind(next.Next.Thumbnail, image => UpNextStill.Source = image);
+                if (next.Next.Thumbnail != upNextStill)
+                {
+                    upNextStill = next.Next.Thumbnail;
+                    UpNextStill.Source = null;
+                    ctx?.Art.Bind(next.Next.Thumbnail, image => UpNextStill.Source = image);
+                }
                 still.After = (int)next.StillWatchingAfter;
                 ShowUpNext();
                 break;
@@ -475,6 +825,12 @@ public sealed partial class PlayerView : UserControl
                 if (!ChatEcho(alert.Text))
                     Alert(alert.Text);
                 break;
+            case PlayerUi.Resumed resumed:
+                resumedAt = resumed.Position;
+                resumeReached = false;
+                ResumeLine.Text = T.PlayerResumedAt(KaeriFfiMethods.PlayClock(resumed.Position));
+                Motion.Show(ResumeNote);
+                break;
             case PlayerUi.Thumbnails thumb:
                 if (thumb.Url != thumbnails)
                     ClosePreview();
@@ -482,6 +838,38 @@ public sealed partial class PlayerView : UserControl
                 thumbs = null;
                 break;
         }
+    }
+
+    /// <summary>Where the episode resumed while its note is up.</summary>
+    double? resumedAt;
+
+    /// <summary>The playhead has been seen where the episode resumed: before that, mpv's reports are of the start.</summary>
+    bool resumeReached;
+
+    /// <summary>The note goes after 6 s played past where it resumed, or once the playhead moves back before it (as the Mac's).</summary>
+    void ShowResumeNote()
+    {
+        if (resumedAt is not { } at)
+            return;
+        if (!resumeReached)
+        {
+            resumeReached = Math.Abs(position - at) < 2;
+            return;
+        }
+        if (position >= at + 6 || position < at - 1)
+            HideResumeNote();
+    }
+
+    void HideResumeNote()
+    {
+        resumedAt = null;
+        Motion.Hide(ResumeNote);
+    }
+
+    void OnStartOver(object sender, RoutedEventArgs e)
+    {
+        HideResumeNote();
+        SeekTo(0);
     }
 
     /// <summary>
@@ -496,15 +884,52 @@ public sealed partial class PlayerView : UserControl
     /// <summary>Whether the alert is up: it counts as one of the chat column's three lines.</summary>
     bool alertUp;
 
+    /// <summary>The alert line on show, of the two that crossfade, and the newest alert's number.</summary>
+    TextBlock? alertFront;
+    int alertsSaid;
+
+    /// <summary>
+    /// An alert for 4 s. One that comes while another is up crossfades over it in place, and the
+    /// card eases to its new width; each alert keeps its own full time, even the same words again.
+    /// </summary>
     async void Alert(string text)
     {
-        AlertText.Text = text;
-        Motion.Show(AlertCard);
-        alertUp = true;
-        MakeChatRoom();
-        Announce(AlertText);
+        var mine = ++alertsSaid;
+        var front = alertFront ?? AlertText;
+        if (!alertUp || AlertCard.Visibility != Visibility.Visible)
+        {
+            Motion.Set(AlertText, true);
+            Motion.Set(AlertTextB, true);
+            AlertText.Text = text;
+            AlertTextB.Text = "";
+            AlertTextB.Opacity = 0;
+            AlertCard.Width = double.NaN;
+            alertFront = front = AlertText;
+            Motion.Show(AlertCard);
+            alertUp = true;
+            MakeChatRoom();
+        }
+        else if (front.Text != text)
+        {
+            var back = front == AlertText ? AlertTextB : AlertText;
+            var from = AlertCard.ActualWidth;
+            back.Text = text;
+            back.Measure(new global::Windows.Foundation.Size(480, double.PositiveInfinity));
+            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right;
+            Motion.Crossfade(front, back);
+            var leaving = front;
+            alertFront = front = back;
+            Motion.Ease(AlertCard, from, to, width => AlertCard.Width = width);
+            // The old words go once faded, so they no longer hold the card's height.
+            _ = Task.Delay(Motion.Standard + TimeSpan.FromMilliseconds(30)).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (alertFront != leaving)
+                    leaving.Text = "";
+            }));
+        }
+        Announce(front);
         await Task.Delay(TimeSpan.FromSeconds(4 * NoticeTime.Scale(DeviceWatch.ScreenReaderRunning())));
-        if (AlertText.Text == text)
+        if (mine == alertsSaid && alertUp)
         {
             Motion.Hide(AlertCard);
             alertUp = false;
@@ -590,7 +1015,7 @@ public sealed partial class PlayerView : UserControl
         if (undo is not { } u)
             return;
         undo = null;
-        Send(new PlayerCommand.UndoSkip(u.To));
+        SendControl(new PlayerCommand.UndoSkip(u.To));
         UpdateCorner();
     }
 
@@ -602,12 +1027,55 @@ public sealed partial class PlayerView : UserControl
     uint playingId;
     TimeRange[] buffered = [];
 
-    void OnTimelineSized(object sender, SizeChangedEventArgs e) => DrawTimeline();
+    void OnTimelineSized(object sender, SizeChangedEventArgs e)
+    {
+        DrawTimeline();
+        // The thumb ends a drag that began on it, whose release the line may not hear.
+        if (!thumbHooked && Find(Timeline, "HorizontalThumb") is Thumb thumb)
+        {
+            thumbHooked = true;
+            thumb.DragCompleted += (_, _) => EndScrub();
+        }
+    }
 
+    bool thumbHooked;
+
+    /// <summary>
+    /// The track's bars, drawn again in place: each bar is the same rectangle as last time, only
+    /// moved or resized, so a buffered range or a mark arriving never empties the line for a frame.
+    /// </summary>
     void DrawTimeline()
     {
-        TimelineUnder.Children.Clear();
+        barsUsed = 0;
         tickPlaces.Clear();
+        try
+        {
+            DrawBars();
+        }
+        finally
+        {
+            while (TimelineUnder.Children.Count > barsUsed)
+                TimelineUnder.Children.RemoveAt(TimelineUnder.Children.Count - 1);
+        }
+    }
+
+    int barsUsed;
+
+    /// <summary>The next of the track's rectangles, kept from the last drawing or made.</summary>
+    Microsoft.UI.Xaml.Shapes.Rectangle NextBar()
+    {
+        if (barsUsed < TimelineUnder.Children.Count && TimelineUnder.Children[barsUsed] is Microsoft.UI.Xaml.Shapes.Rectangle kept)
+        {
+            barsUsed++;
+            return kept;
+        }
+        var made = new Microsoft.UI.Xaml.Shapes.Rectangle();
+        TimelineUnder.Children.Insert(barsUsed++, made);
+        return made;
+    }
+
+    void DrawBars()
+    {
         if (Find(Timeline, "HorizontalTrackRect") is not FrameworkElement track || track.ActualWidth <= 0)
             return;
         var thumb = Find(Timeline, "HorizontalThumb") as FrameworkElement;
@@ -624,14 +1092,14 @@ public sealed partial class PlayerView : UserControl
         {
             if (to - from < 1)
                 return;
-            var bar = new Microsoft.UI.Xaml.Shapes.Rectangle
-            {
-                Width = to - from, Height = height, Fill = brush, Opacity = opacity,
-                RadiusX = height / 2, RadiusY = height / 2,
-            };
+            var bar = NextBar();
+            bar.Width = to - from;
+            bar.Height = height;
+            bar.Fill = brush;
+            bar.Opacity = opacity;
+            bar.RadiusX = bar.RadiusY = height / 2;
             Canvas.SetLeft(bar, from);
             Canvas.SetTop(bar, at.Y);
-            TimelineUnder.Children.Add(bar);
         }
         Bar(at.X, at.X + width, silk, 0.25);
         playedBar = null;
@@ -640,14 +1108,13 @@ public sealed partial class PlayerView : UserControl
         foreach (var range in buffered)
             Bar(X(range.Start), X(range.End), silk, 0.45);
         // What has played, from the track's start to the thumb, kept to move with the value.
-        playedBar = new Microsoft.UI.Xaml.Shapes.Rectangle
-        {
-            Height = height, Fill = (Brush)Application.Current.Resources["AmberBrush"],
-            RadiusX = height / 2, RadiusY = height / 2,
-        };
+        playedBar = NextBar();
+        playedBar.Height = height;
+        playedBar.Fill = (Brush)Application.Current.Resources["AmberBrush"];
+        playedBar.Opacity = 1;
+        playedBar.RadiusX = playedBar.RadiusY = height / 2;
         Canvas.SetLeft(playedBar, at.X);
         Canvas.SetTop(playedBar, at.Y);
-        TimelineUnder.Children.Add(playedBar);
         playedFrom = at.X;
         playedTo = X;
         ShowPlayed();
@@ -688,20 +1155,25 @@ public sealed partial class PlayerView : UserControl
     {
         if (state.HasPicture && startingShown && !startingHeld)
         {
-            // The first frame fades in over the starting screen.
+            // The first frame comes in under the starting screen, which leaves on the fade-in
+            // token (200 ms, decelerating), as the Mac's curtain does.
             startingShown = false;
             EndStart();
-            Motion.Hide(Starting);
+            Motion.Cover(Starting, false, () =>
+            {
+                if (!startingShown)
+                    Motion.Set(Starting, false);
+            });
         }
         if (state.HasPicture && !pictureSeen)
         {
             pictureSeen = true;
             FirstPicture();
         }
-        paused = state.Paused;
-        PlayPauseIcon.Glyph = paused ? "" : "";
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayPause, paused ? T.ActionPlay : T.ActionPause);
-        ToolTipService.SetToolTip(PlayPause, T.TooltipWithKey(paused ? T.ActionPlay : T.ActionPause, "Space"));
+        // A press shows at once (TogglePause); mpv's word settles it once it agrees, or after 1 s.
+        if (pauseAsked is { } asked && (asked == state.Paused || pauseSince.Elapsed > TimeSpan.FromSeconds(1)))
+            pauseAsked = null;
+        ShowPaused(pauseAsked ?? state.Paused);
         if (paused)
             ShowControls();
         else if (chromeShown && !idle.IsRunning)
@@ -715,31 +1187,113 @@ public sealed partial class PlayerView : UserControl
             duration = d;
             DrawTimeline();
         }
-        Elapsed.Text = KaeriFfiMethods.PlayClock(position);
-        Remaining.Text = "-" + KaeriFfiMethods.PlayClock(Math.Max(0, duration - position));
+        if (state.Buffering && pictureSeen && !startingShown)
+        {
+            if (!bufferingSince.IsRunning)
+                bufferingSince.Restart();
+        }
+        else
+            bufferingSince.Reset();
+        ShowBuffering();
+        // A seek asked for holds the line where it was sent until mpv is there, or for 3 s.
+        if (seekTarget is { } target && (seekSince.Elapsed > TimeSpan.FromSeconds(3) || !state.Seeking && Math.Abs(position - target) < 1.5))
+            seekTarget = null;
+        ShowClocks();
+        if (resumedAt is not null)
+            ShowResumeNote();
+        ShowTracks(state.Tracks);
+        if (upNext is not null || upNextShown)
+            ShowUpNext();
+        fromPlayer = true;
+        var most = Math.Max(1, duration);
+        if (Timeline.Maximum != most)
+            Timeline.Maximum = most;
+        // While the keyboard is on the slider the thumb is left to the person, so the screen
+        // reader does not hear it change under them. A jump of more than a few seconds still lands.
+        // While dragged, the thumb is the pointer's. The thumb moves once it would move half a
+        // pixel, not for every frame's report.
+        var shown = Math.Min(Shown, Timeline.Maximum);
+        var step = Math.Max(0.02, most / Math.Max(1, Timeline.ActualWidth * (XamlRoot?.RasterizationScale ?? 1)) / 2);
+        if (scrubbing is null && (Timeline.FocusState != FocusState.Keyboard || Math.Abs(Timeline.Value - shown) > 5)
+            && Math.Abs(Timeline.Value - shown) >= step)
+            Timeline.Value = shown;
+        fromPlayer = false;
+    }
+
+    readonly Stopwatch bufferingSince = new();
+    bool bufferingShown;
+
+    /// <summary>The ring for a wait on data, half a second in, while no stall card says more.</summary>
+    void ShowBuffering()
+    {
+        var on = bufferingSince.IsRunning && bufferingSince.Elapsed > TimeSpan.FromMilliseconds(500) && !stallShown && Showing;
+        if (on == bufferingShown)
+            return;
+        bufferingShown = on;
+        BufferingRing.IsActive = on;
+        if (on)
+            Motion.Show(BufferingRing);
+        else
+            Motion.Hide(BufferingRing);
+    }
+
+    /// <summary>The time the line and the clocks show: the drag's, a seek on its way, or mpv's.</summary>
+    double Shown => scrubbing ?? seekTarget ?? position;
+
+    /// <summary>The whole seconds and the state the clocks last showed, so a frame's report that changes neither touches nothing.</summary>
+    (long Shown, long Left, long Length, bool Paused) clocksShown = (-1, -1, -1, false);
+
+    void ShowClocks()
+    {
+        var shown = Shown;
+        var now = ((long)Math.Floor(shown), (long)Math.Floor(Math.Max(0, duration - shown)), (long)Math.Floor(duration), paused);
+        if (now == clocksShown)
+            return;
+        var lengthChanged = now.Item3 != clocksShown.Length;
+        clocksShown = now;
+        Elapsed.Text = KaeriFfiMethods.PlayClock(shown);
+        Remaining.Text = "-" + KaeriFfiMethods.PlayClock(Math.Max(0, duration - shown));
         var total = KaeriFfiMethods.PlayClock(duration);
+        if (lengthChanged)
+            KeepClockWidths(total);
         var status = paused ? T.PlayerTimelinePaused(Elapsed.Text, total) : T.PlayerTimelinePlaying(Elapsed.Text, total);
         if (status != timelineStatus)
         {
             timelineStatus = status;
             AutomationProperties.SetItemStatus(Timeline, status);
         }
-        ShowTracks(state.Tracks);
-        ShowUpNext();
-        fromPlayer = true;
-        Timeline.Maximum = Math.Max(1, duration);
-        // While the keyboard is on the slider the thumb is left to the person, so the screen
-        // reader does not hear it change under them. A jump of more than a few seconds still lands.
-        if (Timeline.FocusState != FocusState.Keyboard || Math.Abs(Timeline.Value - position) > 5)
-            Timeline.Value = Math.Min(position, Timeline.Maximum);
-        fromPlayer = false;
+    }
+
+    /// <summary>
+    /// The times keep the width of the longest they can say for this length, so the seek line
+    /// between them never moves as the elapsed time gains a digit or the remaining one loses one.
+    /// The figures are tabular: every digit is as wide as a zero.
+    /// </summary>
+    void KeepClockWidths(string total)
+    {
+        var widest = new string(total.Select(c => char.IsDigit(c) ? '0' : c).ToArray());
+        Elapsed.MinWidth = ClockWidth(widest);
+        Remaining.MinWidth = ClockWidth("-" + widest);
+    }
+
+    TextBlock? clockRuler;
+
+    double ClockWidth(string text)
+    {
+        clockRuler ??= new TextBlock { Style = Elapsed.Style };
+        Microsoft.UI.Xaml.Documents.Typography.SetNumeralAlignment(clockRuler, FontNumeralAlignment.Tabular);
+        clockRuler.Text = text;
+        clockRuler.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        return Math.Ceiling(clockRuler.DesiredSize.Width);
     }
 
     // The swapchain and the panel's size.
 
     void Tick()
     {
+        EndScrubIfLetGo();
         CornerClock();
+        ShowBuffering();
         if (marking is { Step: SkipMarkStep.End })
             DrawTimeline();
         // The panel's timed states: the dashes, the waiting line, "Copied" going.
@@ -844,7 +1398,7 @@ public sealed partial class PlayerView : UserControl
 
     void HideControlsIfIdle()
     {
-        if (keepControls || paused || overBar || menuOpen || Marking)
+        if (keepControls || paused || overBar || MenuOpen || Marking)
             return;
         if (ChatFieldHolds())
         {
@@ -863,13 +1417,14 @@ public sealed partial class PlayerView : UserControl
 
     /// <summary>
     /// Whether the controls must stay: a screen reader runs (its cursor moves without focus, and
-    /// controls that collapse leave the tree), or a control has focus in any state.
+    /// controls that collapse leave the tree), the seek line is being dragged, or the keyboard is
+    /// on a control. A control that only has focus from a click does not hold them.
     /// </summary>
     bool ControlsInUse()
     {
-        if (DeviceWatch.ScreenReaderRunning())
+        if (DeviceWatch.ScreenReaderRunning() || scrubbing is not null || volumeDragging)
             return true;
-        if (XamlRoot is null || FocusManager.GetFocusedElement(XamlRoot) is not Control { FocusState: not FocusState.Unfocused } focused)
+        if (XamlRoot is null || FocusManager.GetFocusedElement(XamlRoot) is not Control { FocusState: FocusState.Keyboard } focused)
             return false;
         for (DependencyObject? at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
         {
@@ -888,7 +1443,8 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The pointer goes with the controls when nobody is using it.</summary>
     void HidePointer()
     {
-        if (pointerHidden || !Showing)
+        // Not over the starting screen or a failure, where there are buttons to reach.
+        if (pointerHidden || !Showing || startingShown)
             return;
         pointerHidden = true;
         while (ShowCursor(false) >= 0)
@@ -908,10 +1464,103 @@ public sealed partial class PlayerView : UserControl
         }
     }
 
-    void OnPointerMoved(object sender, PointerRoutedEventArgs e) => ShowControls();
-    void OnBarEntered(object sender, PointerRoutedEventArgs e) => overBar = true;
-    void OnBarExited(object sender, PointerRoutedEventArgs e) => overBar = false;
-    void OnMenuOpened(object? sender, object e) => menuOpen = true;
+    /// <summary>
+    /// Any movement shows the controls; over a bar they stay. Where the pointer is comes from its
+    /// position on every move, handled ones included: a bar's PointerExited does not come after a
+    /// click on one of its buttons, which left the controls up for good.
+    /// </summary>
+    void OnPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        overBar = chromeShown && (Under(TopBar, e) || Under(BottomBar, e));
+        ShowControls();
+    }
+
+    static bool Under(FrameworkElement bar, PointerRoutedEventArgs e)
+    {
+        var at = e.GetCurrentPoint(bar).Position;
+        return at.X >= 0 && at.Y >= 0 && at.X < bar.ActualWidth && at.Y < bar.ActualHeight;
+    }
+
+    void OnRootExited(object sender, PointerRoutedEventArgs e) => overBar = false;
+    /// <summary>
+    /// The flyouts open now, each by itself: the style panel opens from the Tracks menu, and E or
+    /// T can open one over another, so one closing after the next opened leaves the other counted.
+    /// </summary>
+    readonly HashSet<object> menusOpen = [];
+
+    bool MenuOpen => menusOpen.Count > 0;
+
+    void OnMenuOpened(object? sender, object e)
+    {
+        if (sender is not null)
+            menusOpen.Add(sender);
+        ShowPointer();
+    }
+
+    // The video's own menu, from a right-click, Shift+F10 or the menu key: what the bars offer,
+    // in one place, as the Mac's context menu.
+
+    void OnVideoContext(UIElement sender, ContextRequestedEventArgs e)
+    {
+        if (!Showing || startingShown || still.Asking || mini || e.OriginalSource != VideoPanel && e.OriginalSource != Chrome && e.OriginalSource != Root && e.OriginalSource != this)
+            return;
+        e.Handled = true;
+        click.Stop();
+        var menu = VideoMenu();
+        menu.Opened += OnMenuOpened;
+        menu.Closed += OnMenuClosed;
+        ShowControls();
+        var options = new FlyoutShowOptions();
+        if (e.TryGetPosition(VideoPanel, out var at))
+            options.Position = at;
+        menu.ShowAt(VideoPanel, options);
+    }
+
+    MenuFlyout VideoMenu()
+    {
+        var menu = new MenuFlyout();
+        void Add(string text, Action act, string? key = null, bool enabled = true)
+        {
+            var item = new MenuFlyoutItem { Text = text, IsEnabled = enabled };
+            if (key is not null)
+                item.KeyboardAcceleratorTextOverride = key;
+            item.Click += (_, _) => act();
+            menu.Items.Add(item);
+        }
+        Add(paused ? T.ActionPlay : T.ActionPause, TogglePause, "Space");
+        if (skipShown && SkipCard.Content is string skip)
+            Add(skip, () => SendControl(new PlayerCommand.TakeSkip()), "S");
+        menu.Items.Add(new MenuFlyoutSeparator());
+        Add(T.PlayerSubtitlesAndAudio, () => OpenMenu(TracksButton), "T");
+        Add(T.PlayerEpisodes, () => OpenMenu(EpisodesButton), "E", EpisodesButton.IsEnabled);
+        AddSkipMenu(menu);
+        // The skip entries go first in a menu of their own; here they follow the tracks.
+        foreach (var item in menu.Items.Where(i => i.Tag as string == "skips").ToList())
+        {
+            menu.Items.Remove(item);
+            if (item is not MenuFlyoutSeparator)
+                menu.Items.Add(item);
+        }
+        menu.Items.Add(new MenuFlyoutSeparator());
+        var nerds = new ToggleMenuFlyoutItem { Text = T.PlayerStats, IsChecked = stats.Shown, KeyboardAcceleratorTextOverride = "I" };
+        nerds.Click += (_, _) =>
+        {
+            if (nerds.IsChecked != stats.Shown)
+                ToggleStats();
+        };
+        menu.Items.Add(nerds);
+        if (ctx is { } c && uint.TryParse(playingEpisode, out var episode) && Discussions.Counted(position, duration)
+            && c.Known.Discussions.ContainsKey((playingId, episode)))
+            Add(T.DiscussionOpen, () => OpenDiscussion(episode));
+        Add(T.PlayerMiniPlayer, ToggleMini, "P");
+        if (TvButton.IsHitTestVisible)
+            Add(T.TvPlayOn, () => OnPlayOnTv(TvButton, new RoutedEventArgs()));
+        menu.Items.Add(new MenuFlyoutSeparator());
+        Add(T.PartyTitle, ShowParty);
+        if (ChatLive)
+            Add(T.PartyChatField, () => OpenChatField(), "C");
+        return menu;
+    }
 
     // Watch party.
 
@@ -942,8 +1591,17 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>Play on TV, in the big player only, once the engine gives a sender.</summary>
-    void ShowTvButton() =>
-        TvButton.Visibility = ctx?.Tv.Available == true && !mini ? Visibility.Visible : Visibility.Collapsed;
+    void ShowTvButton()
+    {
+        var on = ctx?.Tv.Available == true && !mini;
+        if (on == (TvButton.Visibility == Visibility.Visible && TvButton.IsHitTestVisible))
+            return;
+        TvButton.IsHitTestVisible = on;
+        if (on)
+            Motion.Show(TvButton);
+        else
+            Motion.Hide(TvButton);
+    }
 
     /// <summary>
     /// Play on TV from here: paused here, then the TV to choose, or straight to the one driven
@@ -986,7 +1644,8 @@ public sealed partial class PlayerView : UserControl
 
     void OnMenuClosed(object? sender, object e)
     {
-        menuOpen = false;
+        if (sender is not null)
+            menusOpen.Remove(sender);
         ShowControls();
     }
 
@@ -1017,6 +1676,9 @@ public sealed partial class PlayerView : UserControl
 
     void OnWheel(object sender, PointerRoutedEventArgs e)
     {
+        // A scroll over a panel or a card scrolls it, or nothing: never the volume or the position.
+        if (e.OriginalSource is DependencyObject source && Over(source))
+            return;
         // Volume 2% a notch; a horizontal scroll seeks 0.25 s a step, gathered into whole steps.
         var point = e.GetCurrentPoint(this);
         var notches = point.Properties.MouseWheelDelta / 120.0;
@@ -1032,10 +1694,23 @@ public sealed partial class PlayerView : UserControl
         }
         else
         {
-            volumeFlash = true;
-            Send(new PlayerCommand.Volume(notches * 2));
+            StepVolume(notches * 2);
         }
         e.Handled = true;
+    }
+
+    /// <summary>Whether <paramref name="source"/> is in one of the panels or cards over the video.</summary>
+    bool Over(DependencyObject source)
+    {
+        for (var at = source; at is not null; at = VisualTreeHelper.GetParent(at))
+        {
+            if (at == StatsLayer || at == Starting || at == StillLayer || at == Corner || at == ChatColumn || at == ChatFieldSlot
+                || discussion is not null && at == discussion)
+                return true;
+            if (at == VideoPanel || at == this)
+                return false;
+        }
+        return false;
     }
 
     // The controls.
@@ -1054,30 +1729,81 @@ public sealed partial class PlayerView : UserControl
             Hide();
             return;
         }
-        player?.ViewerClosed();
+        if (!closedByHost)
+            player?.ViewerClosed();
+        if (stagedAhead)
+        {
+            // The file on screen is closed; the one staged since is still being found, and
+            // would open the player again once found (as Apple's viewerClosed).
+            stagedAhead = false;
+            closedWhileFinding = true;
+            Send(new PlayerCommand.Stop());
+        }
         Hide();
     }
 
     /// <summary>The viewer closed the starting screen before a source was found.</summary>
     bool closedWhileFinding;
 
-    void OnPlayPause(object sender, RoutedEventArgs e) => Send(new PlayerCommand.TogglePause());
-    void OnBack10(object sender, RoutedEventArgs e) => Send(new PlayerCommand.Seek(-10));
-    void OnForward10(object sender, RoutedEventArgs e) => Send(new PlayerCommand.Seek(10));
+    /// <summary>A newer playback has been staged since the one on screen and has not spoken yet.</summary>
+    bool stagedAhead;
+
+    /// <summary>
+    /// mpv's window was closed by the engine before a first frame: the start failed, and its
+    /// failure, which comes just after, keeps the starting screen up to say so.
+    /// </summary>
+    bool closedByHost;
+    DispatcherQueueTimer? verdictWait;
+
+    /// <summary>
+    /// The player closed under a start that never showed a picture: the screen stays a moment
+    /// for the engine's verdict, a failure it then shows, instead of hiding and losing it.
+    /// </summary>
+    void HostClosed()
+    {
+        if (!Showing || start is null || pictureSeen || start.Failed)
+        {
+            Hide();
+            return;
+        }
+        closedByHost = true;
+        if (verdictWait is null)
+        {
+            verdictWait = DispatcherQueue.CreateTimer();
+            verdictWait.Interval = TimeSpan.FromSeconds(2);
+            verdictWait.IsRepeating = false;
+            verdictWait.Tick += (_, _) =>
+            {
+                // No failure came, nor another start: nothing to say over.
+                if (closedByHost && start is not { Failed: true })
+                    Hide();
+            };
+        }
+        verdictWait.Stop();
+        verdictWait.Start();
+    }
+
+    void OnPlayPause(object sender, RoutedEventArgs e) => TogglePause();
+    void OnBack10(object sender, RoutedEventArgs e) => SeekBy(-10, flash: false);
+    void OnForward10(object sender, RoutedEventArgs e) => SeekBy(10, flash: false);
     void OnFullscreen(object sender, RoutedEventArgs e) => FullscreenRequested?.Invoke(null);
-    void OnSkip(object sender, RoutedEventArgs e) => Send(new PlayerCommand.TakeSkip());
+    void OnSkip(object sender, RoutedEventArgs e) => SendControl(new PlayerCommand.TakeSkip());
     void OnPlayNext(object sender, RoutedEventArgs e) => PlayNext(auto: false);
     void OnCancelNext(object sender, RoutedEventArgs e) => CancelNext();
 
     /// <summary>
     /// Up next as the engine hands it over: the card shows from where the ending starts (or near
     /// the end of the file when that is not known), and its countdown runs on the playhead from
-    /// there; at zero this sends PlayNext, once.
+    /// there; at zero this sends PlayNext, once. A seek that lands in or past the countdown runs
+    /// it again from its full length there, rather than playing the next episode at once.
     /// </summary>
-    sealed record Coming(bool Auto, double? EndingAt, uint Countdown)
+    sealed record Coming(string Number, bool Auto, double? EndingAt, uint Countdown)
     {
         public bool Cancelled { get; set; }
         public bool Played { get; set; }
+        public double? RestartedAt { get; set; }
+        /// <summary>The viewer sought since the card came: a roll-on is then theirs, not one nobody watched.</summary>
+        public bool Sought { get; set; }
 
         public double? ShowsAt(double duration)
         {
@@ -1088,50 +1814,148 @@ public sealed partial class PlayerView : UserControl
             return duration > 120 ? duration - 30 : Math.Max(0, duration - (Countdown > 0 ? Countdown : 10));
         }
 
-        public double? Remaining(double position, double duration) =>
-            !Auto || Cancelled || Countdown == 0 || ShowsAt(duration) is not { } start || position < start
-                ? null
-                : Math.Max(0, Countdown - (position - start));
+        public double? Remaining(double position, double duration)
+        {
+            if (!Auto || Cancelled || Countdown == 0 || ShowsAt(duration) is not { } shows)
+                return null;
+            var start = Math.Max(shows, RestartedAt ?? shows);
+            return position < start ? null : Math.Max(0, Countdown - (position - start));
+        }
     }
 
+    /// <summary>The thumbnail Up next shows, so the same one said again does not blank it.</summary>
+    string? upNextStill;
+
     bool InParty => ctx?.Known.Party is not null;
+
+    /// <summary>In a party whose room moves on at the end: everyone goes on together, so nobody's player plays the next episode itself.</summary>
+    bool RoomLeads => InParty && ctx?.Known.Party?.MovesOn == true;
+
+    /// <summary>A seek reached mpv, the viewer's or the engine's: a countdown it lands in or past starts again there.</summary>
+    void Sought(double target)
+    {
+        if (upNext is not { Played: false } card || card.ShowsAt(duration) is not { } start)
+            return;
+        card.RestartedAt = target >= start ? target : null;
+    }
 
     void ShowUpNext()
     {
         var card = upNext;
-        UpNextButtons.Visibility = InParty ? Visibility.Collapsed : Visibility.Visible;
-        var shown = card is { Cancelled: false } && card.ShowsAt(duration) is { } at && position >= at;
+        var leads = RoomLeads;
+        UpNextButtons.Visibility = leads ? Visibility.Collapsed : Visibility.Visible;
+        var shown = card is { Cancelled: false } && card.ShowsAt(duration) is { } at && Shown >= at;
         upNextShown = shown;
         UpdateCorner();
         if (!shown || card is null)
             return;
-        // With a screen reader running the card waits for a choice instead of counting down.
-        var left = DeviceWatch.ScreenReaderRunning() ? null : card.Remaining(position, duration);
+        if (leads)
+        {
+            // The room moves on when the file ends, for everyone at once: the card says so and
+            // counts the last seconds of the file down.
+            var span = (double)Math.Max(10, card.Countdown);
+            var toEnd = duration - Shown;
+            var counting = duration > 0 && toEnd <= span;
+            UpNextBar.Visibility = counting ? Visibility.Visible : Visibility.Collapsed;
+            UpNextLine.Visibility = Visibility.Visible;
+            UpNextLine.Text = counting ? T.PartyNextLine((long)Math.Ceiling(Math.Max(0, toEnd))) : T.PartyNextOff;
+            if (counting)
+                UpNextFill.ScaleX = Math.Clamp(toEnd / span, 0, 1);
+            return;
+        }
+        // With a screen reader running the card waits for a choice instead of counting down, and
+        // so does it in a party the room doesn't move on: Play now picks the episode for the room.
+        // On the time shown, so a seek on its way holds the line full rather than hiding it.
+        var left = DeviceWatch.ScreenReaderRunning() || InParty ? null : card.Remaining(Shown, duration);
         UpNextBar.Visibility = left is null ? Visibility.Collapsed : Visibility.Visible;
         UpNextLine.Visibility = UpNextBar.Visibility;
         if (left is { } l)
         {
-            UpNextBar.Value = l / card.Countdown;
-            UpNextLine.Text = InParty ? T.PartyNextLine((long)Math.Ceiling(l)) : T.PlayerPlaysIn((long)Math.Ceiling(l));
-            if (l <= 0)
+            UpNextFill.ScaleX = Math.Clamp(l / card.Countdown, 0, 1);
+            UpNextLine.Text = T.PlayerPlaysIn((long)Math.Ceiling(l));
+            // Not while the viewer drags the line, whose keyframe seeks move the playhead, nor
+            // while a seek is on its way.
+            if (l <= 0 && scrubbing is null && seekTarget is null)
                 PlayNext(auto: true);
         }
     }
 
     void PlayNext(bool auto)
     {
-        if (upNext is { Played: true })
+        if (upNext is { Played: true } || RoomLeads)
             return;
         if (upNext is not null)
             upNext.Played = true;
-        if (auto)
+        if (InParty)
+        {
+            // The room's pick, for everyone: the lobby has it.
+            if (upNext is { } card)
+                PlayInRoom(card.Number);
+            return;
+        }
+        if (auto && upNext is not { Sought: true })
         {
             movingOn = true;
             still.RollingOn();
-            SendQuietly(new PlayerCommand.PlayNext());
+            SendControl(new PlayerCommand.PlayNext(), quiet: true);
         }
         else
-            Send(new PlayerCommand.PlayNext());
+        {
+            movingOn = auto;
+            SendControl(new PlayerCommand.PlayNext());
+        }
+    }
+
+    /// <summary>
+    /// Another episode, asked for in the player while in a party: the room's pick, as Play is
+    /// everywhere in a party, never a play of this device's own. The player gives way to the
+    /// lobby, where the room starts it once everyone is ready. The room's own episode is already
+    /// playing here.
+    /// </summary>
+    void PlayInRoom(string episode)
+    {
+        if (ctx is not { } c || playingId == 0 || episode == playingEpisode)
+            return;
+        still.Input();
+        c.Send(new Command.Play(playingId, episode, false));
+        Close();
+        c.Window.Go("together");
+    }
+
+    /// <summary>N and Shift+N, the media keys' Next and Previous: the next or previous episode in the player's list.</summary>
+    void Step(int by)
+    {
+        if (!InParty)
+        {
+            SendControl(new PlayerCommand.Step(by));
+            return;
+        }
+        var list = menus?.Episodes ?? [];
+        var at = Array.FindIndex(list, e => e.Current);
+        if (at < 0)
+            at = Array.FindIndex(list, e => e.Number == playingEpisode);
+        if (at >= 0 && at + by >= 0 && at + by < list.Length)
+            PlayInRoom(list[at + by].Number);
+    }
+
+    /// <summary>An episode picked in the Episodes panel.</summary>
+    void ChooseEpisode(string number)
+    {
+        if (InParty)
+            PlayInRoom(number);
+        else
+            SendControl(new PlayerCommand.Choose(new PlayerChoice.Episode(number)));
+    }
+
+    /// <summary>What the media keys and the taskbar's buttons ask, for the playback on screen.</summary>
+    internal void MediaCommand(PlayerCommand command)
+    {
+        if (command is PlayerCommand.Step step)
+            Step((int)step.V1);
+        else if (command is PlayerCommand.TogglePause && Showing)
+            TogglePause();
+        else
+            SendControl(command);
     }
 
     void CancelNext()
@@ -1139,10 +1963,18 @@ public sealed partial class PlayerView : UserControl
         if (upNext is not null)
             upNext.Cancelled = true;
         ShowUpNext();
-        Send(new PlayerCommand.CancelNext());
+        SendControl(new PlayerCommand.CancelNext());
     }
-    void OnStallWait(object sender, RoutedEventArgs e) => Send(new PlayerCommand.StallWait());
-    void OnStallSwitch(object sender, RoutedEventArgs e) => Send(new PlayerCommand.StallSwitch());
+    void OnStallWait(object sender, RoutedEventArgs e) => StallAnswer(new PlayerCommand.StallWait());
+    void OnStallSwitch(object sender, RoutedEventArgs e) => StallAnswer(new PlayerCommand.StallSwitch());
+
+    /// <summary>The stall card answered: it goes at once, as on the Mac; the engine says it again while the stall holds.</summary>
+    void StallAnswer(PlayerCommand answer)
+    {
+        stallShown = false;
+        UpdateCorner();
+        SendControl(answer);
+    }
 
     internal void ShowFullscreen(bool on)
     {
@@ -1169,20 +2001,34 @@ public sealed partial class PlayerView : UserControl
     void OnTimelineChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         ShowPlayed();
-        if (!fromPlayer && Math.Abs(e.NewValue - position) > 1)
-            Send(new PlayerCommand.SeekTo(e.NewValue));
+        if (fromPlayer)
+            return;
+        if (scrubbing is not null)
+        {
+            Scrub(e.NewValue);
+            return;
+        }
+        // A press on the line moves the value before the press reaches this view: whether it
+        // starts a drag is known once the press has been handled. A key or a screen reader's
+        // change seeks exactly.
+        if (timelineSettling)
+            return;
+        timelineSettling = true;
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            timelineSettling = false;
+            if (scrubbing is null && Showing && Math.Abs(Timeline.Value - Shown) > 1)
+                SeekTo(Timeline.Value);
+        });
     }
 
     void OnVolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         if (fromPlayer)
             return;
-        var delta = e.NewValue - volume;
-        if (Math.Abs(delta) >= 1)
-        {
-            volume = e.NewValue;
-            Send(new PlayerCommand.Volume(delta));
-        }
+        var to = Math.Round(e.NewValue);
+        if (Math.Abs(to - volume) >= 1)
+            StepVolume(to - volume, flash: false);
     }
 
     /// <summary>mpv listed the file's tracks again: rebuild the menu when what it offers changed.</summary>
@@ -1192,10 +2038,8 @@ public sealed partial class PlayerView : UserControl
         if (tracksHeld)
             return;
 #endif
-        var seen = string.Join(";", now.Select(t => $"{t.Kind}{t.Id}{(t.Selected ? "*" : "")}{t.Language}{t.Title}"));
-        if (seen == tracksSeen)
+        if (now.AsSpan().SequenceEqual(tracks))
             return;
-        tracksSeen = seen;
         tracks = now;
         BuildTracks();
     }
@@ -1347,7 +2191,7 @@ public sealed partial class PlayerView : UserControl
         episodesPanel = new EpisodesPanel(
             () => (PanelEpisodes(), ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
                 ownSpoilers ?? SettingsCatalog.IsOn(ctx?.Known.Setting(SettingKey.SpoilerProtection))),
-            number => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number))));
+            ChooseEpisode);
         episodesPanel.Flyout.Opened += OnMenuOpened;
         episodesPanel.Flyout.Closed += OnMenuClosed;
         EpisodesButton.Flyout = episodesPanel.Flyout;
@@ -1384,17 +2228,21 @@ public sealed partial class PlayerView : UserControl
             upscaling.Items.Add(item);
         }
         SettingsMenu.Items.Add(upscaling);
+        // The speeds ] and [ step along, the one playing checked.
         var speed = new MenuFlyoutSubItem { Text = T.PlayerSpeed };
-        foreach (var s in new[] { 0.75, 1.0, 1.25, 1.5, 2.0 })
+        speedItems.Clear();
+        foreach (var s in Speeds)
         {
-            var item = new MenuFlyoutItem { Text = s == 1 ? T.PlayerSpeedNormal : T.PlayerSpeedValue(Wording.Number(s)) };
+            var item = new RadioMenuFlyoutItem { Text = s == 1 ? T.PlayerSpeedNormal : T.PlayerSpeedValue(Wording.Number(s)), GroupName = "speed" };
             item.Click += (_, _) =>
             {
                 this.speed = s;
                 Send(new PlayerCommand.SpeedTo(s));
             };
+            speedItems.Add((s, item));
             speed.Items.Add(item);
         }
+        CheckSpeed();
         SettingsMenu.Items.Add(speed);
         var night = new ToggleMenuFlyoutItem { Text = T.PlayerNightMode, IsChecked = menus.NightMode };
         night.Click += (_, _) => Send(new PlayerCommand.NightMode(night.IsChecked));
@@ -1415,10 +2263,20 @@ public sealed partial class PlayerView : UserControl
         return false;
     }
 
+    readonly List<(double Speed, RadioMenuFlyoutItem Item)> speedItems = [];
+
+    void CheckSpeed()
+    {
+        foreach (var (at, item) in speedItems)
+            item.IsChecked = Math.Abs(at - speed) < 0.01;
+    }
+
     void OnSettingsMenuOpening(object? sender, object e)
     {
+        CheckSpeed();
         AddSkipMenu(SettingsMenu);
-        if (SettingsMenu.Items.FirstOrDefault(i => i.Tag as string == "discussion") is { } old)
+        // The item and its separator, both, so no separator is left behind each time.
+        foreach (var old in SettingsMenu.Items.Where(i => i.Tag as string == "discussion").ToList())
             SettingsMenu.Items.Remove(old);
         if (ctx is not { } c || !uint.TryParse(playingEpisode, out var episode) || !Discussions.Counted(position, duration)
             || !c.Known.Discussions.ContainsKey((playingId, episode)))
@@ -1446,15 +2304,57 @@ public sealed partial class PlayerView : UserControl
             if (discussion != pane)
                 return;
             discussion = null;
-            Root.Children.Remove(pane);
-            if (discussionScrim is not null)
-                Root.Children.Remove(discussionScrim);
+            var scrim = discussionScrim;
             discussionScrim = null;
-            Root.ColumnDefinitions[1].Width = GridLength.Auto;
             Focus(FocusState.Programmatic);
+            // The pane slides back out as the video takes its room again, on standard; over the
+            // video, it and its scrim fade.
+            void Gone()
+            {
+                Root.Children.Remove(pane);
+                if (scrim is not null)
+                    Root.Children.Remove(scrim);
+                if (discussion is null)
+                    Root.ColumnDefinitions[1].Width = GridLength.Auto;
+            }
+            if (Grid.GetColumnSpan(pane) == 1 && Motion.Enabled)
+            {
+                var from = Root.ColumnDefinitions[1].ActualWidth;
+                Motion.Ease(Root.ColumnDefinitions[1], from, 0, width =>
+                {
+                    Root.ColumnDefinitions[1].Width = new GridLength(width);
+                    if (width <= 0.5)
+                        Gone();
+                });
+            }
+            else
+            {
+                Motion.Hide(pane);
+                if (scrim is not null)
+                    Motion.Hide(scrim);
+                _ = Task.Delay(Motion.FadeOutTime + TimeSpan.FromMilliseconds(30)).ContinueWith(_ => DispatcherQueue.TryEnqueue(Gone));
+            }
         };
         Root.Children.Add(pane);
         PlaceDiscussion();
+        // Beside the video it slides in as the video gives it room, on standard; over the video
+        // the scrim and the pane fade in.
+        if (Grid.GetColumnSpan(pane) == 1)
+        {
+            pane.HorizontalAlignment = HorizontalAlignment.Left;
+            Root.ColumnDefinitions[1].Width = new GridLength(0);
+            Motion.Ease(Root.ColumnDefinitions[1], 0, DiscussionPane.PaneWidth, width =>
+            {
+                if (discussion == pane)
+                    Root.ColumnDefinitions[1].Width = new GridLength(width);
+            });
+        }
+        else
+        {
+            Motion.FadeIn(pane);
+            if (discussionScrim is not null)
+                Motion.FadeIn(discussionScrim);
+        }
         pane.Start();
     }
 
@@ -1471,6 +2371,8 @@ public sealed partial class PlayerView : UserControl
         {
             Grid.SetColumn(pane, 0);
             Grid.SetColumnSpan(pane, 2);
+            pane.HorizontalAlignment = HorizontalAlignment.Right;
+            Root.ColumnDefinitions[1].Width = GridLength.Auto;
             if (discussionScrim is null)
             {
                 discussionScrim = new Microsoft.UI.Xaml.Shapes.Rectangle { Fill = (Brush)Application.Current.Resources["ScrimBrush"] };
@@ -1499,6 +2401,9 @@ public sealed partial class PlayerView : UserControl
     {
         if (!Showing)
             return;
+        // A dialog over the player takes the keys: Escape closes it, not the player under it.
+        if (Dialogs.Open)
+            return;
         // Typing in the discussion's field, or pressing a key on one of its buttons, is not a player key.
         if (discussion is { } pane && XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focus && Within(focus, pane))
             return;
@@ -1511,9 +2416,9 @@ public sealed partial class PlayerView : UserControl
         act();
     }
 
-    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Send(new PlayerCommand.TogglePause()));
-    void OnKeyBack10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Send(new PlayerCommand.Seek(-10)));
-    void OnKeyForward10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Send(new PlayerCommand.Seek(10)));
+    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, TogglePause);
+    void OnKeyBack10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(-10, flash: false));
+    void OnKeyForward10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(10, flash: false));
     void OnKeyBack5(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(-1)) SeekBy(-5); }, show: false);
     void OnKeyForward5(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(1)) SeekBy(5); }, show: false);
     void OnKeyBack30(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(-5)) SeekBy(-30); }, show: false);
@@ -1527,43 +2432,63 @@ public sealed partial class PlayerView : UserControl
     void OnKeyTracks(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => OpenMenu(TracksButton));
 
     /// <summary>A seek by key or scroll, with the time it lands on in the flash.</summary>
-    void SeekBy(double seconds)
+    void SeekBy(double seconds, bool flash = true)
     {
+        // Nothing to seek in before the file has loaded: the engine would let it go.
+        if (duration <= 0 || startingShown)
+            return;
         // Named for the playback on screen, so the engine lets a seek go once the next episode
         // has taken over instead of carrying it there.
+        var to = Math.Clamp(Shown + seconds, 0, duration);
+        SendControl(new PlayerCommand.Seek(seconds));
+        if (upNext is not null)
+            upNext.Sought = true;
+        seekTarget = to;
+        seekSince.Restart();
+        Sought(to);
+        HoldLine();
+        if (flash)
+            ShowFlash(KaeriFfiMethods.PlayClock(to));
+    }
+
+    /// <summary>
+    /// M: silence and back, as mpv's own mute (as the Mac's), so the volume kept for the next
+    /// session is never 0. With nothing to mute through, the volume goes to 0 and back.
+    /// </summary>
+    void Mute()
+    {
         ulong now;
         lock (loads)
             now = playback;
-        if (now == 0)
-            Send(new PlayerCommand.Seek(seconds));
-        else
+        if (player is { } p && now != 0)
         {
             still.Input();
-            ctx?.Send(new Command.Control(now, new PlayerCommand.Seek(seconds)));
+            muted = !muted;
+            p.Apply(now, [new PlayerOp.Set("mute", new MpvValue.Flag(muted))]);
+            ShowMuted();
+            ShowFlash(muted ? T.PlayerMuted : T.PlayerVolumeLevel(Wording.Percent(volume)));
+            return;
         }
-        ShowFlash(KaeriFfiMethods.PlayClock(Math.Clamp(position + seconds, 0, Math.Max(0, duration))));
-    }
-
-    void StepVolume(double by)
-    {
-        volumeFlash = true;
-        Send(new PlayerCommand.Volume(by));
-    }
-
-    /// <summary>M: to silence and back to where it was.</summary>
-    void Mute()
-    {
-        volumeFlash = true;
         if (volume > 0)
         {
             mutedFrom = volume;
-            Send(new PlayerCommand.Volume(-volume));
+            StepVolume(-volume);
         }
         else
-            Send(new PlayerCommand.Volume(mutedFrom > 0 ? mutedFrom : 100));
+            StepVolume(mutedFrom > 0 ? mutedFrom : 100);
     }
 
-    /// <summary>] and [: a step along the speeds the Speed menu lists.</summary>
+    /// <summary>mpv's mute, which this player sets; a new mpv starts unmuted.</summary>
+    bool muted;
+
+    void ShowMuted()
+    {
+        var silent = muted || volume <= 0;
+        VolumeIcon.Glyph = silent ? "" : "";
+        AutomationProperties.SetName(VolumeButton, silent ? T.PlayerVolumeMuted : T.PlayerVolume);
+    }
+
+    /// <summary>] and [: a step along the speeds the Speed menu lists (the same list).</summary>
     void SpeedStep(int step)
     {
         var at = Array.FindIndex(Speeds, x => x >= speed - 0.01);
@@ -1592,8 +2517,8 @@ public sealed partial class PlayerView : UserControl
             ShowFlash(skipDone);
         Send(new PlayerCommand.TakeSkip());
     }, show: false);
-    void OnKeyNext(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Send(new PlayerCommand.Step(1)));
-    void OnKeyPrevious(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Send(new PlayerCommand.Step(-1)));
+    void OnKeyNext(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(1));
+    void OnKeyPrevious(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(-1));
     void OnKeyMini(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => ToggleMini());
     void OnKeyClose(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, Close, show: false);
 
@@ -1604,13 +2529,13 @@ public sealed partial class PlayerView : UserControl
         else if (MarkingEnter())
             return;
         else if (cornerCard == StallCard)
-            Send(new PlayerCommand.StallSwitch());
+            StallAnswer(new PlayerCommand.StallSwitch());
         else if (cornerCard == UndoCard)
             Undo();
-        else if (cornerCard == UpNextCard && !InParty)
+        else if (cornerCard == UpNextCard && !RoomLeads)
             PlayNext(auto: false);
         else if (cornerCard == SkipSlot)
-            Send(new PlayerCommand.TakeSkip());
+            SendControl(new PlayerCommand.TakeSkip());
     });
 
     /// <summary>Esc: cancel Up next or the stall prompt, then leave fullscreen, then close.</summary>
@@ -1624,10 +2549,12 @@ public sealed partial class PlayerView : UserControl
             discussion.Close();
         else if (mini)
             ToggleMini();
-        else if (cornerCard == UpNextCard && !InParty)
+        else if (skipPrompt is not null && cornerCard == promptCard)
+            DismissPrompt();
+        else if (cornerCard == UpNextCard && !RoomLeads)
             CancelNext();
         else if (cornerCard == StallCard)
-            Send(new PlayerCommand.StallWait());
+            StallAnswer(new PlayerCommand.StallWait());
         else if (FullscreenOn?.Invoke() == true)
             FullscreenRequested?.Invoke(false);
         else
@@ -1867,7 +2794,7 @@ public sealed partial class PlayerView : UserControl
             case "upnext":
                 UpNextTitle.Text = T.EpisodeNumber(2);
                 UpNextStillFrame.Visibility = Visibility.Visible;
-                upNext = new Coming(false, position, 0);
+                upNext = new Coming("2", false, position, 0);
                 ShowUpNext();
                 break;
             case "skip":
@@ -2029,6 +2956,13 @@ public sealed partial class PlayerView : UserControl
 
     void OnMini(object sender, RoutedEventArgs e) => ToggleMini();
 
+    /// <summary>Back from the mini window, if in it: a dialog is about to open, and needs the room.</summary>
+    internal void LeaveMini()
+    {
+        if (mini)
+            ToggleMini();
+    }
+
     void ToggleMini()
     {
         var on = !mini;
@@ -2084,6 +3018,11 @@ public sealed partial class PlayerView : UserControl
             {
                 lock (loads)
                     lastLoad = new PreviewSource(load.Url, PreviewSource.Reach(load.Options));
+            }
+            else if (op is PlayerOp.Seek seek)
+            {
+                // Before mpv has it, so the countdown never sees the landing as time played.
+                DispatcherQueue.TryEnqueue(() => Sought(seek.Absolute ? seek.Seconds : position + seek.Seconds));
             }
         }
     }

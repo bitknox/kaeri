@@ -201,6 +201,15 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     /// Takes over what the row of the same episode showed before the table was drawn again, so text
     /// that arrives late fades into the room the row kept rather than the row starting over.
     /// </summary>
+    /// <summary>The same episode as the engine now has it: its watched state and what follows from it change in place.</summary>
+    internal void Take(EpisodeRow row)
+    {
+        if (row == Row)
+            return;
+        Row = row;
+        Changed(nameof(Watched), nameof(Completed), nameof(Dim), nameof(PartWay), nameof(Playable), nameof(WatchedAction), nameof(Line), nameof(RowFacts), nameof(Name));
+    }
+
     internal void Inherit(EpisodeItem was)
     {
         narrow = was.narrow;
@@ -332,6 +341,8 @@ public sealed partial class TitlePage : Page, IPageKeys
 
     readonly Ctx ctx = Ctx.Current;
     uint id;
+    /// <summary>The title the frame opened this page with; <see cref="id"/> differs once a season is picked here.</summary>
+    uint openedWith;
     QueueItem? action;
 
     public TitlePage()
@@ -345,7 +356,14 @@ public sealed partial class TitlePage : Page, IPageKeys
         })
         {
             var item = new RadioMenuFlyoutItem { Text = name, GroupName = "status", Tag = segment };
-            item.Click += (_, _) => ctx.Send(new Command.SetStatus(id, segment));
+            item.Click += (_, _) =>
+            {
+                // The engine only queues the change for the tracker: the status shows at once from here.
+                ctx.Send(new Command.SetStatus(id, segment));
+                ctx.Known.SetStatus(id, segment);
+                if (ctx.Known.Entry(id) is { } entry)
+                    ShowStatus(entry);
+            };
             StatusMenu.Items.Add(item);
         }
         SourceItem.Text = T.SourcePickerTitle;
@@ -394,11 +412,13 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>The page's own layout as raised plates: banner, cover and title, then episode rows.</summary>
-    static UIElement Placeholders()
+    UIElement Placeholders()
     {
+        // The band as tall as the real one, and the cover and title where they will stand on it.
+        var band = double.IsNaN(Banner.Height) ? 220 : Banner.Height;
         var page = new StackPanel { Spacing = 20 };
-        page.Children.Add(new Border { Height = 220, Background = Ui.Res<Brush>("RaisedBrush") });
-        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, 0, 36, 0) };
+        page.Children.Add(new Border { Height = band, Background = Ui.Res<Brush>("RaisedBrush") });
+        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, -120 - 20, 36, 0) };
         head.Children.Add(States.Plate(120, 180, 8));
         var bars = new StackPanel { Spacing = 10, VerticalAlignment = VerticalAlignment.Bottom };
         bars.Children.Add(States.Plate(320, 28, 4));
@@ -414,14 +434,16 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>
-    /// The episode rows while they load, in the rows' own layout: a still and two lines, 72 high
-    /// with 8 between. As many as the title has, where that is known, up to a screenful, so the
-    /// rows that replace them take the room they kept.
+    /// The episode rows while they load, in the rows' own layout and size: the still and two
+    /// lines, each row as high as a real one with its margin. As many as the title has, where
+    /// that is known, up to a screenful, so the rows that replace them take the room they kept.
     /// </summary>
     UIElement EpisodePlaceholders()
     {
         var count = (int)Math.Clamp(ctx.Known.Entry(id)?.Episodes ?? 4, 1, 12);
-        var rows = States.Rows(count, 128, 72, rowHeight: 72, spacing: 8);
+        var narrow = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
+        var still = narrow ? global::Kaeri.App.Synopsis.StillNarrow : global::Kaeri.App.Synopsis.StillWide;
+        var rows = States.Rows(count, still, Math.Round(still * 9 / 16), rowHeight: global::Kaeri.App.Synopsis.RowHeight(narrow, true) + 4, spacing: 0);
         if (rows is FrameworkElement f)
             f.Margin = new Thickness(0, 8, 0, 0);
         return rows;
@@ -430,24 +452,14 @@ public sealed partial class TitlePage : Page, IPageKeys
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        id = (uint)e.Parameter;
+        id = openedWith = (uint)e.Parameter;
         var known = ctx.Known.Entry(id) is not null;
         if (!known)
             State.Wait();
-        ctx.Send(new Command.LoadDetail(id));
-        ctx.Send(new Command.LoadEpisodes(id));
         // Episodes not yet known: nothing for 600 ms, then plates in the rows' place.
         if (!ctx.Known.Episodes.ContainsKey(id))
             EpisodesState.Wait();
-        // The queue, for each row's download cell.
-        ctx.Send(new Command.LoadDownloads());
-        ctx.Send(new Command.LoadDub(id));
-        // What the show sets for itself, its spoiler protection among it.
-        ctx.Send(new Command.LoadShowSettings(id));
-        DubLine.Opacity = 0;
-        Layout();
-        Show();
-        ShowEpisodes();
+        Load();
 #if KAERI_TESTING
         // --show=title-another: as if Surprise me opened this title, so Another is there.
         if (ctx.Options.Show == "title-another" && ctx.Options.Title == id)
@@ -518,6 +530,84 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (ctx.Options.Show == "source-menu" && ctx.Options.Title == id)
             _ = Task.Delay(1500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => MoreButton.Flyout.ShowAt(MoreButton)));
 #endif
+    }
+
+    /// <summary>Asks for what the title's page shows and draws what is known of it now.</summary>
+    void Load()
+    {
+        ctx.Send(new Command.LoadDetail(id));
+        ctx.Send(new Command.LoadEpisodes(id));
+        // The queue, for each row's download cell.
+        ctx.Send(new Command.LoadDownloads());
+        ctx.Send(new Command.LoadDub(id));
+        // What the show sets for itself, its spoiler protection among it.
+        ctx.Send(new Command.LoadShowSettings(id));
+        DubLine.Opacity = 0;
+        Layout();
+        Show();
+        ShowEpisodes();
+    }
+
+    /// <summary>
+    /// Another season of the show, picked here: the page stays and takes it in place, as on the
+    /// Mac. What stood crossfades to the new season's words and rows, the scroll stays where it
+    /// is, and Back still goes to where the title was opened from, not through every season tried.
+    /// </summary>
+    void SwitchTo(uint to)
+    {
+        if (to == id)
+            return;
+        Crossfade.Swap(Scroll, () =>
+        {
+            discussion?.Close();
+            id = to;
+            // What was chosen for the last season does not carry over to this one.
+            chosenRange = null;
+            opened = false;
+            revealAll = false;
+            revealed.Clear();
+            shownShape = null;
+            protection = null;
+            targetNumber = null;
+            askedPlaysHere = null;
+            detailsKey = null;
+            availKey = null;
+            shownSynopsis = null;
+            // The new season's words wait 600 ms over what stood, then plates; its rows, when
+            // not yet known, are plates at once, so no row of the last season is clicked for this one.
+            if (ctx.Known.Entry(id) is null)
+                State.WaitKeeping(true);
+            if (!ctx.Known.Episodes.ContainsKey(id))
+            {
+                allItems = null;
+                EpisodeList.ItemsSource = null;
+                EpisodesState.WaitKeeping(false);
+            }
+            Load();
+            ShowAnother();
+        });
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        // A season picked here changed the title in place: once the frame has put this page on
+        // its back stack, its entry is made to say that season, so Back comes to it.
+        if (e.NavigationMode != NavigationMode.New || id == openedWith || Frame is not { } frame)
+            return;
+        var shown = id;
+        var opened = openedWith;
+        void Fix(object sender, NavigationEventArgs args)
+        {
+            frame.Navigated -= Fix;
+            var stack = frame.BackStack;
+            if (stack.Count > 0 && stack[^1] is { Parameter: uint was } entry && entry.SourcePageType == typeof(TitlePage) && was == opened)
+            {
+                stack.RemoveAt(stack.Count - 1);
+                stack.Add(new PageStackEntry(typeof(TitlePage), shown, entry.NavigationTransitionInfo));
+            }
+        }
+        frame.Navigated += Fix;
     }
 
 #if KAERI_TESTING
@@ -672,8 +762,14 @@ public sealed partial class TitlePage : Page, IPageKeys
                     Show();
                     break;
                 case Event.Progress p when p.Id == id:
-                    Show();
-                    ctx.Send(new Command.LoadEpisodes(id));
+                    // The event carries the rows' watched state, which Known has put in the
+                    // table: the rows change in place, with no new listing and no rebuilt list.
+                    if (ctx.Known.Entry(id) is { } progressed)
+                        ShowAction(progressed);
+                    if (p.EpisodesValue.Length > 0)
+                        ShowEpisodes();
+                    else
+                        ctx.Send(new Command.LoadEpisodes(id));
                     break;
                 case Event.DiscussionFound found when found.Media == id:
                     foreach (var item in Episodes().Where(i => i.Row.Number == found.Episode.ToString()))
@@ -761,9 +857,14 @@ public sealed partial class TitlePage : Page, IPageKeys
     void ShowBanner(ImageSource art)
     {
         var again = BannerImage.Source == art && BannerImage.Opacity > 0;
-        BannerImage.Source = art;
         if (again)
             return;
+        if (BannerImage.Source is not null && BannerImage.Opacity > 0 && IsLoaded)
+        {
+            Crossfade.Swap(Art, () => BannerImage.Source = art);
+            return;
+        }
+        BannerImage.Source = art;
         if (IsLoaded)
         {
             Motion.FadeIn(BannerImage);
@@ -798,17 +899,19 @@ public sealed partial class TitlePage : Page, IPageKeys
         Secondary.Text = entry.Secondary ?? "";
         Secondary.Visibility = entry.Secondary is { Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
         Meta.Text = Wording.MetaLine(entry);
-        Synopsis.MaxLines = 8;
-        SynopsisMore.Visibility = Visibility.Collapsed;
-        Synopsis.Text = entry.Synopsis;
+        if (shownSynopsis != entry.Synopsis)
+        {
+            shownSynopsis = entry.Synopsis;
+            Synopsis.MaxLines = 8;
+            SynopsisMore.Visibility = Visibility.Collapsed;
+            Synopsis.Text = entry.Synopsis;
+        }
         DemoCredit.Visibility = entry.IsDemo ? Visibility.Visible : Visibility.Collapsed;
         DemoCredit.Content = entry.IsDemo ? DemoHome.Credit(KaeriFfiMethods.DemoInfo()) : null;
 
         ShowAction(entry);
 
-        StatusButton.Content = entry.ListStatus is { } status ? StatusName(status) : T.LibraryAddToList;
-        foreach (var item in StatusMenu.Items.OfType<RadioMenuFlyoutItem>())
-            item.IsChecked = item.Tag is LibrarySegment s && s == entry.ListStatus;
+        ShowStatus(entry);
         TrailerItem.IsEnabled = entry.TrailerUrl is not null;
 
         ShowSeasons(entry);
@@ -820,6 +923,8 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// is loaded the first after it that some source lists. With none, a line says so in its place.
     /// </summary>
     /// <summary>More shows only where the synopsis is cut at its eight lines.</summary>
+    string? shownSynopsis;
+
     void OnSynopsisTrimmed(TextBlock sender, IsTextTrimmedChangedEventArgs args) =>
         SynopsisMore.Visibility = sender.IsTextTrimmed ? Visibility.Visible : Visibility.Collapsed;
 
@@ -828,6 +933,9 @@ public sealed partial class TitlePage : Page, IPageKeys
         Synopsis.MaxLines = 0;
         SynopsisMore.Visibility = Visibility.Collapsed;
     }
+
+    /// <summary>What the availability line and the More menu's Watch on items were drawn from.</summary>
+    string? availKey;
 
     TitleAvailability? Avail => ctx.Known.Availability.GetValueOrDefault(id);
     bool? askedPlaysHere;
@@ -850,6 +958,10 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>Case A and C lines, the Case B action and the More menu's Watch on items.</summary>
     void ShowAvailability()
     {
+        var key = Drawn.Fingerprint(Avail);
+        if (key == availKey)
+            return;
+        availKey = key;
         AvailLine.Children.Clear();
         AvailLine.Visibility = Visibility.Collapsed;
         foreach (var old in MoreMenu.Items.Where(i => i.Tag as string == "avail").ToList())
@@ -910,17 +1022,33 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (ctx.Known.Episodes.ContainsKey(id))
             AskAvailability(action is { Playable: true });
         // The demo plays in parts: "Play part 1".
-        PrimaryAction.Content = entry.IsDemo && action.Button is not null ? T.TitlePlayPart(action.Episode.ToString()) : action.Button;
+        var words = entry.IsDemo && action.Button is not null ? T.TitlePlayPart(action.Episode.ToString()) : action.Button;
+        if (PrimaryAction.Content as string != words)
+            PrimaryAction.Content = words;
         PrimaryAction.Visibility = action.Button is not null ? Visibility.Visible : Visibility.Collapsed;
         WaitingLine.Text = action.Waiting ?? "";
         WaitingLine.Visibility = action.Waiting is not null ? Visibility.Visible : Visibility.Collapsed;
         // A party plays the episode the primary action would.
         PartyItem.IsEnabled = action is { Playable: true };
-        TvAction.Visibility = action is { Playable: true } && ctx.Tv.Available ? Visibility.Visible : Visibility.Collapsed;
+        // Items that would do nothing are greyed, not left to fail in silence: nothing to
+        // download yet, or no episode before the next one left unwatched.
+        var table = ctx.Known.Episodes.GetValueOrDefault(id);
+        DownloadItem.IsEnabled = table is { } listed && EpisodeSources.Downloadable(listed).Length > 0;
+        MarkPreviousItem.IsEnabled = table is { } all && all.Any(r => uint.TryParse(r.Number, out var n) && n < action.Episode && !r.Completed);
+        // Play on TV comes and goes with a fade, not a snap of the buttons beside it.
+        var tv = action is { Playable: true } && ctx.Tv.Available;
+        if (tv != (TvAction.Visibility == Visibility.Visible))
+        {
+            if (tv)
+                Motion.Show(TvAction);
+            else
+                Motion.Hide(TvAction);
+        }
         // Case B: it does not play here, so the amber action opens the service that has it.
         if (Avail is { Case: AvailabilityCase.OnService, Main: { } main } && action is not { Playable: true })
         {
-            PrimaryAction.Content = ExternalLabel(T.TitleWatchOn(main.Service));
+            if (PrimaryAction.Content is not StackPanel { Tag: string said } || said != main.Service)
+                PrimaryAction.Content = ExternalLabel(T.TitleWatchOn(main.Service), main.Service);
             PrimaryAction.Visibility = Visibility.Visible;
             WaitingLine.Visibility = Visibility.Collapsed;
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PrimaryAction, T.TitleWatchOn(main.Service));
@@ -930,9 +1058,9 @@ public sealed partial class TitlePage : Page, IPageKeys
         ShowAvailability();
     }
 
-    static StackPanel ExternalLabel(string text)
+    static StackPanel ExternalLabel(string text, string service)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Tag = service };
         row.Children.Add(new TextBlock { Text = text });
         row.Children.Add(new FontIcon { Glyph = "\uE8A7", FontSize = 12 });
         return row;
@@ -963,16 +1091,33 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         if (SeasonPicker.SelectedIndex is not (var at and >= 0) || at >= seasons.Count || seasons[at].IsThis)
             return;
-        ctx.OpenTitle(seasons[at].Id);
-        // Back here, the picker says this page's season again.
-        SeasonPicker.SelectionChanged -= OnSeasonPicked;
-        SeasonPicker.SelectedIndex = seasons.ToList().FindIndex(c => c.IsThis);
-        SeasonPicker.SelectionChanged += OnSeasonPicked;
+        SwitchTo(seasons[at].Id);
     }
 
     void ShowDetails(Entry entry)
     {
         var wide = Scroll.ActualWidth == 0 || Scroll.ActualWidth >= SideWidth;
+        var related = Kaeri.App.TitleSeasons.Related(entry);
+        var key = $"{wide}|{entry.Id}|{entry.Source}|{Drawn.Fingerprint(entry.Airing)}|{TitleFacts.Country(entry)}|{string.Join(",", entry.Genres ?? [])}|{BroadcastLine(entry)}|"
+            + string.Join(";", related.Take(8).Select(r => $"{r.Id},{r.Title},{r.Relation},{r.Format}"));
+        if (key == detailsKey)
+            return;
+        // On the same side, the column changes as a whole, crossfaded in its place.
+        var same = detailsKey is not null && detailsKey.StartsWith($"{wide}|", StringComparison.Ordinal);
+        detailsKey = key;
+        if (same && Motion.Enabled && (wide ? Side : DetailsBelow).ActualHeight > 0)
+        {
+            Crossfade.Swap(wide ? Side : DetailsBelow, () => LayDetails(entry, wide, related));
+            return;
+        }
+        LayDetails(entry, wide, related);
+    }
+
+    /// <summary>What the side column was last laid from, and where.</summary>
+    string? detailsKey;
+
+    void LayDetails(Entry entry, bool wide, RelatedTitle[] related)
+    {
         SideColumn.Width = wide ? new GridLength(260) : new GridLength(0);
         Side.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
         var host = wide ? Side : DetailsBelow;
@@ -1013,7 +1158,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (BroadcastLine(entry) is { Length: > 0 } broadcast)
             host.Children.Add(Ui.Haze(broadcast));
 
-        if (Kaeri.App.TitleSeasons.Related(entry) is { Length: > 0 } related)
+        if (related.Length > 0)
         {
             var list = new StackPanel { Spacing = 6 };
             list.Children.Add(new TextBlock { Text = T.TitleRelated, Style = Res<Style>("BodyStrongTextBlockStyle") });
@@ -1043,13 +1188,41 @@ public sealed partial class TitlePage : Page, IPageKeys
     NoteItem? protection;
     readonly HashSet<string> revealed = [];
 
-    IEnumerable<EpisodeItem> Episodes() => (EpisodeList.ItemsSource as IEnumerable<object>)?.OfType<EpisodeItem>() ?? [];
+    IEnumerable<EpisodeItem> Episodes() => allItems?.OfType<EpisodeItem>() ?? [];
 
     /// <summary>Whether spoiler protection is on for this show: what it sets for itself, else Settings.</summary>
     bool ProtectionOn() => Spoilers.On(ctx.Known, id);
 
     bool Held(EpisodeRow row) =>
         global::Kaeri.App.Synopsis.Held(row, ProtectionOn(), revealAll || revealed.Contains(row.Number));
+
+    /// <summary>The rows built with the page: more than a tall window shows.</summary>
+    const int FirstRows = 14;
+
+    /// <summary>Every row of the shown list, built or still to come.</summary>
+    List<object>? allItems;
+
+    /// <summary>Adds the rest of <paramref name="items"/> to <paramref name="showing"/>, a few rows each time the UI thread is idle.</summary>
+    void MoreRows(System.Collections.ObjectModel.ObservableCollection<object> showing, List<object> items)
+    {
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            // The list was replaced since: its rows are not these.
+            if (!ReferenceEquals(EpisodeList.ItemsSource, showing))
+                return;
+            for (var n = 0; n < 8 && showing.Count < items.Count; n++)
+                showing.Add(items[showing.Count]);
+            if (showing.Count < items.Count)
+                MoreRows(showing, items);
+        });
+    }
+
+    /// <summary>Whether two rows of one episode differ only in how far it was watched.</summary>
+    static bool OnlyProgress(EpisodeRow was, EpisodeRow now) =>
+        now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress } == was;
+
+    /// <summary>The shown rows' numbers and places, and what decides how they are laid: the list is rebuilt only when it changes.</summary>
+    string? shownShape;
 
     void ShowEpisodes()
     {
@@ -1072,6 +1245,27 @@ public sealed partial class TitlePage : Page, IPageKeys
 
         var shown = rows[(plan.Start + plan.Fold)..plan.End];
         var start = global::Kaeri.App.Synopsis.ProtectionStart(shown, on);
+        // The same rows in the same places, only their state changed (an episode marked
+        // watched): each row takes its new state where it stands, and focus stays on it.
+        var shape = $"{plan.Start}|{plan.Fold}|{plan.End}|{start?.At}|{start?.Before}|{narrowList}|{on}|{outlook}|{targetNumber}|{string.Join(",", shown.Select(r => r.Number))}";
+        var byNumber = shape == shownShape ? shown.GroupBy(r => r.Number).ToDictionary(g => g.Key, g => g.First()) : null;
+        if (byNumber is not null && allItems is { } standing
+            && standing.OfType<EpisodeItem>().All(item => byNumber.TryGetValue(item.Row.Number, out var row) && OnlyProgress(item.Row, row)))
+        {
+            foreach (var item in standing.OfType<EpisodeItem>())
+            {
+                if (!byNumber.TryGetValue(item.Row.Number, out var now))
+                    continue;
+                var protectable = global::Kaeri.App.Synopsis.Protectable(now, on);
+                var changed = now != item.Row;
+                item.Take(now);
+                if (changed)
+                    item.Lay(narrowList, outlook, protectable, Held(now), true);
+            }
+            ShowDownloads(ctx.Known.Downloads);
+            return;
+        }
+        shownShape = shape;
         var items = new List<object>();
         protection = null;
         if (plan.Fold > 0)
@@ -1097,7 +1291,16 @@ public sealed partial class TitlePage : Page, IPageKeys
             ctx.Art.Bind(row.Thumbnail ?? wide, s => item.Still = s);
             items.Add(item);
         }
-        EpisodeList.ItemsSource = items;
+        // A screenful of rows now, so the page shows at once; the rest follow a few at a time
+        // while the UI thread is idle. Each row is a still, a ring, a check box and a menu, and a
+        // long season built whole held the page's first frame back.
+        allItems = items;
+        var target = targetNumber is null ? -1 : items.FindIndex(i => i is EpisodeItem e && e.Row.Number == targetNumber);
+        var built = Math.Min(items.Count, Math.Max(FirstRows, target + 4));
+        var showing = new System.Collections.ObjectModel.ObservableCollection<object>(items.Take(built));
+        EpisodeList.ItemsSource = showing;
+        if (built < items.Count)
+            MoreRows(showing, items);
         EpisodesState.Done();
         ShowDownloads(ctx.Known.Downloads);
         var metadataOnly = rows.Length > 0 && rows.All(r => r.MetadataOnly);
@@ -1577,6 +1780,13 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         if (ctx.Known.Entry(id) is { } entry)
             TrailerWindow.Play(ctx, entry);
+    }
+
+    void ShowStatus(Entry entry)
+    {
+        StatusButton.Content = entry.ListStatus is { } status ? StatusName(status) : T.LibraryAddToList;
+        foreach (var item in StatusMenu.Items.OfType<RadioMenuFlyoutItem>())
+            item.IsChecked = item.Tag is LibrarySegment s && s == entry.ListStatus;
     }
 
     static string StatusName(LibrarySegment status) => status switch

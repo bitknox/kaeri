@@ -30,6 +30,7 @@ public sealed partial class SettingsPage : Page
         /// <summary>The pane's name as the list shows it.</summary>
         public string Title => Name switch
         {
+            "general" => T.SettingsGroupGeneral,
             "playback" => T.SettingsGroupPlayback,
             "downloads" => T.NavDownloads,
             "notifications" => T.SettingsGroupNotifications,
@@ -37,7 +38,6 @@ public sealed partial class SettingsPage : Page
             "accounts" => T.NavAccounts,
             "devices" => T.DevicesTitle,
             "profiles" => T.ProfilesTitle,
-            "library" => T.NavLibrary,
             "integrations" => T.SettingsGroupIntegrations,
             "advanced" => T.SettingsGroupAdvanced,
             _ => T.AboutTitle,
@@ -46,12 +46,16 @@ public sealed partial class SettingsPage : Page
 
     static readonly Pane[] PaneList =
     [
+        // As the Mac's: how titles read and which show, the app's language, and the titles hidden.
+        new("general", "",
+        [
+            ("titles", [K.Titles, K.AdultTitles]),
+            // Laid out by LanguageCard: the app's own language, kept by this app.
+            ("language", []),
+        ]),
         new("playback", "",
         [
-            // The app's language and how titles read everywhere, not only while watching, so they
-            // head the pane on their own.
-            ("language", [K.Titles, K.Trailers]),
-            ("watching", [K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
+            ("watching", [K.Trailers, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
             ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
@@ -72,7 +76,6 @@ public sealed partial class SettingsPage : Page
         new("accounts", "", []),
         new("devices", "\uE772", []),
         new("profiles", "\uE716", []),
-        new("library", "\uE8F1", []),
         new("integrations", "",
         [
             ("discord", [K.Presence, K.PresenceTitle, K.PresenceRich]),
@@ -86,6 +89,7 @@ public sealed partial class SettingsPage : Page
     /// <summary>A group's heading, from its id.</summary>
     static string GroupHeading(string group) => group switch
     {
+        "titles" => T.SettingsGroupTitles,
         "language" => T.SettingsLanguage,
         "watching" => T.SettingsGroupWatching,
         "player" => T.SettingsGroupPlayer,
@@ -185,7 +189,9 @@ public sealed partial class SettingsPage : Page
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Height = 36 };
             line.Children.Add(new FontIcon { Glyph = p.Glyph, FontSize = 16, VerticalAlignment = VerticalAlignment.Center });
             line.Children.Add(new TextBlock { Text = p.Title, VerticalAlignment = VerticalAlignment.Center });
-            Panes.Items.Add(new ListViewItem { Content = line, Tag = p });
+            var item = new ListViewItem { Content = line, Tag = p };
+            AutomationProperties.SetName(item, p.Title);
+            Panes.Items.Add(item);
         }
         State.Placeholders = () =>
         {
@@ -199,30 +205,62 @@ public sealed partial class SettingsPage : Page
         // "2 min ago" moves on while the Proxy check card is on screen.
         guardClock = Timers.Weak(this, TimeSpan.FromSeconds(30), true, static page => page.ShowProxyCheck());
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
-        // Heard from the start: what arrives before the page is loaded is not missed.
+        // The frame keeps the page for the next visit: its cards are built once, which is most of
+        // what opening Settings costs, and the pane and the scroll stay where they were.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
+        // A redraw held back while a box was typed in is made once the box is left.
+        Cards.LostFocus += (_, _) => DispatcherQueue.TryEnqueue(() =>
+        {
+            if (held && !Ui.TypingIn(Cards))
+                Show();
+        });
+    }
+
+    /// <summary>The pane last open, so Settings opens there again while the app runs.</summary>
+    static string? lastPane;
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // Heard from each visit's start, before the page is loaded, until the frame moves on.
         ctx.Tv.Changed += TvChanged;
         Sync.SyncDialogs.Changed += SyncChanged;
+        ctx.Known.ConflictsChanged += ShowConflicts;
         ctx.Hear(this, Heard, () =>
         {
+            ctx.Known.ConflictsChanged -= ShowConflicts;
             ctx.Tv.Changed -= TvChanged;
             Sync.SyncDialogs.Changed -= SyncChanged;
             guardClock.Stop();
             savedClock.Stop();
         });
+        var was = Panes.SelectedIndex;
+        ShowPane(e.Parameter as string ?? lastPane ?? ctx.Options.Pane ?? "general");
+        // The same pane again: what changed while away reaches its cards in place.
+        if (was >= 0 && Panes.SelectedIndex == was)
+            Show();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    /// <summary>Opens a pane on this page, as navigation does and as the window asks while Settings is already open.</summary>
+    internal void ShowPane(string name)
     {
-        base.OnNavigatedTo(e);
-        var name = e.Parameter as string ?? ctx.Options.Pane ?? "playback";
+        // Hidden titles moved from a Library pane into General, as the Mac has them.
+        if (name == "library")
+            name = "general";
         var at = Array.FindIndex(PaneList, p => p.Name == name);
         Panes.SelectedIndex = at < 0 ? 0 : at;
+        if (narrow && picking)
+        {
+            picking = false;
+            Layout();
+        }
     }
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"
-            || e is Event.Profiles && pane.Name == "profiles"
+        if (batch.Any(e => e is Event.HiddenTitles) && pane.Name == "general")
+            FillHidden();
+        if (batch.Any(e => e is Event.Settings || e is Event.Profiles && pane.Name == "profiles"
             || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
         else if (batch.Any(e => e is Event.TorrentProxy))
@@ -234,6 +272,7 @@ public sealed partial class SettingsPage : Page
         if ((Panes.SelectedItem as ListViewItem)?.Tag is Pane p)
         {
             pane = p;
+            lastPane = p.Name;
             Show();
         }
     }
@@ -278,51 +317,101 @@ public sealed partial class SettingsPage : Page
 
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
-    /// <summary>The pane the cards were last made for.</summary>
-    string? shownPane;
+    /// <summary>The pane the cards were last made for, and what decided which cards it has.</summary>
+    string? shownPane, shapeDrawn;
+    /// <summary>A redraw waits for the box being typed in to be left.</summary>
+    bool held;
+    /// <summary>Each card's way to take the engine's latest value in place.</summary>
+    readonly List<Action> refresh = [];
 
     /// <summary>
-    /// The pane's cards, made anew. For the same pane again, as after a setting changes, the page
-    /// stays where it was: the scroll offset, and the focus on the control of the same name. The
-    /// cards come and go within one frame, so nothing moves on screen.
+    /// The pane as the engine last said. The cards are made once for a pane; after that a change
+    /// sets each control's value, line and enabled state in place, so a switch finishes its slide,
+    /// the card under the pointer keeps its hover and a box keeps what is typed in it. The cards
+    /// are made again only when which cards the pane has changed, and not while a box in it is
+    /// being typed in; the scroll offset and the focus stay where they were.
     /// </summary>
     void Show()
     {
         var same = shownPane == pane.Name;
+        var shape = Shape();
+        if (same && shape == shapeDrawn)
+        {
+            held = false;
+            Refresh();
+            return;
+        }
+        if (same && Ui.TypingIn(Cards))
+        {
+            held = true;
+            Refresh();
+            return;
+        }
+        held = false;
         var offset = CardScroll.VerticalOffset;
-        var focused = same && XamlRoot is not null ? FocusManager.GetFocusedElement(XamlRoot) as Control : null;
-        var focusName = focused is null ? null : AutomationProperties.GetName(focused);
-        var focusType = focused?.GetType();
+        var focus = same ? Ui.MarkFocus(Cards) : null;
         Build();
         shownPane = pane.Name;
+        shapeDrawn = shape;
         if (!same)
+        {
+            // Another pane starts at its top.
+            CardScroll.ChangeView(null, 0, null, disableAnimation: true);
             return;
+        }
         CardScroll.UpdateLayout();
         CardScroll.ChangeView(null, offset, null, disableAnimation: true);
-        if (!string.IsNullOrEmpty(focusName) && Find(Cards, c => c.GetType() == focusType && AutomationProperties.GetName(c) == focusName) is { } again)
-            again.Focus(FocusState.Programmatic);
+        Ui.RestoreFocus(Cards, focus);
     }
 
-    static Control? Find(DependencyObject under, Func<Control, bool> match)
+    void Refresh()
     {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(under); i++)
-        {
-            var child = VisualTreeHelper.GetChild(under, i);
-            if (child is Control c && match(c))
-                return c;
-            if (Find(child, match) is { } found)
-                return found;
-        }
-        return null;
+        var was = quiet;
+        quiet = true;
+        foreach (var set in refresh)
+            set();
+        quiet = was;
+    }
+
+    /// <summary>What decides which cards the pane has, and for Accounts and Devices what they say.</summary>
+    string Shape() => pane.Name switch
+    {
+        // Its cards keep themselves current, so the pane itself never changes shape.
+        "accounts" => "accounts",
+        "devices" => DevicesKey(),
+        "profiles" => Drawn.Fingerprint(ctx.Known.Profiles),
+        // The crash reports redraw alone (ShowCrashes), so About's top and its update panel stay.
+        "about" => Drawn.Fingerprint(ctx.Known.Setting(K.UpdateBeta) is null),
+        _ => SettingsShape(),
+    };
+
+    /// <summary>A settings pane's rows: which of its keys the engine has, and what adds or takes away a card.</summary>
+    string SettingsShape()
+    {
+        if (ctx.Known.Settings is not { } settings)
+            return "";
+        var parts = new List<object?>();
+        foreach (var (group, keys) in pane.Groups)
+            parts.Add((group, keys.Where(k => ctx.Known.Setting(k) is not null).ToArray()));
+        parts.Add(settings.PresenceAvailable);
+        parts.Add(SettingsCatalog.IsOn(ctx.Known.Setting(K.Torrents)));
+        parts.Add(settings.Torrent.Proxy is null);
+        parts.Add(ctx.Known.Setting(K.TorrentsWhileCasting) is null);
+        parts.Add(ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is not null);
+        parts.Add(settings.SubtitleStyle is null);
+        return Drawn.Fingerprint(parts);
     }
 
     void Build()
     {
         quiet = true;
+        refresh.Clear();
         Cards.Children.Clear();
         guardCard = null;
         protectCard = null;
         tvGroup = null;
+        conflictsCard = null;
+        hiddenGroup = null;
         guardClock.Stop();
         if (narrow)
             Layout();
@@ -339,9 +428,6 @@ public sealed partial class SettingsPage : Page
                 break;
             case "about":
                 ShowAbout();
-                break;
-            case "library":
-                ShowHidden();
                 break;
             default:
                 if (ctx.Known.Settings is null)
@@ -366,13 +452,18 @@ public sealed partial class SettingsPage : Page
                         ShowTorrents();
                         continue;
                     }
+                    if (group == "language")
+                    {
+                        Cards.Children.Add(Heading(GroupHeading(group)));
+                        Cards.Children.Add(LanguageCard());
+                        continue;
+                    }
                     if (group == "subtitles")
                     {
                         if (ctx.Known.Settings?.SubtitleStyle is { } style)
                         {
                             Cards.Children.Add(Heading(T.SettingsGroupSubtitles));
-                            foreach (var element in new SubtitleSettings(ctx, style, () => quiet).Rows())
-                                Cards.Children.Add(element);
+                            SubtitleRows(style);
                         }
                         continue;
                     }
@@ -385,8 +476,6 @@ public sealed partial class SettingsPage : Page
                     Cards.Children.Add(Heading(GroupHeading(group)));
                     if (group == "seeding")
                         Cards.Children.Add(Note(T.SettingsSeedingOpenOnly));
-                    if (group == "language")
-                        Cards.Children.Add(LanguageCard());
                     foreach (var row in rows)
                     {
                         var made = Card(row);
@@ -398,13 +487,20 @@ public sealed partial class SettingsPage : Page
                     if (pane.Name == "playback" && group == "player")
                     {
                         var clear = new Button { Content = T.PlayerSkipClear };
-                        clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
+                        // Asks first, as the Mac does: what Kaeri found is gone with it.
+                        clear.Click += async (_, _) =>
+                        {
+                            if (await Ui.Confirm(XamlRoot, T.SettingsClearSkips, T.SettingsClearSkipsConfirm, T.PlayerSkipClear))
+                                ctx.Send(new Command.ClearSkipMarks());
+                        };
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
                         Cards.Children.Add(HideChatCard());
                     }
                     if (pane.Name == "downloads" && group == "files")
                         Cards.Children.Add(WhenClosingCard());
                 }
+                if (pane.Name == "general")
+                    ShowHidden();
                 State.Done();
 #if KAERI_TESTING
                 Demo();
@@ -415,60 +511,123 @@ public sealed partial class SettingsPage : Page
     }
 
     /// <summary>
-    /// Hidden titles: what was marked Not interested, each with Restore. A title hidden until it
-    /// airs says it comes back by itself. Restoring takes the row away at once.
+    /// The subtitle group's preview and rows. A change to the style draws this group again, in
+    /// its place, and leaves the rest of the pane as it is.
+    /// </summary>
+    void SubtitleRows(SubtitleStyle style)
+    {
+        var drawn = Drawn.Fingerprint(style);
+        var rows = new SubtitleSettings(ctx, style, () => quiet).Rows().ToList();
+        foreach (var element in rows)
+            Cards.Children.Add(element);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.Settings?.SubtitleStyle is not { } now)
+                return;
+            var said = Drawn.Fingerprint(now);
+            var at = rows.Count == 0 ? -1 : Cards.Children.IndexOf(rows[0]);
+            if (said == drawn || at < 0)
+                return;
+            drawn = said;
+            var focus = Ui.MarkFocus(Cards);
+            foreach (var old in rows)
+                Cards.Children.Remove(old);
+            rows = new SubtitleSettings(ctx, now, () => quiet).Rows().ToList();
+            for (var i = 0; i < rows.Count; i++)
+                Cards.Children.Insert(at + i, rows[i]);
+            Ui.RestoreFocus(Cards, focus);
+        });
+    }
+
+    /// <summary>
+    /// Hidden titles, at General's foot: what was marked Not interested, each with Restore. A title
+    /// hidden until it airs says it comes back by itself. The group keeps its rows by title: one
+    /// restored fades out and only it goes, and the engine's later list adds or takes away only
+    /// the rows that changed, so the pane never redraws around them.
     /// </summary>
     void ShowHidden()
     {
-        // Asked once as the pane opens; the engine's answer redraws it.
-        if (shownPane != "library")
-            ctx.Send(new Command.LoadHiddenTitles());
-        if (!ctx.Known.HiddenLoaded)
-        {
-            // Never "nothing hidden" before the engine has said: nothing for 600 ms, then plates.
-            State.Wait();
-            return;
-        }
         Cards.Children.Add(Heading(T.SettingsHiddenTitles));
         Cards.Children.Add(Note(T.SettingsHiddenTitlesBody));
-        var hidden = ctx.Known.Hidden.Where(h => !ctx.Known.RestoredHere.Contains(h.Entry.Id)).ToArray();
-        if (hidden.Length == 0)
-        {
-            Cards.Children.Add(Note(T.SettingsHiddenEmpty));
-            State.Done();
+        hiddenGroup = new StackPanel { Spacing = 4 };
+        hiddenRows.Clear();
+        hiddenNone = Note(T.SettingsHiddenEmpty);
+        hiddenNone.Visibility = Visibility.Collapsed;
+        hiddenGroup.Children.Add(hiddenNone);
+        Cards.Children.Add(hiddenGroup);
+        // Asked each time the pane opens; the engine's answer fills the group.
+        ctx.Send(new Command.LoadHiddenTitles());
+        FillHidden();
+    }
+
+    StackPanel? hiddenGroup;
+    TextBlock? hiddenNone;
+    readonly Dictionary<uint, FrameworkElement> hiddenRows = [];
+
+    void FillHidden()
+    {
+        if (hiddenGroup is not { } group || hiddenNone is null)
             return;
-        }
+        // Never "nothing hidden" before the engine has said.
+        if (!ctx.Known.HiddenLoaded)
+            return;
+        var hidden = ctx.Known.Hidden.Where(h => !ctx.Known.RestoredHere.Contains(h.Entry.Id)).ToArray();
+        var desired = new List<UIElement> { hiddenNone };
         foreach (var title in hidden)
         {
-            var row = new Grid { ColumnSpacing = 12, MinHeight = 64, Padding = new Thickness(12, 8, 12, 8), CornerRadius = new CornerRadius(4), Background = Ui.Res<Brush>("RaisedBrush") };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
-            text.Children.Add(new TextBlock { Text = title.Entry.Title, Style = Ui.Res<Style>("ShowTitleStyle") });
-            if (title.UntilAirs)
-                text.Children.Add(new TextBlock { Text = T.SettingsHiddenUntilAirs, Style = Ui.Res<Style>("HazeCaptionStyle") });
-            // When it was hidden, as the engine words it ("Hidden 3d ago"); nothing when the time was not kept.
-            if (title.HiddenAt > 0)
-                text.Children.Add(new TextBlock
-                {
-                    Text = T.SettingsHiddenOn(Wording.AgoCompact(Math.Max(0, DateTimeOffset.UtcNow.ToUnixTimeSeconds() - title.HiddenAt))),
-                    Style = Ui.Res<Style>("HazeCaptionStyle"),
-                });
-            row.Children.Add(text);
-            var restore = new Button { Content = T.SettingsRestore, MinHeight = 32, VerticalAlignment = VerticalAlignment.Center };
-            AutomationProperties.SetName(restore, $"{T.SettingsRestore}, {title.Entry.Title}");
-            var id = title.Entry.Id;
-            restore.Click += (_, _) =>
-            {
-                ctx.Known.RestoredHere.Add(id);
-                ctx.Send(new Command.RestoreUpNext(id));
-                Show();
-            };
-            Grid.SetColumn(restore, 1);
-            row.Children.Add(restore);
-            Cards.Children.Add(row);
+            if (!hiddenRows.TryGetValue(title.Entry.Id, out var row))
+                hiddenRows[title.Entry.Id] = row = HiddenRow(title);
+            desired.Add(row);
         }
-        State.Done();
+        foreach (var gone in hiddenRows.Keys.Where(id => !hidden.Any(h => h.Entry.Id == id)).ToList())
+            hiddenRows.Remove(gone);
+        Drawn.Arrange(group.Children, desired, Ui.HoldingFocus(group, group.Children));
+        var none = hidden.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (hiddenNone.Visibility != none)
+            hiddenNone.Visibility = none;
+    }
+
+    FrameworkElement HiddenRow(HiddenTitle title)
+    {
+        var row = new Grid { ColumnSpacing = 12, MinHeight = 64, Padding = new Thickness(12, 8, 12, 8), CornerRadius = new CornerRadius(4), Background = Ui.Res<Brush>("RaisedBrush") };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
+        text.Children.Add(new TextBlock { Text = title.Entry.Title, Style = Ui.Res<Style>("ShowTitleStyle") });
+        if (title.UntilAirs)
+            text.Children.Add(new TextBlock { Text = T.SettingsHiddenUntilAirs, Style = Ui.Res<Style>("HazeCaptionStyle") });
+        // When it was hidden, as the engine words it ("Hidden 3d ago"); nothing when the time was not kept.
+        if (title.HiddenAt > 0)
+            text.Children.Add(new TextBlock
+            {
+                Text = T.SettingsHiddenOn(Wording.AgoCompact(Math.Max(0, DateTimeOffset.UtcNow.ToUnixTimeSeconds() - title.HiddenAt))),
+                Style = Ui.Res<Style>("HazeCaptionStyle"),
+            });
+        row.Children.Add(text);
+        var restore = new Button { Content = T.SettingsRestore, MinHeight = 32, VerticalAlignment = VerticalAlignment.Center };
+        AutomationProperties.SetName(restore, $"{T.SettingsRestore}, {title.Entry.Title}");
+        var id = title.Entry.Id;
+        restore.Click += (_, _) =>
+        {
+            ctx.Known.RestoredHere.Add(id);
+            ctx.Send(new Command.RestoreUpNext(id));
+            // Focus to the next row's Restore, or the group, before this row fades away.
+            var at = hiddenGroup?.Children.IndexOf(row) ?? -1;
+            if (hiddenGroup is { } group && at >= 0)
+            {
+                var next = group.Children.Skip(at + 1).Concat(group.Children.Take(at).Reverse()).OfType<Grid>().FirstOrDefault();
+                (next?.Children.OfType<Button>().FirstOrDefault())?.Focus(FocusState.Keyboard);
+            }
+            Motion.Hide(row);
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(Motion.FadeOutTime + TimeSpan.FromMilliseconds(50));
+                FillHidden();
+            });
+        };
+        Grid.SetColumn(restore, 1);
+        row.Children.Add(restore);
+        return row;
     }
 
     StackPanel? tvGroup;
@@ -596,13 +755,22 @@ public sealed partial class SettingsPage : Page
                 parts.Add(T.LanguageRestartNote);
             return parts.Count == 0 ? null : string.Join(" ", parts);
         }
-        var card = CardFrame(T.SettingsLanguageApp, Description(), box, "\uF2B7");
+        // Restart beside the picker once another language is chosen, as the Mac has it.
+        var restart = new Button { Content = T.SettingsLanguageRestart };
+        restart.Click += (_, _) => Relaunch.Now("a new app language");
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        row.Children.Add(restart);
+        row.Children.Add(box);
+        void ShowRestart() => restart.Visibility = StringResources.Chosen != StringResources.AtStart ? Visibility.Visible : Visibility.Collapsed;
+        ShowRestart();
+        var card = CardFrame(T.SettingsLanguageApp, Description(), row, "\uF2B7");
         box.SelectionChanged += (_, _) =>
         {
             if (quiet || box.SelectedIndex < 0)
                 return;
             StringResources.Choose(box.SelectedIndex == 0 ? null : languages[box.SelectedIndex - 1].Tag);
             card.Description = Description();
+            ShowRestart();
         };
         return card;
     }
@@ -657,14 +825,10 @@ public sealed partial class SettingsPage : Page
     {
         if (ctx.Known.Setting(K.Torrents) is not { } row || ctx.Known.Settings is not { } settings)
             return;
-        var on = SettingsCatalog.IsOn(row);
         var view = settings.Torrent;
         Cards.Children.Add(Heading(T.TorrentsTitle));
-        if (Card(row) is SettingsCard toggle)
-        {
-            toggle.Description = on ? TorrentWords.OnNote(view) : TorrentWords.OffNote;
-            Cards.Children.Add(toggle);
-        }
+        // Its line says where traffic goes (Describe), kept up to date with the switch.
+        Cards.Children.Add(Card(row));
 
         // Route torrent traffic through a proxy: always there. On opens the form, and goes back
         // off unless a proxy passes its check and is saved; off removes the proxy at once.
@@ -890,9 +1054,216 @@ public sealed partial class SettingsPage : Page
         _ => null,
     };
 
+    /// <summary>
+    /// A row's card. The control is made once; the engine's later values reach it in place, under
+    /// <c>quiet</c> so they are not sent back, and a box being typed in keeps what is in it.
+    /// </summary>
     FrameworkElement Card(SettingRow row)
     {
-        var title = Title(row.Key);
+        var key = row.Key;
+        var title = Title(key);
+        FrameworkElement control;
+        Action<SettingRow> take;
+        switch (SettingsCatalog.ControlFor(row))
+        {
+            case SettingControl.Switch:
+            {
+                var toggle = new ToggleSwitch { IsOn = SettingsCatalog.IsOn(row), OnContent = "", OffContent = "", MinWidth = 0 };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
+                toggle.Toggled += (_, _) =>
+                {
+                    if (quiet)
+                        return;
+                    ctx.Send(new Command.SetSetting(key, new SettingValue.Bool(toggle.IsOn)));
+                };
+                take = now =>
+                {
+                    if (toggle.IsOn != SettingsCatalog.IsOn(now))
+                        toggle.IsOn = SettingsCatalog.IsOn(now);
+                };
+                control = toggle;
+                break;
+            }
+            case SettingControl.Choice:
+            {
+                var options = SettingsCatalog.Options(key);
+                var box = new ComboBox { MinWidth = 200, ItemsSource = options.Select(o => o.Shown).ToList() };
+                int At(SettingRow r) => SettingsCatalog.Current(r) is { } current ? options.ToList().IndexOf(current) : -1;
+                var at = At(row);
+                if (at < 0)
+                    box.PlaceholderText = SettingsCatalog.Shown(key, row.Value);
+                else
+                    box.SelectedIndex = at;
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                box.SelectionChanged += (_, _) =>
+                {
+                    if (!quiet && box.SelectedIndex >= 0 && box.SelectedIndex != at)
+                        ctx.Send(new Command.SetSetting(key, options[box.SelectedIndex].Value));
+                };
+                take = now =>
+                {
+                    // An open list is the person's: the value waits until it closes.
+                    if (box.IsDropDownOpen)
+                        return;
+                    at = At(now);
+                    if (at < 0)
+                    {
+                        box.PlaceholderText = SettingsCatalog.Shown(key, now.Value);
+                        if (box.SelectedIndex != -1)
+                            box.SelectedIndex = -1;
+                    }
+                    else if (box.SelectedIndex != at)
+                        box.SelectedIndex = at;
+                };
+                control = box;
+                break;
+            }
+            case SettingControl.Text when key == K.DownloadDir:
+                control = FolderControl(row, out take);
+                break;
+            case SettingControl.Text:
+            {
+                // mpv's options are one to a line: a box that takes several, where Enter starts the
+                // next line and leaving the box saves them. The box breaks its lines at \r, where
+                // the engine's text breaks at \n. It takes several lines before its text is set, or
+                // it keeps only the first.
+                var lines = key == K.MpvOptions;
+                var text = SettingsCatalog.TypedText(row) ?? "";
+                string Shown(string engine) => lines ? engine.Replace('\n', '\r') : engine;
+                var box = new TextBox { MinWidth = lines ? 320 : 220, PlaceholderText = T.SettingsNotSet };
+                if (lines)
+                {
+                    box.AcceptsReturn = true;
+                    box.TextWrapping = TextWrapping.Wrap;
+                    box.MinHeight = 96;
+                }
+                box.Text = Shown(text);
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                string Typed() => box.Text.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+                void Commit()
+                {
+                    if (!quiet && Typed() != text.Trim())
+                    {
+                        // The options go as a list, one to a line, as the config file keeps them.
+                        SettingValue value = lines
+                            ? new SettingValue.Strings([.. Typed().Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0)])
+                            : new SettingValue.Str(Typed());
+                        ctx.Send(new Command.SetSetting(key, value));
+                    }
+                }
+                box.LostFocus += (_, _) => Commit();
+                box.KeyDown += (_, e) =>
+                {
+                    if (e.Key == global::Windows.System.VirtualKey.Enter && !lines)
+                        Commit();
+                };
+                take = now =>
+                {
+                    text = SettingsCatalog.TypedText(now) ?? "";
+                    // What is being typed is never replaced.
+                    if (box.FocusState == FocusState.Unfocused && Typed() != text.Trim())
+                        box.Text = Shown(text);
+                };
+                control = box;
+                break;
+            }
+            default:
+            {
+                var shown = new TextBlock { Text = SettingsCatalog.Shown(key, row.Value), Style = Res<Style>("HazeBodyStyle") };
+                take = now => shown.Text = SettingsCatalog.Shown(key, now.Value);
+                control = shown;
+                break;
+            }
+        }
+        var card = CardFrame(title, null, control);
+        string? described = null;
+        void Apply(SettingRow now)
+        {
+            take(now);
+            var description = Describe(now);
+            // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
+            var why = key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
+                ? FindSkipsPause(ctx.Known.SkipFindPaused) : null;
+            var said = $"{description}\u0001{why}";
+            if (said != described)
+            {
+                described = said;
+                if (why is not null)
+                    card.Description = PausedLine(description ?? "", why);
+                else if (description is not null)
+                    card.Description = description;
+                else
+                    card.ClearValue(SettingsCard.DescriptionProperty);
+            }
+            // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
+            card.IsEnabled = SettingsCatalog.Needs(key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
+        }
+        Apply(row);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.Setting(key) is { } now)
+                Apply(now);
+        });
+        return card;
+    }
+
+    /// <summary>
+    /// The download folder, as the Mac's folder menu has it: the path, Browse… for the system's
+    /// folder picker, and Open folder in File Explorer. The path changes in place.
+    /// </summary>
+    FrameworkElement FolderControl(SettingRow row, out Action<SettingRow> take)
+    {
+        static string Path(SettingRow r) => SettingsCatalog.TypedText(r) is { Length: > 0 } typed ? typed : SettingsCatalog.Shown(r.Key, r.Value);
+        var path = new TextBlock
+        {
+            Text = Path(row),
+            Style = Res<Style>("HazeBodyStyle"),
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxWidth = 260,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        ToolTipService.SetToolTip(path, path.Text);
+        var browse = new Button { Content = T.SettingsFolderBrowse };
+        AutomationProperties.SetName(browse, $"{T.SettingsFolderBrowse} {T.DownloadsFolder}");
+        browse.Click += async (_, _) =>
+        {
+            if (await ctx.Window.PickFolder() is { Length: > 0 } picked && picked != path.Text)
+                ctx.Send(new Command.SetSetting(K.DownloadDir, new SettingValue.Str(picked)));
+        };
+        // Only a folder that is there opens; the engine's own place has words, not a path.
+        var open = new Button { Content = T.DownloadsOpenFolder, IsEnabled = Directory.Exists(path.Text) };
+        open.Click += async (_, _) =>
+        {
+            try
+            {
+                if (Directory.Exists(path.Text))
+                    await global::Windows.System.Launcher.LaunchFolderPathAsync(path.Text);
+            }
+            catch (Exception)
+            {
+                // A folder that cannot be shown: nothing to open.
+            }
+        };
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        line.Children.Add(path);
+        line.Children.Add(browse);
+        line.Children.Add(open);
+        take = now =>
+        {
+            var shown = Path(now);
+            if (path.Text != shown)
+            {
+                path.Text = shown;
+                ToolTipService.SetToolTip(path, shown);
+                open.IsEnabled = Directory.Exists(shown);
+            }
+        };
+        return line;
+    }
+
+    /// <summary>A row's line under its title: the catalogue's for the rows that have one, or how many shows set it their own way.</summary>
+    string? Describe(SettingRow row)
+    {
         var overridden = ctx.Known.Settings?.Overridden?.FirstOrDefault(o => o.Key == row.Key);
         string? description = overridden is { Shows: > 0 } o ? T.SettingsOverridden((long)o.Shows) : null;
         if (row.Key == K.Trailers)
@@ -911,114 +1282,171 @@ public sealed partial class SettingsPage : Page
             description = T.SettingsNoteCastTvsPc;
         if (row.Key == K.TorrentsWhileCasting)
             description = T.SettingsNoteTorrentsWhileCastingPc;
-        FrameworkElement control;
-        switch (SettingsCatalog.ControlFor(row))
-        {
-            case SettingControl.Switch:
-            {
-                var toggle = new ToggleSwitch { IsOn = SettingsCatalog.IsOn(row), OnContent = "", OffContent = "", MinWidth = 0 };
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
-                toggle.Toggled += (_, _) =>
-                {
-                    if (quiet)
-                        return;
-                    ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Bool(toggle.IsOn)));
-                };
-                control = toggle;
-                break;
-            }
-            case SettingControl.Choice:
-            {
-                var options = SettingsCatalog.Options(row.Key);
-                var box = new ComboBox { MinWidth = 200, ItemsSource = options.Select(o => o.Shown).ToList() };
-                var at = SettingsCatalog.Current(row) is { } current ? options.ToList().IndexOf(current) : -1;
-                if (at < 0)
-                    box.PlaceholderText = SettingsCatalog.Shown(row.Key, row.Value);
-                else
-                    box.SelectedIndex = at;
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
-                box.SelectionChanged += (_, _) =>
-                {
-                    if (!quiet && box.SelectedIndex >= 0 && box.SelectedIndex != at)
-                        ctx.Send(new Command.SetSetting(row.Key, options[box.SelectedIndex].Value));
-                };
-                control = box;
-                break;
-            }
-            case SettingControl.Text:
-            {
-                var text = SettingsCatalog.TypedText(row) ?? "";
-                var box = new TextBox { Text = text, MinWidth = 220, PlaceholderText = T.SettingsNotSet };
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
-                void Commit()
-                {
-                    if (!quiet && box.Text.Trim() != text)
-                        ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Str(box.Text.Trim())));
-                }
-                box.LostFocus += (_, _) => Commit();
-                box.KeyDown += (_, e) =>
-                {
-                    if (e.Key == global::Windows.System.VirtualKey.Enter)
-                        Commit();
-                };
-                control = box;
-                break;
-            }
-            default:
-                control = new TextBlock { Text = SettingsCatalog.Shown(row.Key, row.Value), Style = Res<Style>("HazeBodyStyle") };
-                break;
-        }
-        var card = CardFrame(title, description, control);
-        // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
-        if (row.Key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
-            && FindSkipsPause(ctx.Known.SkipFindPaused) is { } why)
-            card.Description = PausedLine(description ?? "", why);
-        // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
-        card.IsEnabled = SettingsCatalog.Needs(row.Key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
-        return card;
+        // Torrents: where traffic goes while they are on.
+        if (row.Key == K.Torrents && ctx.Known.Settings is { } settings)
+            description = SettingsCatalog.IsOn(row) ? TorrentWords.OnNote(settings.Torrent) : TorrentWords.OffNote;
+        return description ?? Detail(row.Key);
     }
+
+    /// <summary>The line under a row, where the Mac has one, unless the row says something of its own.</summary>
+    static string? Detail(K key) => key switch
+    {
+        K.AdultTitles => T.SettingsAdultDetail(KaeriFfiMethods.TrackerName("anilist")),
+        K.Translation => T.SettingsAudioDetail,
+        K.CommitThreshold => T.SettingsCountsWatchedDetail,
+        K.SkipButton => T.SettingsSkipButtonDetail,
+        K.SpoilerProtection => T.SettingsSpoilerDetail,
+        K.DownloadQuality => T.SettingsQualityDetailWindows,
+        K.MergeSubtitles => T.SettingsMergeSubtitlesDetailWindows,
+        K.KeepNextEpisodes => T.SettingsKeepNextDetail,
+        K.KeepSeeding => T.SettingsKeepSeedingDetailWindows,
+        K.EpisodeNotifications => T.SettingsNewEpisodesDetail,
+        K.EpisodeDiscussions => T.SettingsDiscussionsNoteWindows,
+        K.CommentImages => T.SettingsCommentImagesNoteWindows,
+        _ => null,
+    };
 
     void ShowAccounts()
     {
         Cards.Children.Add(Heading(T.SettingsTrackers));
+        // Each card keeps itself current: sync, an expired sign-in, and one under way.
         foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
         {
-            var name = KaeriFfiMethods.TrackerName(tracker);
-            var state = ctx.Known.Sync.GetValueOrDefault(tracker);
-            Button action;
-            string description;
-            if (state is { Connected: true })
+            Cards.Children.Add(AccountCard.For(ctx, tracker));
+            // What the last pull found different from AniList, under its card, with Review.
+            if (tracker == "anilist")
             {
-                var waiting = (long)state.Outbox;
-                description = (state.User, waiting) switch
+                var review = new Button { Content = T.SettingsDifferencesReview };
+                review.Click += async (_, _) =>
                 {
-                    ({ } user, > 0) => T.AccountsStateSignedInWaiting(name, user, waiting),
-                    ({ } user, _) => T.AccountsStateSignedIn(name, user),
-                    (null, > 0) => T.SettingsSignedInWaiting(waiting),
-                    _ => T.SettingsSignedIn,
+                    if (XamlRoot is { } root)
+                        await Sync.ConflictsDialog.Show(ctx, root);
+                    ShowConflicts();
                 };
-                action = new Button { Content = T.AccountsSignOut };
-                action.Click += (_, _) => ctx.Send(new Command.Disconnect(tracker));
+                conflictsCard = CardFrame("", null, review, "");
+                Cards.Children.Add(conflictsCard);
+                ShowConflicts();
             }
-            else
-            {
-                description = tracker is "simkl" or "trakt" ? T.SettingsSignedOutCode : T.AccountsStateSignedOut;
-                action = new Button { Content = T.AccountsSignIn };
-                // Kitsu takes a user name and password here; the others sign in in the browser or with a code.
-                action.Click += (_, _) =>
-                {
-                    if (tracker == "kitsu")
-                        KitsuDialog.Show(ctx, XamlRoot);
-                    else
-                        ctx.Send(new Command.Connect(tracker));
-                };
-            }
-            Cards.Children.Add(CardFrame(name, description, action));
         }
         var sync = new Button { Content = T.AccountsSyncNow };
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));
         Cards.Children.Add(CardFrame(T.AccountsSyncAll, T.SettingsSyncDetail, sync));
+    }
+
+    /// <summary>A setting found by Search settings: its row's name and the pane it is on.</summary>
+    sealed record Hit(string Name, Pane Pane)
+    {
+        public override string ToString() => $"{Name} · {Pane.Title}";
+    }
+
+    /// <summary>Every row Search settings finds, by the name it shows: the engine's rows and the app's own.</summary>
+    IEnumerable<Hit> Index()
+    {
+        foreach (var p in PaneList)
+        {
+            yield return new Hit(p.Title, p);
+            foreach (var (group, keys) in p.Groups)
+            {
+                yield return new Hit(GroupHeading(group), p);
+                foreach (var key in keys.Where(k => ctx.Known.Setting(k) is not null))
+                    yield return new Hit(Title(key), p);
+            }
+            string[] own = p.Name switch
+            {
+                "general" => [T.SettingsLanguageApp, T.SettingsHiddenTitles],
+                "playback" => [T.SettingsClearSkips, T.SettingsHideChat],
+                "downloads" => [T.DownloadsBackgroundTitle],
+                "sources" => [T.TorrentsProxyRoute],
+                "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll],
+                "devices" => [T.DevicesName, T.CloudGroup, T.TvPlayOn],
+                "integrations" => [T.SettingsDiscord],
+                "about" => [T.AboutReportBug, T.SettingsGroupCrashes, T.SettingsCrashSave, T.UpdatesTitle],
+                _ => [],
+            };
+            foreach (var name in own)
+                yield return new Hit(name, p);
+        }
+    }
+
+    /// <summary>Ctrl+F on Settings: the settings' own search.</summary>
+    internal void FocusFind() => Find.Focus(FocusState.Keyboard);
+
+    void OnFindChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+            return;
+        var text = sender.Text.Trim();
+        if (text.Length == 0)
+        {
+            sender.ItemsSource = null;
+            return;
+        }
+        var hits = Index().Where(h => h.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase))
+            .DistinctBy(h => (h.Name, h.Pane.Name)).Take(8).ToList();
+        sender.ItemsSource = hits.Count > 0 ? hits : new List<string> { T.SearchNothingFound(text) };
+    }
+
+    void OnFindSubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var text = args.QueryText.Trim();
+        var hit = args.ChosenSuggestion as Hit
+            ?? (text.Length == 0 ? null : Index().FirstOrDefault(h => h.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)));
+        if (hit is null)
+            return;
+        sender.Text = "";
+        sender.ItemsSource = null;
+        Go(hit);
+    }
+
+    /// <summary>Opens the hit's pane and brings its row into view with the focus on it.</summary>
+    void Go(Hit hit)
+    {
+        ShowPane(hit.Pane.Name);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (Named(Cards, hit.Name) is not { } found)
+                return;
+            found.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.3, AnimationDesired = Motion.Enabled });
+            if ((found as Control)?.IsTabStop == true)
+                ((Control)found).Focus(FocusState.Keyboard);
+            else
+                (FocusManager.FindFirstFocusableElement(found) as Control)?.Focus(FocusState.Keyboard);
+        });
+    }
+
+    /// <summary>The card or heading that shows <paramref name="name"/>, searched through the pane.</summary>
+    static FrameworkElement? Named(DependencyObject at, string name)
+    {
+        if (at is SettingsCard { Header: string header } card && header == name)
+            return card;
+        if (at is TextBlock { Text: var text } block && text == name)
+            return block;
+        if (at is Panel panel)
+        {
+            foreach (var child in panel.Children)
+                if (Named(child, name) is { } found)
+                    return found;
+        }
+        else if (at is Border { Child: { } inner })
+            return Named(inner, name);
+        return null;
+    }
+
+    SettingsCard? conflictsCard;
+
+    /// <summary>The differences card, in place: its count, or hidden while there are none.</summary>
+    void ShowConflicts()
+    {
+        if (conflictsCard is not { } card)
+            return;
+        var count = ctx.Known.Conflicts.Select(c => c.AnilistId).Distinct().Count();
+        var shown = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (card.Visibility != shown)
+            card.Visibility = shown;
+        var header = count > 0 ? T.SettingsDifferences(count, KaeriFfiMethods.TrackerName("anilist")) : "";
+        if (card.Header as string != header)
+            card.Header = header;
     }
 
     void ShowAbout()
@@ -1058,65 +1486,91 @@ public sealed partial class SettingsPage : Page
     /// <summary>
     /// Settings, About, Crash reports. Saving is off until it is switched on; while it is, Ask
     /// after a crash and the saved reports show. Windows has no record of its own to offer from
-    /// before, so there is no "kept by the system" list.
+    /// before, so there is no "kept by the system" list. The switch stays; what is under it is
+    /// drawn again alone when saving or the saved reports change, so About itself never redraws.
     /// </summary>
     void ShowCrashes()
     {
         Cards.Children.Add(Heading(T.SettingsGroupCrashes));
-        var saving = SettingsCatalog.IsOn(ctx.Known.Setting(K.SaveCrashReports));
-        SettingsCard Switch(K key, string title, string detail, bool on)
+        SettingsCard Switch(K key, string title, string detail, out ToggleSwitch toggle)
         {
-            var toggle = new ToggleSwitch { IsOn = on, OnContent = "", OffContent = "", MinWidth = 0 };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
-            toggle.Toggled += (_, _) =>
+            var made = toggle = new ToggleSwitch { IsOn = SettingsCatalog.IsOn(ctx.Known.Setting(key)), OnContent = "", OffContent = "", MinWidth = 0 };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(made, title);
+            made.Toggled += (_, _) =>
             {
                 if (!quiet)
-                    ctx.Send(new Command.SetSetting(key, new SettingValue.Bool(toggle.IsOn)));
+                    ctx.Send(new Command.SetSetting(key, new SettingValue.Bool(made.IsOn)));
             };
-            return CardFrame(title, detail, toggle);
+            return CardFrame(title, detail, made);
         }
-        Cards.Children.Add(Switch(K.SaveCrashReports, T.SettingsCrashSave, T.SettingsCrashSaveDetail, saving));
-        if (saving)
-            Cards.Children.Add(Switch(K.AskAfterCrash, T.SettingsCrashAsk, T.SettingsCrashAskDetail, SettingsCatalog.IsOn(ctx.Known.Setting(K.AskAfterCrash))));
-        var saved = KaeriFfiMethods.CrashList();
-        if (saving || saved.Length > 0)
-        {
-            Cards.Children.Add(new TextBlock
-            {
-                Text = $"{T.SettingsCrashSaved} · {saved.Length}",
-                Style = Res<Style>("BodyStrongTextBlockStyle"),
-                Margin = new Thickness(0, 8, 0, 0),
-            });
-            if (saved.Length == 0)
-                Cards.Children.Add(Ui.Haze(T.SettingsCrashNone));
-            foreach (var crash in saved)
-            {
-                var when = DateTimeOffset.FromUnixTimeMilliseconds(crash.AtMs).ToLocalTime().ToString("d MMMM, HH:mm");
-                var view = new Button { Content = T.SettingsCrashView };
-                view.Click += (_, _) => ViewCrash(crash);
-                var delete = new Button { Content = T.SettingsCrashDelete };
-                delete.Click += (_, _) =>
-                {
-                    KaeriFfiMethods.CrashDelete(crash.Id);
-                    Show();
-                };
-                var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-                buttons.Children.Add(view);
-                buttons.Children.Add(delete);
-                Cards.Children.Add(CardFrame(T.ReportCrashItem(when, ReportDialog.Place(crash.Place)), null, buttons));
-            }
-            if (saved.Length > 0)
-            {
-                var all = new Button { Content = T.SettingsCrashDeleteAll };
-                all.Click += (_, _) =>
-                {
-                    KaeriFfiMethods.CrashDeleteAll();
-                    Show();
-                };
-                Cards.Children.Add(all);
-            }
-        }
+        Cards.Children.Add(Switch(K.SaveCrashReports, T.SettingsCrashSave, T.SettingsCrashSaveDetail, out var save));
+        var group = new StackPanel { Spacing = 4 };
+        Cards.Children.Add(group);
         Cards.Children.Add(Ui.Haze(T.SettingsCrashFootnote));
+        ToggleSwitch? ask = null;
+        string? drawn = null;
+        void Fill()
+        {
+            var saving = SettingsCatalog.IsOn(ctx.Known.Setting(K.SaveCrashReports));
+            var saved = KaeriFfiMethods.CrashList();
+            var key = Drawn.Fingerprint((saving, saved.Select(c => c.Id).ToArray()));
+            if (key == drawn)
+                return;
+            drawn = key;
+            var focus = Ui.MarkFocus(group);
+            group.Children.Clear();
+            ask = null;
+            if (saving)
+                group.Children.Add(Switch(K.AskAfterCrash, T.SettingsCrashAsk, T.SettingsCrashAskDetail, out ask));
+            if (saving || saved.Length > 0)
+            {
+                group.Children.Add(new TextBlock
+                {
+                    Text = $"{T.SettingsCrashSaved} · {saved.Length}",
+                    Style = Res<Style>("BodyStrongTextBlockStyle"),
+                    Margin = new Thickness(0, 8, 0, 0),
+                });
+                if (saved.Length == 0)
+                    group.Children.Add(Ui.Haze(T.SettingsCrashNone));
+                foreach (var crash in saved)
+                {
+                    var when = DateTimeOffset.FromUnixTimeMilliseconds(crash.AtMs).ToLocalTime().ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+                    var view = new Button { Content = T.SettingsCrashView };
+                    view.Click += (_, _) => ViewCrash(crash);
+                    var delete = new Button { Content = T.SettingsCrashDelete };
+                    delete.Click += (_, _) =>
+                    {
+                        KaeriFfiMethods.CrashDelete(crash.Id);
+                        Fill();
+                    };
+                    var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+                    buttons.Children.Add(view);
+                    buttons.Children.Add(delete);
+                    group.Children.Add(CardFrame(T.ReportCrashItem(when, ReportDialog.Place(crash.Place)), null, buttons));
+                }
+                if (saved.Length > 0)
+                {
+                    var all = new Button { Content = T.SettingsCrashDeleteAll };
+                    all.Click += (_, _) =>
+                    {
+                        KaeriFfiMethods.CrashDeleteAll();
+                        Fill();
+                    };
+                    group.Children.Add(all);
+                }
+            }
+            Ui.RestoreFocus(group, focus);
+        }
+        Fill();
+        refresh.Add(() =>
+        {
+            var on = SettingsCatalog.IsOn(ctx.Known.Setting(K.SaveCrashReports));
+            if (save.IsOn != on)
+                save.IsOn = on;
+            Fill();
+            if (ask is { } asking && asking.IsOn != SettingsCatalog.IsOn(ctx.Known.Setting(K.AskAfterCrash)))
+                asking.IsOn = SettingsCatalog.IsOn(ctx.Known.Setting(K.AskAfterCrash));
+        });
     }
 
     async void ViewCrash(CrashSummary crash)

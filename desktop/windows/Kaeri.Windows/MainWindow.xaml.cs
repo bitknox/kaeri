@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
     readonly Taskbar? taskbar;
     readonly MediaControls? media;
     Tray? tray;
+    readonly ShellStatus status;
     bool selecting, played, closing, askedClose, firstRun;
 
     public MainWindow(Options options)
@@ -114,6 +115,9 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+        // Where sync stands and what is running, at the title bar's end.
+        status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
+        AppTitleBar.RightHeader = status;
 #if KAERI_TESTING
         // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
         session.Known.ForcedPause = options.Show switch
@@ -131,9 +135,19 @@ public sealed partial class MainWindow : Window
             Ctx.Guarded("the player", () => Player.Heard(batch));
             Ctx.Guarded("the media controls", () => media?.Heard(batch));
             Ctx.Guarded("the window", () => Heard(batch));
+            Ctx.Guarded("the status", () => status.Heard(batch));
             ctx.Heard(batch);
         };
-        session.Stopped += () => { if (!closing) Close(); };
+        session.Stopped += () =>
+        {
+            if (closing)
+                return;
+            // The engine stopped on its own: a window that says so, with Open again, rather than
+            // the app vanishing.
+            stoppedWindow = StartFailedWindow.Stopped();
+            stoppedWindow.Activate();
+            CloseNow();
+        };
 
         player = StartPlayer(engine);
         Player.Attach(ctx, player);
@@ -148,6 +162,8 @@ public sealed partial class MainWindow : Window
                 AppWindow.TitleBar.PreferredHeightOption = shown ? TitleBarHeightOption.Tall : TitleBarHeightOption.Collapsed;
         };
         Player.MiniRequested += Mini;
+        // A dialog doesn't fit the 480 by 270 mini window: the window is its size again first.
+        Dialogs.Opening += Player.LeaveMini;
         session.OffThread = e =>
         {
 #if KAERI_TESTING
@@ -204,7 +220,8 @@ public sealed partial class MainWindow : Window
         device = new DeviceWatch(c => ctx.Send(c), ui);
         taskbar = Taskbar.For(WinRT.Interop.WindowNative.GetWindowHandle(this));
         // The media overlay, the media keys and the thumbnail's buttons, while an episode plays.
-        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, c => ctx.Send(new Command.Player(c)));
+        // Aimed at the playback on screen, and in a party Next and Previous are the room's pick.
+        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, Player.MediaCommand);
         StartNotifications(art);
         Keys();
 #if KAERI_TESTING
@@ -225,8 +242,13 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += OnClosing;
         AppWindow.Changed += (_, e) =>
         {
+            // Kept half a second after a drag or resize settles, not on every pixel of it.
             if (e.DidPositionChange || e.DidSizeChange || e.DidPresenterChange)
-                RememberPlace();
+            {
+                placeLater ??= PlaceTimer();
+                placeLater.Stop();
+                placeLater.Start();
+            }
         };
         Closed += (_, _) => Shutdown();
         // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
@@ -244,6 +266,7 @@ public sealed partial class MainWindow : Window
         var narrow = width < 760;
         SearchBox.MinWidth = narrow ? 140 : 320;
         AppTitleBar.Title = narrow ? "" : T.AppName;
+        status?.Fit(width < 1120);
     }
 
     /// <summary>
@@ -278,6 +301,26 @@ public sealed partial class MainWindow : Window
     bool placed;
 
     string PlacePath => Path.Combine(dirs.Config, "windows-window.json");
+
+    DispatcherQueueTimer? placeLater;
+
+    DispatcherQueueTimer PlaceTimer()
+    {
+        var timer = ui.CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(500);
+        timer.IsRepeating = false;
+        timer.Tick += (_, _) => RememberPlace();
+        return timer;
+    }
+
+    /// <summary>A frame waiting to be kept is kept now: the window is closing or going to the notification area.</summary>
+    void KeepPlaceNow()
+    {
+        if (placeLater is not { IsRunning: true } waiting)
+            return;
+        waiting.Stop();
+        RememberPlace();
+    }
 
     /// <summary>Keeps the window's frame for the next launch: the normal frame, and whether it was maximised.</summary>
     void RememberPlace()
@@ -400,7 +443,7 @@ public sealed partial class MainWindow : Window
                     ShowToast(InfoBarSeverity.Success, T.UpdatesUpdated(Updater.Current));
                 else
                     ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(restarted.Version), T.UpdatesOpenAbout,
-                        () => ContentFrame.Navigate(typeof(SettingsPage), "about", new SuppressNavigationTransitionInfo()));
+                        () => OpenSettings("about"));
             });
 #if KAERI_TESTING
         // --show=update: a newer release with this machine's installer, as the engine's check
@@ -443,6 +486,13 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(1800);
                 OpenLink("magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Hoshikuzu+no+Tabibito+-+03+%5B1080p%5D.mkv");
             });
+        // --show=opened-unreadable: a magnet link the engine can't read, to see the dialog say so and go back.
+        if (options.Show == "opened-unreadable")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1800);
+                OpenLink("magnet:?xt=urn:btih:not-a-hash");
+            });
         if (options.Show == "open-link")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
@@ -462,6 +512,79 @@ public sealed partial class MainWindow : Window
                 AskBeforeClosing();
             });
 #if KAERI_TESTING
+        // --show=accounts-states: Settings › Accounts with an expired AniList sign-in, a
+        // MyAnimeList pull that failed and Simkl synced, as the engine would say them.
+        if (options.Show == "accounts-states")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                ctx.Inject(new Event.Sync(new SyncState("anilist", true, 0, 0, User: "mika", NeedsReauth: true)));
+                ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
+                ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
+            });
+        // --show=jobs[-open]: two jobs past 600 ms, one held up on a wait, as the engine would say
+        // them; -open opens the status flyout. --show=messages: a notice and an alert, then Messages.
+        if (options.Show is "jobs" or "jobs-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2000);
+                ctx.Inject(new Event.JobStarted(9_100_001, "checking sources")); // i18n-skip
+                await Task.Delay(400);
+                ctx.Inject(new Event.JobStarted(9_100_002, "syncing with AniList")); // i18n-skip
+                await Task.Delay(1200);
+                ctx.Inject(new Event.JobNote(9_100_002, new Msg.StatusWaitingForRedirect("AniList"), TimeSpan.FromSeconds(12)));
+                if (options.Show == "jobs-open")
+                    status.Open();
+                await Task.Delay(6000);
+                ctx.Inject(new Event.JobDone(9_100_001));
+                await Task.Delay(3000);
+                ctx.Inject(new Event.JobDone(9_100_002));
+            });
+        // --show=conflicts[-open]: two titles that differ from AniList, as a pull would find them,
+        // under Accounts' AniList card; -open opens the list to settle them.
+        if (options.Show is "conflicts" or "conflicts-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                (uint Id, string Title)[] titles = [(910_001, "Stardust Wayfarer"), (910_002, "The Steel Gardener")]; // i18n-skip
+                ctx.Inject(new Event.Conflicts([.. titles.Select((t, i) => new ConflictRow(t.Id, t.Title, i == 0 ? "progress" : "score", i == 0 ? "7" : "8", i == 0 ? "5" : "6"))])); // i18n-skip
+                if (options.Show == "conflicts-open")
+                {
+                    await Task.Delay(1000);
+                    await Sync.ConflictsDialog.Show(ctx, Root.XamlRoot);
+                }
+            });
+        // --show=hidden: three hidden titles in Settings › General, for Restore to take away one by one.
+        if (options.Show == "hidden")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(3000);
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                ctx.Inject(new Event.HiddenTitles(
+                [
+                    new HiddenTitle(new Entry(920_001, "Lantern Harbor", Genres: [], AvailableOn: []), HiddenAt: now - 3 * 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_002, "Moss and Iron", Genres: [], AvailableOn: []), UntilAirs: true, HiddenAt: now - 86_400), // i18n-skip
+                    new HiddenTitle(new Entry(920_003, "The Quiet Orbit", Genres: [], AvailableOn: [])), // i18n-skip
+                ]));
+            });
+        if (options.Show == "messages")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                // Heard by the window as the engine's own notices are, so they show and are kept.
+                void Notice(NoticeKind kind, Msg msg)
+                {
+                    Event[] said = [new Event.Toast(new Notice(kind, "", Msg: msg))];
+                    Heard(said);
+                    ctx.Heard(said);
+                }
+                await Task.Delay(1500);
+                Notice(NoticeKind.Info, new Msg.StatusWaitingForRedirect("AniList")); // i18n-skip
+                Notice(NoticeKind.Alert, new Msg.NoticeSignInFailed("Kitsu", "invalid credentials")); // i18n-skip
+                await Task.Delay(1000);
+                ShowMessages();
+                await Task.Delay(2000);
+                Notice(NoticeKind.Info, new Msg.NoticeSignInNotWaiting("AniList")); // i18n-skip
+            });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
@@ -565,6 +688,8 @@ public sealed partial class MainWindow : Window
                     AddFolder();
                 else if (welcome.Then == "server")
                     ShowAddServer();
+                else if (welcome.Then == "pair")
+                    Sync.SyncDialogs.PairShow(Sync.Origin.FirstLaunch);
             });
     }
 
@@ -604,6 +729,8 @@ public sealed partial class MainWindow : Window
                     break;
                 case Event.Settings:
                     CrashGuard.Follow(SettingsCatalog.IsOn(ctx.Known.Setting(SettingKey.SaveCrashReports)));
+                    // Motion off in Settings reduces motion, as Windows' own Animation effects off does.
+                    Motion.Chosen = ctx.Known.Setting(SettingKey.Motion) is not { } motion || SettingsCatalog.IsOn(motion);
                     RememberWhere();
                     break;
                 case Event.TitlesChanged:
@@ -613,12 +740,14 @@ public sealed partial class MainWindow : Window
                     break;
                 // A cast's reason is on its card, and someone taking the TV has its own notice.
                 case Event.Toast t when TvWords.OnCastCard(t.V1.Msg):
+                    Keep(t.V1);
                     break;
                 case Event.LicensedReturn back:
                     ShowReturn(back.V1);
                     break;
                 // A start that failed says why on its own screen, not in a notice over it.
-                case Event.Toast { V1.Kind: NoticeKind.Alert } when Player.IsStarting:
+                case Event.Toast { V1.Kind: NoticeKind.Alert } quiet when Player.IsStarting:
+                    Keep(quiet.V1);
                     break;
                 case Event.Toast t when !Lines.SettingSaved(t.V1):
                     ShowToast(t.V1);
@@ -688,9 +817,9 @@ public sealed partial class MainWindow : Window
         var cloud = ctx.Known.SyncGroup is { Problem: SyncProblem.SignInNeeded needed } && !Sync.SyncDialogs.ByHand
             ? T.CloudErrSignedOut(SyncWords.ServiceName(needed.Service), SyncWords.Kind)
             : null;
-        AccountText.Text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
-        AccountDot.Visibility = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
-        AccountAlert.Visibility = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
+        var text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
+        var dot = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
+        var alert = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
         var tip = cloud is not null && !reauth ? cloud
             : anilist is null ? T.LibrarySignedOutAction
             : reauth ? T.AccountsStateExpired(Tracker)
@@ -699,17 +828,42 @@ public sealed partial class MainWindow : Window
         // With two or more profiles the item names the one in use and opens the flyout to switch.
         if (ProfileWords.Active(ctx.Known.Profiles) is { } active)
         {
-            AccountText.Text = active.Name;
+            text = active.Name;
             tip = T.ProfilesAvatarDesc(active.Name);
         }
-        AccountItem.SelectsOnInvoked = !ProfileWords.Picking(ctx.Known.Profiles);
-        ToolTipService.SetToolTip(AccountItem, tip);
-        AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
+        // Each sync event lands here: only what changed is set, so the pane's foot never redraws.
+        if (AccountText.Text != text)
+            AccountText.Text = text;
+        if (AccountDot.Visibility != dot)
+            AccountDot.Visibility = dot;
+        if (AccountAlert.Visibility != alert)
+            AccountAlert.Visibility = alert;
+        var picks = !ProfileWords.Picking(ctx.Known.Profiles);
+        if (AccountItem.SelectsOnInvoked != picks)
+            AccountItem.SelectsOnInvoked = picks;
+        if (ToolTipService.GetToolTip(AccountItem) as string != tip)
+            ToolTipService.SetToolTip(AccountItem, tip);
+        var named = T.AccountsPaneName(tip);
+        if (AutomationProperties.GetName(AccountItem) != named)
+            AutomationProperties.SetName(AccountItem, named);
     }
 
-    /// <summary>Settings open on one pane, such as Profiles from the account flyout.</summary>
-    internal void OpenSettings(string pane) =>
+    /// <summary>
+    /// Settings open on one pane, such as Profiles from the account flyout. With Settings already
+    /// open, the pane changes there: no second Settings page, and no Back step to the same page.
+    /// </summary>
+    internal void OpenSettings(string pane)
+    {
+        if (ContentFrame.Content is SettingsPage open)
+        {
+            open.ShowPane(pane);
+            selecting = true;
+            Nav.SelectedItem = pane == "accounts" ? AccountItem : Nav.SettingsItem;
+            selecting = false;
+            return;
+        }
         ContentFrame.Navigate(typeof(SettingsPage), pane, new SuppressNavigationTransitionInfo());
+    }
 
     void OnNavInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -734,6 +888,12 @@ public sealed partial class MainWindow : Window
 
     /// <summary>A plain notice of the app's own: Matching automatically again.</summary>
     public void Say(string text) => ShowToast(InfoBarSeverity.Informational, text);
+
+    /// <summary>A notice said elsewhere than the notice bar still goes to Messages.</summary>
+    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now);
+
+    /// <summary>Ctrl+Shift+L and the status flyout: every notice this run.</summary>
+    internal void ShowMessages() => Messages.Show(ctx, Root.XamlRoot);
 
     void ShowToast(Notice notice)
     {
@@ -761,9 +921,18 @@ public sealed partial class MainWindow : Window
     void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null)
     {
         var shown = ++toastShown;
+        var alert = severity == InfoBarSeverity.Warning;
+        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now);
+        // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
-        Toast.Severity = severity;
+        else
+        {
+            Toast.Opacity = 0;
+            Motion.FadeTo(Toast, 1, Motion.FadeInTime);
+        }
+        // An alert takes the vermilion mark, as on the Mac; Warning's icon is haze.
+        Toast.Severity = alert ? InfoBarSeverity.Error : severity;
         Toast.Message = text;
         if (button is not null && act is not null)
         {
@@ -778,9 +947,12 @@ public sealed partial class MainWindow : Window
         else
             Toast.ActionButton = null;
         Toast.IsOpen = true;
+        // An alert is read out at once, over what Narrator was saying; the others politely.
+        if (alert && (FrameworkElementAutomationPeer.FromElement(Toast) ?? FrameworkElementAutomationPeer.CreatePeerForElement(Toast)) is { } peer)
+            peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.ImportantMostRecent, text, "kaeri-alert"); // i18n-skip
         // A notice with a button stays until it is dismissed or acted on; the others stay twice as
         // long while a screen reader runs.
-        var stays = NoticeTime.Stays(text, severity == InfoBarSeverity.Warning, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
+        var stays = NoticeTime.Stays(text, alert, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
         if (stays is not { } time)
         {
             toastUntil = DateTimeOffset.MaxValue;
@@ -803,8 +975,16 @@ public sealed partial class MainWindow : Window
             if (DateTimeOffset.UtcNow >= toastUntil)
                 break;
         }
+        if (shown != toastShown)
+            return;
+        // Fades out, then closes, unless a newer notice came meanwhile.
+        Motion.FadeTo(Toast, 0, Motion.FadeOutTime);
+        await Task.Delay(Motion.FadeOutTime);
         if (shown == toastShown)
+        {
             Toast.IsOpen = false;
+            Toast.Opacity = 1;
+        }
     }
 
     void OnToastPointerEntered(object sender, PointerRoutedEventArgs e) => toastHeld = true;
@@ -835,7 +1015,7 @@ public sealed partial class MainWindow : Window
     {
         if (Player.Showing)
             Player.Close();
-        Navigate("settings", pane);
+        OpenSettings(pane);
     }
 
     /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+9 do.</summary>
@@ -910,10 +1090,14 @@ public sealed partial class MainWindow : Window
             if (joining == dialog)
                 joining = null;
         }
-        if (ctx.Known.Joined is { } store)
+        // The store just joined, or the one joined before: Plugin stores opens on it.
+        if ((dialog.Store ?? ctx.Known.Joined) is { } store)
         {
             ctx.Known.Joined = null;
-            ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
+            if (ContentFrame.Content is StoresPage stores)
+                stores.Select(store);
+            else
+                ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
         }
     }
 
@@ -926,7 +1110,7 @@ public sealed partial class MainWindow : Window
         else if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             if (tag == "account")
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
             else if (tag == "search")
             {
                 // Search in the sidebar, as on the Mac: the page with what the box holds, and the
@@ -1018,13 +1202,38 @@ public sealed partial class MainWindow : Window
             FocusPage();
     }
 
+    /// <summary>Where focus was on each page the frame keeps for Back, so a return lands there and the page does not scroll.</summary>
+    readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, WeakReference<Control>> focusKept = [];
+
+    void OnFrameNavigating(object sender, NavigatingCancelEventArgs e)
+    {
+        if (ContentFrame.Content is Page { NavigationCacheMode: not NavigationCacheMode.Disabled } kept && Content?.XamlRoot is { } root)
+        {
+            var focused = FocusManager.GetFocusedElement(root) as Control;
+            focusKept.AddOrUpdate(kept, new WeakReference<Control>(focused is not null && Within(focused, kept) ? focused : null!));
+        }
+    }
+
+    static bool Within(DependencyObject at, DependencyObject outer)
+    {
+        for (DependencyObject? up = at; up is not null; up = VisualTreeHelper.GetParent(up))
+        {
+            if (up == outer)
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// After a page change, focus goes to the page's first control and the screen reader hears
-    /// its title, instead of staying on the pane item. Typing in the search box is left alone.
+    /// its title, instead of staying on the pane item. Typing in the search box is left alone. A
+    /// page the frame kept gets focus back where it was, or keeps none, rather than its first
+    /// control: that one can be above where the page was scrolled to, and focusing it would scroll.
     /// </summary>
     void FocusPage()
     {
         var shown = ContentFrame.Content;
+        var kept = shown is not null && focusKept.TryGetValue(shown, out var weak) ? weak : null;
         DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
             if (Player.Showing || shown != ContentFrame.Content || shown is not UIElement page || Content?.XamlRoot is not { } root)
@@ -1039,7 +1248,10 @@ public sealed partial class MainWindow : Window
             }
             if (Heading(page) is { } heading && FrameworkElementAutomationPeer.FromElement(heading) is { } peer)
                 peer.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.MostRecent, heading.Text, "page");
-            (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
+            if (kept?.TryGetTarget(out var again) == true && again.IsLoaded && Within(again, page))
+                again.Focus(FocusState.Programmatic);
+            else if (kept is null)
+                (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
         });
     }
 
@@ -1108,7 +1320,11 @@ public sealed partial class MainWindow : Window
         if (Player.Showing)
             return;
         args.Handled = true;
-        SearchBox.Focus(FocusState.Keyboard);
+        // On Settings, Ctrl+F finds a setting, as the Mac's toolbar field does there.
+        if (ContentFrame.Content is SettingsPage settings)
+            settings.FocusFind();
+        else
+            SearchBox.Focus(FocusState.Keyboard);
     }
 
     // The player over the window.
@@ -1176,6 +1392,7 @@ public sealed partial class MainWindow : Window
 
     void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
+        KeepPlaceNow();
         if (closing)
             return;
         if (AskLeavingParty())
@@ -1258,7 +1475,8 @@ public sealed partial class MainWindow : Window
     /// <summary>
     /// Keep going: the window goes and the notification area icon comes, the first time with a
     /// notification saying where Kaeri went. The engine stays until nothing is left running,
-    /// or until the icon's Quit; the icon's Open brings the window back.
+    /// or until the icon's Quit; the icon's Open brings the window back. Downloads paused from
+    /// the icon keep it there too, to be resumed from the same menu.
     /// </summary>
     void KeepGoingHidden()
     {
@@ -1268,9 +1486,11 @@ public sealed partial class MainWindow : Window
         tray ??= new Tray(WinRT.Interop.WindowNative.GetWindowHandle(this), Path.Combine(AppContext.BaseDirectory, "Assets", "kaeri.ico"))
         {
             Open = () => ui.TryEnqueue(ShowAgain),
-            PauseAll = () => ui.TryEnqueue(ctx.PauseAllDownloads),
+            PauseAll = () => ui.TryEnqueue(() => trayPaused.UnionWith(ctx.PauseAllDownloads())),
+            ResumeAll = () => ui.TryEnqueue(ctx.ResumeAllDownloads),
             Quit = () => ui.TryEnqueue(CloseNow),
             AnyRunning = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Active or DownloadState.Queued),
+            AnyPaused = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused),
         };
         var told = Path.Combine(dirs.Config, "windows-told-tray");
         tray.Show(tell: !File.Exists(told));
@@ -1282,11 +1502,16 @@ public sealed partial class MainWindow : Window
         keepGoing.Tick += (_, _) =>
         {
             var (d, s) = ctx.Known.Running();
-            if (d + s == 0)
+            // Paused from the icon: still there to resume, so Kaeri stays for them.
+            trayPaused.IntersectWith(ctx.Known.Downloads.Where(r => r.State is DownloadState.Paused or DownloadState.Active or DownloadState.Queued).Select(r => r.Id));
+            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)))
                 CloseNow();
         };
         keepGoing.Start();
     }
+
+    /// <summary>The downloads the icon's Pause all paused, which keep Kaeri in the notification area.</summary>
+    readonly HashSet<long> trayPaused = [];
 
     // Windows notifications: new episodes from the engine's check, finished downloads, and the
     // engine's own notices while the window is not in front.
@@ -1310,6 +1535,9 @@ public sealed partial class MainWindow : Window
         Activated += (_, e) =>
         {
             inFront = e.WindowActivationState != WindowActivationState.Deactivated;
+            // Back in front: the keys go to the dialog that is up, not the page under it.
+            if (inFront)
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, Dialogs.Refocus);
             // The system's caption style has no change event: read it again on coming back.
             if (inFront)
                 Kaeri.Windows.Player.SubtitleStyling.Refresh();
@@ -1386,6 +1614,9 @@ public sealed partial class MainWindow : Window
         ShowOpenLink();
     }
 
+    /// <summary>The window that says the engine stopped, kept while it is up.</summary>
+    static StartFailedWindow? stoppedWindow;
+
     JoinStoreDialog? joining;
     string? fixtureInvite;
     WelcomeDialog? welcoming;
@@ -1460,13 +1691,13 @@ public sealed partial class MainWindow : Window
             case Link.Accounts:
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Auth auth:
-                ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback));
+                ctx.Known.SignInStarted(auth.Tracker, ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback)));
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Download download:
                 // A finished download plays, from its title's page; otherwise Downloads, where it is.
@@ -1489,6 +1720,12 @@ public sealed partial class MainWindow : Window
     bool CloseDialogs()
     {
         var closed = InfoCard.HideOpen();
+        // Closed even when it would hold itself open, as a sign-in's wait does.
+        if (Dialogs.Open)
+        {
+            Dialogs.HideOpen();
+            closed = true;
+        }
         foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(Root.XamlRoot))
             if (popup.Child is ContentDialog dialog)
             {
@@ -1506,6 +1743,7 @@ public sealed partial class MainWindow : Window
     void ShowAgain()
     {
         keepGoing?.Stop();
+        trayPaused.Clear();
         tray?.Hide();
         AppWindow.Show(true);
         Activate();
@@ -1564,9 +1802,25 @@ public sealed partial class MainWindow : Window
         taskbar?.Clear();
         // The engine first: on its way out it stops what plays and waits for the player to say
         // where it ended, so the player must still be there to hear the stop.
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         session.Dispose();
+        var engineMs = clock.ElapsedMilliseconds;
         player?.Shutdown();
         player?.Dispose();
+        // A slow close, with where the time went, beside the crash log: the engine's log has
+        // closed by now.
+        if (clock.ElapsedMilliseconds > 500)
+        {
+            try
+            {
+                var dir = Path.Combine(Path.GetTempPath(), "kaeri-windows");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "closing.txt"), $"{DateTime.Now:O} closing took {clock.ElapsedMilliseconds} ms: the engine {engineMs} ms, the player {clock.ElapsedMilliseconds - engineMs} ms" + Environment.NewLine);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     // The window's keys, after the brief's table. The player's own keys are on the player; these
@@ -1590,6 +1844,7 @@ public sealed partial class MainWindow : Window
         // Ctrl+/ is the slash key on US layouts only; F1 opens the list on every layout.
         Key((VirtualKey)0xBF, VirtualKeyModifiers.Control, ShowShortcuts);
         Key(VirtualKey.F1, VirtualKeyModifiers.None, ShowShortcuts, inPlayer: true);
+        Key(VirtualKey.L, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ShowMessages);
         // The mouse's back button, as Alt+Left.
         Root.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
@@ -1663,6 +1918,7 @@ public sealed partial class MainWindow : Window
         Line(T.ContinueHide, "Delete");
         Line(T.ShortcutsContextMenu, T.ShortcutsKeysMenu("Shift+F10"));
         Line(T.ShortcutsTitle, "Ctrl+/");
+        Line(T.MessagesTitle, "Ctrl+Shift+L");
         Section(T.SettingsGroupPlayer);
         Line(T.ShortcutsPlayPause, "Space, K");
         Line(T.ShortcutsSeek, "Left, Right");

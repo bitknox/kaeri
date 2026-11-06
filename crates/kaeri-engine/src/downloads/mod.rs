@@ -106,6 +106,8 @@ async fn poll_running(
     running: &mut Vec<Running>,
 ) {
     let mut finished = Vec::new();
+    // Bytes arrived since the last poll, for any download: the screens are told, so a meter moves.
+    let mut moved = false;
     // How many queued rows each torrent backs, counted before the walk so a cancellation can
     // tell "this torrent is mine alone" from "another episode is still fetching from it".
     let mut rows_per_torrent: std::collections::HashMap<usize, usize> =
@@ -189,6 +191,11 @@ async fn poll_running(
             entry.path = Some(session.output_dir().join(&progress.name));
         }
         let path_string = entry.path.as_ref().map(|p| p.display().to_string());
+        if progress.downloaded != row.downloaded
+            || (progress.total > 0 && progress.total != row.total)
+        {
+            moved = true;
+        }
         let _ = store.update_download_progress(
             row.id,
             progress.downloaded,
@@ -225,7 +232,7 @@ async fn poll_running(
     }
 
     running.retain(|r| !finished.contains(&r.row_id));
-    if !finished.is_empty() {
+    if moved || !finished.is_empty() {
         publish(store, tx);
     }
 }

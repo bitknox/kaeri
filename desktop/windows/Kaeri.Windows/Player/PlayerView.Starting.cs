@@ -149,17 +149,25 @@ public sealed partial class PlayerView
     void ShowStarting()
     {
         startingShown = true;
+        ShowPointer();
         startingFrom = Stopwatch.GetTimestamp();
-        if (movingOn)
+        if (movingOn || startOverPicture)
         {
-            // Moving on to the next episode: the last frame fades to the ground over 0.25 s (T5).
-            movingOn = false;
-            Starting.Opacity = 0;
-            Motion.FadeIn(Starting, TimeSpan.FromMilliseconds(250));
+            // Moving on to the next episode, or any start over a playing picture: the last frame
+            // fades to the ground over 0.25 s (T5).
+            movingOn = startOverPicture = false;
+            // From where it stands, when the last start's screen is still fading away.
+            if (Starting.Visibility == Visibility.Visible)
+                Motion.FadeTo(Starting, 1, TimeSpan.FromMilliseconds(250));
+            else
+                Motion.FadeIn(Starting, TimeSpan.FromMilliseconds(250));
         }
         else
             Motion.Set(Starting, true);
     }
+
+    /// <summary>The start about to show began over a picture already playing.</summary>
+    bool startOverPicture;
 
     /// <summary>
     /// The app is closing. The window disposes the player next, so every clock that reaches it
@@ -698,6 +706,16 @@ public sealed partial class PlayerView
     {
         StartingSub.IsChecked = translation == Kaeri.Engine.Core.Translation.Sub;
         StartingDub.IsChecked = translation == Kaeri.Engine.Core.Translation.Dub;
+        // Before a stream has been handed to the player, a choice queued for it would only apply
+        // once the old translation's stream opened, or be lost if it failed: the search starts
+        // again at once in the new translation, behind the same screen (as the Mac's startWith).
+        if (findingFor is { } id && start is { } s && ctx is { } c)
+        {
+            still.Input();
+            c.Send(new Command.SetTranslation(translation));
+            c.Send(new Command.Play(id, s.Episode, false));
+            return;
+        }
         Send(new PlayerCommand.Choose(new PlayerChoice.Translation(translation)));
     }
 

@@ -171,15 +171,16 @@ pub fn trend_month_candidates() -> String {
     format!("query ($from: Int) {{\n{}\n}}", pages.join("\n"))
 }
 
-/// The candidates' cards with their daily figures since `$from`, thirty-one rows at most each:
-/// what the month's ranking sums.
+/// The candidates' cards with their latest daily figures, thirty-one rows at most each, newest
+/// first: what the month's ranking sums, once the rows before the month are dropped. A title's
+/// `trends` takes no date, unlike the top-level `mediaTrends`.
 pub fn trend_month_series() -> String {
     format!(
-        r"query ($ids: [Int], $from: Int) {{
+        r"query ($ids: [Int]) {{
             Page(perPage: 50) {{
                 media(id_in: $ids, type: ANIME) {{
                     {MEDIA_FIELDS} {LIST_LINKS}
-                    trends(date_greater: $from, perPage: 31) {{ nodes {{ date trending }} }}
+                    trends(sort: DATE_DESC, perPage: 31) {{ nodes {{ date trending }} }}
                 }}
             }}
         }}"

@@ -38,7 +38,7 @@
     <KeyboardAccelerator Key="C" Invoked="OnKeyChat" />
     <!-- ] and [ have no VirtualKey names: they are added in code. -->
   </UserControl.KeyboardAccelerators>
-  <Grid x:Name="Root" Background="Black" PointerMoved="OnPointerMoved" Tapped="OnVideoTapped"
+  <Grid x:Name="Root" Background="Black" PointerExited="OnRootExited" Tapped="OnVideoTapped"
         DoubleTapped="OnVideoDoubleTapped" PointerWheelChanged="OnWheel" SizeChanged="OnStatsSized">
     <!-- The video takes what the discussion pane leaves, so the controls stay on the picture. -->
     <Grid.ColumnDefinitions>
@@ -59,7 +59,7 @@
         </Grid.RowDefinitions>
 
         <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
-        <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8" PointerEntered="OnBarEntered" PointerExited="OnBarExited">
+        <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -73,6 +73,12 @@
             <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+            <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. First
+                 in the row, so a TV found mid-episode fades in without moving the buttons after it. -->
+            <Button x:Name="TvButton" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayOnTv" Visibility="Collapsed"
+                    ToolTipService.ToolTip="{x:Bind app:T.TvPlayOn}" AutomationProperties.Name="{x:Bind app:T.TvPlayOn}">
+              <FontIcon Glyph="&#xE7F4;" FontSize="16" />
+            </Button>
             <!-- In a party with chat: the four reactions, before the people. Filled in code. -->
             <StackPanel x:Name="Reactions" Orientation="Horizontal" Spacing="2" Margin="0,0,6,0" Visibility="Collapsed" />
             <!-- Watch party: the form that starts a party, or the party's panel once in one. -->
@@ -83,11 +89,6 @@
                 <Ellipse x:Name="PartyDot" Width="6" Height="6" Fill="{ThemeResource TextFillColorPrimaryBrush}"
                          HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-5,0" Opacity="0" />
               </Grid>
-            </Button>
-            <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. -->
-            <Button x:Name="TvButton" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayOnTv" Visibility="Collapsed"
-                    ToolTipService.ToolTip="{x:Bind app:T.TvPlayOn}" AutomationProperties.Name="{x:Bind app:T.TvPlayOn}">
-              <FontIcon Glyph="&#xE7F4;" FontSize="16" />
             </Button>
             <Button x:Name="TracksButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerSubtitlesAndAudio}">
               <FontIcon Glyph="&#xE7F0;" FontSize="16" />
@@ -119,7 +120,7 @@
         </Border>
 
         <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
-        <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized" PointerEntered="OnBarEntered" PointerExited="OnBarExited">
+        <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
@@ -154,7 +155,7 @@
                fill are clear so only its thumb shows. -->
           <Grid Grid.Column="4" VerticalAlignment="Center">
             <Canvas x:Name="TimelineUnder" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
-            <player:SpokenSlider x:Name="Timeline" VerticalAlignment="Center" Minimum="0" Maximum="1" StepFrequency="1" SmallChange="5" LargeChange="30"
+            <player:SpokenSlider x:Name="Timeline" AllowFocusOnInteraction="False" VerticalAlignment="Center" Minimum="0" Maximum="1" StepFrequency="1" SmallChange="5" LargeChange="30"
                     IsThumbToolTipEnabled="False" ValueChanged="OnTimelineChanged" AutomationProperties.Name="{x:Bind app:T.PlayerPosition}"
                     PointerExited="OnTimelineExited" SizeChanged="OnTimelineSized">
               <Slider.Resources>
@@ -173,7 +174,7 @@
             <FontIcon x:Name="VolumeIcon" Glyph="&#xE767;" FontSize="16" />
             <Button.Flyout>
               <Flyout Placement="Top" Opened="OnMenuOpened" Closed="OnMenuClosed">
-                <player:SpokenSlider x:Name="VolumeSlider" Width="160" Minimum="0" Maximum="100" StepFrequency="5" Value="100"
+                <player:SpokenSlider x:Name="VolumeSlider" AllowFocusOnInteraction="False" Width="160" Minimum="0" Maximum="100" StepFrequency="5" Value="100"
                         ValueChanged="OnVolumeChanged" AutomationProperties.Name="{x:Bind app:T.PlayerVolume}" />
               </Flyout>
             </Button.Flyout>
@@ -289,7 +290,7 @@
           </Button>
         </Grid>
         <TextBlock x:Name="StatsWaiting" Grid.Row="1" Text="{x:Bind app:T.PlayerStatsWaiting}" Style="{StaticResource HazeBodyStyle}"
-                   FontSize="13" LineHeight="20" Margin="0,0,10,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+                   FontSize="13" LineHeight="20" Margin="0,0,10,0" Visibility="Collapsed" Opacity="0" AutomationProperties.LiveSetting="Polite" />
         <!-- Label and value: the labels' column as wide as its longest label, each value on one
              line in tabular figures, so a second's new figures change in place without moving. -->
         <ScrollViewer x:Name="StatsScroll" Grid.Row="2" Margin="0,8,0,0" Padding="0,0,10,0"
@@ -315,7 +316,7 @@
            Undo note, Up next, the Skip button. A grid, so a card fading out sits under the next. -->
       <Grid x:Name="Corner" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,80">
         <Border x:Name="SkipSlot" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-          <Button x:Name="SkipCard" Style="{StaticResource AccentButtonStyle}" Click="OnSkip" MinHeight="40" Padding="16,0"
+          <Button x:Name="SkipCard" AllowFocusOnInteraction="False" Style="{StaticResource AccentButtonStyle}" Click="OnSkip" MinHeight="40" Padding="16,0"
                   PointerEntered="OnSkipEntered" PointerExited="OnSkipExited" />
         </Border>
         <Grid x:Name="UndoCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8,8,8"
@@ -325,7 +326,7 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <TextBlock x:Name="UndoLine" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
-          <Button x:Name="UndoButton" Grid.Column="1" Content="{x:Bind app:T.ActionUndo}" Click="OnUndo" />
+          <Button x:Name="UndoButton" AllowFocusOnInteraction="False" Grid.Column="1" Content="{x:Bind app:T.ActionUndo}" Click="OnUndo" />
         </Grid>
         <Grid x:Name="UpNextCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="12" Width="380"
               RowSpacing="10" ColumnSpacing="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
@@ -347,10 +348,20 @@
                        MaxLines="3" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
             <TextBlock x:Name="UpNextLine" Style="{StaticResource HazeCaptionStyle}" Typography.NumeralAlignment="Tabular" Margin="0,4,0,0" />
           </StackPanel>
-          <ProgressBar x:Name="UpNextBar" Grid.Row="1" Grid.ColumnSpan="2" Maximum="1" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+          <!-- The countdown's line, silk under amber, linear. Drawn here rather than a ProgressBar,
+               whose template failed inside XAML (E_INVALIDARG) as the card came and went. -->
+          <Grid x:Name="UpNextBar" Grid.Row="1" Grid.ColumnSpan="2" Height="3" CornerRadius="1.5" Visibility="Collapsed"
+                AutomationProperties.AccessibilityView="Raw">
+            <Rectangle Fill="{ThemeResource SilkBrush}" Opacity="0.25" />
+            <Rectangle Fill="{ThemeResource AmberBrush}" RenderTransformOrigin="0,0.5">
+              <Rectangle.RenderTransform>
+                <ScaleTransform x:Name="UpNextFill" ScaleX="1" />
+              </Rectangle.RenderTransform>
+            </Rectangle>
+          </Grid>
           <StackPanel x:Name="UpNextButtons" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button x:Name="UpNextCancel" Content="{x:Bind app:T.ActionCancel}" Click="OnCancelNext" />
-            <Button Content="{x:Bind app:T.ActionPlayNow}" Style="{StaticResource AccentButtonStyle}" Click="OnPlayNext" />
+            <Button x:Name="UpNextCancel" AllowFocusOnInteraction="False" Content="{x:Bind app:T.ActionCancel}" Click="OnCancelNext" />
+            <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.ActionPlayNow}" Style="{StaticResource AccentButtonStyle}" Click="OnPlayNext" />
           </StackPanel>
         </Grid>
         <Grid x:Name="StallCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16" Width="300"
@@ -361,8 +372,8 @@
           </Grid.RowDefinitions>
           <TextBlock x:Name="StallLine" TextWrapping="WrapWholeWords" Typography.NumeralAlignment="Tabular" />
           <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button Content="{x:Bind app:T.PlayerKeepWaiting}" Click="OnStallWait" />
-            <Button Content="{x:Bind app:T.PlayerSwitchSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStallSwitch" />
+            <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.PlayerKeepWaiting}" Click="OnStallWait" />
+            <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.PlayerSwitchSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStallSwitch" />
           </StackPanel>
         </Grid>
       </Grid>
@@ -396,9 +407,30 @@
       <!-- What the player says on the video, in one column in the top leading corner: an alert
            first, briefly, then the party's chat lines under it, three at most, and the fold. -->
       <StackPanel x:Name="ChatColumn" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0" Spacing="6">
+        <!-- "Resumed at 12:04 · Start over" for the first 6 s of a resumed episode. -->
+        <Border x:Name="ResumeNote" Visibility="Collapsed" HorizontalAlignment="Left" Height="32" Padding="14,0"
+                Background="{ThemeResource RaisedBrush}" CornerRadius="16">
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <TextBlock x:Name="ResumeLine" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" AutomationProperties.LiveSetting="Polite" />
+            <Button x:Name="ResumeStartOver" AllowFocusOnInteraction="False" Content="{x:Bind app:T.PlayerStartOver}" Click="OnStartOver"
+                    Padding="0" MinHeight="0" MinWidth="0" Background="Transparent" BorderThickness="0" FontWeight="SemiBold"
+                    Foreground="{ThemeResource AmberBrush}" VerticalAlignment="Center">
+              <Button.Resources>
+                <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="Transparent" />
+                <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AmberBrush" />
+                <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AmberBrush" />
+              </Button.Resources>
+            </Button>
+          </StackPanel>
+        </Border>
         <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left"
                 Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
-          <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+          <!-- Two lines in one place: a newer alert crossfades over the one up. -->
+          <Grid>
+            <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+            <TextBlock x:Name="AlertTextB" TextWrapping="WrapWholeWords" MaxWidth="480" Opacity="0" AutomationProperties.LiveSetting="Assertive" />
+          </Grid>
         </Border>
         <StackPanel x:Name="ChatLines" Spacing="6" />
         <Button x:Name="ChatFold" Visibility="Collapsed" Click="OnChatFold" Padding="16,10" MinHeight="40" CornerRadius="8"
@@ -420,6 +452,12 @@
               Background="{ThemeResource RaisedBrush}" CornerRadius="6" Padding="8,3">
         <TextBlock x:Name="TickLabelText" Style="{StaticResource CaptionTextBlockStyle}" Typography.NumeralAlignment="Tabular" />
       </Border>
+
+      <!-- Waiting for data mid-episode: a ring in the middle, from half a second in, until the
+           stall card takes over at 8 s. -->
+      <ProgressRing x:Name="BufferingRing" Width="48" Height="48" IsActive="False" Visibility="Collapsed"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                    AutomationProperties.AccessibilityView="Raw" />
 
       <!-- What a key did while the controls stay hidden: the time after a seek, the volume, the
            speed, a skip. Shown for 1.2 s. -->

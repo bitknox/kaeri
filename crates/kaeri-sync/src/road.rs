@@ -7,6 +7,7 @@
 //! <prefix>/devices/<id>/000001.seg   this device's ops, sealed
 //! <prefix>/devices/<id>/acks.bin     the version vector this device has seen, sealed
 //! <prefix>/paused/<id>               present while the group holds back from that device
+//! <prefix>/removed/<id>              present once the group removed that device
 //! ```
 //!
 //! A device whose Sync switch is off (the `device_sync` register) is held back from: the others
@@ -14,6 +15,11 @@
 //! pass and, finding itself, neither reads nor writes. The register alone could not say so, since
 //! a held-back device would never read the register that lets it back in. Not a lock, which
 //! removing a device is (it rotates the key): a device that ignored the marker could still read.
+//!
+//! A removed device cannot read the removal, which is sealed under the key it no longer holds, so
+//! the device that removes it also writes its name under `removed/`. The removed device finds it
+//! at the start of its next pass and says it was removed, rather than that it holds no key. A
+//! device that joins again with the recovery key takes its name out.
 
 use std::{collections::BTreeMap, sync::Arc};
 
@@ -255,7 +261,13 @@ impl FolderRoad {
 
     async fn write_own_keys(&self) -> Result<()> {
         let wrapped = wrap_for(&self.key.public(), &self.device, &self.keyring());
-        self.replace(&self.path(&format!("devices/{}/keys.bin", self.device)), &wrapped).await
+        self.replace(&self.path(&format!("devices/{}/keys.bin", self.device)), &wrapped)
+            .await?;
+        // In the group with its keys: not a removed device any more, if it was one.
+        match self.target.remove(&self.path(&format!("removed/{}", self.device))).await {
+            Ok(()) | Err(FolderError::NotFound(_)) => Ok(()),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// Write a file that is rewritten: a temporary name, then a move over the old one.
@@ -281,6 +293,10 @@ impl FolderRoad {
             .map(|(d, ..)| d)
             .collect();
         if removed.contains(&self.device) {
+            return Err(SyncError::Removed);
+        }
+        let named_removed = self.target.list(&self.path("removed")).await?;
+        if named_removed.iter().any(|e| !e.is_dir && e.name == self.device) {
             return Err(SyncError::Removed);
         }
         let marked: Vec<String> = self
@@ -543,7 +559,15 @@ impl FolderRoad {
         self.set_ring(ring.clone());
         self.write_group(recovery, &ring).await?;
         for (device, _, pubkey, removed) in self.store.sync_peers()? {
-            if removed || device == self.device {
+            if device == self.device {
+                continue;
+            }
+            if removed {
+                match self.target.write_new(&self.path(&format!("removed/{device}")), b"").await
+                {
+                    Ok(()) | Err(FolderError::Exists(_)) => {}
+                    Err(e) => return Err(e.into()),
+                }
                 continue;
             }
             let Some(pubkey) = pubkey
@@ -987,8 +1011,10 @@ mod tests {
         rb.sync().await.unwrap();
         assert_eq!(b.resume("1"), Some(500.0));
         assert_eq!(rb.keyring().current_epoch(), 2);
-        // The removed device still holds the old key and cannot read what follows.
-        assert!(rc.sync().await.is_err());
+        // The removed device still holds the old key and cannot read what follows; it is told
+        // it was removed rather than that it holds no key.
+        let err = rc.sync().await.unwrap_err();
+        assert!(matches!(err, SyncError::Removed), "{err:?}");
         assert_eq!(c.resume("1"), None);
     }
 

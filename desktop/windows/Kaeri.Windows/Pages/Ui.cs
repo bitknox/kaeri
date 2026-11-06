@@ -2,6 +2,7 @@ using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
@@ -96,26 +97,106 @@ static class Ui
         BorderThickness = new Thickness(0, 0, 0, 1),
     };
 
-    /// <summary>A cover thumbnail, in its placeholder colour until the engine's art arrives.</summary>
+    /// <summary>
+    /// A cover thumbnail, in its placeholder colour until the engine's art arrives, which then
+    /// fades in over it. Art the app already has shows at once, so a rebuilt row never flashes.
+    /// </summary>
     public static Border Cover(Ctx ctx, uint id, double width, double height)
     {
+        var image = new Image { Stretch = Stretch.UniformToFill };
+        AutomationProperties.SetAccessibilityView(image, AccessibilityView.Raw);
         var frame = new Border
         {
             Width = width,
             Height = height,
             // Small thumbnails round at 6, covers above 40 wide at 8.
             CornerRadius = new CornerRadius(width > 40 ? 8 : 6),
-            Background = new SolidColorBrush(Colours.Raised),
+            Background = Res<Brush>("RaisedBrush"),
+            Child = image,
         };
         if (ctx.Known.Entries.TryGetValue(id, out var entry))
         {
-            frame.Background = new SolidColorBrush(Colours.Parse(entry.CoverColor) ?? Colours.Raised);
-            ctx.Art.Bind(entry.CoverUrl, image => frame.Background = new ImageBrush { ImageSource = image, Stretch = Stretch.UniformToFill });
+            if (Colours.Parse(entry.CoverColor) is { } colour)
+                frame.Background = new SolidColorBrush(colour);
+            ArtFade.Watch(image);
+            ctx.Art.Bind(entry.CoverUrl, art => image.Source = art);
         }
         return frame;
     }
 
     public static string Bytes(ulong n) => Wording.Bytes(n);
+
+    /// <summary>The focused element when it is <paramref name="root"/> or inside it, otherwise null.</summary>
+    public static DependencyObject? FocusWithin(FrameworkElement root)
+    {
+        if (root.XamlRoot is not { } xamlRoot || Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is not DependencyObject focused)
+            return null;
+        for (var at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (ReferenceEquals(at, root))
+                return focused;
+        return null;
+    }
+
+    /// <summary>Which of <paramref name="children"/> holds the focus, if one does.</summary>
+    public static T? HoldingFocus<T>(FrameworkElement root, IEnumerable<T> children) where T : DependencyObject
+    {
+        if (FocusWithin(root) is not { } focused)
+            return null;
+        var set = new HashSet<DependencyObject>(children, ReferenceEqualityComparer.Instance);
+        for (DependencyObject? at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (set.Contains(at))
+                return (T)at;
+        return null;
+    }
+
+    /// <summary>Where the focus was inside a part that is about to be drawn again, to put it back after.</summary>
+    public sealed record FocusMark(Type Type, string Name, int Index, FocusState How);
+
+    /// <summary>
+    /// The focused control inside <paramref name="root"/> by its kind, its name and which of the
+    /// controls of that kind and name it is, so the same one can be found in a new drawing.
+    /// </summary>
+    public static FocusMark? MarkFocus(FrameworkElement root)
+    {
+        if (FocusWithin(root) is not Control focused)
+            return null;
+        var name = AutomationProperties.GetName(focused);
+        if (string.IsNullOrEmpty(name) && focused is ContentControl { Content: string words })
+            name = words;
+        if (string.IsNullOrEmpty(name))
+            return null;
+        var index = Controls(root).Where(c => c.GetType() == focused.GetType() && NameOf(c) == name).ToList().IndexOf(focused);
+        return new FocusMark(focused.GetType(), name, Math.Max(0, index), focused.FocusState);
+    }
+
+    /// <summary>Puts the focus back on the control <paramref name="mark"/> names, if the new drawing has one.</summary>
+    public static void RestoreFocus(FrameworkElement root, FocusMark? mark)
+    {
+        if (mark is null)
+            return;
+        root.UpdateLayout();
+        var same = Controls(root).Where(c => c.GetType() == mark.Type && NameOf(c) == mark.Name).ToList();
+        if (same.Count == 0)
+            return;
+        same[Math.Min(mark.Index, same.Count - 1)].Focus(mark.How == FocusState.Unfocused ? FocusState.Programmatic : mark.How);
+    }
+
+    static string NameOf(Control c) => AutomationProperties.GetName(c) is { Length: > 0 } name ? name : c is ContentControl { Content: string words } ? words : "";
+
+    static IEnumerable<Control> Controls(DependencyObject under)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(under); i++)
+        {
+            var child = VisualTreeHelper.GetChild(under, i);
+            if (child is Control c)
+                yield return c;
+            foreach (var deeper in Controls(child))
+                yield return deeper;
+        }
+    }
+
+    /// <summary>Whether someone is typing in a box inside <paramref name="root"/>, which a redraw would take from them.</summary>
+    public static bool TypingIn(FrameworkElement root) => FocusWithin(root) is TextBox or PasswordBox;
 
     /// <summary>
     /// Puts <paramref name="text"/> on the clipboard. Windows refuses while another app holds it

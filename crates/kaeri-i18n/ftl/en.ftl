@@ -10192,6 +10192,9 @@ cloud-browser-line = Your browser opened { $service }’s page. Allow access the
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Sign in to { $service } in your browser
 
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.
+
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = computer
 
@@ -11302,6 +11305,9 @@ opened-paste-placeholder = Magnet link or info hash
 
 # Button: choose a torrent file from the device.
 opened-choose-file = Choose a torrent file
+
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri couldn't read that link or file.
 
 # The question once the link's name matched a title and an episode.
 opened-confirm = Is this { $title }, episode { $episode }?

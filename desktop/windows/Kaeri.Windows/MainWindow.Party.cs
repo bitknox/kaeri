@@ -45,15 +45,25 @@ public sealed partial class MainWindow
             ShowToast(InfoBarSeverity.Informational, T.PartyAlreadyIn);
             return;
         }
-        // The lobby opens in its invited state: it looks in, reads what the room watches and waits for Join.
+        // The lobby opens in its invited state: it looks in, reads what the room watches and waits
+        // for Join. A party this device is in is left only when Join is pressed.
         var server = target.Server.Length > 0 ? target.Server : ctx.Known.PartyForm?.SuggestedServer ?? "";
-        ctx.Send(new Command.Party(new PartyCommand.Lobby(server, target.Room, ctx.Known.PartyForm?.Name, null)));
+        TogetherPage.LookIn(ctx, server, target.Room);
         Go("together");
     }
 
     async void ShowPartySource(uint id, string episode, NoSourceWhy why, string reason)
     {
-        if (CloseDialogs())
+        // The engine says this on every start that found nothing, a rejoin's included: one dialog
+        // per episode, and a later episode's takes the place of an earlier one's. Any other
+        // dialog up (the question closing the window asks, a sign-in) is let be; this waits for it.
+        if (PartySourceDialog.Showing is { } up)
+        {
+            if (up.Asks(id, episode))
+                return;
+            up.Close();
+        }
+        if (InfoCard.HideOpen())
             await Task.Delay(250);
         try
         {
@@ -91,11 +101,15 @@ public sealed partial class MainWindow
                     inParty = false;
                     break;
                 case Event.PartyMessage { V1: var message }:
-                    // What the room did, in the engine's words: over the video it is the player's notice.
+                    // What the room did, in the engine's words. Over a playing episode the engine
+                    // gives the same words to the player itself, so they are said once.
                     if (message.Kind is PartyMessageKind.Chat or PartyMessageKind.Corrected or PartyMessageKind.AllReady)
                         break;
                     if (Player.Showing)
-                        Player.Say(message.Text);
+                    {
+                        if (!Player.Playing)
+                            Player.Say(message.Text);
+                    }
                     else if (message.Kind is not (PartyMessageKind.Paused or PartyMessageKind.Resumed or PartyMessageKind.Seeked))
                         ShowToast(InfoBarSeverity.Informational, message.Text);
                     break;

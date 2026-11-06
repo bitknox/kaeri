@@ -6,8 +6,9 @@ namespace Kaeri.Windows;
 /// <summary>
 /// The notification area icon while Kaeri keeps downloading with its window closed (Keep
 /// going), as the brief has it: a click opens the window, and its menu holds Open Kaeri,
-/// Pause all downloads and Quit. Shell_NotifyIcon on the main window's own HWND, whose messages
-/// it reads through a subclass; the first time, a notification says where Kaeri went.
+/// Pause all downloads (Resume all downloads once they are paused) and Quit. Shell_NotifyIcon on
+/// the main window's own HWND, whose messages it reads through a subclass; the first time, a
+/// notification says where Kaeri went.
 /// </summary>
 sealed unsafe partial class Tray : IDisposable
 {
@@ -40,8 +41,10 @@ sealed unsafe partial class Tray : IDisposable
 
     public Action? Open { get; init; }
     public Action? PauseAll { get; init; }
+    public Action? ResumeAll { get; init; }
     public Action? Quit { get; init; }
     public Func<bool>? AnyRunning { get; init; }
+    public Func<bool>? AnyPaused { get; init; }
 
     /// <summary>Adds the icon; with <paramref name="tell"/>, the one-time notification too.</summary>
     public void Show(bool tell)
@@ -115,7 +118,11 @@ sealed unsafe partial class Tray : IDisposable
     {
         var menu = CreatePopupMenu();
         Append(menu, MF_STRING, 1, T.TrayOpen);
-        Append(menu, AnyRunning?.Invoke() == false ? MF_STRING | MF_GRAYED : MF_STRING, 2, T.DownloadsPauseAllLabel);
+        // Resume all in Pause all's place once nothing runs and something is paused.
+        if (AnyRunning?.Invoke() == false && AnyPaused?.Invoke() == true)
+            Append(menu, MF_STRING, 4, T.DownloadsResumeAllLabel);
+        else
+            Append(menu, AnyRunning?.Invoke() == false ? MF_STRING | MF_GRAYED : MF_STRING, 2, T.DownloadsPauseAllLabel);
         Append(menu, MF_SEPARATOR, 0, "");
         Append(menu, MF_STRING, 3, T.TrayQuit);
         // The menu closes when it loses focus only if the window is in front first.
@@ -127,6 +134,7 @@ sealed unsafe partial class Tray : IDisposable
             case 1: Open?.Invoke(); break;
             case 2: PauseAll?.Invoke(); break;
             case 3: Quit?.Invoke(); break;
+            case 4: ResumeAll?.Invoke(); break;
         }
     }
 

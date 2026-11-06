@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Kaeri.App.Tests;
 
+[Collection("Strings")]
 public class StartScreenTests
 {
     public StartScreenTests() => T.Resolver = null;

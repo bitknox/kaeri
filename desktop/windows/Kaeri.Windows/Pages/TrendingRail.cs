@@ -1,6 +1,7 @@
 using Kaeri.App;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Kaeri.Windows.Pages;
@@ -61,12 +62,23 @@ sealed class TrendingRail : StackPanel
         }
         heading.Flyout = menu;
         head.Children.Add(heading);
-        var all = new HyperlinkButton { Content = T.SearchSeeAll, VerticalAlignment = VerticalAlignment.Center };
+        var all = new HyperlinkButton
+        {
+            Style = Ui.Res<Style>("SilkLinkStyle"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 4,
+                Children = { new TextBlock { Text = T.SearchSeeAll }, new FontIcon { Glyph = "", FontSize = 10 } },
+            },
+        };
+        AutomationProperties.SetName(all, T.SearchSeeAll);
         all.Click += (_, _) => this.seeAll(period);
         Grid.SetColumn(all, 1);
         head.Children.Add(all);
         Children.Add(head);
-        state.Placeholders = () => States.Covers();
+        state.Placeholders = () => States.Covers(Shown, rail: true);
         state.ActivityText = T.StateLoading;
         state.Children.Add(covers);
         Children.Add(state);
@@ -177,7 +189,7 @@ sealed class TrendingRail : StackPanel
     {
         if (ctx.Known.TrendingKept.TryGetValue(period, out var entries) && entries.Length > 0)
         {
-            covers.Covers = [.. entries.Take(Shown).Select(e => new CoverItem(e).Load(ctx.Art))];
+            covers.Show([.. entries.Take(Shown)]);
             if (state.PlaceholdersSince is not null)
                 state.DoneNow();
             else
