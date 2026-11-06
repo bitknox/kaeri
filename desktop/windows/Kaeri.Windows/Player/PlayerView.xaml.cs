@@ -314,19 +314,28 @@ public sealed partial class PlayerView : UserControl
                     TookClipboard(clip.Text);
                     break;
                 case Event.PlaybackVolume v:
-                    volume = v.V1;
-                    fromPlayer = true;
-                    VolumeSlider.Value = Math.Clamp(volume, 0, 100);
-                    fromPlayer = false;
-                    VolumeIcon.Glyph = volume <= 0 ? "" : "";
-                    AutomationProperties.SetName(VolumeButton, volume <= 0 ? T.PlayerVolumeMuted : T.PlayerVolume);
-                    if (volumeFlash)
-                    {
-                        volumeFlash = false;
-                        ShowFlash(volume <= 0 ? T.PlayerMuted : T.PlayerVolumeLevel(Wording.Percent(Math.Round(volume))));
-                    }
+                    TookVolume(v.V1);
                     break;
             }
+        }
+    }
+
+    /// <summary>mpv's volume: from the player's state, which has it from the start of a session,
+    /// and from the engine when the viewer changed it. The note shows once the change is in.</summary>
+    void TookVolume(double level)
+    {
+        if (level == volume)
+            return;
+        volume = level;
+        fromPlayer = true;
+        VolumeSlider.Value = Math.Clamp(volume, 0, 100);
+        fromPlayer = false;
+        VolumeIcon.Glyph = volume <= 0 ? "" : "";
+        AutomationProperties.SetName(VolumeButton, volume <= 0 ? T.PlayerVolumeMuted : T.PlayerVolume);
+        if (volumeFlash)
+        {
+            volumeFlash = false;
+            ShowFlash(volume <= 0 ? T.PlayerMuted : T.PlayerVolumeLevel(Wording.Percent(Math.Round(volume))));
         }
     }
 
@@ -699,6 +708,8 @@ public sealed partial class PlayerView : UserControl
             idle.Start();
         if (state.Position is { } p)
             position = p;
+        if (state.Volume is { } level)
+            TookVolume(level);
         if (state.Duration is { } d && d > 0 && d != duration)
         {
             duration = d;

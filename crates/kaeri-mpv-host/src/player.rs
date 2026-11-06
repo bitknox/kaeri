@@ -560,6 +560,7 @@ fn update(shared: &Shared, name: &str, value: &Value) -> Option<PlayerState> {
         "paused-for-cache" => state.buffering = value.as_bool().unwrap_or(false),
         "seeking" => state.seeking = value.as_bool().unwrap_or(false),
         "frame-drop-count" => state.frame_drops = value.as_i64().unwrap_or(0),
+        "volume" => state.volume = value.as_f64(),
         "track-list" => state.tracks = ops::tracks(value),
         _ => return None,
     }
