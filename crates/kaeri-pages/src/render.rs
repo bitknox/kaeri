@@ -10,7 +10,7 @@
 
 use crate::colour::check_colour;
 use crate::crop::content_box;
-use crate::decode::{DecodeLimits, SourceFormat, decode};
+use crate::decode::{DecodeLimits, SourceFormat, decode_for};
 use crate::layout::is_spread;
 use crate::rainbow::RainbowFilter;
 use crate::resize::{AREA_ABOVE, Fit, resize, shrink_factor};
@@ -144,7 +144,8 @@ pub struct SourcePage {
 }
 
 /// A processed page, ready to be written to the page cache as a raw file: no header, rows
-/// packed, [`PixelFormat::Gray8`] or [`PixelFormat::Rgba8`].
+/// packed, [`PixelFormat::Gray8`] on a grey panel and [`PixelFormat::Rgba8`] on every colour
+/// screen.
 #[derive(Clone, Debug)]
 pub struct RawPage {
     pub bitmap: Bitmap,
@@ -220,7 +221,8 @@ impl Renderer {
 
     /// Decodes a page and checks it: colour, spread, crop box.
     pub fn open(&self, bytes: &[u8]) -> Result<SourcePage, Error> {
-        let mut bitmap = decode(bytes, self.limits)?;
+        let room = (self.target.width, self.target.height);
+        let mut bitmap = decode_for(bytes, self.limits, Some(room))?;
         let format = SourceFormat::sniff(bytes).ok_or(Error::UnknownFormat)?;
         let has_rgb = bitmap.format() != PixelFormat::Gray8;
         let colour = match self.look.colour {
@@ -269,12 +271,13 @@ impl Renderer {
                 dither::ordered(&mut grey)?;
                 grey
             }
+            // Colour screens take RGBA whatever the page: one format for the app to draw.
             (Panel::Kaleido3, PixelFormat::Gray8) if self.look.rainbow_filter => {
                 let threads = self.threads;
                 self.filter(page.width(), page.height()).apply(&mut page, threads)?;
-                page
+                page.into_rgba()
             }
-            (_, PixelFormat::Gray8) => page,
+            (_, PixelFormat::Gray8) => page.into_rgba(),
             (Panel::Lcd, _) => page.into_rgba(),
             (_, _) => {
                 let saturation = self.look.saturation.unwrap_or(panel.default_saturation());

@@ -22,6 +22,7 @@ fast_image_resize.workspace = true
 rustfft.workspace = true
 realfft.workspace = true
 png.workspace = true
+jpeg-decoder.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

@@ -116,6 +116,9 @@ realfft = "3.5"
 # 4-bit grey PNG export, which the image crate's encoder does not write. Already in the tree
 # through image.
 png = "0.18"
+# JPEG decoding at a half, quarter or eighth of the size inside the DCT, for scans far larger
+# than the screen. Without rayon: kaeri-pages keeps its own threads.
+jpeg-decoder = { version = "0.3", default-features = false }
 
 # --- book files ---
 # Readers for the formats kaeri-books opens, all pure Rust so every target reads them the same

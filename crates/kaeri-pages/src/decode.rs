@@ -1,7 +1,8 @@
 //! Page bytes to pixels: recognising the format, reading the size from the header, and
 //! decoding within a memory cap.
 //!
-//! JPEG, PNG, WebP and GIF (its first frame) decode here. AVIF is recognised and measured but
+//! JPEG, PNG, WebP and GIF (its first frame) decode here. A JPEG far larger than the screen, or
+//! over the cap, is decoded smaller inside the DCT ([`decode_for`]). AVIF is recognised and measured but
 //! not decoded: no spike has priced an AVIF decoder on every platform yet, so an AVIF page goes
 //! to an LCD screen as its original file for the platform to decode, and
 //! [`Error::Unsupported`] tells the engine when a page needs processing.
@@ -151,6 +152,78 @@ pub fn decode(bytes: &[u8], limits: DecodeLimits) -> Result<Bitmap, Error> {
     Ok(from_dynamic(image))
 }
 
+/// Decodes a page for a screen of `room` pixels. A JPEG is decoded at a half, a quarter or an
+/// eighth of its size inside the DCT when that still leaves it at least twice as large as it
+/// can be shown (whole, rotated or split), so the resize after does the last shrink and keeps
+/// screentone clean; and when its full size is over the cap, at the size that fits. Other
+/// formats, and JPEGs the scaled path cannot read, decode as [`decode`] does.
+pub fn decode_for(
+    bytes: &[u8],
+    limits: DecodeLimits,
+    room: Option<(u32, u32)>,
+) -> Result<Bitmap, Error> {
+    let info = inspect(bytes)?;
+    if info.format == SourceFormat::Jpeg {
+        let k = jpeg_scale(info.width, info.height, limits, room);
+        if k > 1
+            && let Some(bitmap) = decode_jpeg_scaled(bytes, &info, k, limits)?
+        {
+            return Ok(bitmap);
+        }
+    }
+    decode(bytes, limits)
+}
+
+/// The DCT scale denominator for a `width` by `height` JPEG: 1, 2, 4 or 8.
+fn jpeg_scale(width: u32, height: u32, limits: DecodeLimits, room: Option<(u32, u32)>) -> u32 {
+    let (w, h) = (width.max(1) as f64, height.max(1) as f64);
+    let pixels = |k: u32| width.div_ceil(k) as u64 * height.div_ceil(k) as u64;
+    let needed =
+        [1, 2, 4, 8].into_iter().find(|&k| pixels(k) <= limits.max_pixels).unwrap_or(8);
+    let allowed = room.map_or(1, |(rw, rh)| {
+        let (rw, rh) = (rw.max(1) as f64, rh.max(1) as f64);
+        // The largest it is ever drawn: fitted whole, rotated, or as one half of a spread.
+        let whole = (rw / w).min(rh / h);
+        let rotated = (rh / w).min(rw / h);
+        let half = if w > h { (2.0 * rw / w).min(rh / h) } else { 0.0 };
+        let shown = whole.max(rotated).max(half);
+        [8, 4, 2, 1].into_iter().find(|&k| shown * 2.0 * k as f64 <= 1.0).unwrap_or(1)
+    });
+    needed.max(allowed)
+}
+
+/// `None` when the scaled path cannot read this JPEG's pixels (CMYK, 16-bit): the full decode
+/// takes it.
+fn decode_jpeg_scaled(
+    bytes: &[u8],
+    info: &SourceInfo,
+    k: u32,
+    limits: DecodeLimits,
+) -> Result<Option<Bitmap>, Error> {
+    let fail = |e: jpeg_decoder::Error| Error::Decode(e.to_string());
+    let mut decoder = jpeg_decoder::Decoder::new(Cursor::new(bytes));
+    decoder.read_info().map_err(fail)?;
+    let (w, h) = decoder
+        .scale(info.width.div_ceil(k) as u16, info.height.div_ceil(k) as u16)
+        .map_err(fail)?;
+    let (w, h) = (w as u32, h as u32);
+    if w as u64 * h as u64 > limits.max_pixels {
+        return Err(Error::TooLarge {
+            width: info.width,
+            height: info.height,
+            max_pixels: limits.max_pixels,
+        });
+    }
+    decoder.set_max_decoding_buffer_size((w as usize * h as usize * 4).max(1 << 20));
+    let format = match decoder.info().map(|i| i.pixel_format) {
+        Some(jpeg_decoder::PixelFormat::L8) => PixelFormat::Gray8,
+        Some(jpeg_decoder::PixelFormat::RGB24) => PixelFormat::Rgb8,
+        _ => return Ok(None),
+    };
+    let data = decoder.decode().map_err(fail)?;
+    Bitmap::new(w, h, format, data).map(Some)
+}
+
 fn from_dynamic(image: DynamicImage) -> Bitmap {
     let (w, h) = (image.width(), image.height());
     let colour = image.color();
@@ -252,6 +325,25 @@ mod tests {
         let grey = DynamicImage::ImageLuma8(image::GrayImage::new(100, 100));
         let err = decode(&png(grey), DecodeLimits { max_pixels: 9_999 }).unwrap_err();
         assert!(matches!(err, Error::TooLarge { width: 100, height: 100, .. }));
+    }
+
+    #[test]
+    fn a_jpeg_far_larger_than_the_screen_decodes_smaller_and_one_over_the_cap_still_opens() {
+        let page = crate::testpages::manga_page(4000, 5600, 7);
+        let bytes = crate::testpages::jpeg(&page, 85);
+        // A small screen: twice the shown size is still under a quarter of the scan.
+        let b = decode_for(&bytes, DecodeLimits::default(), Some((360, 500))).unwrap();
+        assert_eq!((b.width(), b.height(), b.format()), (1000, 1400, PixelFormat::Gray8));
+        // A large panel needs the whole scan.
+        let b = decode_for(&bytes, DecodeLimits::default(), Some((1860, 2480))).unwrap();
+        assert_eq!((b.width(), b.height()), (4000, 5600));
+        // Over the cap: the size that fits.
+        let small = DecodeLimits { max_pixels: 6_000_000 };
+        let b = decode_for(&bytes, small, Some((1860, 2480))).unwrap();
+        assert_eq!((b.width(), b.height()), (2000, 2800));
+        assert!(matches!(decode(&bytes, small), Err(Error::TooLarge { .. })));
+        let tiny = DecodeLimits { max_pixels: 100_000 };
+        assert!(matches!(decode_for(&bytes, tiny, None), Err(Error::TooLarge { .. })));
     }
 
     #[test]

@@ -48,7 +48,7 @@ pub mod testpages;
 pub mod tone;
 
 pub use bitmap::{Bitmap, PixelFormat, PixelRect};
-pub use decode::{DecodeLimits, SourceFormat, SourceInfo, decode, inspect};
+pub use decode::{DecodeLimits, SourceFormat, SourceInfo, decode, decode_for, inspect};
 pub use render::{
     ColourChoice, Delivery, Look, Panel, RawPage, Renderer, SourcePage, Target, delivery,
 };

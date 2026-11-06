@@ -108,8 +108,9 @@ fn black_and_white_on_kaleido_takes_the_rainbow_filter_only_when_on() {
         let mut r = Renderer::new(GO_COLOR_7, look).with_threads(2);
         r.render(&r.open(&bytes).unwrap(), None, 1264, 1680).unwrap()
     };
-    assert_eq!(off.format(), PixelFormat::Gray8);
-    assert_eq!(on.format(), PixelFormat::Gray8);
+    // A colour screen takes RGBA, grey pages too.
+    assert_eq!(off.format(), PixelFormat::Rgba8);
+    assert_eq!(on.format(), PixelFormat::Rgba8);
     assert!(!on_sixteen_greys(off.bytes()), "no dither on Kaleido");
     let changed = off.bytes().iter().zip(on.bytes()).filter(|(a, b)| a != b).count();
     assert!(changed > off.bytes().len() / 20, "the filter changed {changed} pixels");
@@ -171,7 +172,7 @@ fn lcd_pages_go_as_originals_until_shrunk_past_twice() {
     let mut r = Renderer::new(PHONE, Look::default());
     let page = r.open(&large).unwrap();
     let out = r.render(&page, None, PHONE.width, PHONE.height).unwrap();
-    assert_eq!((out.width(), out.format()), (PHONE.width, PixelFormat::Gray8));
+    assert_eq!((out.width(), out.format()), (PHONE.width, PixelFormat::Rgba8));
     assert!(!on_sixteen_greys(out.bytes()));
 
     let colour = testpages::jpeg(&testpages::colour_page(3000, 4000, 1), 90);
