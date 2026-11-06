@@ -523,8 +523,13 @@ fn watch_through(server: &str, room: &str, by_code: bool) {
     wait("Ada to see Ben ready", &mut [&mut ada, &mut ben], |d| {
         d[0].member("Ben").is_some_and(|m| m.ready == Some(true))
     });
-    hold(&mut [&mut ada, &mut ben], Duration::from_millis(1500));
+    // Longer than the count of three seconds a room with everyone ready runs before it plays.
+    hold(&mut [&mut ada, &mut ben], Duration::from_millis(4500));
     assert!(ada.started.is_empty() && ben.started.is_empty(), "nobody started yet");
+    assert!(
+        ben.view.as_ref().is_some_and(|v| v.starting_in.is_none()),
+        "no count runs while Ada is not ready"
+    );
 
     // Ada is ready too: both count down and both players open on episode 1.
     ada.send(Command::PartyReady { ready: true });
