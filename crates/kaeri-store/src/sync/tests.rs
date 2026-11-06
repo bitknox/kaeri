@@ -796,6 +796,65 @@ fn reading_travels_and_read_again_with_its_undo_reaches_every_device() {
 }
 
 #[test]
+fn an_unread_never_takes_back_a_read_it_did_not_see_and_each_device_keeps_a_note() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let work = "a:900204";
+    read_on(&a, work, "3", 20, true);
+    exchange(&a, &b);
+    // Offline: the tablet takes chapter 3 back while the phone reads it to the end again.
+    a.advance(60);
+    a.store.unread(work, &["3".into()]).unwrap();
+    b.advance(120);
+    read_on(&b, work, "3", 20, true);
+    let to_a = send(&b, &a);
+    let to_b = send(&a, &b);
+    for d in [&a, &b] {
+        assert!(d.store.chapter_is_read(work, "3").unwrap(), "{}", d.id);
+    }
+    assert_eq!((to_a.read_notes.len(), to_b.read_notes.len()), (1, 1));
+    for n in to_a.read_notes.iter().chain(&to_b.read_notes) {
+        assert_eq!((n.unread_device.as_str(), n.read_device.as_str()), ("aaaa", "bbbb"));
+        assert_eq!((n.work.as_str(), n.chapter.as_str()), (work, "3"));
+    }
+    exchange(&a, &b);
+    assert_eq!(a.store.read_notes(0).unwrap().len(), 1);
+    let id = b.store.read_notes(0).unwrap()[0].id;
+    b.store.dismiss_read_note(id).unwrap();
+    assert!(b.store.read_notes(0).unwrap().is_empty());
+
+    // A read made after seeing the unread is no surprise.
+    a.advance(10);
+    a.store.unread(work, &["3".into()]).unwrap();
+    exchange(&a, &b);
+    assert!(!b.store.chapter_is_read(work, "3").unwrap());
+    b.advance(10);
+    read_on(&b, work, "3", 20, true);
+    let to_a = send(&b, &a);
+    assert!(to_a.read_notes.is_empty());
+}
+
+#[test]
+fn an_unread_under_a_watermark_travels_and_a_newer_watermark_counts_the_chapter_again() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let work = "a:900205";
+    a.store.adopt_read(work, "10", None, a.secs()).unwrap();
+    exchange(&a, &b);
+    b.advance(5);
+    b.store.unread(work, &["4".into()]).unwrap();
+    assert!(!b.store.chapter_is_read(work, "4").unwrap());
+    exchange(&a, &b);
+    let marks = a.store.read_marks(work).unwrap();
+    assert!(!marks.is_read("4"));
+    assert!(marks.is_read("5"));
+    a.advance(5);
+    a.store.adopt_read(work, "8", None, a.secs()).unwrap();
+    exchange(&a, &b);
+    assert!(b.store.chapter_is_read(work, "4").unwrap());
+}
+
+#[test]
 fn reading_choices_travel_as_registers_and_local_works_stay_home() {
     let a = dev("a", 1_000);
     let b = dev("b", 1_000);

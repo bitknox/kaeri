@@ -847,7 +847,9 @@ fn apply_one(
         | OpBody::ReadAdopt { .. }
         | OpBody::ReadReset { .. }
         | OpBody::ReadMark { .. } => {
-            if let Some(work) = crate::reading::apply_read_op(tx, op)? {
+            if let Some(work) =
+                crate::reading::apply_read_op(tx, op, now_secs, &mut report.read_notes)?
+            {
                 works.insert(work);
             }
         }
