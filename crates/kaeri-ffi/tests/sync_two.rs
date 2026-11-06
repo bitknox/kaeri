@@ -292,27 +292,16 @@ fn a_change_made_on_both_settles_the_same_on_both() {
 fn a_removed_device_stops_receiving() {
     let shared = tempfile::tempdir().expect("a shared folder");
     let (mut desk, mut laptop) = group(shared.path());
-    let laptop_id = laptop
-        .pass()
-        .devices
-        .into_iter()
-        .find(|d| d.this_device)
-        .expect("the laptop lists itself")
-        .id;
+    let laptop_id = laptop.id();
 
-    desk.send(Command::RemoveSyncDevice { device: laptop_id.clone() });
-    let after =
-        desk.status_where("the laptop gone", |s| s.devices.iter().all(|d| d.id != laptop_id));
-    assert_eq!(after.devices.len(), 1);
+    remove(&mut desk, &laptop_id);
+    let after = desk.pass();
+    assert_eq!(after.devices.len(), 1, "{after:?}");
 
-    desk.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
-    thread::sleep(Duration::from_millis(500));
+    desk.watch(FINISHED, &["5"]);
     desk.pass();
     let seen = laptop.pass();
-    assert!(
-        seen.error.as_deref().is_some_and(|e| e.contains("removed from the group")),
-        "the laptop is told it was removed: {seen:?}"
-    );
+    assert!(removed(&seen), "the laptop is told it was removed: {seen:?}");
     thread::sleep(Duration::from_millis(300));
     laptop.pass();
     assert!(
@@ -336,23 +325,54 @@ fn rounds(devices: &mut [&mut Device], what: &str, done: impl Fn(&Device) -> boo
     }
 }
 
+/// The status line of a device the group removed, in English.
 fn removed(status: &SyncStatus) -> bool {
-    status.error.as_deref().is_some_and(|e| e.contains("removed from the group"))
+    status.error.as_deref().is_some_and(|e| e.contains("was removed from sync"))
+}
+
+/// The next recovery key `device` says, or the problem it says instead.
+fn key_said(device: &mut Device, what: &str) -> String {
+    let deadline = Instant::now() + PATIENCE;
+    loop {
+        let left = deadline.saturating_duration_since(Instant::now());
+        match device.events.recv_timeout(left).unwrap_or_else(|_| panic!("no {what} in time")) {
+            Event::SyncRecoveryKey(key) => return key,
+            Event::SyncProblem(p) => panic!("a problem instead of {what}: {p:?}"),
+            _ => {}
+        }
+    }
+}
+
+/// The next problem `device` says.
+fn problem_said(device: &mut Device) -> SyncProblem {
+    let deadline = Instant::now() + PATIENCE;
+    loop {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if let Event::SyncProblem(p) = device.events.recv_timeout(left).expect("a problem") {
+            return p;
+        }
+    }
 }
 
 /// Ask `device` for a new recovery key, and the key it says.
 fn new_recovery_key(device: &mut Device) -> String {
     while device.events.try_recv().is_ok() {}
     device.send(Command::NewRecoveryKey);
-    let deadline = Instant::now() + PATIENCE;
-    loop {
-        let left = deadline.saturating_duration_since(Instant::now());
-        if let Event::SyncRecoveryKey(key) =
-            device.events.recv_timeout(left).expect("a new key")
-        {
-            return key;
-        }
-    }
+    key_said(device, "a new recovery key")
+}
+
+/// Remove `gone` from the group on `device`, and the new recovery key it shows for it.
+fn remove(device: &mut Device, gone: &str) -> String {
+    while device.events.try_recv().is_ok() {}
+    device.send(Command::RemoveSyncDevice { device: gone.to_owned() });
+    key_said(device, "the recovery key the removal made")
+}
+
+/// The recovery key `device` holds, as Show recovery key says it.
+fn held_key(device: &mut Device) -> String {
+    while device.events.try_recv().is_ok() {}
+    device.send(Command::ShowRecoveryKey);
+    key_said(device, "the recovery key held")
 }
 
 /// A new device that tries to join with `key`: the devices it lists, or the problem it is told.
@@ -376,36 +396,87 @@ fn try_join(folder: SyncFolderSpec, key: &str) -> Result<usize, SyncProblem> {
     }
 }
 
-/// A device still holding the recovery key from before another device made a new one removes a
-/// device: the new key keeps opening the folder and the old one does not, the device that held
-/// the old key no longer offers it, and the removed device is told.
+/// A removal makes a new recovery key, shown on the device that removed, even one whose key
+/// another device had replaced. It is then the only key that opens the folder, and the other
+/// devices pick it up.
 #[test]
-fn a_removal_never_brings_back_a_replaced_recovery_key() {
+fn a_removal_makes_a_new_recovery_key_that_every_device_picks_up() {
     let shared = tempfile::tempdir().expect("a shared folder");
     let (mut desk, old) = set_up("Desk", folder(shared.path()));
     let mut laptop = join("Laptop", folder(shared.path()), &old, 2);
     let mut tv = join("Television", folder(shared.path()), &old, 3);
     let tv_id = tv.id();
     rounds(&mut [&mut desk, &mut laptop, &mut tv], "the three devices", |_| true);
-    let fresh = new_recovery_key(&mut desk);
-    assert_ne!(fresh, old);
+    let replaced = new_recovery_key(&mut desk);
+    assert_ne!(replaced, old);
+    rounds(&mut [&mut desk, &mut laptop], "the new key", |_| true);
+    assert_eq!(held_key(&mut laptop), replaced, "the laptop picked up the desk's new key");
 
-    laptop.send(Command::RemoveSyncDevice { device: tv_id.clone() });
-    let after = laptop.status_where("the TV gone", |s| s.devices.iter().all(|d| d.id != tv_id));
-    assert!(!after.recovery_key, "the laptop still offers a key that opens nothing: {after:?}");
-    assert!(matches!(
-        try_join(folder(shared.path()), &old),
-        Err(SyncProblem::WrongRecoveryKey)
-    ));
+    let fresh = remove(&mut laptop, &tv_id);
+    assert!(fresh != old && fresh != replaced);
+    for gone in [&old, &replaced] {
+        let joined = try_join(folder(shared.path()), gone);
+        assert!(matches!(joined, Err(SyncProblem::WrongRecoveryKey)), "{joined:?}");
+    }
     assert!(try_join(folder(shared.path()), &fresh).is_ok());
+    desk.pass();
+    assert_eq!(held_key(&mut desk), fresh, "the desk picked up the laptop's new key");
 
-    rounds(&mut [&mut desk, &mut laptop], "the removal", |d| {
-        d.store().sync_peers().unwrap().iter().any(|p| p.0 == tv_id && p.3)
-    });
     let deadline = Instant::now() + PATIENCE;
     while !removed(&tv.pass()) {
         assert!(Instant::now() < deadline, "the TV is never told it was removed");
     }
+}
+
+/// A removed device is told so on every pass. Setting sync up again on the folder says it holds
+/// a group, and the recovery key the device knew opens nothing. Joining with the new key adds it
+/// as a new device, which then syncs both ways.
+#[test]
+fn a_removed_device_joins_again_as_a_new_device() {
+    let shared = tempfile::tempdir().expect("a shared folder");
+    let (mut desk, mut laptop) = group(shared.path());
+    let old = held_key(&mut desk);
+    let laptop_id = laptop.id();
+    let fresh = remove(&mut desk, &laptop_id);
+    desk.watch(FINISHED, &["5"]);
+    desk.pass();
+    for _ in 0..2 {
+        let seen = laptop.pass();
+        assert!(removed(&seen), "{seen:?}");
+    }
+    assert!(!laptop.watched(FINISHED).contains(&"5".to_owned()));
+
+    laptop.send(Command::StartSync {
+        device_name: "Laptop".into(),
+        folder: folder(shared.path()),
+    });
+    assert_eq!(problem_said(&mut laptop), SyncProblem::GroupExists);
+    laptop.send(Command::JoinSync {
+        device_name: "Laptop".into(),
+        folder: folder(shared.path()),
+        recovery_key: Secret(old),
+    });
+    assert_eq!(problem_said(&mut laptop), SyncProblem::WrongRecoveryKey);
+    laptop.send(Command::JoinSync {
+        device_name: "Laptop".into(),
+        folder: folder(shared.path()),
+        recovery_key: Secret(fresh),
+    });
+    let back = laptop.status_where("the laptop back", |s| {
+        s.enabled && s.last_synced.is_some() && s.error.is_none() && s.devices.len() == 2
+    });
+    let new_id =
+        back.devices.iter().find(|d| d.this_device).expect("it lists itself").id.clone();
+    assert_ne!(new_id, laptop_id, "a new id");
+
+    laptop.watch(FINISHED, &["6"]);
+    rounds(&mut [&mut laptop, &mut desk], "both ways", |d| {
+        ["5", "6"].iter().all(|e| d.watched(FINISHED).iter().any(|w| w == e))
+    });
+    let listed = desk.pass();
+    assert!(listed.devices.iter().any(|d| d.id == new_id));
+    assert!(listed.devices.iter().all(|d| d.id != laptop_id));
+    assert_eq!(laptop.pass().error, None);
 }
 
 /// The WebDAV server a person's own sync folder would be on, from `KAERI_TEST_WEBDAV` (its
@@ -423,8 +494,8 @@ fn webdav() -> SyncFolderSpec {
 /// Three devices, then others, in one group on a real WebDAV server: watches, a list status and
 /// a shared setting reach every device, changes made on two settle the same everywhere, and a
 /// device removed, online or while offline, is told so on every pass while the others carry on
-/// with nothing lost. A removal by a device holding a replaced recovery key leaves the new key
-/// the one that opens the folder.
+/// with nothing lost. Each removal makes a new recovery key that the others pick up and that alone
+/// opens the folder, and a removed device joins again as a new device.
 ///
 /// It needs a WebDAV server with an empty folder at the address, which rclone gives:
 ///
@@ -485,10 +556,9 @@ fn removing_devices_on_a_webdav_server() {
             && !d.config().contains("skip_filler = true")
     });
 
-    // A removes B, which is online.
-    a.send(Command::RemoveSyncDevice { device: b_id.clone() });
-    let after = a.status_where("B gone", |s| s.devices.iter().all(|d| d.id != b_id));
-    assert_eq!(after.devices.len(), 2, "{after:?}");
+    // A removes B, which is online: A shows a new recovery key.
+    let k1 = remove(&mut a, &b_id);
+    assert_ne!(k1, old);
     let seen = b.pass();
     assert!(removed(&seen), "B is told it was removed: {seen:?}");
     a.watch(FINISHED, &["4"]);
@@ -513,23 +583,48 @@ fn removing_devices_on_a_webdav_server() {
         assert_eq!(d.store().synced_status(AIRING.get()).unwrap().as_deref(), Some("DROPPED"));
         assert!(!d.config().contains("skip_filler = true"));
     }
+    assert_eq!(held_key(&mut c), k1, "C picked up the new recovery key");
 
-    // A makes a new recovery key, D joins with it, and C, which still holds the old one, removes
-    // D while D is offline with a watch of its own.
-    let fresh = new_recovery_key(&mut a);
-    let mut d = join("Television", webdav(), &fresh, 3);
+    // B joins again: the key it knew opens nothing, and with the new one it is a new device.
+    b.send(Command::JoinSync {
+        device_name: "Laptop".into(),
+        folder: webdav(),
+        recovery_key: Secret(old.clone()),
+    });
+    assert_eq!(problem_said(&mut b), SyncProblem::WrongRecoveryKey);
+    b.send(Command::JoinSync {
+        device_name: "Laptop".into(),
+        folder: webdav(),
+        recovery_key: Secret(k1.clone()),
+    });
+    let back = b.status_where("B back", |s| {
+        s.enabled && s.last_synced.is_some() && s.error.is_none() && s.devices.len() == 3
+    });
+    let b_new =
+        back.devices.iter().find(|d| d.this_device).expect("it lists itself").id.clone();
+    assert_ne!(b_new, b_id);
+    b.watch(FINISHED, &["9"]);
+    let has = |d: &Device, eps: &[&str]| {
+        eps.iter().all(|e| d.watched(FINISHED).iter().any(|w| w == e))
+    };
+    rounds(&mut [&mut b, &mut a, &mut c], "B as a new device", |d| {
+        has(d, &["1", "2", "3", "4", "5", "9"])
+    });
+
+    // A makes a new recovery key and D joins with it. C, which picks the new key up, removes D
+    // while D is offline with a watch of its own.
+    let k2 = new_recovery_key(&mut a);
+    let mut d = join("Television", webdav(), &k2, 4);
     let d_id = d.id();
-    rounds(&mut [&mut a, &mut c, &mut d], "D in the group", |dev| {
-        dev.watched(FINISHED) == ["1", "2", "3", "4", "5"]
+    rounds(&mut [&mut a, &mut b, &mut c, &mut d], "D in the group", |dev| {
+        has(dev, &["1", "2", "3", "4", "5", "9"])
             && dev.store().sync_peers().unwrap().iter().any(|p| p.0 == d_id && !p.3)
     });
     d.watch(FINISHED, &["7"]);
-    c.send(Command::RemoveSyncDevice { device: d_id.clone() });
-    c.status_where("D gone", |s| s.devices.iter().all(|x| x.id != d_id));
+    let k3 = remove(&mut c, &d_id);
     c.watch(FINISHED, &["8"]);
-    rounds(&mut [&mut c, &mut a], "A and C after D went", |dev| {
-        dev.watched(FINISHED) == ["1", "2", "3", "4", "5", "8"]
-            && dev.store().sync_peers().unwrap().iter().any(|p| p.0 == d_id && p.3)
+    rounds(&mut [&mut c, &mut a, &mut b], "A, B and C after D went", |dev| {
+        has(dev, &["8"]) && dev.store().sync_peers().unwrap().iter().any(|p| p.0 == d_id && p.3)
     });
     // D comes back.
     let deadline = Instant::now() + PATIENCE;
@@ -537,11 +632,16 @@ fn removing_devices_on_a_webdav_server() {
         assert!(Instant::now() < deadline, "D is never told it was removed");
     }
     assert!(removed(&d.pass()), "D is told on the next pass too");
-    for dev in [&mut a, &mut c] {
+    assert!(!has(&d, &["8"]), "D received after its removal");
+    for dev in [&mut a, &mut b, &mut c] {
         let s = dev.pass();
-        assert_eq!((s.error.as_deref(), s.devices.len()), (None, 2), "{s:?}");
-        assert!(!dev.watched(FINISHED).contains(&"7".to_owned()), "D's offline watch arrived");
+        assert_eq!((s.error.as_deref(), s.devices.len()), (None, 3), "{s:?}");
+        assert!(!has(dev, &["7"]), "D's offline watch arrived");
     }
-    assert!(matches!(try_join(webdav(), &old), Err(SyncProblem::WrongRecoveryKey)));
-    assert_eq!(try_join(webdav(), &fresh), Ok(3));
+    assert_eq!(held_key(&mut a), k3, "A picked up C's new recovery key");
+    for gone in [&old, &k1, &k2] {
+        let joined = try_join(webdav(), gone);
+        assert!(matches!(joined, Err(SyncProblem::WrongRecoveryKey)), "{joined:?}");
+    }
+    assert_eq!(try_join(webdav(), &k3), Ok(4));
 }
