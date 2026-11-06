@@ -157,6 +157,8 @@ public sealed partial class MainWindow : Window
                 AppWindow.TitleBar.PreferredHeightOption = shown ? TitleBarHeightOption.Tall : TitleBarHeightOption.Collapsed;
         };
         Player.MiniRequested += Mini;
+        // A dialog doesn't fit the 480 by 270 mini window: the window is its size again first.
+        Dialogs.Opening += Player.LeaveMini;
         session.OffThread = e =>
         {
 #if KAERI_TESTING
@@ -610,6 +612,8 @@ public sealed partial class MainWindow : Window
                     AddFolder();
                 else if (welcome.Then == "server")
                     ShowAddServer();
+                else if (welcome.Then == "pair")
+                    Sync.SyncDialogs.PairShow(Sync.Origin.FirstLaunch);
             });
     }
 

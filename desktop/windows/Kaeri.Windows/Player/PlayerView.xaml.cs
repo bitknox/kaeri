@@ -2588,6 +2588,13 @@ public sealed partial class PlayerView : UserControl
 
     void OnMini(object sender, RoutedEventArgs e) => ToggleMini();
 
+    /// <summary>Back from the mini window, if in it: a dialog is about to open, and needs the room.</summary>
+    internal void LeaveMini()
+    {
+        if (mini)
+            ToggleMini();
+    }
+
     void ToggleMini()
     {
         var on = !mini;

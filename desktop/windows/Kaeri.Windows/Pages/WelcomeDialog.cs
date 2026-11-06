@@ -34,7 +34,10 @@ sealed class WelcomeDialog
     /// <summary>An invite link to join once the dialog has closed: the join dialog takes it from there.</summary>
     public string? Invite { get; private set; }
 
-    /// <summary>"folder" or "server" when the viewer chose to add their own media: that dialog opens once this closes.</summary>
+    /// <summary>
+    /// "folder" or "server" when the viewer chose to add their own media, "pair" when they set
+    /// this PC up from another device: that dialog opens once this closes.
+    /// </summary>
     public string? Then { get; private set; }
 
     public WelcomeDialog(Ctx ctx, XamlRoot root)
@@ -95,6 +98,8 @@ sealed class WelcomeDialog
                 body.Children.Add(name);
                 body.Children.Add(Ui.Text(T.OnboardingTagline, "BodyTextBlockStyle"));
                 dialog.PrimaryButtonText = T.OnboardingContinue;
+                // As on the Mac: a device already set up shows this one a code, and that brings it all.
+                dialog.SecondaryButtonText = T.FirstSetupOther;
                 dialog.CloseButtonText = T.OnboardingSkip;
                 break;
             case 1:
@@ -199,6 +204,12 @@ sealed class WelcomeDialog
 
     void OnSecondary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
+        if (page == 0)
+        {
+            // The pairing dialog opens once this one has closed: one dialog at a time.
+            Then = "pair";
+            return;
+        }
         if (page == 1)
         {
             args.Cancel = true;
