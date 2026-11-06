@@ -46,6 +46,7 @@ kaeri-track = { path = "crates/kaeri-track", default-features = false }
 kaeri-testkit = { path = "crates/kaeri-testkit" }
 kaeri-tui = { path = "crates/kaeri-tui" }
 kaeri-i18n = { path = "crates/kaeri-i18n" }
+kaeri-books = { path = "crates/kaeri-books" }
 
 # --- async ---
 tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
@@ -104,6 +105,18 @@ ratatui-image = { version = "11.0", default-features = false, features = ["cross
 crossterm = { version = "0.29", features = ["event-stream"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 terminal-colorsaurus = "1.0"
+
+# --- book files ---
+# Readers for the formats kaeri-books opens, all pure Rust so every target reads them the same
+# way (spike S2). Each without its defaults: no encryption, no writers beyond what a test needs.
+zip = { version = "9.4", default-features = false, features = ["deflate-flate2"] }
+sevenz-rust2 = { version = "0.24", default-features = false }
+# CBR: the read side only. The defaults add the compressor, recovery and encryption.
+rars = { version = "0.12", default-features = false }
+# PDF pages. The embedded standard fonts and CMaps are kaeri-books' `pdf-fonts` feature.
+hayro = { version = "0.9", default-features = false }
+# The IDPF font obfuscation key in EPUBs.
+sha1 = "0.11"
 
 # --- matching / parsing ---
 nucleo = "0.5"
