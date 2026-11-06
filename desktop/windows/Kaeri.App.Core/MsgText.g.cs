@@ -366,6 +366,12 @@ public static class MsgText
         ReadingMsg.ReadingOriginKorea => T.ReadingOriginKorea,
         ReadingMsg.ReadingOriginChina => T.ReadingOriginChina,
         ReadingMsg.ReadingOriginTaiwan => T.ReadingOriginTaiwan,
+        ReadingMsg.ExportDeviceOther => T.ExportDeviceOther,
+        ReadingMsg.ExportDeviceEink6 => T.ExportDeviceEink6,
+        ReadingMsg.ExportDeviceEink7 => T.ExportDeviceEink7,
+        ReadingMsg.ExportDeviceColourEink => T.ExportDeviceColourEink,
+        ReadingMsg.ExportDeviceTablet => T.ExportDeviceTablet,
+        ReadingMsg.ExportChapter x => T.ExportChapter(x.Chapter),
         _ => message.ToString() ?? "",
     };
 

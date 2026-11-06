@@ -368,6 +368,12 @@ extension ReadingMsg {
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
         case .readingOriginTaiwan: L.readingOriginTaiwan
+        case .exportDeviceOther: L.exportDeviceOther
+        case .exportDeviceEink6: L.exportDeviceEink6
+        case .exportDeviceEink7: L.exportDeviceEink7
+        case .exportDeviceColourEink: L.exportDeviceColourEink
+        case .exportDeviceTablet: L.exportDeviceTablet
+        case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
         }
     }
 }

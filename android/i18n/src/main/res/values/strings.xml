@@ -469,6 +469,18 @@
     <string name="reading_origin_china">China</string>
     <!-- A search filter: books from Taiwan. -->
     <string name="reading_origin_taiwan">Taiwan</string>
+    <!-- Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB. -->
+    <string name="export_device_other">Other e-reader</string>
+    <!-- Send to e-reader: a device class, a grey e-ink screen of about 6 inches. -->
+    <string name="export_device_eink_6">E-ink, 6 inch</string>
+    <!-- Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches. -->
+    <string name="export_device_eink_7">E-ink, 7 inch</string>
+    <!-- Send to e-reader: a device class, a colour e-ink screen of about 7 inches. -->
+    <string name="export_device_colour_eink">Colour e-ink, 7 inch</string>
+    <!-- Send to e-reader: a device class, a colour tablet. -->
+    <string name="export_device_tablet">Tablet</string>
+    <!-- A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5. -->
+    <string name="export_chapter">Chapter %1$s</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -4998,6 +5010,12 @@
     <string name="settings_subs_styled_strip_detail">Every line shows as plain dialogue at the bottom, in your style. Signs lose their place, and karaoke and effects are gone.</string>
     <!-- Button that restores the default subtitle style. -->
     <string name="settings_subs_reset">Reset subtitle style</string>
+    <!-- Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse. -->
+    <string name="settings_opds_feed">Share on this network</string>
+    <!-- Row: the password e-readers ask for before they browse the shared catalogue. -->
+    <string name="settings_opds_password">Feed password</string>
+    <!-- Row: the port the shared catalogue listens on. Empty picks a free one. -->
+    <string name="settings_opds_port">Feed port</string>
     <!-- Title of the screen or section that lists sources. -->
     <string name="sources_title">Sources</string>
     <!-- Shown on the sources screen when none is installed. -->

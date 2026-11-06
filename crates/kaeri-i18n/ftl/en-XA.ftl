@@ -695,6 +695,24 @@ reading-origin-china = [Çĥîñà~~]
 # A search filter: books from Taiwan.
 reading-origin-taiwan = [Ţàîŵàñ~~]
 
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = [Öţĥéŕ é-ŕéàðéŕ~~~~~]
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = [É-îñķ, 6 îñçĥ~~~~]
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = [É-îñķ, 7 îñçĥ~~~~]
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = [Çöļöüŕ é-îñķ, 7 îñçĥ~~~~~~]
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = [Ţàƀļéţ~~]
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = [Çĥàþţéŕ { $chapter }~~~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 
@@ -9193,6 +9211,15 @@ settings-subs-styled-strip-detail = [Éṽéŕý ļîñé šĥöŵš àš þļà
 
 # Button that restores the default subtitle style.
 settings-subs-reset = [Ŕéšéţ šüƀţîţļé šţýļé~~~~~~]
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = [Šĥàŕé öñ ţĥîš ñéţŵöŕķ~~~~~~~]
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = [Ƒééð þöŕţ~~~]
 
 # Title of the screen or section that lists sources.
 sources-title = [Šöüŕçéš~~~]

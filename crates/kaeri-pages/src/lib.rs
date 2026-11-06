@@ -38,6 +38,7 @@ pub mod colour;
 pub mod crop;
 pub mod decode;
 pub mod dither;
+pub mod export;
 pub mod layout;
 pub mod rainbow;
 pub mod render;

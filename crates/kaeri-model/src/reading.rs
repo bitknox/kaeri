@@ -1093,6 +1093,10 @@ pub enum ReadingCommand {
         target: String,
         format: ExportFormat,
     },
+    /// Stops a [`Self::Prepare`] that is running; the files it had written are removed.
+    CancelPrepare {
+        job: JobId,
+    },
     /// The files were shared: the series page asks where you stopped.
     Shared {
         work: WorkId,
@@ -1150,7 +1154,9 @@ impl ReadingCommand {
             | Self::DownloadCancel { .. }
             | Self::DownloadDelete { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
-            Self::LoadExportTargets | Self::Prepare { .. } => ReadingAbout::Export,
+            Self::LoadExportTargets | Self::Prepare { .. } | Self::CancelPrepare { .. } => {
+                ReadingAbout::Export
+            }
             Self::LoadFeed | Self::SetFeed { .. } => ReadingAbout::Feed,
             Self::DeviceFacts { .. } | Self::AnswerEink { .. } => ReadingAbout::Eink,
         }

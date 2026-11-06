@@ -1090,6 +1090,36 @@ pub fn reading_origin_taiwan() -> String {
     text("reading-origin-taiwan", &[])
 }
 
+/// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+pub fn export_device_other() -> String {
+    text("export-device-other", &[])
+}
+
+/// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+pub fn export_device_eink_6() -> String {
+    text("export-device-eink-6", &[])
+}
+
+/// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+pub fn export_device_eink_7() -> String {
+    text("export-device-eink-7", &[])
+}
+
+/// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+pub fn export_device_colour_eink() -> String {
+    text("export-device-colour-eink", &[])
+}
+
+/// Send to e-reader: a device class, a colour tablet.
+pub fn export_device_tablet() -> String {
+    text("export-device-tablet", &[])
+}
+
+/// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+pub fn export_chapter(chapter: &str) -> String {
+    text("export-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -14783,6 +14813,21 @@ pub fn settings_subs_styled_strip_detail() -> String {
 /// Button that restores the default subtitle style.
 pub fn settings_subs_reset() -> String {
     text("settings-subs-reset", &[])
+}
+
+/// Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+pub fn settings_opds_feed() -> String {
+    text("settings-opds-feed", &[])
+}
+
+/// Row: the password e-readers ask for before they browse the shared catalogue.
+pub fn settings_opds_password() -> String {
+    text("settings-opds-password", &[])
+}
+
+/// Row: the port the shared catalogue listens on. Empty picks a free one.
+pub fn settings_opds_port() -> String {
+    text("settings-opds-port", &[])
 }
 
 /// Title of the screen or section that lists sources.

@@ -666,6 +666,24 @@ public static partial class T
     /// <summary>A search filter: books from Taiwan.</summary>
     public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
 
+    /// <summary>Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.</summary>
+    public static string ExportDeviceOther => Get("ExportDeviceOther");
+
+    /// <summary>Send to e-reader: a device class, a grey e-ink screen of about 6 inches.</summary>
+    public static string ExportDeviceEink6 => Get("ExportDeviceEink6");
+
+    /// <summary>Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.</summary>
+    public static string ExportDeviceEink7 => Get("ExportDeviceEink7");
+
+    /// <summary>Send to e-reader: a device class, a colour e-ink screen of about 7 inches.</summary>
+    public static string ExportDeviceColourEink => Get("ExportDeviceColourEink");
+
+    /// <summary>Send to e-reader: a device class, a colour tablet.</summary>
+    public static string ExportDeviceTablet => Get("ExportDeviceTablet");
+
+    /// <summary>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</summary>
+    public static string ExportChapter(string chapter) => Fill(Get("ExportChapter"), ("chapter", chapter));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -6304,6 +6322,15 @@ public static partial class T
     /// <summary>Button that restores the default subtitle style.</summary>
     public static string SettingsSubsReset => Get("SettingsSubsReset");
 
+    /// <summary>Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.</summary>
+    public static string SettingsOpdsFeed => Get("SettingsOpdsFeed");
+
+    /// <summary>Row: the password e-readers ask for before they browse the shared catalogue.</summary>
+    public static string SettingsOpdsPassword => Get("SettingsOpdsPassword");
+
+    /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
+    public static string SettingsOpdsPort => Get("SettingsOpdsPort");
+
     /// <summary>Title of the screen or section that lists sources.</summary>
     public static string SourcesTitle => Get("SourcesTitle");
 
@@ -9217,6 +9244,12 @@ public static partial class T
         ["ReadingOriginKorea"] = "Korea",
         ["ReadingOriginChina"] = "China",
         ["ReadingOriginTaiwan"] = "Taiwan",
+        ["ExportDeviceOther"] = "Other e-reader",
+        ["ExportDeviceEink6"] = "E-ink, 6 inch",
+        ["ExportDeviceEink7"] = "E-ink, 7 inch",
+        ["ExportDeviceColourEink"] = "Colour e-ink, 7 inch",
+        ["ExportDeviceTablet"] = "Tablet",
+        ["ExportChapter"] = "Chapter {chapter}",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -11153,6 +11186,9 @@ public static partial class T
         ["SettingsSubsStyledStrip"] = "Remove all styling",
         ["SettingsSubsStyledStripDetail"] = "Every line shows as plain dialogue at the bottom, in your style. Signs lose their place, and karaoke and effects are gone.",
         ["SettingsSubsReset"] = "Reset subtitle style",
+        ["SettingsOpdsFeed"] = "Share on this network",
+        ["SettingsOpdsPassword"] = "Feed password",
+        ["SettingsOpdsPort"] = "Feed port",
         ["SourcesTitle"] = "Sources",
         ["SourcesEmpty"] = "No sources yet. Join a plugin store to add some.",
         ["PluginRiskWarning"] = "Plugins are written by other people and run on your device. Install only plugins you trust, for sources you're entitled to use.",

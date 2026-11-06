@@ -67,6 +67,14 @@ pub fn set_setting(
             kaeri_core::settings::SettingValue::Int(now),
         );
     }
+    // The port is typed as text and kept as a number; empty is 0, which the config reads as
+    // "pick a free one".
+    let value = match (key, value) {
+        (SettingKey::OpdsPort, kaeri_core::settings::SettingValue::Str(port)) => {
+            kaeri_core::settings::SettingValue::Int(port.trim().parse().unwrap_or(0))
+        }
+        (_, value) => value,
+    };
     write_setting(table, file_key, value, engine, services, tx);
     // The TV picker's Chromecast group comes and goes with its row.
     #[cfg(feature = "cast")]

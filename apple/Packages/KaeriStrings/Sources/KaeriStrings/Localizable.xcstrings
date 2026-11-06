@@ -59241,6 +59241,78 @@
         }
       }
     },
+    "export-chapter" : {
+      "comment" : "A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@"
+          }
+        }
+      }
+    },
+    "export-device-colour-eink" : {
+      "comment" : "Send to e-reader: a device class, a colour e-ink screen of about 7 inches.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colour e-ink, 7 inch"
+          }
+        }
+      }
+    },
+    "export-device-eink-6" : {
+      "comment" : "Send to e-reader: a device class, a grey e-ink screen of about 6 inches.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-ink, 6 inch"
+          }
+        }
+      }
+    },
+    "export-device-eink-7" : {
+      "comment" : "Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-ink, 7 inch"
+          }
+        }
+      }
+    },
+    "export-device-other" : {
+      "comment" : "Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other e-reader"
+          }
+        }
+      }
+    },
+    "export-device-tablet" : {
+      "comment" : "Send to e-reader: a device class, a colour tablet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tablet"
+          }
+        }
+      }
+    },
     "film-length-hours" : {
       "comment" : "Length of a film or a single episode that is a whole number of hours, such as \"2 h\". Argument 1: hours (Int).",
       "extractionState" : "manual",
@@ -196581,6 +196653,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Khi tập của tựa này ra mắt"
+          }
+        }
+      }
+    },
+    "settings-opds-feed" : {
+      "comment" : "Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share on this network"
+          }
+        }
+      }
+    },
+    "settings-opds-password" : {
+      "comment" : "Row: the password e-readers ask for before they browse the shared catalogue.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed password"
+          }
+        }
+      }
+    },
+    "settings-opds-port" : {
+      "comment" : "Row: the port the shared catalogue listens on. Empty picks a free one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed port"
           }
         }
       }

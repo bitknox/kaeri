@@ -1,0 +1,677 @@
+//! Writing the files of one send: pages processed for the target and set into a fixed-layout
+//! EPUB, KEPUB or CBZ, or the text of chapters set into a plain EPUB or KEPUB.
+//!
+//! Pure of the engine: chapter files in, files out, with progress and a stop flag. The
+//! processed pages of a manga are written to a scratch folder first, so a long series is not
+//! held in memory and the split into parts knows the sizes it is splitting.
+
+use std::{
+    fs::{self, File},
+    io::BufWriter,
+    path::{Path, PathBuf},
+    sync::atomic::{AtomicBool, Ordering},
+};
+
+use kaeri_books::{
+    Book, BookError, ComicInfo, Limits,
+    comicinfo::MangaFlag,
+    epub::Direction as BookDirection,
+    write::{
+        BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES,
+        split_parts,
+    },
+};
+use kaeri_model::reading::{ExportFile, ExportFormat, ReadingFailure};
+use kaeri_pages::{
+    export::{ExportPage, prepare as prepare_page},
+    layout::Direction,
+    render::{Look, Renderer, Target},
+};
+
+use super::profiles::Profile;
+
+/// One chapter to send, and the file it is downloaded as.
+#[derive(Debug, Clone)]
+pub struct Chapter {
+    pub label: String,
+    pub path: PathBuf,
+}
+
+/// What one send is asked to write.
+#[derive(Debug, Clone)]
+pub struct Request {
+    pub title: String,
+    pub chapters: Vec<Chapter>,
+    pub profile: Profile,
+    pub format: ExportFormat,
+    /// Where the files go.
+    pub out: PathBuf,
+    /// A part is kept under this many bytes; `None` takes the Kindle limit for a profile that
+    /// splits and no limit otherwise. Set by tests.
+    pub limit: Option<u64>,
+    /// Right to left for manga, when the series says so.
+    pub right_to_left: Option<bool>,
+    /// Identifies the book to the e-reader, so a second send of the same chapters keeps its
+    /// place there.
+    pub identifier: String,
+}
+
+/// Why a send stopped.
+#[derive(Debug)]
+pub enum Stop {
+    Cancelled,
+    Failed(ReadingFailure),
+}
+
+impl From<ReadingFailure> for Stop {
+    fn from(f: ReadingFailure) -> Self {
+        Stop::Failed(f)
+    }
+}
+
+fn unreadable(path: &Path, format: &str) -> Stop {
+    Stop::Failed(ReadingFailure::Unreadable {
+        path: path.display().to_string(),
+        format: format.into(),
+    })
+}
+
+fn io(e: &std::io::Error, path: &Path) -> Stop {
+    if e.kind() == std::io::ErrorKind::StorageFull {
+        return Stop::Failed(ReadingFailure::DiskFull);
+    }
+    Stop::Failed(ReadingFailure::FileMissing { path: path.display().to_string() })
+}
+
+fn book(e: &BookError, path: &Path) -> Stop {
+    tracing::debug!(error = %e, "a chapter was not prepared");
+    unreadable(path, "book")
+}
+
+/// Whether the chapters are text (EPUB) or pages.
+fn is_text(chapters: &[Chapter]) -> bool {
+    chapters
+        .first()
+        .and_then(|c| c.path.extension())
+        .is_some_and(|e| e.eq_ignore_ascii_case("epub"))
+}
+
+/// Writes the files. `progress` is told `(done, total)` as work finishes.
+pub fn run(
+    req: &Request,
+    progress: &mut dyn FnMut(u32, u32),
+    cancel: &AtomicBool,
+) -> Result<Vec<ExportFile>, Stop> {
+    if req.chapters.is_empty() {
+        return Err(ReadingFailure::NotFound.into());
+    }
+    if !req.profile.opens(req.format) {
+        return Err(unsupported(req.format));
+    }
+    fs::create_dir_all(&req.out).map_err(|e| io(&e, &req.out))?;
+    let result = if is_text(&req.chapters) {
+        novel(req, progress, cancel)
+    } else {
+        manga(req, progress, cancel)
+    };
+    if result.is_err() {
+        // Nothing half written is left to be shared.
+        let _ = fs::remove_dir_all(&req.out);
+    }
+    result
+}
+
+fn unsupported(format: ExportFormat) -> Stop {
+    let extension = match format {
+        ExportFormat::FixedEpub | ExportFormat::Epub => ".epub",
+        ExportFormat::Kepub => ".kepub.epub",
+        ExportFormat::Cbz => ".cbz",
+    };
+    Stop::Failed(ReadingFailure::Unsupported { extension: extension.into() })
+}
+
+fn limit_of(req: &Request) -> u64 {
+    req.limit.unwrap_or(if req.profile.split { KINDLE_PART_BYTES } else { u64::MAX })
+}
+
+fn stopped(cancel: &AtomicBool) -> Result<(), Stop> {
+    if cancel.load(Ordering::Relaxed) { Err(Stop::Cancelled) } else { Ok(()) }
+}
+
+/// A file name from a title: letters, digits, spaces and a few marks.
+fn clean(title: &str) -> String {
+    let kept: String = title
+        .chars()
+        .map(|c| if c.is_alphanumeric() || " -_.,'()".contains(c) { c } else { ' ' })
+        .collect();
+    let kept = kept.split_whitespace().collect::<Vec<_>>().join(" ");
+    let kept = kept.trim_matches(|c| c == '.' || c == ' ');
+    if kept.is_empty() { "Book".into() } else { kept.chars().take(80).collect() }
+}
+
+/// `Title 40-45`, `Title 7`; the part, when there are several, as ` (2 of 3)`.
+fn file_name(req: &Request, part: Option<(usize, usize)>) -> String {
+    let first = req.chapters.first().map(|c| c.label.as_str()).unwrap_or("");
+    let last = req.chapters.last().map(|c| c.label.as_str()).unwrap_or("");
+    let range = if req.chapters.len() <= 1 || first == last {
+        first.to_owned()
+    } else {
+        format!("{first}-{last}")
+    };
+    let mut name = clean(&format!("{} {range}", req.title));
+    if let Some((n, of)) = part.filter(|(_, of)| *of > 1) {
+        name.push_str(&format!(" ({n} of {of})"));
+    }
+    name.push_str(match req.format {
+        ExportFormat::Kepub => ".kepub.epub",
+        ExportFormat::Cbz => ".cbz",
+        ExportFormat::FixedEpub | ExportFormat::Epub => ".epub",
+    });
+    name
+}
+
+fn done_file(path: PathBuf, name: String, part: Option<u32>) -> Result<ExportFile, Stop> {
+    let bytes = fs::metadata(&path).map_err(|e| io(&e, &path))?.len();
+    Ok(ExportFile { path: path.display().to_string(), name, bytes, part })
+}
+
+fn chapter_title(label: &str) -> String {
+    kaeri_i18n::t::export_chapter(label)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Pages
+
+struct Prepared {
+    chapter: usize,
+    file: PathBuf,
+    bytes: u64,
+}
+
+fn manga(
+    req: &Request,
+    progress: &mut dyn FnMut(u32, u32),
+    cancel: &AtomicBool,
+) -> Result<Vec<ExportFile>, Stop> {
+    if req.format == ExportFormat::Epub {
+        return Err(unsupported(req.format));
+    }
+    let limits = Limits::default();
+    let mut comics = Vec::new();
+    for chapter in &req.chapters {
+        match kaeri_books::open(&chapter.path, &limits) {
+            Ok(Book::Comic(c)) => comics.push(c),
+            Ok(_) => return Err(unreadable(&chapter.path, "CBZ")),
+            Err(e) => return Err(book(&e, &chapter.path)),
+        }
+    }
+    let total: u32 = comics.iter().map(|c| c.pages().len() as u32).sum();
+    let right_to_left = req.right_to_left.unwrap_or_else(|| {
+        comics.first().and_then(|c| c.info()).is_some_and(ComicInfo::right_to_left)
+    });
+    let direction = if right_to_left { Direction::RightToLeft } else { Direction::LeftToRight };
+    let target = Target {
+        panel: req.profile.panel,
+        width: req.profile.width,
+        height: req.profile.height,
+    };
+    let mut renderer = Renderer::new(target, Look::default());
+    let scratch = req.out.join(".pages");
+    fs::create_dir_all(&scratch).map_err(|e| io(&e, &scratch))?;
+    let mut prepared: Vec<Prepared> = Vec::new();
+    let mut done = 0u32;
+    progress(0, total);
+    for (chapter, comic) in comics.iter_mut().enumerate() {
+        for index in 0..comic.pages().len() {
+            stopped(cancel)?;
+            let path = &req.chapters[chapter].path;
+            let source = comic.read_page(index).map_err(|e| book(&e, path))?;
+            let pages: Vec<ExportPage> = prepare_page(&mut renderer, &source, direction)
+                .map_err(|e| {
+                    tracing::debug!(error = %e, "a page was not prepared");
+                    unreadable(path, "CBZ")
+                })?;
+            for page in pages {
+                let file = scratch.join(format!("{:06}", prepared.len()));
+                fs::write(&file, &page.bytes).map_err(|e| io(&e, &file))?;
+                prepared.push(Prepared { chapter, file, bytes: page.bytes.len() as u64 });
+            }
+            done += 1;
+            progress(done, total);
+        }
+    }
+    stopped(cancel)?;
+    let sizes: Vec<u64> = prepared.iter().map(|p| p.bytes).collect();
+    let parts = split_parts(&sizes, limit_of(req));
+    let count = parts.len();
+    let mut files = Vec::with_capacity(count);
+    for (n, range) in parts.into_iter().enumerate() {
+        stopped(cancel)?;
+        let name = file_name(req, Some((n + 1, count)));
+        let path = req.out.join(&name);
+        let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
+        let items = &prepared[range];
+        match req.format {
+            ExportFormat::Cbz => write_cbz(req, items, out, &path)?,
+            _ => write_fixed(req, items, out, &path, right_to_left, n + 1, count)?,
+        }
+        files.push(done_file(path, name, (count > 1).then_some(n as u32 + 1))?);
+    }
+    let _ = fs::remove_dir_all(&scratch);
+    Ok(files)
+}
+
+fn write_cbz(
+    req: &Request,
+    items: &[Prepared],
+    out: BufWriter<File>,
+    path: &Path,
+) -> Result<(), Stop> {
+    let info = ComicInfo {
+        series: Some(req.title.clone()),
+        manga: Some(if req.right_to_left == Some(true) {
+            MangaFlag::YesAndRightToLeft
+        } else {
+            MangaFlag::Yes
+        }),
+        page_count: Some(items.len() as u32),
+        ..ComicInfo::default()
+    };
+    let mut cbz = CbzWriter::new(out, Some(&info)).map_err(|e| book(&e, path))?;
+    for item in items {
+        let bytes = fs::read(&item.file).map_err(|e| io(&e, &item.file))?;
+        cbz.add_page(&bytes).map_err(|e| book(&e, path))?;
+    }
+    cbz.finish().map_err(|e| book(&e, path))?;
+    Ok(())
+}
+
+fn write_fixed(
+    req: &Request,
+    items: &[Prepared],
+    out: BufWriter<File>,
+    path: &Path,
+    right_to_left: bool,
+    part: usize,
+    parts: usize,
+) -> Result<(), Stop> {
+    let flavor =
+        if req.format == ExportFormat::Kepub { EpubFlavor::Kepub } else { EpubFlavor::Epub };
+    let title = if parts > 1 {
+        format!("{} ({part} of {parts})", req.title)
+    } else {
+        req.title.clone()
+    };
+    let meta = BookMeta {
+        title,
+        language: String::new(),
+        identifier: Some(format!("{}:{part}", req.identifier)),
+        direction: Some(if right_to_left { BookDirection::Rtl } else { BookDirection::Ltr }),
+        ..BookMeta::default()
+    };
+    let fixed =
+        FixedLayout { width: req.profile.width, height: req.profile.height, spreads: false };
+    let mut epub =
+        EpubWriter::new(out, meta, flavor, Some(fixed)).map_err(|e| book(&e, path))?;
+    let mut last_chapter = None;
+    for item in items {
+        let bytes = fs::read(&item.file).map_err(|e| io(&e, &item.file))?;
+        let title = (last_chapter != Some(item.chapter))
+            .then(|| chapter_title(&req.chapters[item.chapter].label));
+        last_chapter = Some(item.chapter);
+        epub.add_image_page(&bytes, None, title.as_deref()).map_err(|e| book(&e, path))?;
+    }
+    epub.finish().map_err(|e| book(&e, path))?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------------------------
+// Text
+
+/// The inside of a document's `<body>`.
+fn body_inner(xhtml: &str) -> Option<&str> {
+    let lower = xhtml.to_ascii_lowercase();
+    let open = lower.find("<body")?;
+    let start = open + xhtml[open..].find('>')? + 1;
+    let end = lower.rfind("</body>")?;
+    (end >= start).then(|| &xhtml[start..end])
+}
+
+/// One chapter's text with its images carried over into `writer`: each image the text names is
+/// added under a name of its own and the text points at that.
+fn chapter_body(
+    epub: &mut kaeri_books::Epub,
+    chapter: usize,
+    writer: &mut EpubWriter<BufWriter<File>>,
+    path: &Path,
+) -> Result<String, Stop> {
+    let spine: Vec<(String, bool)> = epub
+        .spine()
+        .map(|(_, item)| (item.path.clone(), item.media_type == "application/xhtml+xml"))
+        .collect();
+    let mut body = String::new();
+    let mut images = 0;
+    for (item, xhtml) in spine {
+        if !xhtml {
+            continue;
+        }
+        let bytes = epub.resource(&item).map_err(|e| book(&e, path))?.data;
+        let text = String::from_utf8_lossy(&bytes).into_owned();
+        let Some(inner) = body_inner(&text) else { continue };
+        let mut inner = inner.to_owned();
+        // Each `src="…"` that names a file in the book becomes a file of the new one.
+        let mut from = 0;
+        while let Some(at) = inner[from..].find("src=\"") {
+            let start = from + at + 5;
+            let Some(len) = inner[start..].find('"') else { break };
+            let href = inner[start..start + len].to_owned();
+            from = start + len;
+            let Some(resolved) = epub.resolve(&item, &href) else { continue };
+            if !epub.contains(&resolved.path) {
+                continue;
+            }
+            let Ok(res) = epub.resource(&resolved.path) else { continue };
+            if !res.media_type.starts_with("image/") {
+                continue;
+            }
+            images += 1;
+            let ext = res.media_type.trim_start_matches("image/").replace("jpeg", "jpg");
+            let ext = ext.split(['+', ';']).next().unwrap_or("img").to_owned();
+            let name = format!("img/c{chapter}-{images}.{ext}");
+            if writer.add_resource(&name, &res.media_type, &res.data).is_err() {
+                continue;
+            }
+            inner.replace_range(start..start + len, &name);
+            from = start + name.len();
+        }
+        body.push_str(&inner);
+    }
+    Ok(body)
+}
+
+fn novel(
+    req: &Request,
+    progress: &mut dyn FnMut(u32, u32),
+    cancel: &AtomicBool,
+) -> Result<Vec<ExportFile>, Stop> {
+    let flavor = match req.format {
+        ExportFormat::Epub => EpubFlavor::Epub,
+        ExportFormat::Kepub => EpubFlavor::Kepub,
+        _ => return Err(unsupported(req.format)),
+    };
+    let limits = Limits::default();
+    let sizes: Vec<u64> = req
+        .chapters
+        .iter()
+        .map(|c| fs::metadata(&c.path).map(|m| m.len()).map_err(|e| io(&e, &c.path)))
+        .collect::<Result<_, _>>()?;
+    let parts = split_parts(&sizes, limit_of(req));
+    let count = parts.len();
+    let total = req.chapters.len() as u32;
+    let mut done = 0;
+    progress(0, total);
+    let mut files = Vec::with_capacity(count);
+    for (n, range) in parts.into_iter().enumerate() {
+        let name = file_name(req, Some((n + 1, count)));
+        let path = req.out.join(&name);
+        let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
+        let title = if count > 1 {
+            format!("{} ({} of {count})", req.title, n + 1)
+        } else {
+            req.title.clone()
+        };
+        let meta = BookMeta {
+            title,
+            identifier: Some(format!("{}:{}", req.identifier, n + 1)),
+            ..BookMeta::default()
+        };
+        let mut writer =
+            EpubWriter::new(out, meta, flavor, None).map_err(|e| book(&e, &path))?;
+        let mut covered = false;
+        for index in range {
+            stopped(cancel)?;
+            let chapter = &req.chapters[index];
+            let mut epub = match kaeri_books::open(&chapter.path, &limits) {
+                Ok(Book::Epub(e)) => e,
+                Ok(_) => return Err(unreadable(&chapter.path, "EPUB")),
+                Err(e) => return Err(book(&e, &chapter.path)),
+            };
+            if !covered
+                && let Some(cover) = epub.cover().map(|c| c.path.clone())
+                && let Ok(res) = epub.resource(&cover)
+            {
+                covered = writer.set_cover(&res.data).is_ok();
+            }
+            let body = chapter_body(&mut epub, index, &mut writer, &chapter.path)?;
+            writer
+                .add_chapter(&chapter_title(&chapter.label), &body)
+                .map_err(|e| book(&e, &chapter.path))?;
+            done += 1;
+            progress(done, total);
+        }
+        let bytes = writer.finish().map_err(|e| book(&e, &path))?;
+        drop(bytes);
+        files.push(done_file(path, name, (count > 1).then_some(n as u32 + 1))?);
+    }
+    Ok(files)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use super::*;
+    use crate::export::profiles::{builtin_profiles, find};
+
+    fn noise(width: u32, height: u32, seed: u32) -> Vec<u8> {
+        let mut state = seed.wrapping_mul(2_654_435_761).wrapping_add(1);
+        let image = image::RgbImage::from_fn(width, height, |_, _| {
+            state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let v = (state >> 24) as u8;
+            image::Rgb([v, v.wrapping_add(40), v.wrapping_add(90)])
+        });
+        let mut out = Cursor::new(Vec::new());
+        image.write_to(&mut out, image::ImageFormat::Png).unwrap();
+        out.into_inner()
+    }
+
+    fn cbz(path: &Path, pages: u32, wide: bool) {
+        let mut w = CbzWriter::new(BufWriter::new(File::create(path).unwrap()), None).unwrap();
+        for n in 0..pages {
+            let (width, height) = if wide && n == 1 { (400, 300) } else { (200, 300) };
+            w.add_page(&noise(width, height, n + 1)).unwrap();
+        }
+        w.finish().unwrap();
+    }
+
+    fn text_epub(path: &Path, title: &str, paragraphs: usize) {
+        let meta = BookMeta { title: title.into(), ..BookMeta::default() };
+        let out = BufWriter::new(File::create(path).unwrap());
+        let mut w = EpubWriter::new(out, meta, EpubFlavor::Epub, None).unwrap();
+        let body: String =
+            (0..paragraphs).map(|n| format!("<p>Lantern light, line {n}.</p>")).collect();
+        w.add_chapter("One", &body).unwrap();
+        w.finish().unwrap();
+    }
+
+    fn profile(id: &str) -> Profile {
+        builtin_profiles().into_iter().find(|p| p.id == id).unwrap()
+    }
+
+    fn request(
+        dir: &Path,
+        chapters: Vec<Chapter>,
+        profile: &str,
+        format: ExportFormat,
+    ) -> Request {
+        Request {
+            title: "The Lantern Ferry".into(),
+            chapters,
+            profile: profile_by(profile),
+            format,
+            out: dir.join("out"),
+            limit: None,
+            right_to_left: None,
+            identifier: "made-up:1".into(),
+        }
+    }
+
+    fn profile_by(id: &str) -> Profile {
+        let mut p = profile(id);
+        // A small screen keeps the generated pages quick to process.
+        p.width = 120;
+        p.height = 160;
+        p
+    }
+
+    fn chapters(dir: &Path, count: usize, pages: u32) -> Vec<Chapter> {
+        (0..count)
+            .map(|n| {
+                let path = dir.join(format!("c{n}.cbz"));
+                cbz(&path, pages, false);
+                Chapter { label: format!("Chapter {}", n + 1), path }
+            })
+            .collect()
+    }
+
+    fn go(req: &Request) -> Result<Vec<ExportFile>, Stop> {
+        run(req, &mut |_, _| {}, &AtomicBool::new(false))
+    }
+
+    #[test]
+    fn a_kepub_of_pages_reads_back_as_fixed_layout() {
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 2, 2), "kobo", ExportFormat::Kepub);
+        let files = go(&req).unwrap();
+        assert_eq!(files.len(), 1);
+        assert!(files[0].name.ends_with(".kepub.epub"), "{}", files[0].name);
+        let Ok(Book::Epub(epub)) =
+            kaeri_books::open(Path::new(&files[0].path), &Limits::default())
+        else {
+            panic!("not an EPUB");
+        };
+        assert!(epub.is_fixed_layout());
+        assert_eq!(epub.spine().count(), 4);
+        assert!(!req.out.join(".pages").exists());
+    }
+
+    #[test]
+    fn a_fixed_epub_for_the_kindle_class_reads_back() {
+        let dir = tempfile::tempdir().unwrap();
+        let req =
+            request(dir.path(), chapters(dir.path(), 1, 3), "kindle", ExportFormat::FixedEpub);
+        let files = go(&req).unwrap();
+        assert!(files[0].name.ends_with(".epub"));
+        let Ok(Book::Epub(epub)) =
+            kaeri_books::open(Path::new(&files[0].path), &Limits::default())
+        else {
+            panic!("not an EPUB");
+        };
+        assert!(epub.is_fixed_layout());
+        assert_eq!(epub.spine().count(), 3);
+    }
+
+    #[test]
+    fn a_cbz_keeps_every_page_and_splits_a_spread() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("wide.cbz");
+        cbz(&path, 3, true);
+        let chapters = vec![Chapter { label: "Chapter 1".into(), path }];
+        let req = request(dir.path(), chapters, "kobo", ExportFormat::Cbz);
+        let files = go(&req).unwrap();
+        assert!(files[0].name.ends_with(".cbz"));
+        let Ok(Book::Comic(comic)) =
+            kaeri_books::open(Path::new(&files[0].path), &Limits::default())
+        else {
+            panic!("not a comic");
+        };
+        // Three pages, the middle one a spread of two.
+        assert_eq!(comic.pages().len(), 4);
+    }
+
+    #[test]
+    fn a_novel_goes_out_as_epub_and_kepub() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("n.epub");
+        text_epub(&path, "Ferry Notes", 20);
+        for (format, ext) in
+            [(ExportFormat::Epub, ".epub"), (ExportFormat::Kepub, ".kepub.epub")]
+        {
+            let mut req = request(
+                dir.path(),
+                vec![Chapter { label: "Chapter 1".into(), path: path.clone() }],
+                "kobo",
+                format,
+            );
+            req.out = dir.path().join(format!("out{ext}"));
+            let files = go(&req).unwrap();
+            assert!(files[0].name.ends_with(ext), "{}", files[0].name);
+            let Ok(Book::Epub(mut epub)) =
+                kaeri_books::open(Path::new(&files[0].path), &Limits::default())
+            else {
+                panic!("not an EPUB");
+            };
+            assert!(!epub.is_fixed_layout());
+            let item = epub.spine().next().map(|(_, i)| i.path.clone()).unwrap();
+            let text = String::from_utf8(epub.resource(&item).unwrap().data).unwrap();
+            assert!(text.contains("Lantern light, line 19."));
+        }
+    }
+
+    #[test]
+    fn a_small_limit_splits_the_files_into_parts() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut req =
+            request(dir.path(), chapters(dir.path(), 3, 2), "kobo", ExportFormat::Cbz);
+        // Each part carries a fixed overhead, so the limit sits just over it and holds about
+        // one chapter's pages.
+        req.limit = Some(512 * 1024 + 1);
+        let files = go(&req).unwrap();
+        assert!(files.len() > 1, "{files:?}");
+        let mut pages = 0;
+        for (n, file) in files.iter().enumerate() {
+            assert_eq!(file.part, Some(n as u32 + 1));
+            assert!(file.name.contains(&format!("({} of {})", n + 1, files.len())));
+            let Ok(Book::Comic(comic)) =
+                kaeri_books::open(Path::new(&file.path), &Limits::default())
+            else {
+                panic!("not a comic");
+            };
+            pages += comic.pages().len();
+        }
+        assert_eq!(pages, 6);
+    }
+
+    #[test]
+    fn the_kindle_class_splits_and_the_others_do_not() {
+        assert!(find(&Default::default(), "kindle").unwrap().split);
+        assert!(!find(&Default::default(), "kobo").unwrap().split);
+    }
+
+    #[test]
+    fn a_cancelled_send_leaves_nothing_behind() {
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 1, 2), "kobo", ExportFormat::Cbz);
+        let cancel = AtomicBool::new(true);
+        let result = run(&req, &mut |_, _| {}, &cancel);
+        assert!(matches!(result, Err(Stop::Cancelled)));
+        assert!(!req.out.exists());
+    }
+
+    #[test]
+    fn progress_counts_pages_up_to_the_total() {
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 2, 2), "kobo", ExportFormat::Cbz);
+        let mut seen = Vec::new();
+        run(&req, &mut |d, t| seen.push((d, t)), &AtomicBool::new(false)).unwrap();
+        assert_eq!(seen.first(), Some(&(0, 4)));
+        assert_eq!(seen.last(), Some(&(4, 4)));
+    }
+
+    #[test]
+    fn a_format_the_device_does_not_open_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 1, 1), "kindle", ExportFormat::Cbz);
+        assert!(matches!(go(&req), Err(Stop::Failed(ReadingFailure::Unsupported { .. }))));
+    }
+}

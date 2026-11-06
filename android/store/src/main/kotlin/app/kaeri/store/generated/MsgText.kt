@@ -369,6 +369,12 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingOriginKorea -> Strings.readingOriginKorea(context)
         is ReadingMsg.ReadingOriginChina -> Strings.readingOriginChina(context)
         is ReadingMsg.ReadingOriginTaiwan -> Strings.readingOriginTaiwan(context)
+        is ReadingMsg.ExportDeviceOther -> Strings.exportDeviceOther(context)
+        is ReadingMsg.ExportDeviceEink6 -> Strings.exportDeviceEink6(context)
+        is ReadingMsg.ExportDeviceEink7 -> Strings.exportDeviceEink7(context)
+        is ReadingMsg.ExportDeviceColourEink -> Strings.exportDeviceColourEink(context)
+        is ReadingMsg.ExportDeviceTablet -> Strings.exportDeviceTablet(context)
+        is ReadingMsg.ExportChapter -> Strings.exportChapter(context, this.chapter)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

@@ -572,8 +572,10 @@ pub struct ReadingConfig {
     /// E-ink: `mode` (auto, on, off), `colour_panel` (the answer to "Is this a colour
     /// screen?") and the refresh settings.
     pub eink: BTreeMap<String, toml::Value>,
-    /// The OPDS feed this device serves to e-readers. Its password is in the secure store.
+    /// The OPDS feed this device serves to e-readers.
     pub feed: FeedConfig,
+    /// E-readers of the person's own, beside the built-in device classes, by id.
+    pub export_profiles: BTreeMap<String, ExportProfileConfig>,
 }
 
 impl Default for ReadingConfig {
@@ -589,6 +591,7 @@ impl Default for ReadingConfig {
             novel: BTreeMap::new(),
             eink: BTreeMap::new(),
             feed: FeedConfig::default(),
+            export_profiles: BTreeMap::new(),
         }
     }
 }
@@ -600,6 +603,22 @@ pub struct FeedConfig {
     pub on: bool,
     /// Unset picks a free port.
     pub port: Option<u16>,
+    /// The password e-readers sign in with, with any user name. Empty keeps the feed from
+    /// starting.
+    pub password: String,
+}
+
+/// An e-reader the person described: what Send to e-reader prepares files for.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ExportProfileConfig {
+    pub name: String,
+    pub width: u32,
+    pub height: u32,
+    /// Whether the screen shows colour.
+    pub colour: bool,
+    /// What it opens: `fixed-epub`, `kepub`, `epub` and `cbz`. Empty takes `cbz`.
+    pub formats: Vec<String>,
 }
 
 /// The sources built into Kaeri, as opposed to the plugins people install.

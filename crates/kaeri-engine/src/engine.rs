@@ -3503,5 +3503,171 @@ mod tests {
             assert_eq!(view.meter.chapters, 5);
             engine.shutdown().await;
         }
+
+        /// A made-up comic archive of `pages` generated pages.
+        fn comic_file(path: &std::path::Path, pages: u32) {
+            use kaeri_books::write::CbzWriter;
+            let mut w = CbzWriter::new(std::fs::File::create(path).unwrap(), None).unwrap();
+            for n in 0..pages {
+                let image = image::RgbImage::from_fn(200, 300, |x, y| {
+                    image::Rgb([(x ^ y) as u8, n as u8, (x * 3 + y) as u8])
+                });
+                let mut out = std::io::Cursor::new(Vec::new());
+                image.write_to(&mut out, image::ImageFormat::Png).unwrap();
+                w.add_page(&out.into_inner()).unwrap();
+            }
+            w.finish().unwrap();
+        }
+
+        async fn store_until(what: &str, done: impl Fn() -> bool) {
+            for _ in 0..500 {
+                if done() {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            panic!("{what} never happened");
+        }
+
+        #[tokio::test]
+        async fn send_to_e_reader_runs_through_the_engine() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                for (chapter, pages) in [("1", 2), ("2", 2), ("3", 30)] {
+                    let path = dir.path().join(format!("{chapter}.cbz"));
+                    comic_file(&path, pages);
+                    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                        work: WORK,
+                        chapter,
+                        source_id: "shelf",
+                        version_label: None,
+                        keep_ready: false,
+                    };
+                    o.store.queue_book_download(&ask, now).unwrap();
+                    let id = o.store.book_downloads(Some(WORK)).unwrap().last().unwrap().id;
+                    o.store
+                        .book_download_done(
+                            id,
+                            &path.display().to_string(),
+                            Some(pages),
+                            10,
+                            now,
+                        )
+                        .unwrap();
+                }
+                kept = Some(o.store.clone());
+            })
+            .await;
+            let store = kept.unwrap();
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let ids =
+                |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
+
+            // The targets are engine data.
+            engine.send(Command::Reading(ReadingCommand::LoadExportTargets));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportTargets(_)))
+            })
+            .await;
+            let targets = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportTargets(t)) => Some(t.clone()),
+                    _ => None,
+                })
+                .unwrap();
+            assert!(targets.iter().any(|t| t.id == "kobo" && t.width_px == 1264));
+
+            // A send is a job: progress, then the files.
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["1", "2"]) },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }))
+            })
+            .await;
+            assert!(seen.iter().any(|e| matches!(e, Event::JobStarted { .. })));
+            assert!(seen.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportProgress { total: 4, .. })
+            )));
+            let files = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            assert_eq!(files.len(), 1);
+            assert!(
+                files[0].name.ends_with(".cbz")
+                    && std::path::Path::new(&files[0].path).exists()
+            );
+
+            // A send that is cancelled leaves no files and never says it is ready.
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["3"]) },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let mut all = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. }))
+            })
+            .await;
+            let job = all
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportProgress { job, .. }) => Some(*job),
+                    _ => None,
+                })
+                .unwrap();
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            all.extend(
+                seen_until(&mut events, |e| matches!(e, Event::JobDone(j) if *j == job)).await,
+            );
+            assert!(!all.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+            )));
+            assert!(!dir.path().join("data/exports").join(job.get().to_string()).exists());
+
+            // After sharing, the answer to where you stopped becomes a ReadAdopt.
+            engine.send(Command::Reading(ReadingCommand::Shared {
+                work: work.clone(),
+                chapters: ids(&["1", "2"]),
+                target: "kobo".into(),
+            }));
+            store_until("the send being kept", || store.pending_sent(WORK).unwrap().is_some())
+                .await;
+            engine.send(Command::Reading(ReadingCommand::StoppedAt {
+                work: work.clone(),
+                chapter: Some(ChapterId::new("2")),
+                page: None,
+            }));
+            store_until("the answer being kept", || {
+                store.read_marks(WORK).unwrap().is_read("2")
+            })
+            .await;
+            assert!(store.read_marks(WORK).unwrap().is_read("1"));
+            assert!(!store.read_marks(WORK).unwrap().is_read("3"));
+            assert!(store.pending_sent(WORK).unwrap().is_none());
+            engine.shutdown().await;
+        }
     }
 }

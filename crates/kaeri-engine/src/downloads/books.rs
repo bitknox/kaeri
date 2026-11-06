@@ -839,7 +839,7 @@ fn state_of(d: &BookDownload, wifi: bool) -> ChapterDownloadState {
     }
 }
 
-fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
+pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
     let id = ChapterId::new(d.chapter.clone());
     let key = id.key();
     let number = key.as_ref().and_then(|k| k.range()).map(|r| r.to_string());

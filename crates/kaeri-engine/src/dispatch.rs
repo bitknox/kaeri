@@ -479,6 +479,11 @@ pub(crate) fn dispatch(
             crate::servers::command(command, services, order, tx)
         }
 
+        // Send to e-reader, where you stopped, and the feed: see `export`.
+        Command::Reading(command) if crate::export::handles(&command) => {
+            crate::export::command(engine, services, command, job, tx)
+        }
+
         // Reading: refused in place while it ships dark. See `reading`.
         Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
         Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
@@ -1173,10 +1178,12 @@ pub(crate) async fn handle_internal(
         Internal::SettingsSaved => {
             crate::phases::settings_saved(engine, tx);
             crate::downloads::books::resume(engine, services, tx);
+            crate::export::apply_feed(engine, services, tx);
         }
         Internal::LetGo => {
             ahead::let_go(engine, services, tx);
             crate::downloads::books::launched(engine, services, tx);
+            crate::export::apply_feed(engine, services, tx);
         }
         Internal::Reader { session, wake } => {
             let EngineState { config, reader, .. } = engine;

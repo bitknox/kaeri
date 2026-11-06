@@ -877,6 +877,30 @@ object Strings {
     fun readingOriginTaiwan(context: Context): String =
         context.getString(R.string.reading_origin_taiwan)
 
+    /** Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB. */
+    fun exportDeviceOther(context: Context): String =
+        context.getString(R.string.export_device_other)
+
+    /** Send to e-reader: a device class, a grey e-ink screen of about 6 inches. */
+    fun exportDeviceEink6(context: Context): String =
+        context.getString(R.string.export_device_eink_6)
+
+    /** Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches. */
+    fun exportDeviceEink7(context: Context): String =
+        context.getString(R.string.export_device_eink_7)
+
+    /** Send to e-reader: a device class, a colour e-ink screen of about 7 inches. */
+    fun exportDeviceColourEink(context: Context): String =
+        context.getString(R.string.export_device_colour_eink)
+
+    /** Send to e-reader: a device class, a colour tablet. */
+    fun exportDeviceTablet(context: Context): String =
+        context.getString(R.string.export_device_tablet)
+
+    /** A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5. */
+    fun exportChapter(context: Context, chapter: String): String =
+        context.getString(R.string.export_chapter, chapter)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)
@@ -9585,6 +9609,18 @@ object Strings {
     /** Button that restores the default subtitle style. */
     fun settingsSubsReset(context: Context): String =
         context.getString(R.string.settings_subs_reset)
+
+    /** Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse. */
+    fun settingsOpdsFeed(context: Context): String =
+        context.getString(R.string.settings_opds_feed)
+
+    /** Row: the password e-readers ask for before they browse the shared catalogue. */
+    fun settingsOpdsPassword(context: Context): String =
+        context.getString(R.string.settings_opds_password)
+
+    /** Row: the port the shared catalogue listens on. Empty picks a free one. */
+    fun settingsOpdsPort(context: Context): String =
+        context.getString(R.string.settings_opds_port)
 
     /** Title of the screen or section that lists sources. */
     fun sourcesTitle(context: Context): String =
