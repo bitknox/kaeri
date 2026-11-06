@@ -93,12 +93,13 @@ pub(super) fn cache_dir(cache: &Path) -> PathBuf {
     cache.join("novel")
 }
 
+/// Tells the actor the work is done. It holds the sender it was lent until then: the engine
+/// keeps none between one piece of work and the next, so a weak one could be closed by the
+/// time the book is open.
 fn wake(tx: &Outbox, session: u64, wake: ReaderWake) -> impl Fn() + Send + 'static {
-    let weak = tx.downgrade();
+    let tx = tx.clone();
     move || {
-        if let Some(tx) = weak.upgrade() {
-            let _ = tx.internal(Internal::Reader { session, wake });
-        }
+        let _ = tx.internal(Internal::Reader { session, wake });
     }
 }
 
@@ -526,16 +527,14 @@ impl Session {
         }
         let plan = self.plan(cx);
         let session = self.id;
-        let tx = cx.tx.downgrade();
+        let tx = cx.tx.clone();
         let path = PathBuf::from(path);
         std::thread::spawn(move || {
             let event = match process_fixed(&path, &dir, page, plan.target, plan.look) {
                 Ok(file) => ReaderEvent::PageReady { session, chapter, page, half: None, file },
                 Err(failure) => ReaderEvent::PageFailed { session, chapter, page, failure },
             };
-            if let Some(tx) = tx.upgrade() {
-                let _ = tx.send(Event::Reader(event));
-            }
+            let _ = tx.send(Event::Reader(event));
         });
     }
 }
