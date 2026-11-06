@@ -278,6 +278,31 @@ sealed class PartyDialog
             ctx.Send(new Command.Party(new PartyCommand.Lobby(serverText, roomText, who, new PartyEpisode(ep.Id, ep.Number))));
         else
             ctx.Send(new Command.PartyJoin(serverText, roomText, who));
+        // The room this device is in already: the engine stays in it and says nothing more, so
+        // this is joined now rather than a ring that never ends.
+        if (ctx.Known.Party is { } party && InRoom(party, serverText, roomText))
+            Joined();
+    }
+
+    static bool InRoom(PartyView party, string server, string room)
+    {
+        if (!string.Equals(party.Room, room, StringComparison.Ordinal))
+            return false;
+        // The engine names the server with its port; one typed without a port has the default.
+        return string.Equals(party.Server, server, StringComparison.OrdinalIgnoreCase)
+            || !server.Contains(':') && party.Server.StartsWith(server + ":", StringComparison.OrdinalIgnoreCase);
+    }
+
+    void Joined()
+    {
+        joining = false;
+        // In the room: the lobby, where the picked episode waits for everyone to be
+        // ready; an invite's episode plays with the room, or says it has no source here.
+        if (what is For.Invite inv)
+            ctx.Send(new Command.PlayParty(inv.Link.Id, inv.Link.Episode));
+        else if (what is For.Room or For.Episode)
+            ctx.Go("together");
+        dialog.Hide();
     }
 
     void Heard(IReadOnlyList<Event> batch)
@@ -290,14 +315,7 @@ sealed class PartyDialog
                     Fill(f.V1);
                     break;
                 case Event.PartyJoined when joining:
-                    joining = false;
-                    // In the room: the lobby, where the picked episode waits for everyone to be
-                    // ready; an invite's episode plays with the room, or says it has no source here.
-                    if (what is For.Invite inv)
-                        ctx.Send(new Command.PlayParty(inv.Link.Id, inv.Link.Episode));
-                    else if (what is For.Room or For.Episode)
-                        ctx.Go("together");
-                    dialog.Hide();
+                    Joined();
                     return;
                 case Event.PartyLeft left when joining:
                     joining = false;
