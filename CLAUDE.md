@@ -20,7 +20,8 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 - `kaeri-store` is local watch history. The plugin store's server logic is
   `kaeri-store-core`, with native and WASM adapters.
 - Provider plugins under `plugins/` are separate builds outside the workspace. This repository
-  carries no plugins apart from the two references and two test fixtures.
+  carries no plugins apart from three references (`example-rust`, `example-ts`, `example-books`)
+  and three test fixtures (`test-hostile`, `test-hostile-books`, `test-torrent-source`).
 - `website/` uses Bun; the JS reference plugin uses npm and its `package-lock.json`.
 
 ## Rules that always apply
