@@ -219,6 +219,124 @@ impl Store {
         })
     }
 
+    /// Reading ops due for sending, oldest first: [`Self::claim_ready`] for `read_outbox`.
+    pub fn claim_ready_read(
+        &self,
+        tracker_id: &str,
+        now: i64,
+        limit: u32,
+    ) -> Result<Vec<OutboxEntry>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT id, tracker_id, op, attempts, created_at
+                   FROM read_outbox
+                  WHERE tracker_id = ?1 AND next_retry <= ?2
+                  ORDER BY created_at ASC, id ASC
+                  LIMIT ?3",
+            )?;
+            let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
+                Ok((
+                    r.get::<_, i64>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, u32>(3)?,
+                    r.get::<_, i64>(4)?,
+                ))
+            })?;
+            let mut out = Vec::new();
+            let mut undecodable: Vec<i64> = Vec::new();
+            for row in rows {
+                let (id, tracker, json, attempts, created_at) = row?;
+                match serde_json::from_str(&json) {
+                    Ok(op) => out.push(OutboxEntry { id, tracker_id: tracker, op, attempts, created_at }),
+                    Err(e) => {
+                        tracing::error!(id, error = %e, "discarding an undecodable reading outbox row");
+                        undecodable.push(id);
+                    }
+                }
+            }
+            drop(stmt);
+            for id in undecodable {
+                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+            }
+            Ok(out)
+        })
+    }
+
+    /// Remove a reading op that was sent.
+    pub fn complete_read(&self, id: i64) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+            Ok(())
+        })
+    }
+
+    /// Record a failure of a reading op and schedule a retry, as [`Self::fail`] does.
+    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<()> {
+        self.with_personal(|c| {
+            let attempts = c
+                .query_row("SELECT attempts + 1 FROM read_outbox WHERE id = ?1", [id], |r| {
+                    r.get::<_, u32>(0)
+                })
+                .unwrap_or(1);
+            if attempts >= MAX_ATTEMPTS {
+                tracing::error!(id, attempts, %error, "giving up on a reading outbox operation");
+                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+                return Ok(());
+            }
+            c.execute(
+                "UPDATE read_outbox
+                    SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
+                  WHERE id = ?5",
+                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Hold a reading op until it can be addressed or the tracker may be asked again at `until`.
+    /// With `None` it waits for [`Self::wake_deferred`], as a watching op waits for a mapping.
+    pub fn defer_read(&self, id: i64, reason: &str, until: Option<i64>) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute(
+                "UPDATE read_outbox SET next_retry = ?1, last_error = ?2 WHERE id = ?3",
+                rusqlite::params![until.unwrap_or(DEFERRED), reason, id],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Reading ops held for a mapping, for the Accounts screen.
+    pub fn read_outbox_deferred(&self, tracker_id: &str) -> Result<u32> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COUNT(*) FROM read_outbox WHERE tracker_id = ?1 AND next_retry = ?2",
+                rusqlite::params![tracker_id, DEFERRED],
+                |r| r.get(0),
+            )?)
+        })
+    }
+
+    /// The highest chapter queued for a work on a tracker, if any.
+    pub fn pending_read_progress(
+        &self,
+        tracker_id: &str,
+        anilist_id: AnilistId,
+    ) -> Result<Option<(u32, Option<u32>)>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT json_extract(op, '$.chapter'), json_extract(op, '$.volume')
+                   FROM read_outbox
+                  WHERE tracker_id = ?1 AND anilist_id = ?2
+                    AND json_extract(op, '$.op') = 'set_read_progress'
+                  LIMIT 1",
+                rusqlite::params![tracker_id, anilist_id.get()],
+                |r| Ok((r.get::<_, u32>(0)?, r.get::<_, Option<u32>>(1)?)),
+            )
+            .optional()?)
+        })
+    }
+
     /// Operations due for sending, oldest first.
     pub fn claim_ready(
         &self,
@@ -396,7 +514,11 @@ impl Store {
 /// [`Store::wake_deferred`] on a connection already held, so a mapping refresh can do it
 /// inside its own transaction.
 pub(crate) fn wake_deferred_in(c: &rusqlite::Connection) -> Result<usize> {
-    Ok(c.execute("UPDATE sync_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?)
+    let woken =
+        c.execute("UPDATE sync_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?;
+    // Reading's queue waits for the same news: a mapping that arrived.
+    c.execute("UPDATE read_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?;
+    Ok(woken)
 }
 
 #[cfg(test)]

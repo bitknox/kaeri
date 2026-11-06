@@ -11,6 +11,7 @@
 pub mod books;
 pub mod model;
 pub mod query;
+pub mod readlist;
 pub mod threads;
 pub mod trends;
 
