@@ -52,6 +52,14 @@
       <!-- The controls on a 35% dim of the ground, collapsed when they fade so nothing sits
            over the video. -->
       <Grid x:Name="Chrome" Background="{ThemeResource PlayerScrimBrush}">
+        <!-- The bars' buttons take the see-through hover of buttons over art. -->
+        <Grid.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+              <ResourceDictionary Source="ms-appx:///OverArt.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+          </ResourceDictionary>
+        </Grid.Resources>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
@@ -60,16 +68,6 @@
 
         <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
         <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8">
-          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
-               rather than taking the palette's solid control fill, which reads as a block. -->
-          <Grid.Resources>
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
-          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -131,16 +129,6 @@
 
         <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
         <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized">
-          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
-               rather than taking the palette's solid control fill, which reads as a block. -->
-          <Grid.Resources>
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
-          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
@@ -212,6 +200,14 @@
            doing (starting-screen board): the show, the episode, a 2 px line, the step and its
            detail, the way out and, under Details, what each source said. -->
       <Grid x:Name="Starting" Background="{ThemeResource GroundBrush}" Visibility="Collapsed" SizeChanged="OnStartingSized">
+        <!-- Back, the start's buttons, the rows' Skip and Sub and Dub sit over the art. -->
+        <Grid.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+              <ResourceDictionary Source="ms-appx:///OverArt.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+          </ResourceDictionary>
+        </Grid.Resources>
         <Image x:Name="StartingArt" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
         <Rectangle x:Name="StartingGround" Fill="{ThemeResource GroundBrush}" Opacity="0.55" AutomationProperties.AccessibilityView="Raw" />
         <!-- The column's top is set when a start begins and stays: lines and buttons keep their
