@@ -1002,6 +1002,10 @@ pub fn sign_out(services: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
 }
 
 /// Remove another device and rotate the group key so it reads nothing written from now on.
+///
+/// A recovery key that another device has replaced since no longer opens the folder, and this
+/// device forgets it: the removal stands, as on a device that never held the key, and the
+/// device that holds the new key is the one that can rotate.
 pub async fn remove_device(services: &Ctx, tx: &Outbox, device: &str) {
     if let Err(e) = services.store.sync_device_remove(device) {
         return fail(services, tx, SyncProblem::Other(e.to_string()));
@@ -1009,6 +1013,10 @@ pub async fn remove_device(services: &Ctx, tx: &Outbox, device: &str) {
     if let (Ok(road), Some(recovery)) = (road_of(services).await, recovery_key(services)) {
         match road.rotate_group_key(&recovery).await {
             Ok(ring) => keep_ring(services, &ring),
+            Err(SyncError::WrongRecoveryKey) => {
+                let _ = services.sync.tokens.clear(RECOVERY);
+                let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+            }
             Err(e) => return fail(services, tx, problem_at(services, &e)),
         }
     }
