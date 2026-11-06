@@ -56,7 +56,10 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <!-- A click leaves the focus where it was, as on the Mac, so Space stays play and pause and
+       the controls still fade; Tab still reaches the buttons. -->
   <Style x:Key="PlayerButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <Setter Property="AllowFocusOnInteraction" Value="False" />
     <Setter Property="Width" Value="40" />
     <Setter Property="Height" Value="40" />
     <Setter Property="Padding" Value="0" />

@@ -149,6 +149,7 @@ public sealed partial class PlayerView
     void ShowStarting()
     {
         startingShown = true;
+        ShowPointer();
         startingFrom = Stopwatch.GetTimestamp();
         if (movingOn)
         {
