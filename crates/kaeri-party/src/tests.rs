@@ -537,6 +537,29 @@ async fn a_member_who_joins_reads_the_playlist_the_room_has() {
     assert_eq!(playlist.by.as_deref(), Some("Mika"), "who set the current entry");
 }
 
+/// A member who wrote the playlist, left and came back under the same name reads it again:
+/// the room's playlist named for this member is not an echo on a new connection.
+#[tokio::test]
+async fn a_member_back_under_the_same_name_reads_the_playlist_it_wrote() {
+    let server = server().await;
+    let _mika = server.member(ROOM, "Mika");
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    viewer.party.set_playlist(vec![EP9.into(), EP10.into()], 1);
+    room_until(&server, "had the playlist", |r| r.playlist.len() == 2 && r.index == Some(1))
+        .await;
+    viewer.party.leave();
+    room_until(&server, "Ada gone", |r| r.members.iter().all(|m| m.name != "Ada")).await;
+
+    let mut back = Viewer::join(&server, "Ada");
+    let event = back
+        .until("the playlist", |e| matches!(e, PartyEvent::Playlist(p) if p.index == Some(1)))
+        .await;
+    let PartyEvent::Playlist(playlist) = event else { unreachable!() };
+    assert_eq!(playlist.current(), Some(EP10));
+    assert_eq!(playlist.by.as_deref(), Some("Ada"));
+}
+
 #[tokio::test]
 async fn writing_the_playlist_reaches_the_room_and_is_not_written_twice() {
     let server = server().await;
