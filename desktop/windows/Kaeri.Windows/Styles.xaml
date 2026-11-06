@@ -177,7 +177,7 @@
   <!-- Every list keeps Fluent's motion for a row coming, going or moving, but not its entrance and
        content slides: rows are simply there when a page or dialog opens, as on the Mac, and the
        spec has no list entrances. -->
-  <Style TargetType="ListView" BasedOn="{StaticResource DefaultListViewStyle}">
+  <Style TargetType="ListView">
     <Setter Property="ItemContainerTransitions">
       <Setter.Value>
         <TransitionCollection>
