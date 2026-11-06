@@ -255,6 +255,9 @@ extension SettingKey {
         case .keepNextEpisodes: L.settingsKeepNext
         case .downloadsOnCellular: L.settingsDownloadCellular
         case .torrentsOnCellular: L.settingsTorrentsCellular
+        case .chapterDownloadsOnCellular: L.settingsChapterDownloadsCellular
+        case .keepChaptersReady: L.settingsKeepChaptersReady
+        case .deleteAfterReading: L.settingsDeleteAfterReading
         case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel
         case .torrentsWhileCasting: L.castTorrentsLabel

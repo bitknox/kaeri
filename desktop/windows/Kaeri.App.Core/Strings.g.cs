@@ -5908,6 +5908,15 @@ public static partial class T
     /// <summary>Row: torrents on a mobile connection.</summary>
     public static string SettingsTorrentsCellular => Get("SettingsTorrentsCellular");
 
+    /// <summary>Row: whether chapter downloads run on a mobile connection.</summary>
+    public static string SettingsChapterDownloadsCellular => Get("SettingsChapterDownloadsCellular");
+
+    /// <summary>Row: keep the next chapters of what you read downloaded.</summary>
+    public static string SettingsKeepChaptersReady => Get("SettingsKeepChaptersReady");
+
+    /// <summary>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</summary>
+    public static string SettingsDeleteAfterReading => Get("SettingsDeleteAfterReading");
+
     /// <summary>Row: seeding after watching.</summary>
     public static string SettingsSeedAfter => Get("SettingsSeedAfter");
 
@@ -11011,6 +11020,9 @@ public static partial class T
         ["SettingsWifiOnly"] = "Wi-Fi only",
         ["SettingsWifiOnlyDetail"] = "Downloads wait for Wi-Fi",
         ["SettingsTorrentsCellular"] = "Torrents on mobile data",
+        ["SettingsChapterDownloadsCellular"] = "Chapter downloads on mobile data",
+        ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
+        ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
         ["SettingsSeedAfter"] = "Seed after watching",
         ["SettingsSeedFor"] = "Seed for at most",
         ["SettingsUploadLimit"] = "Upload limit",

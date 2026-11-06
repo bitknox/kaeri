@@ -232,6 +232,8 @@ impl Engine {
             cloud_test,
             #[cfg(feature = "testing")]
             free_space,
+            #[cfg(feature = "testing")]
+            book_source,
         } = options;
         // Read before anything is written: no config file is a new install.
         let new_install = !paths.config_file.exists();
@@ -368,6 +370,10 @@ impl Engine {
             book_plugins,
             ..services
         };
+        #[cfg(feature = "testing")]
+        if let Some(source) = book_source {
+            services.book_sources.registry.put(source);
+        }
         #[cfg(feature = "testing")]
         if let Some(test) = cloud_test {
             services.syncing.cloud.use_test(test);
@@ -3276,6 +3282,226 @@ mod tests {
                 SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId },
                 "Google's desktop client is no use without its secret"
             );
+        }
+    }
+
+    /// Chapter downloads through the commands the apps send, on a fake book source.
+    #[cfg(feature = "testing")]
+    mod book_downloads {
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        use async_trait::async_trait;
+        use kaeri_core::{
+            ProviderError,
+            books::{
+                BookHints, BookSourceKind, BookSourceManifest, ChapterContent, ChapterId,
+                PageRef, SeriesDetail, SeriesHit, SourceChapter, WorkId,
+            },
+            media::Medium,
+            traits::{BookSource, PageError},
+        };
+        use kaeri_model::reading::{
+            BookDownloadsView, ChapterDownloadState, DownloadPick, ReadingCommand, ReadingEvent,
+        };
+
+        use super::*;
+
+        const WORK: &str = "a:900601";
+
+        /// A source whose second chapter waits for the test before its pages arrive.
+        struct Gated {
+            manifest: BookSourceManifest,
+            published: i64,
+            held: AtomicBool,
+        }
+
+        #[async_trait]
+        impl BookSource for Gated {
+            fn manifest(&self) -> &BookSourceManifest {
+                &self.manifest
+            }
+
+            async fn search(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SeriesHit>, ProviderError> {
+                Ok(Vec::new())
+            }
+
+            async fn series(
+                &self,
+                id: &str,
+                _: &BookHints,
+            ) -> Result<SeriesDetail, ProviderError> {
+                Ok(SeriesDetail::new(id, "The Lantern Ferry"))
+            }
+
+            async fn chapters(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SourceChapter>, ProviderError> {
+                Ok((1..=5)
+                    .map(|n| {
+                        let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
+                        chapter.published = Some(self.published);
+                        chapter
+                    })
+                    .collect())
+            }
+
+            async fn content(
+                &self,
+                _: &str,
+                chapter: &str,
+            ) -> Result<ChapterContent, ProviderError> {
+                Ok(ChapterContent::Images(
+                    (1..=2)
+                        .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
+                        .collect(),
+                ))
+            }
+
+            async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+                while self.held.load(Ordering::SeqCst) && page.url.contains("/2/") {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                let mut bytes = vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
+                bytes.extend_from_slice(&[0; 64]);
+                Ok(bytes)
+            }
+        }
+
+        /// The downloads the engine says once `done` accepts them, asked for again until then.
+        async fn downloads_until(
+            engine: &Engine,
+            events: &mut EventStream,
+            done: impl Fn(&BookDownloadsView) -> bool,
+        ) -> BookDownloadsView {
+            let mut last = None;
+            for _ in 0..500 {
+                engine.send(Command::Reading(ReadingCommand::LoadDownloads));
+                let batch = events.next_events().await;
+                for event in batch {
+                    if let Event::Reading(ReadingEvent::Downloads(view)) = event {
+                        if done(&view) {
+                            return view;
+                        }
+                        last = Some(view);
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            panic!("the downloads never came to it, the last being {last:?}");
+        }
+
+        fn states(view: &BookDownloadsView) -> Vec<(String, ChapterDownloadState)> {
+            let mut rows: Vec<_> = view
+                .rows
+                .iter()
+                .map(|r| (r.chapter.id.as_str().to_owned(), r.state.clone()))
+                .collect();
+            rows.sort_by(|a, b| a.0.cmp(&b.0));
+            rows
+        }
+
+        fn done_ids(view: &BookDownloadsView) -> Vec<String> {
+            states(view)
+                .into_iter()
+                .filter(|(_, s)| *s == ChapterDownloadState::Done)
+                .map(|(id, _)| id)
+                .collect()
+        }
+
+        #[tokio::test]
+        async fn download_cancel_delete_and_download_new_run_through_the_engine() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(true),
+            });
+            let held = Arc::clone(&source);
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let ids =
+                |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
+
+            // The list is kept, which is what Updates reads.
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: work.clone(),
+                edition: None,
+            }));
+            seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let none = downloads_until(&engine, &mut events, |_| true).await;
+            assert!(none.rows.is_empty());
+
+            // Three chapters asked for: the first lands, the second waits on its pages, the
+            // third is queued behind it.
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["1", "2", "3"]) },
+            }));
+            let view = downloads_until(&engine, &mut events, |v| {
+                let s = states(v);
+                s.len() == 3
+                    && s[0].1 == ChapterDownloadState::Done
+                    && matches!(s[1].1, ChapterDownloadState::Downloading { .. })
+                    && s[2].1 == ChapterDownloadState::Queued
+            })
+            .await;
+            assert_eq!(done_ids(&view), ["1"]);
+
+            // Cancelling the queued one leaves the finished and the fetching.
+            engine.send(Command::Reading(ReadingCommand::DownloadCancel {
+                work: work.clone(),
+                chapters: ids(&["3"]),
+            }));
+            let view = downloads_until(&engine, &mut events, |v| v.rows.len() == 2).await;
+            assert_eq!(states(&view)[0].0, "1");
+
+            // The second arrives; deleting the first removes its file and row.
+            held.held.store(false, Ordering::SeqCst);
+            let view =
+                downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2"]).await;
+            assert_eq!(view.meter.chapters, 2);
+            engine.send(Command::Reading(ReadingCommand::DownloadDelete {
+                work: work.clone(),
+                chapters: ids(&["1"]),
+            }));
+            let view = downloads_until(&engine, &mut events, |v| v.rows.len() == 1).await;
+            assert_eq!(done_ids(&view), ["2"]);
+
+            // What came out and is unread, queued in one go.
+            engine.send(Command::Reading(ReadingCommand::DownloadNew));
+            let view = downloads_until(&engine, &mut events, |v| done_ids(v).len() == 5).await;
+            assert_eq!(view.meter.chapters, 5);
+            engine.shutdown().await;
         }
     }
 }

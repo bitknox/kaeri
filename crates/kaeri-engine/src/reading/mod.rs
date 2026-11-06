@@ -144,6 +144,11 @@ pub(crate) fn medium(
                 let gone = services.book_sources.downloads.delete_all(&lent);
                 tracing::debug!(gone, "chapter downloads deleted with the medium");
             }
+            if delete_downloads && !answer.watches() {
+                // Watching is the medium turned off: its episode downloads go.
+                let gone = crate::downloads::commands::download_delete_all(services, tx);
+                tracing::debug!(gone, "episode downloads deleted with the medium");
+            }
             Some(answer)
         }
         MediumCommand::Answer { ask: _, answer } if open => {

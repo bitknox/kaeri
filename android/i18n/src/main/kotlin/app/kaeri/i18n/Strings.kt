@@ -9058,6 +9058,18 @@ object Strings {
     fun settingsTorrentsCellular(context: Context): String =
         context.getString(R.string.settings_torrents_cellular)
 
+    /** Row: whether chapter downloads run on a mobile connection. */
+    fun settingsChapterDownloadsCellular(context: Context): String =
+        context.getString(R.string.settings_chapter_downloads_cellular)
+
+    /** Row: keep the next chapters of what you read downloaded. */
+    fun settingsKeepChaptersReady(context: Context): String =
+        context.getString(R.string.settings_keep_chapters_ready)
+
+    /** Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. */
+    fun settingsDeleteAfterReading(context: Context): String =
+        context.getString(R.string.settings_delete_after_reading)
+
     /** Row: seeding after watching. */
     fun settingsSeedAfter(context: Context): String =
         context.getString(R.string.settings_seed_after)

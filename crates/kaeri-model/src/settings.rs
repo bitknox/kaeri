@@ -99,6 +99,13 @@ pub enum SettingKey {
     KeepNextEpisodes,
     /// Whether downloads run over a cellular connection.
     DownloadsOnCellular,
+    /// Whether chapter downloads run over a cellular connection.
+    ChapterDownloadsOnCellular,
+    /// Whether the next chapters of what you read are kept downloaded. Unset follows the
+    /// build: on for the e-reader, off elsewhere.
+    KeepChaptersReady,
+    /// Whether a downloaded chapter is deleted once it is read; bookmarked chapters stay.
+    DeleteAfterReading,
     /// Whether torrents run over a cellular connection.
     TorrentsOnCellular,
     /// Whether the app notifies of new episodes of the shows being watched, from
@@ -314,6 +321,9 @@ impl SettingKey {
             Self::DownloadQuality => (&["downloads"], "quality"),
             Self::KeepNextEpisodes => (&["downloads"], "keep_next"),
             Self::DownloadsOnCellular => (&["downloads"], "on_cellular"),
+            Self::ChapterDownloadsOnCellular => (&["reading"], "downloads_on_cellular"),
+            Self::KeepChaptersReady => (&["reading"], "keep_chapters_ready"),
+            Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
             Self::MpvOptions => (&["playback"], "mpv_args"),
@@ -435,6 +445,15 @@ impl SettingKey {
             Self::DownloadQuality => to.downloads.quality = from.downloads.quality,
             Self::KeepNextEpisodes => to.downloads.keep_next = from.downloads.keep_next,
             Self::DownloadsOnCellular => to.downloads.on_cellular = from.downloads.on_cellular,
+            Self::ChapterDownloadsOnCellular => {
+                to.reading.downloads_on_cellular = from.reading.downloads_on_cellular;
+            }
+            Self::KeepChaptersReady => {
+                to.reading.keep_chapters_ready = from.reading.keep_chapters_ready;
+            }
+            Self::DeleteAfterReading => {
+                to.reading.delete_after_reading = from.reading.delete_after_reading;
+            }
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
             }
@@ -494,7 +513,10 @@ impl SettingKey {
             | Self::DownloadHook
             | Self::DownloadQuality
             | Self::KeepNextEpisodes
-            | Self::DownloadsOnCellular => "downloads",
+            | Self::DownloadsOnCellular
+            | Self::ChapterDownloadsOnCellular
+            | Self::KeepChaptersReady
+            | Self::DeleteAfterReading => "downloads",
             Self::Torrents
             | Self::TorrentProxy
             | Self::SeedRatio
@@ -572,6 +594,9 @@ impl SettingKey {
             Self::DownloadQuality => "download quality",
             Self::KeepNextEpisodes => "keep next episodes",
             Self::DownloadsOnCellular => "downloads on cellular",
+            Self::ChapterDownloadsOnCellular => "chapter downloads on cellular",
+            Self::KeepChaptersReady => "keep chapters ready",
+            Self::DeleteAfterReading => "delete after reading",
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
@@ -928,6 +953,13 @@ pub fn step(
             V::Int(i64::from(step_through(&LADDER, effective.downloads.keep_next, delta)))
         }
         SettingKey::DownloadsOnCellular => V::Bool(!effective.downloads.on_cellular),
+        SettingKey::ChapterDownloadsOnCellular => {
+            V::Bool(!effective.reading.downloads_on_cellular)
+        }
+        SettingKey::KeepChaptersReady => {
+            V::Bool(!effective.reading.keep_chapters_ready.unwrap_or(false))
+        }
+        SettingKey::DeleteAfterReading => V::Bool(!effective.reading.delete_after_reading),
         SettingKey::TorrentsOnCellular => V::Bool(!effective.providers.torrent.on_cellular),
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
@@ -1116,6 +1148,15 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             config.downloads.keep_next = episodes;
         }
         (SettingKey::DownloadsOnCellular, V::Bool(on)) => config.downloads.on_cellular = *on,
+        (SettingKey::ChapterDownloadsOnCellular, V::Bool(on)) => {
+            config.reading.downloads_on_cellular = *on;
+        }
+        (SettingKey::KeepChaptersReady, V::Bool(on)) => {
+            config.reading.keep_chapters_ready = Some(*on);
+        }
+        (SettingKey::DeleteAfterReading, V::Bool(on)) => {
+            config.reading.delete_after_reading = *on;
+        }
         (SettingKey::EpisodeNotifications, V::Bool(on)) => config.notifications.episodes = *on,
         (SettingKey::AdultTitles, V::Bool(on)) => config.meta.adult = *on,
         (SettingKey::EpisodeDiscussions, V::Bool(on)) => config.meta.discussions = *on,
@@ -1296,6 +1337,13 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             n => crate::wording::plural(n as usize, "episode"),
         },
         SettingKey::DownloadsOnCellular => on_off(effective.downloads.on_cellular),
+        SettingKey::ChapterDownloadsOnCellular => {
+            on_off(effective.reading.downloads_on_cellular)
+        }
+        SettingKey::KeepChaptersReady => {
+            on_off(effective.reading.keep_chapters_ready.unwrap_or(false))
+        }
+        SettingKey::DeleteAfterReading => on_off(effective.reading.delete_after_reading),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
@@ -1401,6 +1449,9 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
             c.downloads.quality == kaeri_core::config::DownloadQuality::Higher
         }
         S::DownloadsOnCellular => c.downloads.on_cellular,
+        S::ChapterDownloadsOnCellular => c.reading.downloads_on_cellular,
+        S::KeepChaptersReady => c.reading.keep_chapters_ready.unwrap_or(false),
+        S::DeleteAfterReading => c.reading.delete_after_reading,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
