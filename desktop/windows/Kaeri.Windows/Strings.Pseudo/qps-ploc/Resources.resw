@@ -1459,6 +1459,10 @@
     <value>[{parts} · {percent}% ɱàţçĥ~~~~~]</value>
     <comment>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</comment>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>[Šéàŕçĥîñĝ àš ýöü ţýþé îš þàüšéð ƒöŕ à ɱöɱéñţ, ţö šţàý ŵîţĥîñ ÅñîĻîšţ'š ļîɱîţš. Þŕéšš Éñţéŕ ţö šéàŕçĥ ñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</comment>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>[Éðîţîñĝ ýöüŕ çöɱɱéñţ~~~~~~]</value>
     <comment>Line above the field while the viewer edits their own comment.</comment>

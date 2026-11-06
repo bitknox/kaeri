@@ -11,14 +11,25 @@ namespace Kaeri.Windows.Pages;
 /// Search, opened from the title bar's box: the results as a poster grid under a row of filters.
 /// With nothing typed and no filter set it shows this season's titles; a filter with nothing typed
 /// browses, as the engine's query does with no text. The filters stay set for the session, so a
-/// new search from the title bar keeps them.
+/// new search from the title bar keeps them. While the page is up, the results follow the box as
+/// it is typed in, and the next page comes as the end of the results comes into sight.
 /// </summary>
 public sealed partial class SearchPage : Page
 {
     static SearchFilters remembered = SearchFilters.None;
 
     readonly Ctx ctx = Ctx.Current;
-    readonly DispatcherTimer settle = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    /// <summary>
+    /// After typing stops for as long as the engine waits before it searches: only then does the
+    /// page start waiting for the answer, so the results that show stay while the words change.
+    /// </summary>
+    readonly DispatcherTimer settle = new() { Interval = TimeSpan.FromMilliseconds(400) };
+    /// <summary>The title bar's search box, found once the page is in the window.</summary>
+    AutoSuggestBox? box;
+    /// <summary>The pages of the search on screen past the first: whether there are more, how many came, and whether one is on its way.</summary>
+    bool hasNext, askingMore;
+    uint pages = 1;
+    readonly List<Entry> more = [];
     string query = "";
     SearchFilters filters = remembered;
     /// <summary>What was last asked, or null while the page shows this season.</summary>
@@ -37,10 +48,51 @@ public sealed partial class SearchPage : Page
         settle.Tick += (_, _) =>
         {
             settle.Stop();
-            Run();
+            Wait();
         };
+        Loaded += (_, _) =>
+        {
+            box ??= (XamlRoot?.Content as FrameworkElement)?.FindName("SearchBox") as AutoSuggestBox;
+            if (box is not null)
+            {
+                box.TextChanged -= OnBoxText;
+                box.TextChanged += OnBoxText;
+            }
+        };
+        Unloaded += (_, _) =>
+        {
+            if (box is not null)
+                box.TextChanged -= OnBoxText;
+        };
+        for (var i = 0; i < 8; i++)
+            plates.Children.Add(States.Plate(150, 225, 8));
+        MoreRow.Children.Add(new ScrollViewer
+        {
+            Content = plates,
+            HorizontalScrollMode = ScrollMode.Disabled,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            VerticalScrollMode = ScrollMode.Disabled,
+            IsTabStop = false,
+        });
         // The frame keeps the page for Back and the next visit: the results, the filters and the scroll stay.
         NavigationCacheMode = NavigationCacheMode.Enabled;
+    }
+
+    readonly StackPanel plates = new() { Orientation = Orientation.Horizontal, Spacing = 16 };
+
+    /// <summary>
+    /// The box typed in while the page is up: the results follow it, as on the Mac. The engine
+    /// waits until the typing stops and searches once; Enter still searches at once.
+    /// </summary>
+    void OnBoxText(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput || Frame?.Content != this)
+            return;
+        var text = sender.Text.Trim();
+        if (text == query)
+            return;
+        query = text;
+        Run(live: true, typing: true);
     }
 
     /// <summary>What the page was last opened with: a typed query, a browse from Home, or nothing.</summary>
@@ -118,9 +170,15 @@ public sealed partial class SearchPage : Page
     }
 #endif
 
-    /// <summary>Asks the engine for what the box and the filters now say, or this season when they say nothing.</summary>
-    void Run()
+    /// <summary>
+    /// Asks the engine for what the box and the filters now say, or this season when they say
+    /// nothing. <paramref name="live"/> searches as the words or filters change, which the engine
+    /// waits on and does not keep among the recent searches; <paramref name="typing"/> leaves the
+    /// results showing until the typing stops.
+    /// </summary>
+    void Run(bool live = false, bool typing = false)
     {
+        settle.Stop();
         remembered = filters;
         ShowFilters();
         // Surprise me picks from the filters, so it goes when words are typed; the rail shows with nothing asked.
@@ -144,6 +202,9 @@ public sealed partial class SearchPage : Page
         if (browsing)
         {
             asked = null;
+            more.Clear();
+            hasNext = askingMore = false;
+            CaptionLine.Visibility = Visibility.Collapsed;
             Heading.Text = T.NavSearch;
             Section.Text = T.ContinueThisSeason;
             Section.Visibility = Visibility.Visible;
@@ -154,12 +215,24 @@ public sealed partial class SearchPage : Page
             Show();
             return;
         }
-        asked = Searches.With(query, filters);
+        var next = Searches.With(query, filters);
+        if (asked is not { } was || !Searches.Same(was, next))
+        {
+            // Another search: its pages start again, and what the last said of itself goes.
+            more.Clear();
+            hasNext = askingMore = false;
+            pages = 1;
+            CaptionLine.Visibility = Visibility.Collapsed;
+        }
+        asked = next;
         Heading.Text = query.Length > 0 ? T.SearchResultsFor(query) : T.SearchBrowse;
         Section.Visibility = Visibility.Collapsed;
-        entries = ctx.Known.ListEntries(new ContentFor.Search(asked));
-        Wait();
-        ctx.Send(new Command.Search(asked));
+        entries = ctx.Known.ListEntries(new ContentFor.Search(next));
+        if (typing && entries.Length == 0)
+            settle.Start();
+        else
+            Wait();
+        ctx.Send(live ? new Command.SearchLive(next) : new Command.Search(next));
         Show();
     }
 
@@ -195,6 +268,35 @@ public sealed partial class SearchPage : Page
                 BuildGenres();
             if (e is Event.Demo or Event.Providers)
                 DemoLine.Visibility = ctx.Known.Demo is { On: true, Only: true } ? Visibility.Visible : Visibility.Collapsed;
+            if (e is Event.LiveSearch live)
+                PausedLine.Visibility = live.Paused && query.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (e is Event.Caption caption && Searches.Same(caption.View, View))
+            {
+                CaptionLine.Text = caption.Text;
+                CaptionLine.Visibility = caption.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            if (e is Event.SearchPaging paging && asked is { } a && Searches.Same(paging.Query, a))
+            {
+                hasNext = paging.HasNext;
+                pages = 1;
+                more.Clear();
+                askingMore = false;
+            }
+            if (e is Event.SearchMore page && asked is { } b && Searches.Same(page.Query, b))
+            {
+                askingMore = false;
+                // An empty page failed: it is asked for again as the end comes into sight.
+                if (page.Entries.Length > 0)
+                {
+                    pages = page.Page;
+                    hasNext = page.HasNext;
+                    var have = entries.Concat(more).Select(x => x.Id).ToHashSet();
+                    var added = page.Entries.Where(x => have.Add(x.Id)).ToArray();
+                    more.AddRange(added);
+                    Grid.Append(added);
+                }
+                ShowMore();
+            }
             if (e is not Event.Content c || !Searches.Same(c.View, View) || c.ContentValue is ContentList.Loading)
                 continue;
             entries = ctx.Known.ListEntries(View);
@@ -210,13 +312,37 @@ public sealed partial class SearchPage : Page
         // Not answered yet: what shows stays until the answer.
         if (entries.Length == 0 && list is not (ContentList.Entries or ContentList.Empty or ContentList.Failed))
             return;
-        Grid.Show(entries);
+        Grid.Show([.. entries, .. more]);
+        ShowMore();
         if (entries.Length > 0)
             State.Done();
         else if (list is ContentList.Failed f)
-            State.Failed(f.V1, Run);
+            State.Failed(f.V1, () => Run());
         else if (list is ContentList.Entries or ContentList.Empty)
             State.Empty(Nothing());
+    }
+
+    /// <summary>The plates after the results while there is a next page; asks for it once they are near.</summary>
+    void ShowMore()
+    {
+        var shown = asked is not null && hasNext && Grid.HasCovers;
+        MoreRow.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        if (shown)
+            // Laid out first, so a short page that leaves the plates in sight asks at once.
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, Near);
+    }
+
+    void OnScrolled(object? sender, ScrollViewerViewChangedEventArgs e) => Near();
+
+    /// <summary>The next page, when the plates after the results are within a screen of sight.</summary>
+    void Near()
+    {
+        if (asked is not { } q || !hasNext || askingMore || MoreRow.Visibility != Visibility.Visible)
+            return;
+        if (Scroll.VerticalOffset + Scroll.ViewportHeight < Scroll.ExtentHeight - MoreRow.ActualHeight - Scroll.ViewportHeight)
+            return;
+        askingMore = true;
+        ctx.Send(new Command.SearchMore(q, pages + 1));
     }
 
     /// <summary>No results: the query repeated, and a way out when the filters narrowed it.</summary>
@@ -304,11 +430,8 @@ public sealed partial class SearchPage : Page
         if (now)
             BuildFilters();
         ShowFilters();
-        settle.Stop();
-        if (now)
-            Run();
-        else
-            settle.Start();
+        // The engine waits until the clicks stop (250 ms) and searches once.
+        Run(live: !now);
     }
 
     /// <summary>Each drop-down says its name, or in amber what it has.</summary>

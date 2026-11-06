@@ -1459,6 +1459,10 @@
     <value>{parts} · {percent}% match</value>
     <comment>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</comment>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>Searching as you type is paused for a moment, to stay within AniList's limits. Press Enter to search now.</value>
+    <comment>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</comment>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>Editing your comment</value>
     <comment>Line above the field while the viewer edits their own comment.</comment>
