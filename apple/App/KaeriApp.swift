@@ -26,6 +26,7 @@ struct KaeriApp: App {
         // The one window: browsing, and the player in its place while it plays (M4).
         Window("Kaeri", id: "main") {
             content
+                .hostsReader(delegate.store.reader)
                 .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow)
         }
         // The Fixtures app keeps the exact 1280 by 800 the shot scripts rely on. The real app opens
@@ -57,6 +58,16 @@ struct KaeriApp: App {
                 PictureInPictureMenuItem(model: delegate.player)
             }
         }
+        // The reader: one window, one book at a time, with its own Go menu.
+        Window(L.readerWindow, id: ReaderWindow.id) {
+            ReaderWindowView(model: delegate.store.reader)
+                .environment(delegate.store)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 760, height: 1000)
+        .restorationBehavior(.disabled)
+        .defaultLaunchBehavior(.suppressed)
+        .commands { ReaderMenu() }
         // Play trailer: the trailer watched properly, in a window of its own.
         WindowGroup(L.titlePlayTrailer, id: TrailerRequest.windowId, for: TrailerRequest.self) { $request in
             if let request {
@@ -82,6 +93,7 @@ struct KaeriApp: App {
         #else
         WindowGroup {
             content
+                .hostsReader(delegate.store.reader)
                 // The player covers the window it plays in, so it is in front while it shows.
                 .focusedSceneValue(\.playerInFront, delegate.player.isPresented)
         }

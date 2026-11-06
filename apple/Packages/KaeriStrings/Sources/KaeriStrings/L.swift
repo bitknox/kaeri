@@ -2043,6 +2043,454 @@ public enum L {
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
 
+    /// Button in the reader's control group that closes the reader.
+    public static var readerClose: String { string("reader-close", fallback: "Close") }
+
+    /// Button in the reader's control group that opens the chapters and the page grid.
+    public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
+
+    /// Button in the reader's control group that opens the reader's settings. Aa is the glyph.
+    public static var readerSettingsOpen: String { string("reader-settings-open", fallback: "Reader settings") }
+
+    /// Spoken label of a page in the reader.
+    public static func readerPageLabel(page: Int, total: Int, title: String) -> String {
+        Self.format("reader-page-label", fallback: "Page %1$lld of %2$lld, %3$@", page, total, title)
+    }
+
+    /// The reader's scrubber, spoken.
+    public static var readerScrubber: String { string("reader-scrubber", fallback: "Page") }
+
+    /// The scrubber's value, spoken.
+    public static func readerScrubberValue(page: Int, total: Int) -> String {
+        Self.format("reader-scrubber-value", fallback: "Page %1$lld of %2$lld", page, total)
+    }
+
+    /// Title of the row that picks the look: paper, light, sepia, dark or the system's.
+    public static var readerLook: String { string("reader-look", fallback: "Look") }
+
+    /// The settings button's label in the control group.
+    public static var readerTextLabel: String { string("reader-text-label", fallback: "Aa") }
+
+    /// The control group's line under the title. The chapter label comes from the source.
+    public static func readerGroupLine(chapter: String, page: Int, total: Int) -> String {
+        Self.format("reader-group-line", fallback: "%1$@ · page %2$lld of %3$lld", chapter, page, total)
+    }
+
+    /// The control group's line when a spread shows two pages.
+    public static func readerGroupLineSpread(chapter: String, first: Int, second: Int) -> String {
+        Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$lld and %3$lld", chapter, first, second)
+    }
+
+    /// The control group's line for a strip.
+    public static func readerGroupLineStrip(chapter: String, image: Int, total: Int) -> String {
+        Self.format("reader-group-line-strip", fallback: "%1$@ · image %2$lld of %3$lld", chapter, image, total)
+    }
+
+    /// The control group's line for a novel, paged.
+    public static func readerGroupLineNovel(chapter: String, page: Int, total: Int) -> String {
+        Self.format("reader-group-line-novel", fallback: "%1$@ · page %2$lld of %3$lld", chapter, page, total)
+    }
+
+    /// The control group's line for a novel in one long scroll.
+    public static func readerGroupLineScroll(chapter: String, percent: Int) -> String {
+        Self.format("reader-group-line-scroll", fallback: "%1$@ · %2$lld%%", chapter, percent)
+    }
+
+    /// Line in the margin of a novel's page.
+    public static func readerPagesLeft(count: Int) -> String {
+        Self.format("reader-pages-left", fallback: "%1$lld pages left in this chapter", count)
+    }
+
+    /// Link in the group that opens Go to page, and the field's label.
+    public static var readerGoToPage: String { string("reader-go-to-page", fallback: "Go to page") }
+
+    /// Placeholder of the Go to page field.
+    public static func readerGoToPageField(total: Int) -> String {
+        Self.format("reader-go-to-page-field", fallback: "1 to %1$lld", total)
+    }
+
+    /// Label of the end page: what just ended.
+    public static func readerEndOfChapter(chapter: String) -> String {
+        Self.format("reader-end-of-chapter", fallback: "End of %1$@", chapter)
+    }
+
+    /// Line on the end page when the chapter counted as read.
+    public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
+
+    /// Line on the end page for a chapter that has not counted yet.
+    public static var readerEndNotRead: String { string("reader-end-not-read", fallback: "Not marked read yet") }
+
+    /// Small label above the next chapter's title on the end page.
+    public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
+
+    /// Detail line under the next chapter's title. The chapter label is the source's own words.
+    public static func readerEndNextDetail(chapter: String, pages: Int) -> String {
+        Self.format("reader-end-next-detail", fallback: "%1$@ · %2$lld pages", chapter, pages)
+    }
+
+    /// The one amber button of the end page: opens the next chapter.
+    public static var readerContinue: String { string("reader-continue", fallback: "Continue") }
+
+    /// Button on the end page that goes back to the series page.
+    public static var readerBackToSeries: String { string("reader-back-to-series", fallback: "Back to the series") }
+
+    /// Hint under Continue on the end page.
+    public static var readerSwipeToContinue: String { string("reader-swipe-to-continue", fallback: "Swipe to keep reading") }
+
+    /// End page heading when the next chapter is not out yet.
+    public static func readerEndNotOut(chapter: String) -> String {
+        Self.format("reader-end-not-out", fallback: "%1$@ isn't out yet", chapter)
+    }
+
+    /// End page text when the next chapter is not out yet.
+    public static var readerEndNotOutBody: String { string("reader-end-not-out-body", fallback: "Kaeri checks for new chapters in the background and adds them to Updates.") }
+
+    /// End page heading when the reader has caught up with the series.
+    public static var readerEndCaughtUp: String { string("reader-end-caught-up", fallback: "You're caught up") }
+
+    /// End page text when the reader has caught up with the series.
+    public static var readerEndCaughtUpBody: String { string("reader-end-caught-up-body", fallback: "New chapters show in Updates when your sources have them.") }
+
+    /// End page heading at the end of a finished series.
+    public static var readerEndFinished: String { string("reader-end-finished", fallback: "End of the series") }
+
+    /// End page text at the end of a finished series.
+    public static var readerEndFinishedBody: String { string("reader-end-finished-body", fallback: "There are no more chapters.") }
+
+    /// End page heading when no source has the next chapter.
+    public static func readerEndNoSource(chapter: String) -> String {
+        Self.format("reader-end-no-source", fallback: "No %1$@ in your sources yet", chapter)
+    }
+
+    /// End page heading when the next chapter is not downloaded and the device is offline.
+    public static func readerEndOffline(chapter: String) -> String {
+        Self.format("reader-end-offline", fallback: "%1$@ isn't downloaded", chapter)
+    }
+
+    /// End page text when the next chapter is not downloaded and the device is offline.
+    public static var readerEndOfflineBody: String { string("reader-end-offline-body", fallback: "You're offline. It opens here once you're connected.") }
+
+    /// Line that opens a chapter, over the cover.
+    public static func readerOpening(chapter: String) -> String {
+        Self.format("reader-opening", fallback: "Opening %1$@", chapter)
+    }
+
+    /// The opening line after a few seconds of waiting.
+    public static func readerOpeningSlow(seconds: Int) -> String {
+        Self.format("reader-opening-slow", fallback: "Finding a source · %1$lld s", seconds)
+    }
+
+    /// Plate with the page's number while a page loads.
+    public static func readerPageLoading(page: Int) -> String {
+        Self.format("reader-page-loading", fallback: "Loading page %1$lld", page)
+    }
+
+    /// Heading of the error in a page's place.
+    public static func readerPageFailed(page: Int) -> String {
+        Self.format("reader-page-failed", fallback: "Couldn't load page %1$lld", page)
+    }
+
+    /// Button in the error in a page's place.
+    public static var readerTryAgain: String { string("reader-try-again", fallback: "Try again") }
+
+    /// Hint under a page's error.
+    public static var readerPageFailedHint: String { string("reader-page-failed-hint", fallback: "Swipe to go on without it.") }
+
+    /// Heading of the error when a chapter would not open.
+    public static func readerChapterFailed(chapter: String) -> String {
+        Self.format("reader-chapter-failed", fallback: "Couldn't open %1$@", chapter)
+    }
+
+    /// Button of the error when a chapter would not open.
+    public static var readerChooseSource: String { string("reader-choose-source", fallback: "Choose source") }
+
+    /// Heading of the error when a chapter has no pages.
+    public static var readerNothingToRead: String { string("reader-nothing-to-read", fallback: "Nothing to read here") }
+
+    /// Notice over the page when the person's Focus turned Paper mode on.
+    public static var readerFocusPaper: String { string("reader-focus-paper", fallback: "Paper mode is on while your Focus is.") }
+
+    /// Button on the Resumed notice.
+    public static var readerStartOver: String { string("reader-start-over", fallback: "Start over") }
+
+    /// Button on the Moved notice.
+    public static var readerGoBack: String { string("reader-go-back", fallback: "Go back") }
+
+    /// Button on the mode detected notice.
+    public static var readerChange: String { string("reader-change", fallback: "Change") }
+
+    /// Heading of the settings that belong to one series.
+    public static var readerThisSeries: String { string("reader-this-series", fallback: "This series") }
+
+    /// Heading of the manga settings.
+    public static var readerAllManga: String { string("reader-all-manga", fallback: "All manga") }
+
+    /// Heading of the manga settings on a device: it names the device kind.
+    public static var readerAllMangaHere: String { string("reader-all-manga-here", fallback: "All manga on this device") }
+
+    /// Heading of the novel settings.
+    public static var readerAllNovels: String { string("reader-all-novels", fallback: "All light novels") }
+
+    /// Heading of the web comic settings.
+    public static var readerAllStrips: String { string("reader-all-strips", fallback: "All webtoons") }
+
+    /// Row: how the series reads.
+    public static var readerReadingMode: String { string("reader-reading-mode", fallback: "Reading mode") }
+
+    /// Reading mode value when it was guessed.
+    public static func readerModeAuto(mode: String) -> String {
+        Self.format("reader-mode-auto", fallback: "Auto · %1$@", mode)
+    }
+
+    /// Reading mode names.
+    public static var readerModeRtl: String { string("reader-mode-rtl", fallback: "Right to left") }
+
+    public static var readerModeLtr: String { string("reader-mode-ltr", fallback: "Left to right") }
+
+    public static var readerModeStrip: String { string("reader-mode-strip", fallback: "Strip") }
+
+    public static var readerModePaged: String { string("reader-mode-paged", fallback: "Paged") }
+
+    public static var readerModeScrolled: String { string("reader-mode-scrolled", fallback: "Scroll") }
+
+    /// Under the reading mode picker for a guessed mode.
+    public static var readerModeDetectedNote: String { string("reader-mode-detected-note", fallback: "Detected from the series details.") }
+
+    /// Under the reading mode picker for a choice.
+    public static var readerModeChoiceNote: String { string("reader-mode-choice-note", fallback: "Your choice is saved for this series and follows it to your other devices.") }
+
+    /// Option of the reading mode picker that lets Kaeri guess again.
+    public static var readerModeAutoOption: String { string("reader-mode-auto-option", fallback: "Auto") }
+
+    /// Detail of the Auto option.
+    public static var readerModeAutoDetail: String { string("reader-mode-auto-detail", fallback: "Kaeri picks from the series details") }
+
+    /// Detail of the Strip option.
+    public static var readerModeStripDetail: String { string("reader-mode-strip-detail", fallback: "For webtoons and long images") }
+
+    /// Line under a series' own choice.
+    public static func readerModeOverrideNote(title: String) -> String {
+        Self.format("reader-mode-override-note", fallback: "Set for %1$@ on all your devices.", title)
+    }
+
+    /// Button that drops the series' own choice.
+    public static var readerUseDefault: String { string("reader-use-default", fallback: "Use default") }
+
+    /// Rows of the manga sheet.
+    public static var readerFit: String { string("reader-fit", fallback: "Fit") }
+
+    public static var readerFitScreen: String { string("reader-fit-screen", fallback: "Screen") }
+
+    public static var readerFitWidth: String { string("reader-fit-width", fallback: "Width") }
+
+    public static var readerCropBorders: String { string("reader-crop-borders", fallback: "Crop borders") }
+
+    public static var readerBackground: String { string("reader-background", fallback: "Background") }
+
+    public static var readerBackgroundTheme: String { string("reader-background-theme", fallback: "Theme") }
+
+    public static var readerBackgroundBlack: String { string("reader-background-black", fallback: "Black") }
+
+    public static var readerBackgroundWhite: String { string("reader-background-white", fallback: "White") }
+
+    public static var readerPaperMode: String { string("reader-paper-mode", fallback: "Paper mode") }
+
+    public static var readerMoreSettings: String { string("reader-more-settings", fallback: "More reader settings") }
+
+    public static var readerSearchSettings: String { string("reader-search-settings", fallback: "Search reader settings") }
+
+    /// Rows of the novel sheet.
+    public static var readerFont: String { string("reader-font", fallback: "Font") }
+
+    public static var readerFontSerif: String { string("reader-font-serif", fallback: "Serif") }
+
+    public static var readerFontSans: String { string("reader-font-sans", fallback: "Sans") }
+
+    public static var readerLineSpacing: String { string("reader-line-spacing", fallback: "Line spacing") }
+
+    public static var readerLineTight: String { string("reader-line-tight", fallback: "Tight") }
+
+    public static var readerLineNormal: String { string("reader-line-normal", fallback: "Normal") }
+
+    public static var readerLineLoose: String { string("reader-line-loose", fallback: "Loose") }
+
+    public static var readerMargins: String { string("reader-margins", fallback: "Margins") }
+
+    public static var readerMarginsNarrow: String { string("reader-margins-narrow", fallback: "Narrow") }
+
+    public static var readerMarginsNormal: String { string("reader-margins-normal", fallback: "Normal") }
+
+    public static var readerMarginsWide: String { string("reader-margins-wide", fallback: "Wide") }
+
+    public static var readerPages: String { string("reader-pages", fallback: "Pages") }
+
+    public static var readerTextSize: String { string("reader-text-size", fallback: "Text size") }
+
+    public static var readerJustify: String { string("reader-justify", fallback: "Justify text") }
+
+    /// The five looks.
+    public static var readerLookPaper: String { string("reader-look-paper", fallback: "Paper") }
+
+    public static var readerLookLight: String { string("reader-look-light", fallback: "Light") }
+
+    public static var readerLookSepia: String { string("reader-look-sepia", fallback: "Sepia") }
+
+    public static var readerLookDark: String { string("reader-look-dark", fallback: "Dark") }
+
+    public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
+
+    /// Rows of More reader settings.
+    public static var readerPageLayout: String { string("reader-page-layout", fallback: "Page layout") }
+
+    public static var readerLayoutAuto: String { string("reader-layout-auto", fallback: "Auto") }
+
+    public static var readerLayoutSingle: String { string("reader-layout-single", fallback: "One") }
+
+    public static var readerLayoutDouble: String { string("reader-layout-double", fallback: "Two") }
+
+    public static var readerSpreads: String { string("reader-spreads", fallback: "Wide pages") }
+
+    public static var readerSpreadsSplit: String { string("reader-spreads-split", fallback: "Split") }
+
+    public static var readerSpreadsRotate: String { string("reader-spreads-rotate", fallback: "Turn") }
+
+    public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
+
+    public static var readerTapZones: String { string("reader-tap-zones", fallback: "Tap zones") }
+
+    public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
+
+    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Halves") }
+
+    public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
+
+    public static var readerVolumeKeys: String { string("reader-volume-keys", fallback: "Volume buttons turn pages") }
+
+    public static var readerStripWidth: String { string("reader-strip-width", fallback: "Width") }
+
+    public static var readerGreyscale: String { string("reader-greyscale", fallback: "Greyscale pages") }
+
+    public static var readerQuiet: String { string("reader-quiet", fallback: "Quiet the phone while reading") }
+
+    public static var readerFoot: String { string("reader-foot", fallback: "Show pages left") }
+
+    public static var readerFolio: String { string("reader-folio", fallback: "Show page numbers") }
+
+    public static var readerGroupLayout: String { string("reader-group-layout", fallback: "Layout") }
+
+    public static var readerGroupImages: String { string("reader-group-images", fallback: "Images") }
+
+    public static var readerGroupNavigation: String { string("reader-group-navigation", fallback: "Navigation") }
+
+    public static var readerGroupText: String { string("reader-group-text", fallback: "Text") }
+
+    public static var readerGroupPaper: String { string("reader-group-paper", fallback: "Paper mode") }
+
+    public static var readerOn: String { string("reader-on", fallback: "On") }
+
+    public static var readerOff: String { string("reader-off", fallback: "Off") }
+
+    /// Paper mode's page.
+    public static var readerPaperModeNote: String { string("reader-paper-mode-note", fallback: "Pages turn at once and nothing in the reader moves.") }
+
+    public static var readerPaperQuietNote: String { string("reader-paper-quiet-note", fallback: "iPhone quiets notifications with a Focus. Set one to turn on when Kaeri opens, and Kaeri switches to Paper mode while it is on.") }
+
+    public static var readerPaperQuietValue: String { string("reader-paper-quiet-value", fallback: "With a Focus") }
+
+    /// Title of the Focus filter in the system's Focus settings.
+    public static var readerFocusFilterTitle: String { string("reader-focus-filter-title", fallback: "Reading") }
+
+    /// Description of the Focus filter in the system's Focus settings.
+    public static var readerFocusFilterDescription: String { string("reader-focus-filter-description", fallback: "Turns on Paper mode in the reader while this Focus is on.") }
+
+    /// Parameter of the Focus filter.
+    public static var readerFocusFilterPaper: String { string("reader-focus-filter-paper", fallback: "Paper mode") }
+
+    /// Heading in the chapters sheet.
+    public static var readerPagesTab: String { string("reader-pages-tab", fallback: "Pages") }
+
+    public static var readerChaptersTab: String { string("reader-chapters-tab", fallback: "Chapters") }
+
+    /// A volume's heading in the chapter list.
+    public static func readerVolume(volume: String) -> String {
+        Self.format("reader-volume", fallback: "Volume %1$@", volume)
+    }
+
+    /// Chapters sheet: a chapter's state line.
+    public static func readerChapterInProgress(page: Int, total: Int) -> String {
+        Self.format("reader-chapter-in-progress", fallback: "Page %1$lld of %2$lld", page, total)
+    }
+
+    public static var readerChapterRead: String { string("reader-chapter-read", fallback: "Read") }
+
+    public static var readerChapterNew: String { string("reader-chapter-new", fallback: "new") }
+
+    /// Chapters sheet: a chapter's length.
+    public static func readerChapterPages(pages: Int) -> String {
+        Self.format("reader-chapter-pages", fallback: "%1$lld pages", pages)
+    }
+
+    /// Chapters sheet: the offline line.
+    public static var readerOfflineLine: String { string("reader-offline-line", fallback: "Offline. Downloaded chapters still open.") }
+
+    /// Chapters sheet: the list is on its way.
+    public static var readerChaptersLoading: String { string("reader-chapters-loading", fallback: "Loading chapters") }
+
+    /// Mac menu: the Go menu and its items.
+    public static var readerMenuGo: String { string("reader-menu-go", fallback: "Go") }
+
+    public static var readerMenuNextPage: String { string("reader-menu-next-page", fallback: "Next Page") }
+
+    public static var readerMenuPreviousPage: String { string("reader-menu-previous-page", fallback: "Previous Page") }
+
+    public static var readerMenuNextChapter: String { string("reader-menu-next-chapter", fallback: "Next Chapter") }
+
+    public static var readerMenuPreviousChapter: String { string("reader-menu-previous-chapter", fallback: "Previous Chapter") }
+
+    public static var readerMenuGoToPage: String { string("reader-menu-go-to-page", fallback: "Go to Page…") }
+
+    public static var readerMenuChapters: String { string("reader-menu-chapters", fallback: "Chapters") }
+
+    public static var readerMenuSettings: String { string("reader-menu-settings", fallback: "Reader Settings…") }
+
+    public static var readerMenuZoomIn: String { string("reader-menu-zoom-in", fallback: "Zoom In") }
+
+    public static var readerMenuZoomOut: String { string("reader-menu-zoom-out", fallback: "Zoom Out") }
+
+    public static var readerMenuZoomFit: String { string("reader-menu-zoom-fit", fallback: "Fit to Window") }
+
+    /// Mac menu item: back to where the person was before a jump.
+    public static func readerMenuBackToPage(page: Int) -> String {
+        Self.format("reader-menu-back-to-page", fallback: "Back to Page %1$lld", page)
+    }
+
+    /// Mac menu item when there is no place to go back to.
+    public static var readerMenuBack: String { string("reader-menu-back", fallback: "Back to Previous Page") }
+
+    /// Title of the Mac reader window.
+    public static var readerWindow: String { string("reader-window", fallback: "Reader") }
+
+    /// Keyboard step row on the Mac.
+    public static var readerKeyStep: String { string("reader-key-step", fallback: "Keyboard step") }
+
+    public static var readerKeyStepPanel: String { string("reader-key-step-panel", fallback: "Panel") }
+
+    public static var readerKeyStepScreen: String { string("reader-key-step-screen", fallback: "Screen") }
+
+    /// Gap between a strip's images.
+    public static var readerStripGap: String { string("reader-strip-gap", fallback: "Gap between images") }
+
+    public static var readerGapNone: String { string("reader-gap-none", fallback: "None") }
+
+    public static var readerGapSmall: String { string("reader-gap-small", fallback: "Small") }
+
+    /// Accessibility value of the pointer hint on the first chapter's tap zones.
+    public static var readerZoneBack: String { string("reader-zone-back", fallback: "Back") }
+
+    public static var readerZoneForward: String { string("reader-zone-forward", fallback: "Forward") }
+
+    public static var readerZoneMenu: String { string("reader-zone-menu", fallback: "Menu") }
+
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
 

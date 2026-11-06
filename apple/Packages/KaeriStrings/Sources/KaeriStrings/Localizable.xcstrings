@@ -165721,6 +165721,54 @@
         }
       }
     },
+    "reader-all-manga" : {
+      "comment" : "Heading of the manga settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All manga"
+          }
+        }
+      }
+    },
+    "reader-all-manga-here" : {
+      "comment" : "Heading of the manga settings on a device: it names the device kind.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All manga on this device"
+          }
+        }
+      }
+    },
+    "reader-all-novels" : {
+      "comment" : "Heading of the novel settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All light novels"
+          }
+        }
+      }
+    },
+    "reader-all-strips" : {
+      "comment" : "Heading of the web comic settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All webtoons"
+          }
+        }
+      }
+    },
     "reader-back-to-page" : {
       "comment" : "A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. Argument 1: page (Int).",
       "extractionState" : "manual",
@@ -165729,6 +165777,222 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Back to page %1$lld"
+          }
+        }
+      }
+    },
+    "reader-back-to-series" : {
+      "comment" : "Button on the end page that goes back to the series page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the series"
+          }
+        }
+      }
+    },
+    "reader-background" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background"
+          }
+        }
+      }
+    },
+    "reader-background-black" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Black"
+          }
+        }
+      }
+    },
+    "reader-background-theme" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme"
+          }
+        }
+      }
+    },
+    "reader-background-white" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "White"
+          }
+        }
+      }
+    },
+    "reader-change" : {
+      "comment" : "Button on the mode detected notice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        }
+      }
+    },
+    "reader-chapter-failed" : {
+      "comment" : "Heading of the error when a chapter would not open. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't open %1$@"
+          }
+        }
+      }
+    },
+    "reader-chapter-in-progress" : {
+      "comment" : "Chapters sheet: a chapter's state line. Argument 1: page (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "reader-chapter-new" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "new"
+          }
+        }
+      }
+    },
+    "reader-chapter-pages" : {
+      "comment" : "Chapters sheet: a chapter's length. Argument 1: pages (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld pages"
+          }
+        }
+      }
+    },
+    "reader-chapter-read" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "reader-chapters" : {
+      "comment" : "Button in the reader's control group that opens the chapters and the page grid.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
+          }
+        }
+      }
+    },
+    "reader-chapters-loading" : {
+      "comment" : "Chapters sheet: the list is on its way.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading chapters"
+          }
+        }
+      }
+    },
+    "reader-chapters-tab" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
+          }
+        }
+      }
+    },
+    "reader-choose-source" : {
+      "comment" : "Button of the error when a chapter would not open.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose source"
+          }
+        }
+      }
+    },
+    "reader-close" : {
+      "comment" : "Button in the reader's control group that closes the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "reader-continue" : {
+      "comment" : "The one amber button of the end page: opens the next chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "reader-crop-borders" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crop borders"
           }
         }
       }
@@ -165769,6 +166033,1074 @@
         }
       }
     },
+    "reader-end-caught-up" : {
+      "comment" : "End page heading when the reader has caught up with the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're caught up"
+          }
+        }
+      }
+    },
+    "reader-end-caught-up-body" : {
+      "comment" : "End page text when the reader has caught up with the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New chapters show in Updates when your sources have them."
+          }
+        }
+      }
+    },
+    "reader-end-finished" : {
+      "comment" : "End page heading at the end of a finished series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of the series"
+          }
+        }
+      }
+    },
+    "reader-end-finished-body" : {
+      "comment" : "End page text at the end of a finished series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no more chapters."
+          }
+        }
+      }
+    },
+    "reader-end-next" : {
+      "comment" : "Small label above the next chapter's title on the end page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        }
+      }
+    },
+    "reader-end-next-detail" : {
+      "comment" : "Detail line under the next chapter's title. The chapter label is the source's own words. Argument 1: chapter (Text). Argument 2: pages (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld pages"
+          }
+        }
+      }
+    },
+    "reader-end-no-source" : {
+      "comment" : "End page heading when no source has the next chapter. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No %1$@ in your sources yet"
+          }
+        }
+      }
+    },
+    "reader-end-not-out" : {
+      "comment" : "End page heading when the next chapter is not out yet. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't out yet"
+          }
+        }
+      }
+    },
+    "reader-end-not-out-body" : {
+      "comment" : "End page text when the next chapter is not out yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri checks for new chapters in the background and adds them to Updates."
+          }
+        }
+      }
+    },
+    "reader-end-not-read" : {
+      "comment" : "Line on the end page for a chapter that has not counted yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not marked read yet"
+          }
+        }
+      }
+    },
+    "reader-end-of-chapter" : {
+      "comment" : "Label of the end page: what just ended. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of %1$@"
+          }
+        }
+      }
+    },
+    "reader-end-offline" : {
+      "comment" : "End page heading when the next chapter is not downloaded and the device is offline. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't downloaded"
+          }
+        }
+      }
+    },
+    "reader-end-offline-body" : {
+      "comment" : "End page text when the next chapter is not downloaded and the device is offline.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're offline. It opens here once you're connected."
+          }
+        }
+      }
+    },
+    "reader-end-read" : {
+      "comment" : "Line on the end page when the chapter counted as read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "reader-fit" : {
+      "comment" : "Rows of the manga sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fit"
+          }
+        }
+      }
+    },
+    "reader-fit-screen" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen"
+          }
+        }
+      }
+    },
+    "reader-fit-width" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width"
+          }
+        }
+      }
+    },
+    "reader-focus-filter-description" : {
+      "comment" : "Description of the Focus filter in the system's Focus settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns on Paper mode in the reader while this Focus is on."
+          }
+        }
+      }
+    },
+    "reader-focus-filter-paper" : {
+      "comment" : "Parameter of the Focus filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paper mode"
+          }
+        }
+      }
+    },
+    "reader-focus-filter-title" : {
+      "comment" : "Title of the Focus filter in the system's Focus settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "reader-focus-paper" : {
+      "comment" : "Notice over the page when the person's Focus turned Paper mode on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paper mode is on while your Focus is."
+          }
+        }
+      }
+    },
+    "reader-folio" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show page numbers"
+          }
+        }
+      }
+    },
+    "reader-font" : {
+      "comment" : "Rows of the novel sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font"
+          }
+        }
+      }
+    },
+    "reader-font-sans" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans"
+          }
+        }
+      }
+    },
+    "reader-font-serif" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serif"
+          }
+        }
+      }
+    },
+    "reader-foot" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show pages left"
+          }
+        }
+      }
+    },
+    "reader-gap-none" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        }
+      }
+    },
+    "reader-gap-small" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small"
+          }
+        }
+      }
+    },
+    "reader-go-back" : {
+      "comment" : "Button on the Moved notice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back"
+          }
+        }
+      }
+    },
+    "reader-go-to-page" : {
+      "comment" : "Link in the group that opens Go to page, and the field's label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to page"
+          }
+        }
+      }
+    },
+    "reader-go-to-page-field" : {
+      "comment" : "Placeholder of the Go to page field. Argument 1: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 to %1$lld"
+          }
+        }
+      }
+    },
+    "reader-greyscale" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Greyscale pages"
+          }
+        }
+      }
+    },
+    "reader-group-images" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images"
+          }
+        }
+      }
+    },
+    "reader-group-layout" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout"
+          }
+        }
+      }
+    },
+    "reader-group-line" : {
+      "comment" : "The control group's line under the title. The chapter label comes from the source. Argument 1: chapter (Text). Argument 2: page (Int). Argument 3: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · page %2$lld of %3$lld"
+          }
+        }
+      }
+    },
+    "reader-group-line-novel" : {
+      "comment" : "The control group's line for a novel, paged. Argument 1: chapter (Text). Argument 2: page (Int). Argument 3: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · page %2$lld of %3$lld"
+          }
+        }
+      }
+    },
+    "reader-group-line-scroll" : {
+      "comment" : "The control group's line for a novel in one long scroll. Argument 1: chapter (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "reader-group-line-spread" : {
+      "comment" : "The control group's line when a spread shows two pages. Argument 1: chapter (Text). Argument 2: first (Int). Argument 3: second (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · pages %2$lld and %3$lld"
+          }
+        }
+      }
+    },
+    "reader-group-line-strip" : {
+      "comment" : "The control group's line for a strip. Argument 1: chapter (Text). Argument 2: image (Int). Argument 3: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · image %2$lld of %3$lld"
+          }
+        }
+      }
+    },
+    "reader-group-navigation" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation"
+          }
+        }
+      }
+    },
+    "reader-group-paper" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paper mode"
+          }
+        }
+      }
+    },
+    "reader-group-text" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        }
+      }
+    },
+    "reader-justify" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Justify text"
+          }
+        }
+      }
+    },
+    "reader-key-step" : {
+      "comment" : "Keyboard step row on the Mac.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard step"
+          }
+        }
+      }
+    },
+    "reader-key-step-panel" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel"
+          }
+        }
+      }
+    },
+    "reader-key-step-screen" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen"
+          }
+        }
+      }
+    },
+    "reader-layout-auto" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "reader-layout-double" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two"
+          }
+        }
+      }
+    },
+    "reader-layout-single" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One"
+          }
+        }
+      }
+    },
+    "reader-line-loose" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loose"
+          }
+        }
+      }
+    },
+    "reader-line-normal" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "reader-line-spacing" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line spacing"
+          }
+        }
+      }
+    },
+    "reader-line-tight" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tight"
+          }
+        }
+      }
+    },
+    "reader-look" : {
+      "comment" : "Title of the row that picks the look: paper, light, sepia, dark or the system's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look"
+          }
+        }
+      }
+    },
+    "reader-look-dark" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        }
+      }
+    },
+    "reader-look-light" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        }
+      }
+    },
+    "reader-look-paper" : {
+      "comment" : "The five looks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paper"
+          }
+        }
+      }
+    },
+    "reader-look-sepia" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sepia"
+          }
+        }
+      }
+    },
+    "reader-look-system" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
+    "reader-margins" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Margins"
+          }
+        }
+      }
+    },
+    "reader-margins-narrow" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narrow"
+          }
+        }
+      }
+    },
+    "reader-margins-normal" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "reader-margins-wide" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wide"
+          }
+        }
+      }
+    },
+    "reader-menu-back" : {
+      "comment" : "Mac menu item when there is no place to go back to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Previous Page"
+          }
+        }
+      }
+    },
+    "reader-menu-back-to-page" : {
+      "comment" : "Mac menu item: back to where the person was before a jump. Argument 1: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Page %1$lld"
+          }
+        }
+      }
+    },
+    "reader-menu-chapters" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
+          }
+        }
+      }
+    },
+    "reader-menu-go" : {
+      "comment" : "Mac menu: the Go menu and its items.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go"
+          }
+        }
+      }
+    },
+    "reader-menu-go-to-page" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Page…"
+          }
+        }
+      }
+    },
+    "reader-menu-next-chapter" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Chapter"
+          }
+        }
+      }
+    },
+    "reader-menu-next-page" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Page"
+          }
+        }
+      }
+    },
+    "reader-menu-previous-chapter" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous Chapter"
+          }
+        }
+      }
+    },
+    "reader-menu-previous-page" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous Page"
+          }
+        }
+      }
+    },
+    "reader-menu-settings" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader Settings…"
+          }
+        }
+      }
+    },
+    "reader-menu-zoom-fit" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fit to Window"
+          }
+        }
+      }
+    },
+    "reader-menu-zoom-in" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom In"
+          }
+        }
+      }
+    },
+    "reader-menu-zoom-out" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom Out"
+          }
+        }
+      }
+    },
+    "reader-mode-auto" : {
+      "comment" : "Reading mode value when it was guessed. Argument 1: mode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto · %1$@"
+          }
+        }
+      }
+    },
+    "reader-mode-auto-detail" : {
+      "comment" : "Detail of the Auto option.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri picks from the series details"
+          }
+        }
+      }
+    },
+    "reader-mode-auto-option" : {
+      "comment" : "Option of the reading mode picker that lets Kaeri guess again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "reader-mode-choice-note" : {
+      "comment" : "Under the reading mode picker for a choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your choice is saved for this series and follows it to your other devices."
+          }
+        }
+      }
+    },
+    "reader-mode-detected-note" : {
+      "comment" : "Under the reading mode picker for a guessed mode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected from the series details."
+          }
+        }
+      }
+    },
+    "reader-mode-ltr" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left to right"
+          }
+        }
+      }
+    },
+    "reader-mode-override-note" : {
+      "comment" : "Line under a series' own choice. Argument 1: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set for %1$@ on all your devices."
+          }
+        }
+      }
+    },
+    "reader-mode-paged" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paged"
+          }
+        }
+      }
+    },
+    "reader-mode-rtl" : {
+      "comment" : "Reading mode names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right to left"
+          }
+        }
+      }
+    },
+    "reader-mode-scrolled" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll"
+          }
+        }
+      }
+    },
+    "reader-mode-strip" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strip"
+          }
+        }
+      }
+    },
+    "reader-mode-strip-detail" : {
+      "comment" : "Detail of the Strip option.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For webtoons and long images"
+          }
+        }
+      }
+    },
+    "reader-more-settings" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More reader settings"
+          }
+        }
+      }
+    },
     "reader-moved" : {
       "comment" : "A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message. Argument 1: chapter (Text). Argument 2: page (Int). Argument 3: device (Text).",
       "extractionState" : "manual",
@@ -165793,6 +167125,268 @@
         }
       }
     },
+    "reader-nothing-to-read" : {
+      "comment" : "Heading of the error when a chapter has no pages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing to read here"
+          }
+        }
+      }
+    },
+    "reader-off" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "reader-offline-line" : {
+      "comment" : "Chapters sheet: the offline line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Downloaded chapters still open."
+          }
+        }
+      }
+    },
+    "reader-on" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "reader-opening" : {
+      "comment" : "Line that opens a chapter, over the cover. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening %1$@"
+          }
+        }
+      }
+    },
+    "reader-opening-slow" : {
+      "comment" : "The opening line after a few seconds of waiting. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding a source · %1$lld s"
+          }
+        }
+      }
+    },
+    "reader-page-failed" : {
+      "comment" : "Heading of the error in a page's place. Argument 1: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load page %1$lld"
+          }
+        }
+      }
+    },
+    "reader-page-failed-hint" : {
+      "comment" : "Hint under a page's error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe to go on without it."
+          }
+        }
+      }
+    },
+    "reader-page-label" : {
+      "comment" : "Spoken label of a page in the reader. Argument 1: page (Int). Argument 2: total (Int). Argument 3: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld, %3$@"
+          }
+        }
+      }
+    },
+    "reader-page-layout" : {
+      "comment" : "Rows of More reader settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page layout"
+          }
+        }
+      }
+    },
+    "reader-page-loading" : {
+      "comment" : "Plate with the page's number while a page loads. Argument 1: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading page %1$lld"
+          }
+        }
+      }
+    },
+    "reader-pages" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages"
+          }
+        }
+      }
+    },
+    "reader-pages-left" : {
+      "comment" : "Line in the margin of a novel's page. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One page left in this chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pages left in this chapter"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reader-pages-tab" : {
+      "comment" : "Heading in the chapters sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages"
+          }
+        }
+      }
+    },
+    "reader-paper-mode" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paper mode"
+          }
+        }
+      }
+    },
+    "reader-paper-mode-note" : {
+      "comment" : "Paper mode's page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages turn at once and nothing in the reader moves."
+          }
+        }
+      }
+    },
+    "reader-paper-quiet-note" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone quiets notifications with a Focus. Set one to turn on when Kaeri opens, and Kaeri switches to Paper mode while it is on."
+          }
+        }
+      }
+    },
+    "reader-paper-quiet-value" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With a Focus"
+          }
+        }
+      }
+    },
+    "reader-quiet" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiet the phone while reading"
+          }
+        }
+      }
+    },
+    "reader-reading-mode" : {
+      "comment" : "Row: how the series reads.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading mode"
+          }
+        }
+      }
+    },
     "reader-resumed" : {
       "comment" : "A notice over the page when a chapter opens where it was left. It offers Start over. Argument 1: page (Int).",
       "extractionState" : "manual",
@@ -165801,6 +167395,330 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Resumed at page %1$lld"
+          }
+        }
+      }
+    },
+    "reader-scrubber" : {
+      "comment" : "The reader's scrubber, spoken.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
+          }
+        }
+      }
+    },
+    "reader-scrubber-value" : {
+      "comment" : "The scrubber's value, spoken. Argument 1: page (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "reader-search-settings" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search reader settings"
+          }
+        }
+      }
+    },
+    "reader-settings-open" : {
+      "comment" : "Button in the reader's control group that opens the reader's settings. Aa is the glyph.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader settings"
+          }
+        }
+      }
+    },
+    "reader-spreads" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wide pages"
+          }
+        }
+      }
+    },
+    "reader-spreads-rotate" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn"
+          }
+        }
+      }
+    },
+    "reader-spreads-split" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split"
+          }
+        }
+      }
+    },
+    "reader-spreads-whole" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole"
+          }
+        }
+      }
+    },
+    "reader-start-over" : {
+      "comment" : "Button on the Resumed notice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start over"
+          }
+        }
+      }
+    },
+    "reader-strip-gap" : {
+      "comment" : "Gap between a strip's images.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gap between images"
+          }
+        }
+      }
+    },
+    "reader-strip-width" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width"
+          }
+        }
+      }
+    },
+    "reader-swipe-to-continue" : {
+      "comment" : "Hint under Continue on the end page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe to keep reading"
+          }
+        }
+      }
+    },
+    "reader-tap-edges" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edges"
+          }
+        }
+      }
+    },
+    "reader-tap-off" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "reader-tap-sides" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halves"
+          }
+        }
+      }
+    },
+    "reader-tap-zones" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap zones"
+          }
+        }
+      }
+    },
+    "reader-text-label" : {
+      "comment" : "The settings button's label in the control group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aa"
+          }
+        }
+      }
+    },
+    "reader-text-size" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text size"
+          }
+        }
+      }
+    },
+    "reader-this-series" : {
+      "comment" : "Heading of the settings that belong to one series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This series"
+          }
+        }
+      }
+    },
+    "reader-try-again" : {
+      "comment" : "Button in the error in a page's place.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        }
+      }
+    },
+    "reader-use-default" : {
+      "comment" : "Button that drops the series' own choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use default"
+          }
+        }
+      }
+    },
+    "reader-volume" : {
+      "comment" : "A volume's heading in the chapter list. Argument 1: volume (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume %1$@"
+          }
+        }
+      }
+    },
+    "reader-volume-keys" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume buttons turn pages"
+          }
+        }
+      }
+    },
+    "reader-window" : {
+      "comment" : "Title of the Mac reader window.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader"
+          }
+        }
+      }
+    },
+    "reader-zone-back" : {
+      "comment" : "Accessibility value of the pointer hint on the first chapter's tap zones.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        }
+      }
+    },
+    "reader-zone-forward" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward"
+          }
+        }
+      }
+    },
+    "reader-zone-menu" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu"
           }
         }
       }

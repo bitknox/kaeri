@@ -1,0 +1,220 @@
+// A page on screen: its image, the plate it fades in over, and the error in its place.
+
+import KaeriDesign
+import KaeriKit
+import KaeriStore
+import KaeriStrings
+import SwiftUI
+
+/// Paper mode and Greyscale pages, as they touch a page's pixels.
+struct PageTone: Equatable {
+    var dim = false
+    var grey = false
+}
+
+struct PageImage: View {
+    let file: PageFile
+    let longest: CGFloat
+    var tone = PageTone()
+    var fill = false
+    var onPaint: (() -> Void)?
+    @State private var image: CGImage?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(file: PageFile, longest: CGFloat, tone: PageTone = PageTone(), fill: Bool = false, onPaint: (() -> Void)? = nil) {
+        self.file = file
+        self.longest = longest
+        self.tone = tone
+        self.fill = fill
+        self.onPaint = onPaint
+        // A page that is already decoded draws on the first frame, with no fade.
+        _image = State(initialValue: PageImages.cached(file, longestSide: longest))
+    }
+
+    var body: some View {
+        ZStack {
+            if let image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: fill ? .fill : .fit)
+                    .saturation(tone.grey ? 0 : 1)
+                    // Dim the page's white instead of tinting it.
+                    .brightness(tone.dim ? -0.07 : 0)
+                    .transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? nil : .fadeIn, value: image != nil)
+        .onAppear { if image != nil { onPaint?() } }
+        .task(id: file.path) {
+            image = await PageImages.load(file, longestSide: longest)
+            if image != nil { onPaint?() }
+        }
+    }
+}
+
+/// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
+/// line says it is loading from 4 s.
+struct PagePlate: View {
+    let page: Int
+    let theme: ReaderTheme
+    @State private var shown = false
+    @State private var line = false
+
+    var body: some View {
+        ZStack {
+            if shown {
+                Rectangle().fill(theme.raised)
+                VStack(spacing: 6) {
+                    Text("\(page)").font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                    if line {
+                        Text(L.readerPageLoading(page: page)).font(.ui(13)).foregroundStyle(theme.haze)
+                    }
+                }
+                .transition(.opacity)
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .milliseconds(600))
+            withAnimation(.fadeIn) { shown = true }
+            try? await Task.sleep(for: .milliseconds(3400))
+            withAnimation(.fadeIn) { line = true }
+        }
+    }
+}
+
+/// A page that failed: left-aligned in the page's place, vermilion only on the glyph, Try again
+/// as the one action, and turning past it works.
+struct PageFailed: View {
+    let page: Int
+    let failure: ReadingFailure
+    let theme: ReaderTheme
+    let retry: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 22)).foregroundStyle(theme.vermilion)
+                .accessibilityHidden(true)
+            Text(L.readerPageFailed(page: page)).font(.ui(17, weight: .semibold)).foregroundStyle(theme.silk)
+            Text(failure.words).font(.ui(15)).foregroundStyle(theme.haze)
+            Button(L.readerTryAgain, action: retry)
+                .buttonStyle(ReaderPillStyle(theme: theme))
+                .padding(.top, 4)
+            Text(L.readerPageFailedHint).font(.ui(13)).foregroundStyle(theme.haze)
+        }
+        .frame(maxWidth: 320, alignment: .leading)
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.top, 120)
+        .background(theme.raised)
+    }
+}
+
+/// A quiet pill, the reader's secondary button.
+struct ReaderPillStyle: ButtonStyle {
+    let theme: ReaderTheme
+    var height: CGFloat = 40
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.ui(15, weight: .semibold))
+            .foregroundStyle(theme.silk)
+            .padding(.horizontal, 18)
+            .frame(minHeight: height)
+            .background(theme.high.opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
+            .contentShape(.capsule)
+    }
+}
+
+/// The reader's one amber action.
+struct ReaderAmberStyle: ButtonStyle {
+    let theme: ReaderTheme
+    var height: CGFloat = 50
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.ui(17, weight: .semibold))
+            .foregroundStyle(theme.onAmber)
+            .frame(maxWidth: .infinity, minHeight: height)
+            .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
+            .contentShape(.capsule)
+    }
+}
+
+/// One leaf: its parts laid out where the engine put them in a box of `size`.
+struct LeafView: View {
+    @Bindable var model: ReaderModel
+    let leaf: Leaf
+    let size: CGSize
+    let theme: ReaderTheme
+    let tone: PageTone
+    let scale: CGFloat
+    var fitWidth = false
+
+    var body: some View {
+        let chapter = model.view?.chapter.id ?? ""
+        ZStack(alignment: .topLeading) {
+            ForEach(0..<leaf.parts.count, id: \.self) { index in
+                partView(leaf.parts[index], chapter: chapter)
+            }
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+
+    private func partView(_ part: LeafPart, chapter: String) -> some View {
+        let w = CGFloat(part.place.width) * size.width
+        let h = CGFloat(part.place.height) * size.height
+        let x = CGFloat(part.place.x) * size.width
+        let y = CGFloat(part.place.y) * size.height
+        let double = leaf.parts.count > 1
+        let align: Alignment = double ? (part.place.x < 0.5 ? .trailing : .leading) : .center
+        return PartView(
+            model: model, chapter: chapter, part: part, box: CGSize(width: w, height: h), theme: theme,
+            tone: tone, scale: scale, align: align, fitWidth: fitWidth
+        )
+        .frame(width: w, height: h)
+        .offset(x: x, y: y)
+    }
+}
+
+struct PartView: View {
+    @Bindable var model: ReaderModel
+    let chapter: String
+    let part: LeafPart
+    let box: CGSize
+    let theme: ReaderTheme
+    let tone: PageTone
+    let scale: CGFloat
+    var align: Alignment = .center
+    var fitWidth = false
+    @State private var painted = false
+
+    var body: some View {
+        let number = Int(part.page) + 1
+        ZStack(alignment: align) {
+            // The plate holds the place until the image is on screen, and the image fades in over it.
+            if !painted, model.failure(of: part, chapter: chapter) == nil { PagePlate(page: number, theme: theme) }
+            if let file = model.file(of: part, chapter: chapter) {
+                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: { painted = true })
+                    .accessibilityElement()
+                    .accessibilityLabel(L.readerPageLabel(page: number, total: max(model.pageCount, number), title: model.view?.title ?? ""))
+                    .accessibilityAddTraits(.isImage)
+                if part.rotate {
+                    image.frame(width: box.height, height: box.width).rotationEffect(.degrees(90))
+                        .frame(width: box.width, height: box.height)
+                } else if fitWidth {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        image.frame(width: box.width)
+                    }
+                } else {
+                    image.frame(width: box.width, height: box.height, alignment: align)
+                }
+            } else if let failure = model.failure(of: part, chapter: chapter) {
+                PageFailed(page: number, failure: failure, theme: theme) { model.retry(page: part.page) }
+            }
+        }
+        .frame(width: box.width, height: box.height, alignment: align)
+        .clipped()
+    }
+}
