@@ -480,6 +480,13 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(1800);
                 OpenLink("magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Hoshikuzu+no+Tabibito+-+03+%5B1080p%5D.mkv");
             });
+        // --show=opened-unreadable: a magnet link the engine can't read, to see the dialog say so and go back.
+        if (options.Show == "opened-unreadable")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1800);
+                OpenLink("magnet:?xt=urn:btih:not-a-hash");
+            });
         if (options.Show == "open-link")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {

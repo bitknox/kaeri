@@ -55,6 +55,7 @@ static class Dialogs
         }
         open = dialog;
         var done = closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        dialog.Opened += HideIfForced;
         try
         {
             Opening?.Invoke();
@@ -70,6 +71,7 @@ static class Dialogs
         }
         finally
         {
+            dialog.Opened -= HideIfForced;
             forced.Remove(dialog);
             if (open == dialog)
             {
@@ -93,6 +95,13 @@ static class Dialogs
             dropped.Add(dialog);
         else if (open == dialog)
             Force(dialog);
+    }
+
+    /// <summary>A Hide that came while the dialog was still opening is not kept by WinUI: it is done again once open.</summary>
+    static void HideIfForced(ContentDialog dialog, ContentDialogOpenedEventArgs args)
+    {
+        if (forced.Contains(dialog))
+            dialog.Hide();
     }
 
     static void Force(ContentDialog dialog)
