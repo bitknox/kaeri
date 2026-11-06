@@ -89,7 +89,7 @@
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE721;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
                       <MenuFlyoutSeparator />
-                      <MenuFlyoutItem Text="{x:Bind s:T.EpisodeMarkPreviousWatched}" Click="OnMarkPrevious">
+                      <MenuFlyoutItem x:Name="MarkPreviousItem" Text="{x:Bind s:T.EpisodeMarkPreviousWatched}" Click="OnMarkPrevious">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE73E;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
                       <MenuFlyoutItem x:Name="TrailerItem" Text="{x:Bind s:T.TitlePlayTrailer}" Click="OnTrailer">

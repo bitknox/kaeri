@@ -78,7 +78,7 @@ sealed class TrendingRail : StackPanel
         Grid.SetColumn(all, 1);
         head.Children.Add(all);
         Children.Add(head);
-        state.Placeholders = () => States.Covers();
+        state.Placeholders = () => States.Covers(Shown, rail: true);
         state.ActivityText = T.StateLoading;
         state.Children.Add(covers);
         Children.Add(state);
@@ -189,7 +189,7 @@ sealed class TrendingRail : StackPanel
     {
         if (ctx.Known.TrendingKept.TryGetValue(period, out var entries) && entries.Length > 0)
         {
-            covers.Covers = [.. entries.Take(Shown).Select(e => new CoverItem(e).Load(ctx.Art))];
+            covers.Show([.. entries.Take(Shown)]);
             if (state.PlaceholdersSince is not null)
                 state.DoneNow();
             else

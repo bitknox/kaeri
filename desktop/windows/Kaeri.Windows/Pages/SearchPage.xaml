@@ -19,7 +19,9 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+        <!-- One line, cut short, so a long query never pushes the filters and results down. -->
+        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1"
+                   MaxLines="1" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
         <ContentControl x:Name="SurpriseHost" Grid.Column="1" VerticalAlignment="Center" />
       </Grid>
       <local:OfflineLine />
@@ -68,13 +70,20 @@
         <HyperlinkButton x:Name="ClearButton" Content="{x:Bind s:T.SearchClearFilters}" Click="OnClear" MinHeight="32" Visibility="Collapsed" />
       </StackPanel>
     </ScrollViewer>
-    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" ViewChanged="OnScrolled">
       <StackPanel Padding="0,4,0,24" Spacing="12">
+        <!-- While AniList's limit holds searching as you type back: Enter searches at once. -->
+        <TextBlock x:Name="PausedLine" Text="{x:Bind s:T.SearchRateLimitEnter}" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
+        <!-- What the engine says about the list, such as filters it could not apply. -->
+        <TextBlock x:Name="CaptionLine" Style="{StaticResource HazeCaptionStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
         <ContentControl x:Name="RailHost" />
         <TextBlock x:Name="Section" Style="{StaticResource SectionTitleStyle}" Visibility="Collapsed" />
         <local:StateHost x:Name="State">
           <app:CoverGrid x:Name="Grid" />
         </local:StateHost>
+        <!-- More results than the first page: a row of plates in the cells' size, asking for the
+             next page as it comes into sight. -->
+        <StackPanel x:Name="MoreRow" Visibility="Collapsed" Spacing="8" AutomationProperties.Name="{x:Bind s:T.SearchLoadingMore}" />
       </StackPanel>
     </ScrollViewer>
   </Grid>

@@ -31,9 +31,33 @@ public sealed partial class CoverItem : INotifyPropertyChanged
         Placeholder = new SolidColorBrush(Colours.Parse(entry.CoverColor) ?? Colours.Raised);
     }
 
-    public Entry Entry { get; }
+    public Entry Entry { get; private set; }
     public uint Id => Entry.Id;
     public string Title => Entry.Title;
+
+    /// <summary>
+    /// Takes a newer record of the same title in place: the words that changed are said again
+    /// through the bindings, and the cell, its art and its focus stay.
+    /// </summary>
+    internal void Take(CoverItem newer)
+    {
+        var was = (Entry.Title, Name, Count, Caption);
+        Entry = newer.Entry;
+        Count = newer.Count;
+        Caption = newer.Caption;
+        Spoken = newer.Spoken;
+        if (was.Title != Title)
+            PropertyChanged?.Invoke(this, new(nameof(Title)));
+        if (was.Count != Count)
+        {
+            PropertyChanged?.Invoke(this, new(nameof(Count)));
+            PropertyChanged?.Invoke(this, new(nameof(CountShown)));
+        }
+        if (was.Caption != Caption)
+            PropertyChanged?.Invoke(this, new(nameof(Caption)));
+        if (was.Name != Name)
+            PropertyChanged?.Invoke(this, new(nameof(Name)));
+    }
 
     /// <summary>What a screen reader says: the title, the English title when it differs, then the caption.</summary>
     public string Name => string.Join(", ", new[] { Entry.Title, Entry.Secondary is { Length: > 0 } s && s != Entry.Title ? s : null, Spoken is { Length: > 0 } said ? said : null, Caption is { Length: > 0 } c ? c : null }.Where(x => x is not null));
@@ -42,12 +66,12 @@ public sealed partial class CoverItem : INotifyPropertyChanged
     const double CellWidth = 150;
 
     /// <summary>The count line as the cell has room for it, or empty when the engine has none.</summary>
-    public string Count { get; } = "";
+    public string Count { get; private set; } = "";
 
     /// <summary>Whether the cell has a count line to draw.</summary>
     public Microsoft.UI.Xaml.Visibility CountShown => Count.Length > 0 ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
 
-    string Spoken { get; } = "";
+    string Spoken { get; set; } = "";
 
     static Microsoft.UI.Xaml.Controls.TextBlock? ruler;
 

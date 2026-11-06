@@ -236,11 +236,21 @@ public sealed partial class HomePage : Page, IPageKeys
         FirstMargin();
     }
 
-    /// <summary>The first shelf sits 40 under the spotlight; with no spotlight it has nothing to clear.</summary>
+    /// <summary>
+    /// Every shelf sits 40 under what is above it; the first, with no spotlight, has nothing to
+    /// clear. Set for all of them each time, since a shelf that was first once (a week drawn
+    /// before Continue arrived) is not first later and needs its gap back.
+    /// </summary>
     void FirstMargin()
     {
-        if (Shelves.Children.FirstOrDefault() is FrameworkElement first && Spot.Visibility != Visibility.Visible)
-            first.Margin = new Thickness(0);
+        for (var i = 0; i < Shelves.Children.Count; i++)
+        {
+            if (Shelves.Children[i] is not FrameworkElement shelf)
+                continue;
+            var top = i == 0 && Spot.Visibility != Visibility.Visible ? 0 : HomeWording.ShelfGap;
+            if (shelf.Margin.Top != top)
+                shelf.Margin = new Thickness(0, top, 0, 0);
+        }
     }
 
     FrameworkElement Make(HomeSection section, HomeView home) =>
@@ -252,14 +262,13 @@ public sealed partial class HomePage : Page, IPageKeys
     {
         if (element is not HomeShelf shelf)
         {
-            // This week is drawn again in its place, only when what it shows has changed.
+            // This week changes in place, and only when what it shows has changed.
             var key = WeekKey(section);
             if (element.Tag as string == key)
                 return;
-            var at = Shelves.Children.IndexOf(element);
-            var again = Make(section, home);
-            Shelves.Children[at] = again;
-            shown[section.Kind] = again;
+            element.Tag = key;
+            if (element is HomeWeek week)
+                week.Update(section);
             return;
         }
         var now = section.Items.Select(i => i.Entry.Id).ToHashSet();
@@ -612,7 +621,7 @@ public sealed partial class HomePage : Page, IPageKeys
         return menu;
     }
 
-    void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
+    internal void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
     {
         menu.Items.Clear();
         var item = card.Item;

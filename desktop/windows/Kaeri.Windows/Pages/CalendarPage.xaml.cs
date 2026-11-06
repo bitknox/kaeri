@@ -39,9 +39,15 @@ public sealed partial class CalendarPage : Page
     string? failed;
     TextBlock? nowTime;
     long nowAt;
-    int airedToday = -1;
     /// <summary>The shown broadcasts' "in 1 h 30 min" lines and their buttons, kept to the clock by <see cref="Tick"/>.</summary>
     readonly List<(TextBlock Status, Button Button, Broadcast Broadcast)> live = [];
+
+    /// <summary>
+    /// The cells drawn last, by what they show. When the week is laid out again (a broadcast
+    /// watched, the now line passing one, a page arriving) every cell that shows the same keeps
+    /// its element, art and all, so nothing that did not change is drawn again or flashes.
+    /// </summary>
+    Dictionary<string, (FrameworkElement Cell, TextBlock? Status, Button Button, Broadcast Broadcast)> cells = [], lastCells = [];
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer silence, activity, minute;
 
     public CalendarPage()
@@ -272,6 +278,8 @@ public sealed partial class CalendarPage : Page
             return;
         shownKey = key;
         plated = false;
+        lastCells = cells;
+        cells = [];
         Days.Children.Clear();
         Days.ColumnDefinitions.Clear();
         Days.RowDefinitions.Clear();
@@ -303,8 +311,16 @@ public sealed partial class CalendarPage : Page
     {
         var key = new System.Text.StringBuilder();
         key.Append(monday).Append('|').Append(today).Append('|').Append(wideNow).Append('|').Append(failed?.ToString() ?? "")
-            .Append('|').Append(loaded).Append(ctx.Known.Offline).Append(placeholders).Append(slow).Append(mine)
+            .Append('|').Append(loaded).Append(ctx.Known.Offline).Append(mine)
             .Append(plan.MineEmpty).Append(plan.PastFailed).Append(plan.AheadFailed).Append('|');
+        // The plates and the activity line matter only while something is on its way: a loaded
+        // week is not laid out again when a page for a week not shown is slow.
+        if (!loaded || plan.Pending.Any(p => p))
+            key.Append(placeholders).Append(slow);
+        // The now line's place in today's column, and which lines carry the water dot, move
+        // with the clock: the week is laid out again when they change, keeping its cells.
+        var now = Now;
+        key.Append('|').Append(days.Where(d => d.Day == today).Sum(d => d.Broadcasts.Count(b => b.Airs <= now))).Append('|');
         for (var i = 0; i < 7; i++)
             key.Append(plan.InRange[i] ? 'r' : '-').Append(plan.Pending[i] ? 'p' : '-').Append(plan.Past[i] ? 'b' : '-')
                 .Append(plan.Beyond[i] ? 'a' : '-').Append(plan.End[i] ? 'e' : '-');
@@ -314,7 +330,7 @@ public sealed partial class CalendarPage : Page
             foreach (var b in list)
                 key.Append(b.Entry.Id).Append(',').Append(b.Episode).Append(',').Append(b.Airs).Append(',').Append(b.Was)
                     .Append(',').Append(b.Watched).Append(',').Append(b.Dubbed).Append(',').Append(b.Entry.AiringApproximate)
-                    .Append(',').Append(b.Entry.Title).Append(',').Append(b.Entry.BannerUrl ?? b.Entry.CoverUrl).Append(';');
+                    .Append(',').Append(b.Entry.Title).Append(',').Append(b.Entry.BannerUrl ?? b.Entry.CoverUrl).Append(',').Append(b.IsNew(now)).Append(';');
         }
         return key.ToString();
     }
@@ -513,9 +529,6 @@ public sealed partial class CalendarPage : Page
         var now = Now;
         var line = isToday && broadcasts.Count > 0;
         var placed = false;
-        var aired = broadcasts.Count(b => b.Airs <= now);
-        if (isToday)
-            airedToday = aired;
         foreach (var b in broadcasts)
         {
             if (line && !placed && b.Airs > now)
@@ -523,10 +536,31 @@ public sealed partial class CalendarPage : Page
                 into.Children.Add(NowLine());
                 placed = true;
             }
-            into.Children.Add(grid ? Cell(b) : AgendaRow(b));
+            into.Children.Add(Kept(b, grid));
         }
         if (line && !placed)
             into.Children.Add(NowLine());
+    }
+
+    /// <summary>The cell for <paramref name="b"/>: the one drawn last when it shows the same, else a new one.</summary>
+    FrameworkElement Kept(Broadcast b, bool grid)
+    {
+        var now = Now;
+        var key = $"{grid}|{b.Entry.Id}|{b.Episode}|{b.Airs}|{b.Was}|{b.Watched}|{b.Dubbed}|{b.Entry.AiringApproximate}|{b.Entry.Title}|{b.Entry.BannerUrl ?? b.Entry.CoverUrl}|{b.IsNew(now)}";
+        if (lastCells.Remove(key, out var kept) && !cells.ContainsKey(key))
+        {
+            if (kept.Cell.Parent is Panel parent)
+                parent.Children.Remove(kept.Cell);
+            cells[key] = kept;
+            if (kept.Status is { } status)
+                live.Add((status, kept.Button, b));
+            return kept.Cell;
+        }
+        var count = live.Count;
+        var made = grid ? Cell(b) : AgendaRow(b);
+        var (line, button) = live.Count > count ? (live[^1].Status, live[^1].Button) : ((TextBlock?)null, (Button)((made as Button) ?? new Button()));
+        cells[key] = (made, line, button, b);
+        return made;
     }
 
     FrameworkElement NowLine()
@@ -563,18 +597,21 @@ public sealed partial class CalendarPage : Page
         var at = Now;
         foreach (var (status, button, b) in live)
         {
-            status.Text = b.Status(at);
+            var words = b.Status(at);
+            if (status.Text != words)
+                status.Text = words;
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(at, zone));
         }
         if (week != 0)
+        {
+            Show();
             return;
+        }
         if (nowTime is not null)
             nowTime.Text = Calendar.Time(Now, zone);
-        var anchor = ctx.Known.CalendarAnchor ?? Now;
-        var today = Calendar.Day(Now, zone);
-        var passed = Calendar.Broadcasts(rows, anchor, ctx.Known, mine).Count(b => Calendar.Day(b.Airs, zone) == today && b.Airs <= Now);
-        if (passed != airedToday)
-            Show();
+        // A broadcast the now line has passed, or a line that gained its water dot: the week is
+        // laid out again with the cells it has, so only the line moves and the dot shows.
+        Show();
     }
 
     void ShowAgenda(List<(DateOnly Day, List<Broadcast> Broadcasts)> days, DateOnly today, Plan plan)
@@ -713,6 +750,8 @@ public sealed partial class CalendarPage : Page
         var button = BroadcastButton();
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
+        // The title menu, as on a cover and on the Mac.
+        button.ContextFlyout = CoverGrid.Menu(() => b.Entry);
         if (b.Watched)
         {
             // Watched: one quiet line, a dub still marked.
@@ -757,6 +796,7 @@ public sealed partial class CalendarPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(now, zone));
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
+        button.ContextFlyout = CoverGrid.Menu(() => b.Entry);
         return button;
     }
 
@@ -852,20 +892,56 @@ public sealed partial class CalendarPage : Page
         Pick(sender.SelectedItem?.Tag as string == "mine");
     }
 
-    /// <summary>Moves to a week with the old one sliding out: one width on the standard token, towards the side it went.</summary>
-    void Go(int to)
+    /// <summary>
+    /// Moves to a week with both weeks moving together, one width on the standard token towards
+    /// the side it went: the old week, kept as a picture, slides out as the new one slides in,
+    /// so the area is never bare between them. The new week starts at its top.
+    /// </summary>
+    async void Go(int to)
     {
         var step = Math.Sign(to - week);
         if (step == 0)
             return;
+        var width = (float)Scroll.ActualWidth;
+        Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap? before = null;
+        if (Motion.Enabled && width > 0 && Scroll.ActualHeight > 0)
+        {
+            try
+            {
+                before = new Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap();
+                await before.RenderAsync(Scroll);
+            }
+            catch (Exception)
+            {
+                before = null;
+            }
+        }
         week = to;
         Show();
+        Scroll.ChangeView(null, 0, null, true);
         Motion.FadeIn(WeekTitle, Motion.Standard);
-        var width = (float)Scroll.ActualWidth;
         if (!Motion.Enabled || width <= 0)
         {
             Motion.FadeIn(Days, Motion.Standard);
             return;
+        }
+        if (before is not null && Scroll.Parent is Grid host)
+        {
+            // The old week's picture, clipped to the scroller's place, leaves the other way.
+            var ghost = new Image { Source = before, Width = Scroll.ActualWidth, Height = Scroll.ActualHeight, Stretch = Stretch.Fill, IsHitTestVisible = false };
+            var frame = new Border
+            {
+                Child = ghost,
+                IsHitTestVisible = false,
+                Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, Scroll.ActualWidth, Scroll.ActualHeight) },
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(frame, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            Grid.SetRow(frame, Grid.GetRow(Scroll));
+            host.Children.Add(frame);
+            ghost.TranslationTransition = new Vector3Transition { Duration = Motion.Standard };
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ghost.Translation = new Vector3(-step * width, 0, 0));
+            _ = Task.Delay(Motion.Standard + TimeSpan.FromMilliseconds(100)).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => host.Children.Remove(frame)));
         }
         Days.TranslationTransition = null;
         Days.Translation = new Vector3(step * width, 0, 0);
@@ -882,8 +958,16 @@ public sealed partial class CalendarPage : Page
 
     void OnThisWeek(object sender, RoutedEventArgs e) => Go(0);
 
+    /// <summary>
+    /// Whether a text box has the keys, the title bar's search among them: Ctrl+Left and
+    /// Ctrl+Right move by words there, and do not page the weeks.
+    /// </summary>
+    bool Typing() => XamlRoot is { } root && FocusManager.GetFocusedElement(root) is TextBox or PasswordBox or AutoSuggestBox;
+
     void OnAccelToday(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (Typing())
+            return;
         args.Handled = true;
         if (ThisWeek.IsEnabled)
             Go(0);
@@ -891,6 +975,8 @@ public sealed partial class CalendarPage : Page
 
     void OnAccelEarlier(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (Typing())
+            return;
         args.Handled = true;
         if (Earlier.IsEnabled)
             Go(week - 1);
@@ -898,6 +984,8 @@ public sealed partial class CalendarPage : Page
 
     void OnAccelLater(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (Typing())
+            return;
         args.Handled = true;
         if (Later.IsEnabled)
             Go(week + 1);
@@ -905,6 +993,8 @@ public sealed partial class CalendarPage : Page
 
     void OnAccelRefresh(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
+        if (Typing())
+            return;
         args.Handled = true;
         Refresh();
     }

@@ -339,11 +339,13 @@ static partial class States
     /// <summary>A cover cell's title is kept two lines high, so every cell is one height: this, in px.</summary>
     public const double CoverTitleHeight = 40;
 
-    public static UIElement Covers(int count = 12)
+    public static UIElement Covers(int count = 12, bool rail = false)
     {
         var grid = new ItemsRepeater
         {
-            Layout = new UniformGridLayout { MinItemWidth = 150, MinColumnSpacing = 16, MinRowSpacing = 20, ItemsJustification = UniformGridLayoutItemsJustification.Start },
+            // A rail's plates are one row, as the rail is: a grid of them would collapse to a row when it lands.
+            Layout = rail ? new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 }
+                : new UniformGridLayout { MinItemWidth = 150, MinColumnSpacing = 16, MinRowSpacing = 20, ItemsJustification = UniformGridLayoutItemsJustification.Start },
             ItemsSource = Enumerable.Range(0, count).ToList(),
             ItemTemplate = new CoverPlaceholderFactory(),
         };

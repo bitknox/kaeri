@@ -12,13 +12,17 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Foundation;
+using Size = Windows.Foundation.Size;
 
 namespace Kaeri.Windows;
 
 /// <summary>
-/// The preview a cover opens when the pointer rests on it: the banner, the title, a facts line,
-/// two lines of synopsis and the title's main action, in a flyout. Where the title has a trailer
-/// and trailers may play, it plays muted over the banner as on the title page.
+/// The card a cover grows into when the pointer rests on it, as on the Mac: the banner, the
+/// title, a facts line, two lines of synopsis and the title's main action, 384 wide, centred on
+/// the cover and kept inside the window. It grows from the cover on the standard token, the
+/// banner from the start and the words from 100 ms; with animation effects off it crossfades in
+/// place. A click on it opens the title. Where the title has a trailer and trailers may play, it
+/// plays muted over the banner once the card has grown.
 /// The pointer must rest: less than 4 px of movement for 450 ms, or for 150 ms when a preview
 /// closed less than a second ago (scanning a row). The preview closes 150 ms after
 /// the pointer leaves both the cover and the preview, and at once on a scroll, a key press, a
@@ -74,25 +78,28 @@ static class HoverPreview
                 Show(at, resting.Id());
         });
         target.Loaded += (_, _) => HearWheel(target);
-        target.PointerEntered += (_, e) => Resume(target, state, e);
-        target.PointerMoved += (_, e) =>
+        // Heard even when the target has handled them: a grid's item container and a button
+        // take their own pointer events for their hover and press states, and a plain handler
+        // never heard them, so most covers never opened a card.
+        target.AddHandler(UIElement.PointerEnteredEvent, new PointerEventHandler((_, e) => Resume(target, state, e)), true);
+        target.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler((_, e) =>
         {
             var at = e.GetCurrentPoint(target).Position;
             if (Math.Abs(at.X - state.Anchor.X) >= Rest || Math.Abs(at.Y - state.Anchor.Y) >= Rest)
                 Resume(target, state, e);
-        };
-        target.PointerExited += (_, _) =>
+        }), true);
+        target.AddHandler(UIElement.PointerExitedEvent, new PointerEventHandler((_, _) =>
         {
             state.Timer.Stop();
             if (open is { } o && o.Target == target)
                 o.Leaving();
-        };
+        }), true);
         // A press on the cover opens the title: no preview then.
-        target.PointerPressed += (_, _) =>
+        target.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) =>
         {
             state.Timer.Stop();
             Close();
-        };
+        }), true);
         target.Unloaded += (_, _) => state.Timer.Stop();
     }
 
@@ -147,6 +154,9 @@ static class HoverPreview
             return;
         if (ctx.Known.Entry(id) is not { } entry)
             return;
+        // Expand covers on hover turned off: the cover keeps its hover and its click, and no card.
+        if (ctx.Known.Setting(SettingKey.HoverCards) is { } cards && !SettingsCatalog.IsOn(cards))
+            return;
         // Interest shown: the sources are asked whether they have the title, as the spec ties to a
         // hover card. The engine asks once a minute at most, and Home marks a miss.
         ctx.Send(new Command.ProbeTitle(id));
@@ -156,11 +166,14 @@ static class HoverPreview
         preview.Show();
     }
 
-    /// <summary>The preview on screen.</summary>
+    /// <summary>The card on screen.</summary>
     sealed class Open
     {
         readonly Ctx ctx;
-        readonly Flyout flyout = new();
+        readonly Popup popup = new() { IsLightDismissEnabled = false, ShouldConstrainToRootBounds = true };
+        readonly Border card;
+        readonly StackPanel words;
+        bool closing, playing;
         readonly TrailerStage? stage;
         readonly DispatcherQueueTimer leave;
         readonly Button sound = new();
@@ -184,6 +197,7 @@ static class HoverPreview
             var column = new StackPanel { Width = Width, Spacing = 0 };
             column.Children.Add(video);
             var text = new StackPanel { Spacing = 0, Padding = new Thickness(16, 12, 16, 16) };
+            words = text;
 
             var heading = new Grid { ColumnSpacing = 8, MinHeight = 32 };
             heading.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -245,23 +259,23 @@ static class HoverPreview
             }
             column.Children.Add(text);
 
-            var presenter = new Style(typeof(FlyoutPresenter));
-            presenter.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(0)));
-            presenter.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, Width + 8d));
-            presenter.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(8)));
-            // The canvas's Raised with the system's flyout hairline.
-            presenter.Setters.Add(new Setter(Control.BackgroundProperty, Application.Current.Resources["RaisedBrush"]));
-            presenter.Setters.Add(new Setter(Control.BorderBrushProperty, Application.Current.Resources["SurfaceStrokeColorFlyoutBrush"]));
-            presenter.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
-            flyout.FlyoutPresenterStyle = presenter;
-            flyout.Content = column;
-            flyout.Placement = FlyoutPlacementMode.RightEdgeAlignedTop;
-            flyout.ShowMode = FlyoutShowMode.Transient;
-            flyout.LightDismissOverlayMode = LightDismissOverlayMode.Off;
-            flyout.Closed += (_, _) =>
+            // The canvas's Raised with the system's flyout hairline, over a shadow.
+            card = new Border
+            {
+                Child = column,
+                Width = Width + 2,
+                CornerRadius = new CornerRadius(8),
+                Background = (Brush)Application.Current.Resources["RaisedBrush"],
+                BorderBrush = (Brush)Application.Current.Resources["SurfaceStrokeColorFlyoutBrush"],
+                BorderThickness = new Thickness(1),
+                Shadow = new ThemeShadow(),
+                Translation = new System.Numerics.Vector3(0, 0, 32),
+            };
+            popup.Child = card;
+            popup.Closed += (_, _) =>
             {
                 stage?.Stop();
-                if (open?.flyout == flyout)
+                if (open == this)
                 {
                     open = null;
                     closedAt = DateTime.UtcNow;
@@ -270,6 +284,14 @@ static class HoverPreview
 
             column.PointerEntered += (_, _) => Stay();
             column.PointerExited += (_, _) => Leaving();
+            // A click anywhere on the card but its buttons opens the title, as on the Mac.
+            card.Tapped += (_, e) =>
+            {
+                if (e.OriginalSource is DependencyObject source && Within<ButtonBase>(source, card))
+                    return;
+                Close();
+                ctx.OpenTitle(entry.Id);
+            };
             leave = target.DispatcherQueue.CreateTimer();
             leave.Interval = Leave;
             leave.IsRepeating = false;
@@ -281,6 +303,7 @@ static class HoverPreview
                 stage.Size(video.Width, video.Height);
                 stage.Showing += shown =>
                 {
+                    playing = shown;
                     soundOn = false;
                     sound.IsHitTestVisible = shown;
                     if (shown)
@@ -307,16 +330,92 @@ static class HoverPreview
         readonly KeyEventHandler onKey = (_, _) => Close();
         readonly PointerEventHandler onWheel = (_, _) => Close();
 
+        static bool Within<T>(DependencyObject element, DependencyObject stop) where T : DependencyObject
+        {
+            for (var at = element; at is not null && at != stop; at = VisualTreeHelper.GetParent(at))
+                if (at is T)
+                    return true;
+            return false;
+        }
+
         public void Show()
         {
             // A key press or a scroll closes it at once.
             root = Target.XamlRoot?.Content;
-            root?.AddHandler(UIElement.KeyDownEvent, onKey, true);
-            root?.AddHandler(UIElement.PointerWheelChangedEvent, onWheel, true);
-            flyout.ShowAt(Target, new FlyoutShowOptions { Placement = FlyoutPlacementMode.RightEdgeAlignedTop, ShowMode = FlyoutShowMode.Transient });
-            // Banner first; the trailer loads under it and fades in only when a frame plays.
-            if (stage is not null && Motion.Enabled && Trailers.MayAutoplay(ctx.Known, entryToPlay))
-                stage.Start(entryToPlay);
+            if (root is not FrameworkElement window || Target.ActualWidth <= 0)
+                return;
+            root.AddHandler(UIElement.KeyDownEvent, onKey, true);
+            root.AddHandler(UIElement.PointerWheelChangedEvent, onWheel, true);
+            // Centred on the cover, its top a little above the cover's, inside the page it is on,
+            // so it never lies over the sidebar.
+            card.Measure(new Size(card.Width, double.PositiveInfinity));
+            var height = card.DesiredSize.Height;
+            var cover = Target.TransformToVisual(root).TransformBounds(new Rect(0, 0, Target.ActualWidth, Target.ActualHeight));
+            var area = new Rect(0, 0, window.ActualWidth, window.ActualHeight);
+            for (var up = VisualTreeHelper.GetParent(Target); up is not null; up = VisualTreeHelper.GetParent(up))
+                if (up is Page page && page.ActualWidth > card.Width + 16)
+                {
+                    area = page.TransformToVisual(root).TransformBounds(new Rect(0, 0, page.ActualWidth, page.ActualHeight));
+                    break;
+                }
+            var x = Math.Clamp(cover.X + cover.Width / 2 - card.Width / 2, area.X + 8, Math.Max(area.X + 8, area.Right - card.Width - 8));
+            var y = Math.Clamp(cover.Y - 24, 8, Math.Max(8, window.ActualHeight - height - 8));
+            popup.XamlRoot = Target.XamlRoot;
+            popup.HorizontalOffset = x;
+            popup.VerticalOffset = y;
+            popup.IsOpen = true;
+            Grow(cover, x, y, height);
+        }
+
+        /// <summary>
+        /// From the cover to the card on the standard token: the card scales up from where the
+        /// cover is, the banner shows from the start and the words come in from 100 ms. The
+        /// trailer starts once the card has grown. With animation effects off, a crossfade.
+        /// </summary>
+        void Grow(Rect cover, double x, double y, double height)
+        {
+            var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(card);
+            var compositor = visual.Compositor;
+            var fade = compositor.CreateScalarKeyFrameAnimation();
+            fade.InsertKeyFrame(0, 0);
+            fade.InsertKeyFrame(1, 1);
+            if (!Motion.Enabled)
+            {
+                fade.Duration = Motion.Standard;
+                visual.StartAnimation("Opacity", fade);
+                return;
+            }
+            var ease = compositor.CreateCubicBezierEasingFunction(new System.Numerics.Vector2(0.2f, 0), new System.Numerics.Vector2(0, 1));
+            // The point of the card over the cover's centre stays put while it grows.
+            visual.CenterPoint = new System.Numerics.Vector3((float)(cover.X + cover.Width / 2 - x), (float)(cover.Y + cover.Height / 2 - y), 0);
+            var from = (float)Math.Clamp(cover.Width / card.Width, 0.2, 1);
+            var scale = compositor.CreateVector3KeyFrameAnimation();
+            scale.InsertKeyFrame(0, new System.Numerics.Vector3(from, from, 1));
+            scale.InsertKeyFrame(1, System.Numerics.Vector3.One, ease);
+            scale.Duration = Motion.Standard;
+            fade.Duration = Motion.Quick;
+            visual.StartAnimation("Scale", scale);
+            visual.StartAnimation("Opacity", fade);
+            var text = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(words);
+            var later = compositor.CreateScalarKeyFrameAnimation();
+            later.InsertKeyFrame(0, 0);
+            later.InsertKeyFrame(1, 1);
+            later.DelayTime = TimeSpan.FromMilliseconds(100);
+            later.DelayBehavior = Microsoft.UI.Composition.AnimationDelayBehavior.SetInitialValueBeforeDelay;
+            later.Duration = Motion.Standard - TimeSpan.FromMilliseconds(100);
+            text.StartAnimation("Opacity", later);
+            // Banner first; the trailer loads under it once the card has grown, and fades in
+            // only when a frame plays.
+            var grown = Target.DispatcherQueue.CreateTimer();
+            grown.Interval = Motion.Standard;
+            grown.IsRepeating = false;
+            grown.Tick += (_, _) =>
+            {
+                grown.Stop();
+                if (!closing && popup.IsOpen && stage is not null && Trailers.MayAutoplay(ctx.Known, entryToPlay))
+                    stage.Start(entryToPlay);
+            };
+            grown.Start();
         }
 
         /// <summary>The pointer is on the cover or the preview: stay open.</summary>
@@ -332,13 +431,34 @@ static class HoverPreview
             leave.Start();
         }
 
+        /// <summary>Leaves on the quick token: the trailer stops, the card fades, and it is gone.</summary>
         public void Dismiss()
         {
+            if (closing)
+                return;
+            closing = true;
             leave.Stop();
             root?.RemoveHandler(UIElement.KeyDownEvent, onKey);
             root?.RemoveHandler(UIElement.PointerWheelChangedEvent, onWheel);
             stage?.Stop();
-            flyout.Hide();
+            if (!popup.IsOpen)
+                return;
+            // A trailer's video does not fade with the card and would stand alone as it went:
+            // a card that played one closes at once.
+            if (playing)
+            {
+                popup.IsOpen = false;
+                return;
+            }
+            card.IsHitTestVisible = false;
+            var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(card);
+            var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
+            fade.InsertKeyFrame(1, 0);
+            fade.Duration = Motion.Quick;
+            var batch = visual.Compositor.CreateScopedBatch(Microsoft.UI.Composition.CompositionBatchTypes.Animation);
+            visual.StartAnimation("Opacity", fade);
+            batch.End();
+            batch.Completed += (_, _) => popup.IsOpen = false;
         }
     }
 }

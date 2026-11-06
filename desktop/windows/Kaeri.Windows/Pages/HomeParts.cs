@@ -25,13 +25,27 @@ public sealed class HomeCard
         Name = name;
     }
 
-    public HomeItem Item { get; }
+    public HomeItem Item { get; private set; }
     public CoverItem Cover { get; }
     public uint Id => Item.Entry.Id;
     public string Title => Item.Entry.Title;
-    public string Line { get; }
-    public string Name { get; }
+    public string Line { get; private set; }
+    public string Name { get; private set; }
     public double? Progress => Item.Progress;
+
+    /// <summary>The card's words changed in place; the element showing it says them again.</summary>
+    public event Action? Changed;
+
+    /// <summary>Takes a newer reading of the same title: the card that stands changes its words, and keeps its element, focus and menu.</summary>
+    internal void Take(HomeCard newer)
+    {
+        if (Look == newer.Look)
+            return;
+        Item = newer.Item;
+        Line = newer.Line;
+        Name = newer.Name;
+        Changed?.Invoke();
+    }
 
     /// <summary>Everything the card and its menu are drawn from: a card whose look is the same is kept, element and all.</summary>
     public (string, string, string, double?, bool, Playable, HomeAction, uint?, UpNextReason?, FuzzyDate?, bool, LibrarySegment?) Look =>
@@ -157,29 +171,30 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
         var height = wide ? HomeWording.CardHeight : HomeWording.PosterHeight;
         var stack = new StackPanel { Width = width };
         stack.Children.Add(HomeArt.Make(card.Cover, width, height, 4, wide));
+        Border? track = null, fill = null;
         if (wide)
         {
-            var track = new Border
+            track = new Border
             {
                 Height = 3,
                 Margin = new Thickness(0, 6, 0, 0),
                 CornerRadius = new CornerRadius(2),
                 Background = Ui.Res<Brush>("RuleBrush"),
-                Opacity = card.Progress is null ? 0 : 1,
             };
-            var fill = new Border { Height = 3, HorizontalAlignment = HorizontalAlignment.Left, Width = width * Math.Clamp(card.Progress ?? 0, 0, 1), CornerRadius = new CornerRadius(2), Background = Ui.Res<Brush>("SilkBrush") };
+            fill = new Border { Height = 3, HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(2), Background = Ui.Res<Brush>("SilkBrush") };
             track.Child = fill;
             stack.Children.Add(track);
         }
-        var title = new TextBlock { Text = card.Title, Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 14, Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
+        var title = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 14, Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
         stack.Children.Add(title);
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        if (card.Item.New)
-            line.Children.Add(Ui.Dot(Colours.Water, false));
-        line.Children.Add(new TextBlock { Text = card.Line, Style = Ui.Res<Style>("HazeCaptionStyle"), TextTrimming = TextTrimming.CharacterEllipsis });
+        var dot = Ui.Dot(Colours.Water, false);
+        line.Children.Add(dot);
+        var words = new TextBlock { Style = Ui.Res<Style>("HazeCaptionStyle"), TextTrimming = TextTrimming.CharacterEllipsis };
+        line.Children.Add(words);
         stack.Children.Add(line);
-        if (card.Item.Playable == Playable.NotFound)
-            stack.Children.Add(new TextBlock { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle") });
+        var notFound = new TextBlock { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle") };
+        stack.Children.Add(notFound);
 
         var button = new Button
         {
@@ -188,7 +203,38 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
             Tag = card,
             Width = width,
         };
-        AutomationProperties.SetName(button, card.Name);
+        // The words from the card as it is now: set once, then again only where a newer reading
+        // of the title changed them, so a card is never made again for a new line or a new dot.
+        void Say()
+        {
+            if (track is not null && fill is not null)
+            {
+                track.Opacity = card.Progress is null ? 0 : 1;
+                fill.Width = width * Math.Clamp(card.Progress ?? 0, 0, 1);
+            }
+            if (title.Text != card.Title)
+                title.Text = card.Title;
+            dot.Visibility = card.Item.New ? Visibility.Visible : Visibility.Collapsed;
+            if (words.Text != card.Line)
+                words.Text = card.Line;
+            notFound.Visibility = card.Item.Playable == Playable.NotFound ? Visibility.Visible : Visibility.Collapsed;
+            AutomationProperties.SetName(button, card.Name);
+        }
+        Say();
+        // Heard only while the card is up, so a card taken down is not kept alive by its record.
+        var hearing = false;
+        button.Loaded += (_, _) =>
+        {
+            Say();
+            if (!hearing)
+                card.Changed += Say;
+            hearing = true;
+        };
+        button.Unloaded += (_, _) =>
+        {
+            card.Changed -= Say;
+            hearing = false;
+        };
         button.Click += (_, _) => page.OpenCard(card, shape);
         button.ContextFlyout = page.MenuFor(card, shape);
         button.KeyDown += (_, e) => page.CardKey(card, shape, e);
@@ -417,22 +463,31 @@ sealed partial class HomeShelf : Grid
     {
         var words = HomeWording.Heading(section);
         var small = HomeWording.Aside(section, season);
-        lead.Text = words.Lead;
-        title.Text = words.Title;
-        tail.Text = words.Tail;
+        // Each run and the link change only where their words did.
+        static void Set(Run run, string text)
+        {
+            if (run.Text != text)
+                run.Text = text;
+        }
+        Set(lead, words.Lead);
+        Set(title, words.Title);
+        Set(tail, words.Tail);
         // An em space keeps the aside apart from the heading, as the gap between two blocks did.
-        aside.Text = small is null ? "" : " " + small;
+        Set(aside, small is null ? "" : " " + small);
         AutomationProperties.SetName(heading, small is null ? words.ToString() : $"{words}, {small}");
         var all = HomeWording.ViewAll(section);
-        viewAll.Content = all is null ? null : new StackPanel
+        if (all is not null && viewAll.Tag as string != all)
         {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            Children = { new TextBlock { Text = all, FontWeight = FontWeights.SemiBold }, new FontIcon { Glyph = "", FontSize = 10 } },
-        };
-        viewAll.Visibility = all is null ? Visibility.Collapsed : Visibility.Visible;
-        if (all is not null)
+            viewAll.Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 4,
+                Children = { new TextBlock { Text = all, FontWeight = FontWeights.SemiBold }, new FontIcon { Glyph = "", FontSize = 10 } },
+            };
             AutomationProperties.SetName(viewAll, all);
+        }
+        viewAll.Tag = all;
+        viewAll.Visibility = all is null ? Visibility.Collapsed : Visibility.Visible;
         var now = DateTimeOffset.Now;
         var was = cards.ToDictionary(c => c.Id);
         var next = section.Items.Select(item =>
@@ -440,7 +495,11 @@ sealed partial class HomeShelf : Grid
             was.TryGetValue(item.Entry.Id, out var old);
             var cover = old?.Cover ?? new CoverItem(item.Entry).Load(Ctx.Current.Art, withBanner: Shape == HomeShape.Card);
             var card = new HomeCard(item, cover, HomeWording.Line(item, now, TimeZoneInfo.Local), HomeWording.Name(item, now, TimeZoneInfo.Local));
-            return old is not null && old.Look == card.Look ? old : card;
+            if (old is null)
+                return card;
+            // The card that stands takes the newer words in place.
+            old.Take(card);
+            return old;
         }).ToList();
         Apply(next);
     }

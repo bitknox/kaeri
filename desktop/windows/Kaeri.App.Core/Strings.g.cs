@@ -1035,6 +1035,9 @@ public static partial class T
     /// <summary>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</summary>
     public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</summary>
+    public static string SearchRateLimitEnter => Get("SearchRateLimitEnter");
+
     /// <summary>Line above the field while the viewer edits their own comment.</summary>
     public static string DiscussionEditing => Get("DiscussionEditing");
 
@@ -9129,6 +9132,7 @@ public static partial class T
         ["SearchResultOnServer"] = "On {server}",
         ["SearchResultOnService"] = "On {service}",
         ["MatchChoiceLine"] = "{parts} · {percent}% match",
+        ["SearchRateLimitEnter"] = "Searching as you type is paused for a moment, to stay within AniList's limits. Press Enter to search now.",
         ["DiscussionEditing"] = "Editing your comment",
         ["DiscussionCommentMenu"] = "More for this comment",
         ["DiscussionPaneLabel"] = "Episode {episode} discussion",
