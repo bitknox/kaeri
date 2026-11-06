@@ -1085,7 +1085,7 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
     };
     // The highest whole chapter read, and the volume a watermark named: half chapters go as
     // the chapter below them, and a tracker never holds less than it was told.
-    let (read, volume) = cx.services.store.read_progress(work.as_str()).unwrap_or((0, None));
+    let (read, volume) = crate::read_tracking::progress_of(cx.services, work);
     let op = TrackOp::SetReadProgress {
         anilist_id: AnilistId::new(id),
         chapter: number.max(read),

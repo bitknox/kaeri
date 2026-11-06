@@ -1272,6 +1272,31 @@ impl Store {
         Ok((u32::try_from(milli / 1000).unwrap_or(u32::MAX), volume))
     }
 
+    /// What the chapter catalogue says a work's trackers should hold: whole chapters read in
+    /// reading order, and the highest volume whose every known chapter is read. Kept by the
+    /// engine, which knows the catalogue; [`Self::read_progress`] is the floor.
+    pub fn set_tracked_progress(
+        &self,
+        work: &str,
+        chapters: u32,
+        volume: Option<u32>,
+    ) -> Result<()> {
+        let text = format!("{chapters}/{}", volume.map(|v| v.to_string()).unwrap_or_default());
+        self.set_meta_text(&format!("read_tracked:{work}"), &text)
+    }
+
+    /// The figures [`Self::set_tracked_progress`] kept, and never fewer than [`Self::read_progress`].
+    pub fn tracked_progress(&self, work: &str) -> Result<(u32, Option<u32>)> {
+        let (mut chapters, mut volume) = self.read_progress(work)?;
+        if let Some(text) = self.get_meta_text(&format!("read_tracked:{work}"))?
+            && let Some((c, v)) = text.split_once('/')
+        {
+            chapters = chapters.max(c.parse().unwrap_or(0));
+            volume = volume.max(v.parse().ok());
+        }
+        Ok((chapters, volume))
+    }
+
     /// Which work a source's series is. `share` for a plugin's or a server's match, which
     /// follows the person when confirmed; a folder's stays on the device.
     #[allow(clippy::too_many_arguments)]

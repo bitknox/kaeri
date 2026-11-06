@@ -26,6 +26,7 @@ pub mod auth;
 pub mod device;
 mod held;
 pub mod kitsu;
+pub mod lookup;
 pub mod mal;
 pub mod mangaupdates;
 pub mod merge;

@@ -534,7 +534,7 @@ pub fn local_read_state(
     store: &Store,
     work: &str,
 ) -> Result<merge::ReadLocal, kaeri_store::StoreError> {
-    let (chapters, volumes) = store.read_progress(work)?;
+    let (chapters, volumes) = store.tracked_progress(work)?;
     let (status, score) = store.read_status(work)?;
     let at = store.read_status_at(work)?;
     let named = status.as_deref().and_then(read_status_from_name);

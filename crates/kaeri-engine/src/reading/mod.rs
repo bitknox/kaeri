@@ -305,6 +305,8 @@ fn mark_read(
         }
     }
     services.book_sources.report(&work, ids, read, now);
+    // What the trackers hold follows the catalogue.
+    let _ = crate::read_tracking::progress_of(services, &work);
 }
 
 /// A reader command.

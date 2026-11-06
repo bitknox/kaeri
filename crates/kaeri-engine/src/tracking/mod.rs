@@ -61,6 +61,9 @@ pub struct Sync {
     pub mangaupdates: Option<Arc<kaeri_track::MangaUpdatesTracker>>,
     /// Where a MangaUpdates sign-in goes: the service, or a fixture build's fake.
     pub mangaupdates_api: String,
+    /// The public lookups that match a work to tracker entries: asked only while a tracker that
+    /// needs the answer is signed in.
+    pub lookups: Arc<kaeri_track::lookup::Lookups>,
     /// The Simkl tracker as its concrete type, for the same reason: a sign-in through its
     /// OAuth 2.0 lasts a week, and the pair renewed mid-call has to be written back.
     pub simkl: Option<Arc<kaeri_track::SimklTracker>>,
@@ -239,6 +242,7 @@ impl Sync {
             kitsu_site: kaeri_track::kitsu::Site::default(),
             mangaupdates,
             mangaupdates_api: kaeri_track::mangaupdates::API.to_owned(),
+            lookups: Arc::new(kaeri_track::lookup::Lookups::new(http.plain().clone())),
             simkl,
             tokens,
             store: store.clone(),
@@ -309,6 +313,13 @@ impl Sync {
             self.mangaupdates = Some(tracker);
         }
         self.mangaupdates_api = api.to_owned();
+        self
+    }
+
+    /// The lookups answered by stand-ins: a test's.
+    #[must_use]
+    pub fn with_lookups(mut self, lookups: kaeri_track::lookup::Lookups) -> Self {
+        self.lookups = Arc::new(lookups);
         self
     }
 

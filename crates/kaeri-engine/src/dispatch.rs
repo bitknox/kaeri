@@ -483,7 +483,8 @@ pub(crate) fn dispatch(
         Command::Reading(kaeri_model::reading::ReadingCommand::LoadTracking { work })
             if engine.reading.available =>
         {
-            crate::read_tracking::load(services, work, tx)
+            crate::read_tracking::load(services, work.clone(), tx);
+            crate::read_tracking::resolve_for(services, &work, tx);
         }
         Command::Reading(kaeri_model::reading::ReadingCommand::ChooseMapping {
             work,
