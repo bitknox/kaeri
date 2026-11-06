@@ -88,7 +88,8 @@ sealed partial class HomeWeek : Grid
         var scroll = new ScrollViewer
         {
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollMode = ScrollMode.Disabled,
+            HorizontalScrollMode = ScrollMode.Enabled,
+            IsHorizontalRailEnabled = true,
             VerticalScrollMode = ScrollMode.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             IsTabStop = false,
@@ -98,7 +99,7 @@ sealed partial class HomeWeek : Grid
         // equal columns into ones as wide as their longest title. The strip takes the width the
         // page gives it (at least its minimum), so the days share it and a long title wraps.
         scroll.SizeChanged += (_, e) => strip.Width = Math.Max(strip.MinWidth, e.NewSize.Width);
-        HomeShelf.ForwardWheel(scroll, page);
+        HomeShelf.ForwardWheel(scroll);
         Grid.SetRow(scroll, 1);
         Children.Add(scroll);
     }

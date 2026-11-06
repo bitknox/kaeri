@@ -188,25 +188,54 @@ sealed partial class HomeShelf : Grid
     readonly ScrollViewer scroll = new()
     {
         HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-        HorizontalScrollMode = ScrollMode.Disabled,
+        // Touch and a touchpad swipe the strip sideways, and pass an upright swipe to the page.
+        HorizontalScrollMode = ScrollMode.Enabled,
+        IsHorizontalRailEnabled = true,
         VerticalScrollMode = ScrollMode.Disabled,
         VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         IsTabStop = false,
     };
-    /// <summary>The wheel moves the page, not a sideways strip; Shift and a sideways wheel move the strip.</summary>
-    internal static void ForwardWheel(ScrollViewer inner, HomePage page) =>
-        inner.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
+    /// <summary>
+    /// The wheel moves the page, not a sideways strip; Shift and a sideways wheel move the strip.
+    /// The strip's content hides an upright wheel from the strip, then the strip hands it on
+    /// untouched, so the page's own scrolling takes it just as it does between the shelves, with
+    /// its glide, and a touchpad's precise scrolling and inertia.
+    /// </summary>
+    internal static void ForwardWheel(ScrollViewer inner)
+    {
+        var content = (UIElement)inner.Content;
+        var passing = false;
+        double? heading = null;
+        inner.ViewChanged += (_, e) =>
+        {
+            if (!e.IsIntermediate)
+                heading = null;
+        };
+        content.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
         {
             var point = e.GetCurrentPoint(inner).Properties;
+            // Handled here, the strip's own wheel handling, which would turn an upright wheel
+            // sideways, leaves it alone.
             e.Handled = true;
             if (point.IsHorizontalMouseWheel || e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift))
             {
-                inner.ChangeView(Math.Clamp(inner.HorizontalOffset + point.MouseWheelDelta, 0, inner.ScrollableWidth), null, null, true);
+                passing = false;
+                // Shift with the wheel down goes on along the strip, as everywhere in Windows.
+                var by = point.IsHorizontalMouseWheel ? point.MouseWheelDelta : -point.MouseWheelDelta;
+                heading = Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
+                inner.ChangeView(heading, null, null, false);
                 return;
             }
-            var outer = page.PageScroll;
-            outer.ChangeView(null, Math.Clamp(outer.VerticalOffset - point.MouseWheelDelta, 0, outer.ScrollableHeight), null, true);
+            passing = true;
         }), true);
+        inner.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
+        {
+            if (!passing)
+                return;
+            passing = false;
+            e.Handled = false;
+        }), true);
+    }
 
     readonly ItemsRepeater repeater;
     readonly Button previous, next;
@@ -272,7 +301,7 @@ sealed partial class HomeShelf : Grid
         };
         scroll.Content = repeater;
         // The wheel moves the page, not the shelf; Shift and a sideways wheel move the shelf.
-        ForwardWheel(scroll, page);
+        ForwardWheel(scroll);
         scroll.ViewChanged += (_, _) => Arrows();
         scroll.SizeChanged += (_, _) => Arrows();
         Grid.SetRow(scroll, 1);
