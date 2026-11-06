@@ -1688,9 +1688,25 @@ public sealed partial class MainWindow : Window
         taskbar?.Clear();
         // The engine first: on its way out it stops what plays and waits for the player to say
         // where it ended, so the player must still be there to hear the stop.
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         session.Dispose();
+        var engineMs = clock.ElapsedMilliseconds;
         player?.Shutdown();
         player?.Dispose();
+        // A slow close, with where the time went, beside the crash log: the engine's log has
+        // closed by now.
+        if (clock.ElapsedMilliseconds > 500)
+        {
+            try
+            {
+                var dir = Path.Combine(Path.GetTempPath(), "kaeri-windows");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "closing.txt"), $"{DateTime.Now:O} closing took {clock.ElapsedMilliseconds} ms: the engine {engineMs} ms, the player {clock.ElapsedMilliseconds - engineMs} ms" + Environment.NewLine);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     // The window's keys, after the brief's table. The player's own keys are on the player; these
