@@ -61,6 +61,10 @@ import app.kaeri.widgets.WidgetHost
 import app.kaeri.widgets.Widgets
 
 class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
+    // Below Android 13 the chosen language is the app's own to apply: notifications, widgets and
+    // the engine's words read it from here.
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(app.kaeri.store.AppLanguage.wrap(base))
+
     /** Where the store's work runs: the main thread, for as long as the process. */
     private val scope = MainScope() + kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
         // A coroutine that fails in the store is logged; it does not take the process with it.

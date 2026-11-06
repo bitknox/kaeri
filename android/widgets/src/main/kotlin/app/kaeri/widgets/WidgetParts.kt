@@ -5,8 +5,11 @@
 package app.kaeri.widgets
 
 import android.graphics.Bitmap
+import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -16,6 +19,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.LinearProgressIndicator
@@ -70,11 +74,36 @@ internal class Drawing(
     fun airs(at: Instant): String = words.airs(at, now, zone)
 }
 
-/** The widget's own ground: its background, with the system's corners. */
+/**
+ * The widget's own ground: its background, with the system's corners. Android 11 has neither the
+ * system's radius nor a clip to it, so there the ground is a drawable with Android 12's default
+ * radius, and art that reaches an edge rounds itself ([SystemStyle.unclipped]).
+ */
 internal fun root(onClick: Action?): GlanceModifier {
-    val ground = GlanceModifier.fillMaxSize().appWidgetBackground().background(Palette.ground)
-        .cornerRadius(android.R.dimen.system_app_widget_background_radius)
+    val ground = if (SystemStyle.available) {
+        GlanceModifier.fillMaxSize().appWidgetBackground().background(Palette.ground)
+            .cornerRadius(android.R.dimen.system_app_widget_background_radius)
+    } else {
+        GlanceModifier.fillMaxSize().appWidgetBackground().background(ImageProvider(R.drawable.widget_ground))
+    }
     return if (onClick == null) ground else ground.clickable(onClick)
+}
+
+/**
+ * What Android 12 brought widgets: the launcher clips them to the system's corners, and a widget
+ * can colour its progress bar. Android 11 draws both itself.
+ */
+internal object SystemStyle {
+    @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
+    val available: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    /**
+     * The radius art at the widget's edge gives its own corners there: none where the launcher
+     * clips, Android 12's default (widget_ground) where it does not.
+     */
+    val unclipped: Dp get() = unclipped(Build.VERSION.SDK_INT)
+
+    internal fun unclipped(sdk: Int): Dp = if (sdk >= Build.VERSION_CODES.S) 0.dp else 16.dp
 }
 
 /**
@@ -83,13 +112,13 @@ internal fun root(onClick: Action?): GlanceModifier {
  * picture itself rather than clipped, so they hold however the launcher draws.
  */
 @Composable
-internal fun Art(drawing: Drawing, url: String?, plate: Long?, width: Dp, height: Dp, radius: Dp, modifier: GlanceModifier = GlanceModifier) {
+internal fun Art(drawing: Drawing, url: String?, plate: Long?, width: Dp, height: Dp, radius: Dp, modifier: GlanceModifier = GlanceModifier, topOnly: Boolean = false) {
     // Drawn at no more than 2.5 × the size in dp: the launcher scales it, and a widget's
     // pictures share one memory budget.
     val density = LocalContext.current.resources.displayMetrics.density.coerceAtMost(2.5f)
     val (w, h, r) = Triple((width.value * density).toInt(), (height.value * density).toInt(), radius.value * density)
-    val image = drawing.art(url, w, h)?.let { WidgetArt.rounded(it, r) }
-        ?: WidgetArt.plate((plate ?: PLATE).toInt(), w, h, r)
+    val image = drawing.art(url, w, h)?.let { WidgetArt.rounded(it, r, topOnly) }
+        ?: WidgetArt.plate((plate ?: PLATE).toInt(), w, h, r, topOnly)
     Image(ImageProvider(image), contentDescription = null, modifier = modifier.size(width, height), contentScale = ContentScale.FillBounds)
 }
 
@@ -123,13 +152,22 @@ internal fun Play(onClick: Action, label: String, filled: Boolean) {
 /** Progress through an episode: the amber line on its track, 4 dp. */
 @Composable
 internal fun Bar(progress: Float, modifier: GlanceModifier = GlanceModifier.fillMaxWidth()) {
-    val spoken = Strings.tvCardProgressSpoken(LocalContext.current, java.text.NumberFormat.getPercentInstance().format(progress.coerceIn(0f, 1f).toDouble()))
-    LinearProgressIndicator(
-        progress = progress,
-        modifier = modifier.height(4.dp).cornerRadius(2.dp).semantics { contentDescription = spoken },
-        color = ColorProvider(Palette.amber),
-        backgroundColor = ColorProvider(Palette.rule),
-    )
+    val context = LocalContext.current
+    val spoken = Strings.tvCardProgressSpoken(context, java.text.NumberFormat.getPercentInstance().format(progress.coerceIn(0f, 1f).toDouble()))
+    if (SystemStyle.available) {
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = modifier.height(4.dp).cornerRadius(2.dp).semantics { contentDescription = spoken },
+            color = ColorProvider(Palette.amber),
+            backgroundColor = ColorProvider(Palette.rule),
+        )
+    } else {
+        // Android 11 cannot colour a widget's progress bar: the same line, drawn as a picture
+        // about the widget's width and stretched to the bar's.
+        val density = context.resources.displayMetrics.density.coerceAtMost(2.5f)
+        val image = WidgetArt.bar(progress, (LocalSize.current.width.value * density).toInt(), (4 * density).toInt(), Palette.amber.toArgb(), Palette.rule.toArgb())
+        Image(ImageProvider(image), contentDescription = spoken, modifier = modifier.height(4.dp), contentScale = ContentScale.FillBounds)
+    }
 }
 
 /**

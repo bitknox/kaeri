@@ -1,12 +1,14 @@
-// Quiet the phone: while the reader is open, notifications wait. Android 15 lets an app turn on
-// an automatic Do Not Disturb rule that only dims the device's interruptions, and asks the
-// person once for access to Do Not Disturb. Without that access nothing changes and the setting
-// row says what to grant.
+// Quiet the phone: while the reader is open, notifications wait. The app turns on an automatic
+// Do Not Disturb rule that only dims the device's interruptions, and asks the person once for
+// access to Do Not Disturb. Without that access nothing changes and the setting row says what to
+// grant. Android 15 builds the rule with its Builder; Android 10 to 14 with the constructor,
+// which wants the app's own activity named as the rule's settings.
 
 package app.kaeri.reader.phone
 
 import android.app.AutomaticZenRule
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -20,8 +22,8 @@ class QuietPhone(private val context: Context) {
     /** Whether the app may change Do Not Disturb. */
     val allowed: Boolean get() = manager.isNotificationPolicyAccessGranted
 
-    /** Whether this Android has the rule the setting uses. */
-    val supported: Boolean get() = Build.VERSION.SDK_INT >= 28
+    /** Whether this Android has the rule the setting uses: every one the app runs on. */
+    val supported: Boolean get() = true
 
     /** The system screen where the person grants access. */
     fun accessIntent(): Intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
@@ -39,11 +41,16 @@ class QuietPhone(private val context: Context) {
             .disallowAllSounds()
             .hideAllVisualEffects()
             .build()
-        val rule = AutomaticZenRule.Builder("Reader", Uri.parse("kaeri://reader"))
-            .setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-            .setZenPolicy(policy)
-            .setEnabled(true)
-            .build()
+        val condition = Uri.parse("kaeri://reader")
+        val rule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            AutomaticZenRule.Builder("Reader", condition)
+                .setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                .setZenPolicy(policy)
+                .setEnabled(true)
+                .build()
+        } else {
+            AutomaticZenRule("Reader", null, launcher(), condition, policy, NotificationManager.INTERRUPTION_FILTER_PRIORITY, true)
+        }
         val id = manager.addAutomaticZenRule(rule)
         ruleId = id
         manager.setAutomaticZenRuleState(
@@ -51,6 +58,9 @@ class QuietPhone(private val context: Context) {
             android.service.notification.Condition(rule.conditionId, "", android.service.notification.Condition.STATE_TRUE),
         )
     }
+
+    /** The app's own launcher activity, which Android 14 and below want a rule to name. */
+    private fun launcher(): ComponentName? = context.packageManager.getLaunchIntentForPackage(context.packageName)?.component
 
     private fun stop() {
         val id = ruleId ?: return

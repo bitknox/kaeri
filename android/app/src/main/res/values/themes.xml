@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The window before Compose draws: the ground colour from the first frame, the splash screen
-         too, so a launch never flashes white. -->
+    <!-- The window before Compose draws: the ground colour from the first frame, so a launch never
+         flashes white. Android 12 and up add their splash screen (values-v31). -->
     <style name="Theme.Kaeri" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/ground</item>
         <item name="android:colorBackground">@color/ground</item>
-        <item name="android:windowSplashScreenBackground">@color/ground</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- The activity's theme as it launches. Android 11 has no splash screen of the system's, so
+         its starting window draws the same one, Nagare on the ground; the activity takes
+         Theme.Kaeri as it starts. -->
+    <style name="Theme.Kaeri.Launch">
+        <item name="android:windowBackground">@drawable/launch_window</item>
     </style>
 </resources>

@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -248,7 +249,12 @@ object FixtureParty {
                 go = true
             }
         }
-        context.applicationContext.registerReceiver(receiver, IntentFilter(GO), Context.RECEIVER_EXPORTED)
+        // The shell sends it, so it is exported; Android 13 asks to be told so.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.applicationContext.registerReceiver(receiver, IntentFilter(GO), Context.RECEIVER_EXPORTED)
+        } else {
+            context.applicationContext.registerReceiver(receiver, IntentFilter(GO))
+        }
     }
 
     /** The lobby of the room an invite opened, joined, with its members and conversation. */

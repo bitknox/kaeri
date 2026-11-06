@@ -15,8 +15,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.eink"
-    // Shared with the e-reader build, on Android 11 and up.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
 }
 
 dependencies {

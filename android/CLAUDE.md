@@ -1,6 +1,7 @@
 # The Android app
 
-- Kotlin and Jetpack Compose, minSdk 35, arm64-v8a only. Modules: `:engine` (bindings),
+- Kotlin and Jetpack Compose, minSdk 30 for every app and module (`KaeriSdk.MIN`), the phone
+  app arm64-v8a only. What newer Androids add is checked at run time with a fallback below. Modules: `:engine` (bindings),
   `:store`, `:design`, `:ui`, `:player` (libmpv through a JNI shim), `:widgets`, `:app`.
   Flavours: `app` (`app.kaeri.app`) and `fixtures` (made-up data, never for real use).
 - Scripts: `engine.sh <testing|release>` builds the engine (cached in `KAERI_ENGINE_CACHE`),

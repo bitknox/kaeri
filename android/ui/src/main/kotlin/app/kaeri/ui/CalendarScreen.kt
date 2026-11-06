@@ -184,7 +184,7 @@ internal class CalendarPage(
         }
 
         private fun make(window: CalendarModel.Window, titles: Map<AnilistId, Entry>, mine: Boolean, now: Instant, zone: ZoneId): CalendarPage {
-            val today = LocalDate.ofInstant(now, zone)
+            val today = now.atZone(zone).toLocalDate()
             // The titles as they now stand: progress may have moved since the calendar came.
             val broadcasts = window.broadcasts(now).map { b ->
                 val known = titles[b.entry.id]
@@ -192,7 +192,7 @@ internal class CalendarPage(
                 else b.copy(entry = b.entry.copy(progress = known.progress, listStatus = known.listStatus))
             }
             val shown = if (mine) broadcasts.filter { it.entry.isMine() } else broadcasts
-            val byDay = shown.groupBy { LocalDate.ofInstant(it.airs, zone) }.toSortedMap()
+            val byDay = shown.groupBy { it.airs.atZone(zone).toLocalDate() }.toSortedMap()
             val mineAheadEmpty = mine && byDay.keys.none { it >= today }
             // Every day of this week and the next seven has a heading, so today can stand at the top
             // of the page, and so does every other day with something on it. With nothing on your
@@ -202,8 +202,8 @@ internal class CalendarPage(
             val days = (byDay.keys + (week + ahead).filter { !mineAheadEmpty || it <= today }).toSortedSet().toList()
             val todayRows = byDay[today].orEmpty()
             val nowAfter = if (todayRows.isEmpty()) null else todayRows.count { !it.airs.isAfter(now) }
-            val firstDay = window.floor?.let { LocalDate.ofInstant(Instant.ofEpochSecond(it), zone) }
-            val lastDay = window.ceiling?.let { LocalDate.ofInstant(Instant.ofEpochSecond(it), zone) }
+            val firstDay = window.floor?.let { Instant.ofEpochSecond(it).atZone(zone).toLocalDate() }
+            val lastDay = window.ceiling?.let { Instant.ofEpochSecond(it).atZone(zone).toLocalDate() }
             val top = when {
                 window.pastFailed -> Edge.Failed
                 window.loadingPast || window.morePast -> Edge.Loading
