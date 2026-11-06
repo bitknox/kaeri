@@ -2,9 +2,6 @@
 
 # Button in the reader's control group that closes the reader.
 
-# Button in the reader's control group that opens the chapters and the page grid.
-reader-chapters = Chapters
-
 # Button in the reader's control group that opens the reader's settings. Aa is the glyph.
 reader-settings-open = Reader settings
 
@@ -57,13 +54,6 @@ reader-group-line-novel = { $chapter } · page { $page } of { $total }
 # @arg percent: int
 reader-group-line-scroll = { $chapter } · { $percent }%
 
-# Line in the margin of a novel's page.
-# @arg count: int
-reader-pages-left = { $count ->
-    [one] One page left in this chapter
-   *[other] { $count } pages left in this chapter
-}
-
 # Link in the group that opens Go to page, and the field's label.
 reader-go-to-page = Go to page
 
@@ -104,7 +94,6 @@ reader-end-not-out = { $chapter } isn't out yet
 reader-end-not-out-body = { -app-name } checks for new chapters in the background and adds them to Updates.
 
 # End page heading when the reader has caught up with the series.
-reader-end-caught-up = You're caught up
 
 # End page text when the reader has caught up with the series.
 reader-end-caught-up-body = New chapters show in Updates when your { -source-pl } have them.
@@ -219,9 +208,6 @@ reader-use-default = Use default
 reader-fit = Fit
 reader-crop-borders = Crop borders
 reader-background = Background
-reader-background-theme = Theme
-reader-background-black = Black
-reader-background-white = White
 reader-paper-mode = Paper mode
 reader-more-settings = More reader settings
 reader-search-settings = Search reader settings
@@ -239,7 +225,6 @@ reader-text-size = Text size
 reader-justify = Justify text
 
 # The five looks.
-reader-look-system = System
 
 # Rows of More reader settings.
 reader-page-layout = Page layout
@@ -295,9 +280,6 @@ reader-chapter-pages = { $pages } pages
 # Chapters sheet: the offline line.
 reader-offline-line = Offline. Downloaded chapters still open.
 
-# Chapters sheet: the list is on its way.
-reader-chapters-loading = Loading chapters
-
 # Mac menu: the Go menu and its items.
 reader-menu-go = Go
 reader-menu-next-page = Next Page
@@ -328,8 +310,6 @@ reader-key-step-screen = Screen
 
 # Gap between a strip's images.
 reader-strip-gap = Gap between images
-reader-gap-none = None
-reader-gap-small = Small
 
 # Accessibility value of the pointer hint on the first chapter's tap zones.
 reader-zone-back = Back

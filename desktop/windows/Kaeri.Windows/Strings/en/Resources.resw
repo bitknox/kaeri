@@ -6984,6 +6984,50 @@
     <value>Off</value>
     <comment>A choice for the reader's tap zones: taps do not turn the page.</comment>
   </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>Chapters</value>
+    <comment>Button in the reader's controls that opens the chapters and the page grid.</comment>
+  </data>
+  <data name="ReaderPagesLeft_one" xml:space="preserve">
+    <value>One page left in this chapter</value>
+    <comment>Line in the margin of a novel's page.</comment>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>{count} pages left in this chapter</value>
+    <comment>Line in the margin of a novel's page.</comment>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>Loading chapters</value>
+    <comment>Chapters sheet and the chapter list: the list is on its way.</comment>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>Theme</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>Black</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>White</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>You're caught up</value>
+    <comment>Title of the end page when the series has no newer chapter.</comment>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>None</value>
+    <comment>A choice for the gap between a strip's images: none at all.</comment>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>Small</value>
+    <comment>A choice for the gap between a strip's images: a small one.</comment>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>System</value>
+    <comment>Look choice that follows the system's light or dark.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>

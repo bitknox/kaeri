@@ -111,3 +111,54 @@ reader-tap-sides = Halves
 # A choice for the reader's tap zones: taps do not turn the page.
 # @max 12
 reader-tap-off = Off
+
+# Button in the reader's controls that opens the chapters and the page grid.
+# @max 16
+reader-chapters = Chapters
+
+# Line in the margin of a novel's page.
+# @arg count: int
+# @max 44
+reader-pages-left = { $count ->
+    [one] One page left in this chapter
+   *[other] { $count } pages left in this chapter
+}
+
+# Chapters sheet and the chapter list: the list is on its way.
+# @max 30
+reader-chapters-loading = Loading chapters
+
+# Background choice.
+# @max 16
+# @max 24
+reader-background-theme = Theme
+
+# Background choice.
+# @max 16
+# @max 24
+reader-background-black = Black
+
+# Background choice.
+# @max 16
+# @max 24
+reader-background-white = White
+
+# Title of the end page when the series has no newer chapter.
+# @max 40
+# @max 24
+reader-end-caught-up = You're caught up
+
+# A choice for the gap between a strip's images: none at all.
+# @max 12
+# @max 24
+reader-gap-none = None
+
+# A choice for the gap between a strip's images: a small one.
+# @max 12
+# @max 24
+reader-gap-small = Small
+
+# Look choice that follows the system's light or dark.
+# @max 16
+# @max 24
+reader-look-system = System

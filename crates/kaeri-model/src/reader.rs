@@ -119,6 +119,10 @@ pub struct LeafPart {
     /// One half of a spread split on a single-page screen: the file holds only that half.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub half: Option<PageHalf>,
+    /// The part's width over its height, known from the book before the file is made: a
+    /// strip sizes each image with it, so nothing moves when the files land.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ratio: Option<f32>,
 }
 
 /// Which half of a split spread a part shows, as it lies on the page.
@@ -247,6 +251,8 @@ pub enum ReaderSettingKey {
     Font,
     CropBorders,
     Fit,
+    /// The ground behind a page: the theme's, black or white.
+    Background,
     /// Auto, single or double.
     PageLayout,
     /// Split or rotate spreads on a single-page screen.
@@ -271,6 +277,14 @@ pub enum ReaderSettingKey {
     /// What the foot of the page says: pages left, or nothing.
     FootValue,
     Folio,
+    /// The space between a strip's images: none or small.
+    StripGap,
+    /// Paper mode's parts: turn pages at once, the Paper look by day, how far the page's white
+    /// is dimmed from 0 to 1, and the volume keys turning pages.
+    PaperInstant,
+    PaperLook,
+    PaperDim,
+    PaperVolume,
 }
 
 /// Where a setting's value is kept.
@@ -307,6 +321,7 @@ impl ReaderSettingKey {
         Self::Font,
         Self::CropBorders,
         Self::Fit,
+        Self::Background,
         Self::PageLayout,
         Self::Spreads,
         Self::TextSize,
@@ -328,6 +343,11 @@ impl ReaderSettingKey {
         Self::QuietPhone,
         Self::FootValue,
         Self::Folio,
+        Self::StripGap,
+        Self::PaperInstant,
+        Self::PaperLook,
+        Self::PaperDim,
+        Self::PaperVolume,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -340,6 +360,7 @@ impl ReaderSettingKey {
             Self::Font => "font",
             Self::CropBorders => "crop",
             Self::Fit => "fit",
+            Self::Background => "background",
             Self::PageLayout => "page_layout",
             Self::Spreads => "spreads",
             Self::TextSize => "text_size",
@@ -361,6 +382,11 @@ impl ReaderSettingKey {
             Self::QuietPhone => "quiet_phone",
             Self::FootValue => "foot",
             Self::Folio => "folio",
+            Self::StripGap => "strip_gap",
+            Self::PaperInstant => "paper_instant",
+            Self::PaperLook => "paper_look",
+            Self::PaperDim => "paper_dim",
+            Self::PaperVolume => "paper_volume",
         }
     }
 
@@ -378,9 +404,11 @@ impl ReaderSettingKey {
             | Self::Colour
             | Self::CropBorders
             | Self::Fit
+            | Self::Background
             | Self::PageLayout
             | Self::Spreads
-            | Self::StripWidth => matches!(medium, Medium::Manga),
+            | Self::StripWidth
+            | Self::StripGap => matches!(medium, Medium::Manga),
             Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
                 matches!(medium, Medium::Novel)
             }
@@ -479,9 +507,18 @@ pub struct ReaderSettingsView {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderMode {
     Paged,
+    /// Pages one under another, each fitted to the screen.
+    Vertical,
     Strip,
     /// Novels only: one long page.
     Scrolled,
+}
+
+impl ReaderMode {
+    /// Pages run one under another rather than turning.
+    pub const fn flows(self) -> bool {
+        matches!(self, Self::Strip | Self::Vertical)
+    }
 }
 
 /// Which way pages turn.
@@ -665,6 +702,14 @@ pub struct NovelAssets {
     pub stylesheet: String,
     /// The policy every book response carries, for hosts that set it themselves too.
     pub csp: String,
+}
+
+/// What an open waits on, for the opening screen's slow line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReaderWait {
+    /// A source is asked for the series' chapters.
+    FindingSource,
 }
 
 /// Why the end page names no next chapter.
@@ -862,12 +907,34 @@ pub enum ReaderEvent {
     ChapterRead {
         work: WorkId,
         chapter: ChapterId,
+        /// The trackers the read was queued for, by name.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        trackers: Vec<String>,
     },
     /// The last leaf is showing: what the end page names next.
     EndPage {
         session: u64,
         next: Option<ChapterRow>,
         why_none: Option<NoNext>,
+        /// The source the next chapter was downloaded from, by name; `None` for a file in a
+        /// folder.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        next_source: Option<String>,
+    },
+    /// The next chapter's first page, made while this chapter is read, for the end page and a
+    /// strip's divider.
+    NextPreview {
+        session: u64,
+        chapter: ChapterId,
+        file: PageFile,
+    },
+    /// An open is under way: which chapter, once it is known, and what it waits on. Sent
+    /// before [`ReaderEvent::Opened`], so the opening screen can say so.
+    Opening {
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        chapter: Option<ChapterRow>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        wait: Option<ReaderWait>,
     },
     Notice(ReaderNotice),
     /// Another device read further: the reader moved, with Go back to `back`.

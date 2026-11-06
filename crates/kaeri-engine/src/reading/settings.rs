@@ -55,17 +55,19 @@ fn choices(names: &[&str]) -> Vec<ReaderValue> {
 pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
     match key {
         Key::Mode if medium == Medium::Novel => choices(&["paged", "scrolled"]),
-        Key::Mode => choices(&["paged", "strip"]),
+        Key::Mode => choices(&["paged", "vertical", "strip"]),
         Key::Direction => choices(&["rtl", "ltr"]),
         Key::Colour => choices(&["auto", "colour", "greys"]),
-        Key::Look => choices(&["paper", "light", "sepia", "dark"]),
+        Key::Look => choices(&["system", "paper", "light", "sepia", "dark"]),
         Key::Font => choices(&["serif", "sans"]),
-        Key::Fit => choices(&["screen", "width"]),
+        Key::Fit => choices(&["screen", "width", "height"]),
+        Key::Background => choices(&["theme", "black", "white"]),
         Key::PageLayout => choices(&["auto", "single", "double"]),
         Key::Spreads => choices(&["split", "rotate", "whole"]),
         Key::TapLayout => choices(&["edges", "sides", "off"]),
         Key::GallerySpeed => choices(&["standard", "fast", "best"]),
         Key::FootValue => choices(&["pages_left", "none"]),
+        Key::StripGap => choices(&["none", "small"]),
         _ => Vec::new(),
     }
 }
@@ -82,10 +84,13 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::Font => choice("serif"),
         Key::CropBorders => on(screen.eink.is_some()),
         Key::Fit => choice("screen"),
+        Key::Background => choice("theme"),
         Key::PageLayout => choice("auto"),
         Key::Spreads => choice("split"),
         Key::TextSize | Key::Margins | Key::Contrast => amount(1.0),
-        Key::LineSpacing => amount(1.4),
+        Key::LineSpacing => {
+            amount(if medium == Medium::Novel && screen.phone { 1.6 } else { 1.4 })
+        }
         Key::Justify => on(medium == Medium::Novel && (screen.eink.is_some() || !screen.phone)),
         Key::TapLayout => choice("edges"),
         Key::VolumeKeysTurn => on(screen.eink.is_some()),
@@ -104,6 +109,10 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         }
         Key::FootValue => choice("pages_left"),
         Key::Folio => on(true),
+        Key::StripGap => choice("none"),
+        // Paper mode's parts, on by default inside it; the page's white dimmed a little.
+        Key::PaperInstant | Key::PaperLook | Key::PaperVolume => on(true),
+        Key::PaperDim => amount(0.3),
     }
 }
 
@@ -117,10 +126,16 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
         Key::GallerySpeed => screen.eink == Some(EinkPanel::Gallery3),
         Key::RainbowFilter => screen.eink == Some(EinkPanel::Kaleido3),
         Key::Saturation | Key::Contrast => screen.colour_eink(),
-        Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
-            screen.handheld && screen.eink.is_none()
-        }
+        Key::PaperMode
+        | Key::GreyscalePages
+        | Key::QuietPhone
+        | Key::PaperInstant
+        | Key::PaperLook
+        | Key::PaperDim
+        | Key::PaperVolume => screen.handheld && screen.eink.is_none(),
+        Key::StripGap => screen.eink.is_none(),
         Key::Colour => screen.eink != Some(EinkPanel::Grey),
+        Key::Background => screen.eink.is_none(),
         Key::StripWidth => !screen.handheld,
         Key::VolumeKeysTurn => screen.handheld || screen.eink.is_some(),
         _ => true,

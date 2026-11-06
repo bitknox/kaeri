@@ -5068,6 +5068,36 @@ public static partial class T
     /// <summary>A choice for the reader's tap zones: taps do not turn the page.</summary>
     public static string ReaderTapOff => Get("ReaderTapOff");
 
+    /// <summary>Button in the reader's controls that opens the chapters and the page grid.</summary>
+    public static string ReaderChapters => Get("ReaderChapters");
+
+    /// <summary>Line in the margin of a novel's page.</summary>
+    public static string ReaderPagesLeft(long count) => Fill(GetPlural("ReaderPagesLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters sheet and the chapter list: the list is on its way.</summary>
+    public static string ReaderChaptersLoading => Get("ReaderChaptersLoading");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundTheme => Get("ReaderBackgroundTheme");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundBlack => Get("ReaderBackgroundBlack");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundWhite => Get("ReaderBackgroundWhite");
+
+    /// <summary>Title of the end page when the series has no newer chapter.</summary>
+    public static string ReaderEndCaughtUp => Get("ReaderEndCaughtUp");
+
+    /// <summary>A choice for the gap between a strip's images: none at all.</summary>
+    public static string ReaderGapNone => Get("ReaderGapNone");
+
+    /// <summary>A choice for the gap between a strip's images: a small one.</summary>
+    public static string ReaderGapSmall => Get("ReaderGapSmall");
+
+    /// <summary>Look choice that follows the system's light or dark.</summary>
+    public static string ReaderLookSystem => Get("ReaderLookSystem");
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -10759,6 +10789,17 @@ public static partial class T
         ["ReaderTapEdges"] = "Edges",
         ["ReaderTapSides"] = "Halves",
         ["ReaderTapOff"] = "Off",
+        ["ReaderChapters"] = "Chapters",
+        ["ReaderPagesLeft_one"] = "One page left in this chapter",
+        ["ReaderPagesLeft_other"] = "{count} pages left in this chapter",
+        ["ReaderChaptersLoading"] = "Loading chapters",
+        ["ReaderBackgroundTheme"] = "Theme",
+        ["ReaderBackgroundBlack"] = "Black",
+        ["ReaderBackgroundWhite"] = "White",
+        ["ReaderEndCaughtUp"] = "You're caught up",
+        ["ReaderGapNone"] = "None",
+        ["ReaderGapSmall"] = "Small",
+        ["ReaderLookSystem"] = "System",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

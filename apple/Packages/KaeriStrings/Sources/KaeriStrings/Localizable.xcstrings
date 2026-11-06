@@ -165878,7 +165878,7 @@
       }
     },
     "reader-background-black" : {
-      "comment" : "",
+      "comment" : "Background choice.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -165890,7 +165890,7 @@
       }
     },
     "reader-background-theme" : {
-      "comment" : "",
+      "comment" : "Background choice.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -165902,7 +165902,7 @@
       }
     },
     "reader-background-white" : {
-      "comment" : "",
+      "comment" : "Background choice.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -165986,7 +165986,7 @@
       }
     },
     "reader-chapters" : {
-      "comment" : "Button in the reader's control group that opens the chapters and the page grid.",
+      "comment" : "Button in the reader's controls that opens the chapters and the page grid.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -165998,7 +165998,7 @@
       }
     },
     "reader-chapters-loading" : {
-      "comment" : "Chapters sheet: the list is on its way.",
+      "comment" : "Chapters sheet and the chapter list: the list is on its way.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166106,7 +166106,7 @@
       }
     },
     "reader-end-caught-up" : {
-      "comment" : "End page heading when the reader has caught up with the series.",
+      "comment" : "Title of the end page when the series has no newer chapter.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166418,7 +166418,7 @@
       }
     },
     "reader-gap-none" : {
-      "comment" : "",
+      "comment" : "A choice for the gap between a strip's images: none at all.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166430,7 +166430,7 @@
       }
     },
     "reader-gap-small" : {
-      "comment" : "",
+      "comment" : "A choice for the gap between a strip's images: a small one.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166802,7 +166802,7 @@
       }
     },
     "reader-look-system" : {
-      "comment" : "The five looks.",
+      "comment" : "Look choice that follows the system's light or dark.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

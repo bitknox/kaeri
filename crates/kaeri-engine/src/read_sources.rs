@@ -833,6 +833,11 @@ async fn sign_in(
 }
 
 impl BookSources {
+    /// A source's name as its manifest gives it, or its id when it is no longer loaded.
+    pub fn source_name(&self, id: &str) -> String {
+        self.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
+    }
+
     /// The editions a work has: every source holding a series matched to it.
     pub(crate) fn editions(
         &self,

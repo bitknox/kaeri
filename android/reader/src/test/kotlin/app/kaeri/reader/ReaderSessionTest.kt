@@ -4,14 +4,21 @@
 package app.kaeri.reader
 
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.NoNext
 import app.kaeri.engine.model.OpenAt
+import app.kaeri.engine.model.PageEncoding
+import app.kaeri.engine.model.PageFile
 import app.kaeri.engine.model.ReadPlace
 import app.kaeri.engine.model.ReaderAction as NoticeAction
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.ReaderNotice
+import app.kaeri.engine.model.ReaderWait
+import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingCommand
+import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.StripPos
@@ -88,7 +95,7 @@ class ReaderSessionTest {
     fun pages_land_and_fail_by_page_and_half() {
         opened()
         val file = ReaderFixtures.part(2u)
-        val page = app.kaeri.engine.model.PageFile("/cache/2.jpg", app.kaeri.engine.model.PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1u)
+        val page = PageFile("/cache/2.jpg", app.kaeri.engine.model.PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1u)
         session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 2u, null, page))
         assertEquals(page, session.state.value.file(file))
         session.apply(ReaderEvent.PageFailed(SESSION, CHAPTER, 3u, ReadingFailure.PageFetch(404u)))
@@ -163,7 +170,7 @@ class ReaderSessionTest {
     @Test
     fun a_failed_open_is_kept_for_the_screen() {
         session.open(WORK, ReaderFixtures.surface)
-        session.apply(app.kaeri.engine.model.Event.Reading(app.kaeri.engine.model.ReadingEvent.Failed(app.kaeri.engine.model.ReadingAbout.READER, ReadingFailure.Offline)))
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
         assertEquals(ReadingFailure.Offline, session.state.value.failure)
     }
 
@@ -175,5 +182,70 @@ class ReaderSessionTest {
         assertEquals(ReaderCommand.Close(SESSION), sent.single())
         session.apply(ReaderEvent.Closed(SESSION))
         assertTrue(session.state.value.closed)
+    }
+    @Test
+    fun a_strip_that_flows_on_keeps_the_chapter_it_left_above_the_next() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val next = "local:lantern-stair/13"
+        sent.clear()
+        session.flowInto(next)
+        session.flowInto(next)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        val view = ReaderFixtures.view(start = 0u).copy(chapter = ReaderFixtures.chapter(next, "13"))
+        session.apply(ReaderEvent.Opened(view))
+        assertEquals(CHAPTER, session.state.value.previous?.chapter)
+        assertEquals(6, session.state.value.previous?.pages)
+        // Flowed into from above, the scroll is already where the chapter starts: no jump.
+        session.apply(ReaderEvent.Leaves(SESSION, next, ReaderFixtures.leaves(4)))
+        assertNull(session.state.value.jump)
+        assertEquals(4, session.state.value.pages)
+    }
+
+    @Test
+    fun a_chapter_opened_by_hand_does_not_keep_the_one_before() {
+        opened()
+        session.openChapter("local:lantern-stair/13")
+        val view = ReaderFixtures.view().copy(chapter = ReaderFixtures.chapter("local:lantern-stair/13", "13"))
+        session.apply(ReaderEvent.Opened(view))
+        assertNull(session.state.value.previous)
+    }
+
+    @Test
+    fun a_chapter_that_fails_to_open_from_another_is_named_and_its_sources_asked() {
+        opened()
+        session.openChapter("local:lantern-stair/13")
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
+        val state = session.state.value
+        assertEquals(ReadingFailure.Offline, state.failure)
+        assertEquals("13", state.openingChapter?.number)
+        val asked = mutableListOf<Command>()
+        val other = ReaderSession { asked += it }
+        other.open(WORK, ReaderFixtures.surface, "local:lantern-stair/13")
+        other.loadSources()
+        assertEquals(Command.Reading(ReadingCommand.LoadVersions(WORK, "local:lantern-stair/13")), asked.last())
+    }
+
+    @Test
+    fun the_next_chapter_s_first_page_and_source_reach_the_end_page() {
+        opened()
+        val next = ReaderFixtures.chapter("local:lantern-stair/13", "13")
+        session.apply(ReaderEvent.EndPage(SESSION, next, null, "Lantern Archive"))
+        assertEquals("Lantern Archive", session.state.value.end?.source)
+        val page = PageFile("/cache/n0.jpg", PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1uL)
+        session.apply(ReaderEvent.NextPreview(SESSION, next.id, page))
+        assertEquals(NextPreview(next.id, page), session.state.value.preview)
+        session.apply(ReaderEvent.NextPreview(SESSION + 1u, next.id, page.copy(path = "/other")))
+        assertEquals("/cache/n0.jpg", session.state.value.preview?.file?.path)
+    }
+
+    @Test
+    fun what_an_open_waits_on_shows_only_while_opening() {
+        session.open(WORK, ReaderFixtures.surface)
+        session.apply(ReaderEvent.Opening(ReaderFixtures.chapter(), ReaderWait.FINDING_SOURCE))
+        assertEquals(ReaderWait.FINDING_SOURCE, session.state.value.openingWait)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        session.apply(ReaderEvent.Opening(null, null))
+        assertNull(session.state.value.openingWait)
     }
 }

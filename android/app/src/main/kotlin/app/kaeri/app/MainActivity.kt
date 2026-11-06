@@ -55,6 +55,8 @@ import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
+import app.kaeri.reader.phone.ReaderLauncher
+import app.kaeri.reader.phone.SettingsPane
 import app.kaeri.store.AppLanguage
 
 class MainActivity : ComponentActivity() {
@@ -485,8 +487,18 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // The redirect a sign-in comes back with is the engine's, and is not kept as the
         // activity's intent.
-        if (signIn.handle(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
+        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
         setIntent(intent)
+    }
+
+    /**
+     * The reader's Do Not Disturb rule names this activity as its settings: from the system's
+     * Do Not Disturb page it opens the reader's Paper mode page, where Quiet is turned off.
+     */
+    private fun quietRule(intent: Intent): Boolean {
+        if (intent.getStringExtra(android.app.NotificationManager.EXTRA_AUTOMATIC_RULE_ID) == null) return false
+        ReaderLauncher.showSettings(SettingsPane.Paper)
+        return true
     }
 
     companion object {

@@ -171,6 +171,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         super.onCreate()
         // Every process draws the widgets again when a record lands: the app's, and one started
         // for the background check alone.
+        // Do Not Disturb a reader left on when its process died goes at every start.
+        app.kaeri.reader.phone.QuietPhone(this).clearStale()
         widgetKeeper.follow(scope)
         scope.launch { Widgets.publishPreviews(this@KaeriApp) }
         // Whether a widget is placed, which keeps the background check, as the app starts.

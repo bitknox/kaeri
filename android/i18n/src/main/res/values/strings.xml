@@ -1013,23 +1013,14 @@
     <string name="reader_notice_go_back">Go back</string>
     <!-- The action on the notice that says how a series was detected to read: change it. -->
     <string name="reader_notice_change">Change</string>
-    <!-- Button in the reader's controls that opens the page grid. -->
-    <string name="reader_pages_button">Pages</string>
     <!-- Button in the reader's controls that opens its settings, drawn as Aa. -->
     <string name="reader_settings">Reader settings</string>
     <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line">Chapter %1$s</string>
     <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
-    <!-- Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4. -->
-    <string name="reader_novel_line">Chapter %1$s · paged</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
-    <!-- The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin. -->
-    <plurals name="reader_pages_left_short">
-        <item quantity="one">One page left</item>
-        <item quantity="other">%1$d pages left</item>
-    </plurals>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$d min</string>
     <!-- Name of the tap zone on the reading side, shown once on the first chapter. -->
@@ -1153,13 +1144,97 @@
     <!-- Button that goes back from the reader's settings page to the sheet. -->
     <string name="reader_settings_back">Back</string>
     <!-- Line under the Paper mode switch. -->
-    <string name="reader_paper_line">Turns pages at once, stops all motion and lets the volume keys turn pages.</string>
+    <string name="reader_paper_line">Pages turn at once and nothing in the reader moves. Change any part below.</string>
     <!-- What a screen reader says for a page in the page grid. -->
     <string name="reader_grid_page">Go to page %1$d</string>
     <!-- What a screen reader says for the slider that moves through the chapter. -->
     <string name="reader_scrubber_in_chapter">Page in chapter</string>
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
+    <!-- Under the end of chapter line, naming the trackers the read went to. -->
+    <string name="reader_end_tracker">Read · %1$s updated</string>
+    <!-- Under the end of chapter line when the phone is offline. -->
+    <string name="reader_end_tracker_offline">Read · %1$s updates when you\'re back online</string>
+    <!-- Title of the end page when no source has the next chapter. -->
+    <string name="reader_end_none">No chapter %1$s in your sources yet</string>
+    <!-- Line under the no next chapter title. -->
+    <string name="reader_end_none_line">Kaeri checks for new chapters in the background and adds them to Updates.</string>
+    <!-- Title of the end page after the last chapter of a finished series. -->
+    <string name="reader_end_finished_title">The end</string>
+    <!-- Line under the end title of a finished series. -->
+    <string name="reader_end_finished_line">This series has no more chapters.</string>
+    <!-- Title of the end page when the next chapter needs a connection. -->
+    <string name="reader_end_offline_title">Chapter %1$s isn\'t downloaded</string>
+    <!-- Line under the offline end page title. -->
+    <string name="reader_end_offline_line">You\'re offline. It opens here once you\'re connected, or download it on the series page for next time.</string>
+    <!-- The name of the Do Not Disturb mode in the system's list. -->
+    <string name="reader_quiet_rule">Reading in Kaeri</string>
+    <!-- What the system says starts the reading mode. -->
+    <string name="reader_quiet_trigger">While the reader is open</string>
+    <!-- Shown when access to Do Not Disturb was refused. -->
+    <string name="reader_quiet_denied">Do Not Disturb access wasn\'t allowed, so notifications keep coming.</string>
+    <!-- Setting row for the ground behind a page. -->
+    <string name="reader_row_background">Background</string>
+    <!-- Fit choice. -->
+    <string name="reader_fit_height">Height</string>
+    <!-- Reading mode. -->
+    <string name="reader_mode_vertical">Vertical pages</string>
+    <!-- Line under the vertical pages mode. -->
+    <string name="reader_mode_vertical_line">Pages one under another</string>
+    <!-- Heading of a volume in the chapter list. -->
+    <string name="reader_volume_line">Volume %1$s</string>
+    <!-- A folded volume whose chapters are all read. -->
+    <string name="reader_volume_read">Volume %1$s · read</string>
+    <!-- Heading for chapters outside any volume. -->
+    <string name="reader_volume_none">Chapters</string>
+    <!-- On the plate of a page that is still loading. -->
+    <string name="reader_page_plate">Page %1$d</string>
+    <!-- Under Opening chapter when it takes more than three seconds. -->
+    <string name="reader_opening_finding">Finding a source</string>
+    <!-- Button on a chapter that could not open. -->
+    <string name="reader_failed_choose">Choose source</string>
+    <!-- Hint in the settings search field. -->
+    <string name="reader_settings_search">Search settings</string>
+    <!-- Paper mode part. -->
+    <string name="reader_paper_turn">Turn pages at once</string>
+    <!-- Label on the previous page tap zone. -->
+    <string name="reader_zone_previous">Previous page</string>
+    <!-- Label on the middle tap zone. -->
+    <string name="reader_zone_controls">Controls</string>
+    <!-- Description of the small A at the start of the text size slider. -->
+    <string name="reader_size_small">Smaller text</string>
+    <!-- Description of the large A at the end of the text size slider. -->
+    <string name="reader_size_large">Larger text</string>
+    <!-- The next chapter's length on the page between chapters. -->
+    <plurals name="reader_end_pages">
+        <item quantity="one">One page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- The value of Paper mode in the settings list when it is on. -->
+    <string name="reader_value_on">On</string>
+    <!-- The value of Paper mode in the settings list when it is off. -->
+    <string name="reader_value_off">Off</string>
+    <!-- Row in the reader's settings for strips: the space between a strip's images. -->
+    <string name="reader_row_strip_gap">Gap between images</string>
+    <!-- Paper mode part: the Paper look while it is day, the Dark look at night. -->
+    <string name="reader_paper_look">Paper look by day</string>
+    <!-- Paper mode part: a slider for how far the page's white is dimmed. -->
+    <string name="reader_paper_dim">Dim the page</string>
+    <!-- Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. -->
+    <string name="reader_end_from">From %1$s</string>
+    <!-- The next episode's length on the divider inside a strip. -->
+    <plurals name="reader_divider_images">
+        <item quantity="one">One image</item>
+        <item quantity="other">%1$d images</item>
+    </plurals>
+    <!-- The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. -->
+    <string name="reader_divider_facts_source">%1$s · from %2$s</string>
+    <!-- The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". -->
+    <string name="reader_opening_waited">%1$s · %2$d s</string>
+    <!-- Heading of the list of other sources a failed chapter can be read from. -->
+    <string name="reader_sources_title">Read this chapter from</string>
+    <!-- Heading on the Paper mode page above the parts it changes. -->
+    <string name="reader_paper_parts">What it changes</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->
@@ -4147,6 +4222,29 @@
     <string name="reader_tap_sides">Halves</string>
     <!-- A choice for the reader's tap zones: taps do not turn the page. -->
     <string name="reader_tap_off">Off</string>
+    <!-- Button in the reader's controls that opens the chapters and the page grid. -->
+    <string name="reader_chapters">Chapters</string>
+    <!-- Line in the margin of a novel's page. -->
+    <plurals name="reader_pages_left">
+        <item quantity="one">One page left in this chapter</item>
+        <item quantity="other">%1$d pages left in this chapter</item>
+    </plurals>
+    <!-- Chapters sheet and the chapter list: the list is on its way. -->
+    <string name="reader_chapters_loading">Loading chapters</string>
+    <!-- Background choice. -->
+    <string name="reader_background_theme">Theme</string>
+    <!-- Background choice. -->
+    <string name="reader_background_black">Black</string>
+    <!-- Background choice. -->
+    <string name="reader_background_white">White</string>
+    <!-- Title of the end page when the series has no newer chapter. -->
+    <string name="reader_end_caught_up">You\'re caught up</string>
+    <!-- A choice for the gap between a strip's images: none at all. -->
+    <string name="reader_gap_none">None</string>
+    <!-- A choice for the gap between a strip's images: a small one. -->
+    <string name="reader_gap_small">Small</string>
+    <!-- Look choice that follows the system's light or dark. -->
+    <string name="reader_look_system">System</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->

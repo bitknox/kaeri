@@ -72,6 +72,7 @@ fn shelf_file(path: &Path, n: i64, format: &str) -> ShelfFile {
         format: format.into(),
         pages: None,
         comicinfo: None,
+        source: None,
     }
 }
 

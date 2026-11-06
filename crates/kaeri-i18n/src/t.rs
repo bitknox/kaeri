@@ -12725,6 +12725,56 @@ pub fn reader_tap_off() -> String {
     text("reader-tap-off", &[])
 }
 
+/// Button in the reader's controls that opens the chapters and the page grid.
+pub fn reader_chapters() -> String {
+    text("reader-chapters", &[])
+}
+
+/// Line in the margin of a novel's page.
+pub fn reader_pages_left(count: i64) -> String {
+    text("reader-pages-left", &[("count", Arg::Int(count))])
+}
+
+/// Chapters sheet and the chapter list: the list is on its way.
+pub fn reader_chapters_loading() -> String {
+    text("reader-chapters-loading", &[])
+}
+
+/// Background choice.
+pub fn reader_background_theme() -> String {
+    text("reader-background-theme", &[])
+}
+
+/// Background choice.
+pub fn reader_background_black() -> String {
+    text("reader-background-black", &[])
+}
+
+/// Background choice.
+pub fn reader_background_white() -> String {
+    text("reader-background-white", &[])
+}
+
+/// Title of the end page when the series has no newer chapter.
+pub fn reader_end_caught_up() -> String {
+    text("reader-end-caught-up", &[])
+}
+
+/// A choice for the gap between a strip's images: none at all.
+pub fn reader_gap_none() -> String {
+    text("reader-gap-none", &[])
+}
+
+/// A choice for the gap between a strip's images: a small one.
+pub fn reader_gap_small() -> String {
+    text("reader-gap-small", &[])
+}
+
+/// Look choice that follows the system's light or dark.
+pub fn reader_look_system() -> String {
+    text("reader-look-system", &[])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])

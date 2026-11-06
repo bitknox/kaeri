@@ -7,6 +7,7 @@ package app.kaeri.reader
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.ChapterRow
+import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.Leaf
@@ -27,7 +28,10 @@ import app.kaeri.engine.model.ReaderSettingsView
 import app.kaeri.engine.model.ReaderSurface
 import app.kaeri.engine.model.ReaderValue
 import app.kaeri.engine.model.ReaderView
+import app.kaeri.engine.model.ReaderWait
 import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingCommand
+import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SettingScope
@@ -41,8 +45,11 @@ import kotlinx.coroutines.flow.asStateFlow
 /** Where one page file goes: a page, and for a spread split in two, which half. */
 data class PageKey(val page: UInt, val half: PageHalf? = null)
 
-/** What the end page names: the next chapter, or why there is none. */
-data class EndPageView(val next: ChapterRow?, val whyNone: NoNext?)
+/** What the end page names: the next chapter and the source it came from, or why there is none. */
+data class EndPageView(val next: ChapterRow?, val whyNone: NoNext?, val source: String? = null)
+
+/** The next chapter's first page, made while this one is read, for the end page. */
+data class NextPreview(val chapter: ChapterId, val file: PageFile)
 
 /** A notice to show, with an id of its own so the same words twice still show twice. */
 data class ShownNotice(val notice: ReaderNotice, val id: Long)
@@ -73,9 +80,21 @@ data class ReaderState(
     /** Chapters the read rule counted while this reader was open. */
     val read: Set<ChapterId> = emptySet(),
     val jump: ReaderJump? = null,
+    /** The series' chapters by volume, once asked for. */
+    val volumes: List<VolumeGroup> = emptyList(),
+    /** The trackers each chapter read here was queued for. */
+    val readTrackers: Map<ChapterId, List<String>> = emptyMap(),
     /** The open itself failed: the chapter could not be had. */
     val failure: ReadingFailure? = null,
     val closed: Boolean = false,
+    /** While opening: the chapter, once the engine knows it, and what it waits on. */
+    val openingChapter: ChapterRow? = null,
+    val openingWait: ReaderWait? = null,
+    val preview: NextPreview? = null,
+    /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
+    val previous: ReaderState? = null,
+    /** The other sources a failed chapter can be read from; null until the engine answers. */
+    val sources: List<ChapterVersion>? = null,
 ) {
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
@@ -103,10 +122,18 @@ class ReaderSession(private val send: (Command) -> Unit) {
     val state: StateFlow<ReaderState> = _state.asStateFlow()
 
     private var ids = 0L
+    private var work: WorkId? = null
+    private var asked: Pair<ChapterId?, OpenAt>? = null
     private var surface: ReaderSurface? = null
+    /** A chapter asked for and not yet opened, so its failure is shown in its name. */
+    private var awaiting: ChapterRow? = null
+    private var awaitingOpen = false
+    /** A strip flowing on: the chapter it flows into and the one it leaves, kept above. */
+    private var flowTo: ChapterId? = null
+    private var flowFrom: ReaderState? = null
     private var startAt: ReadPlace? = null
     private var shownPage: UInt? = null
-    private val asked = mutableSetOf<PageKey>()
+    private val askedPages = mutableSetOf<PageKey>()
 
     /** Hear the store's reader events until what is returned is called. */
     fun bind(store: AppStore): () -> Unit = store.listenToReading(::apply)
@@ -114,11 +141,16 @@ class ReaderSession(private val send: (Command) -> Unit) {
     // What the screen sends.
 
     fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume) {
+        this.work = work
+        this.asked = chapter to at
         this.surface = surface
+        awaitingOpen = true
+        flowTo = null
+        flowFrom = null
         startAt = null
         shownPage = null
-        asked.clear()
-        _state.value = ReaderState(opening = true)
+        askedPages.clear()
+        _state.value = ReaderState(opening = true, openingChapter = state.value.openingChapter?.takeIf { it.id == chapter })
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
 
@@ -167,7 +199,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** A file the session still shows is gone: made again, asked once per layout. */
     fun needPage(part: LeafPart) {
         val now = state.value
-        if (!asked.add(PageKey(part.page, part.half))) return
+        if (!askedPages.add(PageKey(part.page, part.half))) return
         _state.value = now.copy(files = now.files - PageKey(part.page, part.half))
         reader(ReaderCommand.NeedPage(now.session ?: return, now.chapter ?: return, part.page))
     }
@@ -180,7 +212,64 @@ class ReaderSession(private val send: (Command) -> Unit) {
     }
 
     fun openChapter(chapter: ChapterId) {
-        reader(ReaderCommand.OpenChapter(state.value.session ?: return, chapter))
+        val now = state.value
+        val session = now.session ?: return
+        awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
+        awaitingOpen = true
+        reader(ReaderCommand.OpenChapter(session, chapter))
+    }
+
+    /**
+     * A strip scrolled onto its divider: open [chapter] and keep this one above it, so the next
+     * chapter's images follow in the same scroll.
+     */
+    fun flowInto(chapter: ChapterId) {
+        if (flowTo == chapter) return
+        flowFrom = state.value.copy(previous = null)
+        flowTo = chapter
+        openChapter(chapter)
+    }
+
+    /** Try the open again, from the start, when it failed before any chapter opened. */
+    fun retryOpen() {
+        val now = state.value
+        if (now.session != null && now.view != null) return retry(null)
+        val work = work ?: return
+        val surface = surface ?: return
+        val (chapter, at) = asked ?: (null to OpenAt.Resume)
+        open(work, surface, now.openingChapter?.id ?: chapter, at)
+    }
+
+    /** Ask which other sources hold the chapter that would not open. */
+    fun loadSources() {
+        val now = state.value
+        val work = work ?: return
+        val chapter = now.openingChapter?.id ?: now.chapter ?: asked?.first ?: return
+        send(Command.Reading(ReadingCommand.LoadVersions(work, chapter)))
+    }
+
+    /** Read the series from [version]'s source from now on, and open the reader again with it. */
+    fun chooseSource(version: ChapterVersion) {
+        val work = work ?: return
+        val surface = surface ?: return
+        val edition = version.edition
+        send(Command.Reading(ReadingCommand.ChooseEdition(work, edition.sourceId, edition.versionLabel, edition.language)))
+        open(work, surface, null, OpenAt.Resume)
+    }
+
+    /** Read the series again from its first chapter: fresh marks, the old ones set aside. */
+    fun readAgain() {
+        val work = work ?: return
+        val surface = surface ?: return
+        send(Command.Reading(ReadingCommand.ReadAgain(work)))
+        val first = state.value.volumes.firstOrNull()?.chapters?.firstOrNull()?.id
+        open(work, surface, first, OpenAt.Start)
+    }
+
+    /** Ask for the series' chapters, for the chapter list. */
+    fun loadChapters() {
+        val work = state.value.view?.work ?: return
+        send(Command.Reading(ReadingCommand.LoadChapters(work, null)))
     }
 
     fun backTo() = state.value.session?.let { reader(ReaderCommand.BackTo(it)) }
@@ -229,10 +318,33 @@ class ReaderSession(private val send: (Command) -> Unit) {
         when (event) {
             is Event.Reader -> apply(event.v1)
             is Event.Reading -> {
-                val failed = event.v1 as? ReadingEvent.Failed ?: return
-                if (failed.about == ReadingAbout.READER && state.value.opening) {
-                    _state.value = state.value.copy(opening = false, failure = failed.failure)
+                val chapters = event.v1 as? ReadingEvent.Chapters
+                if (chapters != null) {
+                    if (chapters.work == state.value.view?.work) _state.value = state.value.copy(volumes = chapters.volumes)
+                    return
                 }
+                val versions = event.v1 as? ReadingEvent.Versions
+                if (versions != null) {
+                    if (versions.work == work) _state.value = state.value.copy(sources = versions.versions)
+                    return
+                }
+                val failed = event.v1 as? ReadingEvent.Failed ?: return
+                if (failed.about != ReadingAbout.READER || !awaitingOpen) return
+                awaitingOpen = false
+                val now = state.value
+                flowTo = null
+                flowFrom = null
+                // A chapter asked for from another one: the reader shows that chapter's failure in its place.
+                val chapter = awaiting ?: now.openingChapter
+                awaiting = null
+                _state.value = ReaderState(
+                    failure = failed.failure,
+                    openingChapter = chapter,
+                    read = now.read,
+                    readTrackers = now.readTrackers,
+                    volumes = now.volumes,
+                    settings = now.settings,
+                )
             }
             else -> {}
         }
@@ -245,17 +357,33 @@ class ReaderSession(private val send: (Command) -> Unit) {
             // Each open and each chapter opened: a fresh chapter, its start place kept for the leaves.
             is ReaderEvent.Opened -> {
                 if (!now.opening && now.session != null && event.v1.session != now.session) return
+                awaitingOpen = false
+                awaiting = null
                 startAt = event.v1.start
                 shownPage = null
-                asked.clear()
-                ReaderState(view = event.v1, settings = event.v1.settings ?: now.settings, read = now.read, layout = now.layout + 1)
+                askedPages.clear()
+                // A strip that flowed on keeps the chapter it left above this one.
+                val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }
+                flowTo = null
+                flowFrom = null
+                ReaderState(
+                    view = event.v1,
+                    settings = event.v1.settings ?: now.settings,
+                    read = now.read,
+                    readTrackers = now.readTrackers,
+                    volumes = now.volumes,
+                    layout = now.layout + 1,
+                    previous = previous,
+                )
             }
             is ReaderEvent.Leaves -> {
                 if (!ours(event.session) || event.chapter != now.chapter) return
-                asked.clear()
+                askedPages.clear()
                 // The start place on the first layout; after that the page shown stays shown.
                 val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap())
                 val start = startAt?.also { startAt = null }
+                // Flowed into from above: the scroll is already where the chapter starts.
+                if (start != null && now.previous != null) return run { _state.value = placed }
                 val leaf = when {
                     start != null -> placed.leafOf(start)
                     else -> shownPage?.let(placed::leafOf)
@@ -265,7 +393,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.PageReady -> {
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 val key = PageKey(event.page, event.half)
-                asked -= key
+                askedPages -= key
                 now.copy(files = now.files + (key to event.file), failures = now.failures - event.page)
             }
             is ReaderEvent.PageFailed -> {
@@ -277,8 +405,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 now.copy(novel = event.v1)
             }
             is ReaderEvent.NovelStyle -> if (ours(event.session)) now.copy(novelStyle = event) else return
-            is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter) else return
-            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone)) else return
+            is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter, readTrackers = now.readTrackers + (event.chapter to event.trackers)) else return
+            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource)) else return
+            is ReaderEvent.NextPreview -> if (ours(event.session)) now.copy(preview = NextPreview(event.chapter, event.file)) else return
+            // Only while opening: a chapter opened from another one keeps its own page up meanwhile.
+            is ReaderEvent.Opening -> if (now.opening) now.copy(openingChapter = event.chapter ?: now.openingChapter, openingWait = event.wait) else return
             is ReaderEvent.Notice -> now.copy(notice = ShownNotice(event.v1, ++ids))
             is ReaderEvent.Moved -> if (ours(event.session)) now.copy(moved = event) else return
             is ReaderEvent.Settings -> {

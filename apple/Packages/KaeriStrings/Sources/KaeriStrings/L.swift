@@ -2063,9 +2063,6 @@ public enum L {
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
 
-    /// Button in the reader's control group that opens the chapters and the page grid.
-    public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
-
     /// Button in the reader's control group that opens the reader's settings. Aa is the glyph.
     public static var readerSettingsOpen: String { string("reader-settings-open", fallback: "Reader settings") }
 
@@ -2113,11 +2110,6 @@ public enum L {
         Self.format("reader-group-line-scroll", fallback: "%1$@ · %2$lld%%", chapter, percent)
     }
 
-    /// Line in the margin of a novel's page.
-    public static func readerPagesLeft(count: Int) -> String {
-        Self.format("reader-pages-left", fallback: "%1$lld pages left in this chapter", count)
-    }
-
     /// Link in the group that opens Go to page, and the field's label.
     public static var readerGoToPage: String { string("reader-go-to-page", fallback: "Go to page") }
 
@@ -2155,9 +2147,6 @@ public enum L {
 
     /// End page text when the next chapter is not out yet.
     public static var readerEndNotOutBody: String { string("reader-end-not-out-body", fallback: "Kaeri checks for new chapters in the background and adds them to Updates.") }
-
-    /// End page heading when the reader has caught up with the series.
-    public static var readerEndCaughtUp: String { string("reader-end-caught-up", fallback: "You're caught up") }
 
     /// End page text when the reader has caught up with the series.
     public static var readerEndCaughtUpBody: String { string("reader-end-caught-up-body", fallback: "New chapters show in Updates when your sources have them.") }
@@ -2275,12 +2264,6 @@ public enum L {
 
     public static var readerBackground: String { string("reader-background", fallback: "Background") }
 
-    public static var readerBackgroundTheme: String { string("reader-background-theme", fallback: "Theme") }
-
-    public static var readerBackgroundBlack: String { string("reader-background-black", fallback: "Black") }
-
-    public static var readerBackgroundWhite: String { string("reader-background-white", fallback: "White") }
-
     public static var readerPaperMode: String { string("reader-paper-mode", fallback: "Paper mode") }
 
     public static var readerMoreSettings: String { string("reader-more-settings", fallback: "More reader settings") }
@@ -2307,9 +2290,6 @@ public enum L {
     public static var readerTextSize: String { string("reader-text-size", fallback: "Text size") }
 
     public static var readerJustify: String { string("reader-justify", fallback: "Justify text") }
-
-    /// The five looks.
-    public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
 
     /// Rows of More reader settings.
     public static var readerPageLayout: String { string("reader-page-layout", fallback: "Page layout") }
@@ -2387,9 +2367,6 @@ public enum L {
     /// Chapters sheet: the offline line.
     public static var readerOfflineLine: String { string("reader-offline-line", fallback: "Offline. Downloaded chapters still open.") }
 
-    /// Chapters sheet: the list is on its way.
-    public static var readerChaptersLoading: String { string("reader-chapters-loading", fallback: "Loading chapters") }
-
     /// Mac menu: the Go menu and its items.
     public static var readerMenuGo: String { string("reader-menu-go", fallback: "Go") }
 
@@ -2433,10 +2410,6 @@ public enum L {
 
     /// Gap between a strip's images.
     public static var readerStripGap: String { string("reader-strip-gap", fallback: "Gap between images") }
-
-    public static var readerGapNone: String { string("reader-gap-none", fallback: "None") }
-
-    public static var readerGapSmall: String { string("reader-gap-small", fallback: "Small") }
 
     /// Accessibility value of the pointer hint on the first chapter's tap zones.
     public static var readerZoneBack: String { string("reader-zone-back", fallback: "Back") }
@@ -7703,6 +7676,38 @@ public enum L {
 
     /// A choice for the reader's tap zones: taps do not turn the page.
     public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
+
+    /// Button in the reader's controls that opens the chapters and the page grid.
+    public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
+
+    /// Line in the margin of a novel's page.
+    public static func readerPagesLeft(count: Int) -> String {
+        Self.format("reader-pages-left", fallback: "%1$lld pages left in this chapter", count)
+    }
+
+    /// Chapters sheet and the chapter list: the list is on its way.
+    public static var readerChaptersLoading: String { string("reader-chapters-loading", fallback: "Loading chapters") }
+
+    /// Background choice.
+    public static var readerBackgroundTheme: String { string("reader-background-theme", fallback: "Theme") }
+
+    /// Background choice.
+    public static var readerBackgroundBlack: String { string("reader-background-black", fallback: "Black") }
+
+    /// Background choice.
+    public static var readerBackgroundWhite: String { string("reader-background-white", fallback: "White") }
+
+    /// Title of the end page when the series has no newer chapter.
+    public static var readerEndCaughtUp: String { string("reader-end-caught-up", fallback: "You're caught up") }
+
+    /// A choice for the gap between a strip's images: none at all.
+    public static var readerGapNone: String { string("reader-gap-none", fallback: "None") }
+
+    /// A choice for the gap between a strip's images: a small one.
+    public static var readerGapSmall: String { string("reader-gap-small", fallback: "Small") }
+
+    /// Look choice that follows the system's light or dark.
+    public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
 
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }

@@ -7922,6 +7922,40 @@ reader-tap-sides = [Ĥàļṽéš~~]
 # A choice for the reader's tap zones: taps do not turn the page.
 reader-tap-off = [Öƒƒ~]
 
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = [Çĥàþţéŕš~~~]
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+        [one] [Öñé þàĝé ļéƒţ îñ ţĥîš çĥàþţéŕ~~~~~~~~~]
+       *[other] [{ $count } þàĝéš ļéƒţ îñ ţĥîš çĥàþţéŕ~~~~~~~~~]
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = [Ļöàðîñĝ çĥàþţéŕš~~~~~]
+
+# Background choice.
+reader-background-theme = [Ţĥéɱé~~]
+
+# Background choice.
+reader-background-black = [Ɓļàçķ~~]
+
+# Background choice.
+reader-background-white = [Ŵĥîţé~~]
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = [Ýöü'ŕé çàüĝĥţ üþ~~~~~]
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = [Ñöñé~~]
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = [Šɱàļļ~~]
+
+# Look choice that follows the system's light or dark.
+reader-look-system = [Šýšţéɱ~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 
