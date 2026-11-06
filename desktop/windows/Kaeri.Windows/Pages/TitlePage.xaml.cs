@@ -341,6 +341,8 @@ public sealed partial class TitlePage : Page, IPageKeys
 
     readonly Ctx ctx = Ctx.Current;
     uint id;
+    /// <summary>The title the frame opened this page with; <see cref="id"/> differs once a season is picked here.</summary>
+    uint openedWith;
     QueueItem? action;
 
     public TitlePage()
@@ -450,7 +452,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        id = (uint)e.Parameter;
+        id = openedWith = (uint)e.Parameter;
         var known = ctx.Known.Entry(id) is not null;
         if (!known)
             State.Wait();
@@ -589,10 +591,23 @@ public sealed partial class TitlePage : Page, IPageKeys
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        // A season picked here changed the title in place: Back to this page comes to that season.
-        if (e.NavigationMode == NavigationMode.New && Frame is { BackStack: { Count: > 0 } stack }
-            && stack[^1] is { SourcePageType: var type, Parameter: uint was } entry && type == typeof(TitlePage) && was != id)
-            stack[^1] = new PageStackEntry(typeof(TitlePage), id, entry.NavigationTransitionInfo);
+        // A season picked here changed the title in place: once the frame has put this page on
+        // its back stack, its entry is made to say that season, so Back comes to it.
+        if (e.NavigationMode != NavigationMode.New || id == openedWith || Frame is not { } frame)
+            return;
+        var shown = id;
+        var opened = openedWith;
+        void Fix(object sender, NavigationEventArgs args)
+        {
+            frame.Navigated -= Fix;
+            var stack = frame.BackStack;
+            if (stack.Count > 0 && stack[^1] is { Parameter: uint was } entry && entry.SourcePageType == typeof(TitlePage) && was == opened)
+            {
+                stack.RemoveAt(stack.Count - 1);
+                stack.Add(new PageStackEntry(typeof(TitlePage), shown, entry.NavigationTransitionInfo));
+            }
+        }
+        frame.Navigated += Fix;
     }
 
 #if KAERI_TESTING
