@@ -569,12 +569,12 @@ public sealed partial class MainWindow : Window
                     ctx.Heard(said);
                 }
                 await Task.Delay(1500);
-                Notice(NoticeKind.Info, new Msg.NoticeSaved(T.SettingsQuality));
+                Notice(NoticeKind.Info, new Msg.StatusWaitingForRedirect("AniList")); // i18n-skip
                 Notice(NoticeKind.Alert, new Msg.NoticeSignInFailed("Kitsu", "invalid credentials")); // i18n-skip
                 await Task.Delay(1000);
                 ShowMessages();
                 await Task.Delay(2000);
-                Notice(NoticeKind.Info, new Msg.NoticeSaved(T.SettingsAudio));
+                Notice(NoticeKind.Info, new Msg.NoticeSignInNotWaiting("AniList")); // i18n-skip
             });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
