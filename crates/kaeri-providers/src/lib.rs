@@ -15,7 +15,7 @@ pub mod resolve;
 pub mod torrent;
 pub mod walk;
 
-pub use books::{BookRegistry, Searched};
+pub use books::{BookRegistry, ChapterAt, Searched};
 pub use health::{HealthTracker, ProviderHealth};
 pub use mock::MockProvider;
 pub use proxy::{ProxyState, TorrentRoute};

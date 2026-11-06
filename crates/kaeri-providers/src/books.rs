@@ -20,8 +20,8 @@ use std::{
 use futures::future::join_all;
 use kaeri_core::{
     books::{
-        BookHints, BookIds, BookSourceManifest, ChapterContent, PageRef, SeriesDetail, SeriesHit,
-        SourceChapter,
+        BookHints, BookIds, BookSourceManifest, ChapterContent, PageRef, SeriesDetail,
+        SeriesHit, SourceChapter,
     },
     error::ProviderError,
     media::Medium,
@@ -48,6 +48,14 @@ impl std::fmt::Debug for BookRegistry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BookRegistry").field("sources", &self.ids()).finish_non_exhaustive()
     }
+}
+
+/// A chapter in a source's own terms: the source, its series reference and its chapter reference.
+#[derive(Debug, Clone, Copy)]
+pub struct ChapterAt<'a> {
+    pub source: &'a str,
+    pub series: &'a str,
+    pub chapter: &'a str,
 }
 
 /// What a search over every source found.
@@ -266,8 +274,11 @@ impl BookRegistry {
         medium: Option<Medium>,
         now: i64,
     ) -> Searched {
-        let asked: Vec<_> =
-            self.candidates().into_iter().filter(|s| Self::covers(s.as_ref(), medium)).collect();
+        let asked: Vec<_> = self
+            .candidates()
+            .into_iter()
+            .filter(|s| Self::covers(s.as_ref(), medium))
+            .collect();
         let answers = join_all(asked.into_iter().map(|source| async move {
             let id = source.manifest().id.clone();
             let answer = self
@@ -294,9 +305,8 @@ impl BookRegistry {
     pub async fn lookup(&self, ids: &BookIds, now: i64) -> Option<(String, SeriesHit)> {
         for source in self.candidates() {
             let id = source.manifest().id.clone();
-            let found = self
-                .ask(&id, now, |source| async move { source.lookup(ids).await })
-                .await;
+            let found =
+                self.ask(&id, now, |source| async move { source.lookup(ids).await }).await;
             if let Ok(Some(hit)) = found {
                 return Some((id, hit));
             }
@@ -356,9 +366,7 @@ impl BookRegistry {
     /// for a source that does not fetch its own pages.
     pub async fn fetch_page<F, Fut>(
         &self,
-        source: &str,
-        series: &str,
-        chapter: &str,
+        at: &ChapterAt<'_>,
         pages: &mut Vec<PageRef>,
         index: usize,
         now: i64,
@@ -368,6 +376,7 @@ impl BookRegistry {
         F: Fn(PageRef) -> Fut,
         Fut: std::future::Future<Output = Result<Vec<u8>, PageError>>,
     {
+        let ChapterAt { source, series, chapter } = *at;
         let owner = self.get(source).ok_or(ProviderError::NotFound)?;
         let fetch = |page: PageRef| {
             let owner = owner.clone();
@@ -416,7 +425,9 @@ fn page_failure(error: PageError) -> ProviderError {
         PageError::Status(404) => ProviderError::NotFound,
         PageError::Status(status) => ProviderError::Blocked(format!("page answered {status}")),
         PageError::Failed(e) => e,
-        PageError::Unsupported => ProviderError::Other("the source has no way to fetch pages".into()),
+        PageError::Unsupported => {
+            ProviderError::Other("the source has no way to fetch pages".into())
+        }
     }
 }
 
@@ -479,7 +490,11 @@ mod tests {
             &self.manifest
         }
 
-        async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        async fn search(
+            &self,
+            _: &str,
+            _: &BookHints,
+        ) -> Result<Vec<SeriesHit>, ProviderError> {
             self.asked.fetch_add(1, Ordering::SeqCst);
             match self.error.lock().unwrap().clone() {
                 Some(error) => Err(error),
@@ -501,7 +516,9 @@ mod tests {
 
         async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
             let round = self.contents.fetch_add(1, Ordering::SeqCst);
-            Ok(ChapterContent::Images(vec![PageRef::new(format!("https://pages.example/{round}"))]))
+            Ok(ChapterContent::Images(vec![PageRef::new(format!(
+                "https://pages.example/{round}"
+            ))]))
         }
 
         fn is_available(&self) -> Result<(), ProviderError> {
@@ -636,7 +653,13 @@ mod tests {
             panic!("images")
         };
         let bytes = registry
-            .fetch_page("a", "s", "c", &mut pages, 0, 1, |_| async { Err(PageError::Unsupported) })
+            .fetch_page(
+                &ChapterAt { source: "a", series: "s", chapter: "c" },
+                &mut pages,
+                0,
+                1,
+                |_| async { Err(PageError::Unsupported) },
+            )
             .await
             .unwrap();
         assert_eq!(bytes, b"https://pages.example/1");
@@ -652,10 +675,18 @@ mod tests {
             fn manifest(&self) -> &BookSourceManifest {
                 self.0.manifest()
             }
-            async fn search(&self, q: &str, h: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+            async fn search(
+                &self,
+                q: &str,
+                h: &BookHints,
+            ) -> Result<Vec<SeriesHit>, ProviderError> {
                 self.0.search(q, h).await
             }
-            async fn series(&self, i: &str, h: &BookHints) -> Result<SeriesDetail, ProviderError> {
+            async fn series(
+                &self,
+                i: &str,
+                h: &BookHints,
+            ) -> Result<SeriesDetail, ProviderError> {
                 self.0.series(i, h).await
             }
             async fn chapters(
@@ -677,7 +708,13 @@ mod tests {
         registry.put(Arc::new(Stubborn(inner.clone())));
         let mut pages = vec![PageRef::new("https://pages.example/x")];
         let error = registry
-            .fetch_page("a", "s", "c", &mut pages, 0, 1, |_| async { Err(PageError::Unsupported) })
+            .fetch_page(
+                &ChapterAt { source: "a", series: "s", chapter: "c" },
+                &mut pages,
+                0,
+                1,
+                |_| async { Err(PageError::Unsupported) },
+            )
             .await
             .unwrap_err();
         assert_eq!(error, ProviderError::Blocked("page answered 403".into()));

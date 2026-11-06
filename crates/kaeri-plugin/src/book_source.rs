@@ -118,7 +118,9 @@ impl BookSource for WasmBookSource {
     async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
         let response =
             self.plugin.fetch_page(&page.url, &page.headers).await.map_err(|e| match e {
-                host::HostError::Denied(reason) => PageError::Failed(ProviderError::Blocked(reason)),
+                host::HostError::Denied(reason) => {
+                    PageError::Failed(ProviderError::Blocked(reason))
+                }
                 other => PageError::Failed(ProviderError::Other(other.to_string())),
             })?;
         match response.status {

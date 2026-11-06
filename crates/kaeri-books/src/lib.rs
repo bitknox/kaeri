@@ -23,13 +23,16 @@ pub mod comic;
 pub mod comicinfo;
 pub mod epub;
 mod error;
+pub mod library;
 mod limits;
 pub mod mime;
+pub mod naming;
 pub mod natural;
 pub mod opds;
 pub mod path;
 #[cfg(feature = "pdf")]
 pub mod pdf;
+pub mod worker;
 pub mod write;
 mod xml;
 
