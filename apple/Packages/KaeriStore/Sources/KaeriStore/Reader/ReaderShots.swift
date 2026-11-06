@@ -28,14 +28,15 @@ extension ReaderModel {
     public func stage(arguments: [String] = ProcessInfo.processInfo.arguments) async -> Bool {
         guard let work = Self.shotWork(arguments: arguments) else { return true }
         open(work: work)
-        let deadline = ContinuousClock.now + .seconds(6)
+        let drawn = arguments.contains("-KaeriReaderDrawn")
+        let deadline = ContinuousClock.now + .seconds(drawn ? 6 : 25)
         while ContinuousClock.now < deadline {
             if phase == .open, novel != nil || !pages.isEmpty { break }
             try? await Task.sleep(for: .milliseconds(100))
         }
-        // The testing engine has no book source for these works yet: its answer is played here
-        // from pages drawn for the shot, so the screens themselves are the real ones.
-        if phase != .open || (novel == nil && pages.isEmpty) {
+        // `-KaeriReaderDrawn`: the engine's answer played from pages drawn for the shot, for an
+        // engine without a book source.
+        if drawn, phase != .open || (novel == nil && pages.isEmpty) {
             playFixture(work: work, scene: arguments)
             try? await Task.sleep(for: .milliseconds(800))
         }
