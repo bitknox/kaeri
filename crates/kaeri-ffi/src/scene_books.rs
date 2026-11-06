@@ -270,6 +270,7 @@ fn register(
             format: (*format).into(),
             pages: Some(*pages),
             comicinfo: None,
+            source: None,
         };
         let size = std::fs::metadata(path).map_or(0, |m| m.len());
         if let Err(e) = store.put_local_file(series.id, &file, size, now) {

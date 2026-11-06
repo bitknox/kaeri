@@ -290,3 +290,26 @@ fun BrokenPageGlyph(colour: Color, modifier: Modifier = Modifier) {
         drawPath(path, colour, style = stroke)
     }
 }
+
+/**
+ * One page file drawn small: the scrubber's preview and the end page's first page. Until it is
+ * decoded, or with no file, [plate] fills the place.
+ */
+@Composable
+fun PageFileView(
+    file: app.kaeri.engine.model.PageFile?,
+    images: PageImages,
+    modifier: Modifier = Modifier,
+    plate: @Composable BoxScope.() -> Unit = {},
+) {
+    val result by produceState(file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, file) {
+        value = file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) }
+        if (file != null && value == null) value = withContext(Dispatchers.IO) { images.load(file) }
+    }
+    Box(modifier) {
+        when (val now = result) {
+            is PageDecodeResult.Decoded -> PageCanvas(now.page, rotate = false, modifier = Modifier.fillMaxSize())
+            else -> plate()
+        }
+    }
+}

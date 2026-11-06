@@ -114,6 +114,17 @@ enum Job {
     Close {
         session: u64,
     },
+    /// Make the first page of the next chapter, for the end page to show.
+    Peek(Box<PeekJob>),
+}
+
+/// The next chapter's first page, made while the reader nears the end of this one.
+#[derive(Debug)]
+pub struct PeekJob {
+    pub session: u64,
+    pub chapter: ChapterId,
+    pub path: PathBuf,
+    pub out: Outbox,
 }
 
 /// The handle the engine keeps: jobs go in, events come out through the outbox.
@@ -148,6 +159,10 @@ impl Pages {
 
     pub fn close(&self, session: u64) {
         let _ = self.jobs.send(Job::Close { session });
+    }
+
+    pub fn peek(&self, job: PeekJob) {
+        let _ = self.jobs.send(Job::Peek(Box::new(job)));
     }
 }
 
@@ -284,7 +299,60 @@ impl Worker {
                     self.open = None;
                 }
             }
+            Job::Peek(job) => {
+                if let Some(file) = self.first_page(&job.path) {
+                    let event = ReaderEvent::NextPreview {
+                        session: job.session,
+                        chapter: job.chapter,
+                        file,
+                    };
+                    let _ = job.out.send(Event::Reader(event));
+                }
+            }
         }
+    }
+
+    /// A book's first picture as the book has it, kept in that book's cache folder.
+    fn first_page(&self, path: &Path) -> Option<PageFile> {
+        let dir = self.cache.join(book_key(path));
+        std::fs::create_dir_all(&dir).ok()?;
+        let kept = ["jpg", "png", "webp", "gif", "avif"]
+            .iter()
+            .find_map(|ext| std::fs::read(dir.join(format!("p0.{ext}"))).ok());
+        let bytes = match kept {
+            Some(bytes) => bytes,
+            None => match open_book(path, &self.opening).ok()? {
+                Book::Comic(mut comic) => {
+                    let mut first = None;
+                    let mut take = |_: usize, bytes: Vec<u8>| {
+                        first = Some(bytes);
+                        std::ops::ControlFlow::Break(())
+                    };
+                    let _ = comic.extract_pages(0, &mut take);
+                    first?
+                }
+                Book::Epub(mut epub) => {
+                    let page = epub.image_pages()?.into_iter().next()?;
+                    epub.resource(&page.path).ok()?.data
+                }
+                Book::Pdf(pdf) => pdf.page_image(0).map(|i| i.data).or_else(|| {
+                    let page = pdf.render(0, 600, 900).ok()?;
+                    png_of(page.width, page.height, page.rgba)
+                })?,
+            },
+        };
+        touch(&dir);
+        let original = keep_original(&dir, 0, &bytes)?;
+        let format = original.format?;
+        Some(PageFile {
+            path: original.path.display().to_string(),
+            encoding: PageEncoding::Original { mime: format.mime().to_owned() },
+            width: original.width,
+            height: original.height,
+            crop: None,
+            colour: false,
+            bytes: bytes.len() as u64,
+        })
     }
 
     fn fail(&self, job: &OpenJob, failure: ReadingFailure) {
@@ -446,6 +514,7 @@ impl Worker {
                                 place: UnitRect::WHOLE,
                                 rotate: false,
                                 half: None,
+                                ratio: None,
                             }],
                             end_page: false,
                         })
@@ -455,6 +524,7 @@ impl Worker {
             let cuts = strip.map(strip_places).unwrap_or_default();
             (leaves, cuts)
         } else {
+            let pixels = shapes.clone();
             let shapes: Vec<PageShape> = shapes
                 .iter()
                 .zip(&kinds)
@@ -481,7 +551,10 @@ impl Worker {
             let laid = layout::lay_out(&shapes, options);
             chapter.leaves = laid.iter().map(|l| l.parts.clone()).collect();
             (
-                laid.iter().enumerate().map(|(i, l)| model_leaf(i as u32, l)).collect(),
+                laid.iter()
+                    .enumerate()
+                    .map(|(i, l)| model_leaf(i as u32, l, &pixels))
+                    .collect(),
                 Vec::new(),
             )
         };
@@ -641,7 +714,17 @@ pub fn is_strip(shapes: &[(u32, u32)]) -> bool {
     shapes.len() >= 2 && tall * 2 > shapes.len()
 }
 
-fn model_leaf(index: u32, leaf: &layout::Leaf) -> Leaf {
+/// The width over the height of a part as the reader draws it, before its file is made.
+fn ratio_of(part: &layout::LeafPart, shapes: &[(u32, u32)]) -> Option<f32> {
+    let (w, h) = match part.source {
+        Some(s) => (s.width, s.height),
+        None => *shapes.get(part.page as usize)?,
+    };
+    let (w, h) = if part.rotate { (h, w) } else { (w, h) };
+    (w > 0 && h > 0).then(|| w as f32 / h as f32)
+}
+
+fn model_leaf(index: u32, leaf: &layout::Leaf, shapes: &[(u32, u32)]) -> Leaf {
     Leaf {
         index,
         parts: leaf
@@ -665,6 +748,7 @@ fn model_leaf(index: u32, leaf: &layout::Leaf) -> Leaf {
                 },
                 rotate: p.rotate,
                 half: half_of(p),
+                ratio: ratio_of(p, shapes),
             })
             .collect(),
         end_page: false,

@@ -1,6 +1,7 @@
 // Quiet the phone: while the reader is open, notifications wait. Android 15 lets an app own an
 // automatic Do Not Disturb rule of the immersive kind, and asks the person once for access to Do
-// Not Disturb. Alarms keep sounding. The rule's id is kept, so a rule a crash or a killed process
+// Not Disturb. Alarms and repeat callers still ring. The rule's settings link opens the reader's
+// Paper mode page. The rule's id is kept, so a rule a crash or a killed process
 // left on is removed at the next start. Without access nothing changes.
 
 package app.kaeri.reader.phone
@@ -54,10 +55,12 @@ class QuietPhone(private val context: Context) {
     private fun start() {
         if (prefs.getString(RULE, null) != null) return
         val manager = manager ?: return
-        // Silence everything but alarms; a ZenPolicy that only disallows sounds would silence them too.
+        // Silence everything but alarms and a caller who rings twice within 15 minutes; a ZenPolicy
+        // that only disallows sounds would silence those too.
         val policy = ZenPolicy.Builder()
             .disallowAllSounds()
             .allowAlarms(true)
+            .allowRepeatCallers(true)
             .hideAllVisualEffects()
             .build()
         val main = context.packageManager.getLaunchIntentForPackage(context.packageName)?.component

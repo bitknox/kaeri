@@ -227,14 +227,18 @@ fun PagedReader(
                 .pointerInput(rtl, motion) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        // A new touch takes over a settling swipe from where it is.
+                        // A new touch takes over a settling swipe from where it is. A page caught
+                        // between two places is held there until the finger moves or lifts.
+                        val caught = settling?.isActive == true && drag != 0f
                         settling?.cancel()
+                        settling = null
                         val tracker = VelocityTracker()
                         tracker.addPosition(down.uptimeMillis, down.position)
                         var dragging = false
                         var total = Offset.Zero
+                        var event: androidx.compose.ui.input.pointer.PointerEvent
                         do {
-                            val event = awaitPointerEvent()
+                            event = awaitPointerEvent()
                             val pressed = event.changes.filter { it.pressed }
                             if (pressed.size >= 2) {
                                 // Pinch: zoom about the centre, pan within the page.
@@ -273,7 +277,14 @@ fun PagedReader(
                             pager.zoom = 1f
                             pager.pan = Offset.Zero
                         }
-                        if (dragging) settle(tracker.calculateVelocity().x)
+                        if (dragging) {
+                            settle(tracker.calculateVelocity().x)
+                        } else if (caught && drag != 0f) {
+                            // A tap on a page caught mid-swipe finishes the swipe the way it was going,
+                            // and is not also a tap: the zones would turn a second time.
+                            event.changes.forEach { it.consume() }
+                            settle(0f)
+                        }
                     }
                 },
         ) {

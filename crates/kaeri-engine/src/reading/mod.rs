@@ -204,6 +204,10 @@ pub(crate) fn reading(
         ReadingCommand::LoadChapters { work, edition } => {
             return chapters(services, work, edition, tx);
         }
+        ReadingCommand::LoadVersions { work, chapter } => {
+            let versions = other_sources(services, &work, &chapter);
+            ReadingEvent::Versions { work, chapter, versions }
+        }
         ReadingCommand::ChooseEdition { work, source_id, version_label, language } => {
             let pref = kaeri_store::reading::EditionPref { source_id, version_label, language };
             if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
@@ -224,6 +228,34 @@ pub(crate) fn reading(
         }
     };
     let _ = tx.send(Event::Reading(event));
+}
+
+/// The other sources a chapter could be read from. A file on the shelf is read only from that
+/// file, so it has none; a chapter listed from a source can be read from any other source that
+/// holds the work, which lists its chapters again once chosen.
+fn other_sources(
+    services: &Services,
+    work: &WorkId,
+    chapter: &kaeri_core::books::ChapterId,
+) -> Vec<kaeri_model::reading::ChapterVersion> {
+    let on_shelf = shelf::chapters(&services.store, work.as_str())
+        .iter()
+        .any(|c| &c.id == chapter && c.format != session::SOURCE);
+    if on_shelf {
+        return Vec::new();
+    }
+    let sources = &services.book_sources;
+    let current = sources.edition_of(work, None).map(|(source, _)| source);
+    sources
+        .editions(work)
+        .into_iter()
+        .filter(|e| current.as_ref() != Some(&e.source_id))
+        .map(|edition| kaeri_model::reading::ChapterVersion {
+            edition,
+            chapter_ref: chapter.as_str().to_owned(),
+            published: None,
+        })
+        .collect()
 }
 
 /// Search the book sources, page by page. A page holds what the sources gave: they are asked

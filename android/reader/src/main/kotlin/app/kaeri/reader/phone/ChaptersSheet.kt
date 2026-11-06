@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -64,18 +63,15 @@ fun ChaptersSheet(
     rtl: Boolean,
     onGo: (leaf: Int) -> Unit,
     onDismiss: () -> Unit,
+    /** Paper mode: the sheet comes and goes at once. */
+    instant: Boolean = false,
 ) {
     val context = LocalContext.current
     val view = state.view ?: return
     var tab by remember { mutableStateOf(0) }
     val novel = view.medium == app.kaeri.engine.core.Medium.NOVEL
     LaunchedEffect(view.work) { session.loadChapters() }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Chrome.plate,
-        contentColor = Chrome.text,
-        scrimColor = Color.Transparent,
-    ) {
+    ReaderSheet(instant = instant, onDismiss = onDismiss) {
         Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp)) {
             Text(view.title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 18.sp), fontSize = 18.sp, maxLines = 1)
             Text(chapterWords(context, view.chapter), color = Chrome.faint, fontSize = 13.sp)

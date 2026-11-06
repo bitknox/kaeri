@@ -1,13 +1,32 @@
 // The reader's settings sheet: this series' reading mode (manga and strips only), the medium's
-// other choices, Paper mode on a page of its own, and the rest on one searchable page. The engine
+// other choices (a novel's size, font, look as five swatches, spacing, margins and pages), Paper
+// mode and its parts on a page of their own, and the rest on one searchable page. The engine
 // keeps every value; a change goes out as a command and the sheet draws the settings the engine
 // sends back. Every choice and row has a written name; one without a name is not drawn, and the
 // unit test fails on it.
 
 package app.kaeri.reader.phone
 
+import androidx.activity.compose.BackHandler
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import app.kaeri.engine.model.ReaderMode
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +35,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
@@ -27,7 +47,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -36,7 +55,6 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,13 +83,17 @@ import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
 import kotlin.math.abs
 
-private enum class Pane { Main, Mode, More, Paper }
+/** The sheet's pages; the configuration of the Quiet rule opens it on Paper. */
+enum class SettingsPane { Main, Mode, More, Paper, Font }
+
+private typealias Pane = SettingsPane
 
 /** The rows a phone has: the e-ink panel's own are left to its reader. */
 internal val phoneKeys = listOf(
     Key.MODE, Key.DIRECTION, Key.COLOUR, Key.FIT, Key.BACKGROUND, Key.CROP_BORDERS, Key.PAGE_LAYOUT, Key.SPREADS,
     Key.LOOK, Key.FONT, Key.TEXT_SIZE, Key.MARGINS, Key.LINE_SPACING, Key.JUSTIFY,
     Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.PAPER_MODE, Key.GREYSCALE_PAGES, Key.QUIET_PHONE, Key.FOOT_VALUE, Key.FOLIO,
+    Key.STRIP_GAP, Key.PAPER_INSTANT, Key.PAPER_LOOK, Key.PAPER_DIM, Key.PAPER_VOLUME,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,26 +103,35 @@ fun ReaderSettingsSheet(
     state: ReaderState,
     onDismiss: () -> Unit,
     toggle: (Key, Boolean) -> Unit = { key, on -> session.setSetting(key, SettingScope.DEVICE, ReaderValue.Toggle(on)) },
+    /** Paper mode: the sheet comes and goes at once. */
+    instant: Boolean = false,
+    /** The page it opens on. */
+    start: SettingsPane = SettingsPane.Main,
+    /** Do Not Disturb access was refused the last time Quiet asked for it. */
+    quietDenied: Boolean = false,
 ) {
     val context = LocalContext.current
     val view = state.view ?: return
     val settings = state.settings
-    var pane by remember { mutableStateOf(Pane.Main) }
+    var pane by remember { mutableStateOf(start) }
+    // Paper's page goes back to where it was opened from.
+    var paperBack by remember { mutableStateOf(Pane.Main) }
     val rows = settings?.rows.orEmpty().filter { it.key in phoneKeys }
     val novel = view.medium == Medium.NOVEL
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Chrome.plate,
-        contentColor = Chrome.text,
-        // The page behind stays undimmed.
-        scrimColor = Color.Transparent,
-    ) {
+    val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
+    ReaderSheet(instant = instant, onDismiss = onDismiss) {
+        // Back from a page of the sheet goes to the page it came from, not out of the sheet.
+        BackHandler(enabled = pane != Pane.Main) { pane = if (pane == Pane.Paper) paperBack else Pane.Main }
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 4.dp)) {
             when (pane) {
-                Pane.Main -> Main(context, session, rows, novel, view.title, toggle, onMode = { pane = Pane.Mode }, onPaper = { pane = Pane.Paper }, onMore = { pane = Pane.More })
+                Pane.Main -> Main(
+                    context, session, rows, novel, strip, view.title, toggle,
+                    onMode = { pane = Pane.Mode }, onPaper = { paperBack = Pane.Main; pane = Pane.Paper }, onMore = { pane = Pane.More }, onFont = { pane = Pane.Font },
+                )
                 Pane.Mode -> ModePicker(context, session, rows, view.title) { pane = Pane.Main }
-                Pane.More -> More(context, session, rows, novel, toggle) { pane = Pane.Main }
-                Pane.Paper -> PaperPage(context, session, rows, toggle) { pane = Pane.Main }
+                Pane.More -> More(context, session, rows, novel, toggle, onPaper = { paperBack = Pane.More; pane = Pane.Paper }) { pane = Pane.Main }
+                Pane.Paper -> PaperPage(context, session, rows, novel, toggle, quietDenied) { pane = paperBack }
+                Pane.Font -> FontPicker(context, session, rows) { pane = Pane.Main }
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -109,7 +140,7 @@ fun ReaderSettingsSheet(
 
 @Composable
 private fun Heading(text: String) {
-    Text(text, color = Chrome.faint, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 14.dp, bottom = 6.dp))
+    Text(text, color = Chrome.faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
 }
 
 @Composable
@@ -141,29 +172,35 @@ private fun Main(
     session: ReaderSession,
     rows: List<ReaderSettingRow>,
     novel: Boolean,
+    strip: Boolean,
     title: String,
     toggle: (Key, Boolean) -> Unit,
     onMode: () -> Unit,
     onPaper: () -> Unit,
     onMore: () -> Unit,
+    onFont: () -> Unit,
 ) {
     val mode = rows.firstOrNull { it.key == Key.MODE }
     val direction = rows.firstOrNull { it.key == Key.DIRECTION }
-    if (!novel) {
+    fun row(key: Key) = rows.firstOrNull { it.key == key }
+    if (novel) {
+        // Novels have no mode or direction per series: one group, as the board has it.
+        Heading(Strings.readerSheetAllNovels(context))
+        row(Key.TEXT_SIZE)?.let { SizeSlider(context, session, it) }
+        row(Key.FONT)?.let { font ->
+            NavRow(Strings.readerRowFont(context), choiceLabel(context, Key.FONT, font.value), onFont)
+        }
+        row(Key.LOOK)?.let { LookSwatches(context, session, it) }
+        listOf(Key.LINE_SPACING, Key.MARGINS, Key.MODE).forEach { key -> row(key)?.let { SettingLine(context, session, it, toggle, novel = true) } }
+    } else {
         Heading(Strings.readerSheetSeries(context))
         NavRow(Strings.readerRowReadingMode(context), modeSummary(context, mode, direction), onMode)
         ModeNote(context, session, mode, direction, title)
-    }
-    Heading(if (novel) Strings.readerSheetAllNovels(context) else Strings.readerSheetAllManga(context))
-    if (novel) {
-        listOf(Key.TEXT_SIZE, Key.FONT, Key.LOOK, Key.LINE_SPACING, Key.MARGINS, Key.MODE).forEach { key ->
-            rows.firstOrNull { it.key == key }?.let { SettingLine(context, session, it, toggle) }
-        }
-    } else {
-        listOf(Key.FIT, Key.CROP_BORDERS, Key.BACKGROUND).forEach { key ->
-            rows.firstOrNull { it.key == key }?.let { SettingLine(context, session, it, toggle) }
-        }
-        val paper = rows.firstOrNull { it.key == Key.PAPER_MODE }
+        Heading(Strings.readerSheetAllManga(context))
+        // A strip has no fit or borders to crop; its images can have a gap instead.
+        val keys = if (strip) listOf(Key.STRIP_GAP, Key.BACKGROUND) else listOf(Key.FIT, Key.CROP_BORDERS, Key.BACKGROUND)
+        keys.forEach { key -> row(key)?.let { SettingLine(context, session, it, toggle) } }
+        val paper = row(Key.PAPER_MODE)
         if (paper != null) {
             val on = (paper.value as? ReaderValue.Toggle)?.on == true
             NavRow(Strings.readerRowPaper(context), if (on) Strings.readerValueOn(context) else Strings.readerValueOff(context), onPaper)
@@ -171,6 +208,131 @@ private fun Main(
     }
     Spacer(Modifier.height(6.dp))
     NavRow(Strings.readerSheetMore(context), null, onMore)
+}
+
+/** The text size between a small and a large serif A, with no title, as the board has it. */
+@Composable
+private fun SizeSlider(context: Context, session: ReaderSession, row: ReaderSettingRow) {
+    val value = row.value as? ReaderValue.Amount ?: return
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "A", color = Chrome.faint, fontSize = 14.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.semantics { contentDescription = Strings.readerSizeSmall(context) },
+        )
+        Slider(
+            value = value.value.toFloat().coerceIn(sizeRange),
+            onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 10).toInt() / 10.0))) },
+            valueRange = sizeRange,
+            steps = 12,
+            colors = SliderDefaults.colors(
+                thumbColor = Chrome.text,
+                activeTrackColor = Chrome.text,
+                inactiveTrackColor = Chrome.rule,
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent,
+            ),
+            modifier = Modifier.weight(1f).padding(horizontal = 14.dp).semantics {
+                contentDescription = Strings.readerRowTextSize(context)
+                stateDescription = "%.1f".format(value.value)
+            },
+        )
+        Text(
+            "A", color = Chrome.faint, fontSize = 24.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.semantics { contentDescription = Strings.readerSizeLarge(context) },
+        )
+    }
+    UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
+}
+
+/** The five looks as round "Aa" swatches in their own paper and ink, the chosen one ringed in silk. */
+@Composable
+private fun LookSwatches(context: Context, session: ReaderSession, row: ReaderSettingRow) {
+    val chosen = (row.value as? ReaderValue.Choice)?.name
+    val order = listOf("paper", "light", "sepia", "dark", "system")
+    val looks = order.filter { name -> row.choices.any { (it as? ReaderValue.Choice)?.name == name } }
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        looks.forEach { name ->
+            val selected = name == chosen
+            val label = choiceLabel(context, Key.LOOK, ReaderValue.Choice(name)).orEmpty()
+            Column(
+                Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .selectable(selected = selected, role = Role.RadioButton) { session.setSetting(row.key, row.scope, ReaderValue.Choice(name)) }
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                LookSwatch(name, selected)
+                Text(
+                    label,
+                    color = if (selected) Chrome.text else Chrome.faint,
+                    fontSize = 12.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+    UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
+}
+
+/** The board's look colours: paper, ink. */
+private val lookColours = mapOf(
+    "paper" to (Color(0xFFEFE9DC) to Color(0xFF2A2620)),
+    "light" to (Color(0xFFF7F5F0) to Color(0xFF1E2033)),
+    "sepia" to (Color(0xFFE9DCC4) to Color(0xFF3B2F22)),
+    "dark" to (Color(0xFF161A2E) to Color(0xFFD9D5CB)),
+)
+
+@Composable
+private fun LookSwatch(name: String, selected: Boolean) {
+    val ring = Chrome.text
+    val gap = Chrome.plate
+    val rule = Chrome.rule
+    Box(
+        Modifier
+            .size(54.dp)
+            .drawBehind {
+                // Selected: a 2 dp gap in the sheet's colour, then a 2 dp silk ring.
+                if (selected) drawCircle(ring, radius = size.minDimension / 2)
+                drawCircle(gap, radius = size.minDimension / 2 - 2.dp.toPx())
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(46.dp).clip(CircleShape)) {
+            if (name == "system") {
+                // System: light on the left half, dark on the right.
+                Half(lookColours.getValue("dark"), Modifier.fillMaxSize())
+                Half(lookColours.getValue("light"), Modifier.fillMaxSize().clipLeftHalf())
+            } else {
+                Half(lookColours[name] ?: lookColours.getValue("dark"), Modifier.fillMaxSize())
+            }
+            Box(Modifier.fillMaxSize().border(1.dp, rule, CircleShape))
+        }
+    }
+}
+
+@Composable
+private fun Half(colours: Pair<Color, Color>, modifier: Modifier) {
+    Box(modifier.background(colours.first), contentAlignment = Alignment.Center) {
+        Text("Aa", color = colours.second, fontSize = 16.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+private fun Modifier.clipLeftHalf(): Modifier = drawWithContent {
+    clipRect(right = size.width / 2) { this@drawWithContent.drawContent() }
+}
+
+/** The font's own page: each font as a row with a check. */
+@Composable
+private fun FontPicker(context: Context, session: ReaderSession, rows: List<ReaderSettingRow>, onBack: () -> Unit) {
+    val row = rows.firstOrNull { it.key == Key.FONT } ?: return
+    BackRow(Strings.readerRowFont(context), context, onBack)
+    row.choices.forEach { choice ->
+        val label = choiceLabel(context, Key.FONT, choice) ?: return@forEach
+        ModeOption(label, null, choice == row.value) { session.setSetting(row.key, row.scope, choice) }
+    }
+    UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
 }
 
 private fun modeSummary(context: Context, mode: ReaderSettingRow?, direction: ReaderSettingRow?): String {
@@ -186,21 +348,43 @@ private fun modeSummary(context: Context, mode: ReaderSettingRow?, direction: Re
     return if (auto) Strings.readerModeAuto(context, way) else way
 }
 
-/** Under the mode row: where the mode came from, and Use default when the series has its own. */
+/** Under the mode row: where the mode came from, with Use default inline when the series has its own. */
 @Composable
 private fun ModeNote(context: Context, session: ReaderSession, mode: ReaderSettingRow?, direction: ReaderSettingRow?, title: String) {
     val overridden = mode?.overridden == true || direction?.overridden == true
+    UseDefaultNote(context, if (overridden) Strings.readerModeSet(context, title) else Strings.readerModeDetected(context), overridden) {
+        session.useDefault(Key.MODE)
+        session.useDefault(Key.DIRECTION)
+    }
+}
+
+/**
+ * A note in haze, 13 on 18, with Use default underlined at its end when [overridden]: one line of
+ * text, not a button with its own padding. With no [note], Use default stands alone.
+ */
+@Composable
+private fun UseDefaultNote(context: Context, note: String?, overridden: Boolean, onUseDefault: () -> Unit) {
+    if (note == null && !overridden) return
+    val silk = Chrome.text
+    val text = buildAnnotatedString {
+        if (note != null) append(note)
+        if (overridden) {
+            if (note != null) append(" ")
+            withLink(
+                LinkAnnotation.Clickable(
+                    "use-default",
+                    TextLinkStyles(SpanStyle(color = silk, fontWeight = FontWeight.SemiBold, textDecoration = TextDecoration.Underline)),
+                ) { onUseDefault() },
+            ) { append(Strings.readerModeUseDefault(context)) }
+        }
+    }
     Text(
-        if (overridden) Strings.readerModeSet(context, title) else Strings.readerModeDetected(context),
+        text,
         color = Chrome.faint,
         fontSize = 13.sp,
+        lineHeight = 18.sp,
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 8.dp),
     )
-    if (overridden) {
-        TextButton(onClick = {
-            session.useDefault(Key.MODE)
-            session.useDefault(Key.DIRECTION)
-        }) { Text(Strings.readerModeUseDefault(context), color = Chrome.text, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline) }
-    }
 }
 
 @Composable
@@ -258,17 +442,48 @@ private fun ModeOption(name: String, line: String?, selected: Boolean, onClick: 
     }
 }
 
+/**
+ * Paper mode's page: the switch, what it does, then each part it changes, on by default except
+ * Greyscale pages and Quiet. A part only acts while Paper mode is on.
+ */
 @Composable
-private fun PaperPage(context: Context, session: ReaderSession, rows: List<ReaderSettingRow>, toggle: (Key, Boolean) -> Unit, onBack: () -> Unit) {
+private fun PaperPage(
+    context: Context,
+    session: ReaderSession,
+    rows: List<ReaderSettingRow>,
+    novel: Boolean,
+    toggle: (Key, Boolean) -> Unit,
+    quietDenied: Boolean,
+    onBack: () -> Unit,
+) {
     BackRow(Strings.readerRowPaper(context), context, onBack)
-    Text(Strings.readerPaperLine(context), color = Chrome.faint, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
-    listOf(Key.PAPER_MODE, Key.GREYSCALE_PAGES, Key.QUIET_PHONE).forEach { key ->
-        rows.firstOrNull { it.key == key }?.let { SettingLine(context, session, it, toggle) }
+    fun row(key: Key) = rows.firstOrNull { it.key == key }
+    row(Key.PAPER_MODE)?.let { paper ->
+        SwitchLine(Strings.readerRowPaper(context), null, (paper.value as? ReaderValue.Toggle)?.on == true, big = true) { toggle(Key.PAPER_MODE, it) }
+    }
+    Text(Strings.readerPaperLine(context), color = Chrome.faint, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 2.dp, bottom = 8.dp))
+    Heading(Strings.readerPaperParts(context))
+    val parts = if (novel) {
+        listOf(Key.PAPER_INSTANT, Key.PAPER_LOOK, Key.PAPER_DIM, Key.PAPER_VOLUME, Key.QUIET_PHONE)
+    } else {
+        listOf(Key.PAPER_INSTANT, Key.PAPER_LOOK, Key.PAPER_DIM, Key.GREYSCALE_PAGES, Key.PAPER_VOLUME, Key.QUIET_PHONE)
+    }
+    parts.forEach { key -> row(key)?.let { SettingLine(context, session, it, toggle) } }
+    if (quietDenied) {
+        Text(Strings.readerQuietDenied(context), color = Chrome.error, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
     }
 }
 
 @Composable
-private fun More(context: Context, session: ReaderSession, rows: List<ReaderSettingRow>, novel: Boolean, toggle: (Key, Boolean) -> Unit, onBack: () -> Unit) {
+private fun More(
+    context: Context,
+    session: ReaderSession,
+    rows: List<ReaderSettingRow>,
+    novel: Boolean,
+    toggle: (Key, Boolean) -> Unit,
+    onPaper: () -> Unit,
+    onBack: () -> Unit,
+) {
     BackRow(Strings.readerSheetMore(context), context, onBack)
     var query by remember { mutableStateOf("") }
     Row(
@@ -293,14 +508,12 @@ private fun More(context: Context, session: ReaderSession, rows: List<ReaderSett
         listOf(
             Strings.readerMoreHeadingText(context) to listOf(Key.LOOK, Key.FONT, Key.TEXT_SIZE, Key.LINE_SPACING, Key.MARGINS, Key.JUSTIFY, Key.MODE),
             Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
-            Strings.readerMoreHeadingPaper(context) to listOf(Key.PAPER_MODE, Key.QUIET_PHONE),
         )
     } else {
         listOf(
-            Strings.readerMoreHeadingLayout(context) to listOf(Key.FIT, Key.BACKGROUND, Key.PAGE_LAYOUT, Key.SPREADS),
+            Strings.readerMoreHeadingLayout(context) to listOf(Key.FIT, Key.BACKGROUND, Key.STRIP_GAP, Key.PAGE_LAYOUT, Key.SPREADS),
             Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
             Strings.readerMoreHeadingImages(context) to listOf(Key.COLOUR, Key.CROP_BORDERS),
-            Strings.readerMoreHeadingPaper(context) to listOf(Key.PAPER_MODE, Key.GREYSCALE_PAGES, Key.QUIET_PHONE),
         )
     }
     groups.forEach { (heading, keys) ->
@@ -311,14 +524,23 @@ private fun More(context: Context, session: ReaderSession, rows: List<ReaderSett
             shown.forEach { SettingLine(context, session, it, toggle) }
         }
     }
+    // Paper mode and its parts have their own page.
+    val paperKeys = listOf(Key.PAPER_MODE, Key.PAPER_INSTANT, Key.PAPER_LOOK, Key.PAPER_DIM, Key.GREYSCALE_PAGES, Key.PAPER_VOLUME, Key.QUIET_PHONE)
+    val paper = rows.firstOrNull { it.key == Key.PAPER_MODE }
+    val matches = query.isBlank() || paperKeys.any { key -> rows.any { it.key == key } && rowTitle(context, key)?.contains(query.trim(), ignoreCase = true) == true }
+    if (paper != null && matches) {
+        Heading(Strings.readerMoreHeadingPaper(context))
+        val on = (paper.value as? ReaderValue.Toggle)?.on == true
+        NavRow(Strings.readerRowPaper(context), if (on) Strings.readerValueOn(context) else Strings.readerValueOff(context), onPaper)
+    }
 }
 
 private val sizeRange = 0.7f..2.0f
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSettingRow, toggle: (Key, Boolean) -> Unit) {
-    val title = rowTitle(context, row.key) ?: return
+private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSettingRow, toggle: (Key, Boolean) -> Unit, novel: Boolean = false) {
+    val title = (if (novel && row.key == Key.MODE) Strings.readerRowPages(context) else rowTitle(context, row.key)) ?: return
     val value = row.value
     val scope = if (row.key.series) SettingScope.SERIES else row.scope
     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
@@ -364,6 +586,24 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                     }
                 }
             }
+            value is ReaderValue.Amount && row.key == Key.PAPER_DIM -> {
+                Text(title, color = Chrome.text, fontSize = 16.sp)
+                Spacer(Modifier.height(10.dp))
+                Slider(
+                    value = value.value.toFloat().coerceIn(0f, 1f),
+                    onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 20).toInt() / 20.0))) },
+                    valueRange = 0f..1f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = Chrome.text,
+                        activeTrackColor = Chrome.text,
+                        inactiveTrackColor = Chrome.rule,
+                    ),
+                    modifier = Modifier.fillMaxWidth().semantics {
+                        contentDescription = title
+                        stateDescription = "${(value.value * 100).toInt()}%"
+                    },
+                )
+            }
             value is ReaderValue.Amount && row.key == Key.TEXT_SIZE -> {
                 Text(title, color = Chrome.text, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -386,8 +626,8 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                 }
             }
         }
-        if (row.overridden && row.key != Key.MODE && row.key != Key.DIRECTION) {
-            TextButton(onClick = { session.useDefault(row.key) }) { Text(Strings.readerModeUseDefault(context), color = Chrome.text) }
+        if (row.key != Key.MODE && row.key != Key.DIRECTION) {
+            UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
         }
     }
 }
@@ -419,15 +659,18 @@ internal fun Segments(labels: List<String>, selected: Int, onSelect: (Int) -> Un
 }
 
 @Composable
-private fun SwitchLine(title: String, line: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 46.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun SwitchLine(title: String, line: String?, checked: Boolean, big: Boolean = false, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 46.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Column(Modifier.weight(1f)) {
-            Text(title, color = Chrome.text, fontSize = 16.sp)
+            Text(title, color = Chrome.text, fontSize = if (big) 17.sp else 16.sp)
             if (line != null) Text(line, color = Chrome.faint, fontSize = 12.sp)
         }
         Switch(
             checked = checked,
-            onCheckedChange = onChange,
+            onCheckedChange = null,
             colors = SwitchDefaults.colors(
                 checkedTrackColor = Chrome.text,
                 checkedThumbColor = Chrome.plate,
@@ -471,6 +714,11 @@ internal fun rowTitle(context: Context, key: Key): String? = when (key) {
     Key.QUIET_PHONE -> Strings.readerRowQuiet(context)
     Key.FOOT_VALUE -> Strings.readerRowFoot(context)
     Key.FOLIO -> Strings.readerRowFolio(context)
+    Key.STRIP_GAP -> Strings.readerRowStripGap(context)
+    Key.PAPER_INSTANT -> Strings.readerPaperTurn(context)
+    Key.PAPER_LOOK -> Strings.readerPaperLook(context)
+    Key.PAPER_DIM -> Strings.readerPaperDim(context)
+    Key.PAPER_VOLUME -> Strings.readerRowVolume(context)
     else -> null
 }
 
@@ -510,6 +758,8 @@ internal fun choiceLabel(context: Context, key: Key, value: ReaderValue): String
         Key.TAP_LAYOUT to "sides" -> Strings.readerTapSides(context)
         Key.TAP_LAYOUT to "off" -> Strings.readerTapOff(context)
         Key.FOOT_VALUE to "pages_left" -> Strings.readerRowFoot(context)
+        Key.STRIP_GAP to "none" -> Strings.readerGapNone(context)
+        Key.STRIP_GAP to "small" -> Strings.readerGapSmall(context)
         else -> null
     }
 }

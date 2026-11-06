@@ -813,8 +813,13 @@ async fn sign_in(
 }
 
 impl BookSources {
+    /// A source's name as its manifest gives it, or its id when it is no longer loaded.
+    pub fn source_name(&self, id: &str) -> String {
+        self.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
+    }
+
     /// The editions a work has: every source holding a series matched to it.
-    fn editions(
+    pub(crate) fn editions(
         &self,
         work: &kaeri_core::books::WorkId,
     ) -> Vec<kaeri_model::reading::BookEditionRow> {
@@ -932,7 +937,11 @@ impl BookSources {
 
     /// Which source and series reference a work is read from: the chosen edition, the person's
     /// preference, or the first source in their order that holds it.
-    fn edition_of(&self, work: &WorkId, edition: Option<&str>) -> Option<(String, String)> {
+    pub(crate) fn edition_of(
+        &self,
+        work: &WorkId,
+        edition: Option<&str>,
+    ) -> Option<(String, String)> {
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         let wanted = edition.map(str::to_owned).or_else(|| {
             self.store.edition_pref(work.as_str()).ok().flatten().map(|p| p.source_id)

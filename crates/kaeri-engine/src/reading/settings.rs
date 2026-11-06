@@ -67,6 +67,7 @@ pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
         Key::TapLayout => choices(&["edges", "sides", "off"]),
         Key::GallerySpeed => choices(&["standard", "fast", "best"]),
         Key::FootValue => choices(&["pages_left", "none"]),
+        Key::StripGap => choices(&["none", "small"]),
         _ => Vec::new(),
     }
 }
@@ -106,6 +107,10 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::Saturation => amount(if screen.eink == Some(Panel::Kaleido3) { 1.2 } else { 1.0 }),
         Key::FootValue => choice("pages_left"),
         Key::Folio => on(true),
+        Key::StripGap => choice("none"),
+        // Paper mode's parts, on by default inside it; the page's white dimmed a little.
+        Key::PaperInstant | Key::PaperLook | Key::PaperVolume => on(true),
+        Key::PaperDim => amount(0.3),
     }
 }
 
@@ -119,9 +124,14 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
         Key::GallerySpeed => screen.eink == Some(Panel::Gallery3),
         Key::RainbowFilter => screen.eink == Some(Panel::Kaleido3),
         Key::Saturation | Key::Contrast => screen.colour_eink(),
-        Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
-            screen.handheld && screen.eink.is_none()
-        }
+        Key::PaperMode
+        | Key::GreyscalePages
+        | Key::QuietPhone
+        | Key::PaperInstant
+        | Key::PaperLook
+        | Key::PaperDim
+        | Key::PaperVolume => screen.handheld && screen.eink.is_none(),
+        Key::StripGap => screen.eink.is_none(),
         Key::Colour => screen.eink != Some(Panel::Grey),
         Key::Background => screen.eink.is_none(),
         Key::StripWidth => !screen.handheld,

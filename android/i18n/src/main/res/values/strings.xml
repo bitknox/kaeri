@@ -955,14 +955,12 @@
     <string name="reader_chapter_line">Chapter %1$s</string>
     <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
-    <!-- Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4. -->
-    <string name="reader_novel_line">Chapter %1$s · paged</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
     <!-- The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin. -->
     <plurals name="reader_pages_left">
-        <item quantity="one">One page left</item>
-        <item quantity="other">%1$d pages left</item>
+        <item quantity="one">One page left in this chapter</item>
+        <item quantity="other">%1$d pages left in this chapter</item>
     </plurals>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$d min</string>
@@ -1217,6 +1215,31 @@
     <string name="reader_value_on">On</string>
     <!-- The value of Paper mode in the settings list when it is off. -->
     <string name="reader_value_off">Off</string>
+    <!-- Row in the reader's settings for strips: the space between a strip's images. -->
+    <string name="reader_row_strip_gap">Gap between images</string>
+    <!-- A choice for the gap between a strip's images: none at all. -->
+    <string name="reader_gap_none">None</string>
+    <!-- A choice for the gap between a strip's images: a small one. -->
+    <string name="reader_gap_small">Small</string>
+    <!-- Paper mode part: the Paper look while it is day, the Dark look at night. -->
+    <string name="reader_paper_look">Paper look by day</string>
+    <!-- Paper mode part: a slider for how far the page's white is dimmed. -->
+    <string name="reader_paper_dim">Dim the page</string>
+    <!-- Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. -->
+    <string name="reader_end_from">From %1$s</string>
+    <!-- The next episode's length on the divider inside a strip. -->
+    <plurals name="reader_divider_images">
+        <item quantity="one">One image</item>
+        <item quantity="other">%1$d images</item>
+    </plurals>
+    <!-- The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. -->
+    <string name="reader_divider_facts_source">%1$s · from %2$s</string>
+    <!-- The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". -->
+    <string name="reader_opening_waited">%1$s · %2$d s</string>
+    <!-- Heading of the list of other sources a failed chapter can be read from. -->
+    <string name="reader_sources_title">Read this chapter from</string>
+    <!-- Heading on the Paper mode page above the parts it changes. -->
+    <string name="reader_paper_parts">What it changes</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->

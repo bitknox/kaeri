@@ -30,6 +30,7 @@ class ReaderSettingNamesTest {
         Key.SPREADS to listOf("split", "rotate", "whole"),
         Key.TAP_LAYOUT to listOf("edges", "sides", "off"),
         Key.FOOT_VALUE to listOf("pages_left"),
+        Key.STRIP_GAP to listOf("none", "small"),
     )
 
     @Test

@@ -21,6 +21,8 @@ pub struct ShelfFile {
     pub pages: Option<u32>,
     /// ComicInfo, as JSON.
     pub comicinfo: Option<String>,
+    /// The source a download came from; `None` for a file in a folder.
+    pub source: Option<String>,
 }
 
 /// One series found in a folder.
@@ -70,12 +72,13 @@ impl Store {
                         format: r.get(4)?,
                         pages: r.get(5)?,
                         comicinfo: r.get(6)?,
+                        source: None,
                     })
                 })?
                 .collect::<rusqlite::Result<_>>()?
             };
             let mut stmt = c.prepare(
-                "SELECT path, chapter, pages_total FROM book_download
+                "SELECT path, chapter, pages_total, source_id FROM book_download
                   WHERE work = ?1 AND state = 'done' AND path IS NOT NULL ORDER BY id",
             )?;
             let downloads = stmt.query_map([work], |r| {
@@ -94,6 +97,7 @@ impl Store {
                     format,
                     pages: r.get(2)?,
                     comicinfo: None,
+                    source: r.get(3)?,
                 })
             })?;
             for file in downloads {
@@ -240,6 +244,7 @@ mod tests {
             format: "cbz".into(),
             pages: Some(20),
             comicinfo: None,
+            source: None,
         };
         store.put_local_file("s1", &file, 1000, 1).unwrap();
         store

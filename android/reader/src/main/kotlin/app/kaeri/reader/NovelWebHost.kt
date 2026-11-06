@@ -170,10 +170,24 @@ class NovelWebHost(
         val message = NovelMessage.parse(text) ?: return
         when (message) {
             // The next linear document on a turn past the end, the previous one before the start.
-            is NovelMessage.End -> nextDocument(+1)?.let { load(it) } ?: onMessage(message)
-            is NovelMessage.Start -> nextDocument(-1)?.let { load(it, "kaeri:end") } ?: onMessage(message)
+            is NovelMessage.End -> nextDocument(+1)?.let { turnInto(it) } ?: onMessage(message)
+            is NovelMessage.Start -> nextDocument(-1)?.let { turnInto(it, "kaeri:end") } ?: onMessage(message)
+            // A document turned into is a page turn, not a jump that Back to page would undo.
+            is NovelMessage.Page -> {
+                val how = turnedInto?.takeIf { message.how == null }
+                turnedInto = null
+                onMessage(if (how != null) message.copy(how = how) else message)
+            }
             else -> onMessage(message)
         }
+    }
+
+    /** How the document being loaded was reached, when a turn crossed into it. */
+    private var turnedInto: TurnHow? = null
+
+    private fun turnInto(document: Int, fragment: String? = null) {
+        turnedInto = TurnHow.TURN
+        load(document, fragment)
     }
 
     private fun nextDocument(step: Int): Int? {

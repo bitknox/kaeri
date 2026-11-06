@@ -8,6 +8,7 @@
 //! timers run on the runtime and come back as [`Internal::Reader`] wakes.
 
 mod novel;
+pub(crate) use novel::SOURCE;
 
 use std::{sync::Arc, time::Duration};
 
@@ -24,7 +25,7 @@ use kaeri_model::{
     reader::{
         Leaf, NoNext, NovelPos, OpenAt, ReadDirection, ReadPlace, ReaderAction, ReaderCommand,
         ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key, ReaderSettingsView,
-        ReaderSurface, ReaderView, StripPos, TurnHow,
+        ReaderSurface, ReaderView, ReaderWait, StripPos, TurnHow,
     },
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
@@ -34,7 +35,7 @@ use tokio::time::Instant;
 
 use super::{
     eink,
-    pages::{Laid, OpenJob, Pages, Plan, Shared},
+    pages::{Laid, OpenJob, Pages, PeekJob, Plan, Shared},
     settings::{self, Layers, Screen},
     shelf::{self, ShelfChapter},
 };
@@ -150,8 +151,12 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
-    /// A guess from the source's hint, kept and shown when the chapter is laid out.
-    hinted_strip: bool,
+    /// The work comes from a country whose comics are read as strips. It stands for the
+    /// series' mode only while the series has no mode of its own: once a mode is chosen, or the
+    /// guess is kept, the layers say the mode.
+    origin_strip: bool,
+    /// The next chapter's first page was asked of the worker.
+    peeked: bool,
     /// The place before a jump, for Back to page.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
@@ -347,6 +352,10 @@ impl Reader {
             && let Some(slot) = novel::list(cx, id, &work)
         {
             self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+            cx.send(ReaderEvent::Opening {
+                chapter: None,
+                wait: Some(ReaderWait::FindingSource),
+            });
             return;
         }
         self.open_with(cx, id, work, chapters, chapter, at, surface);
@@ -407,6 +416,11 @@ impl Reader {
             }));
             return;
         };
+        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        cx.send(ReaderEvent::Opening {
+            chapter: Some(chapters[index].row(&marks)),
+            wait: None,
+        });
         let layers = cx.layers(medium, Some(work.as_str()));
         // A novel opens at its kept text position, or the one asked for.
         let restore = match &at {
@@ -423,8 +437,7 @@ impl Reader {
         };
         // The source's word comes before the pages' shape: a work from Korea or China is read
         // as a strip unless the series says otherwise.
-        let hinted_strip = !layers.series_has(Key::Mode)
-            && medium == Medium::Manga
+        let origin_strip = medium == Medium::Manga
             && kind
                 .as_ref()
                 .and_then(|k| k.origin.as_deref())
@@ -450,7 +463,8 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
-            hinted_strip,
+            origin_strip,
+            peeked: false,
             back_to: None,
             moved_back: None,
             read_fired: false,
@@ -618,6 +632,12 @@ impl Session {
         &self.chapters[self.at]
     }
 
+    /// The work's origin says strip and the series has no mode of its own yet. A mode the
+    /// person picks, or the guess once kept, is in the layers and wins over the origin.
+    fn hinted_strip(&self) -> bool {
+        self.origin_strip && !self.layers.series_has(Key::Mode)
+    }
+
     fn eink(&self) -> bool {
         self.surface.eink
     }
@@ -668,7 +688,7 @@ impl Session {
             ..Look::default()
         };
         let layout = l.word(Key::PageLayout);
-        let strip = self.hinted_strip || l.word(Key::Mode) == "strip";
+        let strip = self.hinted_strip() || l.word(Key::Mode) == "strip";
         let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
             target: Target {
@@ -695,7 +715,7 @@ impl Session {
             } else {
                 ReadDirection::RightToLeft
             },
-            guess_mode: !self.hinted_strip && !l.series_has(Key::Mode),
+            guess_mode: !self.hinted_strip() && !l.series_has(Key::Mode),
             guess_direction: !l.series_has(Key::Direction),
         }
     }
@@ -744,7 +764,7 @@ impl Session {
         let now = cx.now();
         let store = &cx.services.store;
         let mut said = None;
-        if laid.guessed_mode || self.hinted_strip {
+        if laid.guessed_mode || self.hinted_strip() {
             if store
                 .set_series_guess(self.work.as_str(), Key::Mode.name(), "strip", now)
                 .unwrap_or(false)
@@ -814,6 +834,11 @@ impl Session {
                 self.note_place(cx);
                 if foot_visible && at.image + 1 >= self.pages_total {
                     self.wait_to_read(cx);
+                }
+                // Near the foot, the divider names the next chapter and shows its first page.
+                if at.image + 3 >= self.pages_total {
+                    self.say_end_page(cx);
+                    self.peek(cx, pages);
                 }
             }
             C::Surface { surface, .. } if self.novel.is_some() => {
@@ -906,6 +931,30 @@ impl Session {
             want.push(before);
         }
         pages.want(self.id, self.generation, want, cx.tx);
+        // Near the end, the next chapter's first page is made for the end page.
+        if leaf + 3 >= story {
+            self.peek(cx, pages);
+        }
+    }
+
+    /// Ask the worker for the next chapter's first page, once a chapter.
+    fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
+        if std::mem::replace(&mut self.peeked, true) {
+            return;
+        }
+        let Some(next) = self.chapters.get(self.at + 1) else { return };
+        if novel::prepares(next) {
+            return;
+        }
+        if next.path.as_os_str().is_empty() {
+            return;
+        }
+        pages.peek(PeekJob {
+            session: self.id,
+            chapter: next.id.clone(),
+            path: next.path.clone(),
+            out: cx.tx.clone(),
+        });
     }
 
     fn say_end_page(&mut self, cx: &Cx<'_>) {
@@ -913,9 +962,13 @@ impl Session {
             return;
         }
         let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
-        let next = self.chapters.get(self.at + 1).map(|c| c.row(&marks));
+        let following = self.chapters.get(self.at + 1);
+        let next = following.map(|c| c.row(&marks));
+        let next_source = following
+            .and_then(|c| c.source.as_deref())
+            .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then_some(NoNext::CaughtUp);
-        cx.send(ReaderEvent::EndPage { session: self.id, next, why_none });
+        cx.send(ReaderEvent::EndPage { session: self.id, next, why_none, next_source });
     }
 
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
@@ -995,6 +1048,7 @@ impl Session {
         self.opened = false;
         self.read_fired = false;
         self.end_page_said = false;
+        self.peeked = false;
         self.back_to = None;
         self.place = None;
         self.start = place(&self.work, &self.chapters[index].id, Some(page));
@@ -1203,6 +1257,7 @@ mod tests {
                         format: "cbz".into(),
                         pages: Some(3),
                         comicinfo: None,
+                        source: None,
                     }
                 })
                 .collect()
@@ -1784,6 +1839,7 @@ mod tests {
             format: "pdf".into(),
             pages: None,
             comicinfo: None,
+            source: None,
         };
         store.put_local_file("s1", &file, 1, 1).unwrap();
         for _ in 0..2 {
@@ -1853,5 +1909,70 @@ mod tests {
             .await;
         assert_eq!(mode, ());
         assert_eq!(h.reader.session.as_ref().unwrap().mode, ReaderMode::Strip);
+    }
+    /// A strip hinted by the work's origin gives way to the mode the person picks, at once and
+    /// not only after the reader is opened again.
+    #[tokio::test(start_paused = true)]
+    async fn a_mode_picked_wins_over_the_origin_hint_at_once() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .seed_book_work(WORK, "manga", Some("MANGA"), Some("KR"), "The Lantern Keeper", 1)
+            .unwrap();
+        let mut h = harness(store);
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip, "the origin hints a strip");
+        let session = h.session();
+        h.send(ReaderCommand::SetSetting {
+            session: Some(session),
+            medium: Medium::Manga,
+            work: Some(WorkId::new(WORK)),
+            key: Key::Mode,
+            scope: kaeri_model::reader::SettingScope::SeriesHere,
+            value: kaeri_model::reader::ReaderValue::Choice { name: "paged".into() },
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        assert_eq!(h.reader.session.as_ref().unwrap().mode, ReaderMode::Paged);
+    }
+
+    /// A chapter read from a file on the shelf has no other source to choose, so the failed
+    /// chapter offers Try again.
+    #[test]
+    fn a_file_on_the_shelf_has_no_other_source() {
+        let h = harness(Store::open_in_memory().unwrap());
+        let chapters = crate::reading::shelf::chapters(&h.services.store, WORK);
+        let work = WorkId::new(WORK);
+        assert!(crate::reading::other_sources(&h.services, &work, &chapters[0].id).is_empty());
+    }
+
+    /// Each part says its shape before its file is made, so a strip can hold its place.
+    #[tokio::test(start_paused = true)]
+    async fn leaves_carry_each_page_s_shape() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let (_, leaves, _) = h.open(OpenAt::Resume).await;
+        let ratio = leaves[0].parts[0].ratio.expect("a ratio");
+        assert!((ratio - 300.0 / 450.0).abs() < 0.001, "{ratio}");
+    }
+
+    /// Near a chapter's end the next chapter's first page is made, once, for the end page.
+    #[tokio::test(start_paused = true)]
+    async fn the_next_chapter_s_first_page_is_made_near_the_end() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(1, TurnHow::Turn).await;
+        let (chapter, file) = h
+            .until(|e| match e {
+                ReaderEvent::NextPreview { chapter, file, .. } => {
+                    Some((chapter.clone(), file.clone()))
+                }
+                _ => None,
+            })
+            .await;
+        let opened = h.reader.session.as_ref().unwrap().chapter().id.clone();
+        assert_ne!(chapter, opened, "the preview is of the next chapter");
+        assert_eq!((file.width, file.height), (300, 450));
+        assert!(Path::new(&file.path).exists());
+        h.shown(2, TurnHow::Turn).await;
+        let again = h.drain().iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. }));
+        assert!(!again, "made once per chapter");
     }
 }

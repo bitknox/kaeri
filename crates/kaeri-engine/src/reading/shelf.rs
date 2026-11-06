@@ -19,6 +19,8 @@ pub struct ShelfChapter {
     pub format: String,
     pub pages: Option<u32>,
     pub comicinfo: Option<String>,
+    /// The source a downloaded chapter came from; `None` for a file in a folder.
+    pub source: Option<String>,
 }
 
 impl ShelfChapter {
@@ -101,6 +103,7 @@ fn order(files: Vec<ShelfFile>) -> Vec<ShelfChapter> {
                 format: file.format,
                 pages: file.pages,
                 comicinfo: file.comicinfo,
+                source: file.source,
             },
         ));
     }
@@ -124,6 +127,7 @@ mod tests {
             format: "cbz".into(),
             pages: None,
             comicinfo: None,
+            source: None,
         }
     }
 

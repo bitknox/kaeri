@@ -376,12 +376,6 @@ reader-chapter-line = Chapter { $chapter }
 # @max 60
 reader-chapter-line-titled = Chapter { $chapter } · { $title }
 
-# Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4.
-# @only android
-# @arg chapter: text
-# @max 50
-reader-novel-line = Chapter { $chapter } · paged
-
 # Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4.
 # @only android
 # @arg chapter: text
@@ -391,10 +385,10 @@ reader-novel-line-scroll = Chapter { $chapter } · scroll
 # The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin.
 # @only android
 # @arg count: int
-# @max 24
-reader-pages-left = { $count -> 
-    [one] One page left
-   *[other] { $count } pages left
+# @max 44
+reader-pages-left = { $count ->
+    [one] One page left in this chapter
+   *[other] { $count } pages left in this chapter
  }
 
 # At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace.
@@ -1042,3 +1036,67 @@ reader-value-on = On
 # @only android
 # @max 12
 reader-value-off = Off
+
+# Row in the reader's settings for strips: the space between a strip's images.
+# @only android
+# @max 30
+reader-row-strip-gap = Gap between images
+
+# A choice for the gap between a strip's images: none at all.
+# @only android
+# @max 12
+reader-gap-none = None
+
+# A choice for the gap between a strip's images: a small one.
+# @only android
+# @max 12
+reader-gap-small = Small
+
+# Paper mode part: the Paper look while it is day, the Dark look at night.
+# @only android
+# @max 30
+reader-paper-look = Paper look by day
+
+# Paper mode part: a slider for how far the page's white is dimmed.
+# @only android
+# @max 30
+reader-paper-dim = Dim the page
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+# @only android
+# @arg source: text
+# @max 40
+reader-end-from = From { $source }
+
+# The next episode's length on the divider inside a strip.
+# @only android
+# @arg count: int
+# @max 24
+reader-divider-images = { $count ->
+    [one] One image
+   *[other] { $count } images
+ }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+# @only android
+# @arg facts: text
+# @arg source: text
+# @max 60
+reader-divider-facts-source = { $facts } · from { $source }
+
+# The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s".
+# @only android
+# @arg line: text
+# @arg seconds: int
+# @max 60
+reader-opening-waited = { $line } · { $seconds } s
+
+# Heading of the list of other sources a failed chapter can be read from.
+# @only android
+# @max 40
+reader-sources-title = Read this chapter from
+
+# Heading on the Paper mode page above the parts it changes.
+# @only android
+# @max 30
+reader-paper-parts = What it changes

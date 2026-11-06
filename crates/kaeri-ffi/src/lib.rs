@@ -379,6 +379,7 @@ mod tests {
             place: UnitRect::WHOLE,
             rotate: false,
             half: Some(PageHalf::Right),
+            ratio: Some(0.71),
         };
         crosses_intact(Event::Reader(ReaderEvent::Leaves {
             session: 7,
@@ -399,6 +400,23 @@ mod tests {
                 colour: false,
                 bytes: 1264 * 1680,
             },
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::NextPreview {
+            session: 7,
+            chapter: chapter.clone(),
+            file: PageFile {
+                path: "/cache/pages/p0.jpg".into(),
+                encoding: PageEncoding::Original { mime: "image/jpeg".into() },
+                width: 800,
+                height: 1200,
+                crop: None,
+                colour: true,
+                bytes: 4096,
+            },
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::Opening {
+            chapter: None,
+            wait: Some(kaeri_model::reader::ReaderWait::FindingSource),
         }));
         crosses_intact(Event::Reader(ReaderEvent::GoTo {
             session: 7,

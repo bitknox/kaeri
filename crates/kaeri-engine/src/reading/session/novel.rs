@@ -86,7 +86,7 @@ pub(super) fn prepares(chapter: &ShelfChapter) -> bool {
 }
 
 /// The format of a chapter read from a source rather than a file on the shelf.
-pub(super) const SOURCE: &str = "source";
+pub(crate) const SOURCE: &str = "source";
 
 /// The folder novels' files are written to, under the cache.
 pub(super) fn cache_dir(cache: &Path) -> PathBuf {
@@ -168,6 +168,7 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
             format: SOURCE.into(),
             pages: row.pages,
             comicinfo: None,
+            source: None,
         })
         .collect()
 }
