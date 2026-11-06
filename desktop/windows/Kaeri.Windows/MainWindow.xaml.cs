@@ -763,9 +763,17 @@ public sealed partial class MainWindow : Window
     void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null)
     {
         var shown = ++toastShown;
+        var alert = severity == InfoBarSeverity.Warning;
+        // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
-        Toast.Severity = severity;
+        else
+        {
+            Toast.Opacity = 0;
+            Motion.FadeTo(Toast, 1, Motion.FadeInTime);
+        }
+        // An alert takes the vermilion mark, as on the Mac; Warning's icon is haze.
+        Toast.Severity = alert ? InfoBarSeverity.Error : severity;
         Toast.Message = text;
         if (button is not null && act is not null)
         {
@@ -780,9 +788,12 @@ public sealed partial class MainWindow : Window
         else
             Toast.ActionButton = null;
         Toast.IsOpen = true;
+        // An alert is read out at once, over what Narrator was saying; the others politely.
+        if (alert && (FrameworkElementAutomationPeer.FromElement(Toast) ?? FrameworkElementAutomationPeer.CreatePeerForElement(Toast)) is { } peer)
+            peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.ImportantMostRecent, text, "kaeri-alert"); // i18n-skip
         // A notice with a button stays until it is dismissed or acted on; the others stay twice as
         // long while a screen reader runs.
-        var stays = NoticeTime.Stays(text, severity == InfoBarSeverity.Warning, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
+        var stays = NoticeTime.Stays(text, alert, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
         if (stays is not { } time)
         {
             toastUntil = DateTimeOffset.MaxValue;
@@ -805,8 +816,16 @@ public sealed partial class MainWindow : Window
             if (DateTimeOffset.UtcNow >= toastUntil)
                 break;
         }
+        if (shown != toastShown)
+            return;
+        // Fades out, then closes, unless a newer notice came meanwhile.
+        Motion.FadeTo(Toast, 0, Motion.FadeOutTime);
+        await Task.Delay(Motion.FadeOutTime);
         if (shown == toastShown)
+        {
             Toast.IsOpen = false;
+            Toast.Opacity = 1;
+        }
     }
 
     void OnToastPointerEntered(object sender, PointerRoutedEventArgs e) => toastHeld = true;
