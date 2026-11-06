@@ -127,9 +127,11 @@ public sealed partial class CoverGrid : UserControl
     /// </summary>
     void OnCoverLoaded(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { Tag: uint } container)
+        // The container can be loaded before its bindings have given it its title, so the title
+        // is read when the card opens, not here: a check here left most covers without a card.
+        if (sender is not FrameworkElement container)
             return;
-        HoverPreview.Attach(container, () => (uint)container.Tag);
+        HoverPreview.Attach(container, () => container.DataContext is CoverItem item ? item.Id : container.Tag is uint id ? id : 0);
         if (container.ContextFlyout is null)
         {
             var menu = new MenuFlyout();
