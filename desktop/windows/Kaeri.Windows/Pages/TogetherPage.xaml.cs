@@ -35,6 +35,7 @@ public sealed partial class TogetherPage : Page
     {
         InitializeComponent();
         recentState.Children.Add(recentRows);
+        joinProblem.Visibility = Visibility.Collapsed;
         membersState.Children.Add(memberRows);
         AutomationProperties.SetName(join, T.TogetherJoinField);
         join.KeyDown += (_, e) =>
@@ -108,21 +109,43 @@ public sealed partial class TogetherPage : Page
     /// <summary>The party dialog for a room with nothing picked: in it, Play on any episode picks for the room.</summary>
     void StartParty() => ctx.Window.ShowParty(new PartyDialog.For.Room());
 
-    /// <summary>The row the join field is in. WinUI leaves Parent null for a child added in code, so it is kept here.</summary>
-    Panel? joinRow;
+    // The page is a column of blocks, each kept under a key across party events (about one a
+    // second while the room counts down): a block whose key and look are the same stays the same
+    // element, so a click in progress, the keyboard's place and the chat's field are kept. Only a
+    // block that changed is made again, and text changes in place.
+
+    readonly Dictionary<string, FrameworkElement> blocks = [];
+    List<FrameworkElement> laying = [];
+
+    /// <summary>The block under <paramref name="key"/>: kept, or made, then brought up to date.</summary>
+    T Block<T>(string key, Func<T> make, Action<T>? update = null) where T : FrameworkElement
+    {
+        if (!blocks.TryGetValue(key, out var kept) || kept is not T block)
+        {
+            block = make();
+            blocks[key] = block;
+        }
+        update?.Invoke(block);
+        laying.Add(block);
+        return block;
+    }
+
+    TextBlock Line(string key, string text, string style = "HazeBodyStyle") =>
+        Block(key, () => Ui.Text(text, style), t => t.Text = text);
+
+    /// <summary>A button whose action and words are its key: the same one stays put.</summary>
+    Button Act(string key, string text, Action act, bool accent = false) =>
+        Block($"{key}|{text}|{accent}", () => Ui.Label(text, (_, _) => act(), accent));
 
     void Show()
     {
-        // The join field and its line outlive a rebuild; let go of their old parents first.
-        joinRow?.Children.Remove(join);
-        joinRow = null;
-        foreach (var kept in new FrameworkElement?[] { join, joinProblem, chat })
-            if (kept?.Parent is Panel old)
-                old.Children.Remove(kept);
-        Stack.Children.Clear();
-        var heading = Ui.Text(T.TogetherTitle, "PageTitleStyle");
-        AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
-        Stack.Children.Add(heading);
+        laying = [];
+        Block("heading", () =>
+        {
+            var made = Ui.Text(T.TogetherTitle, "PageTitleStyle");
+            AutomationProperties.SetHeadingLevel(made, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
+            return made;
+        });
         if (ctx.Known.Party is { } party)
         {
             inLobby = true;
@@ -133,49 +156,92 @@ public sealed partial class TogetherPage : Page
             inLobby = false;
             Place();
         }
+        // The column as laid now: what stays is moved only when its place changed.
+        var wanted = laying;
+        for (var i = Stack.Children.Count - 1; i >= 0; i--)
+            if (Stack.Children[i] is not FrameworkElement old || !wanted.Contains(old))
+                Stack.Children.RemoveAt(i);
+        for (var i = 0; i < wanted.Count; i++)
+        {
+            if (i < Stack.Children.Count && Stack.Children[i] == wanted[i])
+                continue;
+            var at = Stack.Children.IndexOf(wanted[i]);
+            if (at >= 0)
+                Stack.Children.RemoveAt(at);
+            Stack.Children.Insert(i, wanted[i]);
+        }
+        foreach (var key in blocks.Where(b => !wanted.Contains(b.Value)).Select(b => b.Key).ToList())
+            blocks.Remove(key);
     }
 
     // --- Out of a party ---
 
     void Place()
     {
-        Stack.Children.Add(Ui.Haze(T.TogetherLine));
+        Line("place-line", T.TogetherLine);
 
-        Stack.Children.Add(Section(T.TogetherStart));
-        Stack.Children.Add(Ui.Haze(T.TogetherStartLine));
-        Stack.Children.Add(Ui.Label(T.PartyStartParty, (_, _) => StartParty(), accent: true));
+        Block("section-start", () => Section(T.TogetherStart));
+        Line("start-line", T.TogetherStartLine);
+        Act("start", T.PartyStartParty, StartParty, accent: true);
 
-        Stack.Children.Add(Section(T.TogetherJoin));
-        Stack.Children.Add(Ui.Haze(T.TogetherJoinLine));
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        row.Children.Add(join);
-        joinRow = row;
-        row.Children.Add(Ui.Label(T.TogetherPaste, async (_, _) => await PasteIntoJoin()));
-        row.Children.Add(Ui.Label(T.TogetherJoinAction, (_, _) => Join(join.Text)));
-        Stack.Children.Add(row);
-        joinProblem.Visibility = Visibility.Collapsed;
-        Stack.Children.Add(joinProblem);
-        Stack.Children.Add(Ui.Haze(T.TogetherPasteShortcutHint));
+        Block("section-join", () => Section(T.TogetherJoin));
+        Line("join-line", T.TogetherJoinLine);
+        Block("join-row", () =>
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            if (join.Parent is Panel old)
+                old.Children.Remove(join);
+            row.Children.Add(join);
+            row.Children.Add(Ui.Label(T.TogetherPaste, async (_, _) => await PasteIntoJoin()));
+            row.Children.Add(Ui.Label(T.TogetherJoinAction, (_, _) => Join(join.Text)));
+            return row;
+        });
+        Block("join-problem", () => joinProblem);
+        Line("join-hint", T.TogetherPasteShortcutHint);
 
-        Stack.Children.Add(Section(T.TogetherRecent));
-        recentRows.Children.Clear();
-        Stack.Children.Add(recentState);
+        Block("section-recent", () => Section(T.TogetherRecent));
+        Block("recent", () => recentState);
         if (!ctx.Known.PartyRecentLoaded)
             recentState.Wait();
         else
         {
             recentState.Done();
             var recent = ctx.Known.PartyRecent;
-            if (recent.Length == 0)
-                recentRows.Children.Add(Ui.Haze(T.TogetherRecentEmpty));
-            foreach (var room in recent)
-                recentRows.Children.Add(Recent(room));
+            Rows(recentRows, recent.Length == 0
+                ? [("empty", () => Ui.Haze(T.TogetherRecentEmpty))]
+                : recent.Select(r => ($"{r.Server}|{r.Room}|{r.Title}|{r.Episode}|{string.Join(",", r.Names)}|{r.LastAt}", (Func<FrameworkElement>)(() => Recent(r)))).ToArray());
         }
         if (ctx.Known.PartyLookFailure is { } failure)
-            Stack.Children.Add(new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = failure });
+            Block($"look-failure|{failure}", () => new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = failure });
     }
 
-    UIElement Recent(PartyRecentRoom room)
+    /// <summary>A list's rows by key: a row that is still there stays the same element, in its new place.</summary>
+    static void Rows(Panel panel, (string Key, Func<FrameworkElement> Make)[] rows)
+    {
+        var old = panel.Children.OfType<FrameworkElement>().Where(e => e.Tag is string).ToDictionary(e => (string)e.Tag, e => e);
+        var wanted = rows.Select(r =>
+        {
+            if (old.TryGetValue(r.Key, out var kept))
+                return kept;
+            var made = r.Make();
+            made.Tag = r.Key;
+            return made;
+        }).ToList();
+        for (var i = panel.Children.Count - 1; i >= 0; i--)
+            if (panel.Children[i] is not FrameworkElement e || !wanted.Contains(e))
+                panel.Children.RemoveAt(i);
+        for (var i = 0; i < wanted.Count; i++)
+        {
+            if (i < panel.Children.Count && panel.Children[i] == wanted[i])
+                continue;
+            var at = panel.Children.IndexOf(wanted[i]);
+            if (at >= 0)
+                panel.Children.RemoveAt(at);
+            panel.Children.Insert(i, wanted[i]);
+        }
+    }
+
+    FrameworkElement Recent(PartyRecentRoom room)
     {
         var grid = new Grid { ColumnSpacing = 12, MinHeight = 56 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -203,116 +269,117 @@ public sealed partial class TogetherPage : Page
     {
         var members = ctx.Known.PartyMembers ?? [];
         if (party.Connection is PartyConnection.Reconnecting retry)
-            Stack.Children.Add(new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = T.PartyConnectionLost(retry.Attempt, retry.Of) });
+            Block("reconnecting", () => new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false },
+                bar => bar.Message = T.PartyConnectionLost(retry.Attempt, retry.Of));
         if (party.Starter is { Length: > 0 } starter && starter != party.Name)
-            Stack.Children.Add(Ui.Haze(T.PartyInvitedBy(starter)));
+            Line("invited-by", T.PartyInvitedBy(starter));
 
         // What the room is watching, from its playlist: nobody picks a title to join.
-        Stack.Children.Add(Section(T.PartyRoomWatching));
+        Block("section-watching", () => Section(T.PartyRoomWatching));
         if (party.RoomEpisode is { } room)
         {
-            Stack.Children.Add(Ui.Text(room.Title.Length > 0 ? room.Title : room.File, "SubtitleTextBlockStyle"));
-            Stack.Children.Add(Ui.Haze(T.EpisodeNumber(long.TryParse(room.Episode, out var n) ? n : 0)));
+            Line("room-title", room.Title.Length > 0 ? room.Title : room.File, "SubtitleTextBlockStyle");
+            Line("room-episode", T.EpisodeNumber(long.TryParse(room.Episode, out var n) ? n : 0));
             if (room.Found == PartyFound.Name)
-                Stack.Children.Add(Ui.Haze(T.PartyRoomFoundByName));
+                Line("room-found", T.PartyRoomFoundByName);
             else if (room.Found == PartyFound.FileName)
             {
-                Stack.Children.Add(Ui.Haze(T.PartyRoomMatched));
-                Stack.Children.Add(Ui.Label(T.PartyRoomNotThis, (_, _) => ctx.Send(new Command.Party(new PartyCommand.ChooseTitle(null)))));
+                Line("room-found", T.PartyRoomMatched);
+                Act("not-this", T.PartyRoomNotThis, () => ctx.Send(new Command.Party(new PartyCommand.ChooseTitle(null))));
             }
             else if (room.Found == PartyFound.Unmatched)
             {
-                Stack.Children.Add(Ui.Haze(T.PartyRoomPlainFile(room.PlainBy ?? "", room.File)));
+                Line("room-found", T.PartyRoomPlainFile(room.PlainBy ?? "", room.File));
                 if (party.Guesses.Length > 0)
-                    Stack.Children.Add(Ui.Haze(T.PartyRoomGuesses));
+                    Line("guesses", T.PartyRoomGuesses);
                 foreach (var guess in party.Guesses)
                 {
                     var id = guess.Id;
-                    Stack.Children.Add(Ui.Label(guess.Title, (_, _) => ctx.Send(new Command.Party(new PartyCommand.ChooseTitle(id)))));
+                    Act($"guess-{id}", guess.Title, () => ctx.Send(new Command.Party(new PartyCommand.ChooseTitle(id))));
                 }
             }
         }
         else
         {
-            Stack.Children.Add(Ui.Text(T.PartyRoomNothing, "SubtitleTextBlockStyle"));
-            Stack.Children.Add(Ui.Haze(T.PartyRoomNothingLine));
+            Line("room-title", T.PartyRoomNothing, "SubtitleTextBlockStyle");
+            Line("room-episode", T.PartyRoomNothingLine);
             // Picked as anything is played: browsing the app, where Play is the room's.
-            Stack.Children.Add(Ui.Label(T.PartyRoomPick, (_, _) => ctx.Window.Go("home")));
+            Act("pick", T.PartyRoomPick, () => ctx.Window.Go("home"));
         }
 
         // Your own sources, checked for that episode. Never anyone else's.
         switch (party.Sources)
         {
             case PartySources.Checking:
-                Stack.Children.Add(Ui.Haze(T.PartyLookingIn));
+                Line("sources", T.PartyLookingIn);
                 break;
             case PartySources.Found:
-                Stack.Children.Add(Ui.Haze(T.PartyLobbySourcesFound));
+                Line("sources", T.PartyLobbySourcesFound);
                 break;
             case PartySources.Missing missing:
-                Stack.Children.Add(Ui.Text(missing.Reason.Text(), "BodyTextBlockStyle"));
-                Stack.Children.Add(Ui.Label(T.PartyLobbySourcesMissing, (_, _) => ctx.Window.Go("providers")));
+                Line("sources", missing.Reason.Text(), "BodyTextBlockStyle");
+                Act("sources-missing", T.PartyLobbySourcesMissing, () => ctx.Window.Go("providers"));
                 break;
         }
 
         // Members: you first, then in the order they joined. A state in words, never a source.
-        Stack.Children.Add(Section(T.PartyWaitingMembers));
-        memberRows.Children.Clear();
-        Stack.Children.Add(membersState);
+        Block("section-members", () => Section(T.PartyWaitingMembers));
+        Block("members", () => membersState);
         if (ctx.Known.PartyMembers is null)
             membersState.Wait();
         else
             membersState.Done();
-        foreach (var member in members.OrderBy(m => m.You ? 0 : 1))
-            memberRows.Children.Add(MemberRow(member));
+        Rows(memberRows, members.OrderBy(m => m.You ? 0 : 1)
+            .Select(m => ($"{m.Name}|{m.You}|{m.Ready}|{m.File is null}", (Func<FrameworkElement>)(() => MemberRow(m)))).ToArray());
         var ready = members.Count(m => m.Ready == true);
         // No count before the room has listed anyone.
         if (ctx.Known.PartyMembers is not null)
-            Stack.Children.Add(Ui.Haze(T.PartyLobbyCount(ready, members.Length)));
-        Stack.Children.Add(Ui.Haze(party.StartingIn is { } secs ? T.PartyStarting(secs) : party.Playing || members.Length > 0 && ready == members.Length ? T.PartyAllReady : T.PartyStartsLine));
+            Line("count", T.PartyLobbyCount(ready, members.Length));
+        Line("starts", party.StartingIn is { } secs ? T.PartyStarting(secs) : party.Playing || members.Length > 0 && ready == members.Length ? T.PartyAllReady : T.PartyStartsLine);
 
         // While the room plays, Open player is the way back to it, as on the Mac and Android.
         // Before, Ready is the one amber; once ready it is tonal with a check and the word.
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-        if (party.Playing)
-            actions.Children.Add(Ui.Label(T.TogetherOpenPlayer, (_, _) => ctx.Send(new Command.Party(new PartyCommand.OpenPlayer())), accent: true));
-        else
+        var actionsKey = party.Playing ? "open" : $"ready-{party.Ready}-{party.CanStartAnyway}";
+        Block($"actions|{actionsKey}", () =>
         {
-            var readyButton = party.Ready
-                ? Ui.Label("✓ " + T.PartyReadyOn, (_, _) => ctx.Send(new Command.PartyReady(false)))
-                : Ui.Label(T.PartyReadyAction, (_, _) => ctx.Send(new Command.PartyReady(true)), accent: true);
-            actions.Children.Add(readyButton);
-            if (party.CanStartAnyway)
-                actions.Children.Add(Ui.Label(T.PartyStartAnyway, (_, _) => ctx.Send(new Command.Party(new PartyCommand.StartAnyway()))));
-        }
-        Stack.Children.Add(actions);
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
+            if (party.Playing)
+                actions.Children.Add(Ui.Label(T.TogetherOpenPlayer, (_, _) => ctx.Send(new Command.Party(new PartyCommand.OpenPlayer())), accent: true));
+            else
+            {
+                var readyButton = party.Ready
+                    ? Ui.Label("✓ " + T.PartyReadyOn, (_, _) => ctx.Send(new Command.PartyReady(false)))
+                    : Ui.Label(T.PartyReadyAction, (_, _) => ctx.Send(new Command.PartyReady(true)), accent: true);
+                actions.Children.Add(readyButton);
+                if (party.CanStartAnyway)
+                    actions.Children.Add(Ui.Label(T.PartyStartAnyway, (_, _) => ctx.Send(new Command.Party(new PartyCommand.StartAnyway()))));
+            }
+            return actions;
+        });
 
         // Invite: the https link and the code, for reading out.
         if (party.Link is { } link)
         {
-            Stack.Children.Add(Section(T.PartyShareInvite));
-            var invite = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-            invite.Children.Add(Ui.Label(T.PartyCopyInvite, (_, _) =>
+            Block("section-invite", () => Section(T.PartyShareInvite));
+            Act($"copy-invite|{link}", T.PartyCopyInvite, () =>
             {
                 if (Ui.TryCopy(link))
                     ctx.Window.Say(T.PartyInviteCopied);
-            }));
-            Stack.Children.Add(invite);
+            });
             if (party.Code is { } code)
-                Stack.Children.Add(Ui.Text(T.PartyCode + " " + code, "BodyStrongTextBlockStyle"));
+                Line("code", T.PartyCode + " " + code, "BodyStrongTextBlockStyle");
         }
         // The conversation under the room, with its field and, once, where the messages go.
-        Stack.Children.Add(Section(T.PartyChatTitle));
+        Block("section-chat", () => Section(T.PartyChatTitle));
         chat ??= new ChatPane(ctx, lobby: true) { MaxWidth = 480, HorizontalAlignment = HorizontalAlignment.Stretch };
         chat.Refresh();
-        Stack.Children.Add(chat);
+        Block("chat", () => chat);
 
-        var leave = Ui.Label(T.PartyLeave, (_, _) => ctx.Send(new Command.PartyLeave()));
+        var leave = Act("leave", T.PartyLeave, () => ctx.Send(new Command.PartyLeave()));
         leave.Margin = new Thickness(0, 12, 0, 0);
-        Stack.Children.Add(leave);
     }
 
-    static UIElement MemberRow(PartyMember member)
+    static FrameworkElement MemberRow(PartyMember member)
     {
         var state = member.Ready switch
         {
