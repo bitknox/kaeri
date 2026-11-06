@@ -1027,17 +1027,21 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// A title's page, as the Mac opens one: the page crossfades over the one it leaves on the
-    /// standard token, and the cover flies from where it was clicked when one was (a connected
-    /// animation, on the standard spring). With animation effects off, only the crossfade.
+    /// A title's page: drill-in, with the cover carried from where it was clicked when one was
+    /// (a connected animation). With animation effects off, both become a crossfade.
     /// </summary>
     internal void OpenTitle(uint id)
     {
         if (Player.Showing)
             Player.Close();
-        if (!Motion.Enabled)
+        if (Motion.Enabled)
+            ContentFrame.Navigate(typeof(TitlePage), id, new DrillInNavigationTransitionInfo());
+        else
+        {
             ConnectedAnimationService.GetForCurrentView().GetAnimation(TitlePage.CoverAnimation)?.Cancel();
-        Crossfade.Swap(ContentFrame, () => ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo()));
+            ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
+            Motion.FadeIn(ContentFrame, Motion.Standard);
+        }
     }
 
     /// <summary>
@@ -1270,12 +1274,7 @@ public sealed partial class MainWindow : Window
         if (Player.Showing)
             Player.Close();
         else if (ContentFrame.CanGoBack)
-            // Back crossfades as the page came in.
-            Crossfade.Swap(ContentFrame, () =>
-            {
-                if (ContentFrame.CanGoBack)
-                    ContentFrame.GoBack();
-            });
+            ContentFrame.GoBack();
     }
 
     void OnPaneToggleRequested(TitleBar sender, object args) => Nav.IsPaneOpen = !Nav.IsPaneOpen;

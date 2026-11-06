@@ -466,16 +466,12 @@ public sealed partial class TitlePage : Page, IPageKeys
             ctx.Pick = new Pick(id, new SurprisePool.Planning(), true);
 #endif
         ShowAnother();
-        // The cover a grid sent flies in to this one, on the standard spring as the Mac's art flies;
-        // anything else crossfades.
-        var service = ConnectedAnimationService.GetForCurrentView();
-        var flight = service.GetAnimation(CoverAnimation);
+        // The cover a grid sent flies in to this one; anything else crossfades.
+        var flight = ConnectedAnimationService.GetForCurrentView().GetAnimation(CoverAnimation);
         if (flight is not null)
         {
             if (known && Motion.Enabled)
             {
-                service.DefaultDuration = Motion.Standard;
-                service.DefaultEasingFunction = Motion.SpringEasing(Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(CoverFrame).Compositor);
                 flight.Configuration = new BasicConnectedAnimationConfiguration();
                 flight.TryStart(CoverFrame);
             }
