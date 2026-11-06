@@ -11,7 +11,7 @@ name: kaeri-store
 
 services:
   store:
-    image: ghcr.io/bitknox/kaeri-store:0.3
+    image: ghcr.io/bitknox/kaeri-store:0.4
     restart: unless-stopped
     environment:
       KAERI_STORE_URL: https://${STORE_DOMAIN:?set STORE_DOMAIN to the store's domain name}
