@@ -112,7 +112,8 @@ impl ReadMarks {
 pub struct SeriesSetting {
     pub setting: String,
     pub value: String,
-    /// `series` (follows the person) or `here` (this device only).
+    /// `series` (follows the person), `here` (this device only) or `auto` (the reader's guess,
+    /// this device only).
     pub scope: String,
 }
 
@@ -1068,6 +1069,25 @@ impl Store {
                 self.emit_reg(tx, kinds::READ_SERIES, &format!("{work}/{setting}"), value)?;
             }
             Ok(())
+        })
+    }
+
+    /// Keep the reader's guess for a series (scope `auto`), unless the series already has a
+    /// value for the setting. A guess stays on the device. Returns whether it was kept, so the
+    /// guess is shown once.
+    pub fn set_series_guess(
+        &self,
+        work: &str,
+        setting: &str,
+        value: &str,
+        at: i64,
+    ) -> Result<bool> {
+        self.with_personal(|c| {
+            Ok(c.execute(
+                "INSERT OR IGNORE INTO read_series_setting (work, setting, value, scope, updated_at)
+                 VALUES (?1, ?2, ?3, 'auto', ?4)",
+                params![work, setting, value, at],
+            )? > 0)
         })
     }
 
