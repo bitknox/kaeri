@@ -547,8 +547,11 @@ impl FolderRoad {
 
     /// Rotate the group key, as after removing a device: a new current key, wrapped for every
     /// device still in the group and under the recovery key. The removed device keeps what it had
-    /// and reads nothing written from here on. Needs the recovery key to rewrite `group.bin`.
+    /// and reads nothing written from here on. Needs the recovery key to rewrite `group.bin`: one
+    /// that no longer opens it, since another device made a new one, is
+    /// [`SyncError::WrongRecoveryKey`] and nothing changes, so the old key never comes back.
     pub async fn rotate_group_key(&self, recovery: &RecoveryKey) -> Result<Keyring> {
+        open_group_file(&self.target.read(&self.path("group.bin")).await?, recovery)?;
         let ring = self.keyring().rotated();
         self.set_ring(ring.clone());
         self.write_group(recovery, &ring).await?;
@@ -1010,6 +1013,23 @@ mod tests {
         let err = rc.sync().await.unwrap_err();
         assert!(matches!(err, SyncError::Removed), "{err:?}");
         assert_eq!(c.resume("1"), None);
+    }
+
+    #[tokio::test]
+    async fn a_recovery_key_replaced_since_cannot_rotate_and_the_new_one_still_opens_the_folder()
+     {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (_a, ra, _b, rb, old) = pair(&target).await;
+        let fresh = ra.new_recovery_key().await.unwrap();
+        let err = rb.rotate_group_key(&old).await.unwrap_err();
+        assert!(matches!(err, SyncError::WrongRecoveryKey), "{err:?}");
+        assert_eq!(rb.keyring(), ra.keyring(), "nothing rotated");
+        let c = dev("00000000000000c3", 1_000);
+        let join = |key| {
+            FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), key)
+        };
+        assert!(matches!(join(&old).await, Err(SyncError::WrongRecoveryKey)));
+        join(&fresh).await.unwrap();
     }
 
     #[tokio::test]
