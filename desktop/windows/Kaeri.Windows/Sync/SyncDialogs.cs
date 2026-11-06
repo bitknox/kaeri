@@ -976,7 +976,8 @@ static partial class SyncDialogs
 
     public static void PresentPairShow(Origin origin)
     {
-        pair?.Dialog.Hide();
+        if (pair is { } before)
+            Dialogs.Close(before.Dialog);
         var pages = new Steps();
         var showing = new StackPanel { Spacing = 12 };
         showing.Children.Add(Ui.Text(origin == Origin.FirstLaunch ? T.FirstSetupLine : $"{T.PairShowTitle}. {T.PairShowScan}", "HazeBodyStyle"));
@@ -1400,6 +1401,9 @@ static partial class SyncDialogs
                     SayError(r.Error, text);
                 return;
         }
+        // Restoring: any other reason it failed is said there too, where the person is waiting.
+        if (restore is { } restoring)
+            SayError(restoring.Error, text);
         if (enter is { Working: true } e)
         {
             var shown = problem switch
