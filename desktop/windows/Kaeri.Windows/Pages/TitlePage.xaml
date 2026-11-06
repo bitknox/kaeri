@@ -164,7 +164,7 @@
                                 Visibility="{x:Bind LineShown}" AutomationProperties.AccessibilityView="Raw" />
                       <TextBlock Grid.Column="1" Text="{x:Bind Line, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" TextWrapping="Wrap"
                                  VerticalAlignment="Center" Visibility="{x:Bind LineShown}" />
-                      <HyperlinkButton Grid.Column="2" Content="{x:Bind Action, Mode=OneWay}" Click="OnNote" Tag="{x:Bind}"
+                      <HyperlinkButton Grid.Column="2" Content="{x:Bind Action, Mode=OneWay}" Click="OnNote" Tag="{x:Bind}" Style="{StaticResource SilkLinkStyle}"
                                        VerticalAlignment="Center" Padding="8,4" />
                     </Grid>
                   </DataTemplate>

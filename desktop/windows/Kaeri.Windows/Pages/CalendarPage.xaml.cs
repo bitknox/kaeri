@@ -460,7 +460,7 @@ public sealed partial class CalendarPage : Page
         words.TextWrapping = TextWrapping.WrapWholeWords;
         line.Children.Add(words);
         panel.Children.Add(line);
-        var retry = new HyperlinkButton { Content = T.ActionTryAgain, Padding = new Thickness(0), Foreground = (Brush)Application.Current.Resources["SilkBrush"] };
+        var retry = new HyperlinkButton { Content = T.ActionTryAgain, Style = Ui.Res<Style>("SilkLinkStyle"), VerticalAlignment = VerticalAlignment.Center };
         retry.Click += (_, _) => Retry();
         panel.Children.Add(retry);
         return panel;
@@ -473,7 +473,7 @@ public sealed partial class CalendarPage : Page
         var words = Haze(T.CalendarEmptyMine);
         words.TextWrapping = TextWrapping.WrapWholeWords;
         panel.Children.Add(words);
-        var all = new HyperlinkButton { Content = T.CalendarShowAll, Padding = new Thickness(0), Foreground = (Brush)Application.Current.Resources["SilkBrush"] };
+        var all = new HyperlinkButton { Content = T.CalendarShowAll, Style = Ui.Res<Style>("SilkLinkStyle"), VerticalAlignment = VerticalAlignment.Center };
         all.Click += (_, _) => ShowAll();
         panel.Children.Add(all);
         return panel;

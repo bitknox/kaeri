@@ -40,9 +40,10 @@
   <!-- A section on a page: Subtitle 20/28. -->
   <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}" />
 
-  <!-- A link at the end of a heading (View all, Full calendar, See all): silk, semibold, with a
-       chevron, as the spec has it. Amber stays for the one main action. -->
-  <Style x:Key="HeadingLinkStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource DefaultHyperlinkButtonStyle}">
+  <!-- A link that is not the main action: at the end of a heading (View all, Full calendar, See all,
+       with a chevron), and Show or the watched fold on a title page. Silk and semibold, as the spec
+       has it; amber stays for the one main action. -->
+  <Style x:Key="SilkLinkStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource DefaultHyperlinkButtonStyle}">
     <Setter Property="Padding" Value="4,2" />
     <Setter Property="Margin" Value="0,0,-4,0" />
     <Setter Property="FontWeight" Value="SemiBold" />

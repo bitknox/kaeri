@@ -33,7 +33,7 @@ sealed partial class HomeWeek : Grid
         {
             var link = new HyperlinkButton
             {
-                Style = Ui.Res<Style>("HeadingLinkStyle"),
+                Style = Ui.Res<Style>("SilkLinkStyle"),
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,

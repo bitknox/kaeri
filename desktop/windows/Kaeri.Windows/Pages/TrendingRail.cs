@@ -64,7 +64,7 @@ sealed class TrendingRail : StackPanel
         head.Children.Add(heading);
         var all = new HyperlinkButton
         {
-            Style = Ui.Res<Style>("HeadingLinkStyle"),
+            Style = Ui.Res<Style>("SilkLinkStyle"),
             VerticalAlignment = VerticalAlignment.Center,
             Content = new StackPanel
             {
