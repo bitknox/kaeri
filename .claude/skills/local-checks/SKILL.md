@@ -44,6 +44,8 @@ commit **outside** it (the temporary HOME hides `~/.gitconfig`, so commits come 
   `./gradlew --max-workers=3 :store:testFixturesDebugUnitTest :ui:testFixturesDebugUnitTest :app:assembleFixturesDebug`
   (add `:player`, `:widgets`, `:app` tests and `:app:minifyFixturesReleaseWithR8` when touched).
   Re-record scenes with `android/scripts/scenes.sh` after engine record changes.
+  Export `KAERI_ANDROID_ABIS=arm64-v8a` for local testing builds: the 32-bit engine is only for
+  the TV, and CI builds both.
 - **Apple:** `apple/scripts/engine.sh testing`, then per touched package `swift test` and
   `swift build -c release` (Release catches concurrency errors). iPhone-only code: build the
   Fixtures app for the iOS Simulator. Mac Release app: build with signing off, then
