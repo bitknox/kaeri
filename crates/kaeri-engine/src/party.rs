@@ -768,6 +768,38 @@ impl Task {
         }
     }
 
+    /// Who is in the room, for the front end. A plain Syncplay member whose file is the one the
+    /// room was matched from plays the episode this device plays, though its name has no tag
+    /// to compare.
+    fn say_members(&self) {
+        let plain = self.view.room_episode.as_ref().filter(|room| {
+            room.plain_by.is_some()
+                && room.id.is_some_and(|id| {
+                    self.view
+                        .episode
+                        .as_ref()
+                        .is_some_and(|e| e.id == id && e.episode == room.episode)
+                })
+        });
+        let members = self
+            .members
+            .iter()
+            .cloned()
+            .map(|m| {
+                let mut said = member(m);
+                if !said.you
+                    && said.file_matches == Some(false)
+                    && plain
+                        .is_some_and(|room| said.file.as_deref() == Some(room.file.as_str()))
+                {
+                    said.file_matches = Some(true);
+                }
+                said
+            })
+            .collect();
+        self.say(Event::PartyMembers(members));
+    }
+
     fn say(&self, event: Event) {
         let _ = self.env.tx.send(event);
     }
@@ -979,9 +1011,7 @@ impl Task {
             }
             PartyEvent::Members(members) => {
                 self.members = members;
-                self.say(Event::PartyMembers(
-                    self.members.iter().cloned().map(member).collect(),
-                ));
+                self.say_members();
                 self.evaluate();
             }
             PartyEvent::Playlist(playlist) => {
@@ -1075,6 +1105,7 @@ impl Task {
                 }
                 if changed && self.joined {
                     self.say(Event::PartyState(self.view.clone()));
+                    self.say_members();
                 }
                 if self.moving_on {
                     self.evaluate();
@@ -1139,6 +1170,9 @@ impl Task {
                 self.guesses = guesses;
                 self.set_room(room, next, media);
                 self.remember();
+                if self.joined {
+                    self.say_members();
+                }
                 let target = self.room_target();
                 // Another episode: the room playing was the one before, until it says so again.
                 if before.is_some() && before != target {
