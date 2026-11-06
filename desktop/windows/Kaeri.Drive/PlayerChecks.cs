@@ -237,7 +237,7 @@ static partial class PlayerChecks
 
     static Point at;
 
-    static void Move(Point to)
+    internal static void Move(Point to)
     {
         // A few steps on the way, as a hand moves.
         var from = at.IsEmpty ? to : at;
@@ -246,7 +246,7 @@ static partial class PlayerChecks
         at = to;
     }
 
-    static void Button(bool down) => Send(down ? LeftDown : LeftUp, at);
+    internal static void Button(bool down) => Send(down ? LeftDown : LeftUp, at);
 
     [StructLayout(LayoutKind.Sequential)]
     struct KeyInput

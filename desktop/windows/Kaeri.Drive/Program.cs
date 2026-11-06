@@ -55,9 +55,12 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("wheel", FeelScenario.Wheels, "watching", false),
     // The player's checks: clicks on the bar, Space, dragging the seek and volume lines, the ending. By name only.
     ("player-checks", PlayerChecks.All, "playing", true),
+    // The player and the party rehearsals filmed untouched, frame by frame (PlayerFilm.cs). By name only.
+    ("player-film", PlayerFilm.All, "playing", true),
+    ("party-film", PlayerFilm.Party, "watching", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "player-film" or "party-film"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -135,6 +138,9 @@ sealed class Run(string name, Args options, string scene, string? media)
             info.ArgumentList.Add($"--scene={scene}");
         // A given size also keeps the run from saving it as the person's window place.
         info.ArgumentList.Add("--size=2560x1392");
+        // A party rehearsal, for party-film.
+        if (Environment.GetEnvironmentVariable("KAERI_DRIVE_SHOW") is { Length: > 0 } show)
+            info.ArgumentList.Add($"--show={show}");
         if (media is not null)
         {
             info.ArgumentList.Add($"--media={media}");
