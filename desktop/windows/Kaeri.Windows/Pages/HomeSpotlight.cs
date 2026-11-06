@@ -56,10 +56,10 @@ public sealed partial class HomeSpotlight : Grid
         Children.Add(face);
         if (old is not null && crossfade && Motion.Enabled)
         {
+            // The spotlight changing case: a crossfade in place on standard.
             face.Opacity = 0;
-            Motion.Fade(face, 1);
-            Motion.Fade(old, 0);
-            _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            Motion.Crossfade(old, face);
+            _ = Task.Delay(Motion.Standard).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
             {
                 // Both faces share the cell while they cross, so it is as tall as the taller.
                 // With the old one gone the cell eases to the new face's height, and the
