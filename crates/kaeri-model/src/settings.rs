@@ -332,7 +332,7 @@ impl SettingKey {
             Self::KeepChaptersReady => (&["reading"], "keep_chapters_ready"),
             Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
             Self::OpdsFeed => (&["reading", "feed"], "on"),
-            Self::OpdsPassword => (&["reading", "feed"], "password"),
+            Self::OpdsPassword => (&["reading", "feed"], "password_set"),
             Self::OpdsPort => (&["reading", "feed"], "port"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
@@ -468,7 +468,7 @@ impl SettingKey {
             }
             Self::OpdsFeed => to.reading.feed.on = from.reading.feed.on,
             Self::OpdsPassword => {
-                to.reading.feed.password.clone_from(&from.reading.feed.password);
+                to.reading.feed.password_set = from.reading.feed.password_set;
             }
             Self::OpdsPort => to.reading.feed.port = from.reading.feed.port,
             Self::TorrentsOnCellular => {
@@ -1183,7 +1183,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         }
         (SettingKey::OpdsFeed, V::Bool(on)) => config.reading.feed.on = *on,
         (SettingKey::OpdsPassword, V::Str(password)) => {
-            config.reading.feed.password.clone_from(password);
+            config.reading.feed.password_set = !password.trim().is_empty();
         }
         (SettingKey::OpdsPort, V::Str(port)) => {
             let port = port.trim();
@@ -1386,7 +1386,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::OpdsFeed => on_off(effective.reading.feed.on),
         // The password is never read back.
         SettingKey::OpdsPassword => {
-            if effective.reading.feed.password.is_empty() { "not set" } else { "set" }.into()
+            if effective.reading.feed.password_set { "set" } else { "not set" }.into()
         }
         SettingKey::OpdsPort => match effective.reading.feed.port.filter(|p| *p != 0) {
             Some(port) => port.to_string(),

@@ -80,7 +80,7 @@ impl Feed {
     }
 
     /// What the settings pane shows.
-    pub fn view(&self, config: &FeedConfig, store: &Store) -> FeedView {
+    pub fn view(&self, password: bool, store: &Store) -> FeedView {
         let port = self.port();
         let addresses = match (port, local_address()) {
             (Some(port), Some(ip)) => vec![format!("http://{ip}:{port}/opds")],
@@ -91,20 +91,27 @@ impl Feed {
             on: port.is_some(),
             addresses,
             port: port.unwrap_or(0),
-            password_set: !config.password.is_empty(),
+            password_set: password,
             serving: served(store),
         }
     }
 
     /// Starts, moves or stops the listener to match the config, and says how it stands.
-    pub fn apply(&self, config: &FeedConfig, store: Store, tx: &Outbox) {
-        let want = config.on && !config.password.is_empty();
+    pub fn apply(
+        &self,
+        config: &FeedConfig,
+        password: Option<String>,
+        store: Store,
+        tx: &Outbox,
+    ) {
+        let password = password.filter(|p| !p.is_empty());
+        let want = config.on && password.is_some();
         let wanted = config.port.filter(|p| *p != 0);
         {
             let mut state = self.state();
             let same = state.task.is_some()
                 && want
-                && state.password == config.password
+                && Some(&state.password) == password.as_ref()
                 && state.wanted == wanted;
             if same {
                 return;
@@ -116,9 +123,9 @@ impl Feed {
                 match bind(wanted) {
                     Some(listener) => {
                         state.port = listener.local_addr().map_or(0, |a| a.port());
-                        state.password = config.password.clone();
+                        let password = password.clone().unwrap_or_default();
+                        state.password.clone_from(&password);
                         state.wanted = wanted;
-                        let password = config.password.clone();
                         let store = store.clone();
                         state.task = Some(tokio::spawn(serve(listener, password, store)));
                     }
@@ -126,7 +133,8 @@ impl Feed {
                 }
             }
         }
-        let _ = tx.send(Event::Reading(ReadingEvent::Feed(self.view(config, &store))));
+        let _ =
+            tx.send(Event::Reading(ReadingEvent::Feed(self.view(password.is_some(), &store))));
     }
 }
 
@@ -739,8 +747,8 @@ mod tests {
         store.book_download_done(id, &path.display().to_string(), Some(3), 100, 20).unwrap();
         let (tx, events) = tokio::sync::mpsc::unbounded_channel();
         let feed = Feed::default();
-        let config = FeedConfig { on: true, port: None, password: PASSWORD.into() };
-        feed.apply(&config, store, &Outbox::from(tx));
+        let config = FeedConfig { on: true, port: None, password_set: true };
+        feed.apply(&config, Some(PASSWORD.into()), store, &Outbox::from(tx));
         let port = feed.port().expect("the feed listens");
         Shelf { _dir: dir, feed, port, _events: events }
     }
@@ -763,23 +771,13 @@ mod tests {
         let (tx, _events) = tokio::sync::mpsc::unbounded_channel();
         let feed = Feed::default();
         let outbox = Outbox::from(tx);
-        feed.apply(
-            &FeedConfig { on: true, port: None, password: String::new() },
-            store.clone(),
-            &outbox,
-        );
+        let on = FeedConfig { on: true, port: None, password_set: true };
+        feed.apply(&on, None, store.clone(), &outbox);
         assert_eq!(feed.port(), None);
-        feed.apply(
-            &FeedConfig { on: true, port: None, password: PASSWORD.into() },
-            store.clone(),
-            &outbox,
-        );
+        feed.apply(&on, Some(PASSWORD.into()), store.clone(), &outbox);
         assert!(feed.port().is_some());
-        feed.apply(
-            &FeedConfig { on: false, port: None, password: PASSWORD.into() },
-            store,
-            &outbox,
-        );
+        let off = FeedConfig { on: false, ..on };
+        feed.apply(&off, Some(PASSWORD.into()), store, &outbox);
         assert_eq!(feed.port(), None);
     }
 

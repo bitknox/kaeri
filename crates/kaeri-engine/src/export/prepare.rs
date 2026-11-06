@@ -105,15 +105,12 @@ pub fn run(
     if req.chapters.is_empty() {
         return Err(ReadingFailure::NotFound.into());
     }
-    if !req.profile.opens(req.format) {
+    let text = is_text(&req.chapters);
+    if !req.profile.accepts(text).contains(&req.format) {
         return Err(unsupported(req.format));
     }
     fs::create_dir_all(&req.out).map_err(|e| io(&e, &req.out))?;
-    let result = if is_text(&req.chapters) {
-        novel(req, progress, cancel)
-    } else {
-        manga(req, progress, cancel)
-    };
+    let result = if text { novel(req, progress, cancel) } else { manga(req, progress, cancel) };
     if result.is_err() {
         // Nothing half written is left to be shared.
         let _ = fs::remove_dir_all(&req.out);

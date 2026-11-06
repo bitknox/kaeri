@@ -690,6 +690,13 @@ pub struct ExportTarget {
     pub colour: bool,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub formats: Vec<ExportFormat>,
+    /// What this target is offered for a manga or a comic: the formats the engine will write
+    /// for pages. A format outside the list is refused, so the share sheet offers these only.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub manga_formats: Vec<ExportFormat>,
+    /// The same for a novel.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub novel_formats: Vec<ExportFormat>,
 }
 
 /// A prepared file, ready for the share sheet. Large exports come in parts near 195 MB.

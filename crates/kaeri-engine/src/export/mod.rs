@@ -1,9 +1,10 @@
 //! Send to e-reader and the OPDS feed: the engine's side of getting what is on this device
 //! onto another reader.
 //!
-//! **Send to e-reader** prepares downloaded chapters for one target profile and hands back a
+//! **Send to e-reader** prepares chapters for one target profile and hands back a
 //! list of files for the app's share sheet: [`prepare`] writes them, [`profiles`] says what a
-//! target is. It works from downloads, so a chapter that is not downloaded is not sent. The job
+//! target is. A chapter that is not downloaded is fetched through the download pipeline for the
+//! send and removed once its files are written; downloaded ones are used as they are. The job
 //! is announced like any other, told as `ExportProgress` and ended with `ExportReady`; it stops
 //! on `CancelPrepare` and leaves no files behind. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
@@ -18,7 +19,7 @@ pub mod feed;
 
 use std::{
     collections::HashMap,
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
@@ -38,7 +39,9 @@ use kaeri_model::{
 use kaeri_store::{Store, book_downloads::BookDownloadState};
 
 use crate::{
-    downloads::books::{BookDownloads, chapter_row, flatten},
+    downloads::books::{
+        BookDownloads, Fetching, Lent, Stop as FetchStop, chapter_row, flatten,
+    },
     jobs::JobGuard,
     outbox::Outbox,
     services::Services,
@@ -92,7 +95,11 @@ impl Exports {
         if let Ok(entries) = std::fs::read_dir(&self.dir) {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().into_owned();
-                if !busy.contains(&name) {
+                // A send's scratch folder is its id and `-fetch`.
+                let running = busy
+                    .iter()
+                    .any(|b| name == *b || name.strip_suffix("-fetch") == Some(b.as_str()));
+                if !running {
                     let _ = std::fs::remove_dir_all(entry.path());
                 }
             }
@@ -187,6 +194,20 @@ fn series_header(engine: &EngineState, services: &Services, work: &WorkId, tx: &
 // ---------------------------------------------------------------------------------------------
 // Send to e-reader
 
+/// The chapters the person has downloaded, by chapter id, with the file each is.
+fn chosen_downloads(store: &Store, work: &str) -> HashMap<String, PathBuf> {
+    store
+        .book_downloads(Some(work))
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|d| d.state == BookDownloadState::Done)
+        .filter_map(|d| {
+            let path = PathBuf::from(d.path?);
+            path.is_file().then_some((d.chapter, path))
+        })
+        .collect()
+}
+
 /// The downloaded chapters `pick` names, in reading order, with the file each is.
 pub fn chosen(store: &Store, work: &str, pick: &DownloadPick) -> Vec<prepare::Chapter> {
     let marks = store.read_marks(work).unwrap_or_default();
@@ -232,11 +253,6 @@ fn prepare_files(
         return fail(about, ReadingFailure::NotFound, tx);
     };
     let store = services.book_sources.store();
-    let chapters = chosen(store, work.as_str(), &pick);
-    if chapters.is_empty() {
-        // Nothing downloaded to send.
-        return fail(about, ReadingFailure::NotFound, tx);
-    }
     let title = store
         .book_work_kind(work.as_str())
         .ok()
@@ -252,35 +268,31 @@ fn prepare_files(
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();
     let cancel = exports.begin(id);
-    let first = chapters.first().map(|c| c.label.clone()).unwrap_or_default();
-    let last = chapters.last().map(|c| c.label.clone()).unwrap_or_default();
-    let request = prepare::Request {
-        identifier: format!("urn:kaeri:{}:{first}-{last}", work.as_str()),
+    let out = exports.folder(id);
+    let send = OneSend {
+        lent: Lent::of(services, tx),
+        downloads: services.book_sources.downloads.clone(),
+        exports,
+        told: Told::new(tx.clone(), id),
+        cancel,
+        id,
+        work,
+        pick,
         title,
-        chapters,
         profile,
         format,
-        out: exports.folder(id),
-        limit: None,
+        out,
         right_to_left,
     };
-    let tx = tx.clone();
-    tokio::task::spawn_blocking(move || {
+    tokio::spawn(async move {
         let _job = job;
-        let mut told = Instant::now() - Duration::from_secs(1);
-        let mut progress = |done: u32, total: u32| {
-            if done < total && told.elapsed() < Duration::from_millis(150) {
-                return;
-            }
-            told = Instant::now();
-            let _ =
-                tx.send(Event::Reading(ReadingEvent::ExportProgress { job: id, done, total }));
-        };
-        let result = prepare::run(&request, &mut progress, &cancel);
-        exports.end(id);
+        let tx = send.lent.tx.clone();
+        let result = send.run().await;
+        send.exports.end(send.id);
         match result {
             Ok(files) => {
-                let _ = tx.send(Event::Reading(ReadingEvent::ExportReady { job: id, files }));
+                let _ =
+                    tx.send(Event::Reading(ReadingEvent::ExportReady { job: send.id, files }));
             }
             Err(prepare::Stop::Cancelled) => {}
             Err(prepare::Stop::Failed(failure)) => fail(about, failure, &tx),
@@ -288,15 +300,223 @@ fn prepare_files(
     });
 }
 
+/// Progress of one send, told at most every 150 ms except for its end.
+struct Told {
+    tx: Outbox,
+    job: JobId,
+    last: Mutex<Instant>,
+}
+
+impl Told {
+    fn new(tx: Outbox, job: JobId) -> Arc<Self> {
+        Arc::new(Self { tx, job, last: Mutex::new(Instant::now() - Duration::from_secs(1)) })
+    }
+
+    fn tell(&self, done: u32, total: u32) {
+        let mut last = self.last.lock().unwrap_or_else(|e| e.into_inner());
+        if done < total && last.elapsed() < Duration::from_millis(150) {
+            return;
+        }
+        *last = Instant::now();
+        let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
+            job: self.job,
+            done,
+            total,
+        }));
+    }
+}
+
+/// How much of the progress bar the fetching takes, per chapter fetched. Preparing the pages
+/// takes as much again.
+const FETCH_WEIGHT: u32 = 100;
+
+/// One send, from picking the chapters to the files.
+struct OneSend {
+    lent: Lent,
+    downloads: BookDownloads,
+    exports: Exports,
+    told: Arc<Told>,
+    cancel: Arc<AtomicBool>,
+    id: JobId,
+    work: WorkId,
+    pick: DownloadPick,
+    title: String,
+    profile: profiles::Profile,
+    format: ExportFormat,
+    out: PathBuf,
+    right_to_left: Option<bool>,
+}
+
+impl OneSend {
+    async fn run(&self) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
+        let temp = self.exports.dir.join(format!("{}-fetch", self.id.get()));
+        let gathered = self.gather(&temp).await;
+        let result = match gathered {
+            Ok((chapters, fetched)) => self.write(chapters, fetched).await,
+            Err(stop) => Err(stop),
+        };
+        // What was fetched only for this send goes, whether it worked or not.
+        let _ = std::fs::remove_dir_all(&temp);
+        if result.is_err() {
+            let _ = std::fs::remove_dir_all(&self.out);
+        }
+        result
+    }
+
+    async fn write(
+        &self,
+        chapters: Vec<prepare::Chapter>,
+        fetched: u32,
+    ) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
+        let first = chapters.first().map(|c| c.label.clone()).unwrap_or_default();
+        let last = chapters.last().map(|c| c.label.clone()).unwrap_or_default();
+        let request = prepare::Request {
+            identifier: format!("urn:kaeri:{}:{first}-{last}", self.work.as_str()),
+            title: self.title.clone(),
+            chapters,
+            profile: self.profile.clone(),
+            format: self.format,
+            out: self.out.clone(),
+            limit: None,
+            right_to_left: self.right_to_left,
+        };
+        let (told, cancel) = (self.told.clone(), self.cancel.clone());
+        let blocking = tokio::task::spawn_blocking(move || {
+            let mut progress = |done: u32, total: u32| {
+                if fetched == 0 || total == 0 {
+                    return told.tell(done, total);
+                }
+                // The second half of the bar: the fetching has filled the first.
+                let half = fetched * FETCH_WEIGHT;
+                let at = u64::from(done) * u64::from(half) / u64::from(total);
+                told.tell(half + u32::try_from(at).unwrap_or(half), 2 * half);
+            };
+            prepare::run(&request, &mut progress, &cancel)
+        });
+        blocking.await.unwrap_or(Err(prepare::Stop::Failed(ReadingFailure::Unreadable {
+            path: String::new(),
+            format: "send".into(),
+        })))
+    }
+
+    /// The chapters to send, in reading order, each as a file: the downloaded ones as they
+    /// are, the others fetched through the download pipeline into `temp`. Also says how many
+    /// were fetched.
+    async fn gather(&self, temp: &Path) -> Result<(Vec<prepare::Chapter>, u32), prepare::Stop> {
+        let store = self.lent.sources.store();
+        let downloaded = chosen_downloads(store, self.work.as_str());
+        let asked_all_downloaded = match &self.pick {
+            DownloadPick::Chapters { ids } => {
+                !ids.is_empty() && ids.iter().all(|c| downloaded.contains_key(c.as_str()))
+            }
+            _ => false,
+        };
+        if asked_all_downloaded {
+            // Nothing to fetch, so nothing to ask a source.
+            let chapters = chosen(store, self.work.as_str(), &self.pick);
+            return Ok((chapters, 0));
+        }
+        let now = self.lent.clock.now();
+        self.lent.sources.adopt_plugins(&self.lent.plugins);
+        let (source, rows) =
+            crate::downloads::books::ordered_chapters(&self.lent.sources, &self.work, now)
+                .await
+                .map_err(prepare::Stop::Failed)?;
+        let wanted = BookDownloads::picked(&self.pick, &rows);
+        if wanted.is_empty() {
+            return Err(ReadingFailure::NotFound.into());
+        }
+        let to_fetch =
+            wanted.iter().filter(|w| !downloaded.contains_key(w.chapter.as_str())).count();
+        let fetch_count = u32::try_from(to_fetch).unwrap_or(u32::MAX);
+        let total = fetch_count.saturating_mul(2 * FETCH_WEIGHT);
+        let mut chapters = Vec::with_capacity(wanted.len());
+        let mut fetched = 0u32;
+        for want in &wanted {
+            if self.cancel.load(Ordering::Relaxed) {
+                return Err(prepare::Stop::Cancelled);
+            }
+            let Some(row) = rows.iter().find(|r| r.id == want.chapter) else { continue };
+            let label = row.number.clone().unwrap_or_else(|| row.label.clone());
+            if let Some(path) = downloaded.get(want.chapter.as_str()) {
+                chapters.push(prepare::Chapter { label, path: path.clone() });
+                continue;
+            }
+            if self.downloads.setup().hold {
+                // Offline, or on a connection the downloads are kept off.
+                return Err(ReadingFailure::Offline.into());
+            }
+            std::fs::create_dir_all(temp).map_err(|_| {
+                prepare::Stop::Failed(ReadingFailure::FileMissing {
+                    path: temp.display().to_string(),
+                })
+            })?;
+            let base = fetched * FETCH_WEIGHT;
+            let told = self.told.clone();
+            let cancel = self.cancel.clone();
+            let wanted_now = move || !cancel.load(Ordering::Relaxed);
+            let progress = move |done: u32, pages: u32| {
+                let part = u64::from(done) * u64::from(FETCH_WEIGHT) / u64::from(pages.max(1));
+                told.tell(base + u32::try_from(part).unwrap_or(0), total);
+            };
+            let job = Fetching {
+                work: self.work.clone(),
+                chapter: want.chapter.clone(),
+                source_id: source.clone(),
+                stem: temp.join(crate::downloads::books::safe(want.chapter.as_str())),
+                wanted: &wanted_now,
+                progress: &progress,
+            };
+            match self.downloads.fetch_with(&self.lent, &job).await {
+                Ok(file) => chapters.push(prepare::Chapter { label, path: file.path }),
+                Err(FetchStop::Cancelled) => return Err(prepare::Stop::Cancelled),
+                Err(FetchStop::Held) => return Err(ReadingFailure::Offline.into()),
+                Err(FetchStop::Failed(failure)) => return Err(prepare::Stop::Failed(failure)),
+            }
+            fetched += 1;
+        }
+        Ok((chapters, fetch_count))
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // The feed
 
+/// Where the feed's password is kept: the secure store the trackers' tokens are in, which is
+/// the keychain, the Credential Locker or libsecret, or the `0600` file the token storage
+/// setting falls back to. The config holds only whether one is set.
+pub const FEED_PASSWORD: &str = "opds-feed";
+
+/// Keeps the feed's password in the secure store, or forgets it when empty, and says whether
+/// one is set now. A store that refuses leaves no password.
+pub(crate) fn keep_password(services: &Services, password: &str) -> bool {
+    let password = password.trim();
+    if password.is_empty() {
+        if let Err(e) = services.tokens.clear(FEED_PASSWORD) {
+            tracing::warn!(error = %e, "the feed password was not forgotten");
+        }
+        return false;
+    }
+    match services.tokens.set(FEED_PASSWORD, password) {
+        Ok(_) => true,
+        Err(e) => {
+            tracing::warn!(error = %e, "the feed password was not kept");
+            false
+        }
+    }
+}
+
 #[cfg(feature = "opds-feed")]
-fn feed_view(engine: &EngineState, services: &Services) -> FeedView {
+fn password_of(services: &Services) -> Option<String> {
+    services.tokens.get(FEED_PASSWORD).ok().filter(|p| !p.is_empty())
+}
+
+#[cfg(feature = "opds-feed")]
+fn feed_view(_engine: &EngineState, services: &Services) -> FeedView {
     services
         .book_sources
         .feed
-        .view(&engine.config.effective().reading.feed, services.book_sources.store())
+        .view(password_of(services).is_some(), services.book_sources.store())
 }
 
 #[cfg(not(feature = "opds-feed"))]
@@ -314,15 +534,16 @@ fn set_feed(
 ) {
     use kaeri_core::settings::SettingValue;
     let paths = &services.paths;
-    if let Some(password) = password
-        && let Err(e) = engine.config.write(
+    if let Some(password) = password {
+        let set = keep_password(services, &password);
+        if let Err(e) = engine.config.write(
             paths,
             &["reading", "feed"],
-            "password",
-            SettingValue::Str(password),
-        )
-    {
-        tracing::warn!(error = %e, "the feed password was not kept");
+            "password_set",
+            SettingValue::Bool(set),
+        ) {
+            tracing::warn!(error = %e, "the feed password flag was not kept");
+        }
     }
     if let Err(e) =
         engine.config.write(paths, &["reading", "feed"], "on", SettingValue::Bool(on))
@@ -346,7 +567,12 @@ pub(crate) fn apply_feed(engine: &EngineState, services: &Services, tx: &Outbox)
         return;
     }
     let config = engine.config.effective().reading.feed.clone();
-    services.book_sources.feed.apply(&config, services.book_sources.store().clone(), tx);
+    services.book_sources.feed.apply(
+        &config,
+        password_of(services),
+        services.book_sources.store().clone(),
+        tx,
+    );
 }
 
 #[cfg(not(feature = "opds-feed"))]

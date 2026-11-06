@@ -603,9 +603,9 @@ pub struct FeedConfig {
     pub on: bool,
     /// Unset picks a free port.
     pub port: Option<u16>,
-    /// The password e-readers sign in with, with any user name. Empty keeps the feed from
-    /// starting.
-    pub password: String,
+    /// Whether a password is set. The password itself is in the secure store, with the
+    /// trackers' tokens, never in this file; without one the feed does not start.
+    pub password_set: bool,
 }
 
 /// An e-reader the person described: what Send to e-reader prepares files for.

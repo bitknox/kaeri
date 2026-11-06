@@ -33,11 +33,19 @@ impl Profile {
             height_px: self.height,
             colour: self.colour(),
             formats: self.formats.clone(),
+            manga_formats: self.accepts(false),
+            novel_formats: self.accepts(true),
         }
     }
 
-    pub fn opens(&self, format: ExportFormat) -> bool {
-        self.formats.contains(&format)
+    /// The formats this target is written in: for a novel (`text`) the EPUB kinds, for pages
+    /// the fixed-layout and comic kinds. What the share sheet offers, and the only formats a
+    /// send is prepared in.
+    pub fn accepts(&self, text: bool) -> Vec<ExportFormat> {
+        use ExportFormat::{Cbz, Epub, FixedEpub, Kepub};
+        let kinds: &[ExportFormat] =
+            if text { &[Epub, Kepub] } else { &[FixedEpub, Kepub, Cbz] };
+        self.formats.iter().copied().filter(|f| kinds.contains(f)).collect()
     }
 }
 
@@ -142,6 +150,26 @@ pub fn find(reading: &ReadingConfig, id: &str) -> Option<Profile> {
 mod tests {
     use super::*;
     use kaeri_core::config::ExportProfileConfig;
+
+    #[test]
+    fn a_target_says_which_formats_it_is_offered_for_pages_and_for_novels() {
+        use ExportFormat::{Cbz, Epub, FixedEpub, Kepub};
+        let reading = ReadingConfig::default();
+        let kobo = find(&reading, "kobo").unwrap().target();
+        assert_eq!(kobo.manga_formats, [Kepub, Cbz]);
+        assert_eq!(kobo.novel_formats, [Kepub, Epub]);
+        let kindle = find(&reading, "kindle").unwrap().target();
+        assert_eq!(kindle.manga_formats, [FixedEpub]);
+        assert_eq!(kindle.novel_formats, [Epub]);
+        // Nothing offered is something a send refuses.
+        for profile in all(&reading) {
+            for text in [false, true] {
+                for format in profile.accepts(text) {
+                    assert!(profile.formats.contains(&format));
+                }
+            }
+        }
+    }
 
     #[test]
     fn built_in_classes_and_the_persons_own() {
