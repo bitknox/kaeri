@@ -43,11 +43,11 @@
               <ColumnDefinition Width="120" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="8" VerticalAlignment="Bottom">
+            <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="{x:Bind k:Art.Corner(120)}" VerticalAlignment="Bottom">
               <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
-              <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleLargeStyle}" />
+              <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleDisplayStyle}" />
               <TextBlock x:Name="Secondary" Style="{StaticResource HazeBodyStyle}" />
               <TextBlock x:Name="Meta" Style="{StaticResource HazeCaptionStyle}" />
               <local:OfflineLine />
@@ -112,7 +112,7 @@
             <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
                        TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
                        IsTextTrimmedChanged="OnSynopsisTrimmed" />
-            <HyperlinkButton x:Name="SynopsisMore" Padding="0,4" Visibility="Collapsed" Click="OnSynopsisMore"
+            <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
                              Content="{x:Bind s:T.ActionMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->
             <ContentControl x:Name="DemoCredit" HorizontalContentAlignment="Left" Visibility="Collapsed" />
@@ -198,7 +198,7 @@
                         </MenuFlyout>
                       </Grid.ContextFlyout>
                       <Grid Width="{x:Bind StillWidth, Mode=OneWay}" Height="{x:Bind StillHeight, Mode=OneWay}" Grid.RowSpan="{x:Bind StillRowSpan, Mode=OneWay}"
-                            VerticalAlignment="Top" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
+                            VerticalAlignment="Top" CornerRadius="{x:Bind k:Art.Corner(StillWidth), Mode=OneWay}" Background="{ThemeResource RaisedBrush}">
                         <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
                         <!-- A still the viewer has not asked to see, blurred; a reveal clears it. -->
                         <Border Background="{ThemeResource SpoilerBrush}" Opacity="{x:Bind BlurOpacity, Mode=OneWay}" IsHitTestVisible="False">
@@ -289,16 +289,32 @@
     </local:StateHost>
   </ScrollViewer>
   <!-- Another: a title Surprise me opened swaps for the next pick. It stands where Surprise me
-       stands on Search and Library, at the end of the page's heading row, so the swap leaves it still. -->
-  <Button x:Name="AnotherAction" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0" MinHeight="32"
-          Visibility="Collapsed" Click="OnAnother"
-          ToolTipService.ToolTip="{x:Bind s:T.SurpriseAnotherHint}" AutomationProperties.Name="{x:Bind s:T.SurpriseAnother}"
-          AutomationProperties.HelpText="{x:Bind s:T.SurpriseAnotherHint}">
-    <StackPanel Orientation="Horizontal" Spacing="8">
-      <ContentPresenter x:Name="AnotherGlyph" Width="16" Height="16" VerticalAlignment="Center" />
-      <TextBlock Text="{x:Bind s:T.SurpriseAnother}" />
-    </StackPanel>
-  </Button>
+       stands on Search and Library, at the end of the page's heading row, so the swap leaves it still.
+       Over the banner it wears the typed-digits capsule's look, and the pointer lightens it as it
+       does every button over art. -->
+  <Border x:Name="AnotherBox" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0" Height="32" CornerRadius="16"
+          Background="{ThemeResource CapsuleBrush}" BorderBrush="{ThemeResource CapsuleEdgeBrush}" BorderThickness="1"
+          Translation="0,0,24" Visibility="Collapsed">
+    <Border.Shadow>
+      <ThemeShadow />
+    </Border.Shadow>
+    <Button x:Name="AnotherAction" Click="OnAnother" VerticalAlignment="Stretch" Padding="11,0" CornerRadius="15"
+            Background="Transparent" BorderThickness="0"
+            ToolTipService.ToolTip="{x:Bind s:T.SurpriseAnotherHint}" AutomationProperties.Name="{x:Bind s:T.SurpriseAnother}"
+            AutomationProperties.HelpText="{x:Bind s:T.SurpriseAnotherHint}">
+      <Button.Resources>
+        <ResourceDictionary>
+          <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="ms-appx:///OverArt.xaml" />
+          </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+      </Button.Resources>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <ContentPresenter x:Name="AnotherGlyph" Width="16" Height="16" VerticalAlignment="Center" />
+        <TextBlock Text="{x:Bind s:T.SurpriseAnother}" />
+      </StackPanel>
+    </Button>
+  </Border>
   <!-- Digits typed on the episodes: a small capsule at the top right that says what Go to episode will take. -->
   <Border x:Name="TypedCapsule" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0"
           Height="28" Padding="12,0" CornerRadius="14" Background="{ThemeResource CapsuleBrush}" BorderBrush="{ThemeResource CapsuleEdgeBrush}" BorderThickness="1"

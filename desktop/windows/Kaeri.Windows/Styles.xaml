@@ -6,22 +6,44 @@
   <!-- Show titles are Zen Kaku Gothic New 700; everything else is the Fluent type ramp. -->
   <FontFamily x:Key="ShowFont">ms-appx:///Assets/Fonts/ZenKakuGothicNew-Bold.ttf#Zen Kaku Gothic New</FontFamily>
 
-  <!-- 28/36: the title page and the Continue preview. -->
-  <Style x:Key="ShowTitleLargeStyle" TargetType="TextBlock">
+  <!-- Show titles come in four sizes, each with its line height, as the Mac's do. -->
+
+  <!-- 30/38: the title page, the spotlight and the starting screen, the largest title on screen. -->
+  <Style x:Key="ShowTitleDisplayStyle" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
     <Setter Property="FontWeight" Value="Bold" />
-    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontSize" Value="30" />
+    <Setter Property="LineHeight" Value="38" />
     <Setter Property="TextWrapping" Value="WrapWholeWords" />
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
   </Style>
 
-  <!-- 15/20: rows and under covers. -->
+  <!-- 20/28, the Subtitle size: a title heading a dialog, a card or a room. -->
+  <Style x:Key="ShowTitleMediumStyle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="LineHeight" Value="28" />
+    <Setter Property="TextWrapping" Value="WrapWholeWords" />
+    <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- 15/20: rows, cards, posters and the player's bar. Zen Kaku's own line is taller than
+       Segoe's, so the line height holds every line at 20. -->
   <Style x:Key="ShowTitleStyle" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
     <Setter Property="FontWeight" Value="Bold" />
     <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- 13/18: This week's and the calendar's tiles. -->
+  <Style x:Key="ShowTitleSmallStyle" TargetType="TextBlock" BasedOn="{StaticResource ShowTitleStyle}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="18" />
   </Style>
 
   <Style x:Key="HazeCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
@@ -38,8 +60,11 @@
     <Setter Property="Margin" Value="0,0,0,0" />
   </Style>
 
-  <!-- A section on a page: Subtitle 20/28. -->
-  <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}" />
+  <!-- A section on a page: Subtitle 20/28, with 12 between it and what it heads. Home's shelves,
+       This week, Trending, the title page's Episodes and the discussion pane all use it. -->
+  <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}">
+    <Setter Property="LineHeight" Value="28" />
+  </Style>
 
   <!-- A link that is not the main action: at the end of a heading (View all, Full calendar, See all,
        with a chevron), and Show or the watched fold on a title page. Silk and semibold, as the spec
@@ -89,6 +114,18 @@
     </Setter>
   </Style>
 
+  <!-- The same link at the start of a line: the padding is taken back on the leading side, so the
+       words start on the column's edge. Never set Padding on these; the margin answers it. -->
+  <Style x:Key="SilkLinkLeadingStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource SilkLinkStyle}">
+    <Setter Property="Margin" Value="-4,0,0,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- A small link under a list, at the start of its line: This week's "N more", Show all. -->
+  <Style x:Key="SilkLinkCaptionStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource SilkLinkLeadingStyle}">
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
   <!-- The title page's primary action and the Continue preview's: 40 high, amber. -->
   <Style x:Key="PrimaryActionStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
     <Setter Property="MinHeight" Value="40" />
@@ -119,6 +156,20 @@
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
   </Style>
 
+  <!-- A card over the video (the corner's cards, the alert, the flash, chat lines, stats, the mark
+       panel): raised, with the hair edge Fluent's flyouts carry, at the overlay radius. A card's
+       padding is a pixel less than the room it means, for the edge. -->
+  <Style x:Key="OverVideoCardStyle" TargetType="Border">
+    <Setter Property="Background" Value="{ThemeResource RaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{ThemeResource HairBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <!-- The bottom corner's cards (Up next, the stall prompt, the skip prompt): 12 in from the edge,
+       and one width, so the corner keeps its size as one card takes another's place. -->
+  <Thickness x:Key="OverVideoCornerPadding">11</Thickness>
+  <x:Double x:Key="OverVideoCornerWidth">380</x:Double>
+
   <!-- The skip glyphs: Segoe Fluent's open circle arrow, mirrored for back, with the seconds
        inside it. Fluent has a back-10 glyph but its forward twin says 30. The player's bar and
        the TV's remote both draw them. -->
@@ -141,7 +192,7 @@
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="VerticalContentAlignment" Value="Top" />
     <Setter Property="UseSystemFocusVisuals" Value="True" />
-    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">

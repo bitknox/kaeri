@@ -68,7 +68,7 @@ static class DemoHome
     public static FrameworkElement Closing(Ctx ctx)
     {
         var line = Ui.Haze(T.SourcesDemoOnly);
-        var link = new HyperlinkButton { Content = T.NavPluginStores, Padding = new Thickness(0) };
+        var link = new HyperlinkButton { Content = T.NavPluginStores, Style = Ui.Res<Style>("SilkLinkStyle"), VerticalAlignment = VerticalAlignment.Center };
         link.Click += (_, _) => ctx.Window.Go("stores");
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         row.Children.Add(line);

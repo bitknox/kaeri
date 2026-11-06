@@ -52,6 +52,14 @@
       <!-- The controls on a 35% dim of the ground, collapsed when they fade so nothing sits
            over the video. -->
       <Grid x:Name="Chrome" Background="{ThemeResource PlayerScrimBrush}">
+        <!-- The bars' buttons take the see-through hover of buttons over art. -->
+        <Grid.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+              <ResourceDictionary Source="ms-appx:///OverArt.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+          </ResourceDictionary>
+        </Grid.Resources>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
@@ -60,16 +68,6 @@
 
         <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
         <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8">
-          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
-               rather than taking the palette's solid control fill, which reads as a block. -->
-          <Grid.Resources>
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
-          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -79,7 +77,7 @@
             <FontIcon Glyph="&#xE72B;" FontSize="16" />
           </Button>
           <StackPanel x:Name="TitleArea" Grid.Column="1" VerticalAlignment="Center" Spacing="0" Background="Transparent">
-            <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleStyle}" FontSize="18" LineHeight="24" />
+            <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleStyle}" />
             <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
@@ -131,16 +129,6 @@
 
         <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
         <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized">
-          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
-               rather than taking the palette's solid control fill, which reads as a block. -->
-          <Grid.Resources>
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
-          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
@@ -212,12 +200,20 @@
            doing (starting-screen board): the show, the episode, a 2 px line, the step and its
            detail, the way out and, under Details, what each source said. -->
       <Grid x:Name="Starting" Background="{ThemeResource GroundBrush}" Visibility="Collapsed" SizeChanged="OnStartingSized">
+        <!-- Back, the start's buttons, the rows' Skip and Sub and Dub sit over the art. -->
+        <Grid.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+              <ResourceDictionary Source="ms-appx:///OverArt.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+          </ResourceDictionary>
+        </Grid.Resources>
         <Image x:Name="StartingArt" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
         <Rectangle x:Name="StartingGround" Fill="{ThemeResource GroundBrush}" Opacity="0.55" AutomationProperties.AccessibilityView="Raw" />
         <!-- The column's top is set when a start begins and stays: lines and buttons keep their
              room, and Details and a longer failure grow downward only. -->
         <StackPanel x:Name="StartingColumn" Width="520" HorizontalAlignment="Center" VerticalAlignment="Top">
-          <TextBlock x:Name="StartingShow" Style="{StaticResource ShowTitleLargeStyle}" FontSize="30" TextAlignment="Left"
+          <TextBlock x:Name="StartingShow" Style="{StaticResource ShowTitleDisplayStyle}" TextAlignment="Left"
                      TextWrapping="WrapWholeWords" MaxLines="2" TextTrimming="CharacterEllipsis" />
           <TextBlock x:Name="StartingEpisode" Style="{StaticResource HazeBodyStyle}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
           <!-- The demo's credit line, because CC BY asks for the credit where the work is used. -->
@@ -288,9 +284,10 @@
            the corner cards use, solid so no frame shows through. It stays up while the controls
            hide and ends above the subtitles' band, where its rows scroll first. Over the dim, so
            the controls coming and going never shade it; under the corner cards. -->
-      <Grid x:Name="StatsLayer" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Width="400"
-            Margin="0,64,16,0" Padding="16,6,6,14" Background="{ThemeResource RaisedBrush}" CornerRadius="8"
-            AutomationProperties.Name="{x:Bind app:T.PlayerStats}">
+      <Border x:Name="StatsLayer" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Width="400"
+              Margin="0,64,24,0" Padding="15,5,5,13" Style="{StaticResource OverVideoCardStyle}"
+              AutomationProperties.Name="{x:Bind app:T.PlayerStats}">
+      <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
@@ -331,16 +328,21 @@
                      Margin="12,0,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
         </Grid>
       </Grid>
+      </Border>
 
       <!-- The corner at the bottom end holds one card at a time, by rank: the stall prompt, the
-           Undo note, Up next, the Skip button. A grid, so a card fading out sits under the next. -->
+           Undo note, Up next, the Skip button. A grid, so a card fading out sits under the next.
+           Every overlay keeps 24 from the video's side, 64 from its top (under the top bar) and 80
+           from its bottom (over the bottom bar). The corner's cards share one padding and one
+           width, so the corner keeps its size as one card takes another's place. -->
       <Grid x:Name="Corner" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,80">
         <Border x:Name="SkipSlot" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-          <Button x:Name="SkipCard" AllowFocusOnInteraction="False" Style="{StaticResource AccentButtonStyle}" Click="OnSkip" MinHeight="40" Padding="16,0"
+          <Button x:Name="SkipCard" AllowFocusOnInteraction="False" Style="{StaticResource PrimaryActionStyle}" Click="OnSkip"
                   PointerEntered="OnSkipEntered" PointerExited="OnSkipExited" />
         </Border>
-        <Grid x:Name="UndoCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8,8,8"
-              ColumnSpacing="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Border x:Name="UndoCard" Visibility="Collapsed" Style="{StaticResource OverVideoCardStyle}" Padding="15,7,7,7"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Grid ColumnSpacing="12">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
@@ -348,8 +350,10 @@
           <TextBlock x:Name="UndoLine" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
           <Button x:Name="UndoButton" AllowFocusOnInteraction="False" Grid.Column="1" Content="{x:Bind app:T.ActionUndo}" Click="OnUndo" />
         </Grid>
-        <Grid x:Name="UpNextCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="12" Width="380"
-              RowSpacing="10" ColumnSpacing="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        </Border>
+        <Border x:Name="UpNextCard" Visibility="Collapsed" Style="{StaticResource OverVideoCardStyle}" Padding="{StaticResource OverVideoCornerPadding}"
+                Width="{StaticResource OverVideoCornerWidth}" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Grid RowSpacing="10" ColumnSpacing="12">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -384,8 +388,10 @@
             <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.ActionPlayNow}" Style="{StaticResource AccentButtonStyle}" Click="OnPlayNext" />
           </StackPanel>
         </Grid>
-        <Grid x:Name="StallCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16" Width="300"
-              RowSpacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        </Border>
+        <Border x:Name="StallCard" Visibility="Collapsed" Style="{StaticResource OverVideoCardStyle}" Padding="{StaticResource OverVideoCornerPadding}"
+                Width="{StaticResource OverVideoCornerWidth}" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Grid RowSpacing="10">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -396,6 +402,7 @@
             <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.PlayerSwitchSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStallSwitch" />
           </StackPanel>
         </Grid>
+        </Border>
       </Grid>
 
       <!-- Still watching: after a run of episodes nobody was there for, paused until answered. -->
@@ -426,7 +433,7 @@
 
       <!-- What the player says on the video, in one column in the top leading corner: an alert
            first, briefly, then the party's chat lines under it, three at most, and the fold. -->
-      <StackPanel x:Name="ChatColumn" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0" Spacing="6">
+      <StackPanel x:Name="ChatColumn" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,64,0,0" Spacing="6">
         <!-- "Resumed at 12:04 · Start over" for the first 6 s of a resumed episode. -->
         <Border x:Name="ResumeNote" Visibility="Collapsed" HorizontalAlignment="Left" Height="32" Padding="14,0"
                 Background="{ThemeResource RaisedBrush}" CornerRadius="16">
@@ -445,7 +452,7 @@
           </StackPanel>
         </Border>
         <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left"
-                Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
+                Style="{StaticResource OverVideoCardStyle}" Padding="15,9">
           <!-- Two lines in one place: a newer alert crossfades over the one up. -->
           <Grid>
             <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
@@ -460,16 +467,16 @@
       </StackPanel>
 
       <!-- A reaction's moment: the glyph and the name, bottom trailing, above the corner's card. -->
-      <StackPanel x:Name="ChatMoments" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,76" Spacing="6"
+      <StackPanel x:Name="ChatMoments" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,80" Spacing="6"
                   IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
 
       <!-- C opens the field above the controls; Enter sends and keeps it open, Escape closes it. -->
       <Border x:Name="ChatFieldSlot" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-              Margin="24,0,0,72" Width="480" />
+              Margin="24,0,0,80" Width="480" />
 
       <!-- Near a reaction's tick, when the preview has no frame to show: who reacted there. -->
       <Border x:Name="TickLabel" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsHitTestVisible="False"
-              Background="{ThemeResource RaisedBrush}" CornerRadius="6" Padding="8,3">
+              Style="{StaticResource OverVideoCardStyle}" Padding="7,3">
         <TextBlock x:Name="TickLabelText" Style="{StaticResource CaptionTextBlockStyle}" Typography.NumeralAlignment="Tabular" />
       </Border>
 
@@ -482,7 +489,7 @@
       <!-- What a key did while the controls stay hidden: the time after a seek, the volume, the
            speed, a skip. Shown for 1.2 s. -->
       <Border x:Name="Flash" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"
-              Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8" IsHitTestVisible="False">
+              Style="{StaticResource OverVideoCardStyle}" Padding="15,7" IsHitTestVisible="False">
         <TextBlock x:Name="FlashText" Style="{StaticResource BodyStrongTextBlockStyle}" Typography.NumeralAlignment="Tabular"
                    AutomationProperties.LiveSetting="Polite" />
       </Border>

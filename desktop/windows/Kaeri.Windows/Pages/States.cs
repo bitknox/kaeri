@@ -395,7 +395,7 @@ static partial class States
         {
             // The cover grid's cell, line for line: the cover, the title's two lines, the caption.
             var panel = new StackPanel { Width = 150, Spacing = 2, Padding = new Thickness(0, 0, 0, 6) };
-            var cover = Plate(150, 225, 8);
+            var cover = Plate(150, 225, Art.Radius(150));
             cover.Margin = new Thickness(0, 0, 0, 6);
             panel.Children.Add(cover);
             var title = Plate(110, 12, 3);

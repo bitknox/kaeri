@@ -924,7 +924,7 @@ public sealed partial class PlayerView : UserControl
             var from = AlertCard.ActualWidth;
             back.Text = text;
             back.Measure(new global::Windows.Foundation.Size(480, double.PositiveInfinity));
-            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right;
+            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right + AlertCard.BorderThickness.Left + AlertCard.BorderThickness.Right;
             Motion.Crossfade(front, back);
             var leaving = front;
             alertFront = front = back;
@@ -2995,8 +2995,6 @@ public sealed partial class PlayerView : UserControl
         ShowTvButton();
         Elapsed.Visibility = Remaining.Visibility = VolumeButton.Visibility = SettingsButton.Visibility = big;
         Corner.Visibility = big;
-        ShowTitle.FontSize = on ? 14 : 18;
-        ShowTitle.LineHeight = on ? 20 : 24;
         EpisodeTitle.Visibility = big;
         TopBar.Padding = on ? new Thickness(12, 6, 140, 6) : new Thickness(8, 8, 148, 8);
         MiniIcon.Glyph = on ? "\uE73F" : "\uE8A7";

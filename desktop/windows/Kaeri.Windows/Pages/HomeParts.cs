@@ -170,7 +170,7 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
         var width = wide ? HomeWording.CardWidth : HomeWording.PosterWidth;
         var height = wide ? HomeWording.CardHeight : HomeWording.PosterHeight;
         var stack = new StackPanel { Width = width };
-        stack.Children.Add(HomeArt.Make(card.Cover, width, height, 4, wide));
+        stack.Children.Add(HomeArt.Make(card.Cover, width, height, Art.Radius(width), wide));
         Border? track = null, fill = null;
         if (wide)
         {
@@ -185,7 +185,7 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
             track.Child = fill;
             stack.Children.Add(track);
         }
-        var title = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 14, Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
+        var title = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
         stack.Children.Add(title);
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         var dot = Ui.Dot(Colours.Water, false);
@@ -335,9 +335,7 @@ sealed partial class HomeShelf : Grid
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         heading = new TextBlock
         {
-            FontSize = 20,
-            LineHeight = 28,
-            FontWeight = FontWeights.SemiBold,
+            Style = Ui.Res<Style>("SectionTitleStyle"),
             VerticalAlignment = VerticalAlignment.Bottom,
             TextWrapping = TextWrapping.NoWrap,
             TextTrimming = TextTrimming.CharacterEllipsis,

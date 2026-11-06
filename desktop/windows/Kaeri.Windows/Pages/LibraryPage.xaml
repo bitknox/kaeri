@@ -31,7 +31,7 @@
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <SelectorBar x:Name="Lists" SelectionChanged="OnListChanged" Margin="-8,0,0,0" />
+      <SelectorBar x:Name="Lists" SelectionChanged="OnListChanged" Margin="-12,0,0,0" />
       <DropDownButton x:Name="OrderButton" Grid.Column="2" Content="{x:Bind s:T.LibrarySortUpdated}" MinHeight="32">
         <DropDownButton.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedRight">

@@ -293,7 +293,7 @@ public sealed partial class TogetherPage : Page
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Ui.Text(room.Title, "BodyStrongTextBlockStyle", wrap: false));
+        text.Children.Add(Ui.Text(room.Title, "ShowTitleStyle", wrap: false));
         var when = DateTimeOffset.FromUnixTimeSeconds(room.LastAt).LocalDateTime.ToString("d");
         text.Children.Add(Ui.Text(T.TogetherRecentRow(room.Episode, string.Join(", ", room.Names), when), "HazeCaptionStyle", wrap: false));
         grid.Children.Add(text);
@@ -320,7 +320,11 @@ public sealed partial class TogetherPage : Page
         Block("section-watching", () => Section(T.PartyRoomWatching));
         if (glimpse?.RoomEpisode is { } watching)
         {
-            Line("room-title", watching.Title.Length > 0 ? watching.Title : watching.File, "SubtitleTextBlockStyle");
+            // A show's title in the show font; a file's name, when that is all there is, in Segoe.
+            if (watching.Title.Length > 0)
+                Line("room-show", watching.Title, "ShowTitleMediumStyle");
+            else
+                Line("room-title", watching.File, "SubtitleTextBlockStyle");
             Line("room-episode", T.EpisodeNumber(long.TryParse(watching.Episode, out var n) ? n : 0));
         }
         else if (glimpse is not null)
@@ -385,7 +389,11 @@ public sealed partial class TogetherPage : Page
         Block("section-watching", () => Section(T.PartyRoomWatching));
         if (party.RoomEpisode is { } room)
         {
-            Line("room-title", room.Title.Length > 0 ? room.Title : room.File, "SubtitleTextBlockStyle");
+            // A show's title in the show font; a file's name, when that is all there is, in Segoe.
+            if (room.Title.Length > 0)
+                Line("room-show", room.Title, "ShowTitleMediumStyle");
+            else
+                Line("room-title", room.File, "SubtitleTextBlockStyle");
             Line("room-episode", T.EpisodeNumber(long.TryParse(room.Episode, out var n) ? n : 0));
             if (room.Found == PartyFound.Name)
                 Line("room-found", T.PartyRoomFoundByName);
