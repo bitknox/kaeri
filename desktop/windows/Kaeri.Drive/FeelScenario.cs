@@ -54,14 +54,60 @@ static class FeelScenario
         {
             for (var i = 0; i < Math.Abs(notches); i++)
             {
-                Mouse.Scroll(notches < 0 ? -1 : 1);
+                Native.Wheel(notches < 0 ? -1 : 1);
                 await Task.Delay(40);
             }
         },
         () => { Mouse.MoveTo(at ?? run.Centre); return Task.CompletedTask; });
 
+    /// <summary>A slow wheel, a notch at a time, filmed frame by frame to see whether each notch is a jump or a glide.</summary>
+    static Task SlowWheel(Run run, string label, Func<Point?> at, int notches) => Feel.Film(run, label,
+        () =>
+        {
+            // The notches go on while the filming runs, so each one's frames are seen.
+            _ = Task.Run(async () =>
+            {
+                for (var i = 0; i < Math.Abs(notches); i++)
+                {
+                    Native.Wheel(notches < 0 ? -1 : 1);
+                    await Task.Delay(300);
+                }
+            });
+            return Task.CompletedTask;
+        },
+        () => { Mouse.MoveTo(at() ?? run.Centre); return Task.CompletedTask; }, 6000, wheel: true);
+
+    static Point? Middle(AutomationElement? e) =>
+        e is not null && Run.Safe(() => e.BoundingRectangle) is { Width: > 0 } r ? new Point(r.Left + r.Width / 2, r.Top + r.Height / 2) : null;
+
+    /// <summary>The wheel over a shelf against the wheel over what is not one, in a window small enough for Home to scroll.</summary>
+    public static async Task Wheels(Run run)
+    {
+        Native.Size(run.Hwnd, 1600, 900);
+        await Task.Delay(2000);
+        var w = run.Window.BoundingRectangle;
+        // The window in front, by a click on the page's title, so the wheel reaches it.
+        Native.SetForegroundWindow(run.Hwnd);
+        Mouse.MoveTo(new Point(w.Left + 320, w.Top + 92));
+        Mouse.Click();
+        await Task.Delay(500);
+        // The spotlight's text, top left of the page: no shelf under the pointer.
+        await SlowWheel(run, "wheel slowly over the spotlight (no shelf)", () => new Point(w.Left + 420, w.Top + 260), -3);
+        await SlowWheel(run, "wheel slowly back up over the spotlight", () => new Point(w.Left + 420, w.Top + 260), 3);
+        await SlowWheel(run, "wheel slowly over a shelf's poster", () => Middle(Poster(run)), -3);
+        await SlowWheel(run, "wheel slowly back up over a shelf's poster", () => Middle(Poster(run)), 3);
+        await Go(run, "Seasonal");
+        await SlowWheel(run, "seasonal: wheel slowly over a cover", () => Middle(Poster(run)), -3);
+        await SlowWheel(run, "seasonal: wheel slowly back up over a cover", () => Middle(Poster(run)), 3);
+        await Go(run, "Home");
+        Native.Size(run.Hwnd, 2560, 1392);
+        await Task.Delay(1500);
+    }
+
     public static async Task All(Run run)
     {
+        await Wheels(run);
+
         // Every page from the sidebar, and back Home.
         foreach (var page in Pages)
             await Go(run, page);
@@ -83,6 +129,28 @@ static class FeelScenario
         await Feel.Click(run, "home (scrolled): open a poster", Poster(run), 5000);
         await Feel.Click(run, "title: back to scrolled Home (should look as before)", Find(run, "Back", ControlType.Button));
         await Wheel(run, 12);
+        await Go(run, "Home");
+
+        // The same in a window small enough for Home to scroll: the frame after Back is the one before.
+        Native.Size(run.Hwnd, 1600, 900);
+        await Task.Delay(1500);
+        await Wheel(run, -5);
+        await Feel.Kept(run, "home 1600x900 (scrolled): a poster and Back, kept", async () =>
+        {
+            await Feel.Click(run, "home 1600x900 (scrolled): open a poster", Poster(run), 5000);
+            await Feel.Click(run, "title: back to scrolled Home at 1600x900", Find(run, "Back", ControlType.Button));
+        });
+        await Go(run, "Library");
+        await Feel.Click(run, "library: Completed (for the trip)", Starts(run, "Completed", ControlType.ListItem));
+        await Wheel(run, -3);
+        await Feel.Kept(run, "library 1600x900 (Completed, scrolled): a cover and Back, kept", async () =>
+        {
+            await Feel.Click(run, "library (scrolled): open a cover", Poster(run), 5000);
+            await Feel.Click(run, "title: back to Library", Find(run, "Back", ControlType.Button));
+        });
+        await Feel.Click(run, "library: Watching (after the trip)", Starts(run, "Watching", ControlType.ListItem));
+        Native.Size(run.Hwnd, 2560, 1392);
+        await Task.Delay(1500);
         await Go(run, "Home");
 
         // Calendar.

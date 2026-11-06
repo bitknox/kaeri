@@ -80,10 +80,36 @@ public sealed partial class StateHost : Grid
         silence.Start();
     }
 
+    /// <summary>
+    /// A new load in place of what shows, such as another season or other filters: what shows
+    /// stays for the first 600 ms, then gives way to the placeholders. With nothing showing, the
+    /// placeholders come at once, in the content's own size, so the place is never blank.
+    /// </summary>
+    public void WaitKeeping(bool showing)
+    {
+        if (!showing)
+        {
+            if (!(loading && placeholdersShown))
+                WaitNow();
+            return;
+        }
+        Layer();
+        if (loading && (silence.IsRunning || placeholdersShown))
+            return;
+        loading = true;
+        Motion.Set(message, false);
+        if (Content is { } content)
+            content.Visibility = Visibility.Visible;
+        silence.Stop();
+        silence.Start();
+    }
+
     void ShowWaiting()
     {
         if (!loading)
             return;
+        if (Content is { } shown)
+            shown.Visibility = Visibility.Collapsed;
         if (NeedsConnection && Ctx.Current.Known.Offline)
         {
             Offline();
@@ -291,6 +317,9 @@ static partial class States
     };
 
     /// <summary>Raised plates in the cover grid's layout: covers 150 by 225 and two caption bars.</summary>
+    /// <summary>A cover cell's title is kept two lines high, so every cell is one height: this, in px.</summary>
+    public const double CoverTitleHeight = 40;
+
     public static UIElement Covers(int count = 12)
     {
         var grid = new ItemsRepeater
@@ -307,10 +336,18 @@ static partial class States
     {
         public UIElement GetElement(ElementFactoryGetArgs args)
         {
-            var panel = new StackPanel { Width = 150, Spacing = 6 };
-            panel.Children.Add(Plate(150, 225, 8));
-            panel.Children.Add(Plate(110, 12, 3));
-            panel.Children.Add(Plate(70, 10, 3));
+            // The cover grid's cell, line for line: the cover, the title's two lines, the caption.
+            var panel = new StackPanel { Width = 150, Spacing = 2, Padding = new Thickness(0, 0, 0, 6) };
+            var cover = Plate(150, 225, 8);
+            cover.Margin = new Thickness(0, 0, 0, 6);
+            panel.Children.Add(cover);
+            var title = Plate(110, 12, 3);
+            title.VerticalAlignment = VerticalAlignment.Top;
+            title.Margin = new Thickness(0, 4, 0, 0);
+            panel.Children.Add(new Border { Height = CoverTitleHeight, Child = title });
+            var caption = Plate(70, 10, 3);
+            caption.VerticalAlignment = VerticalAlignment.Center;
+            panel.Children.Add(new Border { Height = 16, Child = caption });
             return panel;
         }
 

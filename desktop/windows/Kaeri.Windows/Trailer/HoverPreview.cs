@@ -19,16 +19,16 @@ namespace Kaeri.Windows;
 /// The preview a cover opens when the pointer rests on it: the banner, the title, a facts line,
 /// two lines of synopsis and the title's main action, in a flyout. Where the title has a trailer
 /// and trailers may play, it plays muted over the banner as on the title page.
-/// The pointer must rest: less than 4 px of movement for 800 ms, or for 300 ms when a preview
+/// The pointer must rest: less than 4 px of movement for 450 ms, or for 150 ms when a preview
 /// closed less than a second ago (scanning a row). The preview closes 150 ms after
 /// the pointer leaves both the cover and the preview, and at once on a scroll, a key press, a
 /// click elsewhere or the window losing focus. Keyboard focus never opens one.
 /// </summary>
 static class HoverPreview
 {
-    static readonly TimeSpan Dwell = TimeSpan.FromMilliseconds(800);
+    static readonly TimeSpan Dwell = TimeSpan.FromMilliseconds(450);
     /// <summary>The dwell for the next cover when a preview closed less than <see cref="Scanning"/> ago.</summary>
-    static readonly TimeSpan NextDwell = TimeSpan.FromMilliseconds(300);
+    static readonly TimeSpan NextDwell = TimeSpan.FromMilliseconds(150);
     static readonly TimeSpan Scanning = TimeSpan.FromSeconds(1);
     static DateTime closedAt = DateTime.MinValue;
     static readonly TimeSpan Leave = TimeSpan.FromMilliseconds(150);
@@ -122,6 +122,9 @@ static class HoverPreview
             return;
         if (ctx.Known.Entry(id) is not { } entry)
             return;
+        // Interest shown: the sources are asked whether they have the title, as the spec ties to a
+        // hover card. The engine asks once a minute at most, and Home marks a miss.
+        ctx.Send(new Command.ProbeTitle(id));
         Close();
         var preview = new Open(ctx, target, entry);
         open = preview;

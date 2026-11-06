@@ -141,3 +141,35 @@ public class HomeTests
         Assert.Equal(new long?[] { 100, 200 }, Pick(250, day.Take(2).ToList()));
     }
 }
+
+[Collection("Strings")]
+public class HomeHeadingTests
+{
+    static HomeSection Because(string title) =>
+        new(Kind: SectionKind.Because, Title: new Msg.HomeBecause(title), Total: 0, Items: []);
+
+    [Fact]
+    public void TheTitleIsItsOwnRunAndTheLeadKeepsItsSpace()
+    {
+        T.Resolver = null;
+        var heading = HomeWording.Heading(Because("Lantern Street"));
+        Assert.Equal(new HomeHeading("Because you finished ", "Lantern Street", ""), heading);
+        Assert.Equal("Because you finished Lantern Street", heading.ToString());
+    }
+
+    [Fact]
+    public void WordsAfterTheTitleAreNotSetBold()
+    {
+        try
+        {
+            T.Resolver = key => key == "HomeBecause" ? "{title}を観終えたあなたに" : null;
+            Assert.Equal(new HomeHeading("", "Lantern Street", "を観終えたあなたに"), HomeWording.Heading(Because("Lantern Street")));
+            T.Resolver = key => key == "HomeBecause" ? "Weil du {title} gesehen hast" : null;
+            Assert.Equal(new HomeHeading("Weil du ", "Lantern Street", " gesehen hast"), HomeWording.Heading(Because("Lantern Street")));
+        }
+        finally
+        {
+            T.Resolver = null;
+        }
+    }
+}

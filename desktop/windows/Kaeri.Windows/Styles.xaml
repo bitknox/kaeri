@@ -77,7 +77,8 @@
   </Style>
 
   <!-- A Home card or poster: no chrome of its own, the art and lines are the button. The focus
-       ring is the system's, drawn round the whole card. -->
+       ring is the system's, drawn round the whole card. A press dims it at once, as the Mac's
+       plain button does, so a click answers before the title page or the player is up. -->
   <Style x:Key="HomeCardButtonStyle" TargetType="Button">
     <Setter Property="Padding" Value="0" />
     <Setter Property="BorderThickness" Value="0" />
@@ -91,7 +92,20 @@
         <ControlTemplate TargetType="Button">
           <ContentPresenter x:Name="ContentPresenter" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
                             CornerRadius="{TemplateBinding CornerRadius}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver" />
+                <VisualState x:Name="Pressed">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Opacity" Value="0.7" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Disabled" />
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+          </ContentPresenter>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

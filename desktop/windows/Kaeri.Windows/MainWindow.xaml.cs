@@ -1031,13 +1031,38 @@ public sealed partial class MainWindow : Window
             FocusPage();
     }
 
+    /// <summary>Where focus was on each page the frame keeps for Back, so a return lands there and the page does not scroll.</summary>
+    readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, WeakReference<Control>> focusKept = [];
+
+    void OnFrameNavigating(object sender, NavigatingCancelEventArgs e)
+    {
+        if (ContentFrame.Content is Page { NavigationCacheMode: not NavigationCacheMode.Disabled } kept && Content?.XamlRoot is { } root)
+        {
+            var focused = FocusManager.GetFocusedElement(root) as Control;
+            focusKept.AddOrUpdate(kept, new WeakReference<Control>(focused is not null && Within(focused, kept) ? focused : null!));
+        }
+    }
+
+    static bool Within(DependencyObject at, DependencyObject outer)
+    {
+        for (DependencyObject? up = at; up is not null; up = VisualTreeHelper.GetParent(up))
+        {
+            if (up == outer)
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// After a page change, focus goes to the page's first control and the screen reader hears
-    /// its title, instead of staying on the pane item. Typing in the search box is left alone.
+    /// its title, instead of staying on the pane item. Typing in the search box is left alone. A
+    /// page the frame kept gets focus back where it was, or keeps none, rather than its first
+    /// control: that one can be above where the page was scrolled to, and focusing it would scroll.
     /// </summary>
     void FocusPage()
     {
         var shown = ContentFrame.Content;
+        var kept = shown is not null && focusKept.TryGetValue(shown, out var weak) ? weak : null;
         DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
             if (Player.Showing || shown != ContentFrame.Content || shown is not UIElement page || Content?.XamlRoot is not { } root)
@@ -1052,7 +1077,10 @@ public sealed partial class MainWindow : Window
             }
             if (Heading(page) is { } heading && FrameworkElementAutomationPeer.FromElement(heading) is { } peer)
                 peer.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.MostRecent, heading.Text, "page");
-            (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
+            if (kept?.TryGetTarget(out var again) == true && again.IsLoaded && Within(again, page))
+                again.Focus(FocusState.Programmatic);
+            else if (kept is null)
+                (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
         });
     }
 

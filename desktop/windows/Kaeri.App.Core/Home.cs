@@ -16,10 +16,13 @@ public enum HomeShape
     Week,
 }
 
-/// <summary>A heading in two runs, so a title that is the viewer's own can be set bold: "Because you finished " and "Lantern Street".</summary>
-public readonly record struct HomeHeading(string Lead, string Title = "")
+/// <summary>
+/// A heading in three runs, so a title that is the viewer's own can be set bold: "Because you
+/// finished ", "Lantern Street", and whatever the language puts after the title.
+/// </summary>
+public readonly record struct HomeHeading(string Lead, string Title = "", string Tail = "")
 {
-    public override string ToString() => Lead + Title;
+    public override string ToString() => Lead + Title + Tail;
 }
 
 /// <summary>
@@ -51,7 +54,7 @@ public static class HomeWording
         _ => HomeShape.Poster,
     };
 
-    /// <summary>The section's heading. The title of "Because you finished X" is the second run.</summary>
+    /// <summary>The section's heading. The title of "Because you finished X" is the second run, and only the title.</summary>
     public static HomeHeading Heading(HomeSection section)
     {
         var whole = section.Title.Text();
@@ -59,7 +62,7 @@ public static class HomeWording
         {
             var at = whole.LastIndexOf(because.Title, StringComparison.Ordinal);
             if (at >= 0)
-                return new(whole[..at], whole[at..]);
+                return new(whole[..at], because.Title, whole[(at + because.Title.Length)..]);
         }
         return new(whole);
     }

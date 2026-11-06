@@ -35,13 +35,15 @@ public sealed partial class SeasonalPage : Page
         }
         State.Placeholders = () => States.Covers();
         State.ActivityText = T.SeasonalLoading;
-        // Heard from the start: what arrives before the page is loaded is not missed.
-        ctx.Hear(this, Heard);
+        // The frame keeps the page for Back and the next visit: the season, the format and the scroll stay.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before anything is asked, until the frame moves on.
+        ctx.Hear(this, Heard);
         Pick(picked);
     }
 
@@ -60,7 +62,11 @@ public sealed partial class SeasonalPage : Page
         ContentFor view = season == now ? new ContentFor.Seasonal() : new ContentFor.Search(Query(season));
         entries = ctx.Known.ListEntries(view);
         answered = ctx.Known.List(view) is ContentList.Entries or ContentList.Empty;
-        State.Wait(hasContent: entries.Length > 0);
+        // A season not yet known: the one showing stays 600 ms, or plates come at once.
+        if (entries.Length > 0)
+            State.Wait(hasContent: true);
+        else if (!answered)
+            State.WaitKeeping(Grid.HasCovers);
         ctx.Send(season == now ? new Command.LoadSeasonal() : new Command.Search(Query(season)));
         if (entries.Length > 0 || answered)
             Show();

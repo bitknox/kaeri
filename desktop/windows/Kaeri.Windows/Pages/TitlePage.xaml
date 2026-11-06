@@ -170,8 +170,12 @@
                   <DataTemplate x:Key="EpisodeTemplate" x:DataType="local:EpisodeItem">
                     <Grid Height="{x:Bind RowHeight, Mode=OneWay}" Padding="{x:Bind RowPad, Mode=OneWay}" Margin="0,2" ColumnSpacing="14"
                           Background="{x:Bind TargetFill, Mode=OneWay}" CornerRadius="6"
-                          AutomationProperties.Name="{x:Bind Name}" AutomationProperties.HelpText="{x:Bind HelpText, Mode=OneWay}"
-                          Opacity="{x:Bind Dim}" ToolTipService.ToolTip="{x:Bind Tip, Mode=OneWay}">
+                          AutomationProperties.Name="{x:Bind Name, Mode=OneWay}" AutomationProperties.HelpText="{x:Bind HelpText, Mode=OneWay}"
+                          Opacity="{x:Bind Dim, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Tip, Mode=OneWay}">
+                      <!-- A row marked watched dims on the quick token, in place. -->
+                      <Grid.OpacityTransition>
+                        <ScalarTransition Duration="0:0:0.2" />
+                      </Grid.OpacityTransition>
                       <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -184,10 +188,10 @@
                       <Grid.ContextFlyout>
                         <MenuFlyout>
                           <MenuFlyoutItem Text="{x:Bind s:T.EpisodeSynopsisShow}" Click="OnEpisodeReveal" Tag="{x:Bind}" Visibility="{x:Bind HeldShown, Mode=OneWay}" />
-                          <MenuFlyoutItem Text="{x:Bind s:T.ActionPlay}" Click="OnEpisodePlay" Tag="{x:Bind}" IsEnabled="{x:Bind Playable}" />
-                          <MenuFlyoutItem Text="{x:Bind s:T.EpisodePlayFromBeginning}" Click="OnEpisodeFromStart" Tag="{x:Bind}" Visibility="{x:Bind PartWay}" />
-                          <MenuFlyoutItem Text="{x:Bind s:T.TvPlayOn}" Click="OnEpisodeOnTv" Tag="{x:Bind}" Visibility="{x:Bind OnTv}" IsEnabled="{x:Bind Playable}" />
-                          <MenuFlyoutItem Text="{x:Bind WatchedAction}" Click="OnEpisodeWatched" Tag="{x:Bind}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.ActionPlay}" Click="OnEpisodePlay" Tag="{x:Bind}" IsEnabled="{x:Bind Playable, Mode=OneWay}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.EpisodePlayFromBeginning}" Click="OnEpisodeFromStart" Tag="{x:Bind}" Visibility="{x:Bind PartWay, Mode=OneWay}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.TvPlayOn}" Click="OnEpisodeOnTv" Tag="{x:Bind}" Visibility="{x:Bind OnTv}" IsEnabled="{x:Bind Playable, Mode=OneWay}" />
+                          <MenuFlyoutItem Text="{x:Bind WatchedAction, Mode=OneWay}" Click="OnEpisodeWatched" Tag="{x:Bind}" />
                           <MenuFlyoutItem Text="{x:Bind s:T.DiscussionOpen}" Click="OnEpisodeDiscussion" Tag="{x:Bind}" Visibility="{x:Bind DiscussionShown, Mode=OneWay}" />
                           <MenuFlyoutItem Text="{x:Bind s:T.TitleEpisodeDownload}" Click="OnEpisodeDownload" Tag="{x:Bind}" IsEnabled="{x:Bind CanDownload, Mode=OneWay}" />
                         </MenuFlyout>
@@ -205,9 +209,9 @@
                                     AutomationProperties.AccessibilityView="Raw" />
                         </Border>
                         <!-- The resume track along the still's bottom edge, as on Continue cards. -->
-                        <ProgressBar Value="{x:Bind Watched}" Maximum="1" VerticalAlignment="Bottom" Margin="6,0,6,6" MinHeight="3" Height="3"
+                        <ProgressBar Value="{x:Bind Watched, Mode=OneWay}" Maximum="1" VerticalAlignment="Bottom" Margin="6,0,6,6" MinHeight="3" Height="3"
                                      CornerRadius="2" Foreground="{ThemeResource SilkBrush}" Background="#B310131F"
-                                     Visibility="{x:Bind PartWay}" AutomationProperties.AccessibilityView="Raw" />
+                                     Visibility="{x:Bind PartWay, Mode=OneWay}" AutomationProperties.AccessibilityView="Raw" />
                       </Grid>
                       <StackPanel Grid.Column="1" VerticalAlignment="{x:Bind HeadAlign, Mode=OneWay}" Margin="{x:Bind HeadMargin, Mode=OneWay}">
                         <!-- Narrow, the title stands alone on up to two lines and the number moves to the facts ("E8"). -->
@@ -238,7 +242,7 @@
                       <!-- The episode's download: Download on hover or focus, then how far, then a check.
                            The cell keeps its width in every state, so the row never moves. -->
                       <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"
-                              Opacity="{x:Bind DownloadOpacity, Mode=OneWay}" IsEnabled="{x:Bind Playable}"
+                              Opacity="{x:Bind DownloadOpacity, Mode=OneWay}" IsEnabled="{x:Bind Playable, Mode=OneWay}"
                               Click="OnDownloadCell" Tag="{x:Bind}" GotFocus="OnDownloadCellFocus"
                               ToolTipService.ToolTip="{x:Bind DownloadSay, Mode=OneWay}"
                               AutomationProperties.Name="{x:Bind DownloadSay, Mode=OneWay}">
@@ -252,7 +256,7 @@
                         </Grid>
                       </Button>
                       <!-- Watched is a state: a neutral check box, not an amber toggle. -->
-                      <CheckBox MinWidth="0" Padding="0" IsChecked="{x:Bind Completed}"
+                      <CheckBox MinWidth="0" Padding="0" IsChecked="{x:Bind Completed, Mode=OneWay}"
                                 Click="OnWatchedToggle" Tag="{x:Bind}" ToolTipService.ToolTip="{x:Bind s:T.EpisodeWatched}"
                                 AutomationProperties.Name="{x:Bind s:T.EpisodeWatched}" VerticalAlignment="Center">
                         <!-- On the control itself: the app's theme overrides do not reach a template's check box. -->

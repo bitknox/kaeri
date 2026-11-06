@@ -38,13 +38,15 @@ public sealed partial class LibraryPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(OrderButton, T.LibrarySortLabel(T.LibrarySortUpdated));
         foreach (var (s, name) in Segments)
             Lists.Items.Add(new SelectorBarItem { Text = name, Tag = s, IsSelected = s == segment });
-        // Heard from the start: what arrives before the page is loaded is not missed.
-        ctx.Hear(this, Heard);
+        // The frame keeps the page for Back and the next visit: the list, the sort and the scroll stay.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before anything is asked, until the frame moves on.
+        ctx.Hear(this, Heard);
         foreach (var (s, _) in Segments)
             ctx.Send(new Command.LoadLibrary(s));
         Show();
@@ -90,6 +92,8 @@ public sealed partial class LibraryPage : Page
         else if (shown is ContentList.Entries or ContentList.Empty)
             State.Empty(States.Unavailable(T.LibraryListEmpty(Segments.First(x => x.Segment == segment).Name.ToLower(System.Globalization.CultureInfo.CurrentCulture)), T.LibraryListEmptyDetail));
         else
+            // The lists come from this device's store, usually within a frame or two: the
+            // usual 600 ms of silence, so a quick answer is one change, not plates then covers.
             State.Wait();
     }
 

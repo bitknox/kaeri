@@ -16,20 +16,28 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <StackPanel Margin="0,0,36,0">
-      <TextBlock Text="{x:Bind s:T.HomeTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+      <!-- The sync line sits on the title's line, so its coming and going moves nothing. -->
+      <Grid ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{x:Bind s:T.HomeTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+        <TextBlock x:Name="SyncLine" Grid.Column="1" Style="{StaticResource HazeCaptionStyle}" VerticalAlignment="Center" Opacity="0"
+                   AutomationProperties.LiveSetting="Polite" />
+      </Grid>
       <StackPanel x:Name="OfflineLine" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0" Visibility="Collapsed"
                   AutomationProperties.LiveSetting="Polite">
         <FontIcon Glyph="&#xE774;" FontSize="14" Foreground="{ThemeResource HazeBrush}" VerticalAlignment="Center" />
         <TextBlock x:Name="OfflineText" Style="{StaticResource HazeBodyStyle}" />
       </StackPanel>
-      <TextBlock x:Name="SyncLine" Style="{StaticResource HazeCaptionStyle}" Visibility="Collapsed" Margin="0,4,0,0" />
     </StackPanel>
 
     <!-- The whole page scrolls as one column: the spotlight, then the engine's sections in the
          engine's order, then the closing line. -->
     <local:StateHost x:Name="State" Grid.Row="1">
       <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" IsTabStop="False">
-        <StackPanel x:Name="Column" Padding="0,8,36,48" HorizontalAlignment="Stretch">
+        <StackPanel x:Name="Column" Padding="0,8,36,48" HorizontalAlignment="Stretch" XYFocusKeyboardNavigation="Enabled">
           <local:HomeSpotlight x:Name="Spot" />
           <StackPanel x:Name="Shelves" />
           <StackPanel x:Name="Waiting" />

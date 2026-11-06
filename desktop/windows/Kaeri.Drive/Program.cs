@@ -51,9 +51,11 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     // Downloads, Sources, Settings and Plugin stores kept in place under the engine's events (PagesScenario.cs). Only when asked for by name.
     ("pages", PagesScenario.All, "watching", true),
     ("pages-sources", PagesScenario.Sourced, "demo-and-store", false),
+    // The wheel over Home's shelves and the grids against the wheel over what is not one, filmed frame by frame.
+    ("wheel", FeelScenario.Wheels, "watching", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -344,7 +346,7 @@ static class Scenarios
             {
                 for (var i = 0; i < 14; i++)
                 {
-                    Mouse.Scroll(-1);
+                    Native.Wheel(-1);
                     await Task.Delay(120);
                 }
                 await Task.Delay(600);
@@ -353,7 +355,7 @@ static class Scenarios
             {
                 for (var i = 0; i < 14; i++)
                 {
-                    Mouse.Scroll(1);
+                    Native.Wheel(1);
                     await Task.Delay(25);
                 }
                 await Task.Delay(800);
@@ -422,12 +424,12 @@ static class Scenarios
                 Mouse.MoveTo(run.Centre);
                 for (var i = 0; i < 10; i++)
                 {
-                    Mouse.Scroll(-1);
+                    Native.Wheel(-1);
                     await Task.Delay(90);
                 }
                 for (var i = 0; i < 10; i++)
                 {
-                    Mouse.Scroll(1);
+                    Native.Wheel(1);
                     await Task.Delay(90);
                 }
                 await Task.Delay(700);
@@ -935,6 +937,16 @@ static partial class Native
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetWindowPos(nint hwnd, nint after, int x, int y, int w, int h, uint flags);
+
+    [LibraryImport("user32.dll")]
+    private static partial void mouse_event(uint flags, int dx, int dy, uint data, nuint extra);
+
+    /// <summary>
+    /// The wheel by <paramref name="notches"/>, down when negative. FlaUI's Mouse.Scroll turns a
+    /// negative amount into an unsigned one by a saturating cast, so a scroll down sends nothing.
+    /// </summary>
+    public static void Wheel(int notches, bool sideways = false) =>
+        mouse_event(sideways ? 0x01000u : 0x0800u, 0, 0, unchecked((uint)(notches * 120)), 0);
 
     /// <summary>The window's size, its top left kept.</summary>
     public static void Size(nint hwnd, int w, int h) => SetWindowPos(hwnd, 0, 0, 0, w, h, 0x0002 | 0x0004 | 0x0010);
