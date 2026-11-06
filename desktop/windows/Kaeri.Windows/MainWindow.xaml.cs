@@ -1262,7 +1262,8 @@ public sealed partial class MainWindow : Window
     /// <summary>
     /// Keep going: the window goes and the notification area icon comes, the first time with a
     /// notification saying where Kaeri went. The engine stays until nothing is left running,
-    /// or until the icon's Quit; the icon's Open brings the window back.
+    /// or until the icon's Quit; the icon's Open brings the window back. Downloads paused from
+    /// the icon keep it there too, to be resumed from the same menu.
     /// </summary>
     void KeepGoingHidden()
     {
@@ -1272,9 +1273,11 @@ public sealed partial class MainWindow : Window
         tray ??= new Tray(WinRT.Interop.WindowNative.GetWindowHandle(this), Path.Combine(AppContext.BaseDirectory, "Assets", "kaeri.ico"))
         {
             Open = () => ui.TryEnqueue(ShowAgain),
-            PauseAll = () => ui.TryEnqueue(ctx.PauseAllDownloads),
+            PauseAll = () => ui.TryEnqueue(() => trayPaused.UnionWith(ctx.PauseAllDownloads())),
+            ResumeAll = () => ui.TryEnqueue(ctx.ResumeAllDownloads),
             Quit = () => ui.TryEnqueue(CloseNow),
             AnyRunning = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Active or DownloadState.Queued),
+            AnyPaused = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused),
         };
         var told = Path.Combine(dirs.Config, "windows-told-tray");
         tray.Show(tell: !File.Exists(told));
@@ -1286,11 +1289,16 @@ public sealed partial class MainWindow : Window
         keepGoing.Tick += (_, _) =>
         {
             var (d, s) = ctx.Known.Running();
-            if (d + s == 0)
+            // Paused from the icon: still there to resume, so Kaeri stays for them.
+            trayPaused.IntersectWith(ctx.Known.Downloads.Where(r => r.State is DownloadState.Paused or DownloadState.Active or DownloadState.Queued).Select(r => r.Id));
+            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)))
                 CloseNow();
         };
         keepGoing.Start();
     }
+
+    /// <summary>The downloads the icon's Pause all paused, which keep Kaeri in the notification area.</summary>
+    readonly HashSet<long> trayPaused = [];
 
     // Windows notifications: new episodes from the engine's check, finished downloads, and the
     // engine's own notices while the window is not in front.
@@ -1510,6 +1518,7 @@ public sealed partial class MainWindow : Window
     void ShowAgain()
     {
         keepGoing?.Stop();
+        trayPaused.Clear();
         tray?.Hide();
         AppWindow.Show(true);
         Activate();

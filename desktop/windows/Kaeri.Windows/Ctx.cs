@@ -285,9 +285,21 @@ sealed class Ctx
     public void Search(string query) => Window.ShowSearch(query);
 
     /// <summary>Pauses every download that runs or waits; each resumes from its own row.</summary>
-    public void PauseAllDownloads()
+    public IReadOnlyList<long> PauseAllDownloads()
     {
-        foreach (var row in Known.Downloads.Where(r => r.State is DownloadState.Active or DownloadState.Queued))
+        var paused = Known.Downloads.Where(r => r.State is DownloadState.Active or DownloadState.Queued).Select(r => r.Id).ToList();
+        foreach (var id in paused)
+            Send(new Command.DownloadPause(id));
+        return paused;
+    }
+
+    /// <summary>Resumes every paused download: a paused one's pause, pressed again.</summary>
+    public void ResumeAllDownloads()
+    {
+        foreach (var row in Known.Downloads.Where(r => r.State is DownloadState.Paused))
             Send(new Command.DownloadPause(row.Id));
     }
+
+    /// <summary>Signs in to a tracker in the browser or with a code, kept as under way until it ends.</summary>
+    public void SignIn(string tracker) => Known.SignInStarted(tracker, Send(new Command.Connect(tracker)));
 }
