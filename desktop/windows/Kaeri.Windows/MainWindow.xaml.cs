@@ -1441,6 +1441,9 @@ public sealed partial class MainWindow : Window
         Activated += (_, e) =>
         {
             inFront = e.WindowActivationState != WindowActivationState.Deactivated;
+            // Back in front: the keys go to the dialog that is up, not the page under it.
+            if (inFront)
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, Dialogs.Refocus);
             // The system's caption style has no change event: read it again on coming back.
             if (inFront)
                 Kaeri.Windows.Player.SubtitleStyling.Refresh();

@@ -1,5 +1,8 @@
 using Kaeri.Engine.Ffi;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 namespace Kaeri.Windows.Pages;
 
@@ -55,7 +58,7 @@ static class Dialogs
         }
         open = dialog;
         var done = closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        dialog.Opened += HideIfForced;
+        dialog.Opened += OnOpened;
         try
         {
             Opening?.Invoke();
@@ -71,7 +74,7 @@ static class Dialogs
         }
         finally
         {
-            dialog.Opened -= HideIfForced;
+            dialog.Opened -= OnOpened;
             forced.Remove(dialog);
             if (open == dialog)
             {
@@ -97,11 +100,35 @@ static class Dialogs
             Force(dialog);
     }
 
-    /// <summary>A Hide that came while the dialog was still opening is not kept by WinUI: it is done again once open.</summary>
-    static void HideIfForced(ContentDialog dialog, ContentDialogOpenedEventArgs args)
+    /// <summary>
+    /// Open: the keyboard is in it. A Hide that came while it was still opening is not kept by
+    /// WinUI, so it is done again now.
+    /// </summary>
+    static void OnOpened(ContentDialog dialog, ContentDialogOpenedEventArgs args)
     {
         if (forced.Contains(dialog))
             dialog.Hide();
+        else
+            Refocus();
+    }
+
+    /// <summary>
+    /// Puts the keyboard back in the dialog that is up when it is somewhere else. A dialog that
+    /// opens while the window is in the background, or a window that comes back to the front,
+    /// leaves the focus on the page under the dialog's shade, where Escape and Tab can't reach the
+    /// dialog and the mouse can't reach the page: the window would seem locked.
+    /// </summary>
+    public static void Refocus()
+    {
+        if (open is not { XamlRoot: { } root } dialog)
+            return;
+        for (var at = FocusManager.GetFocusedElement(root) as DependencyObject; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at == dialog)
+                return;
+        if (FocusManager.FindFirstFocusableElement(dialog) is UIElement first)
+            first.Focus(FocusState.Programmatic);
+        else
+            dialog.Focus(FocusState.Programmatic);
     }
 
     static void Force(ContentDialog dialog)
