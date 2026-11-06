@@ -34,6 +34,50 @@ public class KnownTests
     static Entry Title(uint id, string title) => new(Id: id, Title: title);
 
     [Fact]
+    public void AStatusSetHereShowsAtOnceAndMovesTheTitleBetweenLists()
+    {
+        var known = new Known();
+        known.Take(new Event.Content(new ContentFor.Library(LibrarySegment.Watching), new ContentList.Entries([Title(1, "Lantern Street"), Title(2, "Moon Laundry")])));
+        known.Take(new Event.Content(new ContentFor.Library(LibrarySegment.Planning), new ContentList.Empty()));
+        known.SetStatus(1, LibrarySegment.Planning);
+        Assert.Equal(LibrarySegment.Planning, known.Entry(1)?.ListStatus);
+        Assert.Equal([2u], known.ListEntries(new ContentFor.Library(LibrarySegment.Watching)).Select(e => e.Id));
+        Assert.Equal([1u], known.ListEntries(new ContentFor.Library(LibrarySegment.Planning)).Select(e => e.Id));
+    }
+
+    static HomeView Home(params uint[] continuing) => new(
+        Sections: [new HomeSection(Kind: SectionKind.Continue, Title: new Msg.HomeThisWeek(), Total: (uint)continuing.Length,
+            Items: [.. continuing.Select(id => new HomeItem(Entry: Title(id, "Lantern Street"), Action: HomeAction.Resume, Playable: Playable.Unknown))])],
+        Pending: []);
+
+    [Fact]
+    public void ATitleRemovedOnHomeStaysOutUntilAHomeComesWithoutIt()
+    {
+        var known = new Known();
+        known.Take(new Event.Home(Home(1, 2)));
+        known.HiddenFromContinue.Add(1);
+        known.DismissedHere.Add(2);
+        // A Home that crossed the removal still holds both.
+        known.Take(new Event.Home(Home(1, 2)));
+        Assert.Contains(1u, known.HiddenFromContinue);
+        Assert.Contains(2u, known.DismissedHere);
+        known.Take(new Event.Home(Home(3)));
+        Assert.Empty(known.HiddenFromContinue);
+        Assert.Empty(known.DismissedHere);
+    }
+
+    [Fact]
+    public void ProgressMarksTheEpisodesItCarriesInTheTable()
+    {
+        var known = new Known();
+        known.Take(new Event.Episodes(7, [new EpisodeRow("1", Title: "Lanterns"), new EpisodeRow("2")]));
+        known.Take(new Event.Progress(7, null, null, [new EpisodeProgress("1", Watched: 1, Completed: true)]));
+        Assert.True(known.Episodes[7][0].Completed);
+        Assert.Equal("Lanterns", known.Episodes[7][0].Title);
+        Assert.False(known.Episodes[7][1].Completed);
+    }
+
+    [Fact]
     public void OfflineFollowsTheEnginesConnectivity()
     {
         var known = new Known();

@@ -190,8 +190,35 @@ public sealed class Known
     /// <summary>Titles restored from Settings in this run, until the engine sends the list again.</summary>
     public HashSet<uint> RestoredHere { get; } = [];
 
-    /// <summary>Titles dismissed from Home in this run, until the engine's next Home: so a late send cannot bring one back first.</summary>
+    /// <summary>
+    /// Titles dismissed from Home in this run, until a Home from the engine without them: so a
+    /// send that crossed the dismissal cannot bring one back. Home is drawn without them.
+    /// </summary>
     public HashSet<uint> DismissedHere { get; } = [];
+
+    /// <summary>
+    /// A title put on a list here, ahead of the tracker's word: the engine queues the change for
+    /// the tracker and answers with the outbox's depth only, so the title's status and the
+    /// Library's lists take it now, as the Mac's title cache does. The title moves to the front
+    /// of its new list, where the tracker's last-updated order puts it.
+    /// </summary>
+    public void SetStatus(uint id, LibrarySegment segment)
+    {
+        var entry = Entries.GetValueOrDefault(id);
+        if (entry is not null)
+            Entries[id] = entry = entry with { ListStatus = segment };
+        foreach (var (view, list) in Lists.ToList())
+        {
+            if (view is not ContentFor.Library { V1: var s } || list is not (ContentList.Entries or ContentList.Empty))
+                continue;
+            var rows = list is ContentList.Entries some ? some.V1 : [];
+            var without = rows.Where(e => e.Id != id).ToArray();
+            if (s == segment && entry is not null)
+                Lists[view] = new ContentList.Entries([entry, .. without]);
+            else if (without.Length != rows.Length)
+                Lists[view] = without.Length == 0 ? new ContentList.Empty() : new ContentList.Entries(without);
+        }
+    }
 
     /// <summary>A suggestion was put on Planning here: its button is gone until the engine says otherwise.</summary>
     public void PlannedFromUpNext(uint id) =>
@@ -200,7 +227,10 @@ public sealed class Known
     /// <summary>Whether the engine has sent <c>UpNext</c> since the page asked, even an empty group.</summary>
     public bool UpNextSent { get; set; }
 
-    /// <summary>Titles hidden from Continue in this run, until the engine's next list.</summary>
+    /// <summary>
+    /// Titles hidden from Continue in this run, until the engine's next list or a Home whose
+    /// Continue no longer holds them. Home's Continue and spotlight are drawn without them.
+    /// </summary>
     public HashSet<uint> HiddenFromContinue { get; } = [];
 
     /// <summary>The engine has no network path: from <c>Connectivity</c>, fed by the window's network watch.</summary>
@@ -308,7 +338,16 @@ public sealed class Known
                 break;
             case Event.Home home:
                 Home = home.V1;
-                DismissedHere.Clear();
+                // The engine has the removal once a Home comes without the title; until then a
+                // send that crossed it still holds the title, and Home leaves it out.
+                var held = home.V1.Sections.SelectMany(s => s.Items).Select(i => i.Entry.Id).ToHashSet();
+                if (home.V1.Spotlight is { } shown)
+                    held.Add(shown.Entry.Id);
+                DismissedHere.RemoveWhere(id => !held.Contains(id));
+                var continuing = home.V1.Sections.Where(s => s.Kind == SectionKind.Continue).SelectMany(s => s.Items).Select(i => i.Entry.Id).ToHashSet();
+                if (home.V1.Spotlight is { Case: SpotlightCase.Continuing } going)
+                    continuing.Add(going.Entry.Id);
+                HiddenFromContinue.RemoveWhere(id => !continuing.Contains(id));
                 if (home.V1.Spotlight is { } spot)
                     Entries[spot.Entry.Id] = Merge(Fixed(spot.Entry), local: false);
                 foreach (var section in home.V1.Sections)
@@ -346,6 +385,15 @@ public sealed class Known
             case Event.Progress p:
                 if (Entries.TryGetValue(p.Id, out var known))
                     Entries[p.Id] = known with { Progress = p.ProgressValue, Resume = p.Resume };
+                // The episodes' watched state comes with it, as the Mac's title cache takes it:
+                // the table is patched, with no new listing.
+                if (p.EpisodesValue.Length > 0 && Episodes.TryGetValue(p.Id, out var table))
+                {
+                    var marks = p.EpisodesValue.GroupBy(e => e.Number).ToDictionary(g => g.Key, g => g.Last());
+                    Episodes[p.Id] = [.. table.Select(row => marks.TryGetValue(row.Number, out var mark)
+                        ? row with { Watched = mark.Watched, Completed = mark.Completed, SpoilerAhead = mark.SpoilerAhead }
+                        : row)];
+                }
                 break;
             case Event.LastAired aired:
                 foreach (var title in aired.V1)
