@@ -579,6 +579,90 @@ public static partial class T
     /// <summary>Why something about reading failed, for any other reason. The reason is as it came.</summary>
     public static string ReadingFailedOther(string reason) => Fill(Get("ReadingFailedOther"), ("reason", reason));
 
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</summary>
+    public static string ReadingKindManga => Get("ReadingKindManga");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</summary>
+    public static string ReadingKindManhwa => Get("ReadingKindManhwa");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</summary>
+    public static string ReadingKindManhua => Get("ReadingKindManhua");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</summary>
+    public static string ReadingKindWebtoon => Get("ReadingKindWebtoon");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</summary>
+    public static string ReadingKindOneShot => Get("ReadingKindOneShot");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</summary>
+    public static string ReadingKindLightNovel => Get("ReadingKindLightNovel");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</summary>
+    public static string ReadingKindNovel => Get("ReadingKindNovel");
+
+    /// <summary>Under a cover or on a series page: new chapters are still coming out.</summary>
+    public static string ReadingStatusReleasing => Get("ReadingStatusReleasing");
+
+    /// <summary>Under a cover or on a series page: the story is complete.</summary>
+    public static string ReadingStatusFinished => Get("ReadingStatusFinished");
+
+    /// <summary>Under a cover or on a series page: new chapters have stopped for a while.</summary>
+    public static string ReadingStatusHiatus => Get("ReadingStatusHiatus");
+
+    /// <summary>Under a cover or on a series page: the story was stopped before it ended.</summary>
+    public static string ReadingStatusCancelled => Get("ReadingStatusCancelled");
+
+    /// <summary>Under a cover or on a series page: the first chapter is not out yet.</summary>
+    public static string ReadingStatusNotYet => Get("ReadingStatusNotYet");
+
+    /// <summary>Under a cover or on a series page: how many chapters the series has.</summary>
+    public static string ReadingChapters(long count) => Fill(GetPlural("ReadingChapters", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or on a series page: how many volumes the series has.</summary>
+    public static string ReadingVolumes(long count) => Fill(GetPlural("ReadingVolumes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: the series is on the person's Planning list.</summary>
+    public static string ReadingOnPlanning => Get("ReadingOnPlanning");
+
+    /// <summary>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</summary>
+    public static string ReadingSpotlightNewChapter => Get("ReadingSpotlightNewChapter");
+
+    /// <summary>Above the big picture at the top of reading's Home: the series the person was reading last.</summary>
+    public static string ReadingSpotlightContinue => Get("ReadingSpotlightContinue");
+
+    /// <summary>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</summary>
+    public static string ReadingSpotlightUpNext => Get("ReadingSpotlightUpNext");
+
+    /// <summary>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</summary>
+    public static string ReadingSpotlightPopular => Get("ReadingSpotlightPopular");
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</summary>
+    public static string ReadingOutToday(string chapter) => Fill(Get("ReadingOutToday"), ("chapter", chapter));
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today, with its title.</summary>
+    public static string ReadingOutTodayTitled(string chapter, string title) => Fill(Get("ReadingOutTodayTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>Under a cover or the big picture: the page the person stopped on in a chapter.</summary>
+    public static string ReadingChapterPage(string chapter, long page) => Fill(Get("ReadingChapterPage"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or the big picture: how far into a novel's chapter the person is.</summary>
+    public static string ReadingChapterPercent(string chapter, long percent) => Fill(Get("ReadingChapterPercent"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a chapter came out that the person has not read. The chapter is its number.</summary>
+    public static string ReadingChapterNew(string chapter) => Fill(Get("ReadingChapterNew"), ("chapter", chapter));
+
+    /// <summary>A search filter: books from Japan.</summary>
+    public static string ReadingOriginJapan => Get("ReadingOriginJapan");
+
+    /// <summary>A search filter: books from Korea.</summary>
+    public static string ReadingOriginKorea => Get("ReadingOriginKorea");
+
+    /// <summary>A search filter: books from China.</summary>
+    public static string ReadingOriginChina => Get("ReadingOriginChina");
+
+    /// <summary>A search filter: books from Taiwan.</summary>
+    public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -8997,6 +9081,36 @@ public static partial class T
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
         ["ReadingFailedOther"] = "Something went wrong. {reason}",
+        ["ReadingKindManga"] = "Manga",
+        ["ReadingKindManhwa"] = "Manhwa",
+        ["ReadingKindManhua"] = "Manhua",
+        ["ReadingKindWebtoon"] = "Webtoon",
+        ["ReadingKindOneShot"] = "One-shot",
+        ["ReadingKindLightNovel"] = "Light novel",
+        ["ReadingKindNovel"] = "Novel",
+        ["ReadingStatusReleasing"] = "Releasing",
+        ["ReadingStatusFinished"] = "Finished",
+        ["ReadingStatusHiatus"] = "On hiatus",
+        ["ReadingStatusCancelled"] = "Cancelled",
+        ["ReadingStatusNotYet"] = "Not out yet",
+        ["ReadingChapters_one"] = "1 chapter",
+        ["ReadingChapters_other"] = "{count} chapters",
+        ["ReadingVolumes_one"] = "1 volume",
+        ["ReadingVolumes_other"] = "{count} volumes",
+        ["ReadingOnPlanning"] = "On your Planning list",
+        ["ReadingSpotlightNewChapter"] = "New chapter in a series you follow",
+        ["ReadingSpotlightContinue"] = "Continue reading",
+        ["ReadingSpotlightUpNext"] = "Up next for you",
+        ["ReadingSpotlightPopular"] = "Popular, releasing now",
+        ["ReadingOutToday"] = "Chapter {chapter} is out today",
+        ["ReadingOutTodayTitled"] = "Chapter {chapter}, {title}, out today",
+        ["ReadingChapterPage"] = "Chapter {chapter} · page {page}",
+        ["ReadingChapterPercent"] = "Chapter {chapter} · {percent}%",
+        ["ReadingChapterNew"] = "Chapter {chapter} is new",
+        ["ReadingOriginJapan"] = "Japan",
+        ["ReadingOriginKorea"] = "Korea",
+        ["ReadingOriginChina"] = "China",
+        ["ReadingOriginTaiwan"] = "Taiwan",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",

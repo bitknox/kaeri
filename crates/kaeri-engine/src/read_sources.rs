@@ -924,6 +924,7 @@ impl BookSources {
                     next: None,
                     new_chapter: false,
                     adult: false,
+                    facts: Vec::new(),
                 });
             }
         }
@@ -979,6 +980,7 @@ impl BookSources {
                 },
                 None => ChapterReadState::Unread,
             };
+            let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
             let row = ChapterRow {
                 id,
                 label: chapter.number_raw.clone(),
@@ -992,6 +994,8 @@ impl BookSources {
                 download: None,
                 versions: 1,
                 bookmarked: false,
+                version_label: chapter.version_label.clone(),
+                read_at,
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),

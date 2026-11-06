@@ -339,6 +339,34 @@ extension ReadingMsg {
         case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
         case .readingFailedOff: L.readingFailedOff
         case .readingFailedOther(let reason): L.readingFailedOther(reason: reason)
+        case .readingKindManga: L.readingKindManga
+        case .readingKindManhwa: L.readingKindManhwa
+        case .readingKindManhua: L.readingKindManhua
+        case .readingKindWebtoon: L.readingKindWebtoon
+        case .readingKindOneShot: L.readingKindOneShot
+        case .readingKindLightNovel: L.readingKindLightNovel
+        case .readingKindNovel: L.readingKindNovel
+        case .readingStatusReleasing: L.readingStatusReleasing
+        case .readingStatusFinished: L.readingStatusFinished
+        case .readingStatusHiatus: L.readingStatusHiatus
+        case .readingStatusCancelled: L.readingStatusCancelled
+        case .readingStatusNotYet: L.readingStatusNotYet
+        case .readingChapters(let count): L.readingChapters(count: Int(count))
+        case .readingVolumes(let count): L.readingVolumes(count: Int(count))
+        case .readingOnPlanning: L.readingOnPlanning
+        case .readingSpotlightNewChapter: L.readingSpotlightNewChapter
+        case .readingSpotlightContinue: L.readingSpotlightContinue
+        case .readingSpotlightUpNext: L.readingSpotlightUpNext
+        case .readingSpotlightPopular: L.readingSpotlightPopular
+        case .readingOutToday(let chapter): L.readingOutToday(chapter: chapter)
+        case .readingOutTodayTitled(let chapter, let title): L.readingOutTodayTitled(chapter: chapter, title: title)
+        case .readingChapterPage(let chapter, let page): L.readingChapterPage(chapter: chapter, page: Int(page))
+        case .readingChapterPercent(let chapter, let percent): L.readingChapterPercent(chapter: chapter, percent: Int(percent))
+        case .readingChapterNew(let chapter): L.readingChapterNew(chapter: chapter)
+        case .readingOriginJapan: L.readingOriginJapan
+        case .readingOriginKorea: L.readingOriginKorea
+        case .readingOriginChina: L.readingOriginChina
+        case .readingOriginTaiwan: L.readingOriginTaiwan
         }
     }
 }

@@ -761,6 +761,118 @@ object Strings {
     fun readingFailedOther(context: Context, reason: String): String =
         context.getString(R.string.reading_failed_other, reason)
 
+    /** Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan. */
+    fun readingKindManga(context: Context): String =
+        context.getString(R.string.reading_kind_manga)
+
+    /** Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea. */
+    fun readingKindManhwa(context: Context): String =
+        context.getString(R.string.reading_kind_manhwa)
+
+    /** Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan. */
+    fun readingKindManhua(context: Context): String =
+        context.getString(R.string.reading_kind_manhua)
+
+    /** Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down. */
+    fun readingKindWebtoon(context: Context): String =
+        context.getString(R.string.reading_kind_webtoon)
+
+    /** Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter. */
+    fun readingKindOneShot(context: Context): String =
+        context.getString(R.string.reading_kind_one_shot)
+
+    /** Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan. */
+    fun readingKindLightNovel(context: Context): String =
+        context.getString(R.string.reading_kind_light_novel)
+
+    /** Under a cover or on a series page: what kind of book it is, for a novel from anywhere else. */
+    fun readingKindNovel(context: Context): String =
+        context.getString(R.string.reading_kind_novel)
+
+    /** Under a cover or on a series page: new chapters are still coming out. */
+    fun readingStatusReleasing(context: Context): String =
+        context.getString(R.string.reading_status_releasing)
+
+    /** Under a cover or on a series page: the story is complete. */
+    fun readingStatusFinished(context: Context): String =
+        context.getString(R.string.reading_status_finished)
+
+    /** Under a cover or on a series page: new chapters have stopped for a while. */
+    fun readingStatusHiatus(context: Context): String =
+        context.getString(R.string.reading_status_hiatus)
+
+    /** Under a cover or on a series page: the story was stopped before it ended. */
+    fun readingStatusCancelled(context: Context): String =
+        context.getString(R.string.reading_status_cancelled)
+
+    /** Under a cover or on a series page: the first chapter is not out yet. */
+    fun readingStatusNotYet(context: Context): String =
+        context.getString(R.string.reading_status_not_yet)
+
+    /** Under a cover or on a series page: how many chapters the series has. */
+    fun readingChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_chapters, count, count)
+
+    /** Under a cover or on a series page: how many volumes the series has. */
+    fun readingVolumes(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_volumes, count, count)
+
+    /** Under a cover: the series is on the person's Planning list. */
+    fun readingOnPlanning(context: Context): String =
+        context.getString(R.string.reading_on_planning)
+
+    /** Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads. */
+    fun readingSpotlightNewChapter(context: Context): String =
+        context.getString(R.string.reading_spotlight_new_chapter)
+
+    /** Above the big picture at the top of reading's Home: the series the person was reading last. */
+    fun readingSpotlightContinue(context: Context): String =
+        context.getString(R.string.reading_spotlight_continue)
+
+    /** Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read. */
+    fun readingSpotlightUpNext(context: Context): String =
+        context.getString(R.string.reading_spotlight_up_next)
+
+    /** Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them. */
+    fun readingSpotlightPopular(context: Context): String =
+        context.getString(R.string.reading_spotlight_popular)
+
+    /** Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88. */
+    fun readingOutToday(context: Context, chapter: String): String =
+        context.getString(R.string.reading_out_today, chapter)
+
+    /** Under the big picture on reading's Home: a chapter that came out today, with its title. */
+    fun readingOutTodayTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reading_out_today_titled, chapter, title)
+
+    /** Under a cover or the big picture: the page the person stopped on in a chapter. */
+    fun readingChapterPage(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.reading_chapter_page, chapter, page)
+
+    /** Under a cover or the big picture: how far into a novel's chapter the person is. */
+    fun readingChapterPercent(context: Context, chapter: String, percent: Int): String =
+        context.getString(R.string.reading_chapter_percent, chapter, percent)
+
+    /** Under a cover: a chapter came out that the person has not read. The chapter is its number. */
+    fun readingChapterNew(context: Context, chapter: String): String =
+        context.getString(R.string.reading_chapter_new, chapter)
+
+    /** A search filter: books from Japan. */
+    fun readingOriginJapan(context: Context): String =
+        context.getString(R.string.reading_origin_japan)
+
+    /** A search filter: books from Korea. */
+    fun readingOriginKorea(context: Context): String =
+        context.getString(R.string.reading_origin_korea)
+
+    /** A search filter: books from China. */
+    fun readingOriginChina(context: Context): String =
+        context.getString(R.string.reading_origin_china)
+
+    /** A search filter: books from Taiwan. */
+    fun readingOriginTaiwan(context: Context): String =
+        context.getString(R.string.reading_origin_taiwan)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)

@@ -1251,6 +1251,62 @@ pub enum ReadingMsg {
     ReadingFailedOff,
     /// Why something about reading failed, for any other reason. The reason is as it came.
     ReadingFailedOther { reason: String },
+    /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+    ReadingKindManga,
+    /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+    ReadingKindManhwa,
+    /// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+    ReadingKindManhua,
+    /// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+    ReadingKindWebtoon,
+    /// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+    ReadingKindOneShot,
+    /// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+    ReadingKindLightNovel,
+    /// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+    ReadingKindNovel,
+    /// Under a cover or on a series page: new chapters are still coming out.
+    ReadingStatusReleasing,
+    /// Under a cover or on a series page: the story is complete.
+    ReadingStatusFinished,
+    /// Under a cover or on a series page: new chapters have stopped for a while.
+    ReadingStatusHiatus,
+    /// Under a cover or on a series page: the story was stopped before it ended.
+    ReadingStatusCancelled,
+    /// Under a cover or on a series page: the first chapter is not out yet.
+    ReadingStatusNotYet,
+    /// Under a cover or on a series page: how many chapters the series has.
+    ReadingChapters { count: i64 },
+    /// Under a cover or on a series page: how many volumes the series has.
+    ReadingVolumes { count: i64 },
+    /// Under a cover: the series is on the person's Planning list.
+    ReadingOnPlanning,
+    /// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+    ReadingSpotlightNewChapter,
+    /// Above the big picture at the top of reading's Home: the series the person was reading last.
+    ReadingSpotlightContinue,
+    /// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+    ReadingSpotlightUpNext,
+    /// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+    ReadingSpotlightPopular,
+    /// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+    ReadingOutToday { chapter: String },
+    /// Under the big picture on reading's Home: a chapter that came out today, with its title.
+    ReadingOutTodayTitled { chapter: String, title: String },
+    /// Under a cover or the big picture: the page the person stopped on in a chapter.
+    ReadingChapterPage { chapter: String, page: i64 },
+    /// Under a cover or the big picture: how far into a novel's chapter the person is.
+    ReadingChapterPercent { chapter: String, percent: i64 },
+    /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+    ReadingChapterNew { chapter: String },
+    /// A search filter: books from Japan.
+    ReadingOriginJapan,
+    /// A search filter: books from Korea.
+    ReadingOriginKorea,
+    /// A search filter: books from China.
+    ReadingOriginChina,
+    /// A search filter: books from Taiwan.
+    ReadingOriginTaiwan,
 }
 
 impl ReadingMsg {
@@ -1291,6 +1347,34 @@ impl ReadingMsg {
             Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
             Self::ReadingFailedOff => "reading-failed-off",
             Self::ReadingFailedOther { .. } => "reading-failed-other",
+            Self::ReadingKindManga => "reading-kind-manga",
+            Self::ReadingKindManhwa => "reading-kind-manhwa",
+            Self::ReadingKindManhua => "reading-kind-manhua",
+            Self::ReadingKindWebtoon => "reading-kind-webtoon",
+            Self::ReadingKindOneShot => "reading-kind-one-shot",
+            Self::ReadingKindLightNovel => "reading-kind-light-novel",
+            Self::ReadingKindNovel => "reading-kind-novel",
+            Self::ReadingStatusReleasing => "reading-status-releasing",
+            Self::ReadingStatusFinished => "reading-status-finished",
+            Self::ReadingStatusHiatus => "reading-status-hiatus",
+            Self::ReadingStatusCancelled => "reading-status-cancelled",
+            Self::ReadingStatusNotYet => "reading-status-not-yet",
+            Self::ReadingChapters { .. } => "reading-chapters",
+            Self::ReadingVolumes { .. } => "reading-volumes",
+            Self::ReadingOnPlanning => "reading-on-planning",
+            Self::ReadingSpotlightNewChapter => "reading-spotlight-new-chapter",
+            Self::ReadingSpotlightContinue => "reading-spotlight-continue",
+            Self::ReadingSpotlightUpNext => "reading-spotlight-up-next",
+            Self::ReadingSpotlightPopular => "reading-spotlight-popular",
+            Self::ReadingOutToday { .. } => "reading-out-today",
+            Self::ReadingOutTodayTitled { .. } => "reading-out-today-titled",
+            Self::ReadingChapterPage { .. } => "reading-chapter-page",
+            Self::ReadingChapterPercent { .. } => "reading-chapter-percent",
+            Self::ReadingChapterNew { .. } => "reading-chapter-new",
+            Self::ReadingOriginJapan => "reading-origin-japan",
+            Self::ReadingOriginKorea => "reading-origin-korea",
+            Self::ReadingOriginChina => "reading-origin-china",
+            Self::ReadingOriginTaiwan => "reading-origin-taiwan",
         }
     }
 
@@ -1331,6 +1415,34 @@ impl ReadingMsg {
             Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
             Self::ReadingFailedOff => Vec::new(),
             Self::ReadingFailedOther { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::ReadingKindManga => Vec::new(),
+            Self::ReadingKindManhwa => Vec::new(),
+            Self::ReadingKindManhua => Vec::new(),
+            Self::ReadingKindWebtoon => Vec::new(),
+            Self::ReadingKindOneShot => Vec::new(),
+            Self::ReadingKindLightNovel => Vec::new(),
+            Self::ReadingKindNovel => Vec::new(),
+            Self::ReadingStatusReleasing => Vec::new(),
+            Self::ReadingStatusFinished => Vec::new(),
+            Self::ReadingStatusHiatus => Vec::new(),
+            Self::ReadingStatusCancelled => Vec::new(),
+            Self::ReadingStatusNotYet => Vec::new(),
+            Self::ReadingChapters { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingVolumes { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingOnPlanning => Vec::new(),
+            Self::ReadingSpotlightNewChapter => Vec::new(),
+            Self::ReadingSpotlightContinue => Vec::new(),
+            Self::ReadingSpotlightUpNext => Vec::new(),
+            Self::ReadingSpotlightPopular => Vec::new(),
+            Self::ReadingOutToday { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingOutTodayTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingChapterPage { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page))],
+            Self::ReadingChapterPercent { chapter, percent } => vec![("chapter", Value::Text(chapter.clone())), ("percent", Value::Int(*percent))],
+            Self::ReadingChapterNew { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingOriginJapan => Vec::new(),
+            Self::ReadingOriginKorea => Vec::new(),
+            Self::ReadingOriginChina => Vec::new(),
+            Self::ReadingOriginTaiwan => Vec::new(),
         }
     }
 }

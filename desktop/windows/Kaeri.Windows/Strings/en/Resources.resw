@@ -823,6 +823,126 @@
     <value>Something went wrong. {reason}</value>
     <comment>Why something about reading failed, for any other reason. The reason is as it came.</comment>
   </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>Manga</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</comment>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>Manhwa</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</comment>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>Manhua</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</comment>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>Webtoon</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</comment>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>One-shot</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</comment>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>Light novel</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</comment>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>Novel</value>
+    <comment>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</comment>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>Releasing</value>
+    <comment>Under a cover or on a series page: new chapters are still coming out.</comment>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>Finished</value>
+    <comment>Under a cover or on a series page: the story is complete.</comment>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>On hiatus</value>
+    <comment>Under a cover or on a series page: new chapters have stopped for a while.</comment>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+    <comment>Under a cover or on a series page: the story was stopped before it ended.</comment>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>Not out yet</value>
+    <comment>Under a cover or on a series page: the first chapter is not out yet.</comment>
+  </data>
+  <data name="ReadingChapters_one" xml:space="preserve">
+    <value>1 chapter</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>{count} chapters</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_one" xml:space="preserve">
+    <value>1 volume</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>{count} volumes</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>On your Planning list</value>
+    <comment>Under a cover: the series is on the person's Planning list.</comment>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>New chapter in a series you follow</value>
+    <comment>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</comment>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>Continue reading</value>
+    <comment>Above the big picture at the top of reading's Home: the series the person was reading last.</comment>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>Up next for you</value>
+    <comment>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</comment>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>Popular, releasing now</value>
+    <comment>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</comment>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>Chapter {chapter} is out today</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</comment>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>Chapter {chapter}, {title}, out today</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>Chapter {chapter} · page {page}</value>
+    <comment>Under a cover or the big picture: the page the person stopped on in a chapter.</comment>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>Chapter {chapter} · {percent}%</value>
+    <comment>Under a cover or the big picture: how far into a novel's chapter the person is.</comment>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>Chapter {chapter} is new</value>
+    <comment>Under a cover: a chapter came out that the person has not read. The chapter is its number.</comment>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>Japan</value>
+    <comment>A search filter: books from Japan.</comment>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>Korea</value>
+    <comment>A search filter: books from Korea.</comment>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>China</value>
+    <comment>A search filter: books from China.</comment>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>Taiwan</value>
+    <comment>A search filter: books from Taiwan.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

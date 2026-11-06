@@ -165743,6 +165743,76 @@
         }
       }
     },
+    "reading-chapter-new" : {
+      "comment" : "Under a cover: a chapter came out that the person has not read. The chapter is its number. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ is new"
+          }
+        }
+      }
+    },
+    "reading-chapter-page" : {
+      "comment" : "Under a cover or the big picture: the page the person stopped on in a chapter. Argument 1: chapter (Text). Argument 2: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ · page %2$lld"
+          }
+        }
+      }
+    },
+    "reading-chapter-percent" : {
+      "comment" : "Under a cover or the big picture: how far into a novel's chapter the person is. Argument 1: chapter (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "reading-chapters" : {
+      "comment" : "Under a cover or on a series page: how many chapters the series has. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "reading-failed-blocked" : {
       "comment" : "Why a chapter or a list could not load: the source refused. The reason comes from the source. Argument 1: source (Text). Argument 2: reason (Text).",
       "extractionState" : "manual",
@@ -165935,6 +166005,90 @@
         }
       }
     },
+    "reading-kind-light-novel" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel"
+          }
+        }
+      }
+    },
+    "reading-kind-manga" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga"
+          }
+        }
+      }
+    },
+    "reading-kind-manhua" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manhua"
+          }
+        }
+      }
+    },
+    "reading-kind-manhwa" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manhwa"
+          }
+        }
+      }
+    },
+    "reading-kind-novel" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novel"
+          }
+        }
+      }
+    },
+    "reading-kind-one-shot" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One-shot"
+          }
+        }
+      }
+    },
+    "reading-kind-webtoon" : {
+      "comment" : "Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon"
+          }
+        }
+      }
+    },
     "reading-next-chapter" : {
       "comment" : "Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5. Argument 1: chapter (Text).",
       "extractionState" : "manual",
@@ -165947,6 +166101,90 @@
         }
       }
     },
+    "reading-on-planning" : {
+      "comment" : "Under a cover: the series is on the person's Planning list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On your Planning list"
+          }
+        }
+      }
+    },
+    "reading-origin-china" : {
+      "comment" : "A search filter: books from China.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "China"
+          }
+        }
+      }
+    },
+    "reading-origin-japan" : {
+      "comment" : "A search filter: books from Japan.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japan"
+          }
+        }
+      }
+    },
+    "reading-origin-korea" : {
+      "comment" : "A search filter: books from Korea.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korea"
+          }
+        }
+      }
+    },
+    "reading-origin-taiwan" : {
+      "comment" : "A search filter: books from Taiwan.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taiwan"
+          }
+        }
+      }
+    },
+    "reading-out-today" : {
+      "comment" : "Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ is out today"
+          }
+        }
+      }
+    },
+    "reading-out-today-titled" : {
+      "comment" : "Under the big picture on reading's Home: a chapter that came out today, with its title. Argument 1: chapter (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@, %2$@, out today"
+          }
+        }
+      }
+    },
     "reading-split-chapter" : {
       "comment" : "Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10. Argument 1: chapter (Text). Argument 2: whole (Text).",
       "extractionState" : "manual",
@@ -165955,6 +166193,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapter %1$@ goes to trackers as %2$@."
+          }
+        }
+      }
+    },
+    "reading-spotlight-continue" : {
+      "comment" : "Above the big picture at the top of reading's Home: the series the person was reading last.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue reading"
+          }
+        }
+      }
+    },
+    "reading-spotlight-new-chapter" : {
+      "comment" : "Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New chapter in a series you follow"
+          }
+        }
+      }
+    },
+    "reading-spotlight-popular" : {
+      "comment" : "Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular, releasing now"
+          }
+        }
+      }
+    },
+    "reading-spotlight-up-next" : {
+      "comment" : "Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up next for you"
+          }
+        }
+      }
+    },
+    "reading-status-cancelled" : {
+      "comment" : "Under a cover or on a series page: the story was stopped before it ended.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled"
+          }
+        }
+      }
+    },
+    "reading-status-finished" : {
+      "comment" : "Under a cover or on a series page: the story is complete.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
+          }
+        }
+      }
+    },
+    "reading-status-hiatus" : {
+      "comment" : "Under a cover or on a series page: new chapters have stopped for a while.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On hiatus"
+          }
+        }
+      }
+    },
+    "reading-status-not-yet" : {
+      "comment" : "Under a cover or on a series page: the first chapter is not out yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not out yet"
+          }
+        }
+      }
+    },
+    "reading-status-releasing" : {
+      "comment" : "Under a cover or on a series page: new chapters are still coming out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releasing"
           }
         }
       }
@@ -166039,6 +166385,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usually Wednesdays"
+          }
+        }
+      }
+    },
+    "reading-volumes" : {
+      "comment" : "Under a cover or on a series page: how many volumes the series has. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 volume"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld volumes"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -600,6 +600,98 @@ reading-failed-off = [Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = [Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. { $reason }~~~~~~~~]
 
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = [Ṁàñĝà~~]
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = [Ṁàñĥŵà~~]
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = [Ṁàñĥüà~~]
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = [Ŵéƀţööñ~~~]
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = [Öñé-šĥöţ~~~]
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = [Ļîĝĥţ ñöṽéļ~~~~]
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = [Ñöṽéļ~~]
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = [Ŕéļéàšîñĝ~~~]
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = [Ƒîñîšĥéð~~~]
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = [Öñ ĥîàţüš~~~]
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = [Çàñçéļļéð~~~]
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = [Ñöţ öüţ ýéţ~~~~]
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] [1 çĥàþţéŕ~~~]
+       *[other] [{ $count } çĥàþţéŕš~~~~]
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] [1 ṽöļüɱé~~~]
+       *[other] [{ $count } ṽöļüɱéš~~~~]
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = [Öñ ýöüŕ Þļàññîñĝ ļîšţ~~~~~~~]
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = [Ñéŵ çĥàþţéŕ îñ à šéŕîéš ýöü ƒöļļöŵ~~~~~~~~~~~]
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = [Çöñţîñüé ŕéàðîñĝ~~~~~]
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = [Ûþ ñéẋţ ƒöŕ ýöü~~~~~]
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = [Þöþüļàŕ, ŕéļéàšîñĝ ñöŵ~~~~~~~]
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = [Çĥàþţéŕ { $chapter } îš öüţ ţöðàý~~~~~~~~]
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = [Çĥàþţéŕ { $chapter }, { $title }, öüţ ţöðàý~~~~~~~~~]
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = [Çĥàþţéŕ { $chapter } · þàĝé { $page }~~~~~~~]
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = [Çĥàþţéŕ { $chapter } · { $percent }%~~~~~~]
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = [Çĥàþţéŕ { $chapter } îš ñéŵ~~~~~~]
+
+# A search filter: books from Japan.
+reading-origin-japan = [Ĵàþàñ~~]
+
+# A search filter: books from Korea.
+reading-origin-korea = [Ķöŕéà~~]
+
+# A search filter: books from China.
+reading-origin-china = [Çĥîñà~~]
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = [Ţàîŵàñ~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 

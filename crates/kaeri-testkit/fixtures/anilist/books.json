@@ -1,0 +1,956 @@
+[
+ {
+  "id": 900301,
+  "idMal": null,
+  "title": {
+   "romaji": "Touro no Watashibune",
+   "english": "The Lantern Ferry",
+   "native": "灯籠の渡し舟"
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A ferry keeper carries the lanterns of the departed across a quiet river, one passenger a night.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Fantasy",
+   "Slice of Life"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900301-xl.jpg",
+   "large": "https://img.example/cover/900301.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900301.jpg",
+  "averageScore": 81,
+  "popularity": 42000,
+  "startDate": {
+   "year": 2019,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Travel",
+    "rank": 80
+   },
+   {
+    "name": "Rural",
+    "rank": 62
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tsukasa Mori"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": [
+    {
+     "relationType": "ADAPTATION",
+     "node": {
+      "id": 900002,
+      "type": "ANIME",
+      "format": "TV",
+      "title": {
+       "romaji": "Kumo no Ue no Toshokan",
+       "english": "The Library Above the Clouds",
+       "native": null
+      },
+      "coverImage": {
+       "large": "https://img.example/cover/900002.jpg",
+       "color": null
+      }
+     }
+    }
+   ]
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900304
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900305
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900310
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900302,
+  "idMal": null,
+  "title": {
+   "romaji": "Garasu no Kajuen",
+   "english": "The Glass Orchard",
+   "native": "硝子の果樹園"
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "An apprentice glassblower inherits an orchard whose fruit rings like bells.",
+  "chapters": null,
+  "volumes": 9,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900302-xl.jpg",
+   "large": "https://img.example/cover/900302.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900302.jpg",
+  "averageScore": 77,
+  "popularity": 18000,
+  "startDate": {
+   "year": 2020,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Coming of Age",
+    "rank": 71
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Hana Aoki"
+      }
+     }
+    },
+    {
+     "role": "Illustration",
+     "node": {
+      "name": {
+       "full": "Ren Kiyose"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900306
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900311
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900303,
+  "idMal": null,
+  "title": {
+   "romaji": "Juniper Row",
+   "english": "Paper Kites Over Juniper Row",
+   "native": "주니퍼 골목의 종이연"
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Neighbours on one narrow street settle every quarrel with a kite contest.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Slice of Life"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900303-xl.jpg",
+   "large": "https://img.example/cover/900303.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900303.jpg",
+  "averageScore": 79,
+  "popularity": 26000,
+  "startDate": {
+   "year": 2021,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 95
+   },
+   {
+    "name": "Full Color",
+    "rank": 90
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Jiwoo Han"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900308
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900313
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900304,
+  "idMal": null,
+  "title": {
+   "romaji": "Shiokane no Chizushi",
+   "english": "Tidebell Cartographer",
+   "native": "潮鐘の地図師"
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A mapmaker charts islands that only rise when the tide bells ring.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900304-xl.jpg",
+   "large": "https://img.example/cover/900304.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900304.jpg",
+  "averageScore": 84,
+  "popularity": 61000,
+  "startDate": {
+   "year": 2018,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Travel",
+    "rank": 88
+   },
+   {
+    "name": "Islands",
+    "rank": 70
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Mio Kurata"
+      }
+     }
+    },
+    {
+     "role": "Art",
+     "node": {
+      "name": {
+       "full": "Sora Ishide"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900301
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900307
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900305,
+  "idMal": null,
+  "title": {
+   "romaji": "Tai Yu Tie",
+   "english": "Moss and Iron",
+   "native": "苔与铁"
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "A forest spirit and a clockwork soldier walk the long road home together.",
+  "chapters": 212,
+  "volumes": 18,
+  "countryOfOrigin": "CN",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900305-xl.jpg",
+   "large": "https://img.example/cover/900305.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900305.jpg",
+  "averageScore": 75,
+  "popularity": 33000,
+  "startDate": {
+   "year": 2016,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Full Color",
+    "rank": 85
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Lin Qiao"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": [
+    {
+     "relationType": "ADAPTATION",
+     "node": {
+      "id": 900005,
+      "type": "ANIME",
+      "format": "ONA",
+      "title": {
+       "romaji": "Hagane no Niwashi",
+       "english": "The Steel Gardener",
+       "native": null
+      },
+      "coverImage": {
+       "large": "https://img.example/cover/900005.jpg",
+       "color": null
+      }
+     }
+    }
+   ]
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900301
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900306,
+  "idMal": null,
+  "title": {
+   "romaji": "Shio no Michi no Tegami",
+   "english": "Salt Road Letters",
+   "native": "塩の道の手紙"
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "Letters between a salt merchant and a lighthouse keeper, across one long winter.",
+  "chapters": null,
+  "volumes": 12,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Slice of Life"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900306-xl.jpg",
+   "large": "https://img.example/cover/900306.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900306.jpg",
+  "averageScore": 80,
+  "popularity": 9000,
+  "startDate": {
+   "year": 2014,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Yui Kanzaki"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900302
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900307,
+  "idMal": null,
+  "title": {
+   "romaji": "Shizuka na Tenmondai",
+   "english": "The Quiet Observatory",
+   "native": "静かな天文台"
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Two night-shift astronomers keep a dying telescope running for one last comet.",
+  "chapters": 48,
+  "volumes": 6,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900307-xl.jpg",
+   "large": "https://img.example/cover/900307.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900307.jpg",
+  "averageScore": 82,
+  "popularity": 15000,
+  "startDate": {
+   "year": 2012,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Kei Natsume"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900310
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900312
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900308
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900308,
+  "idMal": null,
+  "title": {
+   "romaji": "Ninefold Garden",
+   "english": "Ninefold Garden",
+   "native": "아홉 겹 정원"
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A gardener tends a hedge maze that grows a new path every full moon.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900308-xl.jpg",
+   "large": "https://img.example/cover/900308.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900308.jpg",
+  "averageScore": 78,
+  "popularity": 38000,
+  "startDate": {
+   "year": 2022,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 96
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Seo-yeon Park"
+      }
+     }
+    },
+    {
+     "role": "Art",
+     "node": {
+      "name": {
+       "full": "Minho Lee"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900303
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900309,
+  "idMal": null,
+  "title": {
+   "romaji": "Fuyugitsune no Yakan",
+   "english": "A Kettle for the Winter Fox",
+   "native": "冬狐の薬缶"
+  },
+  "format": "ONE_SHOT",
+  "status": "FINISHED",
+  "description": "A fox brings a kettle to a mountain hut and asks for tea in return.",
+  "chapters": 1,
+  "volumes": 1,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900309-xl.jpg",
+   "large": "https://img.example/cover/900309.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900309.jpg",
+  "averageScore": 74,
+  "popularity": 4000,
+  "startDate": {
+   "year": 2023,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Aya Fujimoto"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900310,
+  "idMal": null,
+  "title": {
+   "romaji": "Copper Tram",
+   "english": "Copper Tram Afternoons",
+   "native": "銅色電車的午後"
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A tram driver learns the stories of the regulars on the last line in town.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "TW",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900310-xl.jpg",
+   "large": "https://img.example/cover/900310.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900310.jpg",
+  "averageScore": 76,
+  "popularity": 7000,
+  "startDate": {
+   "year": 2021,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Wen Hsu"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900307
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900311,
+  "idMal": null,
+  "title": {
+   "romaji": "Xinghai Youchai",
+   "english": "Starfield Postmen",
+   "native": "星海邮差"
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Couriers deliver handwritten mail between space stations that refuse to go digital.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "CN",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Adventure"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900311-xl.jpg",
+   "large": "https://img.example/cover/900311.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900311.jpg",
+  "averageScore": 73,
+  "popularity": 21000,
+  "startDate": {
+   "year": 2019,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Zhou Yan"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900302
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900312,
+  "idMal": null,
+  "title": {
+   "romaji": "Utsurogane Gakuen",
+   "english": "Hollow Bell Academy",
+   "native": "空鐘学園"
+  },
+  "format": "MANGA",
+  "status": "HIATUS",
+  "description": "Students at a school without a bell keep hearing it ring at midnight.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Supernatural"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900312-xl.jpg",
+   "large": "https://img.example/cover/900312.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900312.jpg",
+  "averageScore": 72,
+  "popularity": 29000,
+  "startDate": {
+   "year": 2017,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Rin Takagi"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900307
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900313,
+  "idMal": null,
+  "title": {
+   "romaji": "Ember Lane",
+   "english": "Ember Lane Bakery",
+   "native": "엠버 레인 베이커리"
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Two rival bakers share an oven after a fire takes one of their shops.",
+  "chapters": 120,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900313-xl.jpg",
+   "large": "https://img.example/cover/900313.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900313.jpg",
+  "averageScore": 77,
+  "popularity": 24000,
+  "startDate": {
+   "year": 2015,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 94
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Yuna Choi"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": [
+    {
+     "mediaRecommendation": {
+      "id": 900303
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": 900314,
+  "idMal": null,
+  "title": {
+   "romaji": "Velvet Hours",
+   "english": "Velvet Hours",
+   "native": "ベルベットの刻"
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "A story for adults about two people who meet only after midnight.",
+  "chapters": 30,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": true,
+  "genres": [
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900314-xl.jpg",
+   "large": "https://img.example/cover/900314.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900314.jpg",
+  "averageScore": 60,
+  "popularity": 3000,
+  "startDate": {
+   "year": 2020,
+   "month": 4,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mika Sato"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ }
+]

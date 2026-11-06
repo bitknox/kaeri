@@ -945,6 +945,146 @@ pub fn reading_failed_other(reason: &str) -> String {
     text("reading-failed-other", &[("reason", Arg::Text(reason))])
 }
 
+/// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+pub fn reading_kind_manga() -> String {
+    text("reading-kind-manga", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+pub fn reading_kind_manhwa() -> String {
+    text("reading-kind-manhwa", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+pub fn reading_kind_manhua() -> String {
+    text("reading-kind-manhua", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+pub fn reading_kind_webtoon() -> String {
+    text("reading-kind-webtoon", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+pub fn reading_kind_one_shot() -> String {
+    text("reading-kind-one-shot", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+pub fn reading_kind_light_novel() -> String {
+    text("reading-kind-light-novel", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+pub fn reading_kind_novel() -> String {
+    text("reading-kind-novel", &[])
+}
+
+/// Under a cover or on a series page: new chapters are still coming out.
+pub fn reading_status_releasing() -> String {
+    text("reading-status-releasing", &[])
+}
+
+/// Under a cover or on a series page: the story is complete.
+pub fn reading_status_finished() -> String {
+    text("reading-status-finished", &[])
+}
+
+/// Under a cover or on a series page: new chapters have stopped for a while.
+pub fn reading_status_hiatus() -> String {
+    text("reading-status-hiatus", &[])
+}
+
+/// Under a cover or on a series page: the story was stopped before it ended.
+pub fn reading_status_cancelled() -> String {
+    text("reading-status-cancelled", &[])
+}
+
+/// Under a cover or on a series page: the first chapter is not out yet.
+pub fn reading_status_not_yet() -> String {
+    text("reading-status-not-yet", &[])
+}
+
+/// Under a cover or on a series page: how many chapters the series has.
+pub fn reading_chapters(count: i64) -> String {
+    text("reading-chapters", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover or on a series page: how many volumes the series has.
+pub fn reading_volumes(count: i64) -> String {
+    text("reading-volumes", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover: the series is on the person's Planning list.
+pub fn reading_on_planning() -> String {
+    text("reading-on-planning", &[])
+}
+
+/// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+pub fn reading_spotlight_new_chapter() -> String {
+    text("reading-spotlight-new-chapter", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the series the person was reading last.
+pub fn reading_spotlight_continue() -> String {
+    text("reading-spotlight-continue", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+pub fn reading_spotlight_up_next() -> String {
+    text("reading-spotlight-up-next", &[])
+}
+
+/// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+pub fn reading_spotlight_popular() -> String {
+    text("reading-spotlight-popular", &[])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+pub fn reading_out_today(chapter: &str) -> String {
+    text("reading-out-today", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today, with its title.
+pub fn reading_out_today_titled(chapter: &str, title: &str) -> String {
+    text("reading-out-today-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// Under a cover or the big picture: the page the person stopped on in a chapter.
+pub fn reading_chapter_page(chapter: &str, page: i64) -> String {
+    text("reading-chapter-page", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+}
+
+/// Under a cover or the big picture: how far into a novel's chapter the person is.
+pub fn reading_chapter_percent(chapter: &str, percent: i64) -> String {
+    text("reading-chapter-percent", &[("chapter", Arg::Text(chapter)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+pub fn reading_chapter_new(chapter: &str) -> String {
+    text("reading-chapter-new", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A search filter: books from Japan.
+pub fn reading_origin_japan() -> String {
+    text("reading-origin-japan", &[])
+}
+
+/// A search filter: books from Korea.
+pub fn reading_origin_korea() -> String {
+    text("reading-origin-korea", &[])
+}
+
+/// A search filter: books from China.
+pub fn reading_origin_china() -> String {
+    text("reading-origin-china", &[])
+}
+
+/// A search filter: books from Taiwan.
+pub fn reading_origin_taiwan() -> String {
+    text("reading-origin-taiwan", &[])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])

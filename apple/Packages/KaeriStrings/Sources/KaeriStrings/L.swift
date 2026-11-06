@@ -773,6 +773,104 @@ public enum L {
         Self.format("reading-failed-other", fallback: "Something went wrong. %1$@", reason)
     }
 
+    /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+    public static var readingKindManga: String { string("reading-kind-manga", fallback: "Manga") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+    public static var readingKindManhwa: String { string("reading-kind-manhwa", fallback: "Manhwa") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+    public static var readingKindManhua: String { string("reading-kind-manhua", fallback: "Manhua") }
+
+    /// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+    public static var readingKindWebtoon: String { string("reading-kind-webtoon", fallback: "Webtoon") }
+
+    /// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+    public static var readingKindOneShot: String { string("reading-kind-one-shot", fallback: "One-shot") }
+
+    /// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+    public static var readingKindLightNovel: String { string("reading-kind-light-novel", fallback: "Light novel") }
+
+    /// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+    public static var readingKindNovel: String { string("reading-kind-novel", fallback: "Novel") }
+
+    /// Under a cover or on a series page: new chapters are still coming out.
+    public static var readingStatusReleasing: String { string("reading-status-releasing", fallback: "Releasing") }
+
+    /// Under a cover or on a series page: the story is complete.
+    public static var readingStatusFinished: String { string("reading-status-finished", fallback: "Finished") }
+
+    /// Under a cover or on a series page: new chapters have stopped for a while.
+    public static var readingStatusHiatus: String { string("reading-status-hiatus", fallback: "On hiatus") }
+
+    /// Under a cover or on a series page: the story was stopped before it ended.
+    public static var readingStatusCancelled: String { string("reading-status-cancelled", fallback: "Cancelled") }
+
+    /// Under a cover or on a series page: the first chapter is not out yet.
+    public static var readingStatusNotYet: String { string("reading-status-not-yet", fallback: "Not out yet") }
+
+    /// Under a cover or on a series page: how many chapters the series has.
+    public static func readingChapters(count: Int) -> String {
+        Self.format("reading-chapters", fallback: "%1$lld chapters", count)
+    }
+
+    /// Under a cover or on a series page: how many volumes the series has.
+    public static func readingVolumes(count: Int) -> String {
+        Self.format("reading-volumes", fallback: "%1$lld volumes", count)
+    }
+
+    /// Under a cover: the series is on the person's Planning list.
+    public static var readingOnPlanning: String { string("reading-on-planning", fallback: "On your Planning list") }
+
+    /// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+    public static var readingSpotlightNewChapter: String { string("reading-spotlight-new-chapter", fallback: "New chapter in a series you follow") }
+
+    /// Above the big picture at the top of reading's Home: the series the person was reading last.
+    public static var readingSpotlightContinue: String { string("reading-spotlight-continue", fallback: "Continue reading") }
+
+    /// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+    public static var readingSpotlightUpNext: String { string("reading-spotlight-up-next", fallback: "Up next for you") }
+
+    /// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+    public static var readingSpotlightPopular: String { string("reading-spotlight-popular", fallback: "Popular, releasing now") }
+
+    /// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+    public static func readingOutToday(chapter: String) -> String {
+        Self.format("reading-out-today", fallback: "Chapter %1$@ is out today", chapter)
+    }
+
+    /// Under the big picture on reading's Home: a chapter that came out today, with its title.
+    public static func readingOutTodayTitled(chapter: String, title: String) -> String {
+        Self.format("reading-out-today-titled", fallback: "Chapter %1$@, %2$@, out today", chapter, title)
+    }
+
+    /// Under a cover or the big picture: the page the person stopped on in a chapter.
+    public static func readingChapterPage(chapter: String, page: Int) -> String {
+        Self.format("reading-chapter-page", fallback: "Chapter %1$@ · page %2$lld", chapter, page)
+    }
+
+    /// Under a cover or the big picture: how far into a novel's chapter the person is.
+    public static func readingChapterPercent(chapter: String, percent: Int) -> String {
+        Self.format("reading-chapter-percent", fallback: "Chapter %1$@ · %2$lld%%", chapter, percent)
+    }
+
+    /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+    public static func readingChapterNew(chapter: String) -> String {
+        Self.format("reading-chapter-new", fallback: "Chapter %1$@ is new", chapter)
+    }
+
+    /// A search filter: books from Japan.
+    public static var readingOriginJapan: String { string("reading-origin-japan", fallback: "Japan") }
+
+    /// A search filter: books from Korea.
+    public static var readingOriginKorea: String { string("reading-origin-korea", fallback: "Korea") }
+
+    /// A search filter: books from China.
+    public static var readingOriginChina: String { string("reading-origin-china", fallback: "China") }
+
+    /// A search filter: books from Taiwan.
+    public static var readingOriginTaiwan: String { string("reading-origin-taiwan", fallback: "Taiwan") }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)

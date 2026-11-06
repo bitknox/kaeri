@@ -405,6 +405,68 @@
     <string name="reading_failed_off">Reading isn\'t available in this version of Kaeri.</string>
     <!-- Why something about reading failed, for any other reason. The reason is as it came. -->
     <string name="reading_failed_other">Something went wrong. %1$s</string>
+    <!-- Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan. -->
+    <string name="reading_kind_manga">Manga</string>
+    <!-- Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea. -->
+    <string name="reading_kind_manhwa">Manhwa</string>
+    <!-- Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan. -->
+    <string name="reading_kind_manhua">Manhua</string>
+    <!-- Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down. -->
+    <string name="reading_kind_webtoon">Webtoon</string>
+    <!-- Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter. -->
+    <string name="reading_kind_one_shot">One-shot</string>
+    <!-- Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan. -->
+    <string name="reading_kind_light_novel">Light novel</string>
+    <!-- Under a cover or on a series page: what kind of book it is, for a novel from anywhere else. -->
+    <string name="reading_kind_novel">Novel</string>
+    <!-- Under a cover or on a series page: new chapters are still coming out. -->
+    <string name="reading_status_releasing">Releasing</string>
+    <!-- Under a cover or on a series page: the story is complete. -->
+    <string name="reading_status_finished">Finished</string>
+    <!-- Under a cover or on a series page: new chapters have stopped for a while. -->
+    <string name="reading_status_hiatus">On hiatus</string>
+    <!-- Under a cover or on a series page: the story was stopped before it ended. -->
+    <string name="reading_status_cancelled">Cancelled</string>
+    <!-- Under a cover or on a series page: the first chapter is not out yet. -->
+    <string name="reading_status_not_yet">Not out yet</string>
+    <!-- Under a cover or on a series page: how many chapters the series has. -->
+    <plurals name="reading_chapters">
+        <item quantity="one">1 chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <!-- Under a cover or on a series page: how many volumes the series has. -->
+    <plurals name="reading_volumes">
+        <item quantity="one">1 volume</item>
+        <item quantity="other">%1$d volumes</item>
+    </plurals>
+    <!-- Under a cover: the series is on the person's Planning list. -->
+    <string name="reading_on_planning">On your Planning list</string>
+    <!-- Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads. -->
+    <string name="reading_spotlight_new_chapter">New chapter in a series you follow</string>
+    <!-- Above the big picture at the top of reading's Home: the series the person was reading last. -->
+    <string name="reading_spotlight_continue">Continue reading</string>
+    <!-- Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read. -->
+    <string name="reading_spotlight_up_next">Up next for you</string>
+    <!-- Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them. -->
+    <string name="reading_spotlight_popular">Popular, releasing now</string>
+    <!-- Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88. -->
+    <string name="reading_out_today">Chapter %1$s is out today</string>
+    <!-- Under the big picture on reading's Home: a chapter that came out today, with its title. -->
+    <string name="reading_out_today_titled">Chapter %1$s, %2$s, out today</string>
+    <!-- Under a cover or the big picture: the page the person stopped on in a chapter. -->
+    <string name="reading_chapter_page">Chapter %1$s · page %2$d</string>
+    <!-- Under a cover or the big picture: how far into a novel's chapter the person is. -->
+    <string name="reading_chapter_percent">Chapter %1$s · %2$d%%</string>
+    <!-- Under a cover: a chapter came out that the person has not read. The chapter is its number. -->
+    <string name="reading_chapter_new">Chapter %1$s is new</string>
+    <!-- A search filter: books from Japan. -->
+    <string name="reading_origin_japan">Japan</string>
+    <!-- A search filter: books from Korea. -->
+    <string name="reading_origin_korea">Korea</string>
+    <!-- A search filter: books from China. -->
+    <string name="reading_origin_china">China</string>
+    <!-- A search filter: books from Taiwan. -->
+    <string name="reading_origin_taiwan">Taiwan</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->

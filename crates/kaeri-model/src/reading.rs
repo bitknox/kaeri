@@ -62,6 +62,11 @@ pub struct WorkTile {
     pub new_chapter: bool,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub adult: bool,
+    /// The words under the cover when [`Self::next`] is `None`, joined with " · ": "Manhwa",
+    /// "Releasing", "9 volumes", "On your Planning list". [`Self::format_label`] is the format's
+    /// key (`manga`, `webtoon`, `one-shot`, `novel`), for an icon or a filter.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub facts: Vec<Msg>,
 }
 
 /// One series' page.
@@ -110,6 +115,22 @@ pub struct SeriesView {
     /// "Usually Fridays", "About every 2 weeks".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rhythm: Option<Msg>,
+    /// The facts under the title, in order: the kind ("Manhwa"), the status, the count of
+    /// chapters or volumes. [`Self::format`], [`Self::origin`] and [`Self::status`] are keys:
+    /// `webtoon`, `KR`, `releasing`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub facts: Vec<Msg>,
+    /// The year it began.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub year: Option<u32>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub adult: bool,
+    /// More like this: what people who liked it rated highest.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub recommended: Vec<WorkTile>,
+    /// The series page is still waiting for the catalogue: the header is from what was kept.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub partial: bool,
 }
 
 /// The series page's main button.
@@ -192,6 +213,12 @@ pub struct ChapterRow {
     pub versions: u32,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub bookmarked: bool,
+    /// The group or translation of the version listed, as the source gives it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub version_label: Option<String>,
+    /// When it was read, Unix seconds.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub read_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -355,6 +382,110 @@ pub struct ReadingHomeView {
     /// No book source is set up yet.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub no_sources: bool,
+    /// Why [`Self::spotlight`] is there, with the words around it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub spot: Option<ReadSpotlight>,
+    /// This week by day, today first: [`Self::this_week`] grouped, with when each is due.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub week: Vec<ReadWeekDay>,
+    /// The parts still on their way: their shelves show as loading.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pending: Vec<ReadHomePart>,
+    /// Shown from what was kept, because AniList could not be reached.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub offline: bool,
+    /// When what is shown was kept, Unix seconds, while [`Self::offline`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub offline_since: Option<i64>,
+    /// A part failed and nothing was kept of it: "Couldn't load. Try again."
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub failed: bool,
+    /// What the end of Home says, when it says something.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub end: Option<ReadHomeEnd>,
+}
+
+/// The series at the top of reading's Home, and why it is there. The first that applies wins:
+/// a new chapter in a series you follow, the chapter you stopped in, the first of Up next, and
+/// with none of those, the most popular series still coming out (said as such, never as a pick).
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadSpotlight {
+    pub case: ReadSpotlightCase,
+    /// The words above the title: "New chapter in a series you follow".
+    pub label: Msg,
+    /// Under the title: the kind, the status, the count, as [`WorkTile::facts`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub facts: Vec<Msg>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub synopsis: Option<String>,
+    /// "Chapter 88 is out today", "Chapter 13 · page 9".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Option<Msg>,
+    /// The main button. `None`: Add to Planning, which [`Self::planned`] says is done.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub action: Option<SeriesAction>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub planned: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub banner: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadSpotlightCase {
+    NewChapter,
+    Continuing,
+    UpNext,
+    Popular,
+}
+
+/// One day of This week.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadWeekDay {
+    /// The day's start, Unix seconds, local time.
+    pub day: i64,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub today: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub entries: Vec<ReadWeekEntry>,
+}
+
+/// A series due on a day of This week. Book sources give no release times ahead, so the day is
+/// the one its chapters usually come out on: the tile's `next` says "Usually Fridays".
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadWeekEntry {
+    pub tile: WorkTile,
+    /// When the newest chapter came out, when it was this day: "out today".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub out_at: Option<i64>,
+    /// Expected from the series' rhythm, not seen yet.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub usually: bool,
+}
+
+/// A part of reading's Home that loads on its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadHomePart {
+    /// Continue, This week and Up next, from this device's reading and the catalogue.
+    Yours,
+    /// Releasing now and the genre shelf.
+    Discovery,
+    /// Because you finished.
+    Because,
+}
+
+/// The end of reading's Home.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadHomeEnd {
+    /// Every shelf is shown.
+    Everything,
+    /// No book source is set up: the end offers Sources.
+    NoSources,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -384,6 +515,25 @@ pub struct UpdatesView {
     /// Unix seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub checked_at: Option<i64>,
+    /// The series whose source did not answer on the last check, each said once.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub failures: Vec<UpdateFailure>,
+    /// A check is running.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub checking: bool,
+    /// Chapters in Updates not read yet: the tab's count.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub unread: u32,
+}
+
+/// A series the check could not ask about.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct UpdateFailure {
+    pub work: WorkId,
+    pub title: String,
+    pub source_name: String,
+    pub failure: ReadingFailure,
 }
 
 /// Reading's own search: the shows' query keeps its shape.
@@ -468,6 +618,52 @@ pub struct NewChapter {
     pub label: String,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub cover: Option<String>,
+    /// For the notification's expanded picture.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub banner: Option<String>,
+    /// When the source dates it, Unix seconds.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub published: Option<i64>,
+    /// The chapter the person is up to, when that is before this one: how far behind they are,
+    /// and the one Read opens.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub next_for_you: Option<ChapterId>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub source_name: Option<String>,
+    /// The chapter's own title.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chapter_title: Option<String>,
+}
+
+/// What reading's search filters choose from. Fixed, so the screen shows them before anything
+/// loads: see [`read_filters`].
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadFilters {
+    /// [`ReadSearchQuery::formats`]: `manga`, `webtoon`, `one-shot`, `novel`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub formats: Vec<ReadFilterChoice>,
+    /// [`ReadSearchQuery::origins`]: `JP`, `KR`, `CN`, `TW`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub origins: Vec<ReadFilterChoice>,
+    /// [`ReadSearchQuery::status`]: `releasing`, `finished`, `hiatus`, `cancelled`, `not-yet`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub statuses: Vec<ReadFilterChoice>,
+    /// [`ReadSearchQuery::sort`], AniList's names, the first the default with no text:
+    /// `POPULARITY_DESC`, `TRENDING_DESC`, `SCORE_DESC`, `START_DATE_DESC`, `TITLE_ROMAJI`. The
+    /// apps word them as the shows' search does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub sorts: Vec<String>,
+    /// AniList's genres, in its own words, the adult one left out.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub genres: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadFilterChoice {
+    pub key: String,
+    pub label: Msg,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -670,6 +866,109 @@ pub fn rhythm(weekday: Option<u8>, every_weeks: u32) -> Option<Msg> {
 /// "Chapter 44", under a cover.
 pub fn next_chapter(number: &str) -> Msg {
     Msg::Reading(ReadingMsg::ReadingNextChapter { chapter: number.to_owned() })
+}
+
+/// What kind of book it is, in words: from its format key (`manga`, `webtoon`, `one-shot`,
+/// `novel`), its medium and the country it is from (`JP`, `KR`).
+pub fn kind_words(format: Option<&str>, medium: Medium, origin: Option<&str>) -> Msg {
+    let msg = match (format, medium, origin) {
+        (Some("webtoon"), ..) => ReadingMsg::ReadingKindWebtoon,
+        (Some("one-shot"), ..) => ReadingMsg::ReadingKindOneShot,
+        (_, Medium::Novel, Some("JP") | None) => ReadingMsg::ReadingKindLightNovel,
+        (_, Medium::Novel, _) => ReadingMsg::ReadingKindNovel,
+        (_, _, Some("KR")) => ReadingMsg::ReadingKindManhwa,
+        (_, _, Some("CN" | "TW")) => ReadingMsg::ReadingKindManhua,
+        _ => ReadingMsg::ReadingKindManga,
+    };
+    Msg::Reading(msg)
+}
+
+/// A status key (`releasing`, `finished`, `hiatus`, `cancelled`, `not-yet`) in words.
+pub fn status_words(status: &str) -> Option<Msg> {
+    Some(Msg::Reading(match status {
+        "releasing" => ReadingMsg::ReadingStatusReleasing,
+        "finished" => ReadingMsg::ReadingStatusFinished,
+        "hiatus" => ReadingMsg::ReadingStatusHiatus,
+        "cancelled" => ReadingMsg::ReadingStatusCancelled,
+        "not-yet" => ReadingMsg::ReadingStatusNotYet,
+        _ => return None,
+    }))
+}
+
+/// "48 chapters", or for a novel, which counts volumes, "9 volumes".
+pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) -> Option<Msg> {
+    let msg = match (medium, chapters, volumes) {
+        (Medium::Novel, _, Some(v)) | (_, None, Some(v)) => {
+            ReadingMsg::ReadingVolumes { count: i64::from(v) }
+        }
+        (_, Some(c), _) => ReadingMsg::ReadingChapters { count: i64::from(c) },
+        _ => return None,
+    };
+    Some(Msg::Reading(msg))
+}
+
+/// "Chapter 13 · page 9".
+pub fn chapter_page(chapter: &str, page: u32) -> Msg {
+    Msg::Reading(ReadingMsg::ReadingChapterPage {
+        chapter: chapter.to_owned(),
+        page: i64::from(page),
+    })
+}
+
+/// AniList's genres for books, in its own words, without the adult one.
+pub const READ_GENRES: [&str; 18] = [
+    "Action",
+    "Adventure",
+    "Comedy",
+    "Drama",
+    "Ecchi",
+    "Fantasy",
+    "Horror",
+    "Mahou Shoujo",
+    "Mecha",
+    "Music",
+    "Mystery",
+    "Psychological",
+    "Romance",
+    "Sci-Fi",
+    "Slice of Life",
+    "Sports",
+    "Supernatural",
+    "Thriller",
+];
+
+/// The sorts reading's search offers, in AniList's names; the first is the default.
+pub const READ_SORTS: [&str; 5] =
+    ["POPULARITY_DESC", "TRENDING_DESC", "SCORE_DESC", "START_DATE_DESC", "TITLE_ROMAJI"];
+
+/// What reading's search filters choose from.
+pub fn read_filters() -> ReadFilters {
+    let choice = |key: &str, msg: ReadingMsg| ReadFilterChoice {
+        key: key.to_owned(),
+        label: Msg::Reading(msg),
+    };
+    ReadFilters {
+        formats: vec![
+            choice("manga", ReadingMsg::ReadingKindManga),
+            choice("webtoon", ReadingMsg::ReadingKindWebtoon),
+            choice("one-shot", ReadingMsg::ReadingKindOneShot),
+            choice("novel", ReadingMsg::ReadingKindLightNovel),
+        ],
+        origins: vec![
+            choice("JP", ReadingMsg::ReadingOriginJapan),
+            choice("KR", ReadingMsg::ReadingOriginKorea),
+            choice("CN", ReadingMsg::ReadingOriginChina),
+            choice("TW", ReadingMsg::ReadingOriginTaiwan),
+        ],
+        statuses: ["releasing", "finished", "hiatus", "cancelled", "not-yet"]
+            .into_iter()
+            .filter_map(|key| {
+                Some(ReadFilterChoice { key: key.to_owned(), label: status_words(key)? })
+            })
+            .collect(),
+        sorts: READ_SORTS.iter().map(|s| (*s).to_owned()).collect(),
+        genres: READ_GENRES.iter().map(|g| (*g).to_owned()).collect(),
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -980,6 +1279,28 @@ mod tests {
         assert_eq!(rhythm(Some(9), 1), None);
         assert_eq!(rhythm(None, 0), None);
         assert_eq!(next_chapter("10.5").english(), "Chapter 10.5");
+    }
+
+    #[test]
+    fn books_are_named_by_kind_status_and_count() {
+        let kind = |f, m, o| kind_words(f, m, o).english();
+        assert_eq!(kind(Some("manga"), Medium::Manga, Some("KR")), "Manhwa");
+        assert_eq!(kind(Some("webtoon"), Medium::Manga, Some("KR")), "Webtoon");
+        assert_eq!(kind(Some("manga"), Medium::Manga, Some("TW")), "Manhua");
+        assert_eq!(kind(Some("novel"), Medium::Novel, Some("JP")), "Light novel");
+        assert_eq!(kind(Some("novel"), Medium::Novel, Some("CN")), "Novel");
+        assert_eq!(kind(None, Medium::Manga, None), "Manga");
+        assert_eq!(status_words("hiatus").unwrap().english(), "On hiatus");
+        assert_eq!(count_words(Medium::Novel, None, Some(9)).unwrap().english(), "9 volumes");
+        assert_eq!(
+            count_words(Medium::Manga, Some(1), Some(1)).unwrap().english(),
+            "1 chapter"
+        );
+        assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 9");
+        let filters = read_filters();
+        assert_eq!(filters.statuses.len(), 5);
+        assert!(!filters.genres.iter().any(|g| g == crate::search::ADULT_GENRE));
+        assert_eq!(filters.sorts[0], "POPULARITY_DESC");
     }
 
     #[test]

@@ -13,6 +13,7 @@
 
 pub mod airing_times;
 pub mod aniskip_outbox;
+pub mod book_catalog;
 pub mod book_sources;
 pub mod cache;
 pub mod dataset;

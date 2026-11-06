@@ -840,3 +840,12 @@ mod tests {
         }
     }
 }
+
+/// The made-up books the fake answers for AniList's `MANGA` type, hand-written in AniList's
+/// shape: manga, manhwa, manhua, light novels, a one-shot and one adult title. The reading
+/// scenes' works are among them: The Lantern Ferry (900301), The Glass Orchard (900302) and
+/// Paper Kites Over Juniper Row (900303).
+pub fn books() -> Vec<serde_json::Value> {
+    serde_json::from_str(include_str!("../fixtures/anilist/books.json"))
+        .expect("the book fixtures are JSON")
+}
