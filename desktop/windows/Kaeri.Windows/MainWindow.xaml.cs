@@ -213,7 +213,8 @@ public sealed partial class MainWindow : Window
         device = new DeviceWatch(c => ctx.Send(c), ui);
         taskbar = Taskbar.For(WinRT.Interop.WindowNative.GetWindowHandle(this));
         // The media overlay, the media keys and the thumbnail's buttons, while an episode plays.
-        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, c => ctx.Send(new Command.Player(c)));
+        // Aimed at the playback on screen, and in a party Next and Previous are the room's pick.
+        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, Player.MediaCommand);
         StartNotifications(art);
         Keys();
 #if KAERI_TESTING

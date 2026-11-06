@@ -53,9 +53,11 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("pages-sources", PagesScenario.Sourced, "demo-and-store", false),
     // The wheel over Home's shelves and the grids against the wheel over what is not one, filmed frame by frame.
     ("wheel", FeelScenario.Wheels, "watching", false),
+    // The player's checks: clicks on the bar, Space, dragging the seek and volume lines, the ending. By name only.
+    ("player-checks", PlayerChecks.All, "playing", true),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -496,7 +498,7 @@ static class Scenarios
     }
 
     /// <summary>Clicks Home's Resume or Play, then waits <paramref name="ms"/> for the player.</summary>
-    static async Task PlayFromHome(Run run, int ms)
+    internal static async Task PlayFromHome(Run run, int ms)
     {
         AutomationElement? button = null;
         for (var i = 0; i < 20 && button is null; i++)

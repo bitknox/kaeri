@@ -208,8 +208,8 @@ sealed class ChatPane : StackPanel
     readonly TextBlock off = Ui.Text(T.PartyChatOff, "HazeCaptionStyle");
     readonly StackPanel hidden = new() { Spacing = 2 };
     readonly TextBlock privacy = Ui.Text(T.PartyChatPrivacy, "HazeCaptionStyle");
-    int shownCount = -1;
-    string? shownFailed;
+    string? shownLast;
+    bool shownFirst = true;
 
     public ChatPane(Ctx ctx, bool lobby)
     {
@@ -255,7 +255,8 @@ sealed class ChatPane : StackPanel
         privacy.Visibility = lobby && !hide ? Visibility.Visible : Visibility.Collapsed;
         if (!live)
         {
-            shownCount = -1;
+            shownLast = null;
+            shownFirst = true;
             return;
         }
         var conversation = ctx.Known.PartyChat;
@@ -264,37 +265,74 @@ sealed class ChatPane : StackPanel
         Field.Typed();
     }
 
+    /// <summary>
+    /// The conversation's lines, kept by what they say: a line already shown stays the same
+    /// element (its selection too), new ones are added and trimmed ones go. The view follows the
+    /// newest line when it was at the bottom or the line is yours, eased; a reader scrolled up
+    /// to read is left there.
+    /// </summary>
     void Rebuild(PartyConversation? conversation)
     {
         var lines = conversation?.Lines ?? [];
-        list.Children.Clear();
+        var rows = new List<(string Key, bool Yours, Func<FrameworkElement> Make)>();
+        var seen = new Dictionary<string, int>();
         foreach (var entry in Chat.Entries(lines))
         {
-            list.Children.Add(entry switch
+            (string Key, bool Yours, Func<FrameworkElement> Make) row = entry switch
             {
-                Chat.Entry.Said said => Said(said.Who, said.You, said.Text),
-                Chat.Entry.Reacted reacted => Quiet(reacted.Line),
-                Chat.Entry.Muted muted => Action(T.PartyMutedLine(muted.Name), T.PartyUnmuteShort, T.PartyUnmute(muted.Name),
-                    () => ctx.Send(new Command.Party(new PartyCommand.Mute(muted.Name, false)))),
-                _ => new TextBlock(),
-            });
+                Chat.Entry.Said said => ($"said|{said.Who}|{said.You}|{said.Text}", said.You, () => Said(said.Who, said.You, said.Text)),
+                Chat.Entry.Reacted reacted => ($"reacted|{reacted.Line}", false, () => Quiet(reacted.Line)),
+                Chat.Entry.Muted muted => ($"muted|{muted.Name}", false, () => Action(T.PartyMutedLine(muted.Name), T.PartyUnmuteShort, T.PartyUnmute(muted.Name),
+                    () => ctx.Send(new Command.Party(new PartyCommand.Mute(muted.Name, false))))),
+                _ => ("other", false, () => new TextBlock()),
+            };
+            // The same words said twice are two lines.
+            var n = seen.GetValueOrDefault(row.Key);
+            seen[row.Key] = n + 1;
+            rows.Add(($"{row.Key}#{n}", row.Yours, row.Make));
         }
         if (conversation?.Failed is { } text)
-            list.Children.Add(Action(T.PartyChatNotSent, T.PartyChatRetry, null,
-                () => ctx.Send(new Command.Party(new PartyCommand.Say(text)))));
-        list.Visibility = list.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        // Newest last and in view, once something new came.
-        var count = list.Children.Count;
-        if (count != shownCount || conversation?.Failed != shownFailed)
+            rows.Add(($"failed|{text}", true, () => Action(T.PartyChatNotSent, T.PartyChatRetry, null,
+                () => ctx.Send(new Command.Party(new PartyCommand.Say(text))))));
+
+        var old = list.Children.OfType<FrameworkElement>().Where(e => e.Tag is string).ToDictionary(e => (string)e.Tag, e => e);
+        var wanted = rows.Select(r =>
         {
-            shownCount = count;
-            shownFailed = conversation?.Failed;
-            DispatcherQueue?.TryEnqueue(() =>
-            {
-                scroll.UpdateLayout();
-                scroll.ChangeView(null, scroll.ScrollableHeight, null, true);
-            });
+            if (old.TryGetValue(r.Key, out var kept))
+                return kept;
+            var made = r.Make();
+            made.Tag = r.Key;
+            return made;
+        }).ToList();
+        for (var i = list.Children.Count - 1; i >= 0; i--)
+            if (list.Children[i] is not FrameworkElement e || !wanted.Contains(e))
+                list.Children.RemoveAt(i);
+        for (var i = 0; i < wanted.Count; i++)
+        {
+            if (i < list.Children.Count && list.Children[i] == wanted[i])
+                continue;
+            var at = list.Children.IndexOf(wanted[i]);
+            if (at >= 0)
+                list.Children.RemoveAt(at);
+            list.Children.Insert(i, wanted[i]);
         }
+        list.Visibility = list.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // The newest line, by what it is rather than how many there are: the engine keeps 200.
+        var last = rows.Count > 0 ? rows[^1].Key : null;
+        if (last == shownLast)
+            return;
+        var atBottom = shownLast is null || scroll.VerticalOffset >= scroll.ScrollableHeight - 24;
+        shownLast = last;
+        if (!atBottom && rows is not [.., { Yours: true }])
+            return;
+        var first = shownFirst;
+        shownFirst = false;
+        DispatcherQueue?.TryEnqueue(() =>
+        {
+            scroll.UpdateLayout();
+            scroll.ChangeView(null, scroll.ScrollableHeight, null, first);
+        });
     }
 
     /// <summary>A typed line: the name in semibold ("You" in haze), an en space, then the words as one sentence.</summary>
