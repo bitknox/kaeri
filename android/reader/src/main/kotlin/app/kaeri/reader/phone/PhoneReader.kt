@@ -329,7 +329,7 @@ private fun ThumbGroup(
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("${shown.toInt() + 1} / $count", color = Chrome.text, fontSize = 13.sp)
+            Text("${shown.toInt() + 1} / $count", color = Chrome.text, fontSize = 13.sp) // i18n-skip
             Text(Strings.readerPagesLeftShort(context, left), color = Chrome.faint, fontSize = 13.sp)
         }
         val desc = Strings.readerScrubberInChapter(context)
