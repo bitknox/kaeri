@@ -237,7 +237,46 @@ enum Snapshot {
             context.draw(picture, in: CGRect(x: frame.minX * scale, y: y * scale,
                                             width: frame.width * scale, height: frame.height * scale))
         }
+        restoreOverlays(of: base, in: context, frames: drawn.map { frame, _ in
+            let y = view.isFlipped ? view.bounds.height - frame.maxY : frame.minY
+            return CGRect(x: frame.minX * scale, y: y * scale, width: frame.width * scale, height: frame.height * scale)
+        })
         return context.makeImage() ?? base
+    }
+
+    /// A web view sits under the reader's notices and chrome, but the multiplied page shows
+    /// through them. Where `base` differs from the flat colour AppKit left in a web view's
+    /// frame (read at its bottom leading corner), what AppKit drew is put back.
+    private static func restoreOverlays(of base: CGImage, in context: CGContext, frames: [CGRect]) {
+        let width = base.width, height = base.height
+        guard let basePixels = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ), let base8 = Optional(base) else { return }
+        basePixels.draw(base8, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard let src = basePixels.data?.assumingMemoryBound(to: UInt8.self),
+              let dst = context.data?.assumingMemoryBound(to: UInt8.self) else { return }
+        let dstRow = context.bytesPerRow
+        for frame in frames {
+            let x0 = max(0, Int(frame.minX)), x1 = min(width, Int(frame.maxX))
+            let y0 = max(0, Int(frame.minY)), y1 = min(height, Int(frame.maxY))
+            guard x1 - x0 > 8, y1 - y0 > 8 else { continue }
+            // Bitmap rows run top down in `data`; the frame's y is bottom up.
+            let rows = (top: height - y1, bottom: height - y0)
+            let flatAt = ((rows.bottom - 4) * width + x0 + 4) * 4
+            let flat = (src[flatAt], src[flatAt + 1], src[flatAt + 2])
+            for row in rows.top..<rows.bottom {
+                for x in x0..<x1 {
+                    let o = (row * width + x) * 4
+                    let near = abs(Int(src[o]) - Int(flat.0)) <= 3 && abs(Int(src[o + 1]) - Int(flat.1)) <= 3
+                        && abs(Int(src[o + 2]) - Int(flat.2)) <= 3
+                    if !near {
+                        let d = row * dstRow + x * 4
+                        dst[d] = src[o]; dst[d + 1] = src[o + 1]; dst[d + 2] = src[o + 2]; dst[d + 3] = src[o + 3]
+                    }
+                }
+            }
+        }
     }
 }
 

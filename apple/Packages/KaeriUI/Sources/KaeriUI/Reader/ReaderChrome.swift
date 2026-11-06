@@ -265,6 +265,9 @@ struct ReaderNotices: View {
         }
         .padding(.horizontal, 18)
         .frame(minHeight: 44)
+        // The board's blur hides the text behind the notice. Where the glass draws flat, as in
+        // the dev harness, the near-solid tint keeps the words from showing through.
+        .background(theme.glassSolid, in: .capsule)
         .glassEffect(.regular, in: .capsule)
         .padding(.horizontal, 16)
         .accessibilityElement(children: .combine)
@@ -279,6 +282,7 @@ struct ReaderNotices: View {
             .foregroundStyle(theme.silk)
             .padding(.horizontal, 16)
             .frame(height: 40)
+            .background(theme.glass, in: .capsule)
             .glassEffect(.regular, in: .capsule)
         }
         .buttonStyle(.plain)
