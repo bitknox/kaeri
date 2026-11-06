@@ -48,6 +48,8 @@ public final class AppStore {
     public let jobs: JobsModel
     public let notices: NoticesModel
     public let settings = SettingsModel()
+    /// The open reader: its session, pages and sheets.
+    public let reader = ReaderModel()
     public let showSettings = ShowSettingsModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
@@ -154,6 +156,7 @@ public final class AppStore {
             return true
         }
         continued.send = { [weak self] command in self?.send(command) }
+        reader.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
@@ -303,6 +306,7 @@ public final class AppStore {
             }
         )
         phase = .running
+        reader.bookResource = { url in engine.bookResource(url: url) }
         attachTV(engine)
         // Typed-code pairing finds the device showing the code by DNS-SD.
         engine.setSyncNetwork(network: BonjourSyncNetwork())
@@ -894,6 +898,7 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        reader.observe(event)
         sync.apply(event)
         if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
