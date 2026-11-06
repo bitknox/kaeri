@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
     readonly Taskbar? taskbar;
     readonly MediaControls? media;
     Tray? tray;
+    readonly ShellStatus status;
     bool selecting, played, closing, askedClose, firstRun;
 
     public MainWindow(Options options)
@@ -114,6 +115,9 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+        // Where sync stands and what is running, at the title bar's end.
+        status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
+        AppTitleBar.RightHeader = status;
 #if KAERI_TESTING
         // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
         session.Known.ForcedPause = options.Show switch
@@ -131,6 +135,7 @@ public sealed partial class MainWindow : Window
             Ctx.Guarded("the player", () => Player.Heard(batch));
             Ctx.Guarded("the media controls", () => media?.Heard(batch));
             Ctx.Guarded("the window", () => Heard(batch));
+            Ctx.Guarded("the status", () => status.Heard(batch));
             ctx.Heard(batch);
         };
         session.Stopped += () =>
@@ -259,6 +264,7 @@ public sealed partial class MainWindow : Window
         var narrow = width < 760;
         SearchBox.MinWidth = narrow ? 140 : 320;
         AppTitleBar.Title = narrow ? "" : T.AppName;
+        status?.Fit(width < 1120);
     }
 
     /// <summary>
@@ -507,6 +513,35 @@ public sealed partial class MainWindow : Window
                 ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
                 ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
             });
+        // --show=jobs[-open]: two jobs past 600 ms, one held up on a wait, as the engine would say
+        // them; -open opens the status flyout. --show=messages: a notice and an alert, then Messages.
+        if (options.Show is "jobs" or "jobs-open")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2000);
+                ctx.Inject(new Event.JobStarted(9_100_001, "checking sources")); // i18n-skip
+                await Task.Delay(400);
+                ctx.Inject(new Event.JobStarted(9_100_002, "syncing with AniList")); // i18n-skip
+                await Task.Delay(1200);
+                ctx.Inject(new Event.JobNote(9_100_002, new Msg.StatusWaitingForRedirect("AniList"), TimeSpan.FromSeconds(12)));
+                if (options.Show == "jobs-open")
+                    status.Open();
+                await Task.Delay(6000);
+                ctx.Inject(new Event.JobDone(9_100_001));
+                await Task.Delay(3000);
+                ctx.Inject(new Event.JobDone(9_100_002));
+            });
+        if (options.Show == "messages")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1500);
+                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Info, "", Msg: new Msg.NoticeSaved(T.SettingsQuality))));
+                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Alert, "", Msg: new Msg.NoticeSignInFailed("Kitsu", "invalid credentials"))));
+                await Task.Delay(1000);
+                ShowMessages();
+                await Task.Delay(2000);
+                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Info, "", Msg: new Msg.NoticeSaved(T.SettingsAudio))));
+            });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
@@ -660,12 +695,14 @@ public sealed partial class MainWindow : Window
                     break;
                 // A cast's reason is on its card, and someone taking the TV has its own notice.
                 case Event.Toast t when TvWords.OnCastCard(t.V1.Msg):
+                    Keep(t.V1);
                     break;
                 case Event.LicensedReturn back:
                     ShowReturn(back.V1);
                     break;
                 // A start that failed says why on its own screen, not in a notice over it.
-                case Event.Toast { V1.Kind: NoticeKind.Alert } when Player.IsStarting:
+                case Event.Toast { V1.Kind: NoticeKind.Alert } quiet when Player.IsStarting:
+                    Keep(quiet.V1);
                     break;
                 case Event.Toast t when !Lines.SettingSaved(t.V1):
                     ShowToast(t.V1);
@@ -795,6 +832,12 @@ public sealed partial class MainWindow : Window
     /// <summary>A plain notice of the app's own: Matching automatically again.</summary>
     public void Say(string text) => ShowToast(InfoBarSeverity.Informational, text);
 
+    /// <summary>A notice said elsewhere than the notice bar still goes to Messages.</summary>
+    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now);
+
+    /// <summary>Ctrl+Shift+L and the status flyout: every notice this run.</summary>
+    internal void ShowMessages() => Messages.Show(ctx, Root.XamlRoot);
+
     void ShowToast(Notice notice)
     {
         var text = notice.Msg?.Text() ?? "";
@@ -822,6 +865,7 @@ public sealed partial class MainWindow : Window
     {
         var shown = ++toastShown;
         var alert = severity == InfoBarSeverity.Warning;
+        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now);
         // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
@@ -1730,6 +1774,7 @@ public sealed partial class MainWindow : Window
         // Ctrl+/ is the slash key on US layouts only; F1 opens the list on every layout.
         Key((VirtualKey)0xBF, VirtualKeyModifiers.Control, ShowShortcuts);
         Key(VirtualKey.F1, VirtualKeyModifiers.None, ShowShortcuts, inPlayer: true);
+        Key(VirtualKey.L, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ShowMessages);
         // The mouse's back button, as Alt+Left.
         Root.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
@@ -1803,6 +1848,7 @@ public sealed partial class MainWindow : Window
         Line(T.ContinueHide, "Delete");
         Line(T.ShortcutsContextMenu, T.ShortcutsKeysMenu("Shift+F10"));
         Line(T.ShortcutsTitle, "Ctrl+/");
+        Line(T.MessagesTitle, "Ctrl+Shift+L");
         Section(T.SettingsGroupPlayer);
         Line(T.ShortcutsPlayPause, "Space, K");
         Line(T.ShortcutsSeek, "Left, Right");
