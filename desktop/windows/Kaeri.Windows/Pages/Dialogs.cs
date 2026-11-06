@@ -59,17 +59,19 @@ static class Dialogs
     static readonly global::Windows.UI.ViewManagement.AccessibilitySettings accessibility = new();
 
     /// <summary>
-    /// Gives the dialog the app's palette. A ContentDialog opens in the popup layer, where WinUI
-    /// reads Fluent's own dark theme and not the app's overrides, so dialogs came up in Fluent's
-    /// greys. The app's Dark dictionary is copied onto the dialog, whose own resources its template
-    /// reads first: content on Raised, buttons on the ground, controls in the palette. Under a
-    /// contrast theme the system's colours rule, so nothing is copied.
+    /// Gives the dialog the app's palette. ContentDialog's template is Fluent's, and reads Fluent's
+    /// own dark brushes, not the palette merged after them, so dialogs came up in Fluent's greys.
+    /// The palette's Dark dictionary (Palette.xaml) is copied onto the dialog, whose own resources
+    /// its template reads first: content on Raised, buttons on the ground, controls in the
+    /// palette. Under a contrast theme the system's colours rule, so nothing is copied.
     /// </summary>
     static void Palette(ContentDialog dialog)
     {
         if (accessibility.HighContrast || dialog.Resources.ContainsKey("GroundBrush"))
             return;
-        if (!Microsoft.UI.Xaml.Application.Current.Resources.ThemeDictionaries.TryGetValue("Dark", out var found) || found is not Microsoft.UI.Xaml.ResourceDictionary dark)
+        if (Microsoft.UI.Xaml.Application.Current.Resources.MergedDictionaries
+                .Select(d => d.ThemeDictionaries.TryGetValue("Dark", out var theme) ? theme as Microsoft.UI.Xaml.ResourceDictionary : null)
+                .LastOrDefault(d => d is not null) is not { } dark)
             return;
         foreach (var (key, value) in dark)
             if (!dialog.Resources.ContainsKey(key))
