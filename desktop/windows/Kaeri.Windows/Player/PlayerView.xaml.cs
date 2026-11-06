@@ -2401,6 +2401,9 @@ public sealed partial class PlayerView : UserControl
     {
         if (!Showing)
             return;
+        // A dialog over the player takes the keys: Escape closes it, not the player under it.
+        if (Dialogs.Open)
+            return;
         // Typing in the discussion's field, or pressing a key on one of its buttons, is not a player key.
         if (discussion is { } pane && XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focus && Within(focus, pane))
             return;
@@ -2952,6 +2955,13 @@ public sealed partial class PlayerView : UserControl
     internal event Action<bool>? MiniRequested;
 
     void OnMini(object sender, RoutedEventArgs e) => ToggleMini();
+
+    /// <summary>Back from the mini window, if in it: a dialog is about to open, and needs the room.</summary>
+    internal void LeaveMini()
+    {
+        if (mini)
+            ToggleMini();
+    }
 
     void ToggleMini()
     {

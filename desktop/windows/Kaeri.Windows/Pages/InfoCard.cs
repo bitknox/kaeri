@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 namespace Kaeri.Windows.Pages;
@@ -54,6 +55,9 @@ static class InfoCard
             Child = layout,
         };
         AutomationProperties.SetIsDialog(card, true);
+        // Tab goes round the card, as in a dialog, so the keys never leave it for the page under it
+        // and Escape always reaches it.
+        card.TabFocusNavigation = KeyboardNavigationMode.Cycle;
         var popup = new Popup
         {
             XamlRoot = root,

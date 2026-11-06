@@ -9527,6 +9527,10 @@
     <value>Sign in to {service} in your browser</value>
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</value>
+    <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
+  </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>computer</value>
     <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
@@ -11003,6 +11007,10 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>Choose a torrent file</value>
     <comment>Button: choose a torrent file from the device.</comment>
+  </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeri couldn't read that link or file.</value>
+    <comment>Line under the field when the link or file could not be read, and the engine gave no reason.</comment>
   </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>Is this {title}, episode {episode}?</value>

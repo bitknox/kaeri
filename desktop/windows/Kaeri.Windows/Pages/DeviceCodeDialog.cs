@@ -56,7 +56,9 @@ sealed class DeviceCodeDialog
         Pending = prompt;
         if (prompt is null)
         {
-            open?.dialog.Hide();
+            // One still waiting behind another dialog never opens on a code that has ended.
+            if (open is { } ended)
+                Dialogs.Close(ended.dialog);
             open = null;
             return;
         }
@@ -120,6 +122,13 @@ sealed class DeviceCodeDialog
                 // A new code replaces this one, through the engine's DeviceCode.
                 Ctx.Current.SignIn(this.prompt.Tracker);
                 dialog.IsSecondaryButtonEnabled = false;
+                // A code that never comes (the engine says why in a notice) leaves the button to try again.
+                var asked = this.prompt;
+                _ = Task.Delay(TimeSpan.FromSeconds(15)).ContinueWith(_ => dialog.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (this.prompt == asked)
+                        dialog.IsSecondaryButtonEnabled = true;
+                }));
                 return;
             }
             if (Ui.TryCopy(this.prompt.Code))

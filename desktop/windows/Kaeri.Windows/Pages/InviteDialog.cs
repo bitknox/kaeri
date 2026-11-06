@@ -23,36 +23,31 @@ static class InviteDialog
         body.Children.Add(Ui.Haze(forDevice ? T.StoresQrWarningDevice : T.StoresQrWarning));
         var box = new TextBox { Text = link, IsReadOnly = true };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, T.StoresInviteLink);
-        body.Children.Add(box);
+        // Copy sits beside the link, so the dialog's Close button can be Done: Escape then closes it.
+        var row = new Grid { ColumnSpacing = 8 };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.Children.Add(box);
+        var copy = Ui.Label(T.StoresCopyLink, (_, _) => Ui.TryCopy(link));
+        Grid.SetColumn(copy, 1);
+        row.Children.Add(copy);
+        body.Children.Add(row);
         var dialog = new ContentDialog
         {
             XamlRoot = root,
             Title = forDevice ? T.StoresLinkDeviceTitle : forWhom is { Length: > 0 } name ? T.StoresInviteForName(name) : T.StoresInviteTitle,
             Content = body,
-            PrimaryButtonText = T.ActionDone,
-            SecondaryButtonText = T.StoresShare,
-            CloseButtonText = T.ActionCopy,
-            DefaultButton = ContentDialogButton.Primary,
+            PrimaryButtonText = T.StoresShare,
+            CloseButtonText = T.ActionDone,
+            DefaultButton = ContentDialogButton.Close,
         };
-        // Copy link and Share keep the sheet up; Done closes it.
-        dialog.CloseButtonClick += (_, e) =>
-        {
-            e.Cancel = true;
-            Ui.TryCopy(link);
-        };
-        dialog.SecondaryButtonClick += (_, e) =>
+        // Share keeps the sheet up; Done, and Escape, close it.
+        dialog.PrimaryButtonClick += (_, e) =>
         {
             e.Cancel = true;
             Share(ctx, link);
         };
-        try
-        {
-            await Dialogs.Show(dialog);
-        }
-        catch (System.Runtime.InteropServices.COMException)
-        {
-            // Another dialog is up: the link stays in the page's own copy.
-        }
+        await Dialogs.Show(dialog);
     }
 
     /// <summary>The system's share sheet for the link, on the app's window.</summary>

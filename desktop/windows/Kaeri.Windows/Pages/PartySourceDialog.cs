@@ -94,9 +94,10 @@ sealed class PartySourceDialog
     {
         Showing = this;
         ctx.Batch += Heard;
+        var answer = ContentDialogResult.None;
         try
         {
-            await Dialogs.Show(dialog);
+            answer = await Dialogs.Show(dialog);
         }
         finally
         {
@@ -104,9 +105,16 @@ sealed class PartySourceDialog
             if (Showing == this)
                 Showing = null;
         }
-        if (openProviders)
+        // Only Open sources goes there: Not now, Escape and a party that ended stay where they are.
+        if (openProviders && answer == ContentDialogResult.Primary)
             ctx.Go("providers");
     }
+
+    /// <summary>Whether this is the dialog for <paramref name="episode"/> of <paramref name="title"/>.</summary>
+    public bool Asks(uint title, string episode) => id == title && this.episode == episode;
+
+    /// <summary>Closes it, or drops it if it is still waiting behind another dialog.</summary>
+    public void Close() => Dialogs.Close(dialog);
 
     string What => ctx.Known.Entry(id) is { } entry ? T.EpisodeLabelOf(episode, entry.Title) : T.EpisodeLabel(episode);
 
@@ -206,7 +214,7 @@ sealed class PartySourceDialog
                     Failed(t.V1.Msg is { } said ? said.Text() : T.SourcesLoadFailed);
                     break;
                 case Event.PartyLeft when !alone:
-                    dialog.Hide();
+                    Close();
                     return;
                 case Event.PartyJoined or Event.PartyState when !choosing && !alone:
                     First();

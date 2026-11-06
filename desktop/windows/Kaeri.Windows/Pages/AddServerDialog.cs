@@ -55,8 +55,12 @@ sealed class AddServerDialog
         address.TextChanged += (_, _) => { if (step == Step.Find) { Problem(null); Refresh(); } };
         address.KeyDown += (_, e) =>
         {
-            if (e.Key == global::Windows.System.VirtualKey.Enter && dialog.IsPrimaryButtonEnabled)
-                dialog.Hide();
+            // Enter is Continue, as the button is: the address is checked, and the dialog stays.
+            if (e.Key == global::Windows.System.VirtualKey.Enter && dialog.IsPrimaryButtonEnabled && step == Step.Find)
+            {
+                e.Handled = true;
+                Check();
+            }
         };
         if (again is not null)
             address.Text = again;
@@ -408,8 +412,10 @@ sealed class AddServerDialog
                     Busy(false);
                     ShowCertificate(cert.V1);
                     break;
-                // The certificate step follows with the fingerprint; it says the rest.
-                case ServerEvent.Failed { Failure: ServerFailure.Certificate }:
+                // The certificate step follows with the fingerprint; it says the rest. When the
+                // fingerprint can't be read it never comes, so the failure is said after a moment.
+                case ServerEvent.Failed { Step: var at, Failure: ServerFailure.Certificate failure }:
+                    CertificateOrFail(at, failure);
                     break;
                 case ServerEvent.Failed { Step: var at, Failure: var failure }:
                     Busy(false);
@@ -429,6 +435,16 @@ sealed class AddServerDialog
                     ShowLibraries();
                     break;
             }
+        }
+    }
+
+    async void CertificateOrFail(ServerStep at, ServerFailure failure)
+    {
+        await Task.Delay(1500);
+        if (busy && step != Step.Certificate)
+        {
+            Busy(false);
+            Fail(at, failure);
         }
     }
 

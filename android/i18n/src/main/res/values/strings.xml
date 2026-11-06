@@ -5150,6 +5150,8 @@
     <string name="cloud_browser_line">Your browser opened %1$s’s page. Allow access there, and Kaeri carries on by itself.</string>
     <!-- Windows and Linux dialog title while the browser is open for a cloud sign-in. -->
     <string name="cloud_browser_title">Sign in to %1$s in your browser</string>
+    <!-- Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running. -->
+    <string name="cloud_close_carries_on">You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</string>
     <!-- Word for this device in sentences such as “Turn off sync on this computer”. -->
     <string name="device_kind_computer">computer</string>
     <!-- Button on the Devices page that opens the box for a code another device shows. -->
@@ -5891,6 +5893,8 @@
     <string name="opened_paste_placeholder">Magnet link or info hash</string>
     <!-- Button: choose a torrent file from the device. -->
     <string name="opened_choose_file">Choose a torrent file</string>
+    <!-- Line under the field when the link or file could not be read, and the engine gave no reason. -->
+    <string name="opened_unreadable">Kaeri couldn\'t read that link or file.</string>
     <!-- The question once the link's name matched a title and an episode. -->
     <string name="opened_confirm">Is this %1$s, episode %2$s?</string>
     <!-- The question when the name matched a title but states no episode. -->

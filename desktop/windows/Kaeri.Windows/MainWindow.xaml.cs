@@ -157,6 +157,8 @@ public sealed partial class MainWindow : Window
                 AppWindow.TitleBar.PreferredHeightOption = shown ? TitleBarHeightOption.Tall : TitleBarHeightOption.Collapsed;
         };
         Player.MiniRequested += Mini;
+        // A dialog doesn't fit the 480 by 270 mini window: the window is its size again first.
+        Dialogs.Opening += Player.LeaveMini;
         session.OffThread = e =>
         {
 #if KAERI_TESTING
@@ -478,6 +480,13 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(1800);
                 OpenLink("magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Hoshikuzu+no+Tabibito+-+03+%5B1080p%5D.mkv");
             });
+        // --show=opened-unreadable: a magnet link the engine can't read, to see the dialog say so and go back.
+        if (options.Show == "opened-unreadable")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1800);
+                OpenLink("magnet:?xt=urn:btih:not-a-hash");
+            });
         if (options.Show == "open-link")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
@@ -610,6 +619,8 @@ public sealed partial class MainWindow : Window
                     AddFolder();
                 else if (welcome.Then == "server")
                     ShowAddServer();
+                else if (welcome.Then == "pair")
+                    Sync.SyncDialogs.PairShow(Sync.Origin.FirstLaunch);
             });
     }
 
@@ -1430,6 +1441,9 @@ public sealed partial class MainWindow : Window
         Activated += (_, e) =>
         {
             inFront = e.WindowActivationState != WindowActivationState.Deactivated;
+            // Back in front: the keys go to the dialog that is up, not the page under it.
+            if (inFront)
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, Dialogs.Refocus);
             // The system's caption style has no change event: read it again on coming back.
             if (inFront)
                 Kaeri.Windows.Player.SubtitleStyling.Refresh();
@@ -1612,6 +1626,12 @@ public sealed partial class MainWindow : Window
     bool CloseDialogs()
     {
         var closed = InfoCard.HideOpen();
+        // Closed even when it would hold itself open, as a sign-in's wait does.
+        if (Dialogs.Open)
+        {
+            Dialogs.HideOpen();
+            closed = true;
+        }
         foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(Root.XamlRoot))
             if (popup.Child is ContentDialog dialog)
             {

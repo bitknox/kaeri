@@ -54,7 +54,16 @@ public sealed partial class MainWindow
 
     async void ShowPartySource(uint id, string episode, NoSourceWhy why, string reason)
     {
-        if (CloseDialogs())
+        // The engine says this on every start that found nothing, a rejoin's included: one dialog
+        // per episode, and a later episode's takes the place of an earlier one's. Any other
+        // dialog up (the question closing the window asks, a sign-in) is let be; this waits for it.
+        if (PartySourceDialog.Showing is { } up)
+        {
+            if (up.Asks(id, episode))
+                return;
+            up.Close();
+        }
+        if (InfoCard.HideOpen())
             await Task.Delay(250);
         try
         {

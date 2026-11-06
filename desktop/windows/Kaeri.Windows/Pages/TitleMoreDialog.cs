@@ -98,7 +98,8 @@ sealed class TitleMoreDialog
             Content = page,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0, 0, 16, 0),
-            Width = 780,
+            // At most 780: the card is narrower in a small window, and the right column stays in it.
+            MaxWidth = 780,
         };
     }
 

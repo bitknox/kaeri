@@ -9831,6 +9831,9 @@ cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þ�
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
 
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = [çöɱþüţéŕ~~~]
 
@@ -10941,6 +10944,9 @@ opened-paste-placeholder = [Ṁàĝñéţ ļîñķ öŕ îñƒö ĥàšĥ~~~~~~~
 
 # Button: choose a torrent file from the device.
 opened-choose-file = [Çĥööšé à ţöŕŕéñţ ƒîļé~~~~~~~]
+
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = [Ķàéŕî çöüļðñ'ţ ŕéàð ţĥàţ ļîñķ öŕ ƒîļé.~~~~~~~~~~~~]
 
 # The question once the link's name matched a title and an episode.
 opened-confirm = [Îš ţĥîš { $title }, éþîšöðé { $episode }?~~~~~~~~]

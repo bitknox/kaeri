@@ -34,7 +34,10 @@ sealed class WelcomeDialog
     /// <summary>An invite link to join once the dialog has closed: the join dialog takes it from there.</summary>
     public string? Invite { get; private set; }
 
-    /// <summary>"folder" or "server" when the viewer chose to add their own media: that dialog opens once this closes.</summary>
+    /// <summary>
+    /// "folder" or "server" when the viewer chose to add their own media, "pair" when they set
+    /// this PC up from another device: that dialog opens once this closes.
+    /// </summary>
     public string? Then { get; private set; }
 
     public WelcomeDialog(Ctx ctx, XamlRoot root)
@@ -94,6 +97,11 @@ sealed class WelcomeDialog
                 AutomationProperties.SetHeadingLevel(name, AutomationHeadingLevel.Level1);
                 body.Children.Add(name);
                 body.Children.Add(Ui.Text(T.OnboardingTagline, "BodyTextBlockStyle"));
+                // As on the Mac, a quiet button under the words: a device already set up shows
+                // this one a code, and that brings everything over. Its dialog opens once this closes.
+                var elsewhere = Ui.Label(T.FirstSetupOther, (_, _) => Leave("pair"));
+                elsewhere.Margin = new Thickness(0, 12, 0, 0);
+                body.Children.Add(elsewhere);
                 dialog.PrimaryButtonText = T.OnboardingContinue;
                 dialog.CloseButtonText = T.OnboardingSkip;
                 break;
