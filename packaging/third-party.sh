@@ -8,6 +8,8 @@ mkdir -p "$dest"
 cp assets/THIRD-PARTY.md "$dest/THIRD-PARTY.md"
 cp assets/shaders/THIRD-PARTY.md "$dest/THIRD-PARTY-shaders.md"
 cp assets/mpv/licenses/* assets/shaders/LICENSE-* "$dest/"
+# The hyphenation patterns the hypher crate compiles in, with the licence header of each.
+cp assets/hyphenation/LICENSE-hyphenation-patterns.txt "$dest/"
 # Every Rust crate compiled in, with its licence: packaging/rust-licences/generate.sh writes it,
 # and the release workflow runs that first.
 cp target/THIRD-PARTY-rust.txt "$dest/THIRD-PARTY-rust.txt"
