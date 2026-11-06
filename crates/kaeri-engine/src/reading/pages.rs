@@ -35,13 +35,20 @@ use kaeri_pages::{
     strip::{StripCut, StripOptions},
 };
 
-use crate::outbox::{Internal, Outbox, ReaderWake};
+use crate::{
+    host::PageDecoder,
+    outbox::{Internal, Outbox, ReaderWake},
+};
 
 /// How long a book may take to open before the chapter fails.
 pub const OPEN_BUDGET: Duration = Duration::from_secs(8);
 /// How long one PDF page may take to render. The PDF reader cannot be stopped, so a page over
 /// this fails the chapter and the render is left to finish on its own thread.
 pub const PDF_PAGE_BUDGET: Duration = Duration::from_secs(2);
+/// How long the platform's decoder may take over one page it was asked to decode. It cannot be
+/// stopped, so a page over this fails and the call is left to finish on its own thread, which
+/// holds the decoder until it ends.
+pub const HOST_DECODE_BUDGET: Duration = Duration::from_secs(2);
 
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
@@ -123,11 +130,12 @@ pub struct Pages {
 }
 
 impl Pages {
-    pub fn start(cache: PathBuf) -> Self {
+    /// The page worker, with the host's `decoder` for the formats it cannot read, when it has one.
+    pub fn start(cache: PathBuf, decoder: Option<Arc<dyn PageDecoder>>) -> Self {
         let (jobs, rx) = mpsc::channel();
         let spawned = std::thread::Builder::new()
             .name("kaeri-pages".into())
-            .spawn(move || Worker::new(cache).run(rx));
+            .spawn(move || Worker::new(cache, HostDecoder::new(decoder)).run(rx));
         if let Err(e) = spawned {
             tracing::error!(error = %e, "the page worker did not start");
         }
@@ -149,6 +157,93 @@ impl Pages {
     pub fn close(&self, session: u64) {
         let _ = self.jobs.send(Job::Close { session });
     }
+}
+
+/// The host's decoder for page formats the engine cannot read, called with a time budget.
+#[derive(Clone)]
+struct HostDecoder {
+    decoder: Option<Arc<dyn PageDecoder>>,
+    /// A call still running: one at a time, so a decoder that hangs costs one thread.
+    busy: Arc<AtomicBool>,
+    budget: Duration,
+}
+
+impl HostDecoder {
+    fn new(decoder: Option<Arc<dyn PageDecoder>>) -> Self {
+        Self { decoder, busy: Arc::new(AtomicBool::new(false)), budget: HOST_DECODE_BUDGET }
+    }
+
+    /// The page in RGBA8 inside `room`, or why not: no decoder or a refusal is unsupported, and
+    /// a call over its budget or an answer that does not add up is unreadable.
+    fn decode(&self, bytes: Vec<u8>, format: SourceFormat, room: (u32, u32)) -> Hosted {
+        let Some(decoder) = self.decoder.clone() else { return Hosted::Unsupported };
+        if self.busy.swap(true, Ordering::AcqRel) {
+            tracing::warn!("the host's decoder is still on an earlier page");
+            return Hosted::Unreadable;
+        }
+        let (tx, rx) = mpsc::channel();
+        let busy = self.busy.clone();
+        let mime = format.mime().to_owned();
+        let spawned =
+            std::thread::Builder::new().name("kaeri-page-decode".into()).spawn(move || {
+                let image = decoder.decode(bytes, mime, room.0, room.1);
+                busy.store(false, Ordering::Release);
+                let _ = tx.send(image);
+            });
+        if spawned.is_err() {
+            self.busy.store(false, Ordering::Release);
+            return Hosted::Unreadable;
+        }
+        match rx.recv_timeout(self.budget) {
+            Ok(Some(image)) => Hosted::Image(image),
+            Ok(None) => Hosted::Unsupported,
+            Err(_) => {
+                tracing::warn!("the host's decoder took too long over a page");
+                Hosted::Unreadable
+            }
+        }
+    }
+
+    /// As [`Self::decode`], as a bitmap the pipeline works on.
+    fn bitmap(&self, bytes: Vec<u8>, format: SourceFormat, room: (u32, u32)) -> Hosted<Bitmap> {
+        match self.decode(bytes, format, room) {
+            Hosted::Image(image) => {
+                match kaeri_pages::decode::from_rgba(
+                    image.width,
+                    image.height,
+                    &image.rgba,
+                    kaeri_pages::DecodeLimits::default(),
+                ) {
+                    Ok(bitmap) => Hosted::Image(bitmap),
+                    Err(e) => {
+                        tracing::warn!(error = %e, "the host's decoder gave an unusable page");
+                        Hosted::Unreadable
+                    }
+                }
+            }
+            Hosted::Unsupported => Hosted::Unsupported,
+            Hosted::Unreadable => Hosted::Unreadable,
+        }
+    }
+}
+
+enum Hosted<T = crate::host::DecodedImage> {
+    Image(T),
+    Unsupported,
+    Unreadable,
+}
+
+/// The size to ask the host to decode a `width` by `height` page down to: at least twice the
+/// largest it is ever drawn (whole, turned, or one half of a spread), as the JPEG decode keeps,
+/// so the resize after does the last shrink. Never larger than the page.
+fn decode_room(width: u32, height: u32, screen: (u32, u32)) -> (u32, u32) {
+    let (w, h) = (width.max(1) as f64, height.max(1) as f64);
+    let (rw, rh) = (screen.0.max(1) as f64, screen.1.max(1) as f64);
+    let whole = (rw / w).min(rh / h);
+    let turned = (rh / w).min(rw / h);
+    let half = if w > h { (2.0 * rw / w).min(rh / h) } else { 0.0 };
+    let scale = (whole.max(turned).max(half) * 2.0).min(1.0);
+    ((w * scale).ceil() as u32, (h * scale).ceil() as u32)
 }
 
 /// One page's original, extracted into the cache.
@@ -188,6 +283,7 @@ struct Chapter {
     /// Pages made before the session sent the leaves, held until it asks for any: an app
     /// never hears of a page before the leaf it belongs to.
     held: Option<Vec<ReaderEvent>>,
+    decoder: HostDecoder,
 }
 
 struct Worker {
@@ -198,11 +294,18 @@ struct Worker {
     open: Option<Chapter>,
     /// One book opens at a time; a stuck open keeps this until it finishes.
     opening: Arc<AtomicBool>,
+    decoder: HostDecoder,
 }
 
 impl Worker {
-    fn new(cache: PathBuf) -> Self {
-        Self { cache, out: None, open: None, opening: Arc::new(AtomicBool::new(false)) }
+    fn new(cache: PathBuf, decoder: HostDecoder) -> Self {
+        Self {
+            cache,
+            out: None,
+            open: None,
+            opening: Arc::new(AtomicBool::new(false)),
+            decoder,
+        }
     }
 
     fn send(&self, event: ReaderEvent) {
@@ -430,6 +533,7 @@ impl Worker {
             sent: HashSet::new(),
             queue: VecDeque::new(),
             held: Some(Vec::new()),
+            decoder: self.decoder.clone(),
         };
         let (leaves, cuts) = if mode == ReaderMode::Strip && eink {
             chapter.strip = cut_strip(&chapter, plan.target);
@@ -768,14 +872,31 @@ impl Chapter {
                 bytes,
             });
         }
-        if !format.decodes() {
-            return Err(ReadingFailure::Unsupported { extension: "avif".into() });
-        }
         let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
-        let page = self.renderer.open(&bytes).map_err(|e| {
-            tracing::warn!(error = %e, "a page did not decode");
-            self.unreadable()
-        })?;
+        let page = if format.decodes() {
+            self.renderer.open(&bytes).map_err(|e| {
+                tracing::warn!(error = %e, "a page did not decode");
+                self.unreadable()
+            })?
+        } else {
+            // A format the engine cannot read: the platform decodes it, small if it can.
+            let screen = (target.width, target.height);
+            let room = decode_room(original.width, original.height, screen);
+            match self.decoder.bitmap(bytes, format, room) {
+                Hosted::Image(bitmap) => {
+                    self.renderer.open_bitmap(bitmap, format).map_err(|e| {
+                        tracing::warn!(error = %e, "a page did not decode");
+                        self.unreadable()
+                    })?
+                }
+                Hosted::Unsupported => {
+                    return Err(ReadingFailure::Unsupported {
+                        extension: extension_of(format).into(),
+                    });
+                }
+                Hosted::Unreadable => return Err(self.unreadable()),
+            }
+        };
         // The layout's rectangles are in the file's pixels; a large scan may decode smaller.
         let region = part.source.map(|s| scale_rect(s, original.width, page.bitmap.width()));
         let raw = self.renderer.render(&page, region, w, h).map_err(|e| {
@@ -903,13 +1024,28 @@ fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
     for (i, original) in chapter.originals.iter().enumerate() {
         let Some(original) = original else { continue };
         let Ok(bytes) = std::fs::read(&original.path) else { continue };
-        let Ok(bitmap) = kaeri_pages::decode_for(
-            &bytes,
-            kaeri_pages::DecodeLimits::default(),
-            Some((width, target.height)),
-        ) else {
-            continue;
+        let hosted = original.format.filter(|f| !f.decodes());
+        let decoded = match hosted {
+            Some(format) => {
+                // A strip is drawn at the screen's width: ask for twice that at most.
+                let scale = (2.0 * width as f64 / original.width.max(1) as f64).min(1.0);
+                let room = (
+                    (original.width as f64 * scale).ceil() as u32,
+                    (original.height as f64 * scale).ceil() as u32,
+                );
+                match chapter.decoder.bitmap(bytes, format, room) {
+                    Hosted::Image(bitmap) => Some(bitmap),
+                    _ => None,
+                }
+            }
+            None => kaeri_pages::decode_for(
+                &bytes,
+                kaeri_pages::DecodeLimits::default(),
+                Some((width, target.height)),
+            )
+            .ok(),
         };
+        let Some(bitmap) = decoded else { continue };
         let (w, h) = Fit::Width(width).size(bitmap.width(), bitmap.height());
         let Ok(scaled) = resize(&bitmap, bitmap.bounds(), w, h) else { continue };
         let scaled = if colour { scaled.into_rgba() } else { scaled.into_gray() };
@@ -942,6 +1078,17 @@ fn strip_places(strip: &Strip) -> Vec<StripPos> {
             StripPos { image: i as u32, offset: (cut.top - top) as f32 / height.max(1) as f32 }
         })
         .collect()
+}
+
+/// The extension a failure names for a format.
+const fn extension_of(format: SourceFormat) -> &'static str {
+    match format {
+        SourceFormat::Jpeg => "jpg",
+        SourceFormat::Png => "png",
+        SourceFormat::WebP => "webp",
+        SourceFormat::Gif => "gif",
+        SourceFormat::Avif => "avif",
+    }
 }
 
 fn scale_rect(r: kaeri_pages::PixelRect, from: u32, to: u32) -> kaeri_pages::PixelRect {
@@ -1070,6 +1217,17 @@ mod tests {
         assert!(is_strip(&[(800, 4000), (800, 3800), (800, 1200)]));
         assert!(!is_strip(&[(1000, 1400), (1000, 1400), (2000, 1400)]));
         assert!(!is_strip(&[(800, 4000)]));
+    }
+
+    #[test]
+    fn the_host_decodes_no_larger_than_twice_what_is_shown() {
+        // A page the screen shows smaller than half its size is asked for smaller.
+        assert_eq!(decode_room(3000, 4500, (600, 900)), (1200, 1800));
+        // One the screen shows larger is asked for whole.
+        assert_eq!(decode_room(300, 450, (600, 900)), (300, 450));
+        // A spread shown as two halves is asked for at the size one half needs.
+        let (w, h) = decode_room(6000, 4000, (600, 900));
+        assert!((1200..6000).contains(&w) && h < 4000);
     }
 
     #[test]

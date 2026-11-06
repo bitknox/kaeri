@@ -9,6 +9,7 @@ import app.kaeri.engine.ffi.FfiBackground
 import app.kaeri.engine.ffi.FfiDirs
 import app.kaeri.engine.ffi.FfiEngine
 import app.kaeri.engine.ffi.FfiHost
+import app.kaeri.engine.ffi.FfiPageDecoder
 import app.kaeri.engine.ffi.FfiPlatform
 import app.kaeri.engine.ffi.FfiStart
 import app.kaeri.engine.ffi.SecretsMode
@@ -73,6 +74,8 @@ data class EngineLaunch(
     val profile: String? = null,
     /** The player's libmpv carries the demuxer's audio tap and each of its cores has the engine's callback. */
     val audioTap: Boolean = true,
+    /** The platform's image decoder for page formats the engine cannot read, AVIF on e-ink. */
+    val pageDecoder: FfiPageDecoder? = PlatformPageDecoder(),
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -99,6 +102,7 @@ data class EngineLaunch(
             secrets = secrets,
             profile = profile,
             audioTap = audioTap,
+            pageDecoder = pageDecoder,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */

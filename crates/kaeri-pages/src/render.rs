@@ -222,8 +222,22 @@ impl Renderer {
     /// Decodes a page and checks it: colour, spread, crop box.
     pub fn open(&self, bytes: &[u8]) -> Result<SourcePage, Error> {
         let room = (self.target.width, self.target.height);
-        let mut bitmap = decode_for(bytes, self.limits, Some(room))?;
+        let bitmap = decode_for(bytes, self.limits, Some(room))?;
         let format = SourceFormat::sniff(bytes).ok_or(Error::UnknownFormat)?;
+        self.analyse(bitmap, format)
+    }
+
+    /// Checks a page decoded elsewhere, such as by the platform ([`crate::decode::from_rgba`]),
+    /// as [`Self::open`] does one the engine decoded.
+    pub fn open_bitmap(
+        &self,
+        bitmap: Bitmap,
+        format: SourceFormat,
+    ) -> Result<SourcePage, Error> {
+        self.analyse(bitmap, format)
+    }
+
+    fn analyse(&self, mut bitmap: Bitmap, format: SourceFormat) -> Result<SourcePage, Error> {
         let has_rgb = bitmap.format() != PixelFormat::Gray8;
         let colour = match self.look.colour {
             ColourChoice::Greys => false,

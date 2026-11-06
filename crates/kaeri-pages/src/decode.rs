@@ -224,6 +224,37 @@ fn decode_jpeg_scaled(
     Bitmap::new(w, h, format, data).map(Some)
 }
 
+/// A page the platform decoded, as packed RGBA8 rows, laid over white paper into
+/// [`PixelFormat::Rgb8`] as [`decode`] does with a transparent file. Refused over the cap or when
+/// the buffer does not match the size.
+pub fn from_rgba(
+    width: u32,
+    height: u32,
+    rgba: &[u8],
+    limits: DecodeLimits,
+) -> Result<Bitmap, Error> {
+    let pixels = width as u64 * height as u64;
+    if pixels > limits.max_pixels {
+        return Err(Error::TooLarge { width, height, max_pixels: limits.max_pixels });
+    }
+    if rgba.len() as u64 != pixels * 4 {
+        return Err(Error::BufferSize {
+            width,
+            height,
+            format: PixelFormat::Rgba8,
+            want: (pixels * 4) as usize,
+            got: rgba.len(),
+        });
+    }
+    let data = rgba
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .flat_map(|p| [0, 1, 2].map(|c| over_white(p[c], p[3])))
+        .collect();
+    Bitmap::new(width, height, PixelFormat::Rgb8, data)
+}
+
 fn from_dynamic(image: DynamicImage) -> Bitmap {
     let (w, h) = (image.width(), image.height());
     let colour = image.color();
@@ -318,6 +349,24 @@ mod tests {
         let b = decode(&png(DynamicImage::ImageRgba8(rgba)), DecodeLimits::default()).unwrap();
         assert_eq!(b.format(), PixelFormat::Rgb8);
         assert_eq!(b.data(), &[255, 255, 255, 255, 0, 0]);
+    }
+
+    #[test]
+    fn a_page_the_platform_decoded_lies_over_white_and_must_match_its_size() {
+        let rgba = [0, 0, 0, 0, 255, 0, 0, 255];
+        let b = from_rgba(2, 1, &rgba, DecodeLimits::default()).unwrap();
+        assert_eq!(
+            (b.format(), b.data()),
+            (PixelFormat::Rgb8, &[255, 255, 255, 255, 0, 0][..])
+        );
+        assert!(matches!(
+            from_rgba(2, 2, &rgba, DecodeLimits::default()),
+            Err(Error::BufferSize { .. })
+        ));
+        assert!(matches!(
+            from_rgba(2, 1, &rgba, DecodeLimits { max_pixels: 1 }),
+            Err(Error::TooLarge { .. })
+        ));
     }
 
     #[test]
