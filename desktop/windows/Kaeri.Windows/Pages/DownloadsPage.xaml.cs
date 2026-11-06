@@ -31,7 +31,8 @@ public sealed partial class DownloadsPage : Page
     {
         InitializeComponent();
         // Each title's card: its cover and its lines, with the card's own padding between them.
-        Loading.Placeholders = () => States.Rows(3, 64, 96, spacing: 32);
+        // The placeholders keep the rows' column; an empty state centres in the whole page.
+        Loading.Placeholders = () => new Border { Child = States.Rows(3, 64, 96, spacing: 32), MaxWidth = 900, HorizontalAlignment = HorizontalAlignment.Left };
         Loading.NeedsConnection = false;
         ctx.Hear(this, Heard);
     }

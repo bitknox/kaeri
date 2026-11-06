@@ -262,10 +262,46 @@ public sealed partial class StateHost : Grid
         var showing = message.Visibility == Visibility.Visible && message.Children.Count > 0;
         message.Children.Clear();
         message.Children.Add(state);
+        FitMessage();
         if (showing)
             Motion.Set(message, true);
         else
             Motion.FadeIn(message, fade);
+    }
+
+    ScrollViewer? scroller;
+
+    /// <summary>
+    /// An empty, offline or failed state sits in the middle of what can be seen below the place's
+    /// top, as on the Mac. In a scroller the place has no height of its own to centre in, so the
+    /// message is given the viewport's.
+    /// </summary>
+    void FitMessage()
+    {
+        if (scroller is null)
+        {
+            for (var at = VisualTreeHelper.GetParent(this); at is not null; at = VisualTreeHelper.GetParent(at))
+                if (at is ScrollViewer found)
+                {
+                    scroller = found;
+                    scroller.SizeChanged += (_, _) => FitMessage();
+                    break;
+                }
+            if (scroller is null)
+                return;
+        }
+        if (scroller.Content is not UIElement inner || message.Children.Count == 0)
+            return;
+        try
+        {
+            var top = TransformToVisual(inner).TransformPoint(default).Y + Padding.Top;
+            // The page's own bottom padding stays below it, so the message never makes the page scroll.
+            message.MinHeight = Math.Max(0, scroller.ViewportHeight - top - Padding.Bottom - 24);
+        }
+        catch (ArgumentException)
+        {
+            // Not in the scroller's tree yet: the next size change places it.
+        }
     }
 
     /// <summary>Clears any empty, offline or failed state; the content shows.</summary>
