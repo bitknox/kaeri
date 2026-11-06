@@ -10,6 +10,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import app.kaeri.i18n.Strings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +50,8 @@ fun NovelScreen(
 ) {
     val context = LocalContext.current
     val current = rememberUpdatedState(state)
+    val scope = rememberCoroutineScope()
+    var failed by remember(state.novel?.chapter) { mutableStateOf(false) }
     val host = remember(session) {
         NovelWebHost(context, assets, resource) { message ->
             val now = current.value
@@ -47,7 +60,14 @@ fun NovelScreen(
                     session.novelAt(it, message.page.toUInt(), message.pages.toUInt(), message.how ?: TurnHow.JUMP)
                 }
                 // The last page of the last document: on to the next chapter, when there is one.
-                is NovelMessage.End -> now.view?.next?.let { session.openChapter(it.id) }
+                // Two seconds on the last page first, so the end is felt before the next chapter opens.
+                is NovelMessage.End -> now.view?.next?.let { next ->
+                    scope.launch {
+                        delay(2000)
+                        session.openChapter(next.id)
+                    }
+                }
+                is NovelMessage.Failed -> failed = true
                 else -> {}
             }
         }
@@ -62,13 +82,21 @@ fun NovelScreen(
     }
     Box(modifier.fillMaxSize()) {
         AndroidView(factory = { host.view }, modifier = Modifier.fillMaxSize())
-        // Taps in the middle third open the chrome; the sides stay with the page.
+        // Taps in the middle third, top to bottom, open the chrome; the sides stay with the page.
         Box(
             Modifier
                 .align(Alignment.Center)
-                .fillMaxWidth(0.34f)
-                .fillMaxHeight(0.7f)
+                .fillMaxWidth(1f / 3f)
+                .fillMaxHeight()
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onControls),
         )
+        if (failed) {
+            Text(
+                Strings.readerFailedNovel(context),
+                color = Chrome.text,
+                fontSize = 22.sp,
+                modifier = Modifier.align(Alignment.CenterStart).padding(horizontal = 28.dp),
+            )
+        }
     }
 }

@@ -8,9 +8,9 @@ package app.kaeri.reader
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -48,6 +48,7 @@ import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.i18n.Strings
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -152,11 +153,12 @@ fun PagedReader(
             return@LaunchedEffect
         }
         fade.snapTo(0f)
-        fade.animateTo(1f, tween(200))
+        fade.animateTo(1f, Motion.quick())
         pager.under = null
     }
 
     var drag by remember { mutableFloatStateOf(0f) }
+    var settling by remember { mutableStateOf<Job?>(null) }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val width = constraints.maxWidth.toFloat().coerceAtLeast(1f)
         val flick = with(LocalDensity.current) { 450.dp.toPx() }
@@ -178,13 +180,13 @@ fun PagedReader(
                     return
                 }
                 val end = if (drag > 0) width else -width
-                scope.launch {
+                settling = scope.launch {
                     animate(drag, end, velocity, Motion.standard()) { v, _ -> drag = v }
                     pager.go(target, TurnHow.SWIPE)
                     drag = 0f
                 }
             } else if (motion) {
-                scope.launch { animate(drag, 0f, velocity, Motion.standard()) { v, _ -> drag = v } }
+                settling = scope.launch { animate(drag, 0f, velocity, Motion.standard()) { v, _ -> drag = v } }
             } else {
                 drag = 0f
             }
@@ -202,19 +204,31 @@ fun PagedReader(
                         CustomAccessibilityAction(Strings.readerActionControls(context)) { onControls(); true },
                     )
                 }
-                .pointerInput(rtl, zones, motion) {
-                    detectTapGestures { at ->
-                        if (pager.zoomed) return@detectTapGestures onControls()
-                        when (zones.at(at.x / size.width)) {
-                            ReaderAction.FORWARD -> pager.forward()
-                            ReaderAction.BACK -> pager.back()
-                            else -> onControls()
+                .pointerInput(rtl, zones, motion, pager.zoomed) {
+                    if (pager.zoomed) {
+                        // A double tap returns to fit; a single tap shows the controls.
+                        detectTapGestures(
+                            onDoubleTap = {
+                                pager.zoom = 1f
+                                pager.pan = Offset.Zero
+                            },
+                            onTap = { onControls() },
+                        )
+                    } else {
+                        detectTapGestures { at ->
+                            when (zones.at(at.x / size.width)) {
+                                ReaderAction.FORWARD -> pager.forward()
+                                ReaderAction.BACK -> pager.back()
+                                else -> onControls()
+                            }
                         }
                     }
                 }
                 .pointerInput(rtl, motion) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
+                        // A new touch takes over a settling swipe from where it is.
+                        settling?.cancel()
                         val tracker = VelocityTracker()
                         tracker.addPosition(down.uptimeMillis, down.position)
                         var dragging = false
@@ -224,9 +238,14 @@ fun PagedReader(
                             val pressed = event.changes.filter { it.pressed }
                             if (pressed.size >= 2) {
                                 // Pinch: zoom about the centre, pan within the page.
-                                val zoom = (pager.zoom * event.calculateZoom()).coerceIn(1f, 4f)
+                                val before = pager.zoom
+                                val zoom = (before * event.calculateZoom()).coerceIn(1f, 4f)
+                                val ratio = zoom / before
+                                val middle = Offset(size.width / 2f, size.height / 2f)
+                                // The point under the fingers stays under them.
+                                val held = pager.pan * ratio + (event.calculateCentroid() - middle) * (1f - ratio)
                                 pager.zoom = zoom
-                                pager.pan = clampPan(pager.pan + event.calculatePan(), zoom, size.width.toFloat(), size.height.toFloat())
+                                pager.pan = clampPan(held + event.calculatePan(), zoom, size.width.toFloat(), size.height.toFloat())
                                 if (dragging) {
                                     dragging = false
                                     drag = 0f

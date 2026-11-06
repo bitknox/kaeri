@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -194,9 +195,13 @@ private fun BoxScope.Waited(page: Int, waiting: WaitingSlot) {
     if (shown > 0) waiting(page, shown > 1)
 }
 
+/** A filter over every page: Paper mode dims the white instead of tinting the page. */
+val LocalPageTone = androidx.compose.runtime.compositionLocalOf<ColorFilter?> { null }
+
 /** A decoded page, fitted into its box; a grey page is drawn white over black. */
 @Composable
 fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier, alpha: Float = 1f) {
+    val tone = LocalPageTone.current
     val image = remember(page) { page.bitmap.asImageBitmap() }
     Canvas(modifier) {
         val turned = rotate
@@ -216,25 +221,20 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
                     colorFilter = ColorFilter.tint(Color.White, BlendMode.SrcIn), filterQuality = FilterQuality.Medium,
                 )
             } else {
-                drawImage(image, dstOffset = dst, dstSize = dstSize, alpha = alpha, filterQuality = FilterQuality.Medium)
+                drawImage(image, dstOffset = dst, dstSize = dstSize, alpha = alpha, colorFilter = tone, filterQuality = FilterQuality.Medium)
             }
         }
         if (turned) rotate(90f) { draw() } else draw()
     }
 }
 
-/** The phone's waiting plate: a raised panel with the page number, and its words at four seconds. */
+/** The phone's waiting plate: it fills the page's place with the page's number, and its words at four seconds. */
 @Composable
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
-    Box(Modifier.fillMaxSize().padding(24.dp).background(ObiSilk.Raised, RoundedCornerShape(12.dp))) {
+    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
         Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                (page + 1).toString(),
-                color = ObiSilk.Haze,
-                fontFamily = robotoFlex(FontWeight.Medium, 34.sp),
-                fontSize = 34.sp,
-            )
+            Text(Strings.readerPagePlate(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
             if (long) {
                 Spacer(Modifier.height(8.dp))
                 Text(Strings.readerPageLoading(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
@@ -243,29 +243,30 @@ fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     }
 }
 
-/** The phone's failed page: the glyph, why, Try again, and that a swipe goes on without it. */
+/** The phone's failed page, left aligned with the glyph beside its title, Try again and the swipe line. */
 @Composable
 fun BoxScope.PageFailed(page: Int, failure: ReadingFailure, retry: () -> Unit) {
     val context = LocalContext.current
     Column(
-        Modifier.align(Alignment.Center).widthIn(max = 360.dp).padding(28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        Modifier.align(Alignment.CenterStart).widthIn(max = 360.dp).padding(28.dp),
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        BrokenPageGlyph(ObiSilk.Vermilion, Modifier.size(44.dp))
-        Text(
-            Strings.readerPageFailed(context, page + 1),
-            color = ObiSilk.Silk,
-            fontFamily = robotoFlex(FontWeight.SemiBold, 20.sp),
-            fontSize = 20.sp,
-            textAlign = TextAlign.Center,
-        )
-        Text(failure.text(context), color = ObiSilk.Haze, fontSize = 15.sp, textAlign = TextAlign.Center)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            BrokenPageGlyph(ObiSilk.Vermilion, Modifier.size(28.dp))
+            Text(
+                Strings.readerPageFailed(context, page + 1),
+                color = ObiSilk.Silk,
+                fontFamily = robotoFlex(FontWeight.SemiBold, 20.sp),
+                fontSize = 20.sp,
+            )
+        }
+        Text(failure.text(context), color = ObiSilk.Haze, fontSize = 15.sp)
         Button(
             onClick = retry,
             colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
         ) { Text(Strings.readerTryAgain(context)) }
-        Text(Strings.readerPageFailedSwipe(context), color = ObiSilk.Haze, fontSize = 13.sp, textAlign = TextAlign.Center)
+        Text(Strings.readerPageFailedSwipe(context), color = ObiSilk.Haze, fontSize = 13.sp)
     }
 }
 

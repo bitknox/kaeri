@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -74,10 +74,10 @@ fun ColourQuestionScreen(onColour: () -> Unit, onGreys: () -> Unit, onSkip: () -
         val squares = Strings.einkColourSquares(context)
         Row(
             Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = squares },
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             EinkColours.Squares.forEach { colour ->
-                Box(Modifier.size(92.dp).background(colour).border(EinkSizes.Rule, EinkColours.Ink))
+                Box(Modifier.weight(1f).aspectRatio(1f).background(colour).border(EinkSizes.Rule, EinkColours.Ink))
             }
         }
         Spacer(Modifier.height(28.dp))

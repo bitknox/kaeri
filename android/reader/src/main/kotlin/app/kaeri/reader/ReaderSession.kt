@@ -28,6 +28,8 @@ import app.kaeri.engine.model.ReaderSurface
 import app.kaeri.engine.model.ReaderValue
 import app.kaeri.engine.model.ReaderView
 import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingCommand
+import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SettingScope
@@ -73,6 +75,10 @@ data class ReaderState(
     /** Chapters the read rule counted while this reader was open. */
     val read: Set<ChapterId> = emptySet(),
     val jump: ReaderJump? = null,
+    /** The series' chapters by volume, once asked for. */
+    val volumes: List<VolumeGroup> = emptyList(),
+    /** The trackers each chapter read here was queued for. */
+    val readTrackers: Map<ChapterId, List<String>> = emptyMap(),
     /** The open itself failed: the chapter could not be had. */
     val failure: ReadingFailure? = null,
     val closed: Boolean = false,
@@ -183,6 +189,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.OpenChapter(state.value.session ?: return, chapter))
     }
 
+    /** Ask for the series' chapters, for the chapter list. */
+    fun loadChapters() {
+        val work = state.value.view?.work ?: return
+        send(Command.Reading(ReadingCommand.LoadChapters(work, null)))
+    }
+
     fun backTo() = state.value.session?.let { reader(ReaderCommand.BackTo(it)) }
 
     fun startOver() = state.value.session?.let { reader(ReaderCommand.StartOver(it)) }
@@ -229,6 +241,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         when (event) {
             is Event.Reader -> apply(event.v1)
             is Event.Reading -> {
+                val chapters = event.v1 as? ReadingEvent.Chapters
+                if (chapters != null) {
+                    if (chapters.work == state.value.view?.work) _state.value = state.value.copy(volumes = chapters.volumes)
+                    return
+                }
                 val failed = event.v1 as? ReadingEvent.Failed ?: return
                 if (failed.about == ReadingAbout.READER && state.value.opening) {
                     _state.value = state.value.copy(opening = false, failure = failed.failure)
@@ -248,7 +265,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 startAt = event.v1.start
                 shownPage = null
                 asked.clear()
-                ReaderState(view = event.v1, settings = event.v1.settings ?: now.settings, read = now.read, layout = now.layout + 1)
+                ReaderState(view = event.v1, settings = event.v1.settings ?: now.settings, read = now.read, readTrackers = now.readTrackers, volumes = now.volumes, layout = now.layout + 1)
             }
             is ReaderEvent.Leaves -> {
                 if (!ours(event.session) || event.chapter != now.chapter) return
@@ -277,7 +294,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 now.copy(novel = event.v1)
             }
             is ReaderEvent.NovelStyle -> if (ours(event.session)) now.copy(novelStyle = event) else return
-            is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter) else return
+            is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter, readTrackers = now.readTrackers + (event.chapter to event.trackers)) else return
             is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone)) else return
             is ReaderEvent.Notice -> now.copy(notice = ShownNotice(event.v1, ++ids))
             is ReaderEvent.Moved -> if (ours(event.session)) now.copy(moved = event) else return

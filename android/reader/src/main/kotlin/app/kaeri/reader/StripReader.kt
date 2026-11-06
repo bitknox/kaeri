@@ -67,6 +67,10 @@ fun StripReader(
     onRetry: (page: Int) -> Unit,
     onJumped: (id: Long) -> Unit,
     footer: @Composable (Leaf) -> Unit,
+    /** The divider that names the next chapter; with it the strip flows on instead of stopping on [footer]. */
+    flow: (@Composable () -> Unit)? = null,
+    /** The divider was scrolled up past the middle of the screen: open the next chapter. */
+    onFlowed: () -> Unit = {},
     modifier: Modifier = Modifier,
     list: LazyListState = rememberLazyListState(),
     maxWidth: Dp = 620.dp,
@@ -112,6 +116,15 @@ fun StripReader(
             }
     }
 
+    val flowed by rememberUpdatedState(onFlowed)
+    LaunchedEffect(list, end != null, flow != null) {
+        if (end == null || flow == null) return@LaunchedEffect
+        snapshotFlow {
+            val info = list.layoutInfo
+            info.visibleItemsInfo.firstOrNull { it.key == "end" }?.let { it.offset < info.viewportEndOffset * 0.4f } ?: false
+        }.filter { it }.collect { flowed() }
+    }
+
     BoxWithConstraints(modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onTap() } }) {
         LazyColumn(
             state = list,
@@ -143,7 +156,14 @@ fun StripReader(
             }
             if (end != null) {
                 item(key = "end") {
-                    Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(this@BoxWithConstraints.maxHeight)) { footer(end) }
+                    if (flow != null) {
+                        // Room to scroll the divider up, so passing it counts.
+                        Box(Modifier.fillMaxWidth().height(this@BoxWithConstraints.maxHeight)) {
+                            Box(Modifier.fillMaxWidth().height(168.dp)) { flow() }
+                        }
+                    } else {
+                        Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(this@BoxWithConstraints.maxHeight)) { footer(end) }
+                    }
                 }
             }
         }
