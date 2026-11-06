@@ -97,9 +97,12 @@ sealed class WelcomeDialog
                 AutomationProperties.SetHeadingLevel(name, AutomationHeadingLevel.Level1);
                 body.Children.Add(name);
                 body.Children.Add(Ui.Text(T.OnboardingTagline, "BodyTextBlockStyle"));
+                // As on the Mac, a quiet button under the words: a device already set up shows
+                // this one a code, and that brings everything over. Its dialog opens once this closes.
+                var elsewhere = Ui.Label(T.FirstSetupOther, (_, _) => Leave("pair"));
+                elsewhere.Margin = new Thickness(0, 12, 0, 0);
+                body.Children.Add(elsewhere);
                 dialog.PrimaryButtonText = T.OnboardingContinue;
-                // As on the Mac: a device already set up shows this one a code, and that brings it all.
-                dialog.SecondaryButtonText = T.FirstSetupOther;
                 dialog.CloseButtonText = T.OnboardingSkip;
                 break;
             case 1:
@@ -204,12 +207,6 @@ sealed class WelcomeDialog
 
     void OnSecondary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        if (page == 0)
-        {
-            // The pairing dialog opens once this one has closed: one dialog at a time.
-            Then = "pair";
-            return;
-        }
         if (page == 1)
         {
             args.Cancel = true;

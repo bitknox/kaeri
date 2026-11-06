@@ -122,6 +122,8 @@ sealed class OpenedDialog
         dialog.PrimaryButtonText = "";
         dialog.SecondaryButtonText = "";
         problem.Text = "";
+        // Kept in the field, so a link that can't be read can be corrected there.
+        input.Text = text.Trim();
         var path = text.Trim().Trim('"');
         if (path.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase) && File.Exists(path))
         {
