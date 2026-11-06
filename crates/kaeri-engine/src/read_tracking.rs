@@ -38,19 +38,6 @@ pub(crate) fn note_conflict(store: &Store, id: AnilistId, tracker: &str) {
     let _ = store.set_meta_i64(&conflict_key(&work, tracker), 1);
 }
 
-fn segment(status: WatchStatus, rereading: bool) -> LibrarySegmentRead {
-    match (status, rereading) {
-        (WatchStatus::Repeating, _) | (WatchStatus::Current, true) => {
-            LibrarySegmentRead::Rereading
-        }
-        (WatchStatus::Current, false) => LibrarySegmentRead::Reading,
-        (WatchStatus::Planning, _) => LibrarySegmentRead::Planning,
-        (WatchStatus::Completed, _) => LibrarySegmentRead::Completed,
-        (WatchStatus::Paused, _) => LibrarySegmentRead::Paused,
-        (WatchStatus::Dropped, _) => LibrarySegmentRead::Dropped,
-    }
-}
-
 /// The note shown when the highest chapter read has a fraction: trackers count whole chapters.
 fn split_note(store: &Store, work: &str) -> Option<Msg> {
     let highest = store
