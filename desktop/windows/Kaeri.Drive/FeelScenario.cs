@@ -69,9 +69,14 @@ static class FeelScenario
         // Home: the spotlight's Details, back, and a row's arrows.
         await Feel.Click(run, "home: spotlight Details", Find(run, "Details", ControlType.Button), 5000);
         await Feel.Click(run, "title: back to Home", Find(run, "Back", ControlType.Button));
-        await Feel.Click(run, "home: row Next", Shown(run, "Next"));
-        await Feel.Click(run, "home: row Previous", Shown(run, "Previous"));
-        await Go(run, "Home");
+        // Not on the person's own profile: a click that misses an arrow plays a Continue card,
+        // and a play there reaches their tracker.
+        if (run.Name != "feel-real")
+        {
+            await Feel.Click(run, "home: row Next", Shown(run, "Next"));
+            await Feel.Click(run, "home: row Previous", Shown(run, "Previous"));
+            await Go(run, "Home");
+        }
 
         // Scroll kept: down Home, a title, back.
         await Wheel(run, -6);
