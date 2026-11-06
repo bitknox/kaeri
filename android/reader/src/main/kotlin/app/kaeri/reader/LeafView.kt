@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -108,7 +109,9 @@ fun LeafView(
                     .offset { IntOffset(x, y) }
                     .size(with(density) { w.toDp() }, with(density) { h.toDp() }),
             ) {
-                PartView(
+                // Each page, and each file of it, starts afresh: nothing of another page is kept.
+                key(part.page, part.half, state.file(part)?.path) {
+                    PartView(
                     part = part,
                     state = state,
                     images = images,
@@ -121,7 +124,8 @@ fun LeafView(
                         failed(page, failure, retry)
                     },
                     onRetry = onRetry,
-                )
+                    )
+                }
             }
         }
     }
