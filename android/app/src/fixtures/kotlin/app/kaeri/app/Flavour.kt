@@ -296,11 +296,29 @@ internal object Flavour {
         delay(1_200)
     }
 
+    /** The reading scenes open their book in the reader, as the Read switch will. */
+    private fun openReaderScene(intent: Intent) {
+        val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
+        val (work, eink) = when (scene) {
+            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED, FixtureScene.READING_DARK -> "a:900301" to false
+            FixtureScene.READER_STRIP -> "a:900303" to false
+            FixtureScene.READER_NOVEL -> "a:900302" to false
+            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE -> "a:900301" to true
+            else -> return
+        }
+        // Left to the app's own screens when the launch asked for one.
+        if (intent.getStringExtra("reader") == "off") return
+        app.kaeri.reader.phone.ReaderLauncher.open(
+            app.kaeri.reader.phone.ReaderRequest(app.kaeri.engine.core.WorkId(work), eink = eink),
+        )
+    }
+
     /** What the extras ask of the engine once it is up, once per process. */
     fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {
         StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
+        openReaderScene(intent)
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)
         intent.getStringExtra("widgets")?.let { pinWidgets(context, it) }
         intent.getStringExtra("check")?.toLongOrNull()?.let { delay ->

@@ -245,6 +245,12 @@ class AppStore(
         return { readers -= listener }
     }
 
+    /** The engine's server for a novel's files: called on the web view's request thread. */
+    fun bookResource(url: String): app.kaeri.engine.model.BookResource? = client?.engine?.bookResource(url)
+
+    /** The paginator script and stylesheet a novel's web view runs with. */
+    fun novelAssets(): app.kaeri.engine.model.NovelAssets = app.kaeri.engine.ffi.novelAssets()
+
     /** The engine named another profile to run: the app starts it again as that one. */
     var onProfileSwitch: ((String) -> Unit)? = null
 
