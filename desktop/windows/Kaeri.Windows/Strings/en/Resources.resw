@@ -7664,6 +7664,14 @@
     <value>Found a {kind} server</value>
     <comment>What the address answered, before the sign-in.</comment>
   </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>Found a {kind} server with 1 series</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>Found a {kind} server with {n} series</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
   <data name="BookServerLooking" xml:space="preserve">
     <value>Looking at this address…</value>
     <comment>While the address is tried.</comment>
@@ -7827,6 +7835,14 @@
   <data name="ReadSearchBrowseLine" xml:space="preserve">
     <value>{what} · from AniList</value>
     <comment>The line over browsing: what is shown, and where the list comes from.</comment>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>1 series from AniList</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>{n} series from AniList</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
   </data>
   <data name="ReadSearchFailed" xml:space="preserve">
     <value>Couldn't search</value>

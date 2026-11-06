@@ -118,6 +118,22 @@ struct Login {
     api_key: String,
 }
 
+/// How many series the signed-in user can see: one row of the series list asked for, and the
+/// total from its `Pagination` header. Search is not used, as it stops at a few results.
+async fn count_series(signed: &Http) -> Option<u32> {
+    let request = signed
+        .request(reqwest::Method::POST, "api/Series/all-v2?PageNumber=1&PageSize=1")
+        .json(&serde_json::json!({}));
+    let response = signed.send(request).await.ok()?;
+    pagination_total(response.headers().get("pagination")?.to_str().ok()?)
+}
+
+/// `totalItems` from Kavita's `Pagination` header.
+fn pagination_total(header: &str) -> Option<u32> {
+    let value: serde_json::Value = serde_json::from_str(header).ok()?;
+    u32::try_from(value.get("totalItems")?.as_u64()?).ok()
+}
+
 /// Sign in and describe the server. `address` is the server's root.
 pub async fn sign_in(
     client: &reqwest::Client,
@@ -142,10 +158,7 @@ pub async fn sign_in(
             .as_str()
             .map(str::to_owned)
     });
-    let series = signed
-        .json::<Search>("api/Search/search?queryString=")
-        .await
-        .map_or(0, |s| u32::try_from(s.series.len()).unwrap_or(u32::MAX));
+    let series = count_series(&signed).await;
     Ok(SignedIn {
         kind: crate::Kind::Kavita,
         name: "Kavita".into(),
@@ -412,5 +425,18 @@ impl BookSource for KavitaSource {
 
     async fn fetch_page(&self, page: &PageRef) -> std::result::Result<Vec<u8>, PageError> {
         crate::fetch_with(&self.http, page).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::pagination_total;
+
+    #[test]
+    fn the_series_count_is_the_pagination_headers_total() {
+        let header = r#"{"currentPage":1,"itemsPerPage":1,"totalItems":212,"totalPages":212}"#;
+        assert_eq!(pagination_total(header), Some(212));
+        assert_eq!(pagination_total(r#"{"currentPage":1}"#), None);
+        assert_eq!(pagination_total("not json"), None);
     }
 }

@@ -13510,6 +13510,11 @@ pub fn sources_found_server(kind: &str) -> String {
     text("sources-found-server", &[("kind", Arg::Text(kind))])
 }
 
+/// What the server held once signed in, when it said how many series it lists.
+pub fn sources_found_server_series(kind: &str, n: i64) -> String {
+    text("sources-found-server-series", &[("kind", Arg::Text(kind)), ("n", Arg::Int(n))])
+}
+
 /// While the address is tried.
 pub fn book_server_looking() -> String {
     text("book-server-looking", &[])
@@ -13698,6 +13703,11 @@ pub fn search_show_them() -> String {
 /// The line over browsing: what is shown, and where the list comes from.
 pub fn read_search_browse_line(what: &str) -> String {
     text("read-search-browse-line", &[("what", Arg::Text(what))])
+}
+
+/// Over reading's results once every result is listed: how many series AniList found.
+pub fn read_search_total(n: i64) -> String {
+    text("read-search-total", &[("n", Arg::Int(n))])
 }
 
 /// Search couldn't ask AniList.

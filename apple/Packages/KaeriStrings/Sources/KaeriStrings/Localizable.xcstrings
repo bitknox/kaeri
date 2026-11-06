@@ -168037,6 +168037,40 @@
         }
       }
     },
+    "read-search-total" : {
+      "comment" : "Over reading's results once every result is listed: how many series AniList found. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 series from AniList"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld series from AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "read-sort-last-read" : {
       "comment" : "The reading library's order: as the engine sends it, most recently read first.",
       "extractionState" : "manual",
@@ -227459,6 +227493,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Found a %1$@ server"
+          }
+        }
+      }
+    },
+    "sources-found-server-series" : {
+      "comment" : "What the server held once signed in, when it said how many series it lists. Argument 1: kind (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Found a %1$@ server with 1 series"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Found a %1$@ server with %2$lld series"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

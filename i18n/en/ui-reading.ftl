@@ -500,6 +500,14 @@ book-add-server-button = Add server
 # @arg kind: text
 sources-found-server = Found a { $kind } server
 
+# What the server held once signed in, when it said how many series it lists.
+# @arg kind: text
+# @arg n: int
+sources-found-server-series = { $n ->
+    [one] Found a { $kind } server with 1 series
+   *[other] Found a { $kind } server with { $n } series
+ }
+
 # While the address is tried.
 book-server-looking = Looking at this address…
 
@@ -637,6 +645,13 @@ search-show-them = Show them
 # The line over browsing: what is shown, and where the list comes from.
 # @arg what: text
 read-search-browse-line = { $what } · from AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+# @arg n: int
+read-search-total = { $n ->
+    [one] 1 series from AniList
+   *[other] { $n } series from AniList
+ }
 
 # Search couldn't ask AniList.
 read-search-failed = Couldn't search

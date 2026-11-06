@@ -8279,6 +8279,11 @@ public enum L {
         Self.format("sources-found-server", fallback: "Found a %1$@ server", kind)
     }
 
+    /// What the server held once signed in, when it said how many series it lists.
+    public static func sourcesFoundServerSeries(kind: String, n: Int) -> String {
+        Self.format("sources-found-server-series", fallback: "Found a %1$@ server with %2$lld series", kind, n)
+    }
+
     /// While the address is tried.
     public static var bookServerLooking: String { string("book-server-looking", fallback: "Looking at this address…") }
 
@@ -8409,6 +8414,11 @@ public enum L {
     /// The line over browsing: what is shown, and where the list comes from.
     public static func readSearchBrowseLine(what: String) -> String {
         Self.format("read-search-browse-line", fallback: "%1$@ · from AniList", what)
+    }
+
+    /// Over reading's results once every result is listed: how many series AniList found.
+    public static func readSearchTotal(n: Int) -> String {
+        Self.format("read-search-total", fallback: "%1$lld series from AniList", n)
     }
 
     /// Search couldn't ask AniList.

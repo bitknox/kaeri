@@ -7664,6 +7664,14 @@
     <value>[Ƒöüñð à {kind} šéŕṽéŕ~~~~~~]</value>
     <comment>What the address answered, before the sign-in.</comment>
   </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>[Ƒöüñð à {kind} šéŕṽéŕ ŵîţĥ 1 šéŕîéš~~~~~~~~~~]</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>[Ƒöüñð à {kind} šéŕṽéŕ ŵîţĥ {n} šéŕîéš~~~~~~~~~~~]</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
   <data name="BookServerLooking" xml:space="preserve">
     <value>[Ļööķîñĝ àţ ţĥîš àððŕéšš…~~~~~~~~]</value>
     <comment>While the address is tried.</comment>
@@ -7827,6 +7835,14 @@
   <data name="ReadSearchBrowseLine" xml:space="preserve">
     <value>[{what} · ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
     <comment>The line over browsing: what is shown, and where the list comes from.</comment>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>[1 šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>[{n} šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
   </data>
   <data name="ReadSearchFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ šéàŕçĥ~~~~~]</value>

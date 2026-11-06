@@ -93,12 +93,16 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                     .into_iter()
                     .next()
                     .map_or((Vec::new(), false), |p| (p.items, p.has_next));
-                let tiles = items
+                let tiles: Vec<_> = items
                     .iter()
                     .filter(|b| ask.adult || !b.adult())
                     .map(|b| tiles::reading(&kit.meta, &kit.store, &kit.sources, b))
                     .collect();
-                send(&tx, ReadingEvent::Search { query, page, tiles, has_more, other_scope });
+                let total = total(page, tiles.len(), has_more);
+                send(
+                    &tx,
+                    ReadingEvent::Search { query, page, tiles, has_more, other_scope, total },
+                );
             }
             Err(e) => {
                 tracing::info!(error = %e, "reading's search fell back to the sources");
@@ -116,11 +120,20 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                         tiles,
                         has_more: false,
                         other_scope: None,
+                        total: None,
                     },
                 );
             }
         }
     });
+}
+
+/// How many series AniList found, once the last page is in. Before that AniList's own total is
+/// a stand-in (5000 for any search with more than a page), so no number is given rather than a
+/// wrong one.
+fn total(page: u32, on_page: usize, has_more: bool) -> Option<u32> {
+    let on_page = u32::try_from(on_page).ok()?;
+    (!has_more).then(|| page.saturating_mul(PER_PAGE).saturating_add(on_page))
 }
 
 /// A reading list: at once from what was kept, then again once the books missing from it land.
@@ -258,4 +271,17 @@ pub fn find_match(kit: &Kit, ask: Ask, group: String, query: String, tx: &Outbox
             offline,
         }));
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PER_PAGE, total};
+
+    #[test]
+    fn the_total_is_given_only_once_the_last_page_is_in() {
+        assert_eq!(total(0, 12, false), Some(12));
+        assert_eq!(total(2, 7, false), Some(2 * PER_PAGE + 7));
+        assert_eq!(total(0, 30, true), None, "AniList's own total is a stand-in until then");
+        assert_eq!(total(0, 0, false), Some(0));
+    }
 }

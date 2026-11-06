@@ -8445,6 +8445,13 @@ book-add-server-button = [Åðð šéŕṽéŕ~~~]
 # What the address answered, before the sign-in.
 sources-found-server = [Ƒöüñð à { $kind } šéŕṽéŕ~~~~~~]
 
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ 1 šéŕîéš~~~~~~~~~~]
+       *[other] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ { $n } šéŕîéš~~~~~~~~~~~]
+    }
+
 # While the address is tried.
 book-server-looking = [Ļööķîñĝ àţ ţĥîš àððŕéšš…~~~~~~~~]
 
@@ -8570,6 +8577,13 @@ search-show-them = [Šĥöŵ ţĥéɱ~~~]
 
 # The line over browsing: what is shown, and where the list comes from.
 read-search-browse-line = [{ $what } · ƒŕöɱ ÅñîĻîšţ~~~~~~]
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] [1 šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+       *[other] [{ $n } šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+    }
 
 # Search couldn't ask AniList.
 read-search-failed = [Çöüļðñ'ţ šéàŕçĥ~~~~~]

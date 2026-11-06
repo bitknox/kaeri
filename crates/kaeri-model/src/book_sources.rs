@@ -246,7 +246,8 @@ pub enum BookSourceEvent {
     ServerAdded {
         id: String,
         kind: BookServerKind,
-        series: u32,
+        /// `None` when the server did not say for sure: the line then names only the kind.
+        series: Option<u32>,
     },
     ServerFailed {
         step: ServerStep,

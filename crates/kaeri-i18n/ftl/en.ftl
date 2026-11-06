@@ -8445,6 +8445,13 @@ book-add-server-button = Add server
 # What the address answered, before the sign-in.
 sources-found-server = Found a { $kind } server
 
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] Found a { $kind } server with 1 series
+       *[other] Found a { $kind } server with { $n } series
+    }
+
 # While the address is tried.
 book-server-looking = Looking at this address…
 
@@ -8570,6 +8577,13 @@ search-show-them = Show them
 
 # The line over browsing: what is shown, and where the list comes from.
 read-search-browse-line = { $what } · from AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] 1 series from AniList
+       *[other] { $n } series from AniList
+    }
 
 # Search couldn't ask AniList.
 read-search-failed = Couldn't search

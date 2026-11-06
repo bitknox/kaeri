@@ -8566,6 +8566,10 @@ object Strings {
     fun sourcesFoundServer(context: Context, kind: String): String =
         context.getString(R.string.sources_found_server, kind)
 
+    /** What the server held once signed in, when it said how many series it lists. */
+    fun sourcesFoundServerSeries(context: Context, kind: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.sources_found_server_series, n, kind, n)
+
     /** While the address is tried. */
     fun bookServerLooking(context: Context): String =
         context.getString(R.string.book_server_looking)
@@ -8717,6 +8721,10 @@ object Strings {
     /** The line over browsing: what is shown, and where the list comes from. */
     fun readSearchBrowseLine(context: Context, what: String): String =
         context.getString(R.string.read_search_browse_line, what)
+
+    /** Over reading's results once every result is listed: how many series AniList found. */
+    fun readSearchTotal(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_total, n, n)
 
     /** Search couldn't ask AniList. */
     fun readSearchFailed(context: Context): String =

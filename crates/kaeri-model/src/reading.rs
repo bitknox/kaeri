@@ -1230,6 +1230,10 @@ pub enum ReadingEvent {
         tiles: Vec<WorkTile>,
         has_more: bool,
         other_scope: Option<u32>,
+        /// How many series AniList found in all, on the last page only: AniList gives no true
+        /// count before it. `None` from the sources' own search.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        total: Option<u32>,
     },
     Series(Box<SeriesView>),
     Chapters {

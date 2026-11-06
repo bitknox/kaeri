@@ -5539,6 +5539,9 @@ public static partial class T
     /// <summary>What the address answered, before the sign-in.</summary>
     public static string SourcesFoundServer(string kind) => Fill(Get("SourcesFoundServer"), ("kind", kind));
 
+    /// <summary>What the server held once signed in, when it said how many series it lists.</summary>
+    public static string SourcesFoundServerSeries(string kind, long n) => Fill(GetPlural("SourcesFoundServerSeries", n), ("kind", kind), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>While the address is tried.</summary>
     public static string BookServerLooking => Get("BookServerLooking");
 
@@ -5652,6 +5655,9 @@ public static partial class T
 
     /// <summary>The line over browsing: what is shown, and where the list comes from.</summary>
     public static string ReadSearchBrowseLine(string what) => Fill(Get("ReadSearchBrowseLine"), ("what", what));
+
+    /// <summary>Over reading's results once every result is listed: how many series AniList found.</summary>
+    public static string ReadSearchTotal(long n) => Fill(GetPlural("ReadSearchTotal", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search couldn't ask AniList.</summary>
     public static string ReadSearchFailed => Get("ReadSearchFailed");
@@ -11862,6 +11868,8 @@ public static partial class T
         ["BookAddServerTitle"] = "Add a server",
         ["BookAddServerButton"] = "Add server",
         ["SourcesFoundServer"] = "Found a {kind} server",
+        ["SourcesFoundServerSeries_one"] = "Found a {kind} server with 1 series",
+        ["SourcesFoundServerSeries_other"] = "Found a {kind} server with {n} series",
         ["BookServerLooking"] = "Looking at this address…",
         ["BookServerNote"] = "Kaeri sends your reading progress back to this server. The password stays in the Keychain.",
         ["BookSourcesFolders"] = "Folders",
@@ -11903,6 +11911,8 @@ public static partial class T
         ["SearchOtherScope_other"] = "{n} matches in {scope}",
         ["SearchShowThem"] = "Show them",
         ["ReadSearchBrowseLine"] = "{what} · from AniList",
+        ["ReadSearchTotal_one"] = "1 series from AniList",
+        ["ReadSearchTotal_other"] = "{n} series from AniList",
         ["ReadSearchFailed"] = "Couldn't search",
         ["ReadSearchNothing"] = "Nothing found for {query}",
         ["ReadSearchNothingBrowse"] = "Nothing matches these filters",

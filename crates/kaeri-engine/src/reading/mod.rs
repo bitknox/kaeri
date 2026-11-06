@@ -325,6 +325,7 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
             tiles: Vec::new(),
             has_more: false,
             other_scope: None,
+            total: None,
         }));
         return;
     }
@@ -339,6 +340,7 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
             tiles,
             has_more: false,
             other_scope: None,
+            total: None,
         }));
     });
 }

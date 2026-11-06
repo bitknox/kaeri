@@ -165,7 +165,10 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     engine.shutdown();
 }
 
-fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Option<u32>) {
+fn search(
+    engine: &Arc<FfiEngine>,
+    query: ReadSearchQuery,
+) -> (Vec<String>, Option<u32>, Option<u32>) {
     engine.send(Command::Reading(ReadingCommand::Search { query: query.clone() }));
     let read = read_until(
         engine,
@@ -174,8 +177,8 @@ fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Opti
     read.into_iter()
         .rev()
         .find_map(|event| match event {
-            Event::Reading(ReadingEvent::Search { tiles, other_scope, .. }) => {
-                Some((tiles.iter().map(|t| t.work.0.clone()).collect(), other_scope))
+            Event::Reading(ReadingEvent::Search { tiles, other_scope, total, .. }) => {
+                Some((tiles.iter().map(|t| t.work.0.clone()).collect(), other_scope, total))
             }
             _ => None,
         })
@@ -185,26 +188,28 @@ fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Opti
 #[test]
 fn search_asks_anilist_with_its_filters() {
     let (_root, engine) = start(FfiScene::ReadingHome);
-    let (found, other) = search(
+    let (found, other, total) = search(
         &engine,
         ReadSearchQuery { text: "lantern".into(), ..ReadSearchQuery::default() },
     );
     assert_eq!(found, ["a:900301"]);
     // Both media are on: the count of shows rides along.
     assert_eq!(other, Some(0));
+    // The whole answer is on its one page, so the total is known.
+    assert_eq!(total, Some(1));
 
     let strips = ReadSearchQuery { formats: vec!["webtoon".into()], ..Default::default() };
-    let (found, other) = search(&engine, strips);
+    let (found, other, _) = search(&engine, strips);
     assert!(found.contains(&"a:900303".to_owned()) && !found.contains(&"a:900301".to_owned()));
     assert_eq!(other, None);
 
     let novels = ReadSearchQuery { formats: vec!["novel".into()], ..Default::default() };
-    let (found, _) = search(&engine, novels);
+    let (found, ..) = search(&engine, novels);
     assert!(found.contains(&"a:900302".to_owned()), "{found:?}");
     assert!(!found.contains(&"a:900301".to_owned()), "{found:?}");
 
     let korean = ReadSearchQuery { origins: vec!["KR".into()], ..Default::default() };
-    let (found, _) = search(&engine, korean);
+    let (found, ..) = search(&engine, korean);
     assert!(found.contains(&"a:900303".to_owned()) && !found.contains(&"a:900302".to_owned()));
     engine.shutdown();
 }

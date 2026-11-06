@@ -4500,6 +4500,11 @@
     <string name="book_add_server_button">Add server</string>
     <!-- What the address answered, before the sign-in. -->
     <string name="sources_found_server">Found a %1$s server</string>
+    <!-- What the server held once signed in, when it said how many series it lists. -->
+    <plurals name="sources_found_server_series">
+        <item quantity="one">Found a %1$s server with 1 series</item>
+        <item quantity="other">Found a %1$s server with %2$d series</item>
+    </plurals>
     <!-- While the address is tried. -->
     <string name="book_server_looking">Looking at this address…</string>
     <!-- Line under the password. -->
@@ -4585,6 +4590,11 @@
     <string name="search_show_them">Show them</string>
     <!-- The line over browsing: what is shown, and where the list comes from. -->
     <string name="read_search_browse_line">%1$s · from AniList</string>
+    <!-- Over reading's results once every result is listed: how many series AniList found. -->
+    <plurals name="read_search_total">
+        <item quantity="one">1 series from AniList</item>
+        <item quantity="other">%1$d series from AniList</item>
+    </plurals>
     <!-- Search couldn't ask AniList. -->
     <string name="read_search_failed">Couldn\'t search</string>
     <!-- No results for what was typed. -->
