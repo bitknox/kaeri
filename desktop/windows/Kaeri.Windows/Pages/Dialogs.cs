@@ -61,7 +61,7 @@ static class Dialogs
     /// <summary>
     /// Gives the dialog the app's palette. ContentDialog's template is Fluent's, and reads Fluent's
     /// own dark brushes, not the palette merged after them, so dialogs came up in Fluent's greys.
-    /// The palette's Dark dictionary (Palette.xaml) is copied onto the dialog, whose own resources
+    /// The palette's Dark dictionary (merged in App.xaml) is copied onto the dialog, whose own resources
     /// its template reads first: content on Raised, buttons on the ground, controls in the
     /// palette. Under a contrast theme the system's colours rule, so nothing is copied.
     /// </summary>
