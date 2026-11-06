@@ -1069,6 +1069,12 @@ public sealed partial class MainWindow : Window
     internal void ShowSearch(string query)
     {
         SearchBox.Text = query;
+        // Enter on Search searches there, as typing does, rather than adding a page for Back.
+        if (ContentFrame.Content is SearchPage page)
+        {
+            page.Submit(query);
+            return;
+        }
         ContentFrame.Navigate(typeof(SearchPage), query, new SuppressNavigationTransitionInfo());
     }
 
