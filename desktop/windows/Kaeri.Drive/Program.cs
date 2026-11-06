@@ -59,9 +59,10 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("idle", IdleScenario.All, "watching", false),
     ("idle-real", IdleScenario.All, "", false),
     ("hover-card", IdleScenario.HoverCard, "watching", false),
+    ("season", IdleScenario.Season, "watching", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "idle" or "idle-real" or "hover-card"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "idle" or "idle-real" or "hover-card" or "season"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");

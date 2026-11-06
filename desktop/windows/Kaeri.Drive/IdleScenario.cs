@@ -97,6 +97,48 @@ static class IdleScenario
         Feel.Write(Path.Combine(run.Options.Out));
     }
 
+    /// <summary>
+    /// A season picked on a title page: filmed, it should crossfade in place, and the window
+    /// should still be the title page (the back button goes where the title was opened from).
+    /// </summary>
+    public static async Task Season(Run run)
+    {
+        await FeelScenario.Go(run, "Seasonal");
+        await Task.Delay(1500);
+        var cover = run.Covers().FirstOrDefault(c => Run.Safe(() => c.Name)?.StartsWith("The Ice Knight Season 2", StringComparison.Ordinal) == true);
+        if (cover is null)
+        {
+            run.Note("season: no second season among the covers");
+            return;
+        }
+        await Feel.Click(run, "season: open a second season", cover, 4000);
+        await Task.Delay(2500);
+        var picker = run.Window.FindAllDescendants(cf => cf.ByControlType(ControlType.ComboBox))
+            .FirstOrDefault(e => Run.Safe(() => e.BoundingRectangle) is { Width: > 0 } r && run.Inside(r));
+        if (picker is null)
+        {
+            run.Note("season: no season picker on the title page");
+            return;
+        }
+        var box = picker.AsComboBox();
+        var r = picker.BoundingRectangle;
+        Mouse.MoveTo(new Point(r.Left + r.Width / 2, r.Top + r.Height / 2));
+        box.Expand();
+        await Task.Delay(600);
+        var items = box.Items;
+        var other = items.FirstOrDefault(i => !Run.Safe(() => i.IsSelected));
+        if (other is null)
+        {
+            run.Note($"season: the picker has {items.Length} item(s), none other");
+            box.Collapse();
+            return;
+        }
+        var label = Run.Safe(() => other.Name);
+        await Feel.Film(run, $"season: pick {label} (in place, no new page)", () => { other.Select(); box.Collapse(); return Task.CompletedTask; }, null, 4000);
+        run.Note($"season: after the pick the window shows {Run.Safe(() => run.Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName(label ?? ""))) is not null)}; picker says {Run.Safe(() => box.SelectedItem?.Name)}");
+        Feel.Write(Path.Combine(run.Options.Out));
+    }
+
     static string Id(AutomationElement e) => string.Join(".", Run.Safe(() => e.Properties.RuntimeId.ValueOrDefault) ?? []);
 
     static Dictionary<string, string> Elements(Run run)
