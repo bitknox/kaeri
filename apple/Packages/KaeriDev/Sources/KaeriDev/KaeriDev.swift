@@ -28,6 +28,7 @@ struct KaeriDev: App {
         Window("Kaeri", id: "main") {
             RootView()
                 .hostsPlayer(delegate.player)
+                .hostsReader(delegate.store.reader, inline: true)
                 .environment(\.playerUp, delegate.player.isPresented)
                 .environment(delegate.store)
                 .environment(delegate.navigator)
@@ -137,6 +138,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
+        if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil { _ = await store.reader.stage() }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is
         // there: wait for the sheet to be taken, and for it to slide in.

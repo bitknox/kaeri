@@ -17,6 +17,8 @@
 # that day, for one with broadcasts, mine=1 the calendar on My list,
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
+# reader=<chrome|settings|chapters|ask> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
+# reader-moved), the reader open with its chrome or a sheet up,
 # party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing
 # scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|all>, the invented rows of `Showcase`
@@ -99,7 +101,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
@@ -136,6 +138,8 @@ arguments() {
     return
   fi
   [[ "$shot" == *:* ]] && screens="${shot#*:}"
+  # The reading scenes are written with dashes (reader-manga-rtl); the launch names have none.
+  case "$scene" in reader-* | reading-*) scene="${scene//-/}" ;; esac
   printf '%s\n' -KaeriScene "$scene"
   local IFS=+
   for screen in $screens; do
@@ -156,6 +160,7 @@ arguments() {
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;
       sync=*) printf '%s\n' -KaeriSync "${screen#sync=}" ;;
       cast=*) printf '%s\n' -KaeriCast "${screen#cast=}" ;;
+      reader=*) printf '%s\n' -KaeriReader "${screen#reader=}" ;;
       party=*) printf '%s\n' -KaeriParty "${screen#party=}" ;;
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
       showcase=*) printf '%s\n' -KaeriShowcase "${screen#showcase=}" ;;
@@ -210,7 +215,7 @@ if [[ "$device" == mac ]]; then
     while IFS= read -r arg; do args+=("$arg"); done < <(arguments "$shot")
     # The harness takes the scene as --scene, and passes the rest to the app.
     (cd "$apple/Packages/KaeriDev" &&
-      swift run KaeriDev --scene "${shot%%:*}" "${args[@]:2}" --snapshot "$out/mac-$(name "$shot").png")
+      swift run KaeriDev --scene "${args[1]}" "${args[@]:2}" --snapshot "$out/mac-$(name "$shot").png")
   done
   exit 0
 fi

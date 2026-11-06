@@ -263,6 +263,10 @@ final class AppDelegate: NSObject {
         if let shot = PlayerShot.named(in: ProcessInfo.processInfo.arguments) {
             ready = await player.stage(shot, store: store)
         }
+        // A screenshot of the reader: the reading scene's work, open with its pages in.
+        if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil {
+            ready = await store.reader.stage() && ready
+        }
         // A screenshot of Play on TV: the scene the arguments name, on screen.
         if let scene = TVScene.named() {
             ready = await store.tv.reached(scene) && ready
