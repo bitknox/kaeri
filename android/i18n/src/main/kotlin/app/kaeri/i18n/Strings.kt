@@ -1777,6 +1777,394 @@ object Strings {
     fun readerNoticeChange(context: Context): String =
         context.getString(R.string.reader_notice_change)
 
+    /** Closes the reader and goes back to the series. */
+    fun readerClose(context: Context): String =
+        context.getString(R.string.reader_close)
+
+    /** Button in the reader's controls that opens the page grid. */
+    fun readerChapters(context: Context): String =
+        context.getString(R.string.reader_chapters)
+
+    /** Button in the reader's controls that opens its settings, drawn as Aa. */
+    fun readerSettings(context: Context): String =
+        context.getString(R.string.reader_settings)
+
+    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
+    fun readerChapterLine(context: Context, chapter: String): String =
+        context.getString(R.string.reader_chapter_line, chapter)
+
+    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
+    fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reader_chapter_line_titled, chapter, title)
+
+    /** Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4. */
+    fun readerNovelLine(context: Context, chapter: String): String =
+        context.getString(R.string.reader_novel_line, chapter)
+
+    /** Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. */
+    fun readerNovelLineScroll(context: Context, chapter: String): String =
+        context.getString(R.string.reader_novel_line_scroll, chapter)
+
+    /** The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin. */
+    fun readerPagesLeft(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_pages_left, count, count)
+
+    /** At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. */
+    fun readerMinutesLeft(context: Context, minutes: Int): String =
+        context.getString(R.string.reader_minutes_left, minutes)
+
+    /** Name of the tap zone on the reading side, shown once on the first chapter. */
+    fun readerZoneNext(context: Context): String =
+        context.getString(R.string.reader_zone_next)
+
+    /** Heading of the page grid. */
+    fun readerGridTitle(context: Context): String =
+        context.getString(R.string.reader_grid_title)
+
+    /** Top line of the page between chapters. The chapter is its number, such as 12. */
+    fun readerEndOfChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_of_chapter, chapter)
+
+    /** Under the top line of the page between chapters, once the chapter counts as read. */
+    fun readerEndRead(context: Context): String =
+        context.getString(R.string.reader_end_read)
+
+    /** Small heading above the next chapter on the page between chapters. */
+    fun readerEndNext(context: Context): String =
+        context.getString(R.string.reader_end_next)
+
+    /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
+    fun readerEndFacts(context: Context, chapter: String, facts: String): String =
+        context.getString(R.string.reader_end_facts, chapter, facts)
+
+    /** Main button on the page between chapters. */
+    fun readerEndContinue(context: Context): String =
+        context.getString(R.string.reader_end_continue)
+
+    /** Line above the main button on the page between chapters. */
+    fun readerEndSwipe(context: Context): String =
+        context.getString(R.string.reader_end_swipe)
+
+    /** Quiet button on the page between chapters that leaves the reader for the series page. */
+    fun readerEndSeries(context: Context): String =
+        context.getString(R.string.reader_end_series)
+
+    /** Button on the last page of a finished series that starts it from the first chapter. */
+    fun readerEndAgain(context: Context): String =
+        context.getString(R.string.reader_end_again)
+
+    /** The one line while a chapter opens. The chapter is its number, such as 13. */
+    fun readerOpening(context: Context, chapter: String): String =
+        context.getString(R.string.reader_opening, chapter)
+
+    /** Heading when a chapter could not open. The chapter is its number, such as 13. */
+    fun readerFailedChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reader_failed_chapter, chapter)
+
+    /** Heading in the reader's settings above the choices that belong to this series only. */
+    fun readerSheetSeries(context: Context): String =
+        context.getString(R.string.reader_sheet_series)
+
+    /** Heading in the reader's settings above the choices every manga shares. */
+    fun readerSheetAllManga(context: Context): String =
+        context.getString(R.string.reader_sheet_all_manga)
+
+    /** Heading in the reader's settings above the choices every light novel shares. */
+    fun readerSheetAllNovels(context: Context): String =
+        context.getString(R.string.reader_sheet_all_novels)
+
+    /** Row in the reader's settings that opens the rest of the settings. */
+    fun readerSheetMore(context: Context): String =
+        context.getString(R.string.reader_sheet_more)
+
+    /** Row in the reader's settings: how the pages are read. */
+    fun readerRowReadingMode(context: Context): String =
+        context.getString(R.string.reader_row_reading_mode)
+
+    /** Value of the reading mode when the reader worked it out. The way is how it reads, such as right to left. */
+    fun readerModeAuto(context: Context, way: String): String =
+        context.getString(R.string.reader_mode_auto, way)
+
+    /** A reading mode, and a reading direction. */
+    fun readerModeRtl(context: Context): String =
+        context.getString(R.string.reader_mode_rtl)
+
+    /** A reading mode, and a reading direction. */
+    fun readerModeLtr(context: Context): String =
+        context.getString(R.string.reader_mode_ltr)
+
+    /** A reading mode: one long scroll of images. */
+    fun readerModeStrip(context: Context): String =
+        context.getString(R.string.reader_mode_strip)
+
+    /** The first choice in the reading mode picker: let the reader work it out. */
+    fun readerModeAutoName(context: Context): String =
+        context.getString(R.string.reader_mode_auto_name)
+
+    /** Line under Auto in the reading mode picker. The way is how it reads, such as right to left. */
+    fun readerModeAutoLine(context: Context, way: String): String =
+        context.getString(R.string.reader_mode_auto_line, way)
+
+    /** Line under Strip in the reading mode picker. */
+    fun readerModeStripLine(context: Context): String =
+        context.getString(R.string.reader_mode_strip_line)
+
+    /** Note under the reading mode when the reader guessed it. */
+    fun readerModeDetected(context: Context): String =
+        context.getString(R.string.reader_mode_detected)
+
+    /** Note under the reading mode after a choice for this series. The title is the series'. */
+    fun readerModeSet(context: Context, title: String): String =
+        context.getString(R.string.reader_mode_set, title)
+
+    /** Link in that note that drops the series' own choice. */
+    fun readerModeUseDefault(context: Context): String =
+        context.getString(R.string.reader_mode_use_default)
+
+    /** Foot of the reading mode picker. */
+    fun readerModeSaved(context: Context): String =
+        context.getString(R.string.reader_mode_saved)
+
+    /** Row in the reader's settings: how a page is fitted to the screen. */
+    fun readerRowFit(context: Context): String =
+        context.getString(R.string.reader_row_fit)
+
+    /** A choice for how a page is fitted. */
+    fun readerFitScreen(context: Context): String =
+        context.getString(R.string.reader_fit_screen)
+
+    /** A choice for how a page is fitted. */
+    fun readerFitWidth(context: Context): String =
+        context.getString(R.string.reader_fit_width)
+
+    /** Row in the reader's settings: cut the blank borders off pages. */
+    fun readerRowCrop(context: Context): String =
+        context.getString(R.string.reader_row_crop)
+
+    /** Row in the reader's settings: the switch for Paper mode. */
+    fun readerRowPaper(context: Context): String =
+        context.getString(R.string.reader_row_paper)
+
+    /** Row in the reader's settings: how big the text is. */
+    fun readerRowTextSize(context: Context): String =
+        context.getString(R.string.reader_row_text_size)
+
+    /** Row in the reader's settings: the typeface of a novel. */
+    fun readerRowFont(context: Context): String =
+        context.getString(R.string.reader_row_font)
+
+    /** A choice of typeface. */
+    fun readerFontSerif(context: Context): String =
+        context.getString(R.string.reader_font_serif)
+
+    /** A choice of typeface. */
+    fun readerFontSans(context: Context): String =
+        context.getString(R.string.reader_font_sans)
+
+    /** Row in the reader's settings: the colours the page is read in. */
+    fun readerRowLook(context: Context): String =
+        context.getString(R.string.reader_row_look)
+
+    /** A look for reading: warm paper. */
+    fun readerLookPaper(context: Context): String =
+        context.getString(R.string.reader_look_paper)
+
+    /** A look for reading: a light page. */
+    fun readerLookLight(context: Context): String =
+        context.getString(R.string.reader_look_light)
+
+    /** A look for reading: a brown page. */
+    fun readerLookSepia(context: Context): String =
+        context.getString(R.string.reader_look_sepia)
+
+    /** A look for reading: a dark page. */
+    fun readerLookDark(context: Context): String =
+        context.getString(R.string.reader_look_dark)
+
+    /** Row in the reader's settings: the space between lines. */
+    fun readerRowLineSpacing(context: Context): String =
+        context.getString(R.string.reader_row_line_spacing)
+
+    /** A choice of line spacing or margins. */
+    fun readerSpacingTight(context: Context): String =
+        context.getString(R.string.reader_spacing_tight)
+
+    /** A choice of line spacing or margins. */
+    fun readerSpacingNormal(context: Context): String =
+        context.getString(R.string.reader_spacing_normal)
+
+    /** A choice of line spacing. */
+    fun readerSpacingLoose(context: Context): String =
+        context.getString(R.string.reader_spacing_loose)
+
+    /** A choice of margins. */
+    fun readerMarginsNarrow(context: Context): String =
+        context.getString(R.string.reader_margins_narrow)
+
+    /** A choice of margins. */
+    fun readerMarginsWide(context: Context): String =
+        context.getString(R.string.reader_margins_wide)
+
+    /** Row in the reader's settings: the space around the text. */
+    fun readerRowMargins(context: Context): String =
+        context.getString(R.string.reader_row_margins)
+
+    /** Row in the reader's settings: whether a novel turns pages or scrolls. */
+    fun readerRowPages(context: Context): String =
+        context.getString(R.string.reader_row_pages)
+
+    /** A choice for how a novel moves. */
+    fun readerPagesPaged(context: Context): String =
+        context.getString(R.string.reader_pages_paged)
+
+    /** A choice for how a novel moves. */
+    fun readerPagesScroll(context: Context): String =
+        context.getString(R.string.reader_pages_scroll)
+
+    /** Row in the reader's settings: even text edges. */
+    fun readerRowJustify(context: Context): String =
+        context.getString(R.string.reader_row_justify)
+
+    /** Row in the reader's settings: one page or two side by side. */
+    fun readerRowPageLayout(context: Context): String =
+        context.getString(R.string.reader_row_page_layout)
+
+    /** A choice for page layout. */
+    fun readerLayoutAuto(context: Context): String =
+        context.getString(R.string.reader_layout_auto)
+
+    /** A choice for page layout. */
+    fun readerLayoutSingle(context: Context): String =
+        context.getString(R.string.reader_layout_single)
+
+    /** A choice for page layout. */
+    fun readerLayoutDouble(context: Context): String =
+        context.getString(R.string.reader_layout_double)
+
+    /** Row in the reader's settings: what happens to a page that is two pages wide. */
+    fun readerRowSpreads(context: Context): String =
+        context.getString(R.string.reader_row_spreads)
+
+    /** A choice for wide pages: cut in two. */
+    fun readerSpreadsSplit(context: Context): String =
+        context.getString(R.string.reader_spreads_split)
+
+    /** A choice for wide pages: turned to fill the screen. */
+    fun readerSpreadsRotate(context: Context): String =
+        context.getString(R.string.reader_spreads_rotate)
+
+    /** A choice for wide pages: shown whole. */
+    fun readerSpreadsWhole(context: Context): String =
+        context.getString(R.string.reader_spreads_whole)
+
+    /** Row in the reader's settings: whether pages are shown in colour. */
+    fun readerRowColour(context: Context): String =
+        context.getString(R.string.reader_row_colour)
+
+    /** A choice for colour. */
+    fun readerColourAuto(context: Context): String =
+        context.getString(R.string.reader_colour_auto)
+
+    /** A choice for colour. */
+    fun readerColourColour(context: Context): String =
+        context.getString(R.string.reader_colour_colour)
+
+    /** A choice for colour: only greys. */
+    fun readerColourGreys(context: Context): String =
+        context.getString(R.string.reader_colour_greys)
+
+    /** Row in the reader's settings: where taps turn the page. */
+    fun readerRowTap(context: Context): String =
+        context.getString(R.string.reader_row_tap)
+
+    /** A choice for tap zones: the sides turn. */
+    fun readerTapEdges(context: Context): String =
+        context.getString(R.string.reader_tap_edges)
+
+    /** A choice for tap zones: left and right halves. */
+    fun readerTapSides(context: Context): String =
+        context.getString(R.string.reader_tap_sides)
+
+    /** A choice for tap zones: taps do not turn. */
+    fun readerTapOff(context: Context): String =
+        context.getString(R.string.reader_tap_off)
+
+    /** Row in the reader's settings: the volume keys turn pages. */
+    fun readerRowVolume(context: Context): String =
+        context.getString(R.string.reader_row_volume)
+
+    /** Row in the reader's settings: how wide a strip is on a big screen. */
+    fun readerRowStripWidth(context: Context): String =
+        context.getString(R.string.reader_row_strip_width)
+
+    /** Row in the reader's settings, inside Paper mode: show pages in greys. */
+    fun readerRowGreyscale(context: Context): String =
+        context.getString(R.string.reader_row_greyscale)
+
+    /** Row in the reader's settings, inside Paper mode: hold notifications back while reading. */
+    fun readerRowQuiet(context: Context): String =
+        context.getString(R.string.reader_row_quiet)
+
+    /** Line under that row. */
+    fun readerQuietLine(context: Context): String =
+        context.getString(R.string.reader_quiet_line)
+
+    /** Notice the first time the phone is quiet while reading. */
+    fun readerQuietNotice(context: Context): String =
+        context.getString(R.string.reader_quiet_notice)
+
+    /** Row in the reader's settings: the line at the foot of a novel's page. */
+    fun readerRowFoot(context: Context): String =
+        context.getString(R.string.reader_row_foot)
+
+    /** Row in the reader's settings: the page number in the margin. */
+    fun readerRowFolio(context: Context): String =
+        context.getString(R.string.reader_row_folio)
+
+    /** Row in the reader's settings: the reading direction. */
+    fun readerRowDirection(context: Context): String =
+        context.getString(R.string.reader_row_direction)
+
+    /** Heading in the reader's settings page. */
+    fun readerMoreHeadingLayout(context: Context): String =
+        context.getString(R.string.reader_more_heading_layout)
+
+    /** Heading in the reader's settings page. */
+    fun readerMoreHeadingNavigation(context: Context): String =
+        context.getString(R.string.reader_more_heading_navigation)
+
+    /** Heading in the reader's settings page. */
+    fun readerMoreHeadingText(context: Context): String =
+        context.getString(R.string.reader_more_heading_text)
+
+    /** Heading in the reader's settings page. */
+    fun readerMoreHeadingImages(context: Context): String =
+        context.getString(R.string.reader_more_heading_images)
+
+    /** Heading in the reader's settings page. */
+    fun readerMoreHeadingPaper(context: Context): String =
+        context.getString(R.string.reader_more_heading_paper)
+
+    /** Button that goes back from the reader's settings page to the sheet. */
+    fun readerSettingsBack(context: Context): String =
+        context.getString(R.string.reader_settings_back)
+
+    /** Line under the Paper mode switch. */
+    fun readerPaperLine(context: Context): String =
+        context.getString(R.string.reader_paper_line)
+
+    /** What a screen reader says for a page in the page grid. */
+    fun readerGridPage(context: Context, page: Int): String =
+        context.getString(R.string.reader_grid_page, page)
+
+    /** What a screen reader says for the slider that moves through the chapter. */
+    fun readerScrubber(context: Context): String =
+        context.getString(R.string.reader_scrubber)
+
+    /** Heading when a novel could not be shown. */
+    fun readerFailedNovel(context: Context): String =
+        context.getString(R.string.reader_failed_novel)
+
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
         context.getString(R.string.tv_pair_request_held, phone, code)

@@ -22,6 +22,7 @@ use kaeri_track::secret::{Backend, TokenStore};
 use crate::{
     engine::{FfiEngine, Opened, RemoteHome, runtime},
     host::{Adapter, FfiHost},
+    scene_books,
     start::{FfiDirs, FfiError, FfiStart, SecretsMode},
     testing,
 };
@@ -253,6 +254,32 @@ pub const READING_MANGA: &str = "a:900301";
 pub const READING_NOVEL: &str = "a:900302";
 pub const READING_STRIP: &str = "a:900303";
 
+/// The works' series as their generated books are kept.
+const MANGA_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-lantern-ferry",
+    work: READING_MANGA,
+    name: "The Lantern Ferry",
+    medium: "manga",
+    format: "MANGA",
+    origin: Some("JP"),
+};
+const NOVEL_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-glass-orchard",
+    work: READING_NOVEL,
+    name: "The Glass Orchard",
+    medium: "novel",
+    format: "NOVEL",
+    origin: Some("JP"),
+};
+const STRIP_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-paper-kites",
+    work: READING_STRIP,
+    name: "Paper Kites Over Juniper Row",
+    medium: "manga",
+    format: "MANGA",
+    origin: Some("KR"),
+};
+
 /// The magnet link [`FfiScene::LinkOpened`] opens: a made-up info hash whose name is
 /// `Hoshikuzu no Tabibito - 03 [1080p].mkv`. No swarm has it.
 pub const FIXTURE_OPENED_LINK: &str = "magnet:?xt=urn:btih:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\
@@ -473,6 +500,7 @@ impl FfiEngine {
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
+        seed_books(&opened.store, &opened.paths.data_dir, &scene, now);
         if let Some(sync) = scene.sync() {
             let tokens =
                 TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
@@ -1010,6 +1038,27 @@ fn seed_reading_join(store: &Store, now: i64) {
     );
 }
 
+/// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
+/// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4.
+fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
+    if !matches!(
+        scene,
+        FfiScene::ReadingHome
+            | FfiScene::ReadingSeries
+            | FfiScene::ReaderMangaRtl
+            | FfiScene::ReaderStrip
+            | FfiScene::ReaderNovel
+            | FfiScene::ReaderMoved
+            | FfiScene::EinkGrey
+            | FfiScene::EinkKaleidoUnsure
+    ) {
+        return;
+    }
+    scene_books::comics(store, data_dir, &MANGA_SERIES, &[12, 13, 14, 15], 20, now);
+    scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
+    scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
+}
+
 /// The reading history of [`FfiScene::ReadingHome`] and its kin.
 fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
     use kaeri_store::reading::ReadEvent;
@@ -1304,6 +1353,26 @@ mod tests {
         assert!(line(FINISHED).ends_with("Dub 8"), "{}", line(FINISHED));
         assert!(line(AIRING_NO_MAL).ends_with("Dub"), "{}", line(AIRING_NO_MAL));
         assert!(!line(ONA).contains("Dub"));
+    }
+
+    #[test]
+    fn the_reader_scenes_shelve_their_generated_books() {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let store = Store::open(dir.path().join("kaeri.db")).expect("a database");
+        seed_books(&store, dir.path(), &FfiScene::ReaderMangaRtl, 1_800_000_000);
+        let shelf = store.shelf(READING_MANGA).expect("the shelf");
+        assert_eq!(shelf.iter().map(|f| f.label.as_str()).collect::<Vec<_>>().len(), 4);
+        assert_eq!(store.shelf(READING_STRIP).expect("the strip's shelf").len(), 3);
+        let novel = store.shelf(READING_NOVEL).expect("the novel's shelf");
+        assert!(
+            novel.iter().all(|f| f.format == "epub" && std::path::Path::new(&f.path).is_file())
+        );
+        let kind = store.book_work_kind(READING_STRIP).expect("a kind").expect("a row");
+        assert_eq!(
+            (kind.origin.as_deref(), kind.title.as_deref()),
+            (Some("KR"), Some("Paper Kites Over Juniper Row"))
+        );
+        seed_books(&store, dir.path(), &FfiScene::Fresh, 1_800_000_000);
     }
 
     #[test]

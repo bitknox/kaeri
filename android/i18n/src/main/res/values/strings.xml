@@ -943,6 +943,203 @@
     <string name="reader_notice_go_back">Go back</string>
     <!-- The action on the notice that says how a series was detected to read: change it. -->
     <string name="reader_notice_change">Change</string>
+    <!-- Closes the reader and goes back to the series. -->
+    <string name="reader_close">Close</string>
+    <!-- Button in the reader's controls that opens the page grid. -->
+    <string name="reader_chapters">Pages</string>
+    <!-- Button in the reader's controls that opens its settings, drawn as Aa. -->
+    <string name="reader_settings">Reader settings</string>
+    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
+    <string name="reader_chapter_line">Chapter %1$s</string>
+    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
+    <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
+    <!-- Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4. -->
+    <string name="reader_novel_line">Chapter %1$s · paged</string>
+    <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
+    <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
+    <!-- The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin. -->
+    <plurals name="reader_pages_left">
+        <item quantity="one">One page left</item>
+        <item quantity="other">%1$d pages left</item>
+    </plurals>
+    <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
+    <string name="reader_minutes_left">%1$d min</string>
+    <!-- Name of the tap zone on the reading side, shown once on the first chapter. -->
+    <string name="reader_zone_next">Next page</string>
+    <!-- Heading of the page grid. -->
+    <string name="reader_grid_title">Pages</string>
+    <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
+    <string name="reader_end_of_chapter">End of chapter %1$s</string>
+    <!-- Under the top line of the page between chapters, once the chapter counts as read. -->
+    <string name="reader_end_read">Read</string>
+    <!-- Small heading above the next chapter on the page between chapters. -->
+    <string name="reader_end_next">Next</string>
+    <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
+    <string name="reader_end_facts">Chapter %1$s · %2$s</string>
+    <!-- Main button on the page between chapters. -->
+    <string name="reader_end_continue">Continue</string>
+    <!-- Line above the main button on the page between chapters. -->
+    <string name="reader_end_swipe">Swipe to keep reading</string>
+    <!-- Quiet button on the page between chapters that leaves the reader for the series page. -->
+    <string name="reader_end_series">Back to the series</string>
+    <!-- Button on the last page of a finished series that starts it from the first chapter. -->
+    <string name="reader_end_again">Read again from the start</string>
+    <!-- The one line while a chapter opens. The chapter is its number, such as 13. -->
+    <string name="reader_opening">Opening chapter %1$s</string>
+    <!-- Heading when a chapter could not open. The chapter is its number, such as 13. -->
+    <string name="reader_failed_chapter">Couldn\'t open chapter %1$s</string>
+    <!-- Heading in the reader's settings above the choices that belong to this series only. -->
+    <string name="reader_sheet_series">This series</string>
+    <!-- Heading in the reader's settings above the choices every manga shares. -->
+    <string name="reader_sheet_all_manga">All manga</string>
+    <!-- Heading in the reader's settings above the choices every light novel shares. -->
+    <string name="reader_sheet_all_novels">All light novels</string>
+    <!-- Row in the reader's settings that opens the rest of the settings. -->
+    <string name="reader_sheet_more">More reader settings</string>
+    <!-- Row in the reader's settings: how the pages are read. -->
+    <string name="reader_row_reading_mode">Reading mode</string>
+    <!-- Value of the reading mode when the reader worked it out. The way is how it reads, such as right to left. -->
+    <string name="reader_mode_auto">Auto · %1$s</string>
+    <!-- A reading mode, and a reading direction. -->
+    <string name="reader_mode_rtl">Right to left</string>
+    <!-- A reading mode, and a reading direction. -->
+    <string name="reader_mode_ltr">Left to right</string>
+    <!-- A reading mode: one long scroll of images. -->
+    <string name="reader_mode_strip">Strip</string>
+    <!-- The first choice in the reading mode picker: let the reader work it out. -->
+    <string name="reader_mode_auto_name">Auto</string>
+    <!-- Line under Auto in the reading mode picker. The way is how it reads, such as right to left. -->
+    <string name="reader_mode_auto_line">%1$s, from the series details</string>
+    <!-- Line under Strip in the reading mode picker. -->
+    <string name="reader_mode_strip_line">For webtoons and long images</string>
+    <!-- Note under the reading mode when the reader guessed it. -->
+    <string name="reader_mode_detected">Detected from the series details.</string>
+    <!-- Note under the reading mode after a choice for this series. The title is the series'. -->
+    <string name="reader_mode_set">Set for %1$s on all your devices.</string>
+    <!-- Link in that note that drops the series' own choice. -->
+    <string name="reader_mode_use_default">Use default</string>
+    <!-- Foot of the reading mode picker. -->
+    <string name="reader_mode_saved">Your choice is saved for this series and follows it to your other devices.</string>
+    <!-- Row in the reader's settings: how a page is fitted to the screen. -->
+    <string name="reader_row_fit">Fit</string>
+    <!-- A choice for how a page is fitted. -->
+    <string name="reader_fit_screen">Screen</string>
+    <!-- A choice for how a page is fitted. -->
+    <string name="reader_fit_width">Width</string>
+    <!-- Row in the reader's settings: cut the blank borders off pages. -->
+    <string name="reader_row_crop">Crop borders</string>
+    <!-- Row in the reader's settings: the switch for Paper mode. -->
+    <string name="reader_row_paper">Paper mode</string>
+    <!-- Row in the reader's settings: how big the text is. -->
+    <string name="reader_row_text_size">Text size</string>
+    <!-- Row in the reader's settings: the typeface of a novel. -->
+    <string name="reader_row_font">Font</string>
+    <!-- A choice of typeface. -->
+    <string name="reader_font_serif">Serif</string>
+    <!-- A choice of typeface. -->
+    <string name="reader_font_sans">Sans</string>
+    <!-- Row in the reader's settings: the colours the page is read in. -->
+    <string name="reader_row_look">Look</string>
+    <!-- A look for reading: warm paper. -->
+    <string name="reader_look_paper">Paper</string>
+    <!-- A look for reading: a light page. -->
+    <string name="reader_look_light">Light</string>
+    <!-- A look for reading: a brown page. -->
+    <string name="reader_look_sepia">Sepia</string>
+    <!-- A look for reading: a dark page. -->
+    <string name="reader_look_dark">Dark</string>
+    <!-- Row in the reader's settings: the space between lines. -->
+    <string name="reader_row_line_spacing">Line spacing</string>
+    <!-- A choice of line spacing or margins. -->
+    <string name="reader_spacing_tight">Tight</string>
+    <!-- A choice of line spacing or margins. -->
+    <string name="reader_spacing_normal">Normal</string>
+    <!-- A choice of line spacing. -->
+    <string name="reader_spacing_loose">Loose</string>
+    <!-- A choice of margins. -->
+    <string name="reader_margins_narrow">Narrow</string>
+    <!-- A choice of margins. -->
+    <string name="reader_margins_wide">Wide</string>
+    <!-- Row in the reader's settings: the space around the text. -->
+    <string name="reader_row_margins">Margins</string>
+    <!-- Row in the reader's settings: whether a novel turns pages or scrolls. -->
+    <string name="reader_row_pages">Pages</string>
+    <!-- A choice for how a novel moves. -->
+    <string name="reader_pages_paged">Paged</string>
+    <!-- A choice for how a novel moves. -->
+    <string name="reader_pages_scroll">Scroll</string>
+    <!-- Row in the reader's settings: even text edges. -->
+    <string name="reader_row_justify">Justify text</string>
+    <!-- Row in the reader's settings: one page or two side by side. -->
+    <string name="reader_row_page_layout">Page layout</string>
+    <!-- A choice for page layout. -->
+    <string name="reader_layout_auto">Auto</string>
+    <!-- A choice for page layout. -->
+    <string name="reader_layout_single">One</string>
+    <!-- A choice for page layout. -->
+    <string name="reader_layout_double">Two</string>
+    <!-- Row in the reader's settings: what happens to a page that is two pages wide. -->
+    <string name="reader_row_spreads">Wide pages</string>
+    <!-- A choice for wide pages: cut in two. -->
+    <string name="reader_spreads_split">Split</string>
+    <!-- A choice for wide pages: turned to fill the screen. -->
+    <string name="reader_spreads_rotate">Turn</string>
+    <!-- A choice for wide pages: shown whole. -->
+    <string name="reader_spreads_whole">Whole</string>
+    <!-- Row in the reader's settings: whether pages are shown in colour. -->
+    <string name="reader_row_colour">Colour pages</string>
+    <!-- A choice for colour. -->
+    <string name="reader_colour_auto">As drawn</string>
+    <!-- A choice for colour. -->
+    <string name="reader_colour_colour">Colour</string>
+    <!-- A choice for colour: only greys. -->
+    <string name="reader_colour_greys">Greys</string>
+    <!-- Row in the reader's settings: where taps turn the page. -->
+    <string name="reader_row_tap">Tap zones</string>
+    <!-- A choice for tap zones: the sides turn. -->
+    <string name="reader_tap_edges">Edges</string>
+    <!-- A choice for tap zones: left and right halves. -->
+    <string name="reader_tap_sides">Halves</string>
+    <!-- A choice for tap zones: taps do not turn. -->
+    <string name="reader_tap_off">Off</string>
+    <!-- Row in the reader's settings: the volume keys turn pages. -->
+    <string name="reader_row_volume">Volume keys turn pages</string>
+    <!-- Row in the reader's settings: how wide a strip is on a big screen. -->
+    <string name="reader_row_strip_width">Strip width</string>
+    <!-- Row in the reader's settings, inside Paper mode: show pages in greys. -->
+    <string name="reader_row_greyscale">Greyscale pages</string>
+    <!-- Row in the reader's settings, inside Paper mode: hold notifications back while reading. -->
+    <string name="reader_row_quiet">Quiet the phone while reading</string>
+    <!-- Line under that row. -->
+    <string name="reader_quiet_line">Notifications wait until you close the reader. Android asks for access to Do Not Disturb first.</string>
+    <!-- Notice the first time the phone is quiet while reading. -->
+    <string name="reader_quiet_notice">Notifications wait while you read</string>
+    <!-- Row in the reader's settings: the line at the foot of a novel's page. -->
+    <string name="reader_row_foot">Pages left in chapter</string>
+    <!-- Row in the reader's settings: the page number in the margin. -->
+    <string name="reader_row_folio">Show page number</string>
+    <!-- Row in the reader's settings: the reading direction. -->
+    <string name="reader_row_direction">Direction</string>
+    <!-- Heading in the reader's settings page. -->
+    <string name="reader_more_heading_layout">Layout</string>
+    <!-- Heading in the reader's settings page. -->
+    <string name="reader_more_heading_navigation">Navigation</string>
+    <!-- Heading in the reader's settings page. -->
+    <string name="reader_more_heading_text">Text</string>
+    <!-- Heading in the reader's settings page. -->
+    <string name="reader_more_heading_images">Images</string>
+    <!-- Heading in the reader's settings page. -->
+    <string name="reader_more_heading_paper">Paper mode</string>
+    <!-- Button that goes back from the reader's settings page to the sheet. -->
+    <string name="reader_settings_back">Back</string>
+    <!-- Line under the Paper mode switch. -->
+    <string name="reader_paper_line">Turns pages at once, stops all motion and lets the volume keys turn pages.</string>
+    <!-- What a screen reader says for a page in the page grid. -->
+    <string name="reader_grid_page">Go to page %1$d</string>
+    <!-- What a screen reader says for the slider that moves through the chapter. -->
+    <string name="reader_scrubber">Page in chapter</string>
+    <!-- Heading when a novel could not be shown. -->
+    <string name="reader_failed_novel">Couldn\'t show this chapter</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->
