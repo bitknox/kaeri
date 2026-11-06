@@ -32,6 +32,10 @@ public sealed class HomeCard
     public string Line { get; }
     public string Name { get; }
     public double? Progress => Item.Progress;
+
+    /// <summary>Everything the card and its menu are drawn from: a card whose look is the same is kept, element and all.</summary>
+    public (string, string, string, double?, bool, Playable, HomeAction, uint?, UpNextReason?, FuzzyDate?, bool, LibrarySegment?) Look =>
+        (Title, Line, Name, Progress, Item.New, Item.Playable, Item.Action, Item.Episode, Item.Reason, Item.Starts, Item.Resume is not null, Item.Entry.ListStatus);
 }
 
 /// <summary>Art that fades over its placeholder colour when it arrives, as covers do everywhere.</summary>
@@ -54,7 +58,22 @@ static class HomeArt
                 image.Opacity = 1;
         }
         Fill(false);
-        cover.PropertyChanged += (_, _) => Fill(true);
+        // Heard only while the art is up: the cover outlives a card that is taken down, and a
+        // handler left on it would keep the card's element alive.
+        void Arrived(object? sender, PropertyChangedEventArgs e) => Fill(true);
+        var hearing = false;
+        box.Loaded += (_, _) =>
+        {
+            Fill(false);
+            if (!hearing)
+                cover.PropertyChanged += Arrived;
+            hearing = true;
+        };
+        box.Unloaded += (_, _) =>
+        {
+            cover.PropertyChanged -= Arrived;
+            hearing = false;
+        };
         return box;
     }
 }
@@ -251,7 +270,9 @@ sealed partial class HomeShelf : Grid
 
     public SectionKind Kind { get; }
     public HomeShape Shape { get; }
-    public List<HomeCard> Cards { get; private set; } = [];
+    /// <summary>The shelf's cards, changed in place: a card that stays keeps its element, its focus and its menu.</summary>
+    readonly System.Collections.ObjectModel.ObservableCollection<HomeCard> cards = [];
+    public IReadOnlyList<HomeCard> Cards => cards;
 
     public HomeShelf(HomePage page, HomeSection section, SeasonYear? season)
     {
@@ -298,6 +319,7 @@ sealed partial class HomeShelf : Grid
         {
             Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = HomeWording.Gap },
             ItemTemplate = new HomeCardFactory(Shape, page),
+            ItemsSource = cards,
         };
         scroll.Content = repeater;
         // The wheel moves the page, not the shelf; Shift and a sideways wheel move the shelf.
@@ -409,20 +431,63 @@ sealed partial class HomeShelf : Grid
         if (all is not null)
             AutomationProperties.SetName(viewAll, all);
         var now = DateTimeOffset.Now;
-        var covers = Cards.ToDictionary(c => c.Id, c => c.Cover);
-        Cards = [.. section.Items.Select(item =>
+        var was = cards.ToDictionary(c => c.Id);
+        var next = section.Items.Select(item =>
         {
-            var cover = covers.TryGetValue(item.Entry.Id, out var known) ? known : new CoverItem(item.Entry).Load(Ctx.Current.Art, withBanner: Shape == HomeShape.Card);
-            return new HomeCard(item, cover, HomeWording.Line(item, now, TimeZoneInfo.Local), HomeWording.Name(item, now, TimeZoneInfo.Local));
-        })];
-        repeater.ItemsSource = Cards;
+            was.TryGetValue(item.Entry.Id, out var old);
+            var cover = old?.Cover ?? new CoverItem(item.Entry).Load(Ctx.Current.Art, withBanner: Shape == HomeShape.Card);
+            var card = new HomeCard(item, cover, HomeWording.Line(item, now, TimeZoneInfo.Local), HomeWording.Name(item, now, TimeZoneInfo.Local));
+            return old is not null && old.Look == card.Look ? old : card;
+        }).ToList();
+        Apply(next);
+    }
+
+    /// <summary>
+    /// Makes the shelf's cards <paramref name="next"/> with the fewest changes: cards that left
+    /// are taken out, moved ones moved, changed ones replaced, and every other element stays.
+    /// </summary>
+    void Apply(List<HomeCard> next)
+    {
+        var ids = next.Select(c => c.Id).ToHashSet();
+        for (var k = cards.Count - 1; k >= 0; k--)
+        {
+            if (!ids.Contains(cards[k].Id))
+                cards.RemoveAt(k);
+        }
+        for (var i = 0; i < next.Count; i++)
+        {
+            var want = next[i];
+            if (i < cards.Count && cards[i].Id == want.Id)
+            {
+                if (!ReferenceEquals(cards[i], want))
+                    cards[i] = want;
+                continue;
+            }
+            var at = -1;
+            for (var j = i + 1; j < cards.Count; j++)
+            {
+                if (cards[j].Id == want.Id)
+                {
+                    at = j;
+                    break;
+                }
+            }
+            if (at < 0)
+            {
+                cards.Insert(i, want);
+                continue;
+            }
+            cards.Move(at, i);
+            if (!ReferenceEquals(cards[i], want))
+                cards[i] = want;
+        }
     }
 
     /// <summary>The element showing title <paramref name="id"/> now, if it is realised.</summary>
     public UIElement? ElementOf(uint id)
     {
-        for (var i = 0; i < Cards.Count; i++)
-            if (Cards[i].Id == id)
+        for (var i = 0; i < cards.Count; i++)
+            if (cards[i].Id == id)
                 return repeater.TryGetElement(i);
         return null;
     }
@@ -436,7 +501,23 @@ sealed partial class HomeShelf : Grid
             return;
         }
         Motion.Fade(element, 0);
-        _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => done()));
+        // Faded, the card narrows to nothing with the gap after it, so the cards after it slide
+        // up to close it on the standard token instead of jumping when it is taken out.
+        _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+        {
+            if (element is not FrameworkElement card || card.ActualWidth <= 0)
+            {
+                done();
+                return;
+            }
+            var width = card.ActualWidth;
+            Motion.Ease(card, width, 0, v =>
+            {
+                card.Width = Math.Max(0, v);
+                card.Margin = new Thickness(0, 0, -HomeWording.Gap * (1 - v / width), 0);
+            });
+            _ = Task.Delay(Motion.Standard).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => done()));
+        }));
     }
 
     public void Focus() => repeater.TryGetElement(0)?.Focus(FocusState.Programmatic);
