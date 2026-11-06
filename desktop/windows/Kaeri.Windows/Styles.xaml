@@ -6,22 +6,44 @@
   <!-- Show titles are Zen Kaku Gothic New 700; everything else is the Fluent type ramp. -->
   <FontFamily x:Key="ShowFont">ms-appx:///Assets/Fonts/ZenKakuGothicNew-Bold.ttf#Zen Kaku Gothic New</FontFamily>
 
-  <!-- 28/36: the title page and the Continue preview. -->
-  <Style x:Key="ShowTitleLargeStyle" TargetType="TextBlock">
+  <!-- Show titles come in four sizes, each with its line height, as the Mac's do. -->
+
+  <!-- 30/38: the title page, the spotlight and the starting screen, the largest title on screen. -->
+  <Style x:Key="ShowTitleDisplayStyle" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
     <Setter Property="FontWeight" Value="Bold" />
-    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontSize" Value="30" />
+    <Setter Property="LineHeight" Value="38" />
     <Setter Property="TextWrapping" Value="WrapWholeWords" />
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
   </Style>
 
-  <!-- 15/20: rows and under covers. -->
+  <!-- 20/28, the Subtitle size: a title heading a dialog, a card or a room. -->
+  <Style x:Key="ShowTitleMediumStyle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="LineHeight" Value="28" />
+    <Setter Property="TextWrapping" Value="WrapWholeWords" />
+    <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- 15/20: rows, cards, posters and the player's bar. Zen Kaku's own line is taller than
+       Segoe's, so the line height holds every line at 20. -->
   <Style x:Key="ShowTitleStyle" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource ShowFont}" />
     <Setter Property="FontWeight" Value="Bold" />
     <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- 13/18: This week's and the calendar's tiles. -->
+  <Style x:Key="ShowTitleSmallStyle" TargetType="TextBlock" BasedOn="{StaticResource ShowTitleStyle}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="18" />
   </Style>
 
   <Style x:Key="HazeCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">

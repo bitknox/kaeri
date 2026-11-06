@@ -185,7 +185,7 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
             track.Child = fill;
             stack.Children.Add(track);
         }
-        var title = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 14, Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
+        var title = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), Margin = new Thickness(0, 8, 0, 0), IsTextScaleFactorEnabled = true };
         stack.Children.Add(title);
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         var dot = Ui.Dot(Colours.Water, false);

@@ -192,7 +192,7 @@ sealed partial class HomeWeek : Grid
             time = new TextBlock { FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
             when.Children.Add(time);
             text.Children.Add(when);
-            name = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 13, LineHeight = 17, MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis };
+            name = new TextBlock { Style = Ui.Res<Style>("ShowTitleSmallStyle"), MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis };
             text.Children.Add(name);
             episode = new TextBlock { Style = Ui.Res<Style>("HazeCaptionStyle") };
             text.Children.Add(episode);

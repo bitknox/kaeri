@@ -6,7 +6,7 @@
     xmlns:local="using:Kaeri.Windows"
     xmlns:app="using:Kaeri.App">
   <!-- A poster grid: covers 150 wide at 2:3, as many columns as fit with 16 between, the title in
-       Zen Kaku 15 and one caption line in haze under each. The title keeps two lines
+       Zen Kaku 15/20 and one caption line in haze under each. The title keeps two lines
        whether it needs them or not, so every cell is one height and none is cut. -->
   <ItemsView x:Name="Items" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="OnInvoked"
              TabFocusNavigation="Once">
@@ -22,8 +22,7 @@
             <Grid Tag="cover" Width="150" Height="225" CornerRadius="{x:Bind local:Art.Corner(150)}" Background="{x:Bind Placeholder}" Margin="0,0,0,6">
               <Image Source="{x:Bind Cover, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" local:ArtFade.On="True" />
             </Grid>
-            <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource ShowTitleStyle}" MaxLines="2" TextWrapping="WrapWholeWords"
-                       LineHeight="20" LineStackingStrategy="BlockLineHeight" Height="40" />
+            <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource ShowTitleStyle}" MaxLines="2" TextWrapping="WrapWholeWords" Height="40" />
             <TextBlock Text="{x:Bind Count, Mode=OneWay}" Visibility="{x:Bind CountShown, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" TextTrimming="CharacterEllipsis" />
             <TextBlock Text="{x:Bind Caption, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" />
           </StackPanel>

@@ -111,10 +111,7 @@ public sealed partial class HomeSpotlight : Grid
         readonly TextBlock label = new() { Style = Ui.Res<Style>("HazeBodyStyle"), FontSize = 14, LineHeight = 19, Margin = new Thickness(0, 0, 0, 8) };
         readonly TextBlock title = new()
         {
-            FontFamily = Ui.Res<FontFamily>("ShowFont"),
-            FontWeight = FontWeights.Bold,
-            FontSize = 30,
-            LineHeight = 38,
+            Style = Ui.Res<Style>("ShowTitleDisplayStyle"),
             MaxLines = 2,
             TextWrapping = TextWrapping.Wrap,
             TextTrimming = TextTrimming.CharacterEllipsis,

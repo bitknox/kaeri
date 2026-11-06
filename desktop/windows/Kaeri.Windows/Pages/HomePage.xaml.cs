@@ -373,7 +373,7 @@ public sealed partial class HomePage : Page, IPageKeys
             if (shape == HomeShape.Card)
                 card.Children.Add(new Border { Height = 9 });
             card.Children.Add(new Border { Height = 8 });
-            card.Children.Add(Line(width * 0.8, 12, 19, 0));
+            card.Children.Add(Line(width * 0.8, 12, 20, 0));
             card.Children.Add(Line(width * 0.55, 10, 16, 0));
             row.Children.Add(card);
         }

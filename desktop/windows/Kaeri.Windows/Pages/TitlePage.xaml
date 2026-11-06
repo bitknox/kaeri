@@ -47,7 +47,7 @@
               <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
-              <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleLargeStyle}" />
+              <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleDisplayStyle}" />
               <TextBlock x:Name="Secondary" Style="{StaticResource HazeBodyStyle}" />
               <TextBlock x:Name="Meta" Style="{StaticResource HazeCaptionStyle}" />
               <local:OfflineLine />

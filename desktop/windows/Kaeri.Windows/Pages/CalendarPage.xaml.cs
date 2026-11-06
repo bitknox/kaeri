@@ -843,9 +843,7 @@ public sealed partial class CalendarPage : Page
     static TextBlock TitleLine(Broadcast b, int lines) => new()
     {
         Text = b.Entry.Title,
-        Style = Ui.Res<Style>("ShowTitleStyle"),
-        FontSize = 13,
-        LineHeight = 17,
+        Style = Ui.Res<Style>("ShowTitleSmallStyle"),
         MaxLines = lines,
         TextWrapping = lines > 1 ? TextWrapping.Wrap : TextWrapping.NoWrap,
         Foreground = Ui.Res<Brush>("SilkBrush"),
