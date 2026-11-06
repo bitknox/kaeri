@@ -9877,6 +9877,10 @@ object Strings {
     fun cloudBrowserTitle(context: Context, service: String): String =
         context.getString(R.string.cloud_browser_title, service)
 
+    /** Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running. */
+    fun cloudCloseCarriesOn(context: Context): String =
+        context.getString(R.string.cloud_close_carries_on)
+
     /** Word for this device in sentences such as “Turn off sync on this computer”. */
     fun deviceKindComputer(context: Context): String =
         context.getString(R.string.device_kind_computer)

@@ -288,7 +288,7 @@ static partial class SyncDialogs
         public required ContentDialog Dialog;
         public required Steps Pages;
         public required Title Title;
-        public required TextBlock Error, WaitTitle, WaitLine, FailLine, NcError, DavError;
+        public required TextBlock Error, WaitTitle, WaitLine, CarriesOn, FailLine, NcError, DavError;
         public required HyperlinkButton OpenAgain;
         public required ProgressRing Ring;
         public required StackPanel KeySlot;
@@ -450,6 +450,7 @@ static partial class SyncDialogs
         p.WaitTitle.Text = T.CloudWaiting(name);
         p.WaitTitle.Visibility = stage == Phase.Browser ? Visibility.Visible : Visibility.Collapsed;
         p.WaitLine.Text = line;
+        p.CarriesOn.Visibility = stage is Phase.Connecting or Phase.SettingUp ? Visibility.Visible : Visibility.Collapsed;
         p.FailLine.Text = line;
         p.WaitUrl = url;
         p.OpenAgain.Visibility = stage == Phase.Browser && url is not null ? Visibility.Visible : Visibility.Collapsed;
@@ -466,12 +467,14 @@ static partial class SyncDialogs
         var dialog = p.Dialog;
         dialog.PrimaryButtonText = form ? T.CloudConnect : showing == "error" ? T.ActionTryAgain : showing == "key" ? T.ActionDone : "";
         dialog.DefaultButton = dialog.PrimaryButtonText.Length > 0 ? ContentDialogButton.Primary : ContentDialogButton.None;
-        // Cancel is the secondary button, so it can dim: the Close button has no disabled state.
-        dialog.SecondaryButtonText = showing == "key" ? "" : T.ActionCancel;
-        dialog.IsSecondaryButtonEnabled = !Dimmed(p);
+        // Cancel is the secondary button. Once the browser is back the sign-in can't be stopped
+        // half way, so it becomes Close, which leaves the work running: the recovery key or an
+        // error opens by itself when it comes.
+        dialog.SecondaryButtonText = showing == "key" ? "" : Dimmed(p) ? T.ActionClose : T.ActionCancel;
+        dialog.IsSecondaryButtonEnabled = true;
     }
 
-    /// <summary>Cancel is dimmed: the browser came back and the token fetch cannot be stopped half way.</summary>
+    /// <summary>The browser came back and the token fetch or the first copy cannot be stopped half way.</summary>
     static bool Dimmed(PickerParts p) => p.Pages.Showing == "wait" && (p.Returning || p.State is Phase.Connecting or Phase.SettingUp);
 
     /// <summary>Cancel by the person: a sign-in under way stops quietly and the picker is back as it was.</summary>
@@ -536,6 +539,10 @@ static partial class SyncDialogs
         wait.Children.Add(waitRow);
         var waitLine = Ui.Text("", "HazeBodyStyle");
         wait.Children.Add(waitLine);
+        // Once the browser is back the work can't be stopped, but the dialog can always be closed.
+        var carriesOn = Note(T.CloudCloseCarriesOn);
+        carriesOn.Visibility = Visibility.Collapsed;
+        wait.Children.Add(carriesOn);
         // A secondary link is silk; the dialog's one amber is its primary button.
         var openAgain = Link(T.CloudOpenAgain);
         openAgain.Visibility = Visibility.Collapsed;
@@ -620,6 +627,7 @@ static partial class SyncDialogs
             Error = error,
             WaitTitle = waitTitle,
             WaitLine = waitLine,
+            CarriesOn = carriesOn,
             FailLine = failLine,
             Ring = ring,
             KeySlot = keySlot,
@@ -678,18 +686,31 @@ static partial class SyncDialogs
         {
             if (pages.Showing == "list")
                 return;
+            if (Dimmed(parts))
+            {
+                // Close: the work carries on without the dialog.
+                parts.Done = true;
+                return;
+            }
             e.Cancel = true;
             CancelStep(parts);
         };
-        // Escape is Cancel: it closes the list, goes back from a later step, does nothing while
-        // Cancel is dimmed and never loses a key not yet seen.
-        dialog.Closing += (_, e) =>
+        // Escape is Cancel: it closes the list and goes back from a later step. While the work
+        // can't be stopped it closes the dialog and leaves the work running, and on the key it
+        // is Done, as the key has been on screen. A close the app asks for always goes through.
+        dialog.Closing += (sender, e) =>
         {
-            if (parts.Done || e.Result != ContentDialogResult.None || pages.Showing == "list")
+            if (parts.Done || Dialogs.Forced(sender) || e.Result != ContentDialogResult.None || pages.Showing == "list")
+                return;
+            if (pages.Showing == "key")
+            {
+                Ctx.Known.RecoveryKey = null;
+                return;
+            }
+            if (Dimmed(parts))
                 return;
             e.Cancel = true;
-            if (pages.Showing != "key" && !Dimmed(parts))
-                CancelStep(parts);
+            CancelStep(parts);
         };
         pages.Shown += name =>
         {
@@ -841,18 +862,17 @@ static partial class SyncDialogs
     {
         if (Ctx.Known.RecoveryKey is not { } key)
             return;
-        keyDialog?.Hide();
+        if (keyDialog is { } before)
+        {
+            keyDialog = null;
+            Dialogs.Close(before);
+        }
         var body = new StackPanel { Spacing = 16 };
         FillKey(body, key);
         var dialog = Dialog(T.RkeyTitle, body, 432);
         dialog.PrimaryButtonText = T.ActionDone;
-        // Only Done closes it: Escape would lose a key never seen again without the lock.
-        dialog.Closing += (_, e) =>
-        {
-            if (e.Result != ContentDialogResult.Primary && keyDialog == dialog)
-                e.Cancel = true;
-        };
-        dialog.PrimaryButtonClick += (_, _) => Ctx.Known.RecoveryKey = null;
+        // Escape is Done: the key has been on screen, and Devices shows it again behind the lock.
+        dialog.Closing += (_, _) => Ctx.Known.RecoveryKey = null;
         dialog.Closed += (_, _) =>
         {
             if (keyDialog == dialog)
@@ -1320,7 +1340,7 @@ static partial class SyncDialogs
                 }
                 break;
             case Event.SyncSignIn { Step: null }:
-                if (Ctx.Known.SyncTrouble is null && picker is { State: not Phase.Key } over)
+                if (Ctx.Known.SyncTrouble is null && picker is { State: not Phase.Key, Pages.Showing: "wait" } over)
                     FinishAfterStage(over);
                 break;
             case Event.SyncRecoveryKey recovery:
@@ -1328,6 +1348,8 @@ static partial class SyncDialogs
                 {
                     // The folder was made from the picker: the key shows in the same dialog.
                     FillKey(making2.KeySlot, recovery.V1);
+                    // The key's, from now: the sign-in's end that follows doesn't close the dialog first.
+                    making2.State = Phase.Key;
                     StageTo(making2, last ?? SyncFolderKind.GoogleDrive, Phase.Key);
                 }
                 else

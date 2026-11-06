@@ -15810,6 +15810,11 @@ pub fn cloud_browser_title(service: &str) -> String {
     text("cloud-browser-title", &[("service", Arg::Text(service))])
 }
 
+/// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+pub fn cloud_close_carries_on() -> String {
+    text("cloud-close-carries-on", &[])
+}
+
 /// Word for this device in sentences such as “Turn off sync on this computer”.
 pub fn device_kind_computer() -> String {
     text("device-kind-computer", &[])

@@ -6929,6 +6929,9 @@ public static partial class T
     /// <summary>Windows and Linux dialog title while the browser is open for a cloud sign-in.</summary>
     public static string CloudBrowserTitle(string service) => Fill(Get("CloudBrowserTitle"), ("service", service));
 
+    /// <summary>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</summary>
+    public static string CloudCloseCarriesOn => Get("CloudCloseCarriesOn");
+
     /// <summary>Word for this device in sentences such as “Turn off sync on this computer”.</summary>
     public static string DeviceKindComputer => Get("DeviceKindComputer");
 
@@ -11093,6 +11096,7 @@ public static partial class T
         ["StoresShare"] = "Share…",
         ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
