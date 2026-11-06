@@ -499,7 +499,13 @@ public sealed partial class HomePage : Page, IPageKeys
             }
             if (hit.At > 0)
                 block.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = rest[..hit.At] });
-            var link = new Microsoft.UI.Xaml.Documents.Hyperlink();
+            // In silk and semibold, as SilkLinkStyle draws a link that is not the main action.
+            var link = new Microsoft.UI.Xaml.Documents.Hyperlink
+            {
+                Foreground = Ui.Res<Brush>("SilkBrush"),
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                UnderlineStyle = Microsoft.UI.Xaml.Documents.UnderlineStyle.None,
+            };
             link.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = hit.L.Words });
             var go = hit.L.Go;
             link.Click += (_, _) => go();

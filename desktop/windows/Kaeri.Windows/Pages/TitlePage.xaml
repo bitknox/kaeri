@@ -112,7 +112,7 @@
             <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
                        TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
                        IsTextTrimmedChanged="OnSynopsisTrimmed" />
-            <HyperlinkButton x:Name="SynopsisMore" Padding="0,4" Visibility="Collapsed" Click="OnSynopsisMore"
+            <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
                              Content="{x:Bind s:T.ActionMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->
             <ContentControl x:Name="DemoCredit" HorizontalContentAlignment="Left" Visibility="Collapsed" />

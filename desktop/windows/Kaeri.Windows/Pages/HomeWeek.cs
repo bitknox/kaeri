@@ -46,7 +46,7 @@ sealed partial class HomeWeek : Grid
         title = new TextBlock { FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
         head.Children.Add(title);
-        link = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle"), Padding = new Thickness(0) };
+        link = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle") };
         link.Click += (_, _) => page.OpenViewAll(SectionKind.ThisWeek, this.section.ViewAll);
         Grid.SetColumn(link, 1);
         head.Children.Add(link);
@@ -67,7 +67,7 @@ sealed partial class HomeWeek : Grid
             days[d] = new TextBlock { FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold };
             AutomationProperties.SetHeadingLevel(days[d], AutomationHeadingLevel.Level3);
             nothing[d] = Ui.Text(T.HomeNothingAiring, "HazeCaptionStyle");
-            mores[d] = new HyperlinkButton { Padding = new Thickness(0), FontSize = 13 };
+            mores[d] = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkCaptionStyle") };
             mores[d].Click += (_, _) => page.OpenViewAll(SectionKind.ThisWeek, null);
             Grid.SetColumn(columns[d], d);
             strip.Children.Add(columns[d]);

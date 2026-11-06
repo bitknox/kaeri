@@ -89,6 +89,18 @@
     </Setter>
   </Style>
 
+  <!-- The same link at the start of a line: the padding is taken back on the leading side, so the
+       words start on the column's edge. Never set Padding on these; the margin answers it. -->
+  <Style x:Key="SilkLinkLeadingStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource SilkLinkStyle}">
+    <Setter Property="Margin" Value="-4,0,0,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- A small link under a list, at the start of its line: This week's "N more", Show all. -->
+  <Style x:Key="SilkLinkCaptionStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource SilkLinkLeadingStyle}">
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
   <!-- The title page's primary action and the Continue preview's: 40 high, amber. -->
   <Style x:Key="PrimaryActionStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
     <Setter Property="MinHeight" Value="40" />

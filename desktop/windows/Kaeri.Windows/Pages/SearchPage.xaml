@@ -67,7 +67,7 @@
             <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedLeft" />
           </DropDownButton.Flyout>
         </DropDownButton>
-        <HyperlinkButton x:Name="ClearButton" Content="{x:Bind s:T.SearchClearFilters}" Click="OnClear" MinHeight="32" Visibility="Collapsed" />
+        <HyperlinkButton x:Name="ClearButton" Content="{x:Bind s:T.SearchClearFilters}" Click="OnClear" Style="{StaticResource SilkLinkStyle}" VerticalAlignment="Center" Visibility="Collapsed" />
       </StackPanel>
     </ScrollViewer>
     <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" ViewChanged="OnScrolled">
