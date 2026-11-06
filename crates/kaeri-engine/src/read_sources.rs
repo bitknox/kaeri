@@ -1028,6 +1028,7 @@ impl BookSources {
                 bookmarked,
                 version_label: chapter.version_label.clone(),
                 read_at,
+                line: Vec::new(),
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),

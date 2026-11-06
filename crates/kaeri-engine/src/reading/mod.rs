@@ -343,21 +343,37 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     });
 }
 
+/// A work's chapters for the reader's sheet and the series page. A series no source holds lists
+/// its files on this device; one with neither answers why.
 fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Outbox) {
-    let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
-    let plugins = services.book_plugins.clone();
+    let kit = crate::read_catalog::Kit::of(services);
+    let (tx, now) = (tx.clone(), services.clock.now());
     tokio::spawn(async move {
-        sources.adopt_plugins(&plugins);
-        let event = match sources.chapters(&work, edition.as_deref(), now).await {
-            Ok((edition, volumes)) => {
-                ReadingEvent::Chapters { work, edition, volumes, failure: None }
+        kit.sources.adopt_plugins(&kit.plugins);
+        let event = if kit.sources.edition_of(&work, edition.as_deref()).is_none() {
+            let list = crate::read_catalog::chapters::of_work(&kit.sources, &kit.store, &work);
+            let volumes = shelf::volumes(
+                &kit.store,
+                work.as_str(),
+                list.as_ref().map(|(_, _, l)| l.as_slice()),
+                now,
+                &kit.clock.zone(),
+            );
+            let failure = volumes.is_empty().then_some(ReadingFailure::NotFound);
+            ReadingEvent::Chapters { work, edition: None, volumes, failure }
+        } else {
+            match kit.sources.chapters(&work, edition.as_deref(), now).await {
+                Ok((edition, mut volumes)) => {
+                    crate::read_catalog::series::finish(&kit, &work, &mut volumes, now);
+                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
+                }
+                Err(failure) => ReadingEvent::Chapters {
+                    work,
+                    edition: None,
+                    volumes: Vec::new(),
+                    failure: Some(failure),
+                },
             }
-            Err(failure) => ReadingEvent::Chapters {
-                work,
-                edition: None,
-                volumes: Vec::new(),
-                failure: Some(failure),
-            },
         };
         let _ = tx.send(Event::Reading(event));
     });

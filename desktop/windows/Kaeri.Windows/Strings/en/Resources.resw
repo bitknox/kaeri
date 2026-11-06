@@ -947,6 +947,122 @@
     <value>Taiwan</value>
     <comment>A search filter: books from Taiwan.</comment>
   </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>Chapter {chapter} · {title}</value>
+    <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>A chapter row's state: the person read it.</comment>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>New</value>
+    <comment>A chapter row's state: it came out since the person last read and is not read.</comment>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>Downloaded</value>
+    <comment>A chapter row's state: it is kept on this device to read offline.</comment>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>Not downloaded</value>
+    <comment>A chapter row's state: it is read from the source and nothing of it is on this device.</comment>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>On this device</value>
+    <comment>A chapter row's state: a file in one of the person's folders, or one already on the device.</comment>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>Queued</value>
+    <comment>A chapter row's state: it waits its turn to download.</comment>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>Queued · waits for Wi-Fi</value>
+    <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>Downloading · {done} of {total} pages</value>
+    <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>Couldn't download</value>
+    <comment>A chapter row's state: the download failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>Page {page} of {of}</value>
+    <comment>A chapter row's state: the page the person stopped on, of how many.</comment>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>Page {page}</value>
+    <comment>A chapter row's state: the page the person stopped on, when the length isn't known.</comment>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+    <comment>A novel's chapter row: how far into it the person is.</comment>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>1 page</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n} pages</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>1 version</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n} versions</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>just now</value>
+    <comment>A chapter row: when it was read or came out, under a minute ago.</comment>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes} min ago</value>
+    <comment>A chapter row: when it was read or came out, in minutes.</comment>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>today</value>
+    <comment>A chapter row: when it was read or came out, earlier today.</comment>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>yesterday</value>
+    <comment>A chapter row: when it was read or came out, the day before today.</comment>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>1 day ago</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days} days ago</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>1 week ago</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks} weeks ago</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>1 month ago</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months} months ago</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>1 year ago</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years} years ago</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

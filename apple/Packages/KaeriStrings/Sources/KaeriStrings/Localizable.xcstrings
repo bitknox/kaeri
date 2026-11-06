@@ -170133,6 +170133,190 @@
         }
       }
     },
+    "reading-ago-days" : {
+      "comment" : "A chapter row: when it was read or came out, in days, under a week. Argument 1: days (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@days@"
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 day ago"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld days ago"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-ago-minutes" : {
+      "comment" : "A chapter row: when it was read or came out, in minutes. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min ago"
+          }
+        }
+      }
+    },
+    "reading-ago-months" : {
+      "comment" : "A chapter row: when it was read or came out, in months, under a year. Argument 1: months (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@months@"
+          },
+          "substitutions" : {
+            "months" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 month ago"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld months ago"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-ago-now" : {
+      "comment" : "A chapter row: when it was read or came out, under a minute ago.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "just now"
+          }
+        }
+      }
+    },
+    "reading-ago-today" : {
+      "comment" : "A chapter row: when it was read or came out, earlier today.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "today"
+          }
+        }
+      }
+    },
+    "reading-ago-weeks" : {
+      "comment" : "A chapter row: when it was read or came out, in weeks, under two months. Argument 1: weeks (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@weeks@"
+          },
+          "substitutions" : {
+            "weeks" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 week ago"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld weeks ago"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-ago-years" : {
+      "comment" : "A chapter row: when it was read or came out, in years. Argument 1: years (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@years@"
+          },
+          "substitutions" : {
+            "years" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 year ago"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld years ago"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-ago-yesterday" : {
+      "comment" : "A chapter row: when it was read or came out, the day before today.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yesterday"
+          }
+        }
+      }
+    },
     "reading-also-a-book" : {
       "comment" : "On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.",
       "extractionState" : "manual",
@@ -170189,6 +170373,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapter %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "reading-chapter-titled" : {
+      "comment" : "Under a This week cell: the chapter that came out that day, with its own title. Argument 1: chapter (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ · %2$@"
           }
         }
       }
@@ -170595,6 +170791,218 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapter %1$@, %2$@, out today"
+          }
+        }
+      }
+    },
+    "reading-row-downloaded" : {
+      "comment" : "A chapter row's state: it is kept on this device to read offline.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded"
+          }
+        }
+      }
+    },
+    "reading-row-downloading" : {
+      "comment" : "A chapter row's state while it downloads. Argument 1: done (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading · %1$lld of %2$lld pages"
+          }
+        }
+      }
+    },
+    "reading-row-failed" : {
+      "comment" : "A chapter row's state: the download failed. The reason follows as the next part.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't download"
+          }
+        }
+      }
+    },
+    "reading-row-new" : {
+      "comment" : "A chapter row's state: it came out since the person last read and is not read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        }
+      }
+    },
+    "reading-row-not-downloaded" : {
+      "comment" : "A chapter row's state: it is read from the source and nothing of it is on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not downloaded"
+          }
+        }
+      }
+    },
+    "reading-row-on-device" : {
+      "comment" : "A chapter row's state: a file in one of the person's folders, or one already on the device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this device"
+          }
+        }
+      }
+    },
+    "reading-row-page" : {
+      "comment" : "A chapter row's state: the page the person stopped on, when the length isn't known. Argument 1: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld"
+          }
+        }
+      }
+    },
+    "reading-row-page-of" : {
+      "comment" : "A chapter row's state: the page the person stopped on, of how many. Argument 1: page (Int). Argument 2: of (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "reading-row-pages" : {
+      "comment" : "A chapter row: how long its pages are, for a file on the device. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 page"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pages"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-row-percent" : {
+      "comment" : "A novel's chapter row: how far into it the person is. Argument 1: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%%"
+          }
+        }
+      }
+    },
+    "reading-row-queued" : {
+      "comment" : "A chapter row's state: it waits its turn to download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        }
+      }
+    },
+    "reading-row-read" : {
+      "comment" : "A chapter row's state: the person read it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "reading-row-versions" : {
+      "comment" : "A chapter row: how many versions the person's sources have of it. The row's menu lists them. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 version"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld versions"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-row-waits-wifi" : {
+      "comment" : "A chapter row's state: it waits to download until the device is on Wi-Fi.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued · waits for Wi-Fi"
           }
         }
       }

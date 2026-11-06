@@ -876,6 +876,99 @@ public enum L {
     /// A search filter: books from Taiwan.
     public static var readingOriginTaiwan: String { string("reading-origin-taiwan", fallback: "Taiwan") }
 
+    /// Under a This week cell: the chapter that came out that day, with its own title.
+    public static func readingChapterTitled(chapter: String, title: String) -> String {
+        Self.format("reading-chapter-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
+    }
+
+    /// A chapter row's state: the person read it.
+    public static var readingRowRead: String { string("reading-row-read", fallback: "Read") }
+
+    /// A chapter row's state: it came out since the person last read and is not read.
+    public static var readingRowNew: String { string("reading-row-new", fallback: "New") }
+
+    /// A chapter row's state: it is kept on this device to read offline.
+    public static var readingRowDownloaded: String { string("reading-row-downloaded", fallback: "Downloaded") }
+
+    /// A chapter row's state: it is read from the source and nothing of it is on this device.
+    public static var readingRowNotDownloaded: String { string("reading-row-not-downloaded", fallback: "Not downloaded") }
+
+    /// A chapter row's state: a file in one of the person's folders, or one already on the device.
+    public static var readingRowOnDevice: String { string("reading-row-on-device", fallback: "On this device") }
+
+    /// A chapter row's state: it waits its turn to download.
+    public static var readingRowQueued: String { string("reading-row-queued", fallback: "Queued") }
+
+    /// A chapter row's state: it waits to download until the device is on Wi-Fi.
+    public static var readingRowWaitsWifi: String { string("reading-row-waits-wifi", fallback: "Queued · waits for Wi-Fi") }
+
+    /// A chapter row's state while it downloads.
+    public static func readingRowDownloading(done: Int, total: Int) -> String {
+        Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
+    }
+
+    /// A chapter row's state: the download failed. The reason follows as the next part.
+    public static var readingRowFailed: String { string("reading-row-failed", fallback: "Couldn't download") }
+
+    /// A chapter row's state: the page the person stopped on, of how many.
+    public static func readingRowPageOf(page: Int, of: Int) -> String {
+        Self.format("reading-row-page-of", fallback: "Page %1$lld of %2$lld", page, of)
+    }
+
+    /// A chapter row's state: the page the person stopped on, when the length isn't known.
+    public static func readingRowPage(page: Int) -> String {
+        Self.format("reading-row-page", fallback: "Page %1$lld", page)
+    }
+
+    /// A novel's chapter row: how far into it the person is.
+    public static func readingRowPercent(percent: Int) -> String {
+        Self.format("reading-row-percent", fallback: "%1$lld%%", percent)
+    }
+
+    /// A chapter row: how long its pages are, for a file on the device.
+    public static func readingRowPages(n: Int) -> String {
+        Self.format("reading-row-pages", fallback: "%1$lld pages", n)
+    }
+
+    /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+    public static func readingRowVersions(n: Int) -> String {
+        Self.format("reading-row-versions", fallback: "%1$lld versions", n)
+    }
+
+    /// A chapter row: when it was read or came out, under a minute ago.
+    public static var readingAgoNow: String { string("reading-ago-now", fallback: "just now") }
+
+    /// A chapter row: when it was read or came out, in minutes.
+    public static func readingAgoMinutes(minutes: Int) -> String {
+        Self.format("reading-ago-minutes", fallback: "%1$lld min ago", minutes)
+    }
+
+    /// A chapter row: when it was read or came out, earlier today.
+    public static var readingAgoToday: String { string("reading-ago-today", fallback: "today") }
+
+    /// A chapter row: when it was read or came out, the day before today.
+    public static var readingAgoYesterday: String { string("reading-ago-yesterday", fallback: "yesterday") }
+
+    /// A chapter row: when it was read or came out, in days, under a week.
+    public static func readingAgoDays(days: Int) -> String {
+        Self.format("reading-ago-days", fallback: "%1$lld days ago", days)
+    }
+
+    /// A chapter row: when it was read or came out, in weeks, under two months.
+    public static func readingAgoWeeks(weeks: Int) -> String {
+        Self.format("reading-ago-weeks", fallback: "%1$lld weeks ago", weeks)
+    }
+
+    /// A chapter row: when it was read or came out, in months, under a year.
+    public static func readingAgoMonths(months: Int) -> String {
+        Self.format("reading-ago-months", fallback: "%1$lld months ago", months)
+    }
+
+    /// A chapter row: when it was read or came out, in years.
+    public static func readingAgoYears(years: Int) -> String {
+        Self.format("reading-ago-years", fallback: "%1$lld years ago", years)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)

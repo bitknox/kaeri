@@ -7,6 +7,7 @@
 
 pub(crate) mod chapters;
 pub(crate) mod home;
+pub(crate) mod rows;
 pub(crate) mod search;
 pub(crate) mod series;
 pub(crate) mod tiles;

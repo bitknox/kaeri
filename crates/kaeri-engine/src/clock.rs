@@ -38,7 +38,7 @@ impl Clock {
     }
 
     /// The system's clock, reading days in `zone` rather than the system's zone.
-    #[cfg(feature = "testing")]
+    #[cfg(any(test, feature = "testing"))]
     pub fn in_zone(zone: TimeZone) -> Self {
         Self { ahead: Arc::default(), zone: Some(zone) }
     }

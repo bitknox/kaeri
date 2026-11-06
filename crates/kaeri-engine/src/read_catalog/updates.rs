@@ -77,9 +77,12 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         let source_name = source_name(sources, &source);
         for chapter in new {
             let is_read = read.is_read(&chapter.id);
+            let mut chapter_row = row_of(chapter, &read);
+            chapter_row.line =
+                super::rows::line(&chapter_row, super::rows::Kept::Source, ask.now, &zone);
             let row = UpdateRow {
                 tile: tile.clone(),
-                chapter: row_of(chapter, &read),
+                chapter: chapter_row,
                 source_name: source_name.clone(),
             };
             rows.push((chapter.out_at().unwrap_or(ask.now), row, is_read));
@@ -160,6 +163,7 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         bookmarked: false,
         version_label: chapter.version_label.clone(),
         read_at: None,
+        line: Vec::new(),
     }
 }
 

@@ -947,6 +947,122 @@
     <value>[Ţàîŵàñ~~]</value>
     <comment>A search filter: books from Taiwan.</comment>
   </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {title}~~~~~~]</value>
+    <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>A chapter row's state: the person read it.</comment>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>[Ñéŵ~]</value>
+    <comment>A chapter row's state: it came out since the person last read and is not read.</comment>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð~~~]</value>
+    <comment>A chapter row's state: it is kept on this device to read offline.</comment>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>[Ñöţ ðöŵñļöàðéð~~~~~]</value>
+    <comment>A chapter row's state: it is read from the source and nothing of it is on this device.</comment>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>[Öñ ţĥîš ðéṽîçé~~~~~]</value>
+    <comment>A chapter row's state: a file in one of the person's folders, or one already on the device.</comment>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>[Ǫüéüéð~~]</value>
+    <comment>A chapter row's state: it waits its turn to download.</comment>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>[Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]</value>
+    <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
+    <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ðöŵñļöàð~~~~~~]</value>
+    <comment>A chapter row's state: the download failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>[Þàĝé {page} öƒ {of}~~~~~]</value>
+    <comment>A chapter row's state: the page the person stopped on, of how many.</comment>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>[Þàĝé {page}~~~]</value>
+    <comment>A chapter row's state: the page the person stopped on, when the length isn't known.</comment>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>[{percent}%~~]</value>
+    <comment>A novel's chapter row: how far into it the person is.</comment>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>[1 þàĝé~~]</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>[{n} þàĝéš~~~]</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>[1 ṽéŕšîöñ~~~]</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>[{n} ṽéŕšîöñš~~~~]</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>[ĵüšţ ñöŵ~~~]</value>
+    <comment>A chapter row: when it was read or came out, under a minute ago.</comment>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>[{minutes} ɱîñ àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in minutes.</comment>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>[ţöðàý~~]</value>
+    <comment>A chapter row: when it was read or came out, earlier today.</comment>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>[ýéšţéŕðàý~~~]</value>
+    <comment>A chapter row: when it was read or came out, the day before today.</comment>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>[1 ðàý àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>[{days} ðàýš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>[1 ŵééķ àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>[{weeks} ŵééķš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>[1 ɱöñţĥ àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>[{months} ɱöñţĥš àĝö~~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>[1 ýéàŕ àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>[{years} ýéàŕš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

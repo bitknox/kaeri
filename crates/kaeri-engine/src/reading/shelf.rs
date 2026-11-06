@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 
 use kaeri_core::books::{ChapterId, ChapterKey, ChapterRange};
-use kaeri_model::reading::{ChapterReadState, ChapterRow};
+use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
 use kaeri_store::{Store, reading::ReadMarks, shelf::ShelfFile};
 
 /// One chapter and the file it reads from.
@@ -50,6 +50,7 @@ impl ShelfChapter {
             bookmarked: false,
             version_label: None,
             read_at: None,
+            line: Vec::new(),
         }
     }
 }
@@ -84,6 +85,53 @@ pub fn name_downloads(
         }
         chapter.pages = chapter.pages.or(kept.pages);
     }
+}
+
+/// A work's files as the chapter list shows them, grouped by volume, with the person's reading
+/// marked: what a series with no source reads from.
+pub fn volumes(
+    store: &Store,
+    work: &str,
+    list: Option<&[crate::read_catalog::chapters::Kept]>,
+    now: i64,
+    zone: &jiff::tz::TimeZone,
+) -> Vec<VolumeGroup> {
+    let mut chapters = chapters(store, work);
+    if let Some(list) = list {
+        name_downloads(&mut chapters, list);
+    }
+    let marks = store.read_marks(work).unwrap_or_default();
+    let places = store.read_chapters(work).unwrap_or_default();
+    let mut groups: Vec<VolumeGroup> = Vec::new();
+    for chapter in &chapters {
+        let mut row = chapter.row(&marks);
+        if let Some(place) = places.iter().find(|p| p.chapter == chapter.id.as_str()) {
+            row.read_at = place.read_at.filter(|_| marks.is_read(chapter.id.as_str()));
+            if let (ChapterReadState::Unread, Some(page)) = (row.state, place.last_page) {
+                row.state = ChapterReadState::InProgress { page, of: place.of_pages };
+            }
+        }
+        match groups.iter_mut().find(|g| g.volume == chapter.volume) {
+            Some(group) => group.chapters.push(row),
+            None => groups.push(VolumeGroup {
+                volume: chapter.volume.clone(),
+                title: None,
+                chapters: vec![row],
+                all_read: false,
+            }),
+        }
+    }
+    for group in &mut groups {
+        group.all_read =
+            group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
+    }
+    crate::read_catalog::rows::fill(
+        &mut groups,
+        crate::read_catalog::rows::Kept::Device,
+        now,
+        zone,
+    );
+    groups
 }
 
 fn order(files: Vec<ShelfFile>) -> Vec<ShelfChapter> {

@@ -695,6 +695,99 @@ reading-origin-china = [Çĥîñà~~]
 # A search filter: books from Taiwan.
 reading-origin-taiwan = [Ţàîŵàñ~~]
 
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
+
+# A chapter row's state: the person read it.
+reading-row-read = [Ŕéàð~~]
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = [Ñéŵ~]
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = [Ðöŵñļöàðéð~~~]
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = [Ñöţ ðöŵñļöàðéð~~~~~]
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = [Öñ ţĥîš ðéṽîçé~~~~~]
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = [Ǫüéüéð~~]
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
+
+# A chapter row's state while it downloads.
+reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = [Çöüļðñ'ţ ðöŵñļöàð~~~~~~]
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = [Þàĝé { $page } öƒ { $of }~~~~~]
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = [Þàĝé { $page }~~~]
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = [{ $percent }%~~]
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] [1 þàĝé~~]
+       *[other] [{ $n } þàĝéš~~~]
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] [1 ṽéŕšîöñ~~~]
+       *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = [ĵüšţ ñöŵ~~~]
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = [{ $minutes } ɱîñ àĝö~~~~]
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = [ţöðàý~~]
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = [ýéšţéŕðàý~~~]
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] [1 ðàý àĝö~~~]
+       *[other] [{ $days } ðàýš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] [1 ŵééķ àĝö~~~]
+       *[other] [{ $weeks } ŵééķš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] [1 ɱöñţĥ àĝö~~~~]
+       *[other] [{ $months } ɱöñţĥš àĝö~~~~~]
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] [1 ýéàŕ àĝö~~~]
+       *[other] [{ $years } ýéàŕš àĝö~~~~]
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 

@@ -219,6 +219,11 @@ pub struct ChapterRow {
     /// When it was read, Unix seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub read_at: Option<i64>,
+    /// The second line in words, as parts the row joins with " · ": "Read · 4 days ago ·
+    /// Downloaded", "New · yesterday", "Not downloaded". Never empty on a series page,
+    /// in Updates or in Downloads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -464,6 +469,11 @@ pub struct ReadWeekEntry {
     /// Expected from the series' rhythm, not seen yet.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub usually: bool,
+    /// The chapter that came out this day, in words: "Chapter 15", or "Chapter 15 · The Far
+    /// Shore" with its title. `None` for one only expected. The tile's `next` stays the
+    /// person's place.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chapter: Option<Msg>,
 }
 
 /// A part of reading's Home that loads on its own.
@@ -907,11 +917,11 @@ pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) 
     Some(Msg::Reading(msg))
 }
 
-/// "Chapter 13 · page 9".
+/// "Chapter 13 · page 9", from the place as kept: pages count from 0 there, from 1 in words.
 pub fn chapter_page(chapter: &str, page: u32) -> Msg {
     Msg::Reading(ReadingMsg::ReadingChapterPage {
         chapter: chapter.to_owned(),
-        page: i64::from(page),
+        page: i64::from(page) + 1,
     })
 }
 
@@ -1296,7 +1306,7 @@ mod tests {
             count_words(Medium::Manga, Some(1), Some(1)).unwrap().english(),
             "1 chapter"
         );
-        assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 9");
+        assert_eq!(chapter_page("13", 8).english(), "Chapter 13 · page 9", "kept from 0");
         let filters = read_filters();
         assert_eq!(filters.statuses.len(), 5);
         assert!(!filters.genres.iter().any(|g| g == crate::search::ADULT_GENRE));

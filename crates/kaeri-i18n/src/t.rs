@@ -1090,6 +1090,121 @@ pub fn reading_origin_taiwan() -> String {
     text("reading-origin-taiwan", &[])
 }
 
+/// Under a This week cell: the chapter that came out that day, with its own title.
+pub fn reading_chapter_titled(chapter: &str, title: &str) -> String {
+    text("reading-chapter-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// A chapter row's state: the person read it.
+pub fn reading_row_read() -> String {
+    text("reading-row-read", &[])
+}
+
+/// A chapter row's state: it came out since the person last read and is not read.
+pub fn reading_row_new() -> String {
+    text("reading-row-new", &[])
+}
+
+/// A chapter row's state: it is kept on this device to read offline.
+pub fn reading_row_downloaded() -> String {
+    text("reading-row-downloaded", &[])
+}
+
+/// A chapter row's state: it is read from the source and nothing of it is on this device.
+pub fn reading_row_not_downloaded() -> String {
+    text("reading-row-not-downloaded", &[])
+}
+
+/// A chapter row's state: a file in one of the person's folders, or one already on the device.
+pub fn reading_row_on_device() -> String {
+    text("reading-row-on-device", &[])
+}
+
+/// A chapter row's state: it waits its turn to download.
+pub fn reading_row_queued() -> String {
+    text("reading-row-queued", &[])
+}
+
+/// A chapter row's state: it waits to download until the device is on Wi-Fi.
+pub fn reading_row_waits_wifi() -> String {
+    text("reading-row-waits-wifi", &[])
+}
+
+/// A chapter row's state while it downloads.
+pub fn reading_row_downloading(done: i64, total: i64) -> String {
+    text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter row's state: the download failed. The reason follows as the next part.
+pub fn reading_row_failed() -> String {
+    text("reading-row-failed", &[])
+}
+
+/// A chapter row's state: the page the person stopped on, of how many.
+pub fn reading_row_page_of(page: i64, of: i64) -> String {
+    text("reading-row-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+}
+
+/// A chapter row's state: the page the person stopped on, when the length isn't known.
+pub fn reading_row_page(page: i64) -> String {
+    text("reading-row-page", &[("page", Arg::Int(page))])
+}
+
+/// A novel's chapter row: how far into it the person is.
+pub fn reading_row_percent(percent: i64) -> String {
+    text("reading-row-percent", &[("percent", Arg::Int(percent))])
+}
+
+/// A chapter row: how long its pages are, for a file on the device.
+pub fn reading_row_pages(n: i64) -> String {
+    text("reading-row-pages", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+pub fn reading_row_versions(n: i64) -> String {
+    text("reading-row-versions", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: when it was read or came out, under a minute ago.
+pub fn reading_ago_now() -> String {
+    text("reading-ago-now", &[])
+}
+
+/// A chapter row: when it was read or came out, in minutes.
+pub fn reading_ago_minutes(minutes: i64) -> String {
+    text("reading-ago-minutes", &[("minutes", Arg::Int(minutes))])
+}
+
+/// A chapter row: when it was read or came out, earlier today.
+pub fn reading_ago_today() -> String {
+    text("reading-ago-today", &[])
+}
+
+/// A chapter row: when it was read or came out, the day before today.
+pub fn reading_ago_yesterday() -> String {
+    text("reading-ago-yesterday", &[])
+}
+
+/// A chapter row: when it was read or came out, in days, under a week.
+pub fn reading_ago_days(days: i64) -> String {
+    text("reading-ago-days", &[("days", Arg::Int(days))])
+}
+
+/// A chapter row: when it was read or came out, in weeks, under two months.
+pub fn reading_ago_weeks(weeks: i64) -> String {
+    text("reading-ago-weeks", &[("weeks", Arg::Int(weeks))])
+}
+
+/// A chapter row: when it was read or came out, in months, under a year.
+pub fn reading_ago_months(months: i64) -> String {
+    text("reading-ago-months", &[("months", Arg::Int(months))])
+}
+
+/// A chapter row: when it was read or came out, in years.
+pub fn reading_ago_years(years: i64) -> String {
+    text("reading-ago-years", &[("years", Arg::Int(years))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])

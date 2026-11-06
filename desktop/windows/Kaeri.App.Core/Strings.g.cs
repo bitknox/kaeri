@@ -666,6 +666,75 @@ public static partial class T
     /// <summary>A search filter: books from Taiwan.</summary>
     public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
 
+    /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
+    public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>A chapter row's state: the person read it.</summary>
+    public static string ReadingRowRead => Get("ReadingRowRead");
+
+    /// <summary>A chapter row's state: it came out since the person last read and is not read.</summary>
+    public static string ReadingRowNew => Get("ReadingRowNew");
+
+    /// <summary>A chapter row's state: it is kept on this device to read offline.</summary>
+    public static string ReadingRowDownloaded => Get("ReadingRowDownloaded");
+
+    /// <summary>A chapter row's state: it is read from the source and nothing of it is on this device.</summary>
+    public static string ReadingRowNotDownloaded => Get("ReadingRowNotDownloaded");
+
+    /// <summary>A chapter row's state: a file in one of the person's folders, or one already on the device.</summary>
+    public static string ReadingRowOnDevice => Get("ReadingRowOnDevice");
+
+    /// <summary>A chapter row's state: it waits its turn to download.</summary>
+    public static string ReadingRowQueued => Get("ReadingRowQueued");
+
+    /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
+    public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
+
+    /// <summary>A chapter row's state while it downloads.</summary>
+    public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
+    public static string ReadingRowFailed => Get("ReadingRowFailed");
+
+    /// <summary>A chapter row's state: the page the person stopped on, of how many.</summary>
+    public static string ReadingRowPageOf(long page, long of) => Fill(Get("ReadingRowPageOf"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state: the page the person stopped on, when the length isn't known.</summary>
+    public static string ReadingRowPage(long page) => Fill(Get("ReadingRowPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A novel's chapter row: how far into it the person is.</summary>
+    public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: how long its pages are, for a file on the device.</summary>
+    public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</summary>
+    public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, under a minute ago.</summary>
+    public static string ReadingAgoNow => Get("ReadingAgoNow");
+
+    /// <summary>A chapter row: when it was read or came out, in minutes.</summary>
+    public static string ReadingAgoMinutes(long minutes) => Fill(Get("ReadingAgoMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, earlier today.</summary>
+    public static string ReadingAgoToday => Get("ReadingAgoToday");
+
+    /// <summary>A chapter row: when it was read or came out, the day before today.</summary>
+    public static string ReadingAgoYesterday => Get("ReadingAgoYesterday");
+
+    /// <summary>A chapter row: when it was read or came out, in days, under a week.</summary>
+    public static string ReadingAgoDays(long days) => Fill(GetPlural("ReadingAgoDays", days), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in weeks, under two months.</summary>
+    public static string ReadingAgoWeeks(long weeks) => Fill(GetPlural("ReadingAgoWeeks", weeks), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in months, under a year.</summary>
+    public static string ReadingAgoMonths(long months) => Fill(GetPlural("ReadingAgoMonths", months), ("months", months.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in years.</summary>
+    public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -10093,6 +10162,35 @@ public static partial class T
         ["ReadingOriginKorea"] = "Korea",
         ["ReadingOriginChina"] = "China",
         ["ReadingOriginTaiwan"] = "Taiwan",
+        ["ReadingChapterTitled"] = "Chapter {chapter} · {title}",
+        ["ReadingRowRead"] = "Read",
+        ["ReadingRowNew"] = "New",
+        ["ReadingRowDownloaded"] = "Downloaded",
+        ["ReadingRowNotDownloaded"] = "Not downloaded",
+        ["ReadingRowOnDevice"] = "On this device",
+        ["ReadingRowQueued"] = "Queued",
+        ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
+        ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowFailed"] = "Couldn't download",
+        ["ReadingRowPageOf"] = "Page {page} of {of}",
+        ["ReadingRowPage"] = "Page {page}",
+        ["ReadingRowPercent"] = "{percent}%",
+        ["ReadingRowPages_one"] = "1 page",
+        ["ReadingRowPages_other"] = "{n} pages",
+        ["ReadingRowVersions_one"] = "1 version",
+        ["ReadingRowVersions_other"] = "{n} versions",
+        ["ReadingAgoNow"] = "just now",
+        ["ReadingAgoMinutes"] = "{minutes} min ago",
+        ["ReadingAgoToday"] = "today",
+        ["ReadingAgoYesterday"] = "yesterday",
+        ["ReadingAgoDays_one"] = "1 day ago",
+        ["ReadingAgoDays_other"] = "{days} days ago",
+        ["ReadingAgoWeeks_one"] = "1 week ago",
+        ["ReadingAgoWeeks_other"] = "{weeks} weeks ago",
+        ["ReadingAgoMonths_one"] = "1 month ago",
+        ["ReadingAgoMonths_other"] = "{months} months ago",
+        ["ReadingAgoYears_one"] = "1 year ago",
+        ["ReadingAgoYears_other"] = "{years} years ago",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",

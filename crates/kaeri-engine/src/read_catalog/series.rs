@@ -57,8 +57,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             }
             let event = match kit.sources.chapters(&work, None, ask.now).await {
                 Ok((edition, mut volumes)) => {
-                    count_versions(&kit, &work, &mut volumes);
-                    mark_new(&kit, &work, &mut volumes);
+                    finish(&kit, &work, &mut volumes, ask.now);
                     ReadingEvent::Chapters {
                         work: work.clone(),
                         edition,
@@ -69,8 +68,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
                 // The source did not answer: the list it gave last, with why.
                 Err(failure) => {
                     let (edition, mut volumes) = kept_volumes(&kit, &work);
-                    count_versions(&kit, &work, &mut volumes);
-                    mark_new(&kit, &work, &mut volumes);
+                    finish(&kit, &work, &mut volumes, ask.now);
                     ReadingEvent::Chapters {
                         work: work.clone(),
                         edition,
@@ -140,6 +138,14 @@ fn kept_volumes(kit: &Kit, work: &WorkId) -> (Option<BookEditionRow>, Vec<Volume
     }
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
     (edition, groups)
+}
+
+/// The rows as every screen shows them: how many versions each has, the new ones, and the
+/// words on their second line.
+pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now: i64) {
+    count_versions(kit, work, volumes);
+    mark_new(kit, work, volumes);
+    super::rows::fill(volumes, super::rows::Kept::Source, now, &kit.clock.zone());
 }
 
 /// How many versions each chapter has across the person's editions.

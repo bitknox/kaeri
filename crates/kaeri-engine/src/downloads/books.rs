@@ -254,11 +254,21 @@ impl BookDownloads {
                 .flatten()
                 .and_then(|kind| kind.title)
                 .unwrap_or_else(|| d.work.clone());
+            let state = state_of(d, wifi);
+            let mut chapter = chapter_row(d, read, bookmarked);
+            // A download row carries no dates, so the clock plays no part in its words.
+            let shown_as = ChapterRow { download: Some(state.clone()), ..chapter.clone() };
+            chapter.line = crate::read_catalog::rows::line(
+                &shown_as,
+                crate::read_catalog::rows::Kept::Source,
+                0,
+                &jiff::tz::TimeZone::UTC,
+            );
             shown.push(BookDownloadRow {
                 work: WorkId::new(d.work.clone()),
                 title,
-                chapter: chapter_row(d, read, bookmarked),
-                state: state_of(d, wifi),
+                chapter,
+                state,
             });
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
@@ -872,6 +882,7 @@ fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
         bookmarked,
         version_label: d.version_label.clone(),
         read_at: None,
+        line: Vec::new(),
     }
 }
 

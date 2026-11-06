@@ -296,3 +296,132 @@ reading-origin-china = China
 # A search filter: books from Taiwan.
 # @max 16
 reading-origin-taiwan = Taiwan
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+# @arg chapter: text
+# @arg title: text
+# @max 40
+reading-chapter-titled = Chapter { $chapter } · { $title }
+
+## Chapter rows
+## The second line of a chapter row is made of these parts, joined with " · ", such as
+## "Read · 4 days ago · Downloaded" or "New · yesterday".
+
+# A chapter row's state: the person read it.
+# @max 16
+reading-row-read = Read
+
+# A chapter row's state: it came out since the person last read and is not read.
+# @max 16
+reading-row-new = New
+
+# A chapter row's state: it is kept on this device to read offline.
+# @max 20
+reading-row-downloaded = Downloaded
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+# @max 20
+reading-row-not-downloaded = Not downloaded
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+# @max 20
+reading-row-on-device = On this device
+
+# A chapter row's state: it waits its turn to download.
+# @max 20
+reading-row-queued = Queued
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+# @max 32
+reading-row-waits-wifi = Queued · waits for Wi-Fi
+
+# A chapter row's state while it downloads.
+# @arg done: int
+# @arg total: int
+# @max 40
+reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+# @max 24
+reading-row-failed = Couldn't download
+
+# A chapter row's state: the page the person stopped on, of how many.
+# @arg page: int
+# @arg of: int
+# @max 24
+reading-row-page-of = Page { $page } of { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+# @arg page: int
+# @max 16
+reading-row-page = Page { $page }
+
+# A novel's chapter row: how far into it the person is.
+# @arg percent: int
+# @max 8
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+# @arg n: int
+# @max 16
+reading-row-pages = { $n ->
+    [one] 1 page
+   *[other] { $n } pages
+ }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+# @arg n: int
+# @max 16
+reading-row-versions = { $n ->
+    [one] 1 version
+   *[other] { $n } versions
+ }
+
+# A chapter row: when it was read or came out, under a minute ago.
+# @max 16
+reading-ago-now = just now
+
+# A chapter row: when it was read or came out, in minutes.
+# @arg minutes: int
+# @max 16
+reading-ago-minutes = { $minutes } min ago
+
+# A chapter row: when it was read or came out, earlier today.
+# @max 16
+reading-ago-today = today
+
+# A chapter row: when it was read or came out, the day before today.
+# @max 16
+reading-ago-yesterday = yesterday
+
+# A chapter row: when it was read or came out, in days, under a week.
+# @arg days: int
+# @max 16
+reading-ago-days = { $days ->
+    [one] 1 day ago
+   *[other] { $days } days ago
+ }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+# @arg weeks: int
+# @max 16
+reading-ago-weeks = { $weeks ->
+    [one] 1 week ago
+   *[other] { $weeks } weeks ago
+ }
+
+# A chapter row: when it was read or came out, in months, under a year.
+# @arg months: int
+# @max 16
+reading-ago-months = { $months ->
+    [one] 1 month ago
+   *[other] { $months } months ago
+ }
+
+# A chapter row: when it was read or came out, in years.
+# @arg years: int
+# @max 16
+reading-ago-years = { $years ->
+    [one] 1 year ago
+   *[other] { $years } years ago
+ }

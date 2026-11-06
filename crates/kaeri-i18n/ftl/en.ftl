@@ -695,6 +695,99 @@ reading-origin-china = China
 # A search filter: books from Taiwan.
 reading-origin-taiwan = Taiwan
 
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Chapter { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Read
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = New
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Downloaded
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = Not downloaded
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = On this device
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = Queued
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = Queued · waits for Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = Couldn't download
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Page { $page } of { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Page { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] 1 page
+       *[other] { $n } pages
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] 1 version
+       *[other] { $n } versions
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = just now
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } min ago
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = today
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = yesterday
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] 1 day ago
+       *[other] { $days } days ago
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] 1 week ago
+       *[other] { $weeks } weeks ago
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] 1 month ago
+       *[other] { $months } months ago
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] 1 year ago
+       *[other] { $years } years ago
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
 

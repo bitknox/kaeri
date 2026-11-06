@@ -368,6 +368,29 @@ extension ReadingMsg {
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
         case .readingOriginTaiwan: L.readingOriginTaiwan
+        case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
+        case .readingRowRead: L.readingRowRead
+        case .readingRowNew: L.readingRowNew
+        case .readingRowDownloaded: L.readingRowDownloaded
+        case .readingRowNotDownloaded: L.readingRowNotDownloaded
+        case .readingRowOnDevice: L.readingRowOnDevice
+        case .readingRowQueued: L.readingRowQueued
+        case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowFailed: L.readingRowFailed
+        case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
+        case .readingRowPage(let page): L.readingRowPage(page: Int(page))
+        case .readingRowPercent(let percent): L.readingRowPercent(percent: Int(percent))
+        case .readingRowPages(let n): L.readingRowPages(n: Int(n))
+        case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingAgoNow: L.readingAgoNow
+        case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
+        case .readingAgoToday: L.readingAgoToday
+        case .readingAgoYesterday: L.readingAgoYesterday
+        case .readingAgoDays(let days): L.readingAgoDays(days: Int(days))
+        case .readingAgoWeeks(let weeks): L.readingAgoWeeks(weeks: Int(weeks))
+        case .readingAgoMonths(let months): L.readingAgoMonths(months: Int(months))
+        case .readingAgoYears(let years): L.readingAgoYears(years: Int(years))
         }
     }
 }

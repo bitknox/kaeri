@@ -877,6 +877,98 @@ object Strings {
     fun readingOriginTaiwan(context: Context): String =
         context.getString(R.string.reading_origin_taiwan)
 
+    /** Under a This week cell: the chapter that came out that day, with its own title. */
+    fun readingChapterTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reading_chapter_titled, chapter, title)
+
+    /** A chapter row's state: the person read it. */
+    fun readingRowRead(context: Context): String =
+        context.getString(R.string.reading_row_read)
+
+    /** A chapter row's state: it came out since the person last read and is not read. */
+    fun readingRowNew(context: Context): String =
+        context.getString(R.string.reading_row_new)
+
+    /** A chapter row's state: it is kept on this device to read offline. */
+    fun readingRowDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_downloaded)
+
+    /** A chapter row's state: it is read from the source and nothing of it is on this device. */
+    fun readingRowNotDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_not_downloaded)
+
+    /** A chapter row's state: a file in one of the person's folders, or one already on the device. */
+    fun readingRowOnDevice(context: Context): String =
+        context.getString(R.string.reading_row_on_device)
+
+    /** A chapter row's state: it waits its turn to download. */
+    fun readingRowQueued(context: Context): String =
+        context.getString(R.string.reading_row_queued)
+
+    /** A chapter row's state: it waits to download until the device is on Wi-Fi. */
+    fun readingRowWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_row_waits_wifi)
+
+    /** A chapter row's state while it downloads. */
+    fun readingRowDownloading(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_row_downloading, done, total)
+
+    /** A chapter row's state: the download failed. The reason follows as the next part. */
+    fun readingRowFailed(context: Context): String =
+        context.getString(R.string.reading_row_failed)
+
+    /** A chapter row's state: the page the person stopped on, of how many. */
+    fun readingRowPageOf(context: Context, page: Int, of: Int): String =
+        context.getString(R.string.reading_row_page_of, page, of)
+
+    /** A chapter row's state: the page the person stopped on, when the length isn't known. */
+    fun readingRowPage(context: Context, page: Int): String =
+        context.getString(R.string.reading_row_page, page)
+
+    /** A novel's chapter row: how far into it the person is. */
+    fun readingRowPercent(context: Context, percent: Int): String =
+        context.getString(R.string.reading_row_percent, percent)
+
+    /** A chapter row: how long its pages are, for a file on the device. */
+    fun readingRowPages(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_pages, n, n)
+
+    /** A chapter row: how many versions the person's sources have of it. The row's menu lists them. */
+    fun readingRowVersions(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_versions, n, n)
+
+    /** A chapter row: when it was read or came out, under a minute ago. */
+    fun readingAgoNow(context: Context): String =
+        context.getString(R.string.reading_ago_now)
+
+    /** A chapter row: when it was read or came out, in minutes. */
+    fun readingAgoMinutes(context: Context, minutes: Int): String =
+        context.getString(R.string.reading_ago_minutes, minutes)
+
+    /** A chapter row: when it was read or came out, earlier today. */
+    fun readingAgoToday(context: Context): String =
+        context.getString(R.string.reading_ago_today)
+
+    /** A chapter row: when it was read or came out, the day before today. */
+    fun readingAgoYesterday(context: Context): String =
+        context.getString(R.string.reading_ago_yesterday)
+
+    /** A chapter row: when it was read or came out, in days, under a week. */
+    fun readingAgoDays(context: Context, days: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_days, days, days)
+
+    /** A chapter row: when it was read or came out, in weeks, under two months. */
+    fun readingAgoWeeks(context: Context, weeks: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_weeks, weeks, weeks)
+
+    /** A chapter row: when it was read or came out, in months, under a year. */
+    fun readingAgoMonths(context: Context, months: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_months, months, months)
+
+    /** A chapter row: when it was read or came out, in years. */
+    fun readingAgoYears(context: Context, years: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_years, years, years)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)
