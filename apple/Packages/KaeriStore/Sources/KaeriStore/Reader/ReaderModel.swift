@@ -455,9 +455,9 @@ public final class ReaderModel {
         case .novelStyle(let session, let style, _, _):
             guard session == self.session else { return }
             novelStyle = style
-        case .chapterRead(_, let chapter):
+        case .chapterRead(_, let chapter, _):
             if chapter == view?.chapter.id { read = true }
-        case .endPage(let session, let next, let why):
+        case .endPage(let session, let next, let why, _):
             guard session == self.session else { return }
             end = ReaderEnd(next: next, why: why)
         case .notice(let notice):
