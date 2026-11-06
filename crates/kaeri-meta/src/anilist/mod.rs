@@ -8,6 +8,7 @@
 //! and library. That is small enough that a careless screen refresh can exhaust it, which
 //! is why queries are wide (one round trip per screen) and responses are cached.
 
+pub mod books;
 pub mod model;
 pub mod query;
 pub mod threads;

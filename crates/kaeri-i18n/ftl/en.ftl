@@ -494,6 +494,204 @@ party-left = Left the watch party.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Couldn't reach { $server }. Check the server, or try again.
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Chapter { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Usually Mondays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Usually Tuesdays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Usually Wednesdays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Usually Thursdays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Usually Fridays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Usually Saturdays
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Usually Sundays
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+        [one] About every week
+       *[other] About every { $weeks } weeks
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = Also a show
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = Also a book
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = Chapter { $chapter } goes to trackers as { $whole }.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = Resumed at page { $page }
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = Back to page { $page }
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+reader-moved = Moved to chapter { $chapter }, page { $page }, where { $device } stopped
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Right to left, detected
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Left to right, detected
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Long strip, detected
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = You're offline. Downloaded chapters still open.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } isn't answering. Try again later.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = This source doesn't have it anymore. Try another source.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } refused the request. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri couldn't read what { $source } sent. Its plugin may need an update.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = This page didn't load (error { $status }). Try again.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Sign in to { $what } again to keep reading.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } isn't there anymore. If it's on a drive, connect it and try again.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = { $path } couldn't be read as { $format }. The file may be damaged.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri can't read { $kind } files.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = This book is copy-protected, so Kaeri can't open it.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = There's no room left on this device. Free some space and try again.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Novels need a newer system WebView than version { $version }. Update Android System WebView and try again.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = This plugin needs a newer Kaeri ({ $world }). Update Kaeri to use it.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = Reading isn't available in this version of Kaeri.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Something went wrong. { $reason }
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Manga
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Manhwa
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Manhua
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Webtoon
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = One-shot
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Light novel
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Novel
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = Releasing
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Finished
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = On hiatus
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = Cancelled
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Not out yet
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] 1 chapter
+       *[other] { $count } chapters
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] 1 volume
+       *[other] { $count } volumes
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = On your Planning list
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = New chapter in a series you follow
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Continue reading
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Up next for you
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Popular, releasing now
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = Chapter { $chapter } is out today
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Chapter { $chapter }, { $title }, out today
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Chapter { $chapter } · page { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Chapter { $chapter } · { $percent }%
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = Chapter { $chapter } is new
+
+# A search filter: books from Japan.
+reading-origin-japan = Japan
+
+# A search filter: books from Korea.
+reading-origin-korea = Korea
+
+# A search filter: books from China.
+reading-origin-china = China
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Taiwan
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
 
@@ -650,6 +848,9 @@ plugin-publish-failed = Couldn't publish { $plugin }. { $reason }
 
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } is no longer in the plugin folder.
+
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } doesn't list book sources yet. Its owner can update the plugin store to add them.
 
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = This device joined { $store } with its link. Paste the same link on the other device.

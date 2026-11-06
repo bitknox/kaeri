@@ -10,6 +10,10 @@
 use async_trait::async_trait;
 
 use crate::{
+    books::{
+        BookHints, BookIds, BookSourceManifest, ChapterContent, PageRef, SeriesDetail,
+        SeriesHit, SourceChapter,
+    },
     error::ProviderError,
     ids::{AnilistId, ExternalIds, ProviderKey},
     media::{Episode, SearchHit, TitleHints, Translation},
@@ -220,6 +224,96 @@ pub trait Provider: Send + Sync {
     }
 }
 
+/// A source of books: folders, Komga, Kavita and OPDS servers, and `kaeri:books` plugins.
+///
+/// The same shape as the `source` interface in `wit/kaeri-books.wit`, as [`Provider`] mirrors
+/// `kaeri:provider`, so a plugin is indistinguishable from a built-in source here. The book
+/// registry ranks them with the same health and failover rules as shows.
+#[async_trait]
+pub trait BookSource: Send + Sync {
+    fn manifest(&self) -> &BookSourceManifest;
+
+    /// Find series. For a plugin this is how a work is found at all: its ids are its own.
+    async fn search(
+        &self,
+        query: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SeriesHit>, ProviderError>;
+
+    /// One series, described.
+    async fn series(&self, id: &str, hints: &BookHints) -> Result<SeriesDetail, ProviderError>;
+
+    /// A series' chapters, in any order: every version and language the source lists.
+    async fn chapters(
+        &self,
+        id: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError>;
+
+    /// What chapter `chapter` of series `series` is made of: page images to fetch, text, or a
+    /// whole book file.
+    async fn content(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<ChapterContent, ProviderError>;
+
+    /// Find a series by the ids other services know it by, with no fuzzy matching. A source
+    /// with its own index (a server, a folder) answers from it; the default answers `None`, so
+    /// the caller falls back to [`Self::search`].
+    async fn lookup(&self, _ids: &BookIds) -> Result<Option<SeriesHit>, ProviderError> {
+        Ok(None)
+    }
+
+    /// Tell the source a chapter was read, or read no more: Komga's and Kavita's progress
+    /// write-back. Plain OPDS and plugins keep the default, which does nothing.
+    async fn report_progress(
+        &self,
+        _series: &str,
+        _chapter: &str,
+        _read: bool,
+    ) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Cheap liveness probe. The default says it is answering.
+    async fn health_check(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Whether local policy lets this source be asked right now: a drive that is not
+    /// connected, a server signed out here. Not a health event, as for [`Provider`]; the reason
+    /// is shown where the source is listed.
+    fn is_available(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Fetch one page image this source named, with the headers it carries. A source that
+    /// names pages the host can fetch plainly (a server's, with its sign-in header) keeps the
+    /// default, which the engine's own client answers; a plugin's goes through its allowlist.
+    /// The status is told as it came, so the registry can ask for fresh addresses on a 403 or 410.
+    async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
+        Err(PageError::Unsupported)
+    }
+}
+
+/// Why a page image could not be fetched.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PageError {
+    /// This source does not fetch its own pages: the engine's client does.
+    Unsupported,
+    /// The address answered with this status. 403 and 410 mean the address has expired.
+    Status(u16),
+    Failed(ProviderError),
+}
+
+impl PageError {
+    /// Whether asking the source for fresh addresses may help.
+    pub const fn expired(&self) -> bool {
+        matches!(self, Self::Status(403 | 410))
+    }
+}
+
 /// Something that can play a [`Stream`].
 ///
 /// mpv over JSON IPC is the reference implementation, but the trait is what lets the
@@ -361,6 +455,26 @@ pub enum TrackOp {
         score: f32,
         at: i64,
     },
+    /// Chapters read, and volumes where the tracker has a field for them. Monotonic like
+    /// `SetProgress`, run once for each.
+    SetReadProgress {
+        anilist_id: crate::ids::AnilistId,
+        chapter: u32,
+        volume: Option<u32>,
+    },
+    /// A reading list's status. `rereading` is Read again: MyAnimeList's `is_rereading`,
+    /// Kitsu's `reconsuming`, AniList's `REPEATING`.
+    SetReadStatus {
+        anilist_id: crate::ids::AnilistId,
+        status: WatchStatus,
+        rereading: bool,
+        at: i64,
+    },
+    SetReadScore {
+        anilist_id: crate::ids::AnilistId,
+        score: f32,
+        at: i64,
+    },
 }
 
 impl TrackOp {
@@ -368,9 +482,36 @@ impl TrackOp {
         match self {
             Self::SetProgress { anilist_id, .. }
             | Self::SetStatus { anilist_id, .. }
-            | Self::SetScore { anilist_id, .. } => *anilist_id,
+            | Self::SetScore { anilist_id, .. }
+            | Self::SetReadProgress { anilist_id, .. }
+            | Self::SetReadStatus { anilist_id, .. }
+            | Self::SetReadScore { anilist_id, .. } => *anilist_id,
         }
     }
+
+    /// Whether this is about reading. Those wait in an outbox of their own, which an older
+    /// version never opens, and the watching queue never carries them.
+    pub const fn is_reading(&self) -> bool {
+        matches!(
+            self,
+            Self::SetReadProgress { .. }
+                | Self::SetReadStatus { .. }
+                | Self::SetReadScore { .. }
+        )
+    }
+}
+
+/// One manga's or novel's state on a tracker.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrackedReadEntry {
+    pub anilist_id: crate::ids::AnilistId,
+    pub medium: crate::media::Medium,
+    pub chapters: u32,
+    /// `None` where the tracker has no volume field (Kitsu).
+    pub volumes: Option<u32>,
+    pub status: WatchStatus,
+    pub rereading: bool,
+    pub score: Option<f32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -395,10 +536,21 @@ mod tests {
             TrackOp::SetProgress { anilist_id: id, episode: 12 },
             TrackOp::SetStatus { anilist_id: id, status: WatchStatus::Current, at: 0 },
             TrackOp::SetScore { anilist_id: id, score: 9.0, at: 0 },
+            TrackOp::SetReadProgress { anilist_id: id, chapter: 40, volume: Some(4) },
+            TrackOp::SetReadStatus {
+                anilist_id: id,
+                status: WatchStatus::Current,
+                rereading: true,
+                at: 0,
+            },
+            TrackOp::SetReadScore { anilist_id: id, score: 8.0, at: 0 },
         ];
         for op in &ops {
             assert_eq!(op.anilist_id(), id);
         }
+        assert_eq!(ops.iter().filter(|op| op.is_reading()).count(), 3);
+        let json = serde_json::to_string(&ops[3]).unwrap();
+        assert!(json.contains(r#""op":"set_read_progress""#), "{json}");
     }
 
     #[test]

@@ -637,6 +637,240 @@ public enum L {
         Self.format("party-server-unreachable", fallback: "Couldn't reach %1$@. Check the server, or try again.", server)
     }
 
+    /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+    public static func readingNextChapter(chapter: String) -> String {
+        Self.format("reading-next-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyMondays: String { string("reading-usually-mondays", fallback: "Usually Mondays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyTuesdays: String { string("reading-usually-tuesdays", fallback: "Usually Tuesdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyWednesdays: String { string("reading-usually-wednesdays", fallback: "Usually Wednesdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyThursdays: String { string("reading-usually-thursdays", fallback: "Usually Thursdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyFridays: String { string("reading-usually-fridays", fallback: "Usually Fridays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallySaturdays: String { string("reading-usually-saturdays", fallback: "Usually Saturdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallySundays: String { string("reading-usually-sundays", fallback: "Usually Sundays") }
+
+    /// Under a cover or on a series page: how often new chapters come out, in weeks.
+    public static func readingAboutEveryWeeks(weeks: Int) -> String {
+        Self.format("reading-about-every-weeks", fallback: "About every %1$lld weeks", weeks)
+    }
+
+    /// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+    public static var readingAlsoAShow: String { string("reading-also-a-show", fallback: "Also a show") }
+
+    /// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+    public static var readingAlsoABook: String { string("reading-also-a-book", fallback: "Also a book") }
+
+    /// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+    public static func readingSplitChapter(chapter: String, whole: String) -> String {
+        Self.format("reading-split-chapter", fallback: "Chapter %1$@ goes to trackers as %2$@.", chapter, whole)
+    }
+
+    /// A notice over the page when a chapter opens where it was left. It offers Start over.
+    public static func readerResumed(page: Int) -> String {
+        Self.format("reader-resumed", fallback: "Resumed at page %1$lld", page)
+    }
+
+    /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+    public static func readerBackToPage(page: Int) -> String {
+        Self.format("reader-back-to-page", fallback: "Back to page %1$lld", page)
+    }
+
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+    public static func readerMoved(chapter: String, page: Int, device: String) -> String {
+        Self.format("reader-moved", fallback: "Moved to chapter %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
+    }
+
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Right to left, detected") }
+
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    public static var readerDetectedLeftToRight: String { string("reader-detected-left-to-right", fallback: "Left to right, detected") }
+
+    /// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+    public static var readerDetectedStrip: String { string("reader-detected-strip", fallback: "Long strip, detected") }
+
+    /// Why a chapter or a list could not load: there is no connection.
+    public static var readingFailedOffline: String { string("reading-failed-offline", fallback: "You're offline. Downloaded chapters still open.") }
+
+    /// Why a chapter or a list could not load: the source did not answer. The source is its name.
+    public static func readingFailedSourceDown(source: String) -> String {
+        Self.format("reading-failed-source-down", fallback: "%1$@ isn't answering. Try again later.", source)
+    }
+
+    /// Why a chapter could not load: the source no longer has it.
+    public static var readingFailedNotFound: String { string("reading-failed-not-found", fallback: "This source doesn't have it anymore. Try another source.") }
+
+    /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+    public static func readingFailedBlocked(source: String, reason: String) -> String {
+        Self.format("reading-failed-blocked", fallback: "%1$@ refused the request. %2$@", source, reason)
+    }
+
+    /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+    public static func readingFailedParse(source: String) -> String {
+        Self.format("reading-failed-parse", fallback: "Kaeri couldn't read what %1$@ sent. Its plugin may need an update.", source)
+    }
+
+    /// Why one page did not load. The status is the server's HTTP status code, such as 404.
+    public static func readingFailedPage(status: Int) -> String {
+        Self.format("reading-failed-page", fallback: "This page didn't load (error %1$lld). Try again.", status)
+    }
+
+    /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+    public static func readingFailedSignIn(what: String) -> String {
+        Self.format("reading-failed-sign-in", fallback: "Sign in to %1$@ again to keep reading.", what)
+    }
+
+    /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+    public static func readingFailedFileMissing(path: String) -> String {
+        Self.format("reading-failed-file-missing", fallback: "%1$@ isn't there anymore. If it's on a drive, connect it and try again.", path)
+    }
+
+    /// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+    public static func readingFailedUnreadable(path: String, format: String) -> String {
+        Self.format("reading-failed-unreadable", fallback: "%1$@ couldn't be read as %2$@. The file may be damaged.", path, format)
+    }
+
+    /// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+    public static func readingFailedUnsupported(kind: String) -> String {
+        Self.format("reading-failed-unsupported", fallback: "Kaeri can't read %1$@ files.", kind)
+    }
+
+    /// Why a book could not open: it is copy-protected or encrypted.
+    public static var readingFailedProtected: String { string("reading-failed-protected", fallback: "This book is copy-protected, so Kaeri can't open it.") }
+
+    /// Why a chapter could not be saved: the disk is full.
+    public static var readingFailedDiskFull: String { string("reading-failed-disk-full", fallback: "There's no room left on this device. Free some space and try again.") }
+
+    /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+    public static func readingFailedWebview(version: Int) -> String {
+        Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$lld. Update Android System WebView and try again.", version)
+    }
+
+    /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+    public static func readingFailedNeedsNewer(world: String) -> String {
+        Self.format("reading-failed-needs-newer", fallback: "This plugin needs a newer Kaeri (%1$@). Update Kaeri to use it.", world)
+    }
+
+    /// Why a reading request was refused: reading is not available in this build.
+    public static var readingFailedOff: String { string("reading-failed-off", fallback: "Reading isn't available in this version of Kaeri.") }
+
+    /// Why something about reading failed, for any other reason. The reason is as it came.
+    public static func readingFailedOther(reason: String) -> String {
+        Self.format("reading-failed-other", fallback: "Something went wrong. %1$@", reason)
+    }
+
+    /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+    public static var readingKindManga: String { string("reading-kind-manga", fallback: "Manga") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+    public static var readingKindManhwa: String { string("reading-kind-manhwa", fallback: "Manhwa") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+    public static var readingKindManhua: String { string("reading-kind-manhua", fallback: "Manhua") }
+
+    /// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+    public static var readingKindWebtoon: String { string("reading-kind-webtoon", fallback: "Webtoon") }
+
+    /// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+    public static var readingKindOneShot: String { string("reading-kind-one-shot", fallback: "One-shot") }
+
+    /// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+    public static var readingKindLightNovel: String { string("reading-kind-light-novel", fallback: "Light novel") }
+
+    /// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+    public static var readingKindNovel: String { string("reading-kind-novel", fallback: "Novel") }
+
+    /// Under a cover or on a series page: new chapters are still coming out.
+    public static var readingStatusReleasing: String { string("reading-status-releasing", fallback: "Releasing") }
+
+    /// Under a cover or on a series page: the story is complete.
+    public static var readingStatusFinished: String { string("reading-status-finished", fallback: "Finished") }
+
+    /// Under a cover or on a series page: new chapters have stopped for a while.
+    public static var readingStatusHiatus: String { string("reading-status-hiatus", fallback: "On hiatus") }
+
+    /// Under a cover or on a series page: the story was stopped before it ended.
+    public static var readingStatusCancelled: String { string("reading-status-cancelled", fallback: "Cancelled") }
+
+    /// Under a cover or on a series page: the first chapter is not out yet.
+    public static var readingStatusNotYet: String { string("reading-status-not-yet", fallback: "Not out yet") }
+
+    /// Under a cover or on a series page: how many chapters the series has.
+    public static func readingChapters(count: Int) -> String {
+        Self.format("reading-chapters", fallback: "%1$lld chapters", count)
+    }
+
+    /// Under a cover or on a series page: how many volumes the series has.
+    public static func readingVolumes(count: Int) -> String {
+        Self.format("reading-volumes", fallback: "%1$lld volumes", count)
+    }
+
+    /// Under a cover: the series is on the person's Planning list.
+    public static var readingOnPlanning: String { string("reading-on-planning", fallback: "On your Planning list") }
+
+    /// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+    public static var readingSpotlightNewChapter: String { string("reading-spotlight-new-chapter", fallback: "New chapter in a series you follow") }
+
+    /// Above the big picture at the top of reading's Home: the series the person was reading last.
+    public static var readingSpotlightContinue: String { string("reading-spotlight-continue", fallback: "Continue reading") }
+
+    /// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+    public static var readingSpotlightUpNext: String { string("reading-spotlight-up-next", fallback: "Up next for you") }
+
+    /// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+    public static var readingSpotlightPopular: String { string("reading-spotlight-popular", fallback: "Popular, releasing now") }
+
+    /// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+    public static func readingOutToday(chapter: String) -> String {
+        Self.format("reading-out-today", fallback: "Chapter %1$@ is out today", chapter)
+    }
+
+    /// Under the big picture on reading's Home: a chapter that came out today, with its title.
+    public static func readingOutTodayTitled(chapter: String, title: String) -> String {
+        Self.format("reading-out-today-titled", fallback: "Chapter %1$@, %2$@, out today", chapter, title)
+    }
+
+    /// Under a cover or the big picture: the page the person stopped on in a chapter.
+    public static func readingChapterPage(chapter: String, page: Int) -> String {
+        Self.format("reading-chapter-page", fallback: "Chapter %1$@ · page %2$lld", chapter, page)
+    }
+
+    /// Under a cover or the big picture: how far into a novel's chapter the person is.
+    public static func readingChapterPercent(chapter: String, percent: Int) -> String {
+        Self.format("reading-chapter-percent", fallback: "Chapter %1$@ · %2$lld%%", chapter, percent)
+    }
+
+    /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+    public static func readingChapterNew(chapter: String) -> String {
+        Self.format("reading-chapter-new", fallback: "Chapter %1$@ is new", chapter)
+    }
+
+    /// A search filter: books from Japan.
+    public static var readingOriginJapan: String { string("reading-origin-japan", fallback: "Japan") }
+
+    /// A search filter: books from Korea.
+    public static var readingOriginKorea: String { string("reading-origin-korea", fallback: "Korea") }
+
+    /// A search filter: books from China.
+    public static var readingOriginChina: String { string("reading-origin-china", fallback: "China") }
+
+    /// A search filter: books from Taiwan.
+    public static var readingOriginTaiwan: String { string("reading-origin-taiwan", fallback: "Taiwan") }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)
@@ -848,6 +1082,11 @@ public enum L {
     /// Error: a plugin to publish is no longer in the plugin folder.
     public static func pluginMissingLocally(plugin: String) -> String {
         Self.format("plugin-missing-locally", fallback: "%1$@ is no longer in the plugin folder.", plugin)
+    }
+
+    /// Error: a book source cannot be published to a store whose server is too old to list book sources.
+    public static func storeTakesNoBooks(store: String) -> String {
+        Self.format("store-takes-no-books", fallback: "%1$@ doesn't list book sources yet. Its owner can update the plugin store to add them.", store)
     }
 
     /// Error: an invite for another device cannot be made from a device that joined with the open link.

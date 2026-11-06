@@ -75,6 +75,11 @@ pub struct EngineOptions {
     /// so the viewer knows why their history starts over and where the old file is. See
     /// `Store::open_or_set_aside`.
     pub set_aside: Option<std::path::PathBuf>,
+    /// Whether reading is in this build. Off while it ships dark: release builds leave it off,
+    /// the Fixtures builds and the terminal's hidden development key turn it on.
+    pub reading: bool,
+    /// Which build this is: the full app, the e-reader build, or a TV, which only watches.
+    pub edition: kaeri_model::medium::AppEdition,
     #[cfg(feature = "testing")]
     pub parts: Option<Parts>,
     /// Where the cloud drives' sign-in and folders are, and how fast the device code is polled,
@@ -115,6 +120,8 @@ impl EngineOptions {
             sources: None,
             background: Background::default(),
             set_aside: None,
+            reading: false,
+            edition: kaeri_model::medium::AppEdition::Full,
             #[cfg(feature = "testing")]
             parts: None,
             #[cfg(feature = "testing")]

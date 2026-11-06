@@ -45,6 +45,21 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "sync_peer",
     "sync_remote_download",
     "sync_note",
+    "read_event",
+    "read_adopt",
+    "read_reset",
+    "read_chapter",
+    "read_work",
+    "read_series_setting",
+    "read_status",
+    "read_bookmark",
+    "read_sent",
+    "read_outbox",
+    "read_track_map",
+    "read_notice",
+    "read_mark",
+    "book_source_match",
+    "book_edition_pref",
 ];
 
 /// Tables that belong to the device and are shared by every profile.
@@ -66,6 +81,14 @@ pub const DEVICE_TABLES: &[&str] = &[
     "skip_prints",
     "skip_found",
     "skip_found_show",
+    "book_work",
+    "book_rhythm",
+    "book_chapter_cache",
+    "book_folder",
+    "book_local_series",
+    "book_local_file",
+    "book_server",
+    "book_download",
 ];
 
 const FILE: &str = "profiles.json";

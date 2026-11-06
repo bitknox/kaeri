@@ -494,6 +494,204 @@ party-left = [Ļéƒţ ţĥé ŵàţçĥ þàŕţý.~~~~~~~]
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = [Çöüļðñ'ţ ŕéàçĥ { $server }. Çĥéçķ ţĥé šéŕṽéŕ, öŕ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = [Çĥàþţéŕ { $chapter }~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = [Ûšüàļļý Ṁöñðàýš~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = [Ûšüàļļý Ţüéšðàýš~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = [Ûšüàļļý Ŵéðñéšðàýš~~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = [Ûšüàļļý Ţĥüŕšðàýš~~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = [Ûšüàļļý Ƒŕîðàýš~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = [Ûšüàļļý Šàţüŕðàýš~~~~~~]
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = [Ûšüàļļý Šüñðàýš~~~~~]
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+        [one] [Åƀöüţ éṽéŕý ŵééķ~~~~~]
+       *[other] [Åƀöüţ éṽéŕý { $weeks } ŵééķš~~~~~~~]
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = [Åļšö à šĥöŵ~~~~]
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = [Åļšö à ƀööķ~~~~]
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = [Çĥàþţéŕ { $chapter } ĝöéš ţö ţŕàçķéŕš àš { $whole }.~~~~~~~~~~~]
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = [Ŕéšüɱéð àţ þàĝé { $page }~~~~~~]
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = [Ɓàçķ ţö þàĝé { $page }~~~~~]
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+reader-moved = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = [Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = [Ļéƒţ ţö ŕîĝĥţ, ðéţéçţéð~~~~~~~]
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = [Ļöñĝ šţŕîþ, ðéţéçţéð~~~~~~]
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = [Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~~~~]
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = [{ $source } îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = [Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = [{ $source } ŕéƒüšéð ţĥé ŕéƣüéšţ. { $reason }~~~~~~~~~]
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = [Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ { $source } šéñţ. Îţš þļüĝîñ ɱàý ñééð àñ üþðàţé.~~~~~~~~~~~~~~~~~~~~]
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = [Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ { $status }). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = [Šîĝñ îñ ţö { $what } àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = [{ $path } îšñ'ţ ţĥéŕé àñýɱöŕé. Îƒ îţ'š öñ à ðŕîṽé, çöññéçţ îţ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = [{ $path } çöüļðñ'ţ ƀé ŕéàð àš { $format }. Ţĥé ƒîļé ɱàý ƀé ðàɱàĝéð.~~~~~~~~~~~~~~~~]
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = [Ķàéŕî çàñ'ţ ŕéàð { $kind } ƒîļéš.~~~~~~~~~]
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = [Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, šö Ķàéŕî çàñ'ţ öþéñ îţ.~~~~~~~~~~~~~~~~]
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = [Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = [Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ { $version }. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = [Ţĥîš þļüĝîñ ñééðš à ñéŵéŕ Ķàéŕî ({ $world }). Ûþðàţé Ķàéŕî ţö üšé îţ.~~~~~~~~~~~~~~~~~~~]
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = [Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~]
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = [Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. { $reason }~~~~~~~~]
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = [Ṁàñĝà~~]
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = [Ṁàñĥŵà~~]
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = [Ṁàñĥüà~~]
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = [Ŵéƀţööñ~~~]
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = [Öñé-šĥöţ~~~]
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = [Ļîĝĥţ ñöṽéļ~~~~]
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = [Ñöṽéļ~~]
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = [Ŕéļéàšîñĝ~~~]
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = [Ƒîñîšĥéð~~~]
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = [Öñ ĥîàţüš~~~]
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = [Çàñçéļļéð~~~]
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = [Ñöţ öüţ ýéţ~~~~]
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] [1 çĥàþţéŕ~~~]
+       *[other] [{ $count } çĥàþţéŕš~~~~]
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] [1 ṽöļüɱé~~~]
+       *[other] [{ $count } ṽöļüɱéš~~~~]
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = [Öñ ýöüŕ Þļàññîñĝ ļîšţ~~~~~~~]
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = [Ñéŵ çĥàþţéŕ îñ à šéŕîéš ýöü ƒöļļöŵ~~~~~~~~~~~]
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = [Çöñţîñüé ŕéàðîñĝ~~~~~]
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = [Ûþ ñéẋţ ƒöŕ ýöü~~~~~]
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = [Þöþüļàŕ, ŕéļéàšîñĝ ñöŵ~~~~~~~]
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = [Çĥàþţéŕ { $chapter } îš öüţ ţöðàý~~~~~~~~]
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = [Çĥàþţéŕ { $chapter }, { $title }, öüţ ţöðàý~~~~~~~~~]
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = [Çĥàþţéŕ { $chapter } · þàĝé { $page }~~~~~~~]
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = [Çĥàþţéŕ { $chapter } · { $percent }%~~~~~~]
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = [Çĥàþţéŕ { $chapter } îš ñéŵ~~~~~~]
+
+# A search filter: books from Japan.
+reading-origin-japan = [Ĵàþàñ~~]
+
+# A search filter: books from Korea.
+reading-origin-korea = [Ķöŕéà~~]
+
+# A search filter: books from China.
+reading-origin-china = [Çĥîñà~~]
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = [Ţàîŵàñ~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 
@@ -650,6 +848,9 @@ plugin-publish-failed = [Çöüļðñ'ţ þüƀļîšĥ { $plugin }. { $reason }
 
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = [{ $plugin } îš ñö ļöñĝéŕ îñ ţĥé þļüĝîñ ƒöļðéŕ.~~~~~~~~~~~~]
+
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = [{ $store } ðöéšñ'ţ ļîšţ ƀööķ šöüŕçéš ýéţ. Îţš öŵñéŕ çàñ üþðàţé ţĥé þļüĝîñ šţöŕé ţö àðð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = [Ţĥîš ðéṽîçé ĵöîñéð { $store } ŵîţĥ îţš ļîñķ. Þàšţé ţĥé šàɱé ļîñķ öñ ţĥé öţĥéŕ ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~]

@@ -14,6 +14,8 @@
 
 use kaeri_core::{ids::AnilistId, traits::TrackOp};
 
+use rusqlite::OptionalExtension;
+
 use crate::{Result, Store, StoreError};
 
 /// Base delay for the retry backoff, in seconds.
@@ -74,6 +76,9 @@ impl Store {
         let anilist_id = op.anilist_id().get();
         let payload = serde_json::to_string(op)
             .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+        if op.is_reading() {
+            return self.enqueue_read(tracker_id, op, &payload, at);
+        }
 
         self.with_personal_tx(|tx| {
             if let TrackOp::SetProgress { episode, .. } = op {
@@ -122,6 +127,95 @@ impl Store {
                 rusqlite::params![tracker_id, &payload, anilist_id, at],
             )?;
             Ok(Some(tx.last_insert_rowid()))
+        })
+    }
+
+    /// Queue a reading op in its own outbox. Chapters and volumes only move forward: a queued
+    /// progress takes the higher of each, and one that raises neither is dropped.
+    fn enqueue_read(
+        &self,
+        tracker_id: &str,
+        op: &TrackOp,
+        payload: &str,
+        at: i64,
+    ) -> Result<Option<i64>> {
+        let anilist_id = op.anilist_id().get();
+        self.with_personal_tx(|tx| {
+            if let TrackOp::SetReadProgress { anilist_id: id, chapter, volume } = op {
+                let existing: Option<(i64, String)> = tx
+                    .query_row(
+                        "SELECT id, op FROM read_outbox
+                          WHERE tracker_id = ?1 AND anilist_id = ?2
+                            AND json_extract(op, '$.op') = 'set_read_progress'
+                          LIMIT 1",
+                        rusqlite::params![tracker_id, anilist_id],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )
+                    .optional()?;
+                if let Some((existing_id, existing_json)) = existing {
+                    let pending: TrackOp = serde_json::from_str(&existing_json)
+                        .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+                    let (held_chapter, held_volume) = match pending {
+                        TrackOp::SetReadProgress { chapter, volume, .. } => (chapter, volume),
+                        _ => (0, None),
+                    };
+                    if *chapter <= held_chapter
+                        && volume.unwrap_or(0) <= held_volume.unwrap_or(0)
+                    {
+                        return Ok(None);
+                    }
+                    let merged = TrackOp::SetReadProgress {
+                        anilist_id: *id,
+                        chapter: (*chapter).max(held_chapter),
+                        volume: volume.max(&held_volume).or(held_volume),
+                    };
+                    let json = serde_json::to_string(&merged)
+                        .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+                    tx.execute(
+                        "UPDATE read_outbox SET op = ?1 WHERE id = ?2",
+                        rusqlite::params![json, existing_id],
+                    )?;
+                    return Ok(Some(existing_id));
+                }
+            }
+            tx.execute(
+                "INSERT INTO read_outbox (tracker_id, op, anilist_id, created_at, next_retry)
+                 VALUES (?1, ?2, ?3, ?4, 0)",
+                rusqlite::params![tracker_id, payload, anilist_id, at],
+            )?;
+            Ok(Some(tx.last_insert_rowid()))
+        })
+    }
+
+    /// Reading ops waiting for a tracker, or for all of them.
+    pub fn read_outbox_depth(&self, tracker_id: Option<&str>) -> Result<u32> {
+        self.with_personal(|c| {
+            Ok(match tracker_id {
+                Some(t) => c.query_row(
+                    "SELECT COUNT(*) FROM read_outbox WHERE tracker_id = ?1",
+                    [t],
+                    |r| r.get(0),
+                )?,
+                None => c.query_row("SELECT COUNT(*) FROM read_outbox", [], |r| r.get(0))?,
+            })
+        })
+    }
+
+    /// The reading ops queued for a tracker, oldest first.
+    pub fn read_outbox(&self, tracker_id: &str) -> Result<Vec<TrackOp>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT op FROM read_outbox WHERE tracker_id = ?1 ORDER BY created_at, id",
+            )?;
+            let rows = stmt.query_map([tracker_id], |r| r.get::<_, String>(0))?;
+            let mut out = Vec::new();
+            for json in rows {
+                match serde_json::from_str(&json?) {
+                    Ok(op) => out.push(op),
+                    Err(e) => tracing::error!(error = %e, "an undecodable reading outbox row"),
+                }
+            }
+            Ok(out)
         })
     }
 
@@ -547,5 +641,34 @@ mod tests {
         for (expected, got) in ops.iter().zip(claimed.iter()) {
             assert_eq!(&got.op, expected);
         }
+    }
+
+    #[test]
+    fn reading_ops_wait_in_their_own_outbox_and_progress_only_rises() {
+        let store = Store::open_in_memory().unwrap();
+        let read = |chapter, volume| TrackOp::SetReadProgress {
+            anilist_id: HOSHIKUZU,
+            chapter,
+            volume,
+        };
+        store.enqueue("mal", &read(12, Some(2)), 0).unwrap();
+        assert_eq!(store.enqueue("mal", &read(10, Some(1)), 1).unwrap(), None);
+        store.enqueue("mal", &read(14, None), 2).unwrap();
+        store
+            .enqueue(
+                "mal",
+                &TrackOp::SetReadStatus {
+                    anilist_id: HOSHIKUZU,
+                    status: WatchStatus::Current,
+                    rereading: true,
+                    at: 3,
+                },
+                3,
+            )
+            .unwrap();
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
+        assert!(store.claim_ready("mal", 100, 10).unwrap().is_empty());
+        assert_eq!(store.read_outbox_depth(Some("mal")).unwrap(), 2);
+        assert_eq!(store.read_outbox("mal").unwrap()[0], read(14, Some(2)));
     }
 }

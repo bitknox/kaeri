@@ -683,6 +683,266 @@
     <value>[Çöüļðñ'ţ ŕéàçĥ {server}. Çĥéçķ ţĥé šéŕṽéŕ, öŕ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]</value>
     <comment>Message when a watch party's server could not be reached, in the lobby or when looking in.</comment>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</comment>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>[Ûšüàļļý Ṁöñðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ţüéšðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ŵéðñéšðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ţĥüŕšðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>[Ûšüàļļý Ƒŕîðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>[Ûšüàļļý Šàţüŕðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>[Ûšüàļļý Šüñðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
+    <value>[Åƀöüţ éṽéŕý ŵééķ~~~~~]</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>[Åƀöüţ éṽéŕý {weeks} ŵééķš~~~~~~~]</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>[Åļšö à šĥöŵ~~~~]</value>
+    <comment>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>[Åļšö à ƀööķ~~~~]</value>
+    <comment>On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} ĝöéš ţö ţŕàçķéŕš àš {whole}.~~~~~~~~~~~]</value>
+    <comment>Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.</comment>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>[Ŕéšüɱéð àţ þàĝé {page}~~~~~~]</value>
+    <comment>A notice over the page when a chapter opens where it was left. It offers Start over.</comment>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>[Ɓàçķ ţö þàĝé {page}~~~~~]</value>
+    <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~~~]</value>
+    <comment>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.</comment>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>[Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>[Ļéƒţ ţö ŕîĝĥţ, ðéţéçţéð~~~~~~~]</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>[Ļöñĝ šţŕîþ, ðéţéçţéð~~~~~~]</value>
+    <comment>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</comment>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>[Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: there is no connection.</comment>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>[{source} îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source did not answer. The source is its name.</comment>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>[Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter could not load: the source no longer has it.</comment>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>[{source} ŕéƒüšéð ţĥé ŕéƣüéšţ. {reason}~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source refused. The reason comes from the source.</comment>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ {source} šéñţ. Îţš þļüĝîñ ɱàý ñééð àñ üþðàţé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</comment>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>[Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ {status}). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]</value>
+    <comment>Why one page did not load. The status is the server's HTTP status code, such as 404.</comment>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {what} àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]</value>
+    <comment>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</comment>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>[{path} îšñ'ţ ţĥéŕé àñýɱöŕé. Îƒ îţ'š öñ à ðŕîṽé, çöññéçţ îţ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.</comment>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>[{path} çöüļðñ'ţ ƀé ŕéàð àš {format}. Ţĥé ƒîļé ɱàý ƀé ðàɱàĝéð.~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</comment>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>[Ķàéŕî çàñ'ţ ŕéàð {kind} ƒîļéš.~~~~~~~~~]</value>
+    <comment>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</comment>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>[Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, šö Ķàéŕî çàñ'ţ öþéñ îţ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: it is copy-protected or encrypted.</comment>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>[Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter could not be saved: the disk is full.</comment>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>[Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ {version}. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</comment>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>[Ţĥîš þļüĝîñ ñééðš à ñéŵéŕ Ķàéŕî ({world}). Ûþðàţé Ķàéŕî ţö üšé îţ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.</comment>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>[Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~]</value>
+    <comment>Why a reading request was refused: reading is not available in this build.</comment>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>[Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. {reason}~~~~~~~~]</value>
+    <comment>Why something about reading failed, for any other reason. The reason is as it came.</comment>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>[Ṁàñĝà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</comment>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>[Ṁàñĥŵà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</comment>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>[Ṁàñĥüà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</comment>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>[Ŵéƀţööñ~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</comment>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>[Öñé-šĥöţ~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</comment>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>[Ļîĝĥţ ñöṽéļ~~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</comment>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>[Ñöṽéļ~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</comment>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>[Ŕéļéàšîñĝ~~~]</value>
+    <comment>Under a cover or on a series page: new chapters are still coming out.</comment>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>[Ƒîñîšĥéð~~~]</value>
+    <comment>Under a cover or on a series page: the story is complete.</comment>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>[Öñ ĥîàţüš~~~]</value>
+    <comment>Under a cover or on a series page: new chapters have stopped for a while.</comment>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>[Çàñçéļļéð~~~]</value>
+    <comment>Under a cover or on a series page: the story was stopped before it ended.</comment>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>[Ñöţ öüţ ýéţ~~~~]</value>
+    <comment>Under a cover or on a series page: the first chapter is not out yet.</comment>
+  </data>
+  <data name="ReadingChapters_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ~~~]</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš~~~~]</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_one" xml:space="preserve">
+    <value>[1 ṽöļüɱé~~~]</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>[{count} ṽöļüɱéš~~~~]</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>[Öñ ýöüŕ Þļàññîñĝ ļîšţ~~~~~~~]</value>
+    <comment>Under a cover: the series is on the person's Planning list.</comment>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕ îñ à šéŕîéš ýöü ƒöļļöŵ~~~~~~~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</comment>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>[Çöñţîñüé ŕéàðîñĝ~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: the series the person was reading last.</comment>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>[Ûþ ñéẋţ ƒöŕ ýöü~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</comment>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>[Þöþüļàŕ, ŕéļéàšîñĝ ñöŵ~~~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</comment>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} îš öüţ ţöðàý~~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</comment>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}, {title}, öüţ ţöðàý~~~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · þàĝé {page}~~~~~~~]</value>
+    <comment>Under a cover or the big picture: the page the person stopped on in a chapter.</comment>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {percent}%~~~~~~]</value>
+    <comment>Under a cover or the big picture: how far into a novel's chapter the person is.</comment>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} îš ñéŵ~~~~~~]</value>
+    <comment>Under a cover: a chapter came out that the person has not read. The chapter is its number.</comment>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>[Ĵàþàñ~~]</value>
+    <comment>A search filter: books from Japan.</comment>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>[Ķöŕéà~~]</value>
+    <comment>A search filter: books from Korea.</comment>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>[Çĥîñà~~]</value>
+    <comment>A search filter: books from China.</comment>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>[Ţàîŵàñ~~]</value>
+    <comment>A search filter: books from Taiwan.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -886,6 +1146,10 @@
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>[{plugin} îš ñö ļöñĝéŕ îñ ţĥé þļüĝîñ ƒöļðéŕ.~~~~~~~~~~~~]</value>
     <comment>Error: a plugin to publish is no longer in the plugin folder.</comment>
+  </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>[{store} ðöéšñ'ţ ļîšţ ƀööķ šöüŕçéš ýéţ. Îţš öŵñéŕ çàñ üþðàţé ţĥé þļüĝîñ šţöŕé ţö àðð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error: a book source cannot be published to a store whose server is too old to list book sources.</comment>
   </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>[Ţĥîš ðéṽîçé ĵöîñéð {store} ŵîţĥ îţš ļîñķ. Þàšţé ţĥé šàɱé ļîñķ öñ ţĥé öţĥéŕ ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>

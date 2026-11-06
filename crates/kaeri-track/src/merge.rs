@@ -183,7 +183,10 @@ pub fn reconcile_at(
     let mut kept = Vec::with_capacity(merged.push.len());
     for op in merged.push.drain(..) {
         let (at, field, local_repr, remote_repr) = match &op {
-            TrackOp::SetProgress { .. } => {
+            TrackOp::SetProgress { .. }
+            | TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => {
                 kept.push(op);
                 continue;
             }

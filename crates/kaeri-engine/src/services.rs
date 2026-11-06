@@ -100,6 +100,10 @@ pub struct Services {
     pub party: crate::playback::seat::PartyHub,
     /// Whether skip times are found from the audio, and why not.
     pub skip_find: Arc<crate::skip_find::SkipFind>,
+    /// The book source plugins loaded, while reading is available.
+    pub book_plugins: crate::book_plugins::BookPlugins,
+    /// The registry of book sources: folders, servers and plugins.
+    pub book_sources: crate::read_sources::BookSources,
     /// How many player windows the playbacks opened, for a test that counts them.
     #[cfg(feature = "testing")]
     pub windows: Option<Arc<std::sync::atomic::AtomicUsize>>,
@@ -131,6 +135,12 @@ impl Services {
         let secrets = host.secrets().unwrap_or_else(|| crate::host::file_secrets(&paths));
         let tokens = TokenStore::over(secrets);
         let local = crate::local::Local::new(store.clone());
+        let book_sources = crate::read_sources::BookSources::new(
+            store.clone(),
+            tokens.clone(),
+            http.plain().clone(),
+            &paths,
+        );
         let servers = crate::servers::Servers::new(tokens.clone(), store.clone(), http.clone());
         let stores = plugin_stores::Stores::with_tokens(config, &paths, tokens.clone())
             .map_err(|e| e.english())?;
@@ -172,6 +182,8 @@ impl Services {
             fixture_route: false,
             party: Default::default(),
             skip_find: Default::default(),
+            book_plugins: Default::default(),
+            book_sources,
             #[cfg(feature = "testing")]
             windows: None,
             #[cfg(feature = "cast")]

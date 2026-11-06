@@ -442,6 +442,10 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
     let mut batched: Vec<Mutation> = Vec::new();
 
     for op in ops {
+        // Reading waits in its own outbox and is never in a watching batch.
+        if op.is_reading() {
+            continue;
+        }
         let id = op.anilist_id();
         let slot = match batched.iter_mut().find(|m| m.anilist_id == id) {
             Some(slot) => slot,
@@ -463,6 +467,9 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
             }
             TrackOp::SetStatus { status, .. } => slot.status = Some(status_to_anilist(*status)),
             TrackOp::SetScore { score, .. } => slot.score = Some(*score),
+            TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => {}
         }
     }
     batched

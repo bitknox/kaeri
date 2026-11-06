@@ -80,6 +80,8 @@ pub async fn run(
     // `syncplay.enabled` sends every play to the party: the terminal's way in, which the apps,
     // starting parties when asked, do without.
     options.every_play_a_party = true;
+    // Reading ships dark; `reading.dev` turns it on for development.
+    options.reading = config.reading.dev;
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
 

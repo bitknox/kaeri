@@ -5,6 +5,7 @@
 //! hostile and replaceable, and the player is stable again. This crate owns the
 //! vocabulary all of those layers speak, and depends on none of them.
 
+pub mod books;
 pub mod config;
 pub mod demo;
 pub mod error;

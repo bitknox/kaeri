@@ -171,6 +171,14 @@ pub enum Event {
     Server(crate::servers::ServerEvent),
     // Your media; see `LocalEvent`.
     Local(crate::local::LocalEvent),
+    // Reading; see `ReadingEvent`.
+    Reading(crate::reading::ReadingEvent),
+    // The open reader; see `ReaderEvent`.
+    Reader(crate::reader::ReaderEvent),
+    // Folders, servers and book plugins; see `BookSourceEvent`.
+    BookSources(crate::book_sources::BookSourceEvent),
+    // Watch, read or both, in answer to `MediumCommand` and when it changes.
+    Medium(crate::medium::MediumView),
     /// The recent searches, newest first: at launch when asked, and after each change.
     RecentSearches(Vec<SearchQuery>),
     Detail(Box<Entry>),

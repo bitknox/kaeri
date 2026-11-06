@@ -796,6 +796,8 @@ async fn a_store_that_cannot_run_plugins_publishes_from_the_manifest_they_carry(
         version: "1.0.0".into(),
         allowed_hosts: vec!["api.example".into()],
         translations: vec![],
+        kind: None,
+        media: Vec::new(),
     };
     let stamped = crate::manifest::stamp(&component(), &info).unwrap();
     let entry = client().publish(&base, &owner, stamped).await.unwrap();

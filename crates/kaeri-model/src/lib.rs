@@ -41,6 +41,7 @@
 //! `android/scripts/engine.sh testing` then `./gradlew :ui:compileFixturesDebugKotlin
 //! :store:testFixturesDebugUnitTest` in `android/`, and `apple/build.sh`.
 
+pub mod book_sources;
 pub mod browsing;
 pub mod bug_report;
 pub mod catalog;
@@ -48,6 +49,7 @@ pub mod command;
 pub mod crash;
 pub mod discussion;
 pub mod downloads;
+pub mod eink;
 pub mod episodes;
 pub mod event;
 pub mod group;
@@ -57,6 +59,7 @@ pub mod input;
 pub mod jobs;
 pub mod licensed;
 pub mod local;
+pub mod medium;
 pub mod servers;
 #[rustfmt::skip]
 mod msg;
@@ -71,6 +74,8 @@ pub mod profiles;
 pub mod progress;
 pub mod proxy;
 pub mod qr;
+pub mod reader;
+pub mod reading;
 pub mod remote;
 pub mod search;
 pub mod settings;
@@ -86,7 +91,7 @@ pub mod updates;
 pub mod widgets;
 pub mod wording;
 
-pub use msg::{Cause, Msg, StoreMsg};
+pub use msg::{Cause, Msg, ReadingMsg, StoreMsg};
 pub use msg_text::{Size, SizeUnit, Span};
 
 // What the types' UniFFI derives register with, under the `ffi` feature only. It compiles under the

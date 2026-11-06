@@ -39,6 +39,13 @@ rules=(
   # engine, a player or an HTTP stack.
   "kaeri-party|$terminal"
   "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|reqwest|hyper) "
+  # Book files as untrusted bytes: parsing only, so no network, no async runtime and no engine.
+  # Fetching books is kaeri-bookserver's and the engine's.
+  "kaeri-books|$terminal"
+  "kaeri-books|^(kaeri-engine|kaeri-net|reqwest|hyper|tokio) "
+  # Clients for book servers: the protocols and the core types, never the engine.
+  "kaeri-bookserver|$terminal"
+  "kaeri-bookserver|^kaeri-engine "
   "kaeri-tui|^kaeri-engine "
 )
 

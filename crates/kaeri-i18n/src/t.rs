@@ -775,6 +775,316 @@ pub fn party_server_unreachable(server: &str) -> String {
     text("party-server-unreachable", &[("server", Arg::Text(server))])
 }
 
+/// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+pub fn reading_next_chapter(chapter: &str) -> String {
+    text("reading-next-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_mondays() -> String {
+    text("reading-usually-mondays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_tuesdays() -> String {
+    text("reading-usually-tuesdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_wednesdays() -> String {
+    text("reading-usually-wednesdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_thursdays() -> String {
+    text("reading-usually-thursdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_fridays() -> String {
+    text("reading-usually-fridays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_saturdays() -> String {
+    text("reading-usually-saturdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_sundays() -> String {
+    text("reading-usually-sundays", &[])
+}
+
+/// Under a cover or on a series page: how often new chapters come out, in weeks.
+pub fn reading_about_every_weeks(weeks: i64) -> String {
+    text("reading-about-every-weeks", &[("weeks", Arg::Int(weeks))])
+}
+
+/// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+pub fn reading_also_a_show() -> String {
+    text("reading-also-a-show", &[])
+}
+
+/// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+pub fn reading_also_a_book() -> String {
+    text("reading-also-a-book", &[])
+}
+
+/// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+pub fn reading_split_chapter(chapter: &str, whole: &str) -> String {
+    text("reading-split-chapter", &[("chapter", Arg::Text(chapter)), ("whole", Arg::Text(whole))])
+}
+
+/// A notice over the page when a chapter opens where it was left. It offers Start over.
+pub fn reader_resumed(page: i64) -> String {
+    text("reader-resumed", &[("page", Arg::Int(page))])
+}
+
+/// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+pub fn reader_back_to_page(page: i64) -> String {
+    text("reader-back-to-page", &[("page", Arg::Int(page))])
+}
+
+/// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+pub fn reader_moved(chapter: &str, page: i64, device: &str) -> String {
+    text("reader-moved", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+}
+
+/// A notice the first time a series opens with its reading direction guessed. It offers Change.
+pub fn reader_detected_right_to_left() -> String {
+    text("reader-detected-right-to-left", &[])
+}
+
+/// A notice the first time a series opens with its reading direction guessed. It offers Change.
+pub fn reader_detected_left_to_right() -> String {
+    text("reader-detected-left-to-right", &[])
+}
+
+/// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+pub fn reader_detected_strip() -> String {
+    text("reader-detected-strip", &[])
+}
+
+/// Why a chapter or a list could not load: there is no connection.
+pub fn reading_failed_offline() -> String {
+    text("reading-failed-offline", &[])
+}
+
+/// Why a chapter or a list could not load: the source did not answer. The source is its name.
+pub fn reading_failed_source_down(source: &str) -> String {
+    text("reading-failed-source-down", &[("source", Arg::Text(source))])
+}
+
+/// Why a chapter could not load: the source no longer has it.
+pub fn reading_failed_not_found() -> String {
+    text("reading-failed-not-found", &[])
+}
+
+/// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+pub fn reading_failed_blocked(source: &str, reason: &str) -> String {
+    text("reading-failed-blocked", &[("source", Arg::Text(source)), ("reason", Arg::Text(reason))])
+}
+
+/// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+pub fn reading_failed_parse(source: &str) -> String {
+    text("reading-failed-parse", &[("source", Arg::Text(source))])
+}
+
+/// Why one page did not load. The status is the server's HTTP status code, such as 404.
+pub fn reading_failed_page(status: i64) -> String {
+    text("reading-failed-page", &[("status", Arg::Int(status))])
+}
+
+/// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+pub fn reading_failed_sign_in(what: &str) -> String {
+    text("reading-failed-sign-in", &[("what", Arg::Text(what))])
+}
+
+/// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+pub fn reading_failed_file_missing(path: &str) -> String {
+    text("reading-failed-file-missing", &[("path", Arg::Text(path))])
+}
+
+/// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+pub fn reading_failed_unreadable(path: &str, format: &str) -> String {
+    text("reading-failed-unreadable", &[("path", Arg::Text(path)), ("format", Arg::Text(format))])
+}
+
+/// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+pub fn reading_failed_unsupported(kind: &str) -> String {
+    text("reading-failed-unsupported", &[("kind", Arg::Text(kind))])
+}
+
+/// Why a book could not open: it is copy-protected or encrypted.
+pub fn reading_failed_protected() -> String {
+    text("reading-failed-protected", &[])
+}
+
+/// Why a chapter could not be saved: the disk is full.
+pub fn reading_failed_disk_full() -> String {
+    text("reading-failed-disk-full", &[])
+}
+
+/// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+pub fn reading_failed_webview(version: i64) -> String {
+    text("reading-failed-webview", &[("version", Arg::Int(version))])
+}
+
+/// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+pub fn reading_failed_needs_newer(world: &str) -> String {
+    text("reading-failed-needs-newer", &[("world", Arg::Text(world))])
+}
+
+/// Why a reading request was refused: reading is not available in this build.
+pub fn reading_failed_off() -> String {
+    text("reading-failed-off", &[])
+}
+
+/// Why something about reading failed, for any other reason. The reason is as it came.
+pub fn reading_failed_other(reason: &str) -> String {
+    text("reading-failed-other", &[("reason", Arg::Text(reason))])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+pub fn reading_kind_manga() -> String {
+    text("reading-kind-manga", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+pub fn reading_kind_manhwa() -> String {
+    text("reading-kind-manhwa", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+pub fn reading_kind_manhua() -> String {
+    text("reading-kind-manhua", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+pub fn reading_kind_webtoon() -> String {
+    text("reading-kind-webtoon", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+pub fn reading_kind_one_shot() -> String {
+    text("reading-kind-one-shot", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+pub fn reading_kind_light_novel() -> String {
+    text("reading-kind-light-novel", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+pub fn reading_kind_novel() -> String {
+    text("reading-kind-novel", &[])
+}
+
+/// Under a cover or on a series page: new chapters are still coming out.
+pub fn reading_status_releasing() -> String {
+    text("reading-status-releasing", &[])
+}
+
+/// Under a cover or on a series page: the story is complete.
+pub fn reading_status_finished() -> String {
+    text("reading-status-finished", &[])
+}
+
+/// Under a cover or on a series page: new chapters have stopped for a while.
+pub fn reading_status_hiatus() -> String {
+    text("reading-status-hiatus", &[])
+}
+
+/// Under a cover or on a series page: the story was stopped before it ended.
+pub fn reading_status_cancelled() -> String {
+    text("reading-status-cancelled", &[])
+}
+
+/// Under a cover or on a series page: the first chapter is not out yet.
+pub fn reading_status_not_yet() -> String {
+    text("reading-status-not-yet", &[])
+}
+
+/// Under a cover or on a series page: how many chapters the series has.
+pub fn reading_chapters(count: i64) -> String {
+    text("reading-chapters", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover or on a series page: how many volumes the series has.
+pub fn reading_volumes(count: i64) -> String {
+    text("reading-volumes", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover: the series is on the person's Planning list.
+pub fn reading_on_planning() -> String {
+    text("reading-on-planning", &[])
+}
+
+/// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+pub fn reading_spotlight_new_chapter() -> String {
+    text("reading-spotlight-new-chapter", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the series the person was reading last.
+pub fn reading_spotlight_continue() -> String {
+    text("reading-spotlight-continue", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+pub fn reading_spotlight_up_next() -> String {
+    text("reading-spotlight-up-next", &[])
+}
+
+/// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+pub fn reading_spotlight_popular() -> String {
+    text("reading-spotlight-popular", &[])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+pub fn reading_out_today(chapter: &str) -> String {
+    text("reading-out-today", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today, with its title.
+pub fn reading_out_today_titled(chapter: &str, title: &str) -> String {
+    text("reading-out-today-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// Under a cover or the big picture: the page the person stopped on in a chapter.
+pub fn reading_chapter_page(chapter: &str, page: i64) -> String {
+    text("reading-chapter-page", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+}
+
+/// Under a cover or the big picture: how far into a novel's chapter the person is.
+pub fn reading_chapter_percent(chapter: &str, percent: i64) -> String {
+    text("reading-chapter-percent", &[("chapter", Arg::Text(chapter)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+pub fn reading_chapter_new(chapter: &str) -> String {
+    text("reading-chapter-new", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A search filter: books from Japan.
+pub fn reading_origin_japan() -> String {
+    text("reading-origin-japan", &[])
+}
+
+/// A search filter: books from Korea.
+pub fn reading_origin_korea() -> String {
+    text("reading-origin-korea", &[])
+}
+
+/// A search filter: books from China.
+pub fn reading_origin_china() -> String {
+    text("reading-origin-china", &[])
+}
+
+/// A search filter: books from Taiwan.
+pub fn reading_origin_taiwan() -> String {
+    text("reading-origin-taiwan", &[])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -1008,6 +1318,11 @@ pub fn plugin_publish_failed(plugin: &str, reason: &str) -> String {
 /// Error: a plugin to publish is no longer in the plugin folder.
 pub fn plugin_missing_locally(plugin: &str) -> String {
     text("plugin-missing-locally", &[("plugin", Arg::Text(plugin))])
+}
+
+/// Error: a book source cannot be published to a store whose server is too old to list book sources.
+pub fn store_takes_no_books(store: &str) -> String {
+    text("store-takes-no-books", &[("store", Arg::Text(store))])
 }
 
 /// Error: an invite for another device cannot be made from a device that joined with the open link.

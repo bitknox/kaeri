@@ -375,6 +375,10 @@ impl Tracker for MalTracker {
         // whichever fields are present, so three ops for one show are one request.
         let mut batched: Vec<(AnilistId, Vec<(&str, String)>)> = Vec::new();
         for op in ops {
+            // Reading waits in its own outbox and is never in a watching batch.
+            if op.is_reading() {
+                continue;
+            }
             let id = op.anilist_id();
             let slot = match batched.iter_mut().find(|(existing, _)| *existing == id) {
                 Some(slot) => slot,
@@ -397,6 +401,9 @@ impl Tracker for MalTracker {
                     slot.1.retain(|(k, _)| *k != "score");
                     slot.1.push(("score", score.round().clamp(0.0, 10.0).to_string()));
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => {}
             }
         }
 

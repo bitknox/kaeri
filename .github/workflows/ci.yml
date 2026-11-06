@@ -67,7 +67,9 @@ jobs:
               - 'wit/**'
               - 'plugins/example-rust/**'
               - 'plugins/example-ts/**'
+              - 'plugins/example-books/**'
               - 'plugins/test-hostile/**'
+              - 'plugins/test-hostile-books/**'
               - 'plugins/test-torrent-source/**'
               - 'assets/**'
               - 'deploy/**'
@@ -293,25 +295,27 @@ jobs:
       # Formatting is checked first: it needs no build, so a stray space fails in seconds.
       - name: Format
         run: cargo fmt --all --check
-      # The two plugins are their own workspaces, so their targets are cached with the rest.
+      # The Rust plugins are their own workspaces, so their targets are cached with the rest.
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             .
             plugins/example-rust
+            plugins/example-books
             plugins/test-hostile
+            plugins/test-hostile-books
             plugins/test-torrent-source
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
-      # The components the sandbox tests load: the Rust reference plugin, the two fixtures and
+      # The components the sandbox tests load: the Rust reference plugins, the three fixtures and
       # the JavaScript reference plugin. Without them those tests skip, so the Test step below
       # sets KAERI_REQUIRE_PLUGINS and a missing one fails it. Built on main as well, for the
       # cache.
       - name: Build the plugins the sandbox tests load
         run: |
-          for plugin in example-rust test-hostile test-torrent-source; do
+          for plugin in example-rust example-books test-hostile test-hostile-books test-torrent-source; do
             cargo build --locked --release --target wasm32-wasip2 --manifest-path "plugins/$plugin/Cargo.toml"
           done
           npm ci --prefix plugins/example-ts

@@ -819,12 +819,14 @@ fn stats_for_nerds_are_read_while_open_worded_by_the_engine_and_copied_without_a
     });
     assert!(summary.rows.is_empty(), "no rows with the panel shut");
     assert_eq!(summary.summary[0], "720p · H.264 · software decoding");
-    assert!(!app.ops.iter().any(|(_, op)| matches!(op, PlayerOp::Sample { .. })));
+    // Until the picture moves, the start screen asks for the cache speed alone once a second,
+    // which a slow run sees here: the panel's figures are the rest.
+    let panel = |op: &PlayerOp| matches!(op, PlayerOp::Sample { properties } if properties.iter().any(|p| p != "cache-speed"));
+    assert!(!app.ops.iter().any(|(_, op)| panel(op)), "{:?}", app.ops);
 
     // Open: the player is asked for its figures, and the rows follow from its answers.
     app.aim(playback, PlayerCommand::Stats(true));
-    let (_, sample) =
-        app.op("the figures asked for", |op| matches!(op, PlayerOp::Sample { .. }));
+    let (_, sample) = app.op("the figures asked for", panel);
     let PlayerOp::Sample { properties } = sample else { unreachable!() };
     assert!(properties.iter().any(|p| p == "cache-speed"), "{properties:?}");
     app.property(playback, "container-fps", json!(23.976));
@@ -846,7 +848,7 @@ fn stats_for_nerds_are_read_while_open_worded_by_the_engine_and_copied_without_a
     assert!(sync.warn && sync.value == "+0.250 s", "{sync:?}");
     // Asked again a second on, and not before.
     let asked = Instant::now();
-    app.op("the figures asked for again", |op| matches!(op, PlayerOp::Sample { .. }));
+    app.op("the figures asked for again", panel);
     assert!(asked.elapsed() > Duration::from_millis(400), "{:?}", asked.elapsed());
 
     app.aim(

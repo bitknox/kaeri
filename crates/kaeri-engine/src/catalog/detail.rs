@@ -19,7 +19,7 @@ use crate::{
 /// has that sent first, as a partial page, so its top is on screen at once while AniList is
 /// asked for the rest. Once the seasons are known, the headers of the others are asked for
 /// together and said as cards, for the screens to fetch their art ahead.
-pub async fn load_detail(lent: Lent, id: AnilistId) {
+pub async fn load_detail(lent: Lent, id: AnilistId, both: bool) {
     let Lent { meta, store, tx, .. } = lent;
     // Sent before the detail itself, so the picker knows the current choice the
     // moment the title is on screen rather than only after it is opened once.
@@ -28,6 +28,7 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
         let mut page = data::entry_with_detail(&header, Some(&store), Some(&seasons));
         if let Some(detail) = page.detail.as_mut() {
             detail.partial = true;
+            detail.other_medium = both.then(|| also_a_book(&meta, &header)).flatten();
         }
         let _ = tx.send(Event::Detail(Box::new(page)));
     }
@@ -43,7 +44,10 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
     // own requests, never into the share kept for screens.
     kaeri_meta::on_screen(meta.seasons(&media, fresh, |seasons| {
         // Each page read as it is sent, so a second one is no older than the first.
-        let page = data::entry_with_detail(&media, Some(&store), seasons.as_deref());
+        let mut page = data::entry_with_detail(&media, Some(&store), seasons.as_deref());
+        if let Some(detail) = page.detail.as_mut() {
+            detail.other_medium = both.then(|| also_a_book(&meta, &media)).flatten();
+        }
         let _ = tx.send(Event::Detail(Box::new(page)));
     }))
     .await;
@@ -58,6 +62,36 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
             }
         });
     }
+}
+
+/// The book a show was told from, or that tells it: its source first, then an adaptation.
+/// AniList's relations name a book's format only as not an anime's, so a novel is told from a
+/// manga by what was kept of it, and is a manga until then.
+fn also_a_book(
+    meta: &kaeri_meta::Meta,
+    media: &kaeri_meta::Media,
+) -> Option<kaeri_model::reading::CrossMediumRow> {
+    use kaeri_core::media::{MediaFormat, Medium};
+    let books: Vec<_> = media
+        .relations
+        .edges
+        .iter()
+        .filter(|edge| matches!(edge.node.format, Some(MediaFormat::Unknown)))
+        .collect();
+    let rank = |relation: Option<&str>| match relation {
+        Some("SOURCE") => 0,
+        Some("ADAPTATION") => 1,
+        _ => 2,
+    };
+    let edge = books.iter().min_by_key(|edge| rank(edge.relation_type.as_deref()))?;
+    let node = &edge.node;
+    let medium = meta.kept_book(node.id).map_or(Medium::Manga, |kept| kept.book.medium());
+    Some(kaeri_model::reading::CrossMediumRow {
+        work: kaeri_core::books::WorkId::new(format!("a:{}", node.id.get())),
+        medium,
+        title: meta.titles().pick(&node.title).to_owned(),
+        relation: Msg::Reading(kaeri_model::ReadingMsg::ReadingAlsoABook),
+    })
 }
 
 /// Play a title's trailer in mpv, or open it in the browser when mpv cannot stream it.

@@ -57,6 +57,8 @@ kaeri-plugin = { workspace = true, features = ["fetch"] }
 kaeri-plugin-store.workspace = true
 kaeri-store-server.workspace = true
 kaeri-providers.workspace = true
+kaeri-books.workspace = true
+kaeri-bookserver.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true

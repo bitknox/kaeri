@@ -221,6 +221,8 @@ impl Engine {
             sources: given,
             background,
             set_aside,
+            reading,
+            edition,
             #[cfg(feature = "testing")]
             parts,
             #[cfg(feature = "testing")]
@@ -228,6 +230,8 @@ impl Engine {
             #[cfg(feature = "testing")]
             free_space,
         } = options;
+        // Read before anything is written: no config file is a new install.
+        let new_install = !paths.config_file.exists();
         if background.prune {
             // Old logs, stale covers and the player's leftovers, off the critical path.
             {
@@ -249,6 +253,8 @@ impl Engine {
         }
 
         let own_chain = given.is_none();
+        // Book source plugins, loaded by the same background load while reading is available.
+        let book_plugins = crate::book_plugins::BookPlugins::default();
         let (registry, plugins_loading) = match given {
             Some(registry) => (registry, None),
             None => {
@@ -263,6 +269,7 @@ impl Engine {
                     config.clone(),
                     http.clone(),
                     paths.clone(),
+                    reading.then(|| book_plugins.clone()),
                 );
                 (registry, Some(loading))
             }
@@ -287,7 +294,14 @@ impl Engine {
                     http.clone(),
                 );
                 let local = crate::local::Local::new(store.clone());
+                let book_sources = crate::read_sources::BookSources::new(
+                    store.clone(),
+                    kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
+                    http.plain().clone(),
+                    &paths,
+                );
                 Services {
+                    book_sources,
                     tokens: kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
                     syncing: Default::default(),
                     servers,
@@ -315,6 +329,7 @@ impl Engine {
                     fixture_route: parts.fixture_route,
                     party: Default::default(),
                     skip_find: Default::default(),
+                    book_plugins: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
@@ -330,7 +345,7 @@ impl Engine {
         // The player a play opens, mpv's process or the one the front end hosts, and the app's
         // own sign-in clients, where signing in will read them (E6).
         // And what a store joined with an invite calls this device unless told otherwise.
-        let stores = services.stores.labelled(&device_label);
+        let stores = services.stores.labelled(&device_label).reading(reading);
         #[cfg(feature = "testing")]
         let room_for_prints = free_space;
         #[cfg(not(feature = "testing"))]
@@ -346,6 +361,7 @@ impl Engine {
             app_clients,
             stores,
             skip_find,
+            book_plugins,
             ..services
         };
         #[cfg(feature = "testing")]
@@ -368,6 +384,21 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
+        let account = {
+            use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
+            let store = &services.store;
+            store.sync_regs(MEDIUM_ACCOUNT).ok().and_then(|regs| {
+                let (key, value) = regs.into_iter().next()?;
+                Some((value, store.sync_reg_writer(MEDIUM_ACCOUNT, &key).ok().flatten()))
+            })
+        };
+        state.reading = crate::reading::ReadingState::at_launch(
+            reading,
+            edition,
+            state.config.effective().reading.kaeri_is_for.as_deref(),
+            account.as_ref().map(|(answer, writer)| (answer.as_str(), writer.clone())),
+            new_install,
+        );
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]

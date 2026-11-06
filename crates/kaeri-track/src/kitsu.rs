@@ -292,6 +292,10 @@ impl KitsuTracker {
 fn coalesce(ops: &[TrackOp]) -> Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> {
     let mut batched: Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> = Vec::new();
     for op in ops {
+        // Reading waits in its own outbox and is never in a watching batch.
+        if op.is_reading() {
+            continue;
+        }
         let id = op.anilist_id();
         let slot = match batched.iter_mut().find(|(existing, _)| *existing == id) {
             Some((_, attributes)) => attributes,
@@ -312,6 +316,9 @@ fn coalesce(ops: &[TrackOp]) -> Vec<(AnilistId, serde_json::Map<String, serde_js
             TrackOp::SetScore { score, .. } => {
                 slot.insert("ratingTwenty".into(), rating_twenty(*score).into());
             }
+            TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => {}
         }
     }
     batched

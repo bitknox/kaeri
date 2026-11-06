@@ -130,6 +130,8 @@ pub struct EngineState {
     /// The watch party going, if one is: see [`crate::party`].
     #[cfg(feature = "party")]
     pub party: Option<crate::party::Running>,
+    /// Whether reading is in this build, the edition, and the medium: see [`crate::reading`].
+    pub reading: crate::reading::ReadingState,
 }
 
 impl EngineState {
@@ -178,6 +180,7 @@ impl EngineState {
             discussion: Default::default(),
             #[cfg(feature = "party")]
             party: None,
+            reading: Default::default(),
         }
     }
 

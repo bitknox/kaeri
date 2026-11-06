@@ -41,6 +41,7 @@ use tokio::{
 
 use crate::fixtures::{self, FIXTURE_NOW};
 
+mod books;
 pub mod kitsu;
 mod threads;
 pub use threads::comment;
@@ -109,6 +110,8 @@ pub enum Operation {
     Tenrai,
     /// A request to the fake Kitsu: see [`kitsu`].
     Kitsu,
+    /// Any request for AniList's `MANGA` type: a book page, books by id or a series page.
+    Books,
     /// Anything else. Answered with an error, and recorded, so a test can catch a query the
     /// fake was never taught rather than reading its failure as the app's.
     Unknown,
@@ -123,7 +126,9 @@ impl Operation {
     pub fn of(document: &str) -> Self {
         let document = document.split_whitespace().collect::<Vec<_>>().join(" ");
         let has = |needle: &str| document.contains(needle);
-        if has("DeleteMediaListEntry") {
+        if has("type: MANGA") {
+            Self::Books
+        } else if has("DeleteMediaListEntry") {
             Self::DeleteEntry
         } else if has("DeleteThreadComment") {
             Self::DeleteThreadComment
@@ -274,6 +279,8 @@ struct State {
     threads: Vec<threads::FakeThread>,
     /// How many comments have been posted to them, for the new comments' ids.
     posted: u64,
+    /// The books: see [`FakeAniList::add_books`].
+    books: Vec<Value>,
 }
 
 /// Art served badly, as a busy CDN serves it.
@@ -317,6 +324,7 @@ impl FakeAniList {
             following: HashMap::new(),
             threads: Vec::new(),
             posted: 0,
+            books: fixtures::books(),
         }));
         let accept = tokio::spawn({
             let state = Arc::clone(&state);
@@ -529,6 +537,16 @@ impl FakeAniList {
         for title in titles {
             let id = title["id"].as_u64().expect("a title has an id");
             state.extra.insert(id, title);
+        }
+    }
+
+    /// Books beside [`fixtures::books`], each in that shape, or in place of one with its id:
+    /// every book page, id list and series page has them.
+    pub fn add_books(&self, books: impl IntoIterator<Item = Value>) {
+        let mut state = lock(&self.state);
+        for book in books {
+            state.books.retain(|b| b["id"] != book["id"]);
+            state.books.push(book);
         }
     }
 
@@ -1096,6 +1114,9 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             );
             let thread = if writes && !authorized {
                 Some(Reply::errors(401, "Invalid token", Value::Null))
+            } else if operation == Operation::Books {
+                let books = lock(state).books.clone();
+                Some(books::respond(&books, &query, &variables))
             } else {
                 threads::respond(&mut lock(state), operation, &variables, clock.now)
             };
@@ -1559,6 +1580,8 @@ fn respond(
         | Operation::Tenrai
         // Kitsu's requests are answered before the GraphQL ones are read.
         | Operation::Kitsu
+        // Books are answered before the rest, from their own records.
+        | Operation::Books
         | Operation::Unknown => {
             Reply::errors(400, "the fake AniList was never taught this query", Value::Null)
         }

@@ -177,7 +177,14 @@ impl Store {
         let now = self.sync.wall_ms() / 1000;
         self.with_personal_tx(|tx| {
             if let Some(op) = self.emit(tx, body)? {
-                apply_one(tx, &op, now, &mut Applied::default(), &mut BTreeSet::new())?;
+                apply_one(
+                    tx,
+                    &op,
+                    now,
+                    &mut Applied::default(),
+                    &mut BTreeSet::new(),
+                    &mut BTreeSet::new(),
+                )?;
             }
             Ok(())
         })
@@ -456,8 +463,9 @@ impl Store {
             let mut report = Applied::default();
             let mut have: BTreeMap<String, u64> = BTreeMap::new();
             let mut titles: BTreeSet<u32> = BTreeSet::new();
+            let mut works: BTreeSet<String> = BTreeSet::new();
             if log::meta(tx, HELD_UNKNOWN)?.is_some() {
-                apply_held(tx, now_secs, &mut report, &mut titles)?;
+                apply_held(tx, now_secs, &mut report, &mut titles, &mut works)?;
             }
             for op in ops {
                 let held = match have.get(&op.device) {
@@ -498,7 +506,7 @@ impl Store {
                 )?;
                 log::raise_hlc(tx, op.stamp)?;
                 if known {
-                    apply_one(tx, &op, now_secs, &mut report, &mut titles)?;
+                    apply_one(tx, &op, now_secs, &mut report, &mut titles, &mut works)?;
                     report.ops += 1;
                 } else {
                     // Held, so it is relayed and its number counts, but a newer version applies it.
@@ -509,7 +517,11 @@ impl Store {
             for id in &titles {
                 refresh_title(tx, *id)?;
             }
+            for work in &works {
+                crate::reading::refresh_work(tx, work)?;
+            }
             report.titles = titles.into_iter().collect();
+            report.works = works.into_iter().collect();
             Ok(report)
         })?;
         let device = std::mem::take(&mut report.device);
@@ -657,6 +669,7 @@ fn apply_held(
     now_secs: i64,
     report: &mut Applied,
     titles: &mut BTreeSet<u32>,
+    works: &mut BTreeSet<String>,
 ) -> Result<()> {
     let held: Vec<Op> = {
         let mut stmt = tx.prepare(
@@ -671,7 +684,7 @@ fn apply_held(
             still += 1;
             continue;
         }
-        apply_one(tx, &op, now_secs, report, titles)?;
+        apply_one(tx, &op, now_secs, report, titles, works)?;
         tx.execute(
             "UPDATE sync_op SET received = ?1 WHERE device = ?2 AND seq = ?3",
             params![RECEIVED, op.device, op.seq as i64],
@@ -690,6 +703,7 @@ fn apply_one(
     now_secs: i64,
     report: &mut Applied,
     titles: &mut BTreeSet<u32>,
+    works: &mut BTreeSet<String>,
 ) -> Result<()> {
     let at_of = |stamp: Stamp| op::secs_of_stamp(stamp);
     match &op.body {
@@ -799,7 +813,16 @@ fn apply_one(
         OpBody::Reg { kind, key, value } => {
             if beats(tx, kind, key, op.stamp, &op.device)? {
                 set_reg(tx, kind, key, op.stamp, &op.device, value.as_deref())?;
-                apply_reg(tx, kind, key, value.as_deref(), at_of(op.stamp), report, titles)?;
+                apply_reg(
+                    tx,
+                    kind,
+                    key,
+                    value.as_deref(),
+                    at_of(op.stamp),
+                    report,
+                    titles,
+                    works,
+                )?;
             }
         }
         OpBody::TrackerMark { tracker, anilist_id, episode } => {
@@ -818,6 +841,15 @@ fn apply_one(
                   WHERE excluded.stamp > sync_remote_download.stamp",
                 params![op.device, anilist_id, episode, *done as i32, op.stamp as i64],
             )?;
+        }
+        OpBody::Read { .. }
+        | OpBody::Unread { .. }
+        | OpBody::ReadAdopt { .. }
+        | OpBody::ReadReset { .. }
+        | OpBody::ReadMark { .. } => {
+            if let Some(work) = crate::reading::apply_read_op(tx, op)? {
+                works.insert(work);
+            }
         }
         OpBody::DeviceAdd { device, name, pubkey } => {
             tx.execute(
@@ -907,6 +939,7 @@ pub(crate) fn insert_adopted(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn apply_reg(
     tx: &Transaction<'_>,
     kind: &str,
@@ -915,8 +948,20 @@ fn apply_reg(
     at: i64,
     report: &mut Applied,
     titles: &mut BTreeSet<u32>,
+    works: &mut BTreeSet<String>,
 ) -> Result<()> {
     match kind {
+        kinds::READ_SERIES
+        | kinds::READ_STATUS
+        | kinds::READ_SCORE
+        | kinds::READ_HIDE
+        | kinds::READ_BOOKMARK
+        | kinds::READ_TRACK_MAP
+        | kinds::BOOK_MATCH => {
+            if let Some(work) = crate::reading::apply_read_reg(tx, kind, key, value, at)? {
+                works.insert(work);
+            }
+        }
         kinds::HIDE => {
             if let Ok(id) = key.parse() {
                 titles.insert(id);

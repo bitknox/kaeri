@@ -477,6 +477,192 @@ public static partial class T
     /// <summary>Message when a watch party's server could not be reached, in the lobby or when looking in.</summary>
     public static string PartyServerUnreachable(string server) => Fill(Get("PartyServerUnreachable"), ("server", server));
 
+    /// <summary>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</summary>
+    public static string ReadingNextChapter(string chapter) => Fill(Get("ReadingNextChapter"), ("chapter", chapter));
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyMondays => Get("ReadingUsuallyMondays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyTuesdays => Get("ReadingUsuallyTuesdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyWednesdays => Get("ReadingUsuallyWednesdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyThursdays => Get("ReadingUsuallyThursdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyFridays => Get("ReadingUsuallyFridays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallySaturdays => Get("ReadingUsuallySaturdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallySundays => Get("ReadingUsuallySundays");
+
+    /// <summary>Under a cover or on a series page: how often new chapters come out, in weeks.</summary>
+    public static string ReadingAboutEveryWeeks(long weeks) => Fill(GetPlural("ReadingAboutEveryWeeks", weeks), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</summary>
+    public static string ReadingAlsoAShow => Get("ReadingAlsoAShow");
+
+    /// <summary>On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.</summary>
+    public static string ReadingAlsoABook => Get("ReadingAlsoABook");
+
+    /// <summary>Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.</summary>
+    public static string ReadingSplitChapter(string chapter, string whole) => Fill(Get("ReadingSplitChapter"), ("chapter", chapter), ("whole", whole));
+
+    /// <summary>A notice over the page when a chapter opens where it was left. It offers Start over.</summary>
+    public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
+    public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.</summary>
+    public static string ReaderMoved(string chapter, long page, string device) => Fill(Get("ReaderMoved"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
+    public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
+
+    /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
+    public static string ReaderDetectedLeftToRight => Get("ReaderDetectedLeftToRight");
+
+    /// <summary>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</summary>
+    public static string ReaderDetectedStrip => Get("ReaderDetectedStrip");
+
+    /// <summary>Why a chapter or a list could not load: there is no connection.</summary>
+    public static string ReadingFailedOffline => Get("ReadingFailedOffline");
+
+    /// <summary>Why a chapter or a list could not load: the source did not answer. The source is its name.</summary>
+    public static string ReadingFailedSourceDown(string source) => Fill(Get("ReadingFailedSourceDown"), ("source", source));
+
+    /// <summary>Why a chapter could not load: the source no longer has it.</summary>
+    public static string ReadingFailedNotFound => Get("ReadingFailedNotFound");
+
+    /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
+    public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
+
+    /// <summary>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</summary>
+    public static string ReadingFailedParse(string source) => Fill(Get("ReadingFailedParse"), ("source", source));
+
+    /// <summary>Why one page did not load. The status is the server's HTTP status code, such as 404.</summary>
+    public static string ReadingFailedPage(long status) => Fill(Get("ReadingFailedPage"), ("status", status.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</summary>
+    public static string ReadingFailedSignIn(string what) => Fill(Get("ReadingFailedSignIn"), ("what", what));
+
+    /// <summary>Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.</summary>
+    public static string ReadingFailedFileMissing(string path) => Fill(Get("ReadingFailedFileMissing"), ("path", path));
+
+    /// <summary>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</summary>
+    public static string ReadingFailedUnreadable(string path, string format) => Fill(Get("ReadingFailedUnreadable"), ("path", path), ("format", format));
+
+    /// <summary>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</summary>
+    public static string ReadingFailedUnsupported(string kind) => Fill(Get("ReadingFailedUnsupported"), ("kind", kind));
+
+    /// <summary>Why a book could not open: it is copy-protected or encrypted.</summary>
+    public static string ReadingFailedProtected => Get("ReadingFailedProtected");
+
+    /// <summary>Why a chapter could not be saved: the disk is full.</summary>
+    public static string ReadingFailedDiskFull => Get("ReadingFailedDiskFull");
+
+    /// <summary>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</summary>
+    public static string ReadingFailedWebview(long version) => Fill(Get("ReadingFailedWebview"), ("version", version.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.</summary>
+    public static string ReadingFailedNeedsNewer(string world) => Fill(Get("ReadingFailedNeedsNewer"), ("world", world));
+
+    /// <summary>Why a reading request was refused: reading is not available in this build.</summary>
+    public static string ReadingFailedOff => Get("ReadingFailedOff");
+
+    /// <summary>Why something about reading failed, for any other reason. The reason is as it came.</summary>
+    public static string ReadingFailedOther(string reason) => Fill(Get("ReadingFailedOther"), ("reason", reason));
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</summary>
+    public static string ReadingKindManga => Get("ReadingKindManga");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</summary>
+    public static string ReadingKindManhwa => Get("ReadingKindManhwa");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</summary>
+    public static string ReadingKindManhua => Get("ReadingKindManhua");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</summary>
+    public static string ReadingKindWebtoon => Get("ReadingKindWebtoon");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</summary>
+    public static string ReadingKindOneShot => Get("ReadingKindOneShot");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</summary>
+    public static string ReadingKindLightNovel => Get("ReadingKindLightNovel");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</summary>
+    public static string ReadingKindNovel => Get("ReadingKindNovel");
+
+    /// <summary>Under a cover or on a series page: new chapters are still coming out.</summary>
+    public static string ReadingStatusReleasing => Get("ReadingStatusReleasing");
+
+    /// <summary>Under a cover or on a series page: the story is complete.</summary>
+    public static string ReadingStatusFinished => Get("ReadingStatusFinished");
+
+    /// <summary>Under a cover or on a series page: new chapters have stopped for a while.</summary>
+    public static string ReadingStatusHiatus => Get("ReadingStatusHiatus");
+
+    /// <summary>Under a cover or on a series page: the story was stopped before it ended.</summary>
+    public static string ReadingStatusCancelled => Get("ReadingStatusCancelled");
+
+    /// <summary>Under a cover or on a series page: the first chapter is not out yet.</summary>
+    public static string ReadingStatusNotYet => Get("ReadingStatusNotYet");
+
+    /// <summary>Under a cover or on a series page: how many chapters the series has.</summary>
+    public static string ReadingChapters(long count) => Fill(GetPlural("ReadingChapters", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or on a series page: how many volumes the series has.</summary>
+    public static string ReadingVolumes(long count) => Fill(GetPlural("ReadingVolumes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: the series is on the person's Planning list.</summary>
+    public static string ReadingOnPlanning => Get("ReadingOnPlanning");
+
+    /// <summary>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</summary>
+    public static string ReadingSpotlightNewChapter => Get("ReadingSpotlightNewChapter");
+
+    /// <summary>Above the big picture at the top of reading's Home: the series the person was reading last.</summary>
+    public static string ReadingSpotlightContinue => Get("ReadingSpotlightContinue");
+
+    /// <summary>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</summary>
+    public static string ReadingSpotlightUpNext => Get("ReadingSpotlightUpNext");
+
+    /// <summary>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</summary>
+    public static string ReadingSpotlightPopular => Get("ReadingSpotlightPopular");
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</summary>
+    public static string ReadingOutToday(string chapter) => Fill(Get("ReadingOutToday"), ("chapter", chapter));
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today, with its title.</summary>
+    public static string ReadingOutTodayTitled(string chapter, string title) => Fill(Get("ReadingOutTodayTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>Under a cover or the big picture: the page the person stopped on in a chapter.</summary>
+    public static string ReadingChapterPage(string chapter, long page) => Fill(Get("ReadingChapterPage"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or the big picture: how far into a novel's chapter the person is.</summary>
+    public static string ReadingChapterPercent(string chapter, long percent) => Fill(Get("ReadingChapterPercent"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a chapter came out that the person has not read. The chapter is its number.</summary>
+    public static string ReadingChapterNew(string chapter) => Fill(Get("ReadingChapterNew"), ("chapter", chapter));
+
+    /// <summary>A search filter: books from Japan.</summary>
+    public static string ReadingOriginJapan => Get("ReadingOriginJapan");
+
+    /// <summary>A search filter: books from Korea.</summary>
+    public static string ReadingOriginKorea => Get("ReadingOriginKorea");
+
+    /// <summary>A search filter: books from China.</summary>
+    public static string ReadingOriginChina => Get("ReadingOriginChina");
+
+    /// <summary>A search filter: books from Taiwan.</summary>
+    public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -617,6 +803,9 @@ public static partial class T
 
     /// <summary>Error: a plugin to publish is no longer in the plugin folder.</summary>
     public static string PluginMissingLocally(string plugin) => Fill(Get("PluginMissingLocally"), ("plugin", plugin));
+
+    /// <summary>Error: a book source cannot be published to a store whose server is too old to list book sources.</summary>
+    public static string StoreTakesNoBooks(string store) => Fill(Get("StoreTakesNoBooks"), ("store", store));
 
     /// <summary>Error: an invite for another device cannot be made from a device that joined with the open link.</summary>
     public static string StoreInviteNeedsLink(string store) => Fill(Get("StoreInviteNeedsLink"), ("store", store));
@@ -8863,6 +9052,71 @@ public static partial class T
         ["PartyRejoined"] = "Back in the watch party.",
         ["PartyLeft"] = "Left the watch party.",
         ["PartyServerUnreachable"] = "Couldn't reach {server}. Check the server, or try again.",
+        ["ReadingNextChapter"] = "Chapter {chapter}",
+        ["ReadingUsuallyMondays"] = "Usually Mondays",
+        ["ReadingUsuallyTuesdays"] = "Usually Tuesdays",
+        ["ReadingUsuallyWednesdays"] = "Usually Wednesdays",
+        ["ReadingUsuallyThursdays"] = "Usually Thursdays",
+        ["ReadingUsuallyFridays"] = "Usually Fridays",
+        ["ReadingUsuallySaturdays"] = "Usually Saturdays",
+        ["ReadingUsuallySundays"] = "Usually Sundays",
+        ["ReadingAboutEveryWeeks_one"] = "About every week",
+        ["ReadingAboutEveryWeeks_other"] = "About every {weeks} weeks",
+        ["ReadingAlsoAShow"] = "Also a show",
+        ["ReadingAlsoABook"] = "Also a book",
+        ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
+        ["ReaderResumed"] = "Resumed at page {page}",
+        ["ReaderBackToPage"] = "Back to page {page}",
+        ["ReaderMoved"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
+        ["ReaderDetectedRightToLeft"] = "Right to left, detected",
+        ["ReaderDetectedLeftToRight"] = "Left to right, detected",
+        ["ReaderDetectedStrip"] = "Long strip, detected",
+        ["ReadingFailedOffline"] = "You're offline. Downloaded chapters still open.",
+        ["ReadingFailedSourceDown"] = "{source} isn't answering. Try again later.",
+        ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
+        ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
+        ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
+        ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
+        ["ReadingFailedSignIn"] = "Sign in to {what} again to keep reading.",
+        ["ReadingFailedFileMissing"] = "{path} isn't there anymore. If it's on a drive, connect it and try again.",
+        ["ReadingFailedUnreadable"] = "{path} couldn't be read as {format}. The file may be damaged.",
+        ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
+        ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
+        ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
+        ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
+        ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
+        ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
+        ["ReadingFailedOther"] = "Something went wrong. {reason}",
+        ["ReadingKindManga"] = "Manga",
+        ["ReadingKindManhwa"] = "Manhwa",
+        ["ReadingKindManhua"] = "Manhua",
+        ["ReadingKindWebtoon"] = "Webtoon",
+        ["ReadingKindOneShot"] = "One-shot",
+        ["ReadingKindLightNovel"] = "Light novel",
+        ["ReadingKindNovel"] = "Novel",
+        ["ReadingStatusReleasing"] = "Releasing",
+        ["ReadingStatusFinished"] = "Finished",
+        ["ReadingStatusHiatus"] = "On hiatus",
+        ["ReadingStatusCancelled"] = "Cancelled",
+        ["ReadingStatusNotYet"] = "Not out yet",
+        ["ReadingChapters_one"] = "1 chapter",
+        ["ReadingChapters_other"] = "{count} chapters",
+        ["ReadingVolumes_one"] = "1 volume",
+        ["ReadingVolumes_other"] = "{count} volumes",
+        ["ReadingOnPlanning"] = "On your Planning list",
+        ["ReadingSpotlightNewChapter"] = "New chapter in a series you follow",
+        ["ReadingSpotlightContinue"] = "Continue reading",
+        ["ReadingSpotlightUpNext"] = "Up next for you",
+        ["ReadingSpotlightPopular"] = "Popular, releasing now",
+        ["ReadingOutToday"] = "Chapter {chapter} is out today",
+        ["ReadingOutTodayTitled"] = "Chapter {chapter}, {title}, out today",
+        ["ReadingChapterPage"] = "Chapter {chapter} · page {page}",
+        ["ReadingChapterPercent"] = "Chapter {chapter} · {percent}%",
+        ["ReadingChapterNew"] = "Chapter {chapter} is new",
+        ["ReadingOriginJapan"] = "Japan",
+        ["ReadingOriginKorea"] = "Korea",
+        ["ReadingOriginChina"] = "China",
+        ["ReadingOriginTaiwan"] = "Taiwan",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -8914,6 +9168,7 @@ public static partial class T
         ["PluginInstallFailed"] = "Couldn't install {plugin}. {reason}",
         ["PluginPublishFailed"] = "Couldn't publish {plugin}. {reason}",
         ["PluginMissingLocally"] = "{plugin} is no longer in the plugin folder.",
+        ["StoreTakesNoBooks"] = "{store} doesn't list book sources yet. Its owner can update the plugin store to add them.",
         ["StoreInviteNeedsLink"] = "This device joined {store} with its link. Paste the same link on the other device.",
         ["StoreLinkMalformed"] = "The plugin store sent a link that doesn't work. Ask its owner to check the plugin store. {reason}",
         ["StoreLinkWrongKey"] = "The plugin store made a link with a different key. Check the address it was started with.",

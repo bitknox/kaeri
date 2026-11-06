@@ -212,6 +212,10 @@ plugin-publish-failed = Couldn't publish { $plugin }. { $reason }
 # @arg plugin: text
 plugin-missing-locally = { $plugin } is no longer in the { -plugin } folder.
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+# @arg store: text
+store-takes-no-books = { $store } doesn't list book { -source-pl } yet. Its owner can update the { -plugin-store } to add them.
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 # @arg store: text
 store-invite-needs-link = This { -device } joined { $store } with its link. Paste the same link on the other { -device }.

@@ -1,0 +1,47 @@
+[package]
+name = "kaeri-books"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Book files opened as untrusted input: CBZ, CBR, CB7, image folders, EPUB and PDF"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[features]
+default = ["cbr", "cb7", "pdf"]
+# CBR through the rars crate's read side. Without it a RAR file is reported as unsupported, so the
+# maintainer can switch CBR off or swap the reader without touching the rest (spike S2).
+cbr = ["dep:rars"]
+cb7 = ["dep:sevenz-rust2"]
+pdf = ["dep:hayro"]
+# hayro's embedded standard fonts and CMaps, for PDFs that leave their fonts out.
+pdf-fonts = ["pdf", "hayro/embed-fonts", "hayro/embed-cmaps"]
+# For the fuzz targets only: lets a panic inside a third-party decoder through instead of reporting
+# a damaged file, so fuzzing finds it.
+fuzzing = []
+
+# Pure: files and buffers in, bytes and parsed records out. No network, no async runtime and no
+# engine, so the engine, the folder scanner and the OPDS feed can all use it. tools/check-boundaries.sh
+# holds it to that.
+[dependencies]
+zip.workspace = true
+roxmltree.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+sha1.workspace = true
+rars = { workspace = true, optional = true }
+sevenz-rust2 = { workspace = true, optional = true }
+hayro = { workspace = true, optional = true }
+
+[dev-dependencies]
+# Writes the CB7 fixtures; only tests compile the compressor.
+sevenz-rust2 = { workspace = true, features = ["compress"] }
+image.workspace = true
+tempfile = "3"
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -96,6 +96,7 @@ pub mod aniskip;
 pub mod artwork;
 pub mod autoplay;
 pub mod background;
+pub mod book_plugins;
 pub mod cache;
 #[cfg(feature = "cast")]
 pub mod cast;
@@ -133,6 +134,9 @@ pub mod playback;
 pub mod plugin_stores;
 pub mod profile;
 pub mod proxy;
+pub mod read_catalog;
+pub mod read_sources;
+pub mod reading;
 #[cfg(feature = "remote")]
 pub mod remote;
 pub mod servers;

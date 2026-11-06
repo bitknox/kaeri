@@ -187,6 +187,14 @@ pub struct FfiStart {
     /// none.
     #[uniffi(default = false)]
     pub audio_tap: bool,
+    /// Whether reading is in this build. Release builds pass `false` while it ships dark, and
+    /// every reading command is then refused; Fixtures builds pass `true`.
+    #[uniffi(default = false)]
+    pub reading: bool,
+    /// The build's edition: the e-reader build is `ReadOnly`. `None` is `Full`, except on
+    /// Android TV, which is always `WatchOnly`.
+    #[uniffi(default = None)]
+    pub edition: Option<kaeri_model::medium::AppEdition>,
 }
 
 /// The address of the engine's audio tap callback, for the app to give its libmpv's
@@ -198,6 +206,15 @@ pub fn audio_tap_callback() -> u64 {
 }
 
 impl FfiStart {
+    /// The edition in effect: the TV watches only, whatever the app says.
+    pub fn edition(&self) -> kaeri_model::medium::AppEdition {
+        use kaeri_model::medium::AppEdition;
+        if self.platform == Some(FfiPlatform::AndroidTv) {
+            return AppEdition::WatchOnly;
+        }
+        self.edition.unwrap_or(AppEdition::Full)
+    }
+
     /// Where tokens are kept, the default filled in.
     pub fn secrets_mode(&self) -> SecretsMode {
         self.secrets.unwrap_or_default()
