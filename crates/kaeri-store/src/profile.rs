@@ -58,6 +58,8 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "read_track_map",
     "read_notice",
     "read_mark",
+    "read_unread",
+    "read_note",
     "book_source_match",
     "book_edition_pref",
 ];

@@ -5,7 +5,7 @@ use roxmltree::Node;
 
 use super::{escape_attr, escape_text};
 
-const XHTML_NS: &str = "http://www.w3.org/1999/xhtml";
+pub(crate) const XHTML_NS: &str = "http://www.w3.org/1999/xhtml";
 
 /// Elements left out with everything inside them.
 const DROPPED: &[&str] = &[
@@ -15,7 +15,7 @@ const DROPPED: &[&str] = &[
 
 /// Elements written as `<x/>`; every other element gets an end tag, which HTML-minded readers
 /// need for `<div/>` or `<a/>`.
-const VOID: &[&str] = &[
+pub(crate) const VOID: &[&str] = &[
     "area", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
     "track", "wbr",
 ];
@@ -133,23 +133,8 @@ impl Writer {
         self.out.push_str(&format!("</{name}>"));
     }
 
-    /// Namespace declarations this element adds to what its parent has in scope.
     fn declarations(&mut self, n: Node<'_, '_>) {
-        let parent: Vec<(Option<&str>, &str)> = n
-            .parent_element()
-            .map(|p| p.namespaces().map(|ns| (ns.name(), ns.uri())).collect())
-            .unwrap_or_default();
-        for ns in n.namespaces() {
-            if ns.name() == Some("xml") || parent.contains(&(ns.name(), ns.uri())) {
-                continue;
-            }
-            match ns.name() {
-                Some(p) => {
-                    self.out.push_str(&format!(" xmlns:{p}=\"{}\"", escape_attr(ns.uri())))
-                }
-                None => self.out.push_str(&format!(" xmlns=\"{}\"", escape_attr(ns.uri()))),
-            }
-        }
+        declarations(&mut self.out, n);
     }
 
     /// Text as Kobo sentence spans, `kobo.<paragraph>.<sentence>`.
@@ -173,9 +158,26 @@ impl Writer {
     }
 }
 
+/// Namespace declarations this element adds to what its parent has in scope.
+pub(crate) fn declarations(out: &mut String, n: Node<'_, '_>) {
+    let parent: Vec<(Option<&str>, &str)> = n
+        .parent_element()
+        .map(|p| p.namespaces().map(|ns| (ns.name(), ns.uri())).collect())
+        .unwrap_or_default();
+    for ns in n.namespaces() {
+        if ns.name() == Some("xml") || parent.contains(&(ns.name(), ns.uri())) {
+            continue;
+        }
+        match ns.name() {
+            Some(p) => out.push_str(&format!(" xmlns:{p}=\"{}\"", escape_attr(ns.uri()))),
+            None => out.push_str(&format!(" xmlns=\"{}\"", escape_attr(ns.uri()))),
+        }
+    }
+}
+
 /// The element's name with the prefix its namespace has in scope. `None` for a namespace with
 /// no prefix in scope, which a well-formed source cannot produce.
-fn qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Option<String> {
+pub(crate) fn qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Option<String> {
     let Some(ns) = ns else { return Some(local.to_owned()) };
     match n.lookup_prefix(ns) {
         Some(p) if !p.is_empty() => Some(format!("{p}:{local}")),
@@ -188,7 +190,7 @@ fn qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Option<String> {
 
 /// An attribute's name; an attribute in a namespace needs a prefix, the default one never
 /// applies to attributes.
-fn attr_qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Option<String> {
+pub(crate) fn attr_qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Option<String> {
     let Some(ns) = ns else { return Some(local.to_owned()) };
     let p = n.lookup_prefix(ns)?;
     (!p.is_empty()).then(|| format!("{p}:{local}"))

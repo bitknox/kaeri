@@ -10,6 +10,8 @@
 //! [`open`] sniffs the file's first bytes and opens it as the right [`Book`]. The readers can
 //! also be used one by one: [`Archive`], [`Comic`], [`Epub`] and [`Pdf`].
 //!
+//! [`novel`] cleans EPUB and text chapters for the web view and carries the paginator.
+//!
 //! [`write`](mod@write) makes books for downloads and Send to e-reader (CBZ, EPUB, fixed-layout EPUB and
 //! KEPUB), and [`opds`] makes the documents of the OPDS catalogue served to e-readers.
 //!
@@ -28,6 +30,7 @@ mod limits;
 pub mod mime;
 pub mod naming;
 pub mod natural;
+pub mod novel;
 pub mod opds;
 pub mod path;
 #[cfg(feature = "pdf")]

@@ -9,7 +9,7 @@
 mod cbz;
 mod epub;
 mod kepub;
-mod xhtml;
+pub(crate) mod xhtml;
 
 use std::io;
 use std::ops::Range;

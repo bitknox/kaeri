@@ -845,9 +845,14 @@ pub fn reader_back_to_page(page: i64) -> String {
     text("reader-back-to-page", &[("page", Arg::Int(page))])
 }
 
-/// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+/// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
 pub fn reader_moved(chapter: &str, page: i64, device: &str) -> String {
     text("reader-moved", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+}
+
+/// The same notice for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number(chapter: &str, page: i64, device: &str) -> String {
+    text("reader-moved-number", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
 }
 
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.

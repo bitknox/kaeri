@@ -983,6 +983,33 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0029_read_unread",
+        r#"
+    -- The newest unread of a chapter and the device that wrote it ('' with sync off), as
+    -- `sync_unwatch` keeps an episode's. It tells a read that arrives later from one that saw
+    -- the unread, and keeps a chapter a watermark covers unread until it is read again.
+    CREATE TABLE read_unread (
+        work    TEXT    NOT NULL,
+        chapter TEXT    NOT NULL,
+        stamp   INTEGER NOT NULL,
+        device  TEXT    NOT NULL DEFAULT '',
+        PRIMARY KEY (work, chapter)
+    ) WITHOUT ROWID;
+
+    -- A finished chapter kept against an unread its reading device had not seen, as `sync_note`
+    -- keeps a watch: surfaced for seven days.
+    CREATE TABLE read_note (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        work          TEXT    NOT NULL,
+        chapter       TEXT    NOT NULL,
+        unread_device TEXT    NOT NULL,
+        read_device   TEXT    NOT NULL,
+        at            INTEGER NOT NULL,
+        UNIQUE (work, chapter, unread_device, read_device)
+    );
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
@@ -1137,6 +1164,8 @@ mod tests {
             "book_local_file",
             "book_server",
             "book_download",
+            "read_unread",
+            "read_note",
         ] {
             let found: bool = conn
                 .query_row(

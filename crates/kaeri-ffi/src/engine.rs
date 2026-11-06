@@ -121,6 +121,16 @@ impl FfiEngine {
         lock(&self.engine).as_ref()?.send(command)
     }
 
+    /// The answer to a novel's web view asking for `url`: what the platform's scheme handler
+    /// (`kaeri-book://`, or Android's asset loader under `/book/`) returns, with its headers.
+    /// `None` for a URL that is no book's, which the host fails. Reads the book on the
+    /// caller's thread without waiting on the engine's commands; call it from the handler's
+    /// own thread, not the main one.
+    pub fn book_resource(&self, url: String) -> Option<kaeri_model::reader::BookResource> {
+        let novels = lock(&self.engine).as_ref()?.novels();
+        novels.resource(&url)
+    }
+
     /// The events there are, waiting for at least one: a batch for the front end to apply in
     /// one go, in the order the engine applied them. Launch's come first: the settings, the
     /// trackers and the stores as they were left.
@@ -314,6 +324,7 @@ impl Opened {
         if let Some(platform) = start.platform {
             platform.device_label().clone_into(&mut options.device_label);
             options.handheld = platform.handheld();
+            options.phone = platform.phone();
             options.device_kind = Some(platform.sync_kind());
         }
         options.language.clone_from(&start.language);

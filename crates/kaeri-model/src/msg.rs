@@ -1211,8 +1211,10 @@ pub enum ReadingMsg {
     ReaderResumed { page: i64 },
     /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
     ReaderBackToPage { page: i64 },
-    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
     ReaderMoved { chapter: String, page: i64, device: String },
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumber { chapter: String, page: i64, device: String },
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     ReaderDetectedRightToLeft,
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
@@ -1328,6 +1330,7 @@ impl ReadingMsg {
             Self::ReaderResumed { .. } => "reader-resumed",
             Self::ReaderBackToPage { .. } => "reader-back-to-page",
             Self::ReaderMoved { .. } => "reader-moved",
+            Self::ReaderMovedNumber { .. } => "reader-moved-number",
             Self::ReaderDetectedRightToLeft => "reader-detected-right-to-left",
             Self::ReaderDetectedLeftToRight => "reader-detected-left-to-right",
             Self::ReaderDetectedStrip => "reader-detected-strip",
@@ -1396,6 +1399,7 @@ impl ReadingMsg {
             Self::ReaderResumed { page } => vec![("page", Value::Int(*page))],
             Self::ReaderBackToPage { page } => vec![("page", Value::Int(*page))],
             Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
             Self::ReaderDetectedRightToLeft => Vec::new(),
             Self::ReaderDetectedLeftToRight => Vec::new(),
             Self::ReaderDetectedStrip => Vec::new(),

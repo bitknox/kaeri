@@ -15,7 +15,7 @@ use rusqlite::{OptionalExtension, Transaction, params};
 
 use crate::{
     Result, Store,
-    sync::{Op, OpBody, Stamp, kinds, tick},
+    sync::{Op, OpBody, ReadNote, Stamp, kinds, tick},
 };
 
 /// The settings a series' own choice syncs for: the rest stay on the device.
@@ -74,10 +74,36 @@ pub struct ReadWork {
 }
 
 impl ReadWork {
-    /// Whether the watermark counts `chapter` as read.
+    /// Whether the highest watermark covers `chapter`, unreads aside: [`ReadMarks`] has the answer
+    /// that counts them.
     pub fn adopted(&self, chapter: &str) -> bool {
         self.adopt_milli
             .is_some_and(|milli| covers(milli, self.adopt_volume.as_deref(), chapter))
+    }
+}
+
+/// What counts as read in one work, loaded once: the chapters read since the newest reset, and
+/// the watermarks with the unreads that came after them.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct ReadMarks {
+    read: std::collections::BTreeSet<String>,
+    /// `(upto_milli, upto_volume, stamp)` of each watermark since the newest reset.
+    adopts: Vec<(i64, Option<String>, Stamp)>,
+    /// The newest unread of each chapter.
+    unreads: std::collections::BTreeMap<String, Stamp>,
+}
+
+impl ReadMarks {
+    /// Whether `chapter` counts as read: read since the newest reset, or under a watermark set
+    /// after the chapter was last marked unread.
+    pub fn is_read(&self, chapter: &str) -> bool {
+        if self.read.contains(chapter) {
+            return true;
+        }
+        let unread = self.unreads.get(chapter).copied().unwrap_or(0);
+        self.adopts.iter().any(|(milli, volume, stamp)| {
+            *stamp > unread && covers(*milli, volume.as_deref(), chapter)
+        })
     }
 }
 
@@ -86,7 +112,8 @@ impl ReadWork {
 pub struct SeriesSetting {
     pub setting: String,
     pub value: String,
-    /// `series` (follows the person) or `here` (this device only).
+    /// `series` (follows the person), `here` (this device only) or `auto` (the reader's guess,
+    /// this device only).
     pub scope: String,
 }
 
@@ -263,8 +290,14 @@ pub(crate) fn refresh_work(tx: &Transaction<'_>, work: &str) -> rusqlite::Result
     Ok(())
 }
 
-/// Apply a received reading op. Returns the work to refresh.
-pub(crate) fn apply_read_op(tx: &Transaction<'_>, op: &Op) -> Result<Option<String>> {
+/// Apply a received reading op, noting reads kept against an unread they had not seen. Returns
+/// the work to refresh.
+pub(crate) fn apply_read_op(
+    tx: &Transaction<'_>,
+    op: &Op,
+    now_secs: i64,
+    notes: &mut Vec<ReadNote>,
+) -> Result<Option<String>> {
     let uid = format!("{}:{}", op.device, op.seq);
     Ok(match &op.body {
         OpBody::Read {
@@ -279,9 +312,10 @@ pub(crate) fn apply_read_op(tx: &Transaction<'_>, op: &Op) -> Result<Option<Stri
             source_id,
             at,
             version_label,
+            seen_unread,
             ..
         } => {
-            tx.execute(
+            let inserted = tx.execute(
                 "INSERT OR IGNORE INTO read_event
                    (uid, stamp, work, chapter, page, of_pages, strip_image, strip_offset,
                     novel_pos, completed, source_id, version_label, at)
@@ -303,15 +337,51 @@ pub(crate) fn apply_read_op(tx: &Transaction<'_>, op: &Op) -> Result<Option<Stri
                     at
                 ],
             )?;
+            if inserted > 0 && *completed {
+                // An unread another device wrote, later than this read, that did not name it.
+                let unread: Option<(i64, String)> = tx
+                    .query_row(
+                        "SELECT stamp, device FROM read_unread WHERE work = ?1 AND chapter = ?2",
+                        params![work, chapter],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )
+                    .optional()?;
+                if let Some((stamp, device)) = unread
+                    && stamp as u64 > *seen_unread
+                    && device != op.device
+                {
+                    read_note(tx, notes, work, chapter, &device, &op.device, now_secs)?;
+                }
+            }
             Some(work.clone())
         }
-        OpBody::Unread { work, removes, .. } => {
+        OpBody::Unread { work, chapter, removes } => {
             for removed in removes {
                 tx.execute(
                     "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                     params![removed, op.stamp as i64],
                 )?;
                 tx.execute("DELETE FROM read_event WHERE uid = ?1", [removed])?;
+            }
+            note_unread(tx, work, chapter, op.stamp, &op.device)?;
+            // Finished reads by other devices that this unread never named.
+            let kept: Vec<String> = {
+                let mut stmt = tx.prepare(
+                    "SELECT uid FROM read_event
+                      WHERE work = ?1 AND chapter = ?2 AND completed = 1 AND uid IS NOT NULL",
+                )?;
+                stmt.query_map(params![work, chapter], |r| r.get(0))?
+                    .collect::<rusqlite::Result<_>>()?
+            };
+            let mut readers = std::collections::BTreeSet::new();
+            for uid in kept {
+                let reader = uid.split_once(':').map_or("", |(d, _)| d).to_owned();
+                if reader != op.device && read_seen_unread(tx, &uid)? < op.stamp {
+                    readers.insert(reader);
+                }
+            }
+            for reader in readers {
+                read_note(tx, notes, work, chapter, &op.device, &reader, now_secs)?;
             }
             Some(work.clone())
         }
@@ -347,6 +417,66 @@ pub(crate) fn apply_read_op(tx: &Transaction<'_>, op: &Op) -> Result<Option<Stri
         }
         _ => None,
     })
+}
+
+/// Keep the newest unread of a chapter, so a watermark set before it no longer counts it.
+fn note_unread(
+    tx: &Transaction<'_>,
+    work: &str,
+    chapter: &str,
+    stamp: Stamp,
+    device: &str,
+) -> rusqlite::Result<()> {
+    tx.execute(
+        "INSERT INTO read_unread (work, chapter, stamp, device) VALUES (?1, ?2, ?3, ?4)
+         ON CONFLICT(work, chapter) DO UPDATE SET stamp = excluded.stamp, device = excluded.device
+          WHERE excluded.stamp > read_unread.stamp",
+        params![work, chapter, stamp as i64, device],
+    )?;
+    Ok(())
+}
+
+/// The unread a read's device had seen, from the op that made the event.
+fn read_seen_unread(tx: &Transaction<'_>, uid: &str) -> rusqlite::Result<Stamp> {
+    let Some((device, seq)) = uid.split_once(':') else { return Ok(0) };
+    let body: Option<String> = tx
+        .query_row(
+            "SELECT body FROM sync_op WHERE device = ?1 AND seq = ?2",
+            params![device, seq.parse::<i64>().unwrap_or(0)],
+            |r| r.get(0),
+        )
+        .optional()?;
+    Ok(match body.and_then(|b| serde_json::from_str::<OpBody>(&b).ok()) {
+        Some(OpBody::Read { seen_unread, .. }) => seen_unread,
+        _ => 0,
+    })
+}
+
+fn read_note(
+    tx: &Transaction<'_>,
+    notes: &mut Vec<ReadNote>,
+    work: &str,
+    chapter: &str,
+    unread_device: &str,
+    read_device: &str,
+    now: i64,
+) -> rusqlite::Result<()> {
+    let added = tx.execute(
+        "INSERT OR IGNORE INTO read_note (work, chapter, unread_device, read_device, at)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![work, chapter, unread_device, read_device, now],
+    )?;
+    if added > 0 {
+        notes.push(ReadNote {
+            id: tx.last_insert_rowid(),
+            work: work.to_owned(),
+            chapter: chapter.to_owned(),
+            unread_device: unread_device.to_owned(),
+            read_device: read_device.to_owned(),
+            at: now,
+        });
+    }
+    Ok(())
 }
 
 fn insert_adopt(
@@ -568,6 +698,7 @@ fn local_stamp(tx: &Transaction<'_>, wall_ms: i64) -> rusqlite::Result<Stamp> {
              SELECT MAX(stamp) AS m FROM read_event
              UNION ALL SELECT MAX(stamp) FROM read_adopt
              UNION ALL SELECT MAX(stamp) FROM read_reset
+             UNION ALL SELECT MAX(stamp) FROM read_unread
          )",
         [],
         |r| r.get(0),
@@ -612,7 +743,17 @@ impl Store {
         let wall = self.sync.wall_ms();
         self.with_personal_tx(|tx| {
             let op = if syncs(&event.work) {
-                let seen_unread = 0;
+                let seen_unread = if event.completed {
+                    tx.query_row(
+                        "SELECT stamp FROM read_unread WHERE work = ?1 AND chapter = ?2",
+                        params![event.work, event.chapter],
+                        |r| r.get::<_, i64>(0),
+                    )
+                    .optional()?
+                    .unwrap_or(0) as u64
+                } else {
+                    0
+                };
                 self.emit(
                     tx,
                     OpBody::Read {
@@ -667,8 +808,9 @@ impl Store {
     }
 
     /// Take chapters back: their events go, named in an unread op when the work syncs. A
-    /// watermark that covers a chapter still counts it.
+    /// watermark set before the unread no longer counts the chapter; one set after it does.
     pub fn unread(&self, work: &str, chapters: &[String]) -> Result<()> {
+        let wall = self.sync.wall_ms();
         self.with_personal_tx(|tx| {
             for chapter in chapters {
                 let removes: Vec<String> = {
@@ -683,6 +825,7 @@ impl Store {
                     "DELETE FROM read_event WHERE work = ?1 AND chapter = ?2",
                     params![work, chapter],
                 )?;
+                let mut kept = None;
                 if syncs(work) {
                     let body = OpBody::Unread {
                         work: work.to_owned(),
@@ -696,8 +839,14 @@ impl Store {
                                 params![uid, op.stamp as i64],
                             )?;
                         }
+                        kept = Some((op.stamp, op.device));
                     }
                 }
+                let (stamp, device) = match kept {
+                    Some(kept) => kept,
+                    None => (local_stamp(tx, wall)?, String::new()),
+                };
+                note_unread(tx, work, chapter, stamp, &device)?;
             }
             refresh_work(tx, work)?;
             Ok(())
@@ -809,18 +958,68 @@ impl Store {
         })
     }
 
-    /// Whether a chapter counts as read: read since the newest reset, or under the watermark.
+    /// Whether a chapter counts as read: read since the newest reset, or under a watermark set
+    /// after its newest unread.
     pub fn chapter_is_read(&self, work: &str, chapter: &str) -> Result<bool> {
-        let marked = self.with_personal(|c| {
-            Ok(c.query_row(
-                "SELECT read FROM read_chapter WHERE work = ?1 AND chapter = ?2",
-                params![work, chapter],
-                |r| r.get::<_, i64>(0),
-            )
-            .optional()?
-            .is_some_and(|read| read != 0))
-        })?;
-        Ok(marked || self.read_work(work)?.is_some_and(|w| w.adopted(chapter)))
+        Ok(self.read_marks(work)?.is_read(chapter))
+    }
+
+    /// What counts as read in a work, for asking about many chapters at once.
+    pub fn read_marks(&self, work: &str) -> Result<ReadMarks> {
+        self.with_personal_tx(|tx| {
+            let reset = reset_stamp(tx, work)?;
+            let read = {
+                let mut stmt = tx
+                    .prepare("SELECT chapter FROM read_chapter WHERE work = ?1 AND read = 1")?;
+                stmt.query_map([work], |r| r.get(0))?.collect::<rusqlite::Result<_>>()?
+            };
+            let adopts = {
+                let mut stmt = tx.prepare(
+                    "SELECT upto_milli, upto_volume, stamp FROM read_adopt
+                      WHERE work = ?1 AND stamp > ?2",
+                )?;
+                stmt.query_map(params![work, reset as i64], |r| {
+                    Ok((r.get(0)?, r.get(1)?, r.get::<_, i64>(2)? as u64))
+                })?
+                .collect::<rusqlite::Result<_>>()?
+            };
+            let unreads = {
+                let mut stmt =
+                    tx.prepare("SELECT chapter, stamp FROM read_unread WHERE work = ?1")?;
+                stmt.query_map([work], |r| Ok((r.get(0)?, r.get::<_, i64>(1)? as u64)))?
+                    .collect::<rusqlite::Result<_>>()?
+            };
+            Ok(ReadMarks { read, adopts, unreads })
+        })
+    }
+
+    /// Finished chapters kept against an unread they had not seen, newer than `since` (unix
+    /// seconds).
+    pub fn read_notes(&self, since: i64) -> Result<Vec<ReadNote>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT id, work, chapter, unread_device, read_device, at
+                   FROM read_note WHERE at >= ?1 ORDER BY id",
+            )?;
+            Ok(stmt
+                .query_map([since], |r| {
+                    Ok(ReadNote {
+                        id: r.get(0)?,
+                        work: r.get(1)?,
+                        chapter: r.get(2)?,
+                        unread_device: r.get(3)?,
+                        read_device: r.get(4)?,
+                        at: r.get(5)?,
+                    })
+                })?
+                .collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
+    pub fn dismiss_read_note(&self, id: i64) -> Result<()> {
+        self.with_personal(|c| {
+            Ok(c.execute("DELETE FROM read_note WHERE id = ?1", [id]).map(|_| ())?)
+        })
     }
 
     /// The works for Continue, newest first: read here or elsewhere, and not hidden.
@@ -870,6 +1069,25 @@ impl Store {
                 self.emit_reg(tx, kinds::READ_SERIES, &format!("{work}/{setting}"), value)?;
             }
             Ok(())
+        })
+    }
+
+    /// Keep the reader's guess for a series (scope `auto`), unless the series already has a
+    /// value for the setting. A guess stays on the device. Returns whether it was kept, so the
+    /// guess is shown once.
+    pub fn set_series_guess(
+        &self,
+        work: &str,
+        setting: &str,
+        value: &str,
+        at: i64,
+    ) -> Result<bool> {
+        self.with_personal(|c| {
+            Ok(c.execute(
+                "INSERT OR IGNORE INTO read_series_setting (work, setting, value, scope, updated_at)
+                 VALUES (?1, ?2, ?3, 'auto', ?4)",
+                params![work, setting, value, at],
+            )? > 0)
         })
     }
 
@@ -1135,7 +1353,7 @@ impl Store {
             let body =
                 OpBody::ReadMark { tracker: tracker.to_owned(), anilist_id, chapter, volume };
             if let Some(op) = self.emit(tx, body)? {
-                apply_read_op(tx, &op)?;
+                apply_read_op(tx, &op, 0, &mut Vec::new())?;
             }
             Ok(())
         })
@@ -1398,6 +1616,23 @@ mod tests {
         assert!(store.chapter_is_read(work, "41").unwrap());
         store.unread(work, &["41".into()]).unwrap();
         assert!(!store.chapter_is_read(work, "41").unwrap());
+    }
+
+    #[test]
+    fn unread_under_a_watermark_holds_until_a_newer_watermark() {
+        let store = store();
+        for work in ["a:900106", "l:9a01"] {
+            store.adopt_read(work, "40", None, 100).unwrap();
+            store.unread(work, &["12".into()]).unwrap();
+            let marks = store.read_marks(work).unwrap();
+            assert!(!marks.is_read("12"), "{work}");
+            assert!(marks.is_read("13"), "{work}");
+            store.adopt_read(work, "20", None, 300).unwrap();
+            assert!(store.chapter_is_read(work, "12").unwrap(), "{work}");
+            store.unread(work, &["12".into()]).unwrap();
+            read(&store, work, "12", 20, true, 400);
+            assert!(store.chapter_is_read(work, "12").unwrap(), "{work}");
+        }
     }
 
     #[test]

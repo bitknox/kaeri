@@ -200,6 +200,17 @@ pub struct SyncNote {
     pub at: i64,
 }
 
+/// A finished chapter kept against an unread it had not seen: reading's [`SyncNote`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReadNote {
+    pub id: i64,
+    pub work: String,
+    pub chapter: String,
+    pub unread_device: String,
+    pub read_device: String,
+    pub at: i64,
+}
+
 /// A write a received op asks of the device's own tables, which the personal transaction cannot
 /// make: done by [`Store::apply_ops`] right after it commits.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -265,6 +276,8 @@ pub struct Applied {
     pub unknown: usize,
     pub effects: Vec<Effect>,
     pub notes: Vec<SyncNote>,
+    /// Reads kept against an unread they had not seen.
+    pub read_notes: Vec<ReadNote>,
     pub titles: Vec<u32>,
     /// Completed watches that arrived, for the tracker lead rule.
     pub watches: Vec<ReceivedWatch>,

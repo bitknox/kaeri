@@ -2,14 +2,24 @@
 //!
 //! Reading ships dark: until the front end starts the engine with reading on, every reading,
 //! reader and book source command is answered with [`ReadingFailure::ReadingOff`] in place, and
-//! the medium is Watch whatever is stored. With reading on, the loads answer with their empty
-//! shapes until the parts that fill them land; the rest are logged and dropped.
+//! the medium is Watch whatever is stored. With reading on, the reader opens what is on this
+//! device ([`session`]); the loads that have no part behind them yet answer with their empty
+//! shapes, and the rest are logged and dropped.
+
+pub(crate) mod eink;
+pub mod novel;
+pub(crate) mod pages;
+pub(crate) mod session;
+pub(crate) mod settings;
+pub(crate) mod shelf;
+
+pub(crate) use session::Reader;
 
 use kaeri_model::{
     book_sources::BookSourceCommand,
     event::Event,
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
-    reader::{ReaderCommand, ReaderEvent, ReaderSettingsView},
+    reader::ReaderCommand,
     reading::{
         BookDownloadsView, FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand,
         ReadingEvent, ReadingFailure, ReadingHomeView, UpdatesView,
@@ -166,16 +176,19 @@ pub(crate) fn medium(
 
 /// A reading command.
 pub(crate) fn reading(
-    state: &ReadingState,
+    engine: &mut EngineState,
     services: &Services,
     command: ReadingCommand,
     tx: &Outbox,
 ) {
     let about = command.about();
-    if !state.available {
+    if !engine.reading.available {
         return off(about, tx);
     }
     let event = match command {
+        ReadingCommand::DeviceFacts { .. } | ReadingCommand::AnswerEink { .. } => {
+            return eink(engine, services, command, tx);
+        }
         ReadingCommand::LoadHome { .. } => ReadingEvent::Home(Box::new(ReadingHomeView {
             no_sources: true,
             ..Default::default()
@@ -289,19 +302,46 @@ fn mark_read(
 }
 
 /// A reader command.
-pub(crate) fn reader(state: &ReadingState, command: ReaderCommand, tx: &Outbox) {
-    if !state.available {
+pub(crate) fn reader(
+    engine: &mut EngineState,
+    services: &Services,
+    command: ReaderCommand,
+    tx: &Outbox,
+) {
+    if !engine.reading.available {
         return off(ReadingAbout::Reader, tx);
     }
+    let EngineState { config, reader, .. } = engine;
+    let mut cx = reader.cx(config, services, tx);
+    reader.command(&mut cx, command);
+}
+
+/// What Android said about its screen, or the person's answers about it: the profile again.
+fn eink(engine: &mut EngineState, services: &Services, command: ReadingCommand, tx: &Outbox) {
     match command {
-        ReaderCommand::LoadSettings { medium, work } => {
-            let view = ReaderSettingsView { medium, work, rows: Vec::new() };
-            let _ = tx.send(Event::Reader(ReaderEvent::Settings(view)));
+        ReadingCommand::DeviceFacts { facts } => engine.reader.facts = Some(facts),
+        ReadingCommand::AnswerEink { eink, colour } => {
+            let word = |v: Option<bool>, yes: &str, no: &str| match v {
+                Some(true) => yes.to_owned(),
+                Some(false) => no.to_owned(),
+                None => "auto".to_owned(),
+            };
+            for (key, value) in [
+                ("mode", word(eink, "on", "off")),
+                ("colour_panel", word(colour, "colour", "greys")),
+            ] {
+                let value = SettingValue::Str(value);
+                if let Err(e) =
+                    engine.config.write(&services.paths, &["reading", "eink"], key, value)
+                {
+                    tracing::warn!(error = %e, "the e-ink answer was not written");
+                }
+            }
         }
-        ReaderCommand::Close { session } => {
-            let _ = tx.send(Event::Reader(ReaderEvent::Closed { session }));
-        }
-        other => tracing::debug!(command = ?other, "reader command not handled yet"),
+        _ => return,
+    }
+    if let Some(profile) = engine.reader.detect(engine.config.effective()) {
+        let _ = tx.send(Event::Reading(ReadingEvent::Eink(profile)));
     }
 }
 

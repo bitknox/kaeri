@@ -10,6 +10,14 @@ pub fn eink_paint(policy: EinkPolicy, counter: EinkCounter, paint: EinkPaint) ->
 }
 
 /// The refresh settings a panel starts with, before the person changes any.
+/// The paginator script, its stylesheet and the content security policy a novel's web view
+/// runs under. Inject `script` as a user script at document start in every frame of the book's
+/// origin; the engine's answers already carry the policy.
+#[uniffi::export]
+pub fn novel_assets() -> kaeri_model::reader::NovelAssets {
+    kaeri_engine::reading::novel::assets()
+}
+
 #[uniffi::export]
 pub fn eink_policy_defaults(panel: Panel) -> EinkPolicy {
     EinkPolicy::defaults(panel)

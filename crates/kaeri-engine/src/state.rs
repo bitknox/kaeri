@@ -132,6 +132,8 @@ pub struct EngineState {
     pub party: Option<crate::party::Running>,
     /// Whether reading is in this build, the edition, and the medium: see [`crate::reading`].
     pub reading: crate::reading::ReadingState,
+    /// The open reader session and the page worker: see [`crate::reading::session`].
+    pub reader: crate::reading::Reader,
 }
 
 impl EngineState {
@@ -181,6 +183,7 @@ impl EngineState {
             #[cfg(feature = "party")]
             party: None,
             reading: Default::default(),
+            reader: Default::default(),
         }
     }
 

@@ -540,8 +540,11 @@ reader-resumed = [Ŕéšüɱéð àţ þàĝé { $page }~~~~~~]
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = [Ɓàçķ ţö þàĝé { $page }~~~~~]
 
-# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
-reader-moved = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~]
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = [Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]

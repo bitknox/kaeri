@@ -30,6 +30,7 @@ pub mod profile;
 pub mod reading;
 pub mod schema;
 pub mod server_health;
+pub mod shelf;
 pub mod show_setting;
 pub mod skip_found;
 pub mod skip_mark;
