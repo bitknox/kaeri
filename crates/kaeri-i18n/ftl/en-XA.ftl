@@ -741,6 +741,9 @@ stores-ready-demo-stays = [{ $store } îš ŕéàðý. Ţĥé ðéɱö šţàý�
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = [Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
 

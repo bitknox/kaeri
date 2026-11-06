@@ -153,6 +153,7 @@ fun Msg.text(context: Context): String =
         is Msg.PartyLeft -> Strings.partyLeft(context)
         is Msg.PartyServerUnreachable -> Strings.partyServerUnreachable(context, this.server)
         is Msg.CloudLoopbackDone -> Strings.cloudLoopbackDone(context)
+        is Msg.SyncDeviceRemoved -> Strings.syncDeviceRemoved(context)
         is Msg.NoticeSignedIn -> Strings.noticeSignedIn(context, this.tracker)
         is Msg.NoticeSignedInKeychain -> Strings.noticeSignedInKeychain(context, this.tracker)
         is Msg.NoticeSignedInFile -> Strings.noticeSignedInFile(context, this.tracker)

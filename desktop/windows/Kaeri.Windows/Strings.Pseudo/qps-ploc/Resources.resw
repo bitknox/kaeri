@@ -1007,6 +1007,10 @@
     <value>[Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]</value>
     <comment>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</comment>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>[Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.</comment>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>[Šîĝñéð îñ ţö {tracker}.~~~~~~]</value>
     <comment>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</comment>
