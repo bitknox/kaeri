@@ -18,8 +18,10 @@ public partial class App : Application
             e.Handled = e.Exception is not (OutOfMemoryException or InsufficientExecutionStackException or System.Runtime.InteropServices.SEHException);
             try
             {
+                // XAML's own failures come with no managed stack: the HRESULT, XAML's message and
+                // the managed frames that were running say where.
                 Kaeri.Engine.Ffi.KaeriFfiMethods.LogLine(Kaeri.Engine.Ffi.FfiLogLevel.Error, "windows",
-                    $"{(e.Handled ? "went on after" : "stopped on")} {e.Exception}");
+                    $"{(e.Handled ? "went on after" : "stopped on")} {e.Exception} (0x{e.Exception.HResult:X8}, {e.Message}){(e.Exception.StackTrace is null ? " while running: " + Environment.StackTrace : "")}");
             }
             catch (Exception)
             {

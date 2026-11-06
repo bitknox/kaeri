@@ -1233,6 +1233,9 @@ public static partial class T
     /// <summary>Note under the Torrents while casting setting, shown while torrents are on.</summary>
     public static string SettingsNoteTorrentsWhileCastingPc => Get("SettingsNoteTorrentsWhileCastingPc");
 
+    /// <summary>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</summary>
+    public static string SettingsLanguageRestart => Get("SettingsLanguageRestart");
+
     /// <summary>The notification area icon's balloon, the first time the window closes with downloads running: its title.</summary>
     public static string TrayStillDownloading => Get("TrayStillDownloading");
 
@@ -1352,6 +1355,15 @@ public static partial class T
 
     /// <summary>Button in that window: closes it and the app.</summary>
     public static string StartFailedQuit => Get("StartFailedQuit");
+
+    /// <summary>Title of the window shown instead of the app when the engine stopped while the app was open.</summary>
+    public static string EngineStoppedTitle => Get("EngineStoppedTitle");
+
+    /// <summary>Line under that title: what happened and what to do.</summary>
+    public static string EngineStoppedDetail => Get("EngineStoppedDetail");
+
+    /// <summary>Button in that window: opens the app again.</summary>
+    public static string EngineStoppedOpenAgain => Get("EngineStoppedOpenAgain");
 
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
@@ -9127,6 +9139,7 @@ public static partial class T
         ["SettingsNoteTrailersWindows"] = "Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.",
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
         ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
+        ["SettingsLanguageRestart"] = "Restart",
         ["TrayStillDownloading"] = "Kaeri is still downloading",
         ["TrayWhere"] = "It's in the notification area.",
         ["TrayOpen"] = "Open Kaeri",
@@ -9170,6 +9183,9 @@ public static partial class T
         ["StartFailedTitle"] = "Kaeri couldn't start",
         ["StartFailedOpenFolder"] = "Open the folder",
         ["StartFailedQuit"] = "Quit",
+        ["EngineStoppedTitle"] = "Kaeri stopped working",
+        ["EngineStoppedDetail"] = "The part of the app that does the work has stopped. Open Kaeri again to carry on.",
+        ["EngineStoppedOpenAgain"] = "Open again",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",

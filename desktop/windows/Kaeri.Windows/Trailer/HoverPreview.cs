@@ -19,16 +19,16 @@ namespace Kaeri.Windows;
 /// The preview a cover opens when the pointer rests on it: the banner, the title, a facts line,
 /// two lines of synopsis and the title's main action, in a flyout. Where the title has a trailer
 /// and trailers may play, it plays muted over the banner as on the title page.
-/// The pointer must rest: less than 4 px of movement for 800 ms, or for 300 ms when a preview
+/// The pointer must rest: less than 4 px of movement for 450 ms, or for 150 ms when a preview
 /// closed less than a second ago (scanning a row). The preview closes 150 ms after
 /// the pointer leaves both the cover and the preview, and at once on a scroll, a key press, a
 /// click elsewhere or the window losing focus. Keyboard focus never opens one.
 /// </summary>
 static class HoverPreview
 {
-    static readonly TimeSpan Dwell = TimeSpan.FromMilliseconds(800);
+    static readonly TimeSpan Dwell = TimeSpan.FromMilliseconds(450);
     /// <summary>The dwell for the next cover when a preview closed less than <see cref="Scanning"/> ago.</summary>
-    static readonly TimeSpan NextDwell = TimeSpan.FromMilliseconds(300);
+    static readonly TimeSpan NextDwell = TimeSpan.FromMilliseconds(150);
     static readonly TimeSpan Scanning = TimeSpan.FromSeconds(1);
     static DateTime closedAt = DateTime.MinValue;
     static readonly TimeSpan Leave = TimeSpan.FromMilliseconds(150);
@@ -36,6 +36,14 @@ static class HoverPreview
     const double Rest = 4;
     /// <summary>The video's width: 384 by 216, over YouTube's 356 by 200 floor.</summary>
     internal const double Width = 384;
+
+    /// <summary>
+    /// How long after the wheel no preview starts. Covers pass under a still pointer while the page
+    /// scrolls, and each would otherwise open a preview at the next pause, for the next notch to close.
+    /// </summary>
+    static readonly TimeSpan Scrolled = TimeSpan.FromMilliseconds(700);
+    static DateTime wheeledAt = DateTime.MinValue;
+    static UIElement? heard;
 
     static readonly ConditionalWeakTable<FrameworkElement, Resting> targets = [];
     static Open? open;
@@ -65,6 +73,7 @@ static class HoverPreview
             if (targets.TryGetValue(at, out var resting))
                 Show(at, resting.Id());
         });
+        target.Loaded += (_, _) => HearWheel(target);
         target.PointerEntered += (_, e) => Resume(target, state, e);
         target.PointerMoved += (_, e) =>
         {
@@ -87,11 +96,27 @@ static class HoverPreview
         target.Unloaded += (_, _) => state.Timer.Stop();
     }
 
+    /// <summary>Every wheel in the window, handled or not, marks the page as scrolling.</summary>
+    static void HearWheel(FrameworkElement target)
+    {
+        if (target.XamlRoot?.Content is not UIElement root || root == heard)
+            return;
+        heard?.RemoveHandler(UIElement.PointerWheelChangedEvent, (PointerEventHandler)OnWheel);
+        heard = root;
+        root.AddHandler(UIElement.PointerWheelChangedEvent, (PointerEventHandler)OnWheel, true);
+    }
+
+    static void OnWheel(object sender, PointerRoutedEventArgs e) => wheeledAt = DateTime.UtcNow;
+
     /// <summary>The pointer is at a new resting place: wait out the dwell again.</summary>
     static void Resume(FrameworkElement target, Resting state, PointerRoutedEventArgs e)
     {
         state.Anchor = e.GetCurrentPoint(target).Position;
         state.Timer!.Stop();
+        // The page is scrolling under the pointer: a cover arriving there is not one pointed at.
+        // The pointer moving once the page is still starts the dwell, as PointerMoved calls here.
+        if (DateTime.UtcNow - wheeledAt < Scrolled)
+            return;
         state.Timer.Interval = DateTime.UtcNow - closedAt < Scanning ? NextDwell : Dwell;
         // A touch has no hover; a pen or a mouse does.
         if (e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Touch)
@@ -122,6 +147,9 @@ static class HoverPreview
             return;
         if (ctx.Known.Entry(id) is not { } entry)
             return;
+        // Interest shown: the sources are asked whether they have the title, as the spec ties to a
+        // hover card. The engine asks once a minute at most, and Home marks a miss.
+        ctx.Send(new Command.ProbeTitle(id));
         Close();
         var preview = new Open(ctx, target, entry);
         open = preview;

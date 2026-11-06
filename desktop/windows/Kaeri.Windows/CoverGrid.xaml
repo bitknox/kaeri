@@ -6,7 +6,8 @@
     xmlns:local="using:Kaeri.Windows"
     xmlns:app="using:Kaeri.App">
   <!-- A poster grid: covers 150 wide at 2:3, as many columns as fit with 16 between, the title in
-       Zen Kaku 15 and one caption line in haze under each. -->
+       Zen Kaku 15 and one caption line in haze under each. The title keeps two lines
+       whether it needs them or not, so every cell is one height and none is cut. -->
   <ItemsView x:Name="Items" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="OnInvoked"
              TabFocusNavigation="Once">
     <ItemsView.Layout>
@@ -29,7 +30,8 @@
             <Grid Tag="cover" Width="150" Height="225" CornerRadius="8" Background="{x:Bind Placeholder}" Margin="0,0,0,6">
               <Image Source="{x:Bind Cover, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
             </Grid>
-            <TextBlock Text="{x:Bind Title}" Style="{StaticResource ShowTitleStyle}" MaxLines="2" TextWrapping="WrapWholeWords" />
+            <TextBlock Text="{x:Bind Title}" Style="{StaticResource ShowTitleStyle}" MaxLines="2" TextWrapping="WrapWholeWords"
+                       LineHeight="20" LineStackingStrategy="BlockLineHeight" Height="40" />
             <TextBlock Text="{x:Bind Count}" Visibility="{x:Bind CountShown}" Style="{StaticResource HazeCaptionStyle}" TextTrimming="CharacterEllipsis" />
             <TextBlock Text="{x:Bind Caption}" Style="{StaticResource HazeCaptionStyle}" />
           </StackPanel>

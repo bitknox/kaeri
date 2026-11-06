@@ -201,6 +201,15 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     /// Takes over what the row of the same episode showed before the table was drawn again, so text
     /// that arrives late fades into the room the row kept rather than the row starting over.
     /// </summary>
+    /// <summary>The same episode as the engine now has it: its watched state and what follows from it change in place.</summary>
+    internal void Take(EpisodeRow row)
+    {
+        if (row == Row)
+            return;
+        Row = row;
+        Changed(nameof(Watched), nameof(Completed), nameof(Dim), nameof(PartWay), nameof(Playable), nameof(WatchedAction), nameof(Line), nameof(RowFacts), nameof(Name));
+    }
+
     internal void Inherit(EpisodeItem was)
     {
         narrow = was.narrow;
@@ -345,7 +354,14 @@ public sealed partial class TitlePage : Page, IPageKeys
         })
         {
             var item = new RadioMenuFlyoutItem { Text = name, GroupName = "status", Tag = segment };
-            item.Click += (_, _) => ctx.Send(new Command.SetStatus(id, segment));
+            item.Click += (_, _) =>
+            {
+                // The engine only queues the change for the tracker: the status shows at once from here.
+                ctx.Send(new Command.SetStatus(id, segment));
+                ctx.Known.SetStatus(id, segment);
+                if (ctx.Known.Entry(id) is { } entry)
+                    ShowStatus(entry);
+            };
             StatusMenu.Items.Add(item);
         }
         SourceItem.Text = T.SourcePickerTitle;
@@ -672,8 +688,14 @@ public sealed partial class TitlePage : Page, IPageKeys
                     Show();
                     break;
                 case Event.Progress p when p.Id == id:
-                    Show();
-                    ctx.Send(new Command.LoadEpisodes(id));
+                    // The event carries the rows' watched state, which Known has put in the
+                    // table: the rows change in place, with no new listing and no rebuilt list.
+                    if (ctx.Known.Entry(id) is { } progressed)
+                        ShowAction(progressed);
+                    if (p.EpisodesValue.Length > 0)
+                        ShowEpisodes();
+                    else
+                        ctx.Send(new Command.LoadEpisodes(id));
                     break;
                 case Event.DiscussionFound found when found.Media == id:
                     foreach (var item in Episodes().Where(i => i.Row.Number == found.Episode.ToString()))
@@ -806,9 +828,7 @@ public sealed partial class TitlePage : Page, IPageKeys
 
         ShowAction(entry);
 
-        StatusButton.Content = entry.ListStatus is { } status ? StatusName(status) : T.LibraryAddToList;
-        foreach (var item in StatusMenu.Items.OfType<RadioMenuFlyoutItem>())
-            item.IsChecked = item.Tag is LibrarySegment s && s == entry.ListStatus;
+        ShowStatus(entry);
         TrailerItem.IsEnabled = entry.TrailerUrl is not null;
 
         ShowSeasons(entry);
@@ -1043,13 +1063,41 @@ public sealed partial class TitlePage : Page, IPageKeys
     NoteItem? protection;
     readonly HashSet<string> revealed = [];
 
-    IEnumerable<EpisodeItem> Episodes() => (EpisodeList.ItemsSource as IEnumerable<object>)?.OfType<EpisodeItem>() ?? [];
+    IEnumerable<EpisodeItem> Episodes() => allItems?.OfType<EpisodeItem>() ?? [];
 
     /// <summary>Whether spoiler protection is on for this show: what it sets for itself, else Settings.</summary>
     bool ProtectionOn() => Spoilers.On(ctx.Known, id);
 
     bool Held(EpisodeRow row) =>
         global::Kaeri.App.Synopsis.Held(row, ProtectionOn(), revealAll || revealed.Contains(row.Number));
+
+    /// <summary>The rows built with the page: more than a tall window shows.</summary>
+    const int FirstRows = 14;
+
+    /// <summary>Every row of the shown list, built or still to come.</summary>
+    List<object>? allItems;
+
+    /// <summary>Adds the rest of <paramref name="items"/> to <paramref name="showing"/>, a few rows each time the UI thread is idle.</summary>
+    void MoreRows(System.Collections.ObjectModel.ObservableCollection<object> showing, List<object> items)
+    {
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            // The list was replaced since: its rows are not these.
+            if (!ReferenceEquals(EpisodeList.ItemsSource, showing))
+                return;
+            for (var n = 0; n < 8 && showing.Count < items.Count; n++)
+                showing.Add(items[showing.Count]);
+            if (showing.Count < items.Count)
+                MoreRows(showing, items);
+        });
+    }
+
+    /// <summary>Whether two rows of one episode differ only in how far it was watched.</summary>
+    static bool OnlyProgress(EpisodeRow was, EpisodeRow now) =>
+        now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress } == was;
+
+    /// <summary>The shown rows' numbers and places, and what decides how they are laid: the list is rebuilt only when it changes.</summary>
+    string? shownShape;
 
     void ShowEpisodes()
     {
@@ -1072,6 +1120,27 @@ public sealed partial class TitlePage : Page, IPageKeys
 
         var shown = rows[(plan.Start + plan.Fold)..plan.End];
         var start = global::Kaeri.App.Synopsis.ProtectionStart(shown, on);
+        // The same rows in the same places, only their state changed (an episode marked
+        // watched): each row takes its new state where it stands, and focus stays on it.
+        var shape = $"{plan.Start}|{plan.Fold}|{plan.End}|{start?.At}|{start?.Before}|{narrowList}|{on}|{outlook}|{targetNumber}|{string.Join(",", shown.Select(r => r.Number))}";
+        var byNumber = shape == shownShape ? shown.GroupBy(r => r.Number).ToDictionary(g => g.Key, g => g.First()) : null;
+        if (byNumber is not null && allItems is { } standing
+            && standing.OfType<EpisodeItem>().All(item => byNumber.TryGetValue(item.Row.Number, out var row) && OnlyProgress(item.Row, row)))
+        {
+            foreach (var item in standing.OfType<EpisodeItem>())
+            {
+                if (!byNumber.TryGetValue(item.Row.Number, out var now))
+                    continue;
+                var protectable = global::Kaeri.App.Synopsis.Protectable(now, on);
+                var changed = now != item.Row;
+                item.Take(now);
+                if (changed)
+                    item.Lay(narrowList, outlook, protectable, Held(now), true);
+            }
+            ShowDownloads(ctx.Known.Downloads);
+            return;
+        }
+        shownShape = shape;
         var items = new List<object>();
         protection = null;
         if (plan.Fold > 0)
@@ -1097,7 +1166,16 @@ public sealed partial class TitlePage : Page, IPageKeys
             ctx.Art.Bind(row.Thumbnail ?? wide, s => item.Still = s);
             items.Add(item);
         }
-        EpisodeList.ItemsSource = items;
+        // A screenful of rows now, so the page shows at once; the rest follow a few at a time
+        // while the UI thread is idle. Each row is a still, a ring, a check box and a menu, and a
+        // long season built whole held the page's first frame back.
+        allItems = items;
+        var target = targetNumber is null ? -1 : items.FindIndex(i => i is EpisodeItem e && e.Row.Number == targetNumber);
+        var built = Math.Min(items.Count, Math.Max(FirstRows, target + 4));
+        var showing = new System.Collections.ObjectModel.ObservableCollection<object>(items.Take(built));
+        EpisodeList.ItemsSource = showing;
+        if (built < items.Count)
+            MoreRows(showing, items);
         EpisodesState.Done();
         ShowDownloads(ctx.Known.Downloads);
         var metadataOnly = rows.Length > 0 && rows.All(r => r.MetadataOnly);
@@ -1577,6 +1655,13 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         if (ctx.Known.Entry(id) is { } entry)
             TrailerWindow.Play(ctx, entry);
+    }
+
+    void ShowStatus(Entry entry)
+    {
+        StatusButton.Content = entry.ListStatus is { } status ? StatusName(status) : T.LibraryAddToList;
+        foreach (var item in StatusMenu.Items.OfType<RadioMenuFlyoutItem>())
+            item.IsChecked = item.Tag is LibrarySegment s && s == entry.ListStatus;
     }
 
     static string StatusName(LibrarySegment status) => status switch

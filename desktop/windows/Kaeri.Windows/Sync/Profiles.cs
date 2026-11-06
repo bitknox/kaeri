@@ -242,27 +242,5 @@ static partial class Profiles
     /// The engine switched: the app opens again on the profile chosen once this copy has ended,
     /// so nothing of the last profile stays in memory. A fixtures scene stays as it is.
     /// </summary>
-    static void Restart()
-    {
-        if (Ctx.Options.Scene is not null)
-        {
-            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "profiles", "a switch in a scene keeps the window");
-            return;
-        }
-        try
-        {
-            var app = Environment.ProcessPath ?? throw new InvalidOperationException("the app's own path is unknown");
-            Process.Start(new ProcessStartInfo("powershell.exe",
-                ProfileWords.Relaunch(Environment.ProcessId, app, Environment.GetCommandLineArgs().Skip(1)))
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            });
-        }
-        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
-        {
-            KaeriFfiMethods.LogLine(FfiLogLevel.Error, "profiles", $"the app could not open again: {e.Message}");
-        }
-        Ctx.Window.CloseNow();
-    }
+    static void Restart() => Relaunch.Now("a profile switch");
 }

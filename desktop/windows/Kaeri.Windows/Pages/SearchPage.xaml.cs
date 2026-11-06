@@ -39,13 +39,33 @@ public sealed partial class SearchPage : Page
             settle.Stop();
             Run();
         };
-        // Heard from the start: what arrives before the page is loaded is not missed.
-        ctx.Hear(this, Heard, settle.Stop);
+        // The frame keeps the page for Back and the next visit: the results, the filters and the scroll stay.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
+
+    /// <summary>What the page was last opened with: a typed query, a browse from Home, or nothing.</summary>
+    object? openedWith;
+    bool opened;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before anything is asked, until the frame moves on.
+        ctx.Hear(this, Heard, settle.Stop);
+        // Back to the search this page still shows: it stays as it was, and only takes an answer
+        // that came while another page was up.
+        if (opened && e.NavigationMode == NavigationMode.Back && SameOpening(e.Parameter, openedWith))
+        {
+            if (!ctx.Known.ListEntries(View).Select(x => x.Id).SequenceEqual(entries.Select(x => x.Id)))
+            {
+                entries = ctx.Known.ListEntries(View);
+                Show();
+            }
+            rail?.Visit();
+            return;
+        }
+        opened = true;
+        openedWith = e.Parameter;
         query = e.Parameter as string ?? (e.Parameter as SearchQuery)?.Text ?? "";
         if (e.Parameter is SearchQuery browse)
             filters = SearchFilters.None with { Genres = browse.Genres ?? [], Sort = browse.Sort };
@@ -128,7 +148,7 @@ public sealed partial class SearchPage : Page
             Section.Text = T.ContinueThisSeason;
             Section.Visibility = Visibility.Visible;
             entries = ctx.Known.ListEntries(new ContentFor.Seasonal());
-            State.Wait(hasContent: entries.Length > 0);
+            Wait();
             if (ctx.Known.List(new ContentFor.Seasonal()) is null or ContentList.Failed)
                 ctx.Send(new Command.LoadSeasonal());
             Show();
@@ -138,12 +158,32 @@ public sealed partial class SearchPage : Page
         Heading.Text = query.Length > 0 ? T.SearchResultsFor(query) : T.SearchBrowse;
         Section.Visibility = Visibility.Collapsed;
         entries = ctx.Known.ListEntries(new ContentFor.Search(asked));
-        State.Wait(hasContent: entries.Length > 0);
+        Wait();
         ctx.Send(new Command.Search(asked));
         Show();
     }
 
+    /// <summary>
+    /// The new ask's results are on their way: known ones show now; otherwise the results that
+    /// show stay 600 ms before plates take their place, or plates come at once over nothing.
+    /// </summary>
+    void Wait()
+    {
+        if (entries.Length > 0)
+            State.Wait(hasContent: true);
+        else if (ctx.Known.List(View) is not (ContentList.Entries or ContentList.Empty or ContentList.Failed))
+            State.WaitKeeping(Grid.HasCovers);
+    }
+
     ContentFor View => asked is { } q ? new ContentFor.Search(q) : new ContentFor.Seasonal();
+
+    static bool SameOpening(object? a, object? b) => (a, b) switch
+    {
+        (null, null) => true,
+        (string x, string y) => x == y,
+        (SearchQuery x, SearchQuery y) => ReferenceEquals(x, y) || Searches.Same(x, y),
+        _ => false,
+    };
 
     void Heard(IReadOnlyList<Event> batch)
     {
@@ -166,8 +206,11 @@ public sealed partial class SearchPage : Page
     {
         // One haze line while the demo is the only source: it goes when a store source is installed.
         DemoLine.Visibility = ctx.Known.Demo is { On: true, Only: true } ? Visibility.Visible : Visibility.Collapsed;
-        Grid.Covers = [.. entries.Select(e => new CoverItem(e).Load(ctx.Art))];
         var list = ctx.Known.List(View);
+        // Not answered yet: what shows stays until the answer.
+        if (entries.Length == 0 && list is not (ContentList.Entries or ContentList.Empty or ContentList.Failed))
+            return;
+        Grid.Covers = [.. entries.Select(e => new CoverItem(e).Load(ctx.Art))];
         if (entries.Length > 0)
             State.Done();
         else if (list is ContentList.Failed f)

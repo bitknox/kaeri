@@ -407,6 +407,17 @@ public sealed partial class PlayerView
         SendQuietly(new PlayerCommand.DismissSkipPrompt());
     }
 
+    /// <summary>Esc on a skip card: answered as its close, not the player's.</summary>
+    void DismissPrompt()
+    {
+        if (skipPrompt is null)
+            return;
+        NoteAnswer("escape");
+        skipPrompt = null;
+        HidePrompt();
+        Send(new PlayerCommand.DismissSkipPrompt());
+    }
+
     /// <summary>The card's answer, or its time running out, in the log.</summary>
     void NoteAnswer(string answer)
     {
@@ -503,7 +514,7 @@ public sealed partial class PlayerView
         var answered = prompt is SkipPrompt.FoundEdges;
         foreach (var (text, act, look, said) in buttons)
         {
-            var b = new Button { Content = text, MinHeight = 32 };
+            var b = new Button { Content = text, MinHeight = 32, AllowFocusOnInteraction = false };
             if (look == PromptButton.Accent)
                 b.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
             else if (look == PromptButton.Quiet)

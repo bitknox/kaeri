@@ -133,7 +133,16 @@ public sealed partial class MainWindow : Window
             Ctx.Guarded("the window", () => Heard(batch));
             ctx.Heard(batch);
         };
-        session.Stopped += () => { if (!closing) Close(); };
+        session.Stopped += () =>
+        {
+            if (closing)
+                return;
+            // The engine stopped on its own: a window that says so, with Open again, rather than
+            // the app vanishing.
+            stoppedWindow = StartFailedWindow.Stopped();
+            stoppedWindow.Activate();
+            CloseNow();
+        };
 
         player = StartPlayer(engine);
         Player.Attach(ctx, player);
@@ -204,7 +213,8 @@ public sealed partial class MainWindow : Window
         device = new DeviceWatch(c => ctx.Send(c), ui);
         taskbar = Taskbar.For(WinRT.Interop.WindowNative.GetWindowHandle(this));
         // The media overlay, the media keys and the thumbnail's buttons, while an episode plays.
-        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, c => ctx.Send(new Command.Player(c)));
+        // Aimed at the playback on screen, and in a party Next and Previous are the room's pick.
+        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, Player.MediaCommand);
         StartNotifications(art);
         Keys();
 #if KAERI_TESTING
@@ -225,8 +235,13 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += OnClosing;
         AppWindow.Changed += (_, e) =>
         {
+            // Kept half a second after a drag or resize settles, not on every pixel of it.
             if (e.DidPositionChange || e.DidSizeChange || e.DidPresenterChange)
-                RememberPlace();
+            {
+                placeLater ??= PlaceTimer();
+                placeLater.Stop();
+                placeLater.Start();
+            }
         };
         Closed += (_, _) => Shutdown();
         // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
@@ -278,6 +293,26 @@ public sealed partial class MainWindow : Window
     bool placed;
 
     string PlacePath => Path.Combine(dirs.Config, "windows-window.json");
+
+    DispatcherQueueTimer? placeLater;
+
+    DispatcherQueueTimer PlaceTimer()
+    {
+        var timer = ui.CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(500);
+        timer.IsRepeating = false;
+        timer.Tick += (_, _) => RememberPlace();
+        return timer;
+    }
+
+    /// <summary>A frame waiting to be kept is kept now: the window is closing or going to the notification area.</summary>
+    void KeepPlaceNow()
+    {
+        if (placeLater is not { IsRunning: true } waiting)
+            return;
+        waiting.Stop();
+        RememberPlace();
+    }
 
     /// <summary>Keeps the window's frame for the next launch: the normal frame, and whether it was maximised.</summary>
     void RememberPlace()
@@ -400,7 +435,7 @@ public sealed partial class MainWindow : Window
                     ShowToast(InfoBarSeverity.Success, T.UpdatesUpdated(Updater.Current));
                 else
                     ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(restarted.Version), T.UpdatesOpenAbout,
-                        () => ContentFrame.Navigate(typeof(SettingsPage), "about", new SuppressNavigationTransitionInfo()));
+                        () => OpenSettings("about"));
             });
 #if KAERI_TESTING
         // --show=update: a newer release with this machine's installer, as the engine's check
@@ -462,6 +497,16 @@ public sealed partial class MainWindow : Window
                 AskBeforeClosing();
             });
 #if KAERI_TESTING
+        // --show=accounts-states: Settings › Accounts with an expired AniList sign-in, a
+        // MyAnimeList pull that failed and Simkl synced, as the engine would say them.
+        if (options.Show == "accounts-states")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                ctx.Inject(new Event.Sync(new SyncState("anilist", true, 0, 0, User: "mika", NeedsReauth: true)));
+                ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
+                ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
+            });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
@@ -604,6 +649,8 @@ public sealed partial class MainWindow : Window
                     break;
                 case Event.Settings:
                     CrashGuard.Follow(SettingsCatalog.IsOn(ctx.Known.Setting(SettingKey.SaveCrashReports)));
+                    // Motion off in Settings reduces motion, as Windows' own Animation effects off does.
+                    Motion.Chosen = ctx.Known.Setting(SettingKey.Motion) is not { } motion || SettingsCatalog.IsOn(motion);
                     RememberWhere();
                     break;
                 case Event.TitlesChanged:
@@ -707,9 +754,22 @@ public sealed partial class MainWindow : Window
         AutomationProperties.SetName(AccountItem, T.AccountsPaneName(tip));
     }
 
-    /// <summary>Settings open on one pane, such as Profiles from the account flyout.</summary>
-    internal void OpenSettings(string pane) =>
+    /// <summary>
+    /// Settings open on one pane, such as Profiles from the account flyout. With Settings already
+    /// open, the pane changes there: no second Settings page, and no Back step to the same page.
+    /// </summary>
+    internal void OpenSettings(string pane)
+    {
+        if (ContentFrame.Content is SettingsPage open)
+        {
+            open.ShowPane(pane);
+            selecting = true;
+            Nav.SelectedItem = pane == "accounts" ? AccountItem : Nav.SettingsItem;
+            selecting = false;
+            return;
+        }
         ContentFrame.Navigate(typeof(SettingsPage), pane, new SuppressNavigationTransitionInfo());
+    }
 
     void OnNavInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -761,9 +821,17 @@ public sealed partial class MainWindow : Window
     void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null)
     {
         var shown = ++toastShown;
+        var alert = severity == InfoBarSeverity.Warning;
+        // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
-        Toast.Severity = severity;
+        else
+        {
+            Toast.Opacity = 0;
+            Motion.FadeTo(Toast, 1, Motion.FadeInTime);
+        }
+        // An alert takes the vermilion mark, as on the Mac; Warning's icon is haze.
+        Toast.Severity = alert ? InfoBarSeverity.Error : severity;
         Toast.Message = text;
         if (button is not null && act is not null)
         {
@@ -778,9 +846,12 @@ public sealed partial class MainWindow : Window
         else
             Toast.ActionButton = null;
         Toast.IsOpen = true;
+        // An alert is read out at once, over what Narrator was saying; the others politely.
+        if (alert && (FrameworkElementAutomationPeer.FromElement(Toast) ?? FrameworkElementAutomationPeer.CreatePeerForElement(Toast)) is { } peer)
+            peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.ImportantMostRecent, text, "kaeri-alert"); // i18n-skip
         // A notice with a button stays until it is dismissed or acted on; the others stay twice as
         // long while a screen reader runs.
-        var stays = NoticeTime.Stays(text, severity == InfoBarSeverity.Warning, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
+        var stays = NoticeTime.Stays(text, alert, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
         if (stays is not { } time)
         {
             toastUntil = DateTimeOffset.MaxValue;
@@ -803,8 +874,16 @@ public sealed partial class MainWindow : Window
             if (DateTimeOffset.UtcNow >= toastUntil)
                 break;
         }
+        if (shown != toastShown)
+            return;
+        // Fades out, then closes, unless a newer notice came meanwhile.
+        Motion.FadeTo(Toast, 0, Motion.FadeOutTime);
+        await Task.Delay(Motion.FadeOutTime);
         if (shown == toastShown)
+        {
             Toast.IsOpen = false;
+            Toast.Opacity = 1;
+        }
     }
 
     void OnToastPointerEntered(object sender, PointerRoutedEventArgs e) => toastHeld = true;
@@ -835,7 +914,7 @@ public sealed partial class MainWindow : Window
     {
         if (Player.Showing)
             Player.Close();
-        Navigate("settings", pane);
+        OpenSettings(pane);
     }
 
     /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+9 do.</summary>
@@ -910,10 +989,14 @@ public sealed partial class MainWindow : Window
             if (joining == dialog)
                 joining = null;
         }
-        if (ctx.Known.Joined is { } store)
+        // The store just joined, or the one joined before: Plugin stores opens on it.
+        if ((dialog.Store ?? ctx.Known.Joined) is { } store)
         {
             ctx.Known.Joined = null;
-            ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
+            if (ContentFrame.Content is StoresPage stores)
+                stores.Select(store);
+            else
+                ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
         }
     }
 
@@ -926,7 +1009,7 @@ public sealed partial class MainWindow : Window
         else if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             if (tag == "account")
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
             else if (tag == "search")
             {
                 // Search in the sidebar, as on the Mac: the page with what the box holds, and the
@@ -1018,13 +1101,38 @@ public sealed partial class MainWindow : Window
             FocusPage();
     }
 
+    /// <summary>Where focus was on each page the frame keeps for Back, so a return lands there and the page does not scroll.</summary>
+    readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, WeakReference<Control>> focusKept = [];
+
+    void OnFrameNavigating(object sender, NavigatingCancelEventArgs e)
+    {
+        if (ContentFrame.Content is Page { NavigationCacheMode: not NavigationCacheMode.Disabled } kept && Content?.XamlRoot is { } root)
+        {
+            var focused = FocusManager.GetFocusedElement(root) as Control;
+            focusKept.AddOrUpdate(kept, new WeakReference<Control>(focused is not null && Within(focused, kept) ? focused : null!));
+        }
+    }
+
+    static bool Within(DependencyObject at, DependencyObject outer)
+    {
+        for (DependencyObject? up = at; up is not null; up = VisualTreeHelper.GetParent(up))
+        {
+            if (up == outer)
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// After a page change, focus goes to the page's first control and the screen reader hears
-    /// its title, instead of staying on the pane item. Typing in the search box is left alone.
+    /// its title, instead of staying on the pane item. Typing in the search box is left alone. A
+    /// page the frame kept gets focus back where it was, or keeps none, rather than its first
+    /// control: that one can be above where the page was scrolled to, and focusing it would scroll.
     /// </summary>
     void FocusPage()
     {
         var shown = ContentFrame.Content;
+        var kept = shown is not null && focusKept.TryGetValue(shown, out var weak) ? weak : null;
         DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
             if (Player.Showing || shown != ContentFrame.Content || shown is not UIElement page || Content?.XamlRoot is not { } root)
@@ -1039,7 +1147,10 @@ public sealed partial class MainWindow : Window
             }
             if (Heading(page) is { } heading && FrameworkElementAutomationPeer.FromElement(heading) is { } peer)
                 peer.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.MostRecent, heading.Text, "page");
-            (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
+            if (kept?.TryGetTarget(out var again) == true && again.IsLoaded && Within(again, page))
+                again.Focus(FocusState.Programmatic);
+            else if (kept is null)
+                (FocusManager.FindFirstFocusableElement(page) as Control)?.Focus(FocusState.Programmatic);
         });
     }
 
@@ -1176,6 +1287,7 @@ public sealed partial class MainWindow : Window
 
     void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
+        KeepPlaceNow();
         if (closing)
             return;
         if (AskLeavingParty())
@@ -1258,7 +1370,8 @@ public sealed partial class MainWindow : Window
     /// <summary>
     /// Keep going: the window goes and the notification area icon comes, the first time with a
     /// notification saying where Kaeri went. The engine stays until nothing is left running,
-    /// or until the icon's Quit; the icon's Open brings the window back.
+    /// or until the icon's Quit; the icon's Open brings the window back. Downloads paused from
+    /// the icon keep it there too, to be resumed from the same menu.
     /// </summary>
     void KeepGoingHidden()
     {
@@ -1268,9 +1381,11 @@ public sealed partial class MainWindow : Window
         tray ??= new Tray(WinRT.Interop.WindowNative.GetWindowHandle(this), Path.Combine(AppContext.BaseDirectory, "Assets", "kaeri.ico"))
         {
             Open = () => ui.TryEnqueue(ShowAgain),
-            PauseAll = () => ui.TryEnqueue(ctx.PauseAllDownloads),
+            PauseAll = () => ui.TryEnqueue(() => trayPaused.UnionWith(ctx.PauseAllDownloads())),
+            ResumeAll = () => ui.TryEnqueue(ctx.ResumeAllDownloads),
             Quit = () => ui.TryEnqueue(CloseNow),
             AnyRunning = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Active or DownloadState.Queued),
+            AnyPaused = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused),
         };
         var told = Path.Combine(dirs.Config, "windows-told-tray");
         tray.Show(tell: !File.Exists(told));
@@ -1282,11 +1397,16 @@ public sealed partial class MainWindow : Window
         keepGoing.Tick += (_, _) =>
         {
             var (d, s) = ctx.Known.Running();
-            if (d + s == 0)
+            // Paused from the icon: still there to resume, so Kaeri stays for them.
+            trayPaused.IntersectWith(ctx.Known.Downloads.Where(r => r.State is DownloadState.Paused or DownloadState.Active or DownloadState.Queued).Select(r => r.Id));
+            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)))
                 CloseNow();
         };
         keepGoing.Start();
     }
+
+    /// <summary>The downloads the icon's Pause all paused, which keep Kaeri in the notification area.</summary>
+    readonly HashSet<long> trayPaused = [];
 
     // Windows notifications: new episodes from the engine's check, finished downloads, and the
     // engine's own notices while the window is not in front.
@@ -1386,6 +1506,9 @@ public sealed partial class MainWindow : Window
         ShowOpenLink();
     }
 
+    /// <summary>The window that says the engine stopped, kept while it is up.</summary>
+    static StartFailedWindow? stoppedWindow;
+
     JoinStoreDialog? joining;
     string? fixtureInvite;
     WelcomeDialog? welcoming;
@@ -1460,13 +1583,13 @@ public sealed partial class MainWindow : Window
             case Link.Accounts:
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Auth auth:
-                ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback));
+                ctx.Known.SignInStarted(auth.Tracker, ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback)));
                 if (Player.Showing)
                     Player.Close();
-                ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+                OpenSettings("accounts");
                 break;
             case Link.Download download:
                 // A finished download plays, from its title's page; otherwise Downloads, where it is.
@@ -1506,6 +1629,7 @@ public sealed partial class MainWindow : Window
     void ShowAgain()
     {
         keepGoing?.Stop();
+        trayPaused.Clear();
         tray?.Hide();
         AppWindow.Show(true);
         Activate();
@@ -1564,9 +1688,25 @@ public sealed partial class MainWindow : Window
         taskbar?.Clear();
         // The engine first: on its way out it stops what plays and waits for the player to say
         // where it ended, so the player must still be there to hear the stop.
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         session.Dispose();
+        var engineMs = clock.ElapsedMilliseconds;
         player?.Shutdown();
         player?.Dispose();
+        // A slow close, with where the time went, beside the crash log: the engine's log has
+        // closed by now.
+        if (clock.ElapsedMilliseconds > 500)
+        {
+            try
+            {
+                var dir = Path.Combine(Path.GetTempPath(), "kaeri-windows");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "closing.txt"), $"{DateTime.Now:O} closing took {clock.ElapsedMilliseconds} ms: the engine {engineMs} ms, the player {clock.ElapsedMilliseconds - engineMs} ms" + Environment.NewLine);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     // The window's keys, after the brief's table. The player's own keys are on the player; these

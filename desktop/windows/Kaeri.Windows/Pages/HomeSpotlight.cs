@@ -72,6 +72,19 @@ public sealed partial class HomeSpotlight : Grid
     /// <summary>The planned state of the shown title changed (Adding, then On your Planning list).</summary>
     public void Refresh() => shown?.Words();
 
+    /// <summary>
+    /// The same title in the same case, as the engine now has it: an episode watched, a sources
+    /// check answered. The face's words, buttons and menu take it in place, with no crossfade,
+    /// and the art and focus stay.
+    /// </summary>
+    public void Update(Spotlight spot)
+    {
+        if (shown is { } face && face.Spot.Entry.Id == spot.Entry.Id)
+            face.Take(spot);
+        else
+            Show(spot, crossfade: true);
+    }
+
     sealed partial class SpotFace : Grid
     {
         readonly HomePage page;
@@ -82,12 +95,16 @@ public sealed partial class HomeSpotlight : Grid
         readonly RowDefinition textRow = new() { Height = GridLength.Auto };
         readonly Border art;
         readonly StackPanel text = new() { VerticalAlignment = VerticalAlignment.Center };
+        /// <summary>The words above the buttons, made again when the record changes; the buttons stay, so focus on one stays.</summary>
+        readonly StackPanel words = new();
+        readonly StackPanel buttons = new() { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 18, 0, 0) };
+        readonly TextBlock notFound = new() { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) };
         readonly Button main = new() { Style = Ui.Res<Style>("AccentButtonStyle"), MinHeight = 32 };
         readonly Button second = new() { MinHeight = 32 };
         readonly Button more = new() { MinHeight = 32, MinWidth = 32, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
         bool wide = true;
 
-        public Spotlight Spot { get; }
+        public Spotlight Spot { get; private set; }
         public Button Main => main;
 
         public SpotFace(HomePage page, Spotlight spot)
@@ -105,6 +122,16 @@ public sealed partial class HomeSpotlight : Grid
             art.Tapped += (_, _) => page.OpenTitle(spot.Entry.Id);
             AutomationProperties.SetAccessibilityView(art, AccessibilityView.Raw);
 
+            text.Children.Add(words);
+            buttons.Children.Add(main);
+            buttons.Children.Add(second);
+            buttons.Children.Add(more);
+            text.Children.Add(buttons);
+            text.Children.Add(notFound);
+            AutomationProperties.SetName(more, T.HomeMore);
+            ToolTipService.SetToolTip(more, T.HomeMore);
+            main.Click += (_, _) => page.MainAction(Spot, Effective());
+            second.Click += (_, _) => page.SecondAction(Spot, Secondary());
             BuildText();
             Children.Add(text);
             Children.Add(art);
@@ -116,7 +143,6 @@ public sealed partial class HomeSpotlight : Grid
                     Arrange(side);
                 SizeArt(e.NewSize.Width);
             };
-            AutomationProperties.SetName(text, HomeWording.Name(spot));
             AutomationProperties.SetLocalizedLandmarkType(text, T.HomeSpotlightContinuing);
         }
 
@@ -147,10 +173,20 @@ public sealed partial class HomeSpotlight : Grid
             art.Height = Math.Round(w * 9 / 16);
         }
 
+        /// <summary>Takes a newer record of the same title.</summary>
+        public void Take(Spotlight spot)
+        {
+            Spot = spot;
+            BuildText();
+        }
+
         void BuildText()
         {
             var s = Spot;
             var entry = s.Entry;
+            AutomationProperties.SetName(this.text, HomeWording.Name(s));
+            var text = words;
+            text.Children.Clear();
             text.Children.Add(new TextBlock { Text = s.Label.Text(), Style = Ui.Res<Style>("HazeBodyStyle"), FontSize = 14, LineHeight = 19, Margin = new Thickness(0, 0, 0, 8) });
             var title = new TextBlock
             {
@@ -216,18 +252,8 @@ public sealed partial class HomeSpotlight : Grid
                 text.Children.Add(row);
             }
 
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 18, 0, 0) };
-            buttons.Children.Add(main);
-            buttons.Children.Add(second);
-            buttons.Children.Add(more);
-            text.Children.Add(buttons);
-            AutomationProperties.SetName(more, T.HomeMore);
-            ToolTipService.SetToolTip(more, T.HomeMore);
             more.Flyout = MoreMenu();
-            main.Click += (_, _) => page.MainAction(Spot, Effective());
-            second.Click += (_, _) => page.SecondAction(Spot, Secondary());
-            if (s.Playable == Playable.NotFound)
-                text.Children.Add(new TextBlock { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) });
+            notFound.Visibility = s.Playable == Playable.NotFound ? Visibility.Visible : Visibility.Collapsed;
             Words();
         }
 
@@ -292,7 +318,9 @@ public sealed partial class HomeSpotlight : Grid
             {
                 var watched = new MenuFlyoutItem { Text = T.HomeMarkWatched(s.Episode), Icon = new FontIcon { Glyph = "" } };
                 watched.Click += (_, _) => page.MarkWatched(s.Entry.Id, s.Episode);
-                menu.Items.Add(watched);
+                // Only an episode there is to play is offered as watched, as on the Mac.
+                if (s.Action is HomeAction.Resume or HomeAction.Play)
+                    menu.Items.Add(watched);
                 var remove = new MenuFlyoutItem { Text = T.HomeRemoveContinue, Icon = new FontIcon { Glyph = "" }, KeyboardAcceleratorTextOverride = "Delete" };
                 remove.Click += (_, _) => page.RemoveFromContinue(s.Entry.Id);
                 menu.Items.Add(remove);

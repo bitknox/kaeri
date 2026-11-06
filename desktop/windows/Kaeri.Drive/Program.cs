@@ -41,9 +41,23 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("real", Scenarios.Real, "", false),
     // The same profile, only moving around: the sidebar's pages, and titles opened from Home.
     ("real-nav", Scenarios.RealNav, "", false),
+    // How it feels: every action filmed, for jumps and slow answers (Feel.cs). Only when asked for by name.
+    ("feel", FeelScenario.All, "watching", false),
+    // Scrolling every page that scrolls (ScrollScenario.cs); scroll-real on the person's own profile, scrolling only.
+    ("scroll", ScrollScenario.Fixture, "watching", false),
+    // The feel scenario on a copy of the person's profile (KAERI_PROFILE_ROOT): real sources and network.
+    ("feel-real", FeelScenario.All, "", false),
+    ("scroll-real", ScrollScenario.Real, "", false),
+    // Downloads, Sources, Settings and Plugin stores kept in place under the engine's events (PagesScenario.cs). Only when asked for by name.
+    ("pages", PagesScenario.All, "watching", true),
+    ("pages-sources", PagesScenario.Sourced, "demo-and-store", false),
+    // The wheel over Home's shelves and the grids against the wheel over what is not one, filmed frame by frame.
+    ("wheel", FeelScenario.Wheels, "watching", false),
+    // The player's checks: clicks on the bar, Space, dragging the seek and volume lines, the ending. By name only.
+    ("player-checks", PlayerChecks.All, "playing", true),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -63,6 +77,7 @@ foreach (var (name, body, scene, playerScene) in all.Where(s => options.Only is 
     }
     results.Add(await run.Finish());
 }
+Feel.Write(options.Out);
 var report = Report.Write(results, Native.RefreshHz());
 File.WriteAllText(Path.Combine(options.Out, "report.md"), report);
 Console.WriteLine(report);
@@ -125,10 +140,16 @@ sealed class Run(string name, Args options, string scene, string? media)
             info.ArgumentList.Add($"--media={media}");
             // No --play: the scenario clicks Play on Home, as a person does, which also gives the
             // window the keyboard; a launched window may not have it.
+            // The pages scenario wants the fixture's three downloads, the finished one at the clip.
+            if (Name == "pages")
+                info.ArgumentList.Add("--downloads");
         }
         info.Environment["KAERI_PROBE_DIR"] = dir;
-        info.Environment["KAERI_FIXTURES_HOME_WORLD"] = "1";
-        info.Environment["KAERI_FIXTURES_CATALOGUE"] = "1";
+        if (scene.Length > 0)
+        {
+            info.Environment["KAERI_FIXTURES_HOME_WORLD"] = "1";
+            info.Environment["KAERI_FIXTURES_CATALOGUE"] = "1";
+        }
         // One copy runs at a time: a launch while the last scenario's copy is still closing would
         // hand over to it and exit.
         var name = Path.GetFileNameWithoutExtension(Options.App);
@@ -292,7 +313,7 @@ sealed class Run(string name, Args options, string scene, string? media)
         }
         await Task.Delay(800);
         var log = scene.Length == 0
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaeri")
+            ? Environment.GetEnvironmentVariable("KAERI_PROFILE_ROOT") is { Length: > 0 } copy ? copy : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaeri")
             : Directory.GetDirectories(Path.GetTempPath(), "kaeri-app-*")
                 .Select(d => new DirectoryInfo(d))
                 .Where(d => d.CreationTime >= started.AddSeconds(-2))
@@ -327,7 +348,7 @@ static class Scenarios
             {
                 for (var i = 0; i < 14; i++)
                 {
-                    Mouse.Scroll(-1);
+                    Native.Wheel(-1);
                     await Task.Delay(120);
                 }
                 await Task.Delay(600);
@@ -336,7 +357,7 @@ static class Scenarios
             {
                 for (var i = 0; i < 14; i++)
                 {
-                    Mouse.Scroll(1);
+                    Native.Wheel(1);
                     await Task.Delay(25);
                 }
                 await Task.Delay(800);
@@ -405,12 +426,12 @@ static class Scenarios
                 Mouse.MoveTo(run.Centre);
                 for (var i = 0; i < 10; i++)
                 {
-                    Mouse.Scroll(-1);
+                    Native.Wheel(-1);
                     await Task.Delay(90);
                 }
                 for (var i = 0; i < 10; i++)
                 {
-                    Mouse.Scroll(1);
+                    Native.Wheel(1);
                     await Task.Delay(90);
                 }
                 await Task.Delay(700);
@@ -477,7 +498,7 @@ static class Scenarios
     }
 
     /// <summary>Clicks Home's Resume or Play, then waits <paramref name="ms"/> for the player.</summary>
-    static async Task PlayFromHome(Run run, int ms)
+    internal static async Task PlayFromHome(Run run, int ms)
     {
         AutomationElement? button = null;
         for (var i = 0; i < 20 && button is null; i++)
@@ -848,6 +869,15 @@ static List<(long At, string What)> ReadMarks(string path) =>        File.Exists
             : [];
 
     /// <summary>The app's own warnings and errors from the fixture run's log, counted by message.</summary>
+    /// <summary>A log's lines, read while the app that writes it may still have it open.</summary>
+    static IEnumerable<string> Shared(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var reader = new StreamReader(stream);
+        while (reader.ReadLine() is { } line)
+            yield return line;
+    }
+
     static string LogLines(string? root, DateTime since)
     {
         var logs = root is null || !Directory.Exists(Path.Combine(root, "cache", "logs")) ? [] : Directory.GetFiles(Path.Combine(root, "cache", "logs"));
@@ -856,7 +886,7 @@ static List<(long At, string What)> ReadMarks(string path) =>        File.Exists
         // The log is UTC; a profile's log holds earlier runs too, so only this run's lines count.
         var from = since.ToUniversalTime().AddSeconds(-2).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
         var counts = new Dictionary<string, int>();
-        foreach (var line in logs.SelectMany(File.ReadLines))
+        foreach (var line in logs.SelectMany(Shared))
         {
             if (line.Length < 19 || string.CompareOrdinal(line, 0, from, 0, 19) < 0)
                 continue;
@@ -909,6 +939,16 @@ static partial class Native
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetWindowPos(nint hwnd, nint after, int x, int y, int w, int h, uint flags);
+
+    [LibraryImport("user32.dll")]
+    private static partial void mouse_event(uint flags, int dx, int dy, uint data, nuint extra);
+
+    /// <summary>
+    /// The wheel by <paramref name="notches"/>, down when negative. FlaUI's Mouse.Scroll turns a
+    /// negative amount into an unsigned one by a saturating cast, so a scroll down sends nothing.
+    /// </summary>
+    public static void Wheel(int notches, bool sideways = false) =>
+        mouse_event(sideways ? 0x01000u : 0x0800u, 0, 0, unchecked((uint)(notches * 120)), 0);
 
     /// <summary>The window's size, its top left kept.</summary>
     public static void Size(nint hwnd, int w, int h) => SetWindowPos(hwnd, 0, 0, 0, w, h, 0x0002 | 0x0004 | 0x0010);

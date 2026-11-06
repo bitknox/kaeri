@@ -95,7 +95,7 @@ static class Colours
     public static readonly Color Ground = Color.FromArgb(0xFF, 0x16, 0x1A, 0x2E);
     public static readonly Color Raised = Color.FromArgb(0xFF, 0x22, 0x26, 0x38);
     public static readonly Color Silk = Color.FromArgb(0xFF, 0xE4, 0xE0, 0xD6);
-    public static readonly Color Haze = Color.FromArgb(0xFF, 0x92, 0x98, 0xB5);
+    public static readonly Color Haze = Color.FromArgb(0xFF, 0xA3, 0xA9, 0xC4);
     public static readonly Color Amber = Color.FromArgb(0xFF, 0xF2, 0xA6, 0x4B);
     public static readonly Color Water = Color.FromArgb(0xFF, 0x7F, 0xC7, 0xD9);
 

@@ -11,6 +11,12 @@ public static class AppDirs
 {
     public static FfiDirs User()
     {
+#if KAERI_TESTING
+        // A copy of a profile, for trying a testing build on real sources and the real network
+        // while the installed app keeps the profile itself.
+        if (Environment.GetEnvironmentVariable("KAERI_PROFILE_ROOT") is { Length: > 0 } copy)
+            return Under(copy);
+#endif
         var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return new FfiDirs(

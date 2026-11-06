@@ -53,7 +53,8 @@ public sealed partial class ProvidersPage : Page
         if (!ctx.Known.StoresLoaded)
             ctx.Send(new Command.LoadStores());
         Show();
-        // The wait for AniList's limit counts down in the rows.
+        // The wait for AniList's limit counts down in the rows. The rows keep their places, so
+        // each second changes only the words of the line that counts.
         countdown ??= Countdown.Start(this, () => ctx.Known.AnyWaiting(DateTimeOffset.UtcNow), Show);
     }
 
@@ -90,39 +91,101 @@ public sealed partial class ProvidersPage : Page
             NoSources.Child = Empty();
         var current = rows.FirstOrDefault(r => r.Id == selected && (r.Kind is "plugin" or "torrent" or "remote" or "demo" || r.IsDemo));
         selected = current?.Id;
-        Sections.Children.Clear();
-        lists.Clear();
 
+        // Each section keeps its list and each list its rows from one event to the next: words
+        // change in place, and rows move only when the order does, around the one with the focus.
+        var wanted = new List<UIElement>();
+        var live = new HashSet<string>();
+        void Place(Section section)
+        {
+            wanted.Add(section.Heading);
+            wanted.Add(section.List);
+            live.Add(section.Key);
+        }
         if (ctx.Known.Local is { Folders.Length: > 0 } local)
-            FirstParty(T.SourcesSectionMedia, local.Folders.Select(f => (Glyph: "\uE8B7", Title: f.Path, Line: Lawful.FolderLine(f, ctx.Known, DateTimeOffset.UtcNow), Quiet: !f.Available, Page: typeof(FolderPage), Param: (object)f.Path)));
+            Place(FirstParty("media", T.SourcesSectionMedia, local.Folders.Select(f => (Glyph: "\uE8B7", Title: f.Path, Line: Lawful.FolderLine(f, ctx.Known, DateTimeOffset.UtcNow), Page: typeof(FolderPage), Param: (object)f.Path))));
         if (servers.Length > 0)
-            FirstParty(T.SourcesSectionServers, servers.Select(r => (r, id: r.Id.StartsWith("jellyfin-") ? r.Id["jellyfin-".Length..] : r.Id)).Select(x => (Glyph: "\uE839", Title: x.r.Name, Line: ctx.Known.Servers.FirstOrDefault(v => v.Id == x.id) is { } saved ? Lawful.ServerLine(saved, ctx.Known, DateTimeOffset.UtcNow) : "", Quiet: false, Page: typeof(ServerPage), Param: (object)x.id)));
+            Place(FirstParty("servers", T.SourcesSectionServers, servers.Select(r => (r, id: r.Id.StartsWith("jellyfin-") ? r.Id["jellyfin-".Length..] : r.Id)).Select(x => (Glyph: "\uE839", Title: x.r.Name, Line: ctx.Known.Servers.FirstOrDefault(v => v.Id == x.id) is { } saved ? Lawful.ServerLine(saved, ctx.Known, DateTimeOffset.UtcNow) : "", Page: typeof(ServerPage), Param: (object)x.id))));
         if (ctx.Known.Licensed is { } licensed)
-            FirstParty(T.SourcesSectionLicensed, [(Glyph: "\uE774", Title: T.LicensedTitle, Line: Lawful.LicensedLine(licensed), Quiet: licensed.Settings.Services.Length == 0, Page: typeof(LicensedPage), Param: (object)"")]);
+            Place(FirstParty("licensed", T.SourcesSectionLicensed, [(Glyph: "\uE774", Title: T.LicensedTitle, Line: Lawful.LicensedLine(licensed), Page: typeof(LicensedPage), Param: (object)"")]));
 
         var shown = rows.Where(r => (r.Kind is "plugin" or "torrent" or "remote" or "demo" || r.IsDemo)).ToArray();
         foreach (var group in KaeriFfiMethods.SourceGroups(shown))
         {
             if (group.Section is not (SourceSection.Plugins or SourceSection.BuiltIn))
                 continue;
-            var ids = group.Ids;
             var heading = group.Section == SourceSection.BuiltIn ? T.SourcesSectionBuiltin
                 : group.Store is { } store ? T.SourcesSectionStore(ctx.Known.Stores.FirstOrDefault(x => x.Id == store)?.Name ?? shown.Select(r => r.Origin).OfType<ProviderOrigin.Store>().FirstOrDefault(o => o.Id == store)?.Name ?? store)
                 : T.SourcesOriginByHand;
-            var list = NewList(group.Section == SourceSection.Plugins);
-            foreach (var row in ids.Select(id => shown.First(r => r.Id == id)))
-            {
-                var item = new ListViewItem { Content = Line(Info(row), row.Id == current?.Id), Tag = row.Id, CanDrag = !Info(row).IsDemo };
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(item, Info(row).Name);
-                list.Items.Add(item);
-                if (row.Id == current?.Id)
-                    list.SelectedItem = item;
-            }
-            Sections.Children.Add(Ui.Heading(heading));
-            Sections.Children.Add(list);
+            Place(Ordered($"{group.Section}:{group.Store}", heading, group.Section == SourceSection.Plugins,
+                group.Ids.Select(id => shown.First(r => r.Id == id)), current?.Id));
         }
+        foreach (var gone in sections.Keys.Where(k => !live.Contains(k)).ToList())
+            sections.Remove(gone);
+        lists.Clear();
+        lists.AddRange(sections.Values.Where(s => s.Ordered).Select(s => s.List));
+        Drawn.Arrange(Sections.Children, wanted, Ui.HoldingFocus(Sections, Sections.Children));
         ShowDetail(current is null ? null : Info(current));
         quiet = false;
+    }
+
+    /// <summary>A section as last drawn: its heading, its list, and its rows by id.</summary>
+    sealed class Section(string key, TextBlock heading, ListView list, bool ordered)
+    {
+        public readonly string Key = key;
+        public readonly TextBlock Heading = heading;
+        public readonly ListView List = list;
+        public readonly bool Ordered = ordered;
+        public readonly Dictionary<string, Row> Rows = [];
+    }
+
+    /// <summary>A row's parts that change: its two lines and, for a source, how it stands.</summary>
+    sealed class Row(ListViewItem item, TextBlock title, TextBlock line, StackPanel? standing)
+    {
+        public readonly ListViewItem Item = item;
+        public readonly TextBlock Title = title;
+        public readonly TextBlock Line = line;
+        public readonly StackPanel? Standing = standing;
+        public string? StandingDrawn;
+    }
+
+    readonly Dictionary<string, Section> sections = [];
+
+    Section Get(string key, string heading, Func<ListView> make, bool ordered)
+    {
+        if (!sections.TryGetValue(key, out var section))
+            sections[key] = section = new Section(key, Ui.Heading(heading), make(), ordered);
+        Set(section.Heading, heading);
+        return section;
+    }
+
+    /// <summary>Puts a list's items in order around the focused one, and selects <paramref name="current"/> when it is there.</summary>
+    static void Order(ListView list, List<object> items, ListViewItem? current)
+    {
+        Drawn.Arrange(list.Items, items, Ui.HoldingFocus(list, list.Items.OfType<ListViewItem>()));
+        if (list.SelectionMode == ListViewSelectionMode.None)
+            return;
+        if (current is not null)
+        {
+            if (!ReferenceEquals(list.SelectedItem, current))
+                list.SelectedItem = current;
+        }
+        else if (list.SelectedItem is not null)
+            list.SelectedItem = null;
+    }
+
+    /// <summary>Lets go of the rows that are no longer in a section.</summary>
+    static void Forget(Section section, List<object> items)
+    {
+        var keep = new HashSet<object>(items, ReferenceEqualityComparer.Instance);
+        foreach (var gone in section.Rows.Where(r => !keep.Contains(r.Value.Item)).Select(r => r.Key).ToList())
+            section.Rows.Remove(gone);
+    }
+
+    static void Set(TextBlock block, string text)
+    {
+        if (block.Text != text)
+            block.Text = text;
     }
 
     ListView NewList(bool reorder)
@@ -131,40 +194,85 @@ public sealed partial class ProvidersPage : Page
         list.SelectionChanged += OnSelected;
         if (reorder)
             list.DragItemsCompleted += OnDragCompleted;
-        lists.Add(list);
         return list;
     }
 
     /// <summary>A section of rows that open a page: no drag handle, a chevron instead.</summary>
-    void FirstParty(string heading, IEnumerable<(string Glyph, string Title, string Line, bool Quiet, Type Page, object Param)> rows)
+    Section FirstParty(string key, string heading, IEnumerable<(string Glyph, string Title, string Line, Type Page, object Param)> rows)
     {
-        var list = new ListView { SelectionMode = ListViewSelectionMode.None, IsItemClickEnabled = true, Margin = new Thickness(-12, 0, 0, 0) };
-        list.ItemClick += (_, e) =>
+        var section = Get(key, heading, () =>
         {
-            if (e.ClickedItem is ListViewItem { Tag: ValueTuple<Type, object> go })
-                ctx.Window.Push(go.Item1, go.Item2 is "" ? null : go.Item2);
-        };
+            var list = new ListView { SelectionMode = ListViewSelectionMode.None, IsItemClickEnabled = true, Margin = new Thickness(-12, 0, 0, 0) };
+            list.ItemClick += (_, e) =>
+            {
+                if (e.ClickedItem is ListViewItem { Tag: ValueTuple<Type, object> go })
+                    ctx.Window.Push(go.Item1, go.Item2 is "" ? null : go.Item2);
+            };
+            return list;
+        }, ordered: false);
+        var items = new List<object>();
         foreach (var row in rows)
         {
-            var grid = new Grid { Height = 52, ColumnSpacing = 12 };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.Children.Add(new FontIcon { Glyph = row.Glyph, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("TextFillColorSecondaryBrush") });
-            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            text.Children.Add(Ui.Text(row.Title, "BodyStrongTextBlockStyle", wrap: false));
-            text.Children.Add(Ui.Text(row.Line, "HazeCaptionStyle", wrap: false));
-            Grid.SetColumn(text, 1);
-            grid.Children.Add(text);
-            var chevron = new FontIcon { Glyph = "\uE76C", FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("TextFillColorSecondaryBrush") };
-            Grid.SetColumn(chevron, 2);
-            grid.Children.Add(chevron);
-            var item = new ListViewItem { Content = grid, Tag = (row.Page, row.Param) };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(item, $"{row.Title}, {row.Line}");
-            list.Items.Add(item);
+            var id = $"{row.Page.Name}:{row.Param}";
+            if (!section.Rows.TryGetValue(id, out var made))
+                section.Rows[id] = made = FirstPartyRow(row.Glyph, (row.Page, row.Param));
+            Set(made.Title, row.Title);
+            Set(made.Line, row.Line);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(made.Item, $"{row.Title}, {row.Line}");
+            items.Add(made.Item);
         }
-        Sections.Children.Add(Ui.Heading(heading));
-        Sections.Children.Add(list);
+        Forget(section, items);
+        Order(section.List, items, null);
+        return section;
+    }
+
+    static Row FirstPartyRow(string glyph, (Type, object) go)
+    {
+        var grid = new Grid { Height = 52, ColumnSpacing = 12 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.Children.Add(new FontIcon { Glyph = glyph, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("TextFillColorSecondaryBrush") });
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        var title = Ui.Text("", "BodyStrongTextBlockStyle", wrap: false);
+        var line = Ui.Text("", "HazeCaptionStyle", wrap: false);
+        text.Children.Add(title);
+        text.Children.Add(line);
+        Grid.SetColumn(text, 1);
+        grid.Children.Add(text);
+        var chevron = new FontIcon { Glyph = "\uE76C", FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("TextFillColorSecondaryBrush") };
+        Grid.SetColumn(chevron, 2);
+        grid.Children.Add(chevron);
+        return new Row(new ListViewItem { Content = grid, Tag = go }, title, line, null);
+    }
+
+    /// <summary>A store's plugins or what is built in: rows in the order failover tries them.</summary>
+    Section Ordered(string key, string heading, bool reorder, IEnumerable<ProviderRow> rows, string? current)
+    {
+        var section = Get(key, heading, () => NewList(reorder), ordered: true);
+        var items = new List<object>();
+        ListViewItem? selectedItem = null;
+        foreach (var row in rows)
+        {
+            var info = Info(row);
+            if (!section.Rows.TryGetValue(row.Id, out var made))
+                section.Rows[row.Id] = made = Line(info);
+            Set(made.Title, info.Name);
+            Set(made.Line, info.Origin);
+            if (made.Standing is { } standing && StandingKey(info) is var said && said != made.StandingDrawn)
+            {
+                made.StandingDrawn = said;
+                FillStanding(standing, info);
+            }
+            made.Item.CanDrag = !info.IsDemo;
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(made.Item, info.Name);
+            items.Add(made.Item);
+            if (row.Id == current)
+                selectedItem = made.Item;
+        }
+        Forget(section, items);
+        Order(section.List, items, selectedItem);
+        return section;
     }
 
     /// <summary>No sources yet: Add a folder (amber) and Add a media server, then a line to join a store.</summary>
@@ -192,7 +300,8 @@ public sealed partial class ProvidersPage : Page
         return empty;
     }
 
-    Grid Line(ProviderInfo info, bool selected)
+    /// <summary>A source's row: its grip, its name over where it comes from, and how it stands.</summary>
+    Row Line(ProviderInfo info)
     {
         var grid = new Grid { Height = 48, ColumnSpacing = 12 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -201,11 +310,15 @@ public sealed partial class ProvidersPage : Page
         // The demo is not placed by hand, so it has no grip; the column keeps the names level.
         grid.Children.Add(info.IsDemo ? new Border { Width = 12 } : GripIcon());
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Ui.Text(info.Name, "BodyStrongTextBlockStyle", wrap: false));
-        text.Children.Add(Ui.Text(info.Origin, "HazeCaptionStyle", wrap: false));
+        var title = Ui.Text("", "BodyStrongTextBlockStyle", wrap: false);
+        var origin = Ui.Text("", "HazeCaptionStyle", wrap: false);
+        text.Children.Add(title);
+        text.Children.Add(origin);
         Grid.SetColumn(text, 1);
         grid.Children.Add(text);
-        FrameworkElement trailing = Standing(info);
+        var standing = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+        FrameworkElement trailing = standing;
+        var item = new ListViewItem { Content = grid, Tag = info.Row.Id };
         if (info.IsDemo)
         {
             var remove = new Button { Content = T.SourcesDemoRemove, VerticalAlignment = VerticalAlignment.Center };
@@ -220,15 +333,22 @@ public sealed partial class ProvidersPage : Page
         }
         Grid.SetColumn(trailing, 2);
         grid.Children.Add(trailing);
-        return grid;
+        return new Row(item, title, origin, info.IsDemo ? null : standing);
     }
 
     static FontIcon GripIcon() => new FontIcon { Glyph = "", FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("TextFillColorSecondaryBrush") };
 
-    /// <summary>How a source stands beside its name: failing, held back, slow, off, or an update waiting.</summary>
-    static StackPanel Standing(ProviderInfo info)
+    /// <summary>What <see cref="FillStanding"/> would draw, to know whether it changed.</summary>
+    static string StandingKey(ProviderInfo info)
     {
-        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+        var standing = info.Row.Standing();
+        return $"{standing}|{standing.StandingLine(info.Row)}|{info.Update is not null}";
+    }
+
+    /// <summary>How a source stands beside its name: failing, held back, slow, off, or an update waiting.</summary>
+    static void FillStanding(StackPanel line, ProviderInfo info)
+    {
+        line.Children.Clear();
         var standing = info.Row.Standing();
         switch (standing)
         {
@@ -249,11 +369,39 @@ public sealed partial class ProvidersPage : Page
             line.Children.Add(Ui.Dot(Colours.Haze));
             line.Children.Add(Ui.Text(T.SourcesStatusUpdate, "HazeCaptionStyle", wrap: false));
         }
-        return line;
     }
 
+    /// <summary>What the detail says apart from how the source stands and its switch, which change in place.</summary>
+    string? detailDrawn;
+    /// <summary>The detail's standing line and Use this switch, kept to be changed in place.</summary>
+    Border? detailStanding;
+    string? detailStandingDrawn;
+    ToggleSwitch? detailSwitch;
+
+    static string DetailKey(ProviderInfo info)
+    {
+        var row = info.Row;
+        return Drawn.Fingerprint((row.Id, info.Name, info.Origin, row.Version, row.State == "down" && row.LastError is not null, row.HeldBack, row.HeldBackFor,
+            info.Hosts, row.Hosts, row.Torrents, info.Update, info.Store?.Id, info.Listing?.Id, row.Update?.NewHosts, info.IsPlugin, info.IsDemo));
+    }
+
+    /// <summary>
+    /// The selected source's detail. It is drawn again only when what it says changed; how the
+    /// source stands and its switch change in place, so a click on them is not lost to a redraw.
+    /// </summary>
     void ShowDetail(ProviderInfo? info)
     {
+        var key = info is null ? null : DetailKey(info);
+        if (key == detailDrawn && (info is null || Detail.Children.Count > 0))
+        {
+            if (info is not null)
+                UpdateDetail(info);
+            return;
+        }
+        detailDrawn = key;
+        detailStanding = null;
+        detailStandingDrawn = null;
+        detailSwitch = null;
         Detail.Children.Clear();
         if (info is null)
             return;
@@ -267,10 +415,10 @@ public sealed partial class ProvidersPage : Page
         Detail.Children.Add(Ui.Haze(row.Version is { Length: > 0 } version ? T.SourcesOriginVersion(info.Origin, version) : info.Origin));
 
         var facts = new StackPanel { Spacing = 10 };
-        var standing = Standing(info);
         var state = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         state.Children.Add(Ui.Text(T.SourcesStanding));
-        state.Children.Add(standing.Children.Count > 0 ? standing : Ui.Haze(T.SourcesStatusWorking));
+        detailStanding = new Border();
+        state.Children.Add(detailStanding);
         facts.Children.Add(state);
         // The engine's error is English from deep in the request: the line says what it means.
         if (row.State == "down" && row.LastError is not null)
@@ -289,7 +437,8 @@ public sealed partial class ProvidersPage : Page
             update.Children.Add(Ui.Text(T.SourcesVersionReady(next), "BodyStrongTextBlockStyle"));
             if (row.Update?.NewHosts is { Length: > 0 } added)
                 update.Children.Add(Ui.Haze(T.StoresUpdateContacts(string.Join(", ", added))));
-            var install = Ui.Label(T.ActionUpdate, (_, _) => ConfirmUpdate(info, store.Id, listing.Id, row.Update?.NewHosts ?? []), accent: true);
+            // Held with a ring until the update ends.
+            var install = JobButton.Make(ctx, listing.Id, T.ActionUpdate, () => ConfirmUpdate(info, store.Id, listing.Id, row.Update?.NewHosts ?? []), accent: true);
             install.HorizontalAlignment = HorizontalAlignment.Left;
             update.Children.Add(install);
             Detail.Children.Add(Ui.Card(update));
@@ -305,9 +454,30 @@ public sealed partial class ProvidersPage : Page
                     ctx.Send(new Command.DisablePlugin(row.Id, !off.IsOn));
             };
             Detail.Children.Add(Ui.Card(off, 10));
+            detailSwitch = off;
             var remove = Ui.Label(T.ActionRemove, (_, _) => ConfirmRemove(info));
             remove.HorizontalAlignment = HorizontalAlignment.Left;
             Detail.Children.Add(remove);
+        }
+        UpdateDetail(info);
+    }
+
+    /// <summary>The detail's parts that change while it shows: how the source stands, and its switch.</summary>
+    void UpdateDetail(ProviderInfo info)
+    {
+        if (detailStanding is { } slot && StandingKey(info) is var said && said != detailStandingDrawn)
+        {
+            detailStandingDrawn = said;
+            var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+            FillStanding(line, info);
+            slot.Child = line.Children.Count > 0 ? line : Ui.Haze(T.SourcesStatusWorking);
+        }
+        if (detailSwitch is { } off && off.IsOn != !info.Row.Disabled)
+        {
+            var was = quiet;
+            quiet = true;
+            off.IsOn = !info.Row.Disabled;
+            quiet = was;
         }
     }
 
@@ -336,7 +506,7 @@ public sealed partial class ProvidersPage : Page
     }
 
     /// <summary>An update that would contact new hosts says which, and asks; otherwise it installs.</summary>
-    async void ConfirmUpdate(ProviderInfo info, string store, string plugin, string[] added)
+    async Task<ulong?> ConfirmUpdate(ProviderInfo info, string store, string plugin, string[] added)
     {
         if (added.Length > 0)
         {
@@ -350,9 +520,9 @@ public sealed partial class ProvidersPage : Page
                 DefaultButton = ContentDialogButton.Close,
             };
             if (await Dialogs.Show(dialog) != ContentDialogResult.Primary)
-                return;
+                return null;
         }
-        ctx.Send(new Command.InstallPlugin(store, plugin));
+        return ctx.Send(new Command.InstallPlugin(store, plugin));
     }
 
     /// <summary>Below about 760 the detail goes under the list, as one column.</summary>

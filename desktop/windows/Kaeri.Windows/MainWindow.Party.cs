@@ -91,11 +91,15 @@ public sealed partial class MainWindow
                     inParty = false;
                     break;
                 case Event.PartyMessage { V1: var message }:
-                    // What the room did, in the engine's words: over the video it is the player's notice.
+                    // What the room did, in the engine's words. Over a playing episode the engine
+                    // gives the same words to the player itself, so they are said once.
                     if (message.Kind is PartyMessageKind.Chat or PartyMessageKind.Corrected or PartyMessageKind.AllReady)
                         break;
                     if (Player.Showing)
-                        Player.Say(message.Text);
+                    {
+                        if (!Player.Playing)
+                            Player.Say(message.Text);
+                    }
                     else if (message.Kind is not (PartyMessageKind.Paused or PartyMessageKind.Resumed or PartyMessageKind.Seeked))
                         ShowToast(InfoBarSeverity.Informational, message.Text);
                     break;

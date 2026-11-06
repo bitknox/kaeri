@@ -71,10 +71,7 @@ impl AniList {
         }
         let ids: Vec<u32> = candidates.iter().map(|id| id.get()).collect();
         let data: Value = self
-            .execute(
-                &query::trend_month_series(),
-                serde_json::json!({ "ids": ids, "from": from }),
-            )
+            .execute(&query::trend_month_series(), serde_json::json!({ "ids": ids }))
             .await?;
         let mut scores: Vec<(AnilistId, f64)> = Vec::new();
         let mut cards: HashMap<AnilistId, Media> = HashMap::new();
@@ -84,6 +81,7 @@ impl AniList {
                 .as_array()
                 .into_iter()
                 .flatten()
+                .filter(|node| node["date"].as_i64().is_some_and(|date| date > from))
                 .filter_map(|node| node["trending"].as_f64())
                 .sum();
             scores.push((media.id, total));
@@ -124,9 +122,7 @@ mod tests {
         assert!(query::trend_week().contains("mediaTrends(date_greater: $from"));
         let month = query::trend_month_candidates();
         assert!(month.contains("p4: Page(page: 4"));
-        assert!(
-            query::trend_month_series().contains("trends(date_greater: $from, perPage: 31)")
-        );
+        assert!(query::trend_month_series().contains("trends(sort: DATE_DESC, perPage: 31)"));
         let filter = BrowseFilter { genres: vec!["Mecha".into()], ..BrowseFilter::default() };
         let (document, variables) = query::media_total(&filter.arguments("", 3, 50));
         assert!(document.contains("Page(page: 1, perPage: 1) { pageInfo { total }"));

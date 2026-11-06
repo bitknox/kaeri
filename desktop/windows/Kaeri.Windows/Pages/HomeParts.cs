@@ -32,6 +32,10 @@ public sealed class HomeCard
     public string Line { get; }
     public string Name { get; }
     public double? Progress => Item.Progress;
+
+    /// <summary>Everything the card and its menu are drawn from: a card whose look is the same is kept, element and all.</summary>
+    public (string, string, string, double?, bool, Playable, HomeAction, uint?, UpNextReason?, FuzzyDate?, bool, LibrarySegment?) Look =>
+        (Title, Line, Name, Progress, Item.New, Item.Playable, Item.Action, Item.Episode, Item.Reason, Item.Starts, Item.Resume is not null, Item.Entry.ListStatus);
 }
 
 /// <summary>Art that fades over its placeholder colour when it arrives, as covers do everywhere.</summary>
@@ -54,7 +58,22 @@ static class HomeArt
                 image.Opacity = 1;
         }
         Fill(false);
-        cover.PropertyChanged += (_, _) => Fill(true);
+        // Heard only while the art is up: the cover outlives a card that is taken down, and a
+        // handler left on it would keep the card's element alive.
+        void Arrived(object? sender, PropertyChangedEventArgs e) => Fill(true);
+        var hearing = false;
+        box.Loaded += (_, _) =>
+        {
+            Fill(false);
+            if (!hearing)
+                cover.PropertyChanged += Arrived;
+            hearing = true;
+        };
+        box.Unloaded += (_, _) =>
+        {
+            cover.PropertyChanged -= Arrived;
+            hearing = false;
+        };
         return box;
     }
 }
@@ -188,37 +207,72 @@ sealed partial class HomeShelf : Grid
     readonly ScrollViewer scroll = new()
     {
         HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-        HorizontalScrollMode = ScrollMode.Disabled,
+        // Touch and a touchpad swipe the strip sideways, and pass an upright swipe to the page.
+        HorizontalScrollMode = ScrollMode.Enabled,
+        IsHorizontalRailEnabled = true,
         VerticalScrollMode = ScrollMode.Disabled,
         VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         IsTabStop = false,
     };
-    /// <summary>The wheel moves the page, not a sideways strip; Shift and a sideways wheel move the strip.</summary>
-    internal static void ForwardWheel(ScrollViewer inner, HomePage page) =>
-        inner.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
+    /// <summary>
+    /// The wheel moves the page, not a sideways strip; Shift and a sideways wheel move the strip.
+    /// The strip's content hides an upright wheel from the strip, then the strip hands it on
+    /// untouched, so the page's own scrolling takes it just as it does between the shelves, with
+    /// its glide, and a touchpad's precise scrolling and inertia.
+    /// </summary>
+    internal static void ForwardWheel(ScrollViewer inner)
+    {
+        var content = (UIElement)inner.Content;
+        var passing = false;
+        double? heading = null;
+        inner.ViewChanged += (_, e) =>
+        {
+            if (!e.IsIntermediate)
+                heading = null;
+        };
+        content.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
         {
             var point = e.GetCurrentPoint(inner).Properties;
+            // Handled here, the strip's own wheel handling, which would turn an upright wheel
+            // sideways, leaves it alone.
             e.Handled = true;
             if (point.IsHorizontalMouseWheel || e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift))
             {
-                inner.ChangeView(Math.Clamp(inner.HorizontalOffset + point.MouseWheelDelta, 0, inner.ScrollableWidth), null, null, true);
+                passing = false;
+                // Shift with the wheel down goes on along the strip, as everywhere in Windows.
+                var by = point.IsHorizontalMouseWheel ? point.MouseWheelDelta : -point.MouseWheelDelta;
+                heading = Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
+                inner.ChangeView(heading, null, null, false);
                 return;
             }
-            var outer = page.PageScroll;
-            outer.ChangeView(null, Math.Clamp(outer.VerticalOffset - point.MouseWheelDelta, 0, outer.ScrollableHeight), null, true);
+            passing = true;
         }), true);
+        inner.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
+        {
+            if (!passing)
+                return;
+            passing = false;
+            e.Handled = false;
+        }), true);
+    }
 
     readonly ItemsRepeater repeater;
     readonly Button previous, next;
-    readonly StackPanel heading = new() { Orientation = Orientation.Horizontal, Spacing = 12 };
-    readonly TextBlock lead, title, aside;
+    /// <summary>
+    /// One line: the lead, the title in the show font, what follows it, then the small aside. As
+    /// one block its spaces keep their width, and it is cut short before the link.
+    /// </summary>
+    readonly TextBlock heading;
+    readonly Run lead = new(), title = new(), tail = new(), aside = new();
     readonly HyperlinkButton viewAll;
     readonly double cardWidth;
     bool inside;
 
     public SectionKind Kind { get; }
     public HomeShape Shape { get; }
-    public List<HomeCard> Cards { get; private set; } = [];
+    /// <summary>The shelf's cards, changed in place: a card that stays keeps its element, its focus and its menu.</summary>
+    readonly System.Collections.ObjectModel.ObservableCollection<HomeCard> cards = [];
+    public IReadOnlyList<HomeCard> Cards => cards;
 
     public HomeShelf(HomePage page, HomeSection section, SeasonYear? season)
     {
@@ -233,14 +287,26 @@ sealed partial class HomeShelf : Grid
         var head = new Grid { Margin = new Thickness(0, 0, 0, 12) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        lead = new TextBlock { FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Bottom, TextWrapping = TextWrapping.NoWrap };
-        title = new TextBlock { FontSize = 20, LineHeight = 28, FontFamily = Ui.Res<FontFamily>("ShowFont"), FontWeight = FontWeights.Bold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Bottom };
-        aside = new TextBlock { Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Bottom, TextWrapping = TextWrapping.NoWrap };
-        var words = new StackPanel { Orientation = Orientation.Horizontal };
-        words.Children.Add(lead);
-        words.Children.Add(title);
-        heading.Children.Add(words);
-        heading.Children.Add(aside);
+        heading = new TextBlock
+        {
+            FontSize = 20,
+            LineHeight = 28,
+            FontWeight = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            TextWrapping = TextWrapping.NoWrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxLines = 1,
+            Margin = new Thickness(0, 0, 12, 0),
+        };
+        title.FontFamily = Ui.Res<FontFamily>("ShowFont");
+        title.FontWeight = FontWeights.Bold;
+        aside.FontSize = 14;
+        aside.FontWeight = FontWeights.Normal;
+        aside.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
+        heading.Inlines.Add(lead);
+        heading.Inlines.Add(title);
+        heading.Inlines.Add(tail);
+        heading.Inlines.Add(aside);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
         head.Children.Add(heading);
         viewAll = new HyperlinkButton { Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Bottom };
@@ -253,10 +319,14 @@ sealed partial class HomeShelf : Grid
         {
             Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = HomeWording.Gap },
             ItemTemplate = new HomeCardFactory(Shape, page),
+            ItemsSource = cards,
+            // Tab enters a shelf once; the arrow keys move along it, and up and down between shelves.
+            TabFocusNavigation = KeyboardNavigationMode.Once,
+            XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled,
         };
         scroll.Content = repeater;
         // The wheel moves the page, not the shelf; Shift and a sideways wheel move the shelf.
-        ForwardWheel(scroll, page);
+        ForwardWheel(scroll);
         scroll.ViewChanged += (_, _) => Arrows();
         scroll.SizeChanged += (_, _) => Arrows();
         Grid.SetRow(scroll, 1);
@@ -345,13 +415,14 @@ sealed partial class HomeShelf : Grid
     /// <summary>Takes the section as the engine now has it. Cards that left fade out first when <paramref name="leaving"/> names them.</summary>
     public void Update(HomeSection section, SeasonYear? season, IReadOnlyCollection<uint> leaving)
     {
-        var heading_ = HomeWording.Heading(section);
-        lead.Text = heading_.Lead;
-        title.Text = heading_.Title;
-        title.Visibility = heading_.Title.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        var words = HomeWording.Heading(section);
         var small = HomeWording.Aside(section, season);
-        aside.Text = small ?? "";
-        aside.Visibility = small is null ? Visibility.Collapsed : Visibility.Visible;
+        lead.Text = words.Lead;
+        title.Text = words.Title;
+        tail.Text = words.Tail;
+        // An em space keeps the aside apart from the heading, as the gap between two blocks did.
+        aside.Text = small is null ? "" : " " + small;
+        AutomationProperties.SetName(heading, small is null ? words.ToString() : $"{words}, {small}");
         var all = HomeWording.ViewAll(section);
         viewAll.Content = all is null ? null : new StackPanel
         {
@@ -363,20 +434,63 @@ sealed partial class HomeShelf : Grid
         if (all is not null)
             AutomationProperties.SetName(viewAll, all);
         var now = DateTimeOffset.Now;
-        var covers = Cards.ToDictionary(c => c.Id, c => c.Cover);
-        Cards = [.. section.Items.Select(item =>
+        var was = cards.ToDictionary(c => c.Id);
+        var next = section.Items.Select(item =>
         {
-            var cover = covers.TryGetValue(item.Entry.Id, out var known) ? known : new CoverItem(item.Entry).Load(Ctx.Current.Art, withBanner: Shape == HomeShape.Card);
-            return new HomeCard(item, cover, HomeWording.Line(item, now, TimeZoneInfo.Local), HomeWording.Name(item, now, TimeZoneInfo.Local));
-        })];
-        repeater.ItemsSource = Cards;
+            was.TryGetValue(item.Entry.Id, out var old);
+            var cover = old?.Cover ?? new CoverItem(item.Entry).Load(Ctx.Current.Art, withBanner: Shape == HomeShape.Card);
+            var card = new HomeCard(item, cover, HomeWording.Line(item, now, TimeZoneInfo.Local), HomeWording.Name(item, now, TimeZoneInfo.Local));
+            return old is not null && old.Look == card.Look ? old : card;
+        }).ToList();
+        Apply(next);
+    }
+
+    /// <summary>
+    /// Makes the shelf's cards <paramref name="next"/> with the fewest changes: cards that left
+    /// are taken out, moved ones moved, changed ones replaced, and every other element stays.
+    /// </summary>
+    void Apply(List<HomeCard> next)
+    {
+        var ids = next.Select(c => c.Id).ToHashSet();
+        for (var k = cards.Count - 1; k >= 0; k--)
+        {
+            if (!ids.Contains(cards[k].Id))
+                cards.RemoveAt(k);
+        }
+        for (var i = 0; i < next.Count; i++)
+        {
+            var want = next[i];
+            if (i < cards.Count && cards[i].Id == want.Id)
+            {
+                if (!ReferenceEquals(cards[i], want))
+                    cards[i] = want;
+                continue;
+            }
+            var at = -1;
+            for (var j = i + 1; j < cards.Count; j++)
+            {
+                if (cards[j].Id == want.Id)
+                {
+                    at = j;
+                    break;
+                }
+            }
+            if (at < 0)
+            {
+                cards.Insert(i, want);
+                continue;
+            }
+            cards.Move(at, i);
+            if (!ReferenceEquals(cards[i], want))
+                cards[i] = want;
+        }
     }
 
     /// <summary>The element showing title <paramref name="id"/> now, if it is realised.</summary>
     public UIElement? ElementOf(uint id)
     {
-        for (var i = 0; i < Cards.Count; i++)
-            if (Cards[i].Id == id)
+        for (var i = 0; i < cards.Count; i++)
+            if (cards[i].Id == id)
                 return repeater.TryGetElement(i);
         return null;
     }
@@ -390,7 +504,23 @@ sealed partial class HomeShelf : Grid
             return;
         }
         Motion.Fade(element, 0);
-        _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => done()));
+        // Faded, the card narrows to nothing with the gap after it, so the cards after it slide
+        // up to close it on the standard token instead of jumping when it is taken out.
+        _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+        {
+            if (element is not FrameworkElement card || card.ActualWidth <= 0)
+            {
+                done();
+                return;
+            }
+            var width = card.ActualWidth;
+            Motion.Ease(card, width, 0, v =>
+            {
+                card.Width = Math.Max(0, v);
+                card.Margin = new Thickness(0, 0, -HomeWording.Gap * (1 - v / width), 0);
+            });
+            _ = Task.Delay(Motion.Standard).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => done()));
+        }));
     }
 
     public void Focus() => repeater.TryGetElement(0)?.Focus(FocusState.Programmatic);

@@ -193,7 +193,24 @@ public sealed partial class SettingsPage : Page
         // "2 min ago" moves on while the Proxy check card is on screen.
         guardClock = Timers.Weak(this, TimeSpan.FromSeconds(30), true, static page => page.ShowProxyCheck());
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
-        // Heard from the start: what arrives before the page is loaded is not missed.
+        // The frame keeps the page for the next visit: its cards are built once, which is most of
+        // what opening Settings costs, and the pane and the scroll stay where they were.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
+        // A redraw held back while a box was typed in is made once the box is left.
+        Cards.LostFocus += (_, _) => DispatcherQueue.TryEnqueue(() =>
+        {
+            if (held && !Ui.TypingIn(Cards))
+                Show();
+        });
+    }
+
+    /// <summary>The pane last open, so Settings opens there again while the app runs.</summary>
+    static string? lastPane;
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // Heard from each visit's start, before the page is loaded, until the frame moves on.
         ctx.Tv.Changed += TvChanged;
         Sync.SyncDialogs.Changed += SyncChanged;
         ctx.Hear(this, Heard, () =>
@@ -203,14 +220,23 @@ public sealed partial class SettingsPage : Page
             guardClock.Stop();
             savedClock.Stop();
         });
+        var was = Panes.SelectedIndex;
+        ShowPane(e.Parameter as string ?? lastPane ?? ctx.Options.Pane ?? "playback");
+        // The same pane again: what changed while away reaches its cards in place.
+        if (was >= 0 && Panes.SelectedIndex == was)
+            Show();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    /// <summary>Opens a pane on this page, as navigation does and as the window asks while Settings is already open.</summary>
+    internal void ShowPane(string name)
     {
-        base.OnNavigatedTo(e);
-        var name = e.Parameter as string ?? ctx.Options.Pane ?? "playback";
         var at = Array.FindIndex(PaneList, p => p.Name == name);
         Panes.SelectedIndex = at < 0 ? 0 : at;
+        if (narrow && picking)
+        {
+            picking = false;
+            Layout();
+        }
     }
 
     void Heard(IReadOnlyList<Event> batch)
@@ -228,6 +254,7 @@ public sealed partial class SettingsPage : Page
         if ((Panes.SelectedItem as ListViewItem)?.Tag is Pane p)
         {
             pane = p;
+            lastPane = p.Name;
             Show();
         }
     }
@@ -272,47 +299,95 @@ public sealed partial class SettingsPage : Page
 
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
-    /// <summary>The pane the cards were last made for.</summary>
-    string? shownPane;
+    /// <summary>The pane the cards were last made for, and what decided which cards it has.</summary>
+    string? shownPane, shapeDrawn;
+    /// <summary>A redraw waits for the box being typed in to be left.</summary>
+    bool held;
+    /// <summary>Each card's way to take the engine's latest value in place.</summary>
+    readonly List<Action> refresh = [];
 
     /// <summary>
-    /// The pane's cards, made anew. For the same pane again, as after a setting changes, the page
-    /// stays where it was: the scroll offset, and the focus on the control of the same name. The
-    /// cards come and go within one frame, so nothing moves on screen.
+    /// The pane as the engine last said. The cards are made once for a pane; after that a change
+    /// sets each control's value, line and enabled state in place, so a switch finishes its slide,
+    /// the card under the pointer keeps its hover and a box keeps what is typed in it. The cards
+    /// are made again only when which cards the pane has changed, and not while a box in it is
+    /// being typed in; the scroll offset and the focus stay where they were.
     /// </summary>
     void Show()
     {
         var same = shownPane == pane.Name;
+        var shape = Shape();
+        if (same && shape == shapeDrawn)
+        {
+            held = false;
+            Refresh();
+            return;
+        }
+        if (same && Ui.TypingIn(Cards))
+        {
+            held = true;
+            Refresh();
+            return;
+        }
+        held = false;
         var offset = CardScroll.VerticalOffset;
-        var focused = same && XamlRoot is not null ? FocusManager.GetFocusedElement(XamlRoot) as Control : null;
-        var focusName = focused is null ? null : AutomationProperties.GetName(focused);
-        var focusType = focused?.GetType();
+        var focus = same ? Ui.MarkFocus(Cards) : null;
         Build();
         shownPane = pane.Name;
+        shapeDrawn = shape;
         if (!same)
+        {
+            // Another pane starts at its top.
+            CardScroll.ChangeView(null, 0, null, disableAnimation: true);
             return;
+        }
         CardScroll.UpdateLayout();
         CardScroll.ChangeView(null, offset, null, disableAnimation: true);
-        if (!string.IsNullOrEmpty(focusName) && Find(Cards, c => c.GetType() == focusType && AutomationProperties.GetName(c) == focusName) is { } again)
-            again.Focus(FocusState.Programmatic);
+        Ui.RestoreFocus(Cards, focus);
     }
 
-    static Control? Find(DependencyObject under, Func<Control, bool> match)
+    void Refresh()
     {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(under); i++)
-        {
-            var child = VisualTreeHelper.GetChild(under, i);
-            if (child is Control c && match(c))
-                return c;
-            if (Find(child, match) is { } found)
-                return found;
-        }
-        return null;
+        var was = quiet;
+        quiet = true;
+        foreach (var set in refresh)
+            set();
+        quiet = was;
+    }
+
+    /// <summary>What decides which cards the pane has, and for Accounts and Devices what they say.</summary>
+    string Shape() => pane.Name switch
+    {
+        // Its cards keep themselves current, so the pane itself never changes shape.
+        "accounts" => "accounts",
+        "devices" => DevicesKey(),
+        "profiles" => Drawn.Fingerprint(ctx.Known.Profiles),
+        "library" => Drawn.Fingerprint((ctx.Known.HiddenLoaded, ctx.Known.Hidden, ctx.Known.RestoredHere.Order())),
+        "about" => Drawn.Fingerprint((SettingsCatalog.IsOn(ctx.Known.Setting(K.SaveCrashReports)), ctx.Known.Setting(K.UpdateBeta) is null, KaeriFfiMethods.CrashList())),
+        _ => SettingsShape(),
+    };
+
+    /// <summary>A settings pane's rows: which of its keys the engine has, and what adds or takes away a card.</summary>
+    string SettingsShape()
+    {
+        if (ctx.Known.Settings is not { } settings)
+            return "";
+        var parts = new List<object?>();
+        foreach (var (group, keys) in pane.Groups)
+            parts.Add((group, keys.Where(k => ctx.Known.Setting(k) is not null).ToArray()));
+        parts.Add(settings.PresenceAvailable);
+        parts.Add(SettingsCatalog.IsOn(ctx.Known.Setting(K.Torrents)));
+        parts.Add(settings.Torrent.Proxy is null);
+        parts.Add(ctx.Known.Setting(K.TorrentsWhileCasting) is null);
+        parts.Add(ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is not null);
+        parts.Add(settings.SubtitleStyle is null);
+        return Drawn.Fingerprint(parts);
     }
 
     void Build()
     {
         quiet = true;
+        refresh.Clear();
         Cards.Children.Clear();
         guardCard = null;
         protectCard = null;
@@ -365,8 +440,7 @@ public sealed partial class SettingsPage : Page
                         if (ctx.Known.Settings?.SubtitleStyle is { } style)
                         {
                             Cards.Children.Add(Heading(T.SettingsGroupSubtitles));
-                            foreach (var element in new SubtitleSettings(ctx, style, () => quiet).Rows())
-                                Cards.Children.Add(element);
+                            SubtitleRows(style);
                         }
                         continue;
                     }
@@ -392,7 +466,12 @@ public sealed partial class SettingsPage : Page
                     if (pane.Name == "playback" && group == "player")
                     {
                         var clear = new Button { Content = T.PlayerSkipClear };
-                        clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
+                        // Asks first, as the Mac does: what Kaeri found is gone with it.
+                        clear.Click += async (_, _) =>
+                        {
+                            if (await Ui.Confirm(XamlRoot, T.SettingsClearSkips, T.SettingsClearSkipsConfirm, T.PlayerSkipClear))
+                                ctx.Send(new Command.ClearSkipMarks());
+                        };
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
                         Cards.Children.Add(HideChatCard());
                     }
@@ -406,6 +485,35 @@ public sealed partial class SettingsPage : Page
                 break;
         }
         quiet = false;
+    }
+
+    /// <summary>
+    /// The subtitle group's preview and rows. A change to the style draws this group again, in
+    /// its place, and leaves the rest of the pane as it is.
+    /// </summary>
+    void SubtitleRows(SubtitleStyle style)
+    {
+        var drawn = Drawn.Fingerprint(style);
+        var rows = new SubtitleSettings(ctx, style, () => quiet).Rows().ToList();
+        foreach (var element in rows)
+            Cards.Children.Add(element);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.Settings?.SubtitleStyle is not { } now)
+                return;
+            var said = Drawn.Fingerprint(now);
+            var at = rows.Count == 0 ? -1 : Cards.Children.IndexOf(rows[0]);
+            if (said == drawn || at < 0)
+                return;
+            drawn = said;
+            var focus = Ui.MarkFocus(Cards);
+            foreach (var old in rows)
+                Cards.Children.Remove(old);
+            rows = new SubtitleSettings(ctx, now, () => quiet).Rows().ToList();
+            for (var i = 0; i < rows.Count; i++)
+                Cards.Children.Insert(at + i, rows[i]);
+            Ui.RestoreFocus(Cards, focus);
+        });
     }
 
     /// <summary>
@@ -590,13 +698,22 @@ public sealed partial class SettingsPage : Page
                 parts.Add(T.LanguageRestartNote);
             return parts.Count == 0 ? null : string.Join(" ", parts);
         }
-        var card = CardFrame(T.SettingsLanguageApp, Description(), box, "\uF2B7");
+        // Restart beside the picker once another language is chosen, as the Mac has it.
+        var restart = new Button { Content = T.SettingsLanguageRestart };
+        restart.Click += (_, _) => Relaunch.Now("a new app language");
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        row.Children.Add(restart);
+        row.Children.Add(box);
+        void ShowRestart() => restart.Visibility = StringResources.Chosen != StringResources.AtStart ? Visibility.Visible : Visibility.Collapsed;
+        ShowRestart();
+        var card = CardFrame(T.SettingsLanguageApp, Description(), row, "\uF2B7");
         box.SelectionChanged += (_, _) =>
         {
             if (quiet || box.SelectedIndex < 0)
                 return;
             StringResources.Choose(box.SelectedIndex == 0 ? null : languages[box.SelectedIndex - 1].Tag);
             card.Description = Description();
+            ShowRestart();
         };
         return card;
     }
@@ -651,14 +768,10 @@ public sealed partial class SettingsPage : Page
     {
         if (ctx.Known.Setting(K.Torrents) is not { } row || ctx.Known.Settings is not { } settings)
             return;
-        var on = SettingsCatalog.IsOn(row);
         var view = settings.Torrent;
         Cards.Children.Add(Heading(T.TorrentsTitle));
-        if (Card(row) is SettingsCard toggle)
-        {
-            toggle.Description = on ? TorrentWords.OnNote(view) : TorrentWords.OffNote;
-            Cards.Children.Add(toggle);
-        }
+        // Its line says where traffic goes (Describe), kept up to date with the switch.
+        Cards.Children.Add(Card(row));
 
         // Route torrent traffic through a proxy: always there. On opens the form, and goes back
         // off unless a proxy passes its check and is saved; off removes the proxy at once.
@@ -884,9 +997,159 @@ public sealed partial class SettingsPage : Page
         _ => null,
     };
 
+    /// <summary>
+    /// A row's card. The control is made once; the engine's later values reach it in place, under
+    /// <c>quiet</c> so they are not sent back, and a box being typed in keeps what is in it.
+    /// </summary>
     FrameworkElement Card(SettingRow row)
     {
-        var title = Title(row.Key);
+        var key = row.Key;
+        var title = Title(key);
+        FrameworkElement control;
+        Action<SettingRow> take;
+        switch (SettingsCatalog.ControlFor(row))
+        {
+            case SettingControl.Switch:
+            {
+                var toggle = new ToggleSwitch { IsOn = SettingsCatalog.IsOn(row), OnContent = "", OffContent = "", MinWidth = 0 };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
+                toggle.Toggled += (_, _) =>
+                {
+                    if (quiet)
+                        return;
+                    ctx.Send(new Command.SetSetting(key, new SettingValue.Bool(toggle.IsOn)));
+                };
+                take = now =>
+                {
+                    if (toggle.IsOn != SettingsCatalog.IsOn(now))
+                        toggle.IsOn = SettingsCatalog.IsOn(now);
+                };
+                control = toggle;
+                break;
+            }
+            case SettingControl.Choice:
+            {
+                var options = SettingsCatalog.Options(key);
+                var box = new ComboBox { MinWidth = 200, ItemsSource = options.Select(o => o.Shown).ToList() };
+                int At(SettingRow r) => SettingsCatalog.Current(r) is { } current ? options.ToList().IndexOf(current) : -1;
+                var at = At(row);
+                if (at < 0)
+                    box.PlaceholderText = SettingsCatalog.Shown(key, row.Value);
+                else
+                    box.SelectedIndex = at;
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                box.SelectionChanged += (_, _) =>
+                {
+                    if (!quiet && box.SelectedIndex >= 0 && box.SelectedIndex != at)
+                        ctx.Send(new Command.SetSetting(key, options[box.SelectedIndex].Value));
+                };
+                take = now =>
+                {
+                    // An open list is the person's: the value waits until it closes.
+                    if (box.IsDropDownOpen)
+                        return;
+                    at = At(now);
+                    if (at < 0)
+                    {
+                        box.PlaceholderText = SettingsCatalog.Shown(key, now.Value);
+                        if (box.SelectedIndex != -1)
+                            box.SelectedIndex = -1;
+                    }
+                    else if (box.SelectedIndex != at)
+                        box.SelectedIndex = at;
+                };
+                control = box;
+                break;
+            }
+            case SettingControl.Text:
+            {
+                // mpv's options are one to a line: a box that takes several, where Enter starts the
+                // next line and leaving the box saves them. The box breaks its lines at \r, where
+                // the engine's text breaks at \n. It takes several lines before its text is set, or
+                // it keeps only the first.
+                var lines = key == K.MpvOptions;
+                var text = SettingsCatalog.TypedText(row) ?? "";
+                string Shown(string engine) => lines ? engine.Replace('\n', '\r') : engine;
+                var box = new TextBox { MinWidth = lines ? 320 : 220, PlaceholderText = T.SettingsNotSet };
+                if (lines)
+                {
+                    box.AcceptsReturn = true;
+                    box.TextWrapping = TextWrapping.Wrap;
+                    box.MinHeight = 96;
+                }
+                box.Text = Shown(text);
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                string Typed() => box.Text.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+                void Commit()
+                {
+                    if (!quiet && Typed() != text.Trim())
+                    {
+                        // The options go as a list, one to a line, as the config file keeps them.
+                        SettingValue value = lines
+                            ? new SettingValue.Strings([.. Typed().Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0)])
+                            : new SettingValue.Str(Typed());
+                        ctx.Send(new Command.SetSetting(key, value));
+                    }
+                }
+                box.LostFocus += (_, _) => Commit();
+                box.KeyDown += (_, e) =>
+                {
+                    if (e.Key == global::Windows.System.VirtualKey.Enter && !lines)
+                        Commit();
+                };
+                take = now =>
+                {
+                    text = SettingsCatalog.TypedText(now) ?? "";
+                    // What is being typed is never replaced.
+                    if (box.FocusState == FocusState.Unfocused && Typed() != text.Trim())
+                        box.Text = Shown(text);
+                };
+                control = box;
+                break;
+            }
+            default:
+            {
+                var shown = new TextBlock { Text = SettingsCatalog.Shown(key, row.Value), Style = Res<Style>("HazeBodyStyle") };
+                take = now => shown.Text = SettingsCatalog.Shown(key, now.Value);
+                control = shown;
+                break;
+            }
+        }
+        var card = CardFrame(title, null, control);
+        string? described = null;
+        void Apply(SettingRow now)
+        {
+            take(now);
+            var description = Describe(now);
+            // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
+            var why = key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
+                ? FindSkipsPause(ctx.Known.SkipFindPaused) : null;
+            var said = $"{description}\u0001{why}";
+            if (said != described)
+            {
+                described = said;
+                if (why is not null)
+                    card.Description = PausedLine(description ?? "", why);
+                else if (description is not null)
+                    card.Description = description;
+                else
+                    card.ClearValue(SettingsCard.DescriptionProperty);
+            }
+            // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
+            card.IsEnabled = SettingsCatalog.Needs(key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
+        }
+        Apply(row);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.Setting(key) is { } now)
+                Apply(now);
+        });
+        return card;
+    }
+
+    /// <summary>A row's line under its title: the catalogue's for the rows that have one, or how many shows set it their own way.</summary>
+    string? Describe(SettingRow row)
+    {
         var overridden = ctx.Known.Settings?.Overridden?.FirstOrDefault(o => o.Key == row.Key);
         string? description = overridden is { Shows: > 0 } o ? T.SettingsOverridden((long)o.Shows) : null;
         if (row.Key == K.Trailers)
@@ -905,110 +1168,18 @@ public sealed partial class SettingsPage : Page
             description = T.SettingsNoteCastTvsPc;
         if (row.Key == K.TorrentsWhileCasting)
             description = T.SettingsNoteTorrentsWhileCastingPc;
-        FrameworkElement control;
-        switch (SettingsCatalog.ControlFor(row))
-        {
-            case SettingControl.Switch:
-            {
-                var toggle = new ToggleSwitch { IsOn = SettingsCatalog.IsOn(row), OnContent = "", OffContent = "", MinWidth = 0 };
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, title);
-                toggle.Toggled += (_, _) =>
-                {
-                    if (quiet)
-                        return;
-                    ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Bool(toggle.IsOn)));
-                };
-                control = toggle;
-                break;
-            }
-            case SettingControl.Choice:
-            {
-                var options = SettingsCatalog.Options(row.Key);
-                var box = new ComboBox { MinWidth = 200, ItemsSource = options.Select(o => o.Shown).ToList() };
-                var at = SettingsCatalog.Current(row) is { } current ? options.ToList().IndexOf(current) : -1;
-                if (at < 0)
-                    box.PlaceholderText = SettingsCatalog.Shown(row.Key, row.Value);
-                else
-                    box.SelectedIndex = at;
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
-                box.SelectionChanged += (_, _) =>
-                {
-                    if (!quiet && box.SelectedIndex >= 0 && box.SelectedIndex != at)
-                        ctx.Send(new Command.SetSetting(row.Key, options[box.SelectedIndex].Value));
-                };
-                control = box;
-                break;
-            }
-            case SettingControl.Text:
-            {
-                var text = SettingsCatalog.TypedText(row) ?? "";
-                var box = new TextBox { Text = text, MinWidth = 220, PlaceholderText = T.SettingsNotSet };
-                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
-                void Commit()
-                {
-                    if (!quiet && box.Text.Trim() != text)
-                        ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Str(box.Text.Trim())));
-                }
-                box.LostFocus += (_, _) => Commit();
-                box.KeyDown += (_, e) =>
-                {
-                    if (e.Key == global::Windows.System.VirtualKey.Enter)
-                        Commit();
-                };
-                control = box;
-                break;
-            }
-            default:
-                control = new TextBlock { Text = SettingsCatalog.Shown(row.Key, row.Value), Style = Res<Style>("HazeBodyStyle") };
-                break;
-        }
-        var card = CardFrame(title, description, control);
-        // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
-        if (row.Key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
-            && FindSkipsPause(ctx.Known.SkipFindPaused) is { } why)
-            card.Description = PausedLine(description ?? "", why);
-        // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
-        card.IsEnabled = SettingsCatalog.Needs(row.Key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
-        return card;
+        // Torrents: where traffic goes while they are on.
+        if (row.Key == K.Torrents && ctx.Known.Settings is { } settings)
+            description = SettingsCatalog.IsOn(row) ? TorrentWords.OnNote(settings.Torrent) : TorrentWords.OffNote;
+        return description;
     }
 
     void ShowAccounts()
     {
         Cards.Children.Add(Heading(T.SettingsTrackers));
+        // Each card keeps itself current: sync, an expired sign-in, and one under way.
         foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
-        {
-            var name = KaeriFfiMethods.TrackerName(tracker);
-            var state = ctx.Known.Sync.GetValueOrDefault(tracker);
-            Button action;
-            string description;
-            if (state is { Connected: true })
-            {
-                var waiting = (long)state.Outbox;
-                description = (state.User, waiting) switch
-                {
-                    ({ } user, > 0) => T.AccountsStateSignedInWaiting(name, user, waiting),
-                    ({ } user, _) => T.AccountsStateSignedIn(name, user),
-                    (null, > 0) => T.SettingsSignedInWaiting(waiting),
-                    _ => T.SettingsSignedIn,
-                };
-                action = new Button { Content = T.AccountsSignOut };
-                action.Click += (_, _) => ctx.Send(new Command.Disconnect(tracker));
-            }
-            else
-            {
-                description = tracker is "simkl" or "trakt" ? T.SettingsSignedOutCode : T.AccountsStateSignedOut;
-                action = new Button { Content = T.AccountsSignIn };
-                // Kitsu takes a user name and password here; the others sign in in the browser or with a code.
-                action.Click += (_, _) =>
-                {
-                    if (tracker == "kitsu")
-                        KitsuDialog.Show(ctx, XamlRoot);
-                    else
-                        ctx.Send(new Command.Connect(tracker));
-                };
-            }
-            Cards.Children.Add(CardFrame(name, description, action));
-        }
+            Cards.Children.Add(AccountCard.For(ctx, tracker));
         var sync = new Button { Content = T.AccountsSyncNow };
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));
@@ -1067,6 +1238,12 @@ public sealed partial class SettingsPage : Page
                 if (!quiet)
                     ctx.Send(new Command.SetSetting(key, new SettingValue.Bool(toggle.IsOn)));
             };
+            refresh.Add(() =>
+            {
+                var now = SettingsCatalog.IsOn(ctx.Known.Setting(key));
+                if (toggle.IsOn != now)
+                    toggle.IsOn = now;
+            });
             return CardFrame(title, detail, toggle);
         }
         Cards.Children.Add(Switch(K.SaveCrashReports, T.SettingsCrashSave, T.SettingsCrashSaveDetail, saving));
