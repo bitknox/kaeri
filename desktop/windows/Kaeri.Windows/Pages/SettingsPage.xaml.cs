@@ -193,16 +193,9 @@ public sealed partial class SettingsPage : Page
         // "2 min ago" moves on while the Proxy check card is on screen.
         guardClock = Timers.Weak(this, TimeSpan.FromSeconds(30), true, static page => page.ShowProxyCheck());
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
-        // Heard from the start: what arrives before the page is loaded is not missed.
-        ctx.Tv.Changed += TvChanged;
-        Sync.SyncDialogs.Changed += SyncChanged;
-        ctx.Hear(this, Heard, () =>
-        {
-            ctx.Tv.Changed -= TvChanged;
-            Sync.SyncDialogs.Changed -= SyncChanged;
-            guardClock.Stop();
-            savedClock.Stop();
-        });
+        // The frame keeps the page for the next visit: its cards are built once, which is most of
+        // what opening Settings costs, and the pane and the scroll stay where they were.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
         // A redraw held back while a box was typed in is made once the box is left.
         Cards.LostFocus += (_, _) => DispatcherQueue.TryEnqueue(() =>
         {
@@ -217,7 +210,21 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before the page is loaded, until the frame moves on.
+        ctx.Tv.Changed += TvChanged;
+        Sync.SyncDialogs.Changed += SyncChanged;
+        ctx.Hear(this, Heard, () =>
+        {
+            ctx.Tv.Changed -= TvChanged;
+            Sync.SyncDialogs.Changed -= SyncChanged;
+            guardClock.Stop();
+            savedClock.Stop();
+        });
+        var was = Panes.SelectedIndex;
         ShowPane(e.Parameter as string ?? lastPane ?? ctx.Options.Pane ?? "playback");
+        // The same pane again: what changed while away reaches its cards in place.
+        if (was >= 0 && Panes.SelectedIndex == was)
+            Show();
     }
 
     /// <summary>Opens a pane on this page, as navigation does and as the window asks while Settings is already open.</summary>
