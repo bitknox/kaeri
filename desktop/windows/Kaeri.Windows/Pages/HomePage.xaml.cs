@@ -604,9 +604,17 @@ public sealed partial class HomePage : Page, IPageKeys
         });
     }
 
+    /// <summary>A card's menu, made as it opens, so it says what is true then: Add to Planning goes once the title is on a list.</summary>
     internal MenuFlyout MenuFor(HomeCard card, HomeShape shape)
     {
         var menu = new MenuFlyout();
+        menu.Opening += (_, _) => Fill(menu, card, shape);
+        return menu;
+    }
+
+    void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
+    {
+        menu.Items.Clear();
         var item = card.Item;
         MenuFlyoutItem Add(string text, string glyph, Action act, string? keys = null)
         {
@@ -634,14 +642,18 @@ public sealed partial class HomePage : Page, IPageKeys
         {
             if (item.Action == HomeAction.Play && item.Playable != Playable.NotFound)
                 Add(T.HomePlayEpisode(episode), "", () => ctx.Play(card.Id, episode.ToString()));
-            if (item.Action != HomeAction.Nothing && item.Reason != UpNextReason.Planning)
-                Add(T.UpNextAddPlanning, "", () => AddToPlanning(card.Id));
+            // A title already on a list, in any status, is not offered again.
+            if (item.Action != HomeAction.Nothing && item.Reason != UpNextReason.Planning && (ctx.Known.Entry(card.Id)?.ListStatus ?? item.Entry.ListStatus) is null)
+                Add(T.UpNextAddPlanning, "", () =>
+                {
+                    AddToPlanning(card.Id);
+                    ctx.Window.Say(T.LibraryAddedPlanning);
+                });
             if (shape == HomeShape.Poster)
                 Add(T.UpNextNotInterested, "", () => NotInterested(card.Item.Entry, card.Item.Starts is not null), "Delete");
         }
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(T.HomeDetails, "", () => ctx.OpenTitle(card.Id));
-        return menu;
     }
 
     internal void CardKey(HomeCard card, HomeShape shape, KeyRoutedEventArgs e)

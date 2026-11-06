@@ -75,7 +75,7 @@ sealed partial class HomeWeek : Grid
             if (days[d].Count == 0)
                 column.Children.Add(Ui.Text(T.HomeNothingAiring, "HazeCaptionStyle"));
             foreach (var item in d == 0 ? HomeWording.Window(days[d], now.ToUnixTimeSeconds(), 3) : days[d].Take(3))
-                column.Children.Add(Entry(item, now));
+                column.Children.Add(Entry(page, item, now));
             if (days[d].Count > 3)
             {
                 var more = new HyperlinkButton { Content = T.HomeDayMore(days[d].Count - 3), Padding = new Thickness(0), FontSize = 12 };
@@ -104,7 +104,7 @@ sealed partial class HomeWeek : Grid
         Children.Add(scroll);
     }
 
-    static Button Entry(HomeItem item, DateTimeOffset now)
+    static Button Entry(HomePage page, HomeItem item, DateTimeOffset now)
     {
         var cover = new CoverItem(item.Entry).Load(Ctx.Current.Art);
         var row = new Grid { ColumnSpacing = 8, VerticalAlignment = VerticalAlignment.Top };
@@ -124,7 +124,10 @@ sealed partial class HomeWeek : Grid
         Grid.SetColumn(text, 1);
         row.Children.Add(text);
         var button = new Button { Style = Ui.Res<Style>("HomeCardButtonStyle"), Content = row, HorizontalAlignment = HorizontalAlignment.Stretch };
-        AutomationProperties.SetName(button, $"{item.Entry.Title}, {episode}, {time}");
+        var name = string.Join(", ", new[] { item.Entry.Title, episode, time }.Where(s => s.Length > 0));
+        AutomationProperties.SetName(button, name);
+        // The Home card menu, as on the Mac: play, Add to Planning, Details.
+        button.ContextFlyout = page.MenuFor(new HomeCard(item, cover, episode, name), HomeShape.Week);
         button.Click += (_, _) => Ctx.Current.OpenTitle(item.Entry.Id);
         return button;
     }

@@ -320,6 +320,9 @@ sealed partial class HomeShelf : Grid
             Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = HomeWording.Gap },
             ItemTemplate = new HomeCardFactory(Shape, page),
             ItemsSource = cards,
+            // Tab enters a shelf once; the arrow keys move along it, and up and down between shelves.
+            TabFocusNavigation = KeyboardNavigationMode.Once,
+            XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled,
         };
         scroll.Content = repeater;
         // The wheel moves the page, not the shelf; Shift and a sideways wheel move the shelf.
