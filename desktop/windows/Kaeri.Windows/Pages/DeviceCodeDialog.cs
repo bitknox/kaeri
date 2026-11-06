@@ -12,12 +12,23 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// A code to type on another device, for Simkl or Trakt: the code large, where to type it, and a
 /// way there, as the Mac's sheet has it, with how long the code has left. It stays until the
-/// engine says the sign-in ended, or the viewer closes it; the engine keeps waiting either way.
+/// engine says the sign-in ended, or the viewer closes it; the engine keeps waiting either way,
+/// and the account's Show code in Settings brings the code back.
 /// Once the code expires, Copy code becomes Get a new code, which asks the engine for another.
 /// </summary>
 sealed class DeviceCodeDialog
 {
     static DeviceCodeDialog? open;
+
+    /// <summary>The code of the sign-in under way, shown or not; none once the engine says it ended.</summary>
+    public static DeviceCodePrompt? Pending { get; private set; }
+
+    /// <summary>The code under way again, after its dialog was closed.</summary>
+    public static void Reopen(XamlRoot root)
+    {
+        if (Pending is { } prompt)
+            Heard(root, prompt);
+    }
 
     readonly ContentDialog dialog;
     readonly TextBlock line = Ui.Text("", "HazeBodyStyle");
@@ -42,6 +53,7 @@ sealed class DeviceCodeDialog
     /// <summary>The engine's <c>DeviceCode</c>: a prompt opens or refreshes the dialog, none closes it.</summary>
     public static void Heard(XamlRoot root, DeviceCodePrompt? prompt)
     {
+        Pending = prompt;
         if (prompt is null)
         {
             open?.dialog.Hide();
@@ -106,7 +118,7 @@ sealed class DeviceCodeDialog
             if (Expired)
             {
                 // A new code replaces this one, through the engine's DeviceCode.
-                Ctx.Current.Send(new Command.Connect(this.prompt.Tracker));
+                Ctx.Current.SignIn(this.prompt.Tracker);
                 dialog.IsSecondaryButtonEnabled = false;
                 return;
             }
@@ -166,12 +178,10 @@ sealed class DeviceCodeDialog
         finally
         {
             tick.Stop();
-            // Closed here rather than by the engine's word that the wait is over: the engine stops polling.
+            // Closed here rather than by the engine's word that the wait is over: the engine goes
+            // on waiting for the code, as the spec has it, and Settings can show it again.
             if (open == this)
-            {
                 open = null;
-                Ctx.Current.Send(new Command.CancelSignIn(prompt.Tracker));
-            }
         }
     }
 }

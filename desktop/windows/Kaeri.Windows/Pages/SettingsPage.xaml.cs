@@ -975,40 +975,9 @@ public sealed partial class SettingsPage : Page
     void ShowAccounts()
     {
         Cards.Children.Add(Heading(T.SettingsTrackers));
+        // Each card keeps itself current: sync, an expired sign-in, and one under way.
         foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
-        {
-            var name = KaeriFfiMethods.TrackerName(tracker);
-            var state = ctx.Known.Sync.GetValueOrDefault(tracker);
-            Button action;
-            string description;
-            if (state is { Connected: true })
-            {
-                var waiting = (long)state.Outbox;
-                description = (state.User, waiting) switch
-                {
-                    ({ } user, > 0) => T.AccountsStateSignedInWaiting(name, user, waiting),
-                    ({ } user, _) => T.AccountsStateSignedIn(name, user),
-                    (null, > 0) => T.SettingsSignedInWaiting(waiting),
-                    _ => T.SettingsSignedIn,
-                };
-                action = new Button { Content = T.AccountsSignOut };
-                action.Click += (_, _) => ctx.Send(new Command.Disconnect(tracker));
-            }
-            else
-            {
-                description = tracker is "simkl" or "trakt" ? T.SettingsSignedOutCode : T.AccountsStateSignedOut;
-                action = new Button { Content = T.AccountsSignIn };
-                // Kitsu takes a user name and password here; the others sign in in the browser or with a code.
-                action.Click += (_, _) =>
-                {
-                    if (tracker == "kitsu")
-                        KitsuDialog.Show(ctx, XamlRoot);
-                    else
-                        ctx.Send(new Command.Connect(tracker));
-                };
-            }
-            Cards.Children.Add(CardFrame(name, description, action));
-        }
+            Cards.Children.Add(AccountCard.For(ctx, tracker));
         var sync = new Button { Content = T.AccountsSyncNow };
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));

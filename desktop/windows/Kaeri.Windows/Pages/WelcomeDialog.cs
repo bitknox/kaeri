@@ -160,7 +160,7 @@ sealed class WelcomeDialog
                 break;
             case 1:
                 args.Cancel = true;
-                ctx.Send(new Command.Connect("anilist"));
+                ctx.SignIn("anilist");
                 Show(2);
                 break;
             default:

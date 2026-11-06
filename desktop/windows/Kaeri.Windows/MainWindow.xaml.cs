@@ -1475,7 +1475,7 @@ public sealed partial class MainWindow : Window
                 ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
                 break;
             case Link.Auth auth:
-                ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback));
+                ctx.Known.SignInStarted(auth.Tracker, ctx.Send(new Command.FinishSignIn(auth.Tracker, auth.Callback)));
                 if (Player.Showing)
                     Player.Close();
                 ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
