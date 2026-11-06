@@ -164,7 +164,7 @@ public sealed partial class DownloadsPage : Page
     {
         public readonly Border Card;
         readonly Grid grid = new() { ColumnSpacing = 16 };
-        readonly TextBlock name = Ui.Text("", "BodyStrongTextBlockStyle", wrap: false);
+        readonly TextBlock name = Ui.Text("", "ShowTitleStyle", wrap: false);
         readonly TextBlock line = Ui.Text("", "HazeCaptionStyle", wrap: false);
         readonly StackPanel column = new() { Spacing = 6 };
         readonly StackPanel head = new() { Spacing = 1 };

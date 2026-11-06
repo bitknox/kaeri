@@ -31,7 +31,7 @@ sealed class TitleMoreDialog
         this.ctx = ctx;
         this.entry = entry;
         this.root = root;
-        header.Children.Add(Ui.Text(entry.Title, "TitleTextBlockStyle"));
+        header.Children.Add(Ui.Text(entry.Title, "ShowTitleMediumStyle"));
         header.Children.Add(Ui.Haze(T.TitleMoreAbout));
         body = Body();
     }
