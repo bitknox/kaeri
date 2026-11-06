@@ -165962,7 +165962,7 @@
       }
     },
     "reader-close" : {
-      "comment" : "Button in the reader's control group that closes the reader.",
+      "comment" : "Closes the reader and goes back to the series.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166082,7 +166082,7 @@
       }
     },
     "reader-end-next" : {
-      "comment" : "Small label above the next chapter's title on the end page.",
+      "comment" : "Small heading above the next chapter on the page between chapters.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166190,7 +166190,7 @@
       }
     },
     "reader-end-read" : {
-      "comment" : "Line on the end page when the chapter counted as read.",
+      "comment" : "Under the top line of the page between chapters, once the chapter counts as read.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166214,7 +166214,7 @@
       }
     },
     "reader-fit-screen" : {
-      "comment" : "",
+      "comment" : "A choice for how a page is fitted.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166226,7 +166226,7 @@
       }
     },
     "reader-fit-width" : {
-      "comment" : "",
+      "comment" : "A choice for how a page is fitted.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166310,7 +166310,7 @@
       }
     },
     "reader-font-sans" : {
-      "comment" : "",
+      "comment" : "A choice of typeface.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166322,7 +166322,7 @@
       }
     },
     "reader-font-serif" : {
-      "comment" : "",
+      "comment" : "A choice of typeface.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166586,7 +166586,7 @@
       }
     },
     "reader-layout-auto" : {
-      "comment" : "",
+      "comment" : "A choice for page layout.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166598,7 +166598,7 @@
       }
     },
     "reader-layout-double" : {
-      "comment" : "",
+      "comment" : "A choice for page layout.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166610,7 +166610,7 @@
       }
     },
     "reader-layout-single" : {
-      "comment" : "",
+      "comment" : "A choice for page layout.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166682,7 +166682,7 @@
       }
     },
     "reader-look-dark" : {
-      "comment" : "",
+      "comment" : "A look for reading: a dark page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166694,7 +166694,7 @@
       }
     },
     "reader-look-light" : {
-      "comment" : "",
+      "comment" : "A look for reading: a light page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166706,7 +166706,7 @@
       }
     },
     "reader-look-paper" : {
-      "comment" : "The five looks.",
+      "comment" : "A look for reading: warm paper.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166718,7 +166718,7 @@
       }
     },
     "reader-look-sepia" : {
-      "comment" : "",
+      "comment" : "A look for reading: a brown page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166730,7 +166730,7 @@
       }
     },
     "reader-look-system" : {
-      "comment" : "",
+      "comment" : "The five looks.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166754,7 +166754,7 @@
       }
     },
     "reader-margins-narrow" : {
-      "comment" : "",
+      "comment" : "A choice of margins.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -166778,7 +166778,7 @@
       }
     },
     "reader-margins-wide" : {
-      "comment" : "",
+      "comment" : "A choice of margins.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167006,7 +167006,7 @@
       }
     },
     "reader-mode-ltr" : {
-      "comment" : "",
+      "comment" : "A reading mode, and a reading direction.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167030,7 +167030,7 @@
       }
     },
     "reader-mode-paged" : {
-      "comment" : "",
+      "comment" : "Reading mode names.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167042,7 +167042,7 @@
       }
     },
     "reader-mode-rtl" : {
-      "comment" : "Reading mode names.",
+      "comment" : "A reading mode, and a reading direction.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167066,7 +167066,7 @@
       }
     },
     "reader-mode-strip" : {
-      "comment" : "",
+      "comment" : "A reading mode: one long scroll of images.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167198,7 +167198,7 @@
       }
     },
     "reader-page-failed" : {
-      "comment" : "Heading of the error in a page's place. Argument 1: page (Int).",
+      "comment" : "Heading where a page could not be loaded. Argument 1: page (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167246,7 +167246,7 @@
       }
     },
     "reader-page-loading" : {
-      "comment" : "Plate with the page's number while a page loads. Argument 1: page (Int).",
+      "comment" : "Under a page that is still loading after four seconds. Argument 1: page (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167460,7 +167460,7 @@
       }
     },
     "reader-spreads-rotate" : {
-      "comment" : "",
+      "comment" : "A choice for wide pages: turned to fill the screen.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167472,7 +167472,7 @@
       }
     },
     "reader-spreads-split" : {
-      "comment" : "",
+      "comment" : "A choice for wide pages: cut in two.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167484,7 +167484,7 @@
       }
     },
     "reader-spreads-whole" : {
-      "comment" : "",
+      "comment" : "A choice for wide pages: shown whole.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167544,7 +167544,7 @@
       }
     },
     "reader-tap-edges" : {
-      "comment" : "",
+      "comment" : "A choice for the reader's tap zones: taps near the left and right edges turn the page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167556,7 +167556,7 @@
       }
     },
     "reader-tap-off" : {
-      "comment" : "",
+      "comment" : "A choice for the reader's tap zones: taps do not turn the page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167568,7 +167568,7 @@
       }
     },
     "reader-tap-sides" : {
-      "comment" : "",
+      "comment" : "A choice for the reader's tap zones: the left and right halves turn the page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -167628,7 +167628,7 @@
       }
     },
     "reader-try-again" : {
-      "comment" : "Button in the error in a page's place.",
+      "comment" : "Button that loads a failed page again.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

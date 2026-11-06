@@ -330,9 +330,9 @@ private fun ThumbGroup(
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("${shown.toInt() + 1} / $count", color = Chrome.text, fontSize = 13.sp)
-            Text(Strings.readerPagesLeft(context, left), color = Chrome.faint, fontSize = 13.sp)
+            Text(Strings.readerPagesLeftShort(context, left), color = Chrome.faint, fontSize = 13.sp)
         }
-        val desc = Strings.readerScrubber(context)
+        val desc = Strings.readerScrubberInChapter(context)
         // A right-to-left chapter's scrubber runs from the right, as its pages do.
         val direction = if (rtl) androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
@@ -409,7 +409,7 @@ private fun Opening(number: String?) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(color = Chrome.accent, strokeWidth = 2.dp, modifier = Modifier.height(28.dp))
         Spacer(Modifier.height(14.dp))
-        if (number != null) Text(Strings.readerOpening(context, number), color = Chrome.faint, fontSize = 14.sp)
+        if (number != null) Text(Strings.readerOpeningChapter(context, number), color = Chrome.faint, fontSize = 14.sp)
     }
 }
 

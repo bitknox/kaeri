@@ -1,26 +1,9 @@
 ## The Android reader and its e-ink layout: the words the phone app and the e-reader build share.
 
-# Under a page that is still loading after four seconds.
-# @only android
-# @arg page: int
-# @max 40
-reader-page-loading = Loading page { $page }
-
-# Heading where a page could not be loaded.
-# @only android
-# @arg page: int
-# @max 40
-reader-page-failed = Couldn't load page { $page }
-
 # Under the failed page's reason on a phone: turning on skips the missing page.
 # @only android
 # @max 60
 reader-page-failed-swipe = Swipe to go on without it.
-
-# Button that loads a failed page again.
-# @only android
-# @max 20
-reader-try-again = Try again
 
 # Button that goes on past a page that could not be loaded.
 # @only android
@@ -347,16 +330,10 @@ reader-notice-go-back = Go back
 # @max 16
 reader-notice-change = Change
 
-
-# Closes the reader and goes back to the series.
-# @only android
-# @max 16
-reader-close = Close
-
 # Button in the reader's controls that opens the page grid.
 # @only android
 # @max 16
-reader-chapters = Pages
+reader-pages-button = Pages
 
 # Button in the reader's controls that opens its settings, drawn as Aa.
 # @only android
@@ -392,7 +369,7 @@ reader-novel-line-scroll = Chapter { $chapter } · scroll
 # @only android
 # @arg count: int
 # @max 24
-reader-pages-left = { $count -> 
+reader-pages-left-short = { $count -> 
     [one] One page left
    *[other] { $count } pages left
  }
@@ -417,17 +394,7 @@ reader-grid-title = Pages
 # @only android
 # @arg chapter: text
 # @max 40
-reader-end-of-chapter = End of chapter { $chapter }
-
-# Under the top line of the page between chapters, once the chapter counts as read.
-# @only android
-# @max 16
-reader-end-read = Read
-
-# Small heading above the next chapter on the page between chapters.
-# @only android
-# @max 16
-reader-end-next = Next
+reader-end-of-chapter-number = End of chapter { $chapter }
 
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 # @only android
@@ -460,7 +427,7 @@ reader-end-again = Read again from the start
 # @only android
 # @arg chapter: text
 # @max 40
-reader-opening = Opening chapter { $chapter }
+reader-opening-chapter = Opening chapter { $chapter }
 
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 # @only android
@@ -497,22 +464,7 @@ reader-row-reading-mode = Reading mode
 # @only android
 # @arg way: text
 # @max 30
-reader-mode-auto = Auto · { $way }
-
-# A reading mode, and a reading direction.
-# @only android
-# @max 20
-reader-mode-rtl = Right to left
-
-# A reading mode, and a reading direction.
-# @only android
-# @max 20
-reader-mode-ltr = Left to right
-
-# A reading mode: one long scroll of images.
-# @only android
-# @max 12
-reader-mode-strip = Strip
+reader-mode-auto-way = Auto · { $way }
 
 # The first choice in the reading mode picker: let the reader work it out.
 # @only android
@@ -556,16 +508,6 @@ reader-mode-saved = Your choice is saved for this series and follows it to your 
 # @max 12
 reader-row-fit = Fit
 
-# A choice for how a page is fitted.
-# @only android
-# @max 12
-reader-fit-screen = Screen
-
-# A choice for how a page is fitted.
-# @only android
-# @max 12
-reader-fit-width = Width
-
 # Row in the reader's settings: cut the blank borders off pages.
 # @only android
 # @max 20
@@ -586,40 +528,10 @@ reader-row-text-size = Text size
 # @max 12
 reader-row-font = Font
 
-# A choice of typeface.
-# @only android
-# @max 12
-reader-font-serif = Serif
-
-# A choice of typeface.
-# @only android
-# @max 12
-reader-font-sans = Sans
-
 # Row in the reader's settings: the colours the page is read in.
 # @only android
 # @max 12
 reader-row-look = Look
-
-# A look for reading: warm paper.
-# @only android
-# @max 12
-reader-look-paper = Paper
-
-# A look for reading: a light page.
-# @only android
-# @max 12
-reader-look-light = Light
-
-# A look for reading: a brown page.
-# @only android
-# @max 12
-reader-look-sepia = Sepia
-
-# A look for reading: a dark page.
-# @only android
-# @max 12
-reader-look-dark = Dark
 
 # Row in the reader's settings: the space between lines.
 # @only android
@@ -640,16 +552,6 @@ reader-spacing-normal = Normal
 # @only android
 # @max 12
 reader-spacing-loose = Loose
-
-# A choice of margins.
-# @only android
-# @max 12
-reader-margins-narrow = Narrow
-
-# A choice of margins.
-# @only android
-# @max 12
-reader-margins-wide = Wide
 
 # Row in the reader's settings: the space around the text.
 # @only android
@@ -681,40 +583,10 @@ reader-row-justify = Justify text
 # @max 20
 reader-row-page-layout = Page layout
 
-# A choice for page layout.
-# @only android
-# @max 12
-reader-layout-auto = Auto
-
-# A choice for page layout.
-# @only android
-# @max 12
-reader-layout-single = One
-
-# A choice for page layout.
-# @only android
-# @max 12
-reader-layout-double = Two
-
 # Row in the reader's settings: what happens to a page that is two pages wide.
 # @only android
 # @max 20
 reader-row-spreads = Wide pages
-
-# A choice for wide pages: cut in two.
-# @only android
-# @max 12
-reader-spreads-split = Split
-
-# A choice for wide pages: turned to fill the screen.
-# @only android
-# @max 12
-reader-spreads-rotate = Turn
-
-# A choice for wide pages: shown whole.
-# @only android
-# @max 12
-reader-spreads-whole = Whole
 
 # Row in the reader's settings: whether pages are shown in colour.
 # @only android
@@ -740,21 +612,6 @@ reader-colour-greys = Greys
 # @only android
 # @max 20
 reader-row-tap = Tap zones
-
-# A choice for tap zones: the sides turn.
-# @only android
-# @max 12
-reader-tap-edges = Edges
-
-# A choice for tap zones: left and right halves.
-# @only android
-# @max 12
-reader-tap-sides = Halves
-
-# A choice for tap zones: taps do not turn.
-# @only android
-# @max 12
-reader-tap-off = Off
 
 # Row in the reader's settings: the volume keys turn pages.
 # @only android
@@ -845,7 +702,7 @@ reader-grid-page = Go to page { $page }
 # What a screen reader says for the slider that moves through the chapter.
 # @only android
 # @max 24
-reader-scrubber = Page in chapter
+reader-scrubber-in-chapter = Page in chapter
 
 # Heading when a novel could not be shown.
 # @only android

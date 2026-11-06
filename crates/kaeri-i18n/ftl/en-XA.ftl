@@ -7820,6 +7820,90 @@ player-subs-bg-box = [Ɓöẋ~]
 # Button in the subtitles panel that opens Settings.
 player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
 
+# Under a page that is still loading after four seconds.
+reader-page-loading = [Ļöàðîñĝ þàĝé { $page }~~~~~]
+
+# Heading where a page could not be loaded.
+reader-page-failed = [Çöüļðñ'ţ ļöàð þàĝé { $page }~~~~~~~]
+
+# Button that loads a failed page again.
+reader-try-again = [Ţŕý àĝàîñ~~~]
+
+# Closes the reader and goes back to the series.
+reader-close = [Çļöšé~~]
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = [Ŕéàð~~]
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = [Ñéẋţ~~]
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = [Ŕîĝĥţ ţö ļéƒţ~~~~]
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = [Ļéƒţ ţö ŕîĝĥţ~~~~]
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = [Šţŕîþ~~]
+
+# A choice for how a page is fitted.
+reader-fit-screen = [Šçŕééñ~~]
+
+# A choice for how a page is fitted.
+reader-fit-width = [Ŵîðţĥ~~]
+
+# A choice of typeface.
+reader-font-serif = [Šéŕîƒ~~]
+
+# A choice of typeface.
+reader-font-sans = [Šàñš~~]
+
+# A look for reading: warm paper.
+reader-look-paper = [Þàþéŕ~~]
+
+# A look for reading: a light page.
+reader-look-light = [Ļîĝĥţ~~]
+
+# A look for reading: a brown page.
+reader-look-sepia = [Šéþîà~~]
+
+# A look for reading: a dark page.
+reader-look-dark = [Ðàŕķ~~]
+
+# A choice of margins.
+reader-margins-narrow = [Ñàŕŕöŵ~~]
+
+# A choice of margins.
+reader-margins-wide = [Ŵîðé~~]
+
+# A choice for page layout.
+reader-layout-auto = [Åüţö~~]
+
+# A choice for page layout.
+reader-layout-single = [Öñé~]
+
+# A choice for page layout.
+reader-layout-double = [Ţŵö~]
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = [Šþļîţ~~]
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = [Ţüŕñ~~]
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = [Ŵĥöļé~~]
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+reader-tap-edges = [Éðĝéš~~]
+
+# A choice for the reader's tap zones: the left and right halves turn the page.
+reader-tap-sides = [Ĥàļṽéš~~]
+
+# A choice for the reader's tap zones: taps do not turn the page.
+reader-tap-off = [Öƒƒ~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 

@@ -129,7 +129,7 @@ private fun modeSummary(context: Context, mode: ReaderSettingRow?, direction: Re
         else -> Strings.readerModeRtl(context)
     }
     val auto = mode?.detected == true || direction?.detected == true
-    return if (auto && !novel) Strings.readerModeAuto(context, way) else way
+    return if (auto && !novel) Strings.readerModeAutoWay(context, way) else way
 }
 
 @Composable

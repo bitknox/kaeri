@@ -6848,6 +6848,118 @@
     <value>[Ṁöŕé îñ Šéţţîñĝš…~~~~~~]</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
   </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>[Ļöàðîñĝ þàĝé {page}~~~~~]</value>
+    <comment>Under a page that is still loading after four seconds.</comment>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð þàĝé {page}~~~~~~~]</value>
+    <comment>Heading where a page could not be loaded.</comment>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>[Ţŕý àĝàîñ~~~]</value>
+    <comment>Button that loads a failed page again.</comment>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>[Çļöšé~~]</value>
+    <comment>Closes the reader and goes back to the series.</comment>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>[Ñéẋţ~~]</value>
+    <comment>Small heading above the next chapter on the page between chapters.</comment>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>[Ŕîĝĥţ ţö ļéƒţ~~~~]</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>[Ļéƒţ ţö ŕîĝĥţ~~~~]</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>[Šţŕîþ~~]</value>
+    <comment>A reading mode: one long scroll of images.</comment>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>[Šçŕééñ~~]</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>[Ŵîðţĥ~~]</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>[Šéŕîƒ~~]</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>[Šàñš~~]</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>[Þàþéŕ~~]</value>
+    <comment>A look for reading: warm paper.</comment>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>[Ļîĝĥţ~~]</value>
+    <comment>A look for reading: a light page.</comment>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>[Šéþîà~~]</value>
+    <comment>A look for reading: a brown page.</comment>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>[Ðàŕķ~~]</value>
+    <comment>A look for reading: a dark page.</comment>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>[Ñàŕŕöŵ~~]</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>[Ŵîðé~~]</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>[Åüţö~~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>[Öñé~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>[Ţŵö~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>[Šþļîţ~~]</value>
+    <comment>A choice for wide pages: cut in two.</comment>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>[Ţüŕñ~~]</value>
+    <comment>A choice for wide pages: turned to fill the screen.</comment>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>[Ŵĥöļé~~]</value>
+    <comment>A choice for wide pages: shown whole.</comment>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>[Éðĝéš~~]</value>
+    <comment>A choice for the reader's tap zones: taps near the left and right edges turn the page.</comment>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>[Ĥàļṽéš~~]</value>
+    <comment>A choice for the reader's tap zones: the left and right halves turn the page.</comment>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>[Öƒƒ~]</value>
+    <comment>A choice for the reader's tap zones: taps do not turn the page.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>[Þŕéṽîöüš šéàšöñ~~~~~]</value>
     <comment>Button that shows the season before.</comment>

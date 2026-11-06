@@ -1,7 +1,6 @@
 ## Apple only: the reader, its chrome, its sheets and its states.
 
 # Button in the reader's control group that closes the reader.
-reader-close = Close
 
 # Button in the reader's control group that opens the chapters and the page grid.
 reader-chapters = Chapters
@@ -77,13 +76,11 @@ reader-go-to-page-field = 1 to { $total }
 reader-end-of-chapter = End of { $chapter }
 
 # Line on the end page when the chapter counted as read.
-reader-end-read = Read
 
 # Line on the end page for a chapter that has not counted yet.
 reader-end-not-read = Not marked read yet
 
 # Small label above the next chapter's title on the end page.
-reader-end-next = Next
 
 # Detail line under the next chapter's title. The chapter label is the source's own words.
 # @arg chapter: text
@@ -139,14 +136,11 @@ reader-opening-slow = Finding a { -source } · { $seconds } s
 
 # Plate with the page's number while a page loads.
 # @arg page: int
-reader-page-loading = Loading page { $page }
 
 # Heading of the error in a page's place.
 # @arg page: int
-reader-page-failed = Couldn't load page { $page }
 
 # Button in the error in a page's place.
-reader-try-again = Try again
 
 # Hint under a page's error.
 reader-page-failed-hint = Swipe to go on without it.
@@ -196,9 +190,6 @@ reader-reading-mode = Reading mode
 reader-mode-auto = Auto · { $mode }
 
 # Reading mode names.
-reader-mode-rtl = Right to left
-reader-mode-ltr = Left to right
-reader-mode-strip = Strip
 reader-mode-paged = Paged
 reader-mode-scrolled = Scroll
 
@@ -226,8 +217,6 @@ reader-use-default = Use default
 
 # Rows of the manga sheet.
 reader-fit = Fit
-reader-fit-screen = Screen
-reader-fit-width = Width
 reader-crop-borders = Crop borders
 reader-background = Background
 reader-background-theme = Theme
@@ -239,40 +228,23 @@ reader-search-settings = Search reader settings
 
 # Rows of the novel sheet.
 reader-font = Font
-reader-font-serif = Serif
-reader-font-sans = Sans
 reader-line-spacing = Line spacing
 reader-line-tight = Tight
 reader-line-normal = Normal
 reader-line-loose = Loose
 reader-margins = Margins
-reader-margins-narrow = Narrow
 reader-margins-normal = Normal
-reader-margins-wide = Wide
 reader-pages = Pages
 reader-text-size = Text size
 reader-justify = Justify text
 
 # The five looks.
-reader-look-paper = Paper
-reader-look-light = Light
-reader-look-sepia = Sepia
-reader-look-dark = Dark
 reader-look-system = System
 
 # Rows of More reader settings.
 reader-page-layout = Page layout
-reader-layout-auto = Auto
-reader-layout-single = One
-reader-layout-double = Two
 reader-spreads = Wide pages
-reader-spreads-split = Split
-reader-spreads-rotate = Turn
-reader-spreads-whole = Whole
 reader-tap-zones = Tap zones
-reader-tap-edges = Edges
-reader-tap-sides = Halves
-reader-tap-off = Off
 reader-volume-keys = Volume buttons turn pages
 reader-strip-width = Width
 reader-greyscale = Greyscale pages

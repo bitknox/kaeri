@@ -4966,6 +4966,90 @@ public static partial class T
     /// <summary>Button in the subtitles panel that opens Settings.</summary>
     public static string PlayerSubsMore => Get("PlayerSubsMore");
 
+    /// <summary>Under a page that is still loading after four seconds.</summary>
+    public static string ReaderPageLoading(long page) => Fill(Get("ReaderPageLoading"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading where a page could not be loaded.</summary>
+    public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button that loads a failed page again.</summary>
+    public static string ReaderTryAgain => Get("ReaderTryAgain");
+
+    /// <summary>Closes the reader and goes back to the series.</summary>
+    public static string ReaderClose => Get("ReaderClose");
+
+    /// <summary>Under the top line of the page between chapters, once the chapter counts as read.</summary>
+    public static string ReaderEndRead => Get("ReaderEndRead");
+
+    /// <summary>Small heading above the next chapter on the page between chapters.</summary>
+    public static string ReaderEndNext => Get("ReaderEndNext");
+
+    /// <summary>A reading mode, and a reading direction.</summary>
+    public static string ReaderModeRtl => Get("ReaderModeRtl");
+
+    /// <summary>A reading mode, and a reading direction.</summary>
+    public static string ReaderModeLtr => Get("ReaderModeLtr");
+
+    /// <summary>A reading mode: one long scroll of images.</summary>
+    public static string ReaderModeStrip => Get("ReaderModeStrip");
+
+    /// <summary>A choice for how a page is fitted.</summary>
+    public static string ReaderFitScreen => Get("ReaderFitScreen");
+
+    /// <summary>A choice for how a page is fitted.</summary>
+    public static string ReaderFitWidth => Get("ReaderFitWidth");
+
+    /// <summary>A choice of typeface.</summary>
+    public static string ReaderFontSerif => Get("ReaderFontSerif");
+
+    /// <summary>A choice of typeface.</summary>
+    public static string ReaderFontSans => Get("ReaderFontSans");
+
+    /// <summary>A look for reading: warm paper.</summary>
+    public static string ReaderLookPaper => Get("ReaderLookPaper");
+
+    /// <summary>A look for reading: a light page.</summary>
+    public static string ReaderLookLight => Get("ReaderLookLight");
+
+    /// <summary>A look for reading: a brown page.</summary>
+    public static string ReaderLookSepia => Get("ReaderLookSepia");
+
+    /// <summary>A look for reading: a dark page.</summary>
+    public static string ReaderLookDark => Get("ReaderLookDark");
+
+    /// <summary>A choice of margins.</summary>
+    public static string ReaderMarginsNarrow => Get("ReaderMarginsNarrow");
+
+    /// <summary>A choice of margins.</summary>
+    public static string ReaderMarginsWide => Get("ReaderMarginsWide");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutAuto => Get("ReaderLayoutAuto");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutSingle => Get("ReaderLayoutSingle");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutDouble => Get("ReaderLayoutDouble");
+
+    /// <summary>A choice for wide pages: cut in two.</summary>
+    public static string ReaderSpreadsSplit => Get("ReaderSpreadsSplit");
+
+    /// <summary>A choice for wide pages: turned to fill the screen.</summary>
+    public static string ReaderSpreadsRotate => Get("ReaderSpreadsRotate");
+
+    /// <summary>A choice for wide pages: shown whole.</summary>
+    public static string ReaderSpreadsWhole => Get("ReaderSpreadsWhole");
+
+    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page.</summary>
+    public static string ReaderTapEdges => Get("ReaderTapEdges");
+
+    /// <summary>A choice for the reader's tap zones: the left and right halves turn the page.</summary>
+    public static string ReaderTapSides => Get("ReaderTapSides");
+
+    /// <summary>A choice for the reader's tap zones: taps do not turn the page.</summary>
+    public static string ReaderTapOff => Get("ReaderTapOff");
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -10605,6 +10689,34 @@ public static partial class T
         ["PlayerSubsBgShadow"] = "Shadow",
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
+        ["ReaderPageLoading"] = "Loading page {page}",
+        ["ReaderPageFailed"] = "Couldn't load page {page}",
+        ["ReaderTryAgain"] = "Try again",
+        ["ReaderClose"] = "Close",
+        ["ReaderEndRead"] = "Read",
+        ["ReaderEndNext"] = "Next",
+        ["ReaderModeRtl"] = "Right to left",
+        ["ReaderModeLtr"] = "Left to right",
+        ["ReaderModeStrip"] = "Strip",
+        ["ReaderFitScreen"] = "Screen",
+        ["ReaderFitWidth"] = "Width",
+        ["ReaderFontSerif"] = "Serif",
+        ["ReaderFontSans"] = "Sans",
+        ["ReaderLookPaper"] = "Paper",
+        ["ReaderLookLight"] = "Light",
+        ["ReaderLookSepia"] = "Sepia",
+        ["ReaderLookDark"] = "Dark",
+        ["ReaderMarginsNarrow"] = "Narrow",
+        ["ReaderMarginsWide"] = "Wide",
+        ["ReaderLayoutAuto"] = "Auto",
+        ["ReaderLayoutSingle"] = "One",
+        ["ReaderLayoutDouble"] = "Two",
+        ["ReaderSpreadsSplit"] = "Split",
+        ["ReaderSpreadsRotate"] = "Turn",
+        ["ReaderSpreadsWhole"] = "Whole",
+        ["ReaderTapEdges"] = "Edges",
+        ["ReaderTapSides"] = "Halves",
+        ["ReaderTapOff"] = "Off",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

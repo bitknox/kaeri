@@ -45,7 +45,7 @@ fun PhoneEndPage(state: ReaderState, session: ReaderSession, actions: PhoneReade
     Column(
         modifier.fillMaxSize().background(ObiSilk.Ground).padding(horizontal = 28.dp, vertical = 72.dp),
     ) {
-        Text(Strings.readerEndOfChapter(context, number), color = Chrome.faint, fontSize = 14.sp)
+        Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 14.sp)
         Spacer(Modifier.height(6.dp))
         Text(view.chapter.title ?: view.title, color = Chrome.text, fontSize = 24.sp, fontWeight = FontWeight.Medium)
         if (view.chapter.id in state.read) {

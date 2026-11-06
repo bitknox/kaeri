@@ -6848,6 +6848,118 @@
     <value>More in Settings…</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
   </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>Loading page {page}</value>
+    <comment>Under a page that is still loading after four seconds.</comment>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>Couldn't load page {page}</value>
+    <comment>Heading where a page could not be loaded.</comment>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>Try again</value>
+    <comment>Button that loads a failed page again.</comment>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>Close</value>
+    <comment>Closes the reader and goes back to the series.</comment>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>Next</value>
+    <comment>Small heading above the next chapter on the page between chapters.</comment>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>Right to left</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>Left to right</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>Strip</value>
+    <comment>A reading mode: one long scroll of images.</comment>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>Screen</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>Width</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>Serif</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>Sans</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>Paper</value>
+    <comment>A look for reading: warm paper.</comment>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>Light</value>
+    <comment>A look for reading: a light page.</comment>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>Sepia</value>
+    <comment>A look for reading: a brown page.</comment>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>Dark</value>
+    <comment>A look for reading: a dark page.</comment>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>Narrow</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>Wide</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>Auto</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>One</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>Two</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>Split</value>
+    <comment>A choice for wide pages: cut in two.</comment>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>Turn</value>
+    <comment>A choice for wide pages: turned to fill the screen.</comment>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>Whole</value>
+    <comment>A choice for wide pages: shown whole.</comment>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>Edges</value>
+    <comment>A choice for the reader's tap zones: taps near the left and right edges turn the page.</comment>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>Halves</value>
+    <comment>A choice for the reader's tap zones: the left and right halves turn the page.</comment>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>Off</value>
+    <comment>A choice for the reader's tap zones: taps do not turn the page.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>

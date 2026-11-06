@@ -2043,9 +2043,6 @@ public enum L {
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
 
-    /// Button in the reader's control group that closes the reader.
-    public static var readerClose: String { string("reader-close", fallback: "Close") }
-
     /// Button in the reader's control group that opens the chapters and the page grid.
     public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
 
@@ -2114,14 +2111,8 @@ public enum L {
         Self.format("reader-end-of-chapter", fallback: "End of %1$@", chapter)
     }
 
-    /// Line on the end page when the chapter counted as read.
-    public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
-
     /// Line on the end page for a chapter that has not counted yet.
     public static var readerEndNotRead: String { string("reader-end-not-read", fallback: "Not marked read yet") }
-
-    /// Small label above the next chapter's title on the end page.
-    public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
 
     /// Detail line under the next chapter's title. The chapter label is the source's own words.
     public static func readerEndNextDetail(chapter: String, pages: Int) -> String {
@@ -2180,19 +2171,6 @@ public enum L {
         Self.format("reader-opening-slow", fallback: "Finding a source · %1$lld s", seconds)
     }
 
-    /// Plate with the page's number while a page loads.
-    public static func readerPageLoading(page: Int) -> String {
-        Self.format("reader-page-loading", fallback: "Loading page %1$lld", page)
-    }
-
-    /// Heading of the error in a page's place.
-    public static func readerPageFailed(page: Int) -> String {
-        Self.format("reader-page-failed", fallback: "Couldn't load page %1$lld", page)
-    }
-
-    /// Button in the error in a page's place.
-    public static var readerTryAgain: String { string("reader-try-again", fallback: "Try again") }
-
     /// Hint under a page's error.
     public static var readerPageFailedHint: String { string("reader-page-failed-hint", fallback: "Swipe to go on without it.") }
 
@@ -2243,12 +2221,6 @@ public enum L {
     }
 
     /// Reading mode names.
-    public static var readerModeRtl: String { string("reader-mode-rtl", fallback: "Right to left") }
-
-    public static var readerModeLtr: String { string("reader-mode-ltr", fallback: "Left to right") }
-
-    public static var readerModeStrip: String { string("reader-mode-strip", fallback: "Strip") }
-
     public static var readerModePaged: String { string("reader-mode-paged", fallback: "Paged") }
 
     public static var readerModeScrolled: String { string("reader-mode-scrolled", fallback: "Scroll") }
@@ -2279,10 +2251,6 @@ public enum L {
     /// Rows of the manga sheet.
     public static var readerFit: String { string("reader-fit", fallback: "Fit") }
 
-    public static var readerFitScreen: String { string("reader-fit-screen", fallback: "Screen") }
-
-    public static var readerFitWidth: String { string("reader-fit-width", fallback: "Width") }
-
     public static var readerCropBorders: String { string("reader-crop-borders", fallback: "Crop borders") }
 
     public static var readerBackground: String { string("reader-background", fallback: "Background") }
@@ -2302,10 +2270,6 @@ public enum L {
     /// Rows of the novel sheet.
     public static var readerFont: String { string("reader-font", fallback: "Font") }
 
-    public static var readerFontSerif: String { string("reader-font-serif", fallback: "Serif") }
-
-    public static var readerFontSans: String { string("reader-font-sans", fallback: "Sans") }
-
     public static var readerLineSpacing: String { string("reader-line-spacing", fallback: "Line spacing") }
 
     public static var readerLineTight: String { string("reader-line-tight", fallback: "Tight") }
@@ -2316,11 +2280,7 @@ public enum L {
 
     public static var readerMargins: String { string("reader-margins", fallback: "Margins") }
 
-    public static var readerMarginsNarrow: String { string("reader-margins-narrow", fallback: "Narrow") }
-
     public static var readerMarginsNormal: String { string("reader-margins-normal", fallback: "Normal") }
-
-    public static var readerMarginsWide: String { string("reader-margins-wide", fallback: "Wide") }
 
     public static var readerPages: String { string("reader-pages", fallback: "Pages") }
 
@@ -2329,40 +2289,14 @@ public enum L {
     public static var readerJustify: String { string("reader-justify", fallback: "Justify text") }
 
     /// The five looks.
-    public static var readerLookPaper: String { string("reader-look-paper", fallback: "Paper") }
-
-    public static var readerLookLight: String { string("reader-look-light", fallback: "Light") }
-
-    public static var readerLookSepia: String { string("reader-look-sepia", fallback: "Sepia") }
-
-    public static var readerLookDark: String { string("reader-look-dark", fallback: "Dark") }
-
     public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
 
     /// Rows of More reader settings.
     public static var readerPageLayout: String { string("reader-page-layout", fallback: "Page layout") }
 
-    public static var readerLayoutAuto: String { string("reader-layout-auto", fallback: "Auto") }
-
-    public static var readerLayoutSingle: String { string("reader-layout-single", fallback: "One") }
-
-    public static var readerLayoutDouble: String { string("reader-layout-double", fallback: "Two") }
-
     public static var readerSpreads: String { string("reader-spreads", fallback: "Wide pages") }
 
-    public static var readerSpreadsSplit: String { string("reader-spreads-split", fallback: "Split") }
-
-    public static var readerSpreadsRotate: String { string("reader-spreads-rotate", fallback: "Turn") }
-
-    public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
-
     public static var readerTapZones: String { string("reader-tap-zones", fallback: "Tap zones") }
-
-    public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
-
-    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Halves") }
-
-    public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
 
     public static var readerVolumeKeys: String { string("reader-volume-keys", fallback: "Volume buttons turn pages") }
 
@@ -7661,6 +7595,94 @@ public enum L {
 
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
+
+    /// Under a page that is still loading after four seconds.
+    public static func readerPageLoading(page: Int) -> String {
+        Self.format("reader-page-loading", fallback: "Loading page %1$lld", page)
+    }
+
+    /// Heading where a page could not be loaded.
+    public static func readerPageFailed(page: Int) -> String {
+        Self.format("reader-page-failed", fallback: "Couldn't load page %1$lld", page)
+    }
+
+    /// Button that loads a failed page again.
+    public static var readerTryAgain: String { string("reader-try-again", fallback: "Try again") }
+
+    /// Closes the reader and goes back to the series.
+    public static var readerClose: String { string("reader-close", fallback: "Close") }
+
+    /// Under the top line of the page between chapters, once the chapter counts as read.
+    public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
+
+    /// Small heading above the next chapter on the page between chapters.
+    public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
+
+    /// A reading mode, and a reading direction.
+    public static var readerModeRtl: String { string("reader-mode-rtl", fallback: "Right to left") }
+
+    /// A reading mode, and a reading direction.
+    public static var readerModeLtr: String { string("reader-mode-ltr", fallback: "Left to right") }
+
+    /// A reading mode: one long scroll of images.
+    public static var readerModeStrip: String { string("reader-mode-strip", fallback: "Strip") }
+
+    /// A choice for how a page is fitted.
+    public static var readerFitScreen: String { string("reader-fit-screen", fallback: "Screen") }
+
+    /// A choice for how a page is fitted.
+    public static var readerFitWidth: String { string("reader-fit-width", fallback: "Width") }
+
+    /// A choice of typeface.
+    public static var readerFontSerif: String { string("reader-font-serif", fallback: "Serif") }
+
+    /// A choice of typeface.
+    public static var readerFontSans: String { string("reader-font-sans", fallback: "Sans") }
+
+    /// A look for reading: warm paper.
+    public static var readerLookPaper: String { string("reader-look-paper", fallback: "Paper") }
+
+    /// A look for reading: a light page.
+    public static var readerLookLight: String { string("reader-look-light", fallback: "Light") }
+
+    /// A look for reading: a brown page.
+    public static var readerLookSepia: String { string("reader-look-sepia", fallback: "Sepia") }
+
+    /// A look for reading: a dark page.
+    public static var readerLookDark: String { string("reader-look-dark", fallback: "Dark") }
+
+    /// A choice of margins.
+    public static var readerMarginsNarrow: String { string("reader-margins-narrow", fallback: "Narrow") }
+
+    /// A choice of margins.
+    public static var readerMarginsWide: String { string("reader-margins-wide", fallback: "Wide") }
+
+    /// A choice for page layout.
+    public static var readerLayoutAuto: String { string("reader-layout-auto", fallback: "Auto") }
+
+    /// A choice for page layout.
+    public static var readerLayoutSingle: String { string("reader-layout-single", fallback: "One") }
+
+    /// A choice for page layout.
+    public static var readerLayoutDouble: String { string("reader-layout-double", fallback: "Two") }
+
+    /// A choice for wide pages: cut in two.
+    public static var readerSpreadsSplit: String { string("reader-spreads-split", fallback: "Split") }
+
+    /// A choice for wide pages: turned to fill the screen.
+    public static var readerSpreadsRotate: String { string("reader-spreads-rotate", fallback: "Turn") }
+
+    /// A choice for wide pages: shown whole.
+    public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
+
+    /// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+    public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
+
+    /// A choice for the reader's tap zones: the left and right halves turn the page.
+    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Halves") }
+
+    /// A choice for the reader's tap zones: taps do not turn the page.
+    public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
 
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }

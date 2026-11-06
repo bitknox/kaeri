@@ -7820,6 +7820,90 @@ player-subs-bg-box = Box
 # Button in the subtitles panel that opens Settings.
 player-subs-more = More in Settings…
 
+# Under a page that is still loading after four seconds.
+reader-page-loading = Loading page { $page }
+
+# Heading where a page could not be loaded.
+reader-page-failed = Couldn't load page { $page }
+
+# Button that loads a failed page again.
+reader-try-again = Try again
+
+# Closes the reader and goes back to the series.
+reader-close = Close
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Read
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = Next
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Right to left
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Left to right
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Strip
+
+# A choice for how a page is fitted.
+reader-fit-screen = Screen
+
+# A choice for how a page is fitted.
+reader-fit-width = Width
+
+# A choice of typeface.
+reader-font-serif = Serif
+
+# A choice of typeface.
+reader-font-sans = Sans
+
+# A look for reading: warm paper.
+reader-look-paper = Paper
+
+# A look for reading: a light page.
+reader-look-light = Light
+
+# A look for reading: a brown page.
+reader-look-sepia = Sepia
+
+# A look for reading: a dark page.
+reader-look-dark = Dark
+
+# A choice of margins.
+reader-margins-narrow = Narrow
+
+# A choice of margins.
+reader-margins-wide = Wide
+
+# A choice for page layout.
+reader-layout-auto = Auto
+
+# A choice for page layout.
+reader-layout-single = One
+
+# A choice for page layout.
+reader-layout-double = Two
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Split
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Turn
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Whole
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+reader-tap-edges = Edges
+
+# A choice for the reader's tap zones: the left and right halves turn the page.
+reader-tap-sides = Halves
+
+# A choice for the reader's tap zones: taps do not turn the page.
+reader-tap-off = Off
+
 # Button that shows the season before.
 seasonal-previous = Previous season
 

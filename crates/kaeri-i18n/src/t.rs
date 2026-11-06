@@ -12555,6 +12555,146 @@ pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
 }
 
+/// Under a page that is still loading after four seconds.
+pub fn reader_page_loading(page: i64) -> String {
+    text("reader-page-loading", &[("page", Arg::Int(page))])
+}
+
+/// Heading where a page could not be loaded.
+pub fn reader_page_failed(page: i64) -> String {
+    text("reader-page-failed", &[("page", Arg::Int(page))])
+}
+
+/// Button that loads a failed page again.
+pub fn reader_try_again() -> String {
+    text("reader-try-again", &[])
+}
+
+/// Closes the reader and goes back to the series.
+pub fn reader_close() -> String {
+    text("reader-close", &[])
+}
+
+/// Under the top line of the page between chapters, once the chapter counts as read.
+pub fn reader_end_read() -> String {
+    text("reader-end-read", &[])
+}
+
+/// Small heading above the next chapter on the page between chapters.
+pub fn reader_end_next() -> String {
+    text("reader-end-next", &[])
+}
+
+/// A reading mode, and a reading direction.
+pub fn reader_mode_rtl() -> String {
+    text("reader-mode-rtl", &[])
+}
+
+/// A reading mode, and a reading direction.
+pub fn reader_mode_ltr() -> String {
+    text("reader-mode-ltr", &[])
+}
+
+/// A reading mode: one long scroll of images.
+pub fn reader_mode_strip() -> String {
+    text("reader-mode-strip", &[])
+}
+
+/// A choice for how a page is fitted.
+pub fn reader_fit_screen() -> String {
+    text("reader-fit-screen", &[])
+}
+
+/// A choice for how a page is fitted.
+pub fn reader_fit_width() -> String {
+    text("reader-fit-width", &[])
+}
+
+/// A choice of typeface.
+pub fn reader_font_serif() -> String {
+    text("reader-font-serif", &[])
+}
+
+/// A choice of typeface.
+pub fn reader_font_sans() -> String {
+    text("reader-font-sans", &[])
+}
+
+/// A look for reading: warm paper.
+pub fn reader_look_paper() -> String {
+    text("reader-look-paper", &[])
+}
+
+/// A look for reading: a light page.
+pub fn reader_look_light() -> String {
+    text("reader-look-light", &[])
+}
+
+/// A look for reading: a brown page.
+pub fn reader_look_sepia() -> String {
+    text("reader-look-sepia", &[])
+}
+
+/// A look for reading: a dark page.
+pub fn reader_look_dark() -> String {
+    text("reader-look-dark", &[])
+}
+
+/// A choice of margins.
+pub fn reader_margins_narrow() -> String {
+    text("reader-margins-narrow", &[])
+}
+
+/// A choice of margins.
+pub fn reader_margins_wide() -> String {
+    text("reader-margins-wide", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_auto() -> String {
+    text("reader-layout-auto", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_single() -> String {
+    text("reader-layout-single", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_double() -> String {
+    text("reader-layout-double", &[])
+}
+
+/// A choice for wide pages: cut in two.
+pub fn reader_spreads_split() -> String {
+    text("reader-spreads-split", &[])
+}
+
+/// A choice for wide pages: turned to fill the screen.
+pub fn reader_spreads_rotate() -> String {
+    text("reader-spreads-rotate", &[])
+}
+
+/// A choice for wide pages: shown whole.
+pub fn reader_spreads_whole() -> String {
+    text("reader-spreads-whole", &[])
+}
+
+/// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+pub fn reader_tap_edges() -> String {
+    text("reader-tap-edges", &[])
+}
+
+/// A choice for the reader's tap zones: the left and right halves turn the page.
+pub fn reader_tap_sides() -> String {
+    text("reader-tap-sides", &[])
+}
+
+/// A choice for the reader's tap zones: taps do not turn the page.
+pub fn reader_tap_off() -> String {
+    text("reader-tap-off", &[])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])
