@@ -206,3 +206,54 @@ settings-note-cast-tvs-pc = They appear under Chromecast in Play on TV. This PC 
 # Note under the Torrents while casting setting, shown while torrents are on.
 # @only windows
 settings-note-torrents-while-casting-pc = Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.
+
+# Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.
+# @only windows
+# @max 20
+settings-language-restart = Restart
+
+# Row title in Accounts: titles that differ between this device and the tracker since the last sync.
+# @only windows
+# @arg count: int
+# @arg tracker: text
+settings-differences = { $count ->
+    [one] One title differs from { $tracker }
+   *[other] { $count } titles differ from { $tracker }
+ }
+
+# Button in Accounts that opens the list of differences.
+# @only windows
+# @max 20
+settings-differences-review = Review
+
+# The box at the top of Settings that finds a setting by its name.
+# @only windows
+settings-search = Search settings
+
+# Note under the download quality row.
+# @only windows
+settings-quality-detail-windows = Higher takes the best version a { -source } offers, and more space.
+
+# Note under the merge subtitles row.
+# @only windows
+settings-merge-subtitles-detail-windows = Subtitles stay with the episode wherever the file goes.
+
+# Note under the keep seeding row.
+# @only windows
+# @allow proceed
+settings-keep-seeding-detail-windows = A download that keeps seeding stays in { -app-name }'s cache, not the download folder.
+
+# Note under the switch for episode discussions.
+# @only windows
+# @max 100
+settings-discussions-note-windows = Reads the comments on AniList's forum thread for episodes you have watched.
+
+# Note under the switch that loads images in comments.
+# @only windows
+# @max 100
+settings-comment-images-note-windows = Each image loads from the site that hosts it, which sees your IP address.
+
+# Button beside the download folder: picks another folder.
+# @only windows
+# @max 20
+settings-folder-browse = Browse…

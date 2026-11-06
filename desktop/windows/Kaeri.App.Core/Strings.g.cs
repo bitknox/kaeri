@@ -1035,6 +1035,9 @@ public static partial class T
     /// <summary>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</summary>
     public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</summary>
+    public static string SearchRateLimitEnter => Get("SearchRateLimitEnter");
+
     /// <summary>Line above the field while the viewer edits their own comment.</summary>
     public static string DiscussionEditing => Get("DiscussionEditing");
 
@@ -1233,6 +1236,36 @@ public static partial class T
     /// <summary>Note under the Torrents while casting setting, shown while torrents are on.</summary>
     public static string SettingsNoteTorrentsWhileCastingPc => Get("SettingsNoteTorrentsWhileCastingPc");
 
+    /// <summary>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</summary>
+    public static string SettingsLanguageRestart => Get("SettingsLanguageRestart");
+
+    /// <summary>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</summary>
+    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
+
+    /// <summary>Button in Accounts that opens the list of differences.</summary>
+    public static string SettingsDifferencesReview => Get("SettingsDifferencesReview");
+
+    /// <summary>The box at the top of Settings that finds a setting by its name.</summary>
+    public static string SettingsSearch => Get("SettingsSearch");
+
+    /// <summary>Note under the download quality row.</summary>
+    public static string SettingsQualityDetailWindows => Get("SettingsQualityDetailWindows");
+
+    /// <summary>Note under the merge subtitles row.</summary>
+    public static string SettingsMergeSubtitlesDetailWindows => Get("SettingsMergeSubtitlesDetailWindows");
+
+    /// <summary>Note under the keep seeding row.</summary>
+    public static string SettingsKeepSeedingDetailWindows => Get("SettingsKeepSeedingDetailWindows");
+
+    /// <summary>Note under the switch for episode discussions.</summary>
+    public static string SettingsDiscussionsNoteWindows => Get("SettingsDiscussionsNoteWindows");
+
+    /// <summary>Note under the switch that loads images in comments.</summary>
+    public static string SettingsCommentImagesNoteWindows => Get("SettingsCommentImagesNoteWindows");
+
+    /// <summary>Button beside the download folder: picks another folder.</summary>
+    public static string SettingsFolderBrowse => Get("SettingsFolderBrowse");
+
     /// <summary>The notification area icon's balloon, the first time the window closes with downloads running: its title.</summary>
     public static string TrayStillDownloading => Get("TrayStillDownloading");
 
@@ -1352,6 +1385,42 @@ public static partial class T
 
     /// <summary>Button in that window: closes it and the app.</summary>
     public static string StartFailedQuit => Get("StartFailedQuit");
+
+    /// <summary>Title of the window shown instead of the app when the engine stopped while the app was open.</summary>
+    public static string EngineStoppedTitle => Get("EngineStoppedTitle");
+
+    /// <summary>Line under that title: what happened and what to do.</summary>
+    public static string EngineStoppedDetail => Get("EngineStoppedDetail");
+
+    /// <summary>Button in that window: opens the app again.</summary>
+    public static string EngineStoppedOpenAgain => Get("EngineStoppedOpenAgain");
+
+    /// <summary>The status in the title bar while the main tracker is synced.</summary>
+    public static string TitlebarSynced(string tracker) => Fill(Get("TitlebarSynced"), ("tracker", tracker));
+
+    /// <summary>The status while the tracker's last pull failed.</summary>
+    public static string TitlebarNotSynced(string tracker) => Fill(Get("TitlebarNotSynced"), ("tracker", tracker));
+
+    /// <summary>The status while the tracker refused the sign-in and needs it again.</summary>
+    public static string TitlebarSignInAgain(string tracker) => Fill(Get("TitlebarSignInAgain"), ("tracker", tracker));
+
+    /// <summary>Help text of the status button, for Narrator.</summary>
+    public static string TitlebarStatusHint => Get("TitlebarStatusHint");
+
+    /// <summary>The status flyout's line while no work is running.</summary>
+    public static string TitlebarNothingRunning => Get("TitlebarNothingRunning");
+
+    /// <summary>Button in the status flyout that opens the Devices pane of Settings.</summary>
+    public static string TitlebarOpenDevices => Get("TitlebarOpenDevices");
+
+    /// <summary>Title of the list of every notice this run, and the button that opens it.</summary>
+    public static string MessagesTitle => Get("MessagesTitle");
+
+    /// <summary>The list of notices while there are none yet.</summary>
+    public static string MessagesNone => Get("MessagesNone");
+
+    /// <summary>Name of the dot before a notice that was an alert, for Narrator.</summary>
+    public static string MessagesAlert => Get("MessagesAlert");
 
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
@@ -6917,6 +6986,9 @@ public static partial class T
     /// <summary>Windows and Linux dialog title while the browser is open for a cloud sign-in.</summary>
     public static string CloudBrowserTitle(string service) => Fill(Get("CloudBrowserTitle"), ("service", service));
 
+    /// <summary>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</summary>
+    public static string CloudCloseCarriesOn => Get("CloudCloseCarriesOn");
+
     /// <summary>Word for this device in sentences such as “Turn off sync on this computer”.</summary>
     public static string DeviceKindComputer => Get("DeviceKindComputer");
 
@@ -8012,6 +8084,9 @@ public static partial class T
     /// <summary>Button: choose a torrent file from the device.</summary>
     public static string OpenedChooseFile => Get("OpenedChooseFile");
 
+    /// <summary>Line under the field when the link or file could not be read, and the engine gave no reason.</summary>
+    public static string OpenedUnreadable => Get("OpenedUnreadable");
+
     /// <summary>The question once the link's name matched a title and an episode.</summary>
     public static string OpenedConfirm(string title, string episode) => Fill(Get("OpenedConfirm"), ("title", title), ("episode", episode));
 
@@ -9057,6 +9132,7 @@ public static partial class T
         ["SearchResultOnServer"] = "On {server}",
         ["SearchResultOnService"] = "On {service}",
         ["MatchChoiceLine"] = "{parts} · {percent}% match",
+        ["SearchRateLimitEnter"] = "Searching as you type is paused for a moment, to stay within AniList's limits. Press Enter to search now.",
         ["DiscussionEditing"] = "Editing your comment",
         ["DiscussionCommentMenu"] = "More for this comment",
         ["DiscussionPaneLabel"] = "Episode {episode} discussion",
@@ -9127,6 +9203,17 @@ public static partial class T
         ["SettingsNoteTrailersWindows"] = "Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.",
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
         ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
+        ["SettingsLanguageRestart"] = "Restart",
+        ["SettingsDifferences_one"] = "One title differs from {tracker}",
+        ["SettingsDifferences_other"] = "{count} titles differ from {tracker}",
+        ["SettingsDifferencesReview"] = "Review",
+        ["SettingsSearch"] = "Search settings",
+        ["SettingsQualityDetailWindows"] = "Higher takes the best version a source offers, and more space.",
+        ["SettingsMergeSubtitlesDetailWindows"] = "Subtitles stay with the episode wherever the file goes.",
+        ["SettingsKeepSeedingDetailWindows"] = "A download that keeps seeding stays in Kaeri's cache, not the download folder.",
+        ["SettingsDiscussionsNoteWindows"] = "Reads the comments on AniList's forum thread for episodes you have watched.",
+        ["SettingsCommentImagesNoteWindows"] = "Each image loads from the site that hosts it, which sees your IP address.",
+        ["SettingsFolderBrowse"] = "Browse…",
         ["TrayStillDownloading"] = "Kaeri is still downloading",
         ["TrayWhere"] = "It's in the notification area.",
         ["TrayOpen"] = "Open Kaeri",
@@ -9170,6 +9257,18 @@ public static partial class T
         ["StartFailedTitle"] = "Kaeri couldn't start",
         ["StartFailedOpenFolder"] = "Open the folder",
         ["StartFailedQuit"] = "Quit",
+        ["EngineStoppedTitle"] = "Kaeri stopped working",
+        ["EngineStoppedDetail"] = "The part of the app that does the work has stopped. Open Kaeri again to carry on.",
+        ["EngineStoppedOpenAgain"] = "Open again",
+        ["TitlebarSynced"] = "{tracker} synced",
+        ["TitlebarNotSynced"] = "{tracker} not synced",
+        ["TitlebarSignInAgain"] = "Sign in to {tracker} again",
+        ["TitlebarStatusHint"] = "Shows what is running",
+        ["TitlebarNothingRunning"] = "Nothing is running.",
+        ["TitlebarOpenDevices"] = "Open Devices",
+        ["MessagesTitle"] = "Messages",
+        ["MessagesNone"] = "No messages yet",
+        ["MessagesAlert"] = "Problem",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
@@ -11077,6 +11176,7 @@ public static partial class T
         ["StoresShare"] = "Share…",
         ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
@@ -11447,6 +11547,7 @@ public static partial class T
         ["OpenedPasteTitle"] = "Open a magnet link or torrent file",
         ["OpenedPastePlaceholder"] = "Magnet link or info hash",
         ["OpenedChooseFile"] = "Choose a torrent file",
+        ["OpenedUnreadable"] = "Kaeri couldn't read that link or file.",
         ["OpenedConfirm"] = "Is this {title}, episode {episode}?",
         ["OpenedConfirmTitle"] = "Is this {title}? Choose the episode.",
         ["OpenedNoGuess"] = "Kaeri couldn't tell what this is. Choose the title it is, or play it without tracking.",

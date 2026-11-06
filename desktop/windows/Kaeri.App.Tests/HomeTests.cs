@@ -16,6 +16,21 @@ public class HomeTests
             Reason: reason, Starts: starts, Playable: playable, Because: because);
 
     [Fact]
+    public void AnotherDevicePlayingLastSaysWhereItStopped()
+    {
+        var item = new HomeItem(Entry: new Entry(Id: 3, Title: "Lantern Street"), Action: HomeAction.Resume, Episode: 7,
+            Resume: new ResumePoint(724, 0.5), Line: new Msg.HomeSpotlightPopular(), LastDevice: "Study Mac", Playable: Playable.Unknown);
+        Assert.Equal("Episode 7 · stopped at 12:04 on Study Mac", HomeWording.Line(item, Now, TimeZoneInfo.Utc, Gb));
+        // With no device, or no place to resume from, the engine's own line stands.
+        Assert.Equal("Popular this season", HomeWording.Line(item with { LastDevice = null }, Now, TimeZoneInfo.Utc, Gb));
+        Assert.Null(HomeWording.Elsewhere(7, null, "Study Mac"));
+        var spot = new Spotlight(SpotlightCase.Continuing, new Msg.HomeSpotlightPopular(), new Entry(Id: 3, Title: "Lantern Street"), 7, HomeAction.Resume,
+            Playable.Unknown, Resume: new ResumePoint(724, 0.5), LastDevice: "Study Mac");
+        Assert.Equal("Episode 7 · stopped at 12:04 on Study Mac", HomeWording.Line(spot));
+        Assert.Contains("Study Mac", HomeWording.Name(spot));
+    }
+
+    [Fact]
     public void ContinueIsCardsThisWeekIsDaysAndTheRestArePosters()
     {
         Assert.Equal(HomeShape.Card, HomeWording.Shape(SectionKind.Continue));
@@ -139,5 +154,37 @@ public class HomeTests
         Assert.Equal(new long?[] { 300, 400, 500 }, Pick(450));
         Assert.Equal(new long?[] { 300, 400, 500 }, Pick(900));
         Assert.Equal(new long?[] { 100, 200 }, Pick(250, day.Take(2).ToList()));
+    }
+}
+
+[Collection("Strings")]
+public class HomeHeadingTests
+{
+    static HomeSection Because(string title) =>
+        new(Kind: SectionKind.Because, Title: new Msg.HomeBecause(title), Total: 0, Items: []);
+
+    [Fact]
+    public void TheTitleIsItsOwnRunAndTheLeadKeepsItsSpace()
+    {
+        T.Resolver = null;
+        var heading = HomeWording.Heading(Because("Lantern Street"));
+        Assert.Equal(new HomeHeading("Because you finished ", "Lantern Street", ""), heading);
+        Assert.Equal("Because you finished Lantern Street", heading.ToString());
+    }
+
+    [Fact]
+    public void WordsAfterTheTitleAreNotSetBold()
+    {
+        try
+        {
+            T.Resolver = key => key == "HomeBecause" ? "{title}を観終えたあなたに" : null;
+            Assert.Equal(new HomeHeading("", "Lantern Street", "を観終えたあなたに"), HomeWording.Heading(Because("Lantern Street")));
+            T.Resolver = key => key == "HomeBecause" ? "Weil du {title} gesehen hast" : null;
+            Assert.Equal(new HomeHeading("Weil du ", "Lantern Street", " gesehen hast"), HomeWording.Heading(Because("Lantern Street")));
+        }
+        finally
+        {
+            T.Resolver = null;
+        }
     }
 }

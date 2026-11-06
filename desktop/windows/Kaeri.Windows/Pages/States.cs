@@ -80,10 +80,36 @@ public sealed partial class StateHost : Grid
         silence.Start();
     }
 
+    /// <summary>
+    /// A new load in place of what shows, such as another season or other filters: what shows
+    /// stays for the first 600 ms, then gives way to the placeholders. With nothing showing, the
+    /// placeholders come at once, in the content's own size, so the place is never blank.
+    /// </summary>
+    public void WaitKeeping(bool showing)
+    {
+        if (!showing)
+        {
+            if (!(loading && placeholdersShown))
+                WaitNow();
+            return;
+        }
+        Layer();
+        if (loading && (silence.IsRunning || placeholdersShown))
+            return;
+        loading = true;
+        Motion.Set(message, false);
+        if (Content is { } content)
+            content.Visibility = Visibility.Visible;
+        silence.Stop();
+        silence.Start();
+    }
+
     void ShowWaiting()
     {
         if (!loading)
             return;
+        if (Content is { } shown)
+            shown.Visibility = Visibility.Collapsed;
         if (NeedsConnection && Ctx.Current.Known.Offline)
         {
             Offline();
@@ -145,64 +171,75 @@ public sealed partial class StateHost : Grid
     }
 
     /// <summary>The answer: the content, crossfaded over the placeholders if they showed.</summary>
-    public async void Done()
-    {
-        Layer();
-        loading = false;
-        silence.Stop();
-        activity.Stop();
-        Motion.Set(message, false);
-        if (placeholdersShown)
-        {
-            var left = Least - (DateTimeOffset.UtcNow - placeholdersSince);
-            if (left > TimeSpan.Zero)
-                await Task.Delay(left);
-            // A later load, or an answer that came twice in the 0.3 s, has this in hand.
-            if (loading || !placeholdersShown)
-                return;
-            placeholdersShown = false;
-            Motion.HideStandard(waiting);
-            if (Content is { } content)
-                Motion.FadeIn(content, Motion.Standard);
-        }
-        else
-        {
-            Motion.Set(waiting, false);
-            if (Content is { } content)
-                content.Visibility = Visibility.Visible;
-        }
-    }
+    public void Done() => Settle(null);
 
     /// <summary>An answer with nothing in it: the empty state in the content's place.</summary>
-    public void Empty(UIElement state)
-    {
-        Done();
-        if (Content is { } content)
-            content.Visibility = Visibility.Collapsed;
-        Say(state);
-    }
+    public void Empty(UIElement state) => Settle(state);
 
     /// <summary>Failed to load: a plain line and Try again. The engine's reason goes to the log.</summary>
     public void Failed(string reason, Action retry)
     {
         if (NeedsConnection && Ctx.Current.Known.Offline)
         {
-            Done();
-            if (Content is { } c)
-                c.Visibility = Visibility.Collapsed;
-            Offline();
+            Settle(OfflineState());
             return;
         }
-        Done();
-        if (Content is { } content)
-            content.Visibility = Visibility.Collapsed;
         KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a page didn't load: {reason}");
-        Say(States.Unavailable(T.StateLoadFailed, T.StateCheckConnection, T.ActionTryAgain, () =>
+        Settle(States.Unavailable(T.StateLoadFailed, T.StateCheckConnection, T.ActionTryAgain, () =>
         {
             Wait();
             retry();
         }, error: true));
     }
+
+    /// <summary>
+    /// Ends a load with the content (<paramref name="state"/> null) or a state in its place. When
+    /// the placeholders showed, they stay their 0.3 s and then give way in one crossfade on the
+    /// standard token; otherwise the answer simply shows. A state already showing is replaced in
+    /// place, without fading out and in again. The last answer wins, also inside the 0.3 s.
+    /// </summary>
+    async void Settle(UIElement? state)
+    {
+        Layer();
+        loading = false;
+        silence.Stop();
+        activity.Stop();
+        var turn = ++settles;
+        if (state is null)
+            Motion.Set(message, false);
+        if (placeholdersShown)
+        {
+            var left = Least - (DateTimeOffset.UtcNow - placeholdersSince);
+            if (left > TimeSpan.Zero)
+                await Task.Delay(left);
+            // A later load or a later answer has this in hand.
+            if (loading || turn != settles || !placeholdersShown)
+                return;
+            placeholdersShown = false;
+            Motion.HideStandard(waiting);
+            if (state is null)
+            {
+                if (Content is { } content)
+                    Motion.FadeIn(content, Motion.Standard);
+            }
+            else
+            {
+                if (Content is { } content)
+                    content.Visibility = Visibility.Collapsed;
+                Say(state, Motion.Standard);
+            }
+        }
+        else
+        {
+            Motion.Set(waiting, false);
+            if (Content is { } content)
+                content.Visibility = state is null ? Visibility.Visible : Visibility.Collapsed;
+            if (state is not null)
+                Say(state, Motion.FadeInTime);
+        }
+    }
+
+    int settles;
 
     /// <summary>Offline with nothing cached: "You're offline" with Show downloads.</summary>
     void Offline()
@@ -212,15 +249,23 @@ public sealed partial class StateHost : Grid
         activity.Stop();
         Motion.Set(waiting, false);
         placeholdersShown = false;
-        Say(States.Unavailable(T.StateOfflineTitle, T.StateOfflineDetail, T.StateOfflineShowDownloads, () => Ctx.Current.Window.Go("downloads")));
+        settles++;
+        Say(OfflineState(), Motion.FadeInTime);
     }
 
-    void Say(UIElement state)
+    static StackPanel OfflineState() =>
+        States.Unavailable(T.StateOfflineTitle, T.StateOfflineDetail, T.StateOfflineShowDownloads, () => Ctx.Current.Window.Go("downloads"));
+
+    void Say(UIElement state, TimeSpan fade)
     {
         Layer();
+        var showing = message.Visibility == Visibility.Visible && message.Children.Count > 0;
         message.Children.Clear();
         message.Children.Add(state);
-        Motion.Show(message);
+        if (showing)
+            Motion.Set(message, true);
+        else
+            Motion.FadeIn(message, fade);
     }
 
     /// <summary>Clears any empty, offline or failed state; the content shows.</summary>
@@ -291,11 +336,16 @@ static partial class States
     };
 
     /// <summary>Raised plates in the cover grid's layout: covers 150 by 225 and two caption bars.</summary>
-    public static UIElement Covers(int count = 12)
+    /// <summary>A cover cell's title is kept two lines high, so every cell is one height: this, in px.</summary>
+    public const double CoverTitleHeight = 40;
+
+    public static UIElement Covers(int count = 12, bool rail = false)
     {
         var grid = new ItemsRepeater
         {
-            Layout = new UniformGridLayout { MinItemWidth = 150, MinColumnSpacing = 16, MinRowSpacing = 20, ItemsJustification = UniformGridLayoutItemsJustification.Start },
+            // A rail's plates are one row, as the rail is: a grid of them would collapse to a row when it lands.
+            Layout = rail ? new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 }
+                : new UniformGridLayout { MinItemWidth = 150, MinColumnSpacing = 16, MinRowSpacing = 20, ItemsJustification = UniformGridLayoutItemsJustification.Start },
             ItemsSource = Enumerable.Range(0, count).ToList(),
             ItemTemplate = new CoverPlaceholderFactory(),
         };
@@ -307,10 +357,18 @@ static partial class States
     {
         public UIElement GetElement(ElementFactoryGetArgs args)
         {
-            var panel = new StackPanel { Width = 150, Spacing = 6 };
-            panel.Children.Add(Plate(150, 225, 8));
-            panel.Children.Add(Plate(110, 12, 3));
-            panel.Children.Add(Plate(70, 10, 3));
+            // The cover grid's cell, line for line: the cover, the title's two lines, the caption.
+            var panel = new StackPanel { Width = 150, Spacing = 2, Padding = new Thickness(0, 0, 0, 6) };
+            var cover = Plate(150, 225, 8);
+            cover.Margin = new Thickness(0, 0, 0, 6);
+            panel.Children.Add(cover);
+            var title = Plate(110, 12, 3);
+            title.VerticalAlignment = VerticalAlignment.Top;
+            title.Margin = new Thickness(0, 4, 0, 0);
+            panel.Children.Add(new Border { Height = CoverTitleHeight, Child = title });
+            var caption = Plate(70, 10, 3);
+            caption.VerticalAlignment = VerticalAlignment.Center;
+            panel.Children.Add(new Border { Height = 16, Child = caption });
             return panel;
         }
 

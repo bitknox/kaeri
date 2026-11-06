@@ -45,6 +45,7 @@ sealed partial class MediaControls
     string show = "", episode = "", artUrl = "";
     double position, duration, writtenAt = double.NaN;
     bool writtenPaused;
+    MediaPlaybackStatus? statusWritten;
     readonly System.Diagnostics.Stopwatch sinceWritten = new();
 
     unsafe MediaControls(nint hwnd, Taskbar? taskbar, Art art, DispatcherQueue ui, Action<PlayerCommand> send)
@@ -166,6 +167,7 @@ sealed partial class MediaControls
             smtc.IsPreviousEnabled = true;
             smtc.IsEnabled = on;
             smtc.PlaybackStatus = on ? MediaPlaybackStatus.Changing : MediaPlaybackStatus.Closed;
+            statusWritten = null;
             if (!on)
                 smtc.DisplayUpdater.ClearAll();
         }
@@ -205,6 +207,7 @@ sealed partial class MediaControls
                 smtc.IsPreviousEnabled = true;
                 smtc.IsEnabled = false;
                 smtc.PlaybackStatus = MediaPlaybackStatus.Closed;
+                statusWritten = null;
                 smtc.DisplayUpdater.ClearAll();
             }
             Buttons();
@@ -287,7 +290,13 @@ sealed partial class MediaControls
             duration = d;
         if (smtc is null)
             return;
-        smtc.PlaybackStatus = paused ? MediaPlaybackStatus.Paused : MediaPlaybackStatus.Playing;
+        // Only when it changes: mpv reports about once a frame, and each write reaches the system.
+        var status = paused ? MediaPlaybackStatus.Paused : MediaPlaybackStatus.Playing;
+        if (statusWritten != status)
+        {
+            statusWritten = status;
+            smtc.PlaybackStatus = status;
+        }
         // Written again on pause or play, on a jump the clock would not have made, and now and then.
         var expected = double.IsNaN(writtenAt) ? double.NaN : writtenAt + (writtenPaused ? 0 : sinceWritten.Elapsed.TotalSeconds);
         if (double.IsNaN(expected) || paused != writtenPaused || Math.Abs(position - expected) > 2 || sinceWritten.Elapsed.TotalSeconds > 15)

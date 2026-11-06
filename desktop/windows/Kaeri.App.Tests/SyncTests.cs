@@ -153,4 +153,57 @@ public class SyncTests
         Assert.Null(known.SyncSigningIn);
         Assert.Equal("K7QF2M9XHD4RTB6WPN3ZC8JA", known.RecoveryKey);
     }
+
+    static SyncState Tracker(string tracker, bool connected, uint outbox = 0, bool expired = false, string? last = null, PullError? failed = null) =>
+        new(tracker, connected, outbox, 0, NeedsReauth: expired, Last: last, PullError: failed);
+
+    [Fact]
+    public void ABrowserSignInWaitsUntilTheTrackerSaysItIsSignedIn()
+    {
+        var known = new Known();
+        known.SignInStarted("anilist", 7);
+        // The job that opened the browser ends; the person is still there.
+        known.Take(new Event.Authorize("anilist", "https://anilist.example/authorize", "kaeri"));
+        known.Take(new Event.JobDone(7));
+        Assert.True(known.SigningIn.ContainsKey("anilist"));
+        // Back with the redirect: its job ending without a sign-in ends the wait.
+        known.SignInStarted("anilist", 9);
+        known.Take(new Event.JobDone(9));
+        Assert.False(known.SigningIn.ContainsKey("anilist"));
+        known.SignInStarted("anilist", 11);
+        known.Take(new Event.Sync(Tracker("anilist", true)));
+        Assert.False(known.SigningIn.ContainsKey("anilist"));
+    }
+
+    [Fact]
+    public void AnExpiredTokenKeepsASignInAgainUnderWay()
+    {
+        var known = new Known();
+        known.SignInStarted("mal", null);
+        known.Take(new Event.Sync(Tracker("mal", true, expired: true)));
+        Assert.True(known.SigningIn.ContainsKey("mal"));
+    }
+
+    [Fact]
+    public void ACodeSignInEndsWhenTheCodeComesDown()
+    {
+        var known = new Known();
+        known.SignInStarted("simkl", 3);
+        known.Take(new Event.DeviceCode(null));
+        Assert.False(known.SigningIn.ContainsKey("simkl"));
+    }
+
+    [Fact]
+    public void SyncedIsKeptOnlyWithNothingWaitingAndNoFailure()
+    {
+        var known = new Known();
+        known.Take(new Event.Sync(Tracker("anilist", true, outbox: 2, last: "pushed 2")));
+        Assert.False(known.SyncedAt.ContainsKey("anilist"));
+        known.Take(new Event.Sync(Tracker("anilist", true, last: "pulled", failed: new PullError("offline", 1))));
+        Assert.False(known.SyncedAt.ContainsKey("anilist"));
+        known.Take(new Event.Sync(Tracker("anilist", true, last: "pulled")));
+        Assert.True(known.SyncedAt.ContainsKey("anilist"));
+        known.Take(new Event.Sync(Tracker("anilist", false)));
+        Assert.False(known.SyncedAt.ContainsKey("anilist"));
+    }
 }

@@ -819,12 +819,15 @@ fn stats_for_nerds_are_read_while_open_worded_by_the_engine_and_copied_without_a
     });
     assert!(summary.rows.is_empty(), "no rows with the panel shut");
     assert_eq!(summary.summary[0], "720p · H.264 · software decoding");
-    assert!(!app.ops.iter().any(|(_, op)| matches!(op, PlayerOp::Sample { .. })));
+    // Before the picture starts, the starting screen asks for the download speed alone once a
+    // second, so on a slow machine that ask can come first; the panel's figures must not.
+    let panel_figures =
+        |op: &PlayerOp| matches!(op, PlayerOp::Sample { properties } if properties.len() > 1);
+    assert!(!app.ops.iter().any(|(_, op)| panel_figures(op)));
 
     // Open: the player is asked for its figures, and the rows follow from its answers.
     app.aim(playback, PlayerCommand::Stats(true));
-    let (_, sample) =
-        app.op("the figures asked for", |op| matches!(op, PlayerOp::Sample { .. }));
+    let (_, sample) = app.op("the figures asked for", panel_figures);
     let PlayerOp::Sample { properties } = sample else { unreachable!() };
     assert!(properties.iter().any(|p| p == "cache-speed"), "{properties:?}");
     app.property(playback, "container-fps", json!(23.976));

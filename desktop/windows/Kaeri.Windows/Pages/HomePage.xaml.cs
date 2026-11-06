@@ -41,24 +41,25 @@ public sealed partial class HomePage : Page, IPageKeys
     {
         InitializeComponent();
         Spot.Use(this);
-        State.Placeholders = () => States.Rows(5, 36, 54);
+        State.Placeholders = FirstPlates;
         State.ActivityText = T.HomeLoading;
         silence = Timers.Weak(this, TimeSpan.FromMilliseconds(HomeWording.PlaceholderAfterMs), false, static page => page.Show());
         activity = Timers.Weak(this, TimeSpan.FromMilliseconds(HomeWording.ActivityAfterMs), false, static page => page.ShowActivity());
-        // Heard from the start: what arrives before the page is loaded is not missed. The shelves
-        // let go of their cards once the frame leaves, so the page can go.
-        ctx.Hear(this, Heard, () =>
-        {
-            silence.Stop();
-            activity.Stop();
-            Shelves.Children.Clear();
-            shown.Clear();
-        });
+        // The frame keeps Home for Back and for the next visit, so it comes back where it was:
+        // its scroll, its shelves' places, and nothing drawn again that has not changed.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        // Heard from each visit's start, before anything is asked, until the frame moves on. The
+        // shelves stay as they are while another page is up, so leaving shows no change.
+        ctx.Hear(this, Heard, () =>
+        {
+            silence.Stop();
+            activity.Stop();
+        });
         ctx.Send(new Command.LoadHome(false));
         silence.Start();
         activity.Start();
@@ -97,12 +98,13 @@ public sealed partial class HomePage : Page, IPageKeys
     void Show()
     {
         ShowSyncLine();
-        var home = ctx.Known.Home;
-        if (home is null)
+        var known = ctx.Known.Home;
+        if (known is null)
         {
             State.Wait();
             return;
         }
+        var home = Drawn(known);
         ShowOffline(home);
         var empty = home.Spotlight is null && home.Sections.Length == 0;
         if (empty && home.Offline && home.OfflineSince is null)
@@ -125,6 +127,8 @@ public sealed partial class HomePage : Page, IPageKeys
         var fresh = Spot.Id is null;
         if (before is null || moved || Spot.Id != home.Spotlight?.Entry.Id)
             Spot.Show(home.Spotlight, crossfade: !fresh);
+        else if (home.Spotlight is { } same && !ReferenceEquals(before.Spotlight, same))
+            Spot.Update(same);
         else
             Spot.Refresh();
         if (home.Spotlight is { } spotlight && probed != spotlight.Entry.Id)
@@ -136,9 +140,9 @@ public sealed partial class HomePage : Page, IPageKeys
         Reconcile(home);
         ShowPlaceholders(home);
         ShowEnd(home);
-        if (home.Failed && !ReferenceEquals(complained, home))
+        if (home.Failed && !ReferenceEquals(complained, known))
         {
-            complained = home;
+            complained = known;
             ctx.Window.Say(T.HomeFailed, T.HomeTryAgain, () => ctx.Send(new Command.LoadHome(true)));
         }
         if (home.Pending.Length == 0)
@@ -150,11 +154,41 @@ public sealed partial class HomePage : Page, IPageKeys
 
     bool SilenceOver => DateTimeOffset.Now - opened >= TimeSpan.FromMilliseconds(HomeWording.PlaceholderAfterMs);
 
+    /// <summary>
+    /// Home as the engine sent it, less what was removed here and is not yet gone from the
+    /// engine's: Not interested anywhere, Remove from Continue on Continue and its spotlight. A
+    /// later send that still holds such a title cannot bring its card back.
+    /// </summary>
+    HomeView Drawn(HomeView home)
+    {
+        var dismissed = ctx.Known.DismissedHere;
+        var hidden = ctx.Known.HiddenFromContinue;
+        if (dismissed.Count == 0 && hidden.Count == 0)
+            return home;
+        bool Gone(uint id, bool continuing) => dismissed.Contains(id) || (continuing && hidden.Contains(id));
+        var spot = home.Spotlight is { } s && Gone(s.Entry.Id, s.Case == SpotlightCase.Continuing) ? null : home.Spotlight;
+        var sections = home.Sections
+            .Select(section =>
+            {
+                var kept = section.Items.Where(i => !Gone(i.Entry.Id, section.Kind == SectionKind.Continue)).ToArray();
+                return kept.Length == section.Items.Length ? section
+                    : section with { Items = kept, Total = (uint)Math.Max(0, (long)section.Total - (section.Items.Length - kept.Length)) };
+            })
+            .Where(section => section.Items.Length > 0)
+            .ToArray();
+        return home with { Spotlight = spot, Sections = sections };
+    }
+
     void ShowSyncLine()
     {
         var waiting = ctx.Known.Anilist?.Outbox ?? 0;
-        SyncLine.Text = waiting > 0 ? T.ContinueSyncWaiting(waiting) : "";
-        SyncLine.Visibility = waiting > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (waiting > 0)
+            SyncLine.Text = T.ContinueSyncWaiting(waiting);
+        // It fades in place: the words stay while it fades out.
+        if ((waiting > 0) != (SyncLine.Opacity > 0.5))
+            Motion.Fade(SyncLine, waiting > 0 ? 1 : 0);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(SyncLine,
+            waiting > 0 ? Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Content : Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
     }
 
     /// <summary>"Offline. Showing Home from 14:20." over a kept Home; the plain offline line over what is only local.</summary>
@@ -202,27 +236,39 @@ public sealed partial class HomePage : Page, IPageKeys
         FirstMargin();
     }
 
-    /// <summary>The first shelf sits 40 under the spotlight; with no spotlight it has nothing to clear.</summary>
+    /// <summary>
+    /// Every shelf sits 40 under what is above it; the first, with no spotlight, has nothing to
+    /// clear. Set for all of them each time, since a shelf that was first once (a week drawn
+    /// before Continue arrived) is not first later and needs its gap back.
+    /// </summary>
     void FirstMargin()
     {
-        if (Shelves.Children.FirstOrDefault() is FrameworkElement first && Spot.Visibility != Visibility.Visible)
-            first.Margin = new Thickness(0);
+        for (var i = 0; i < Shelves.Children.Count; i++)
+        {
+            if (Shelves.Children[i] is not FrameworkElement shelf)
+                continue;
+            var top = i == 0 && Spot.Visibility != Visibility.Visible ? 0 : HomeWording.ShelfGap;
+            if (shelf.Margin.Top != top)
+                shelf.Margin = new Thickness(0, top, 0, 0);
+        }
     }
 
     FrameworkElement Make(HomeSection section, HomeView home) =>
         HomeWording.Shape(section.Kind) == HomeShape.Week
-            ? new HomeWeek(this, section)
+            ? new HomeWeek(this, section) { Tag = WeekKey(section) }
             : new HomeShelf(this, section, home.Season);
 
     void Update(FrameworkElement element, HomeSection section, HomeView home)
     {
         if (element is not HomeShelf shelf)
         {
-            // This week is drawn again in its place.
-            var at = Shelves.Children.IndexOf(element);
-            var again = Make(section, home);
-            Shelves.Children[at] = again;
-            shown[section.Kind] = again;
+            // This week changes in place, and only when what it shows has changed.
+            var key = WeekKey(section);
+            if (element.Tag as string == key)
+                return;
+            element.Tag = key;
+            if (element is HomeWeek week)
+                week.Update(section);
             return;
         }
         var now = section.Items.Select(i => i.Entry.Id).ToHashSet();
@@ -238,9 +284,14 @@ public sealed partial class HomePage : Page, IPageKeys
             shelf.Leave(id, () =>
             {
                 if (--left == 0 && shown.TryGetValue(section.Kind, out var current) && current == shelf)
-                    shelf.Update(ctx.Known.Home?.Sections.FirstOrDefault(s => s.Kind == section.Kind) ?? section, ctx.Known.Home?.Season, []);
+                    shelf.Update(drawn?.Sections.FirstOrDefault(s => s.Kind == section.Kind) ?? section, drawn?.Season, []);
             });
     }
+
+    /// <summary>What This week draws, so it is drawn again only when that changes, or the day does.</summary>
+    static string WeekKey(HomeSection section) =>
+        DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "|"
+        + string.Join(";", section.Items.Select(i => $"{i.Entry.Id},{i.Entry.Title},{i.Episode},{i.AirsAt},{i.Day},{i.New},{i.Playable}"));
 
     void Remove(SectionKind kind)
     {
@@ -286,23 +337,103 @@ public sealed partial class HomePage : Page, IPageKeys
             // One crossfade, held at least 0.3 s, and the plates are the real shelf's size.
             _ = Task.Delay(left > TimeSpan.Zero ? left : TimeSpan.Zero).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
             {
-                Motion.Hide(plates);
-                _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => Waiting.Children.Remove(plates)));
+                // Faded, the plates' place closes on the standard token, so what is under them glides up.
+                Motion.Fade(plates, 0);
+                _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+                {
+                    Motion.Ease(plates, plates.ActualHeight, 0, v => plates.Height = Math.Max(0, v));
+                    _ = Task.Delay(Motion.Standard).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => Waiting.Children.Remove(plates)));
+                }));
             }));
         }
     }
 
     /// <summary>A heading bar and a row of plates at the final size of a poster shelf, or of the week.</summary>
-    static StackPanel Plates(bool posters)
+    static StackPanel Plates(bool posters) => Plates(posters ? HomeShape.Poster : HomeShape.Week);
+
+    /// <summary>
+    /// A shelf's plates at its final size: the heading's line, then each card's art and, under a
+    /// card or a poster, its title and its line, each the height of the text that replaces it.
+    /// </summary>
+    static StackPanel Plates(HomeShape shape)
     {
-        var panel = new StackPanel { Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0), Spacing = 12 };
-        panel.Children.Add(States.Plate(160, 20, 4));
+        var panel = new StackPanel { Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0) };
+        panel.Children.Add(Line(160, 20, 28, 12));
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = HomeWording.Gap };
         for (var i = 0; i < 7; i++)
-            row.Children.Add(States.Plate(posters ? HomeWording.PosterWidth : 150, posters ? HomeWording.PosterHeight : 66, 4));
+        {
+            if (shape == HomeShape.Week)
+            {
+                row.Children.Add(States.Plate(150, 66, 4));
+                continue;
+            }
+            var width = shape == HomeShape.Card ? HomeWording.CardWidth : HomeWording.PosterWidth;
+            var card = new StackPanel { Width = width };
+            card.Children.Add(States.Plate(width, shape == HomeShape.Card ? HomeWording.CardHeight : HomeWording.PosterHeight, 4));
+            if (shape == HomeShape.Card)
+                card.Children.Add(new Border { Height = 9 });
+            card.Children.Add(new Border { Height = 8 });
+            card.Children.Add(Line(width * 0.8, 12, 19, 0));
+            card.Children.Add(Line(width * 0.55, 10, 16, 0));
+            row.Children.Add(card);
+        }
         panel.Children.Add(row);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(panel, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
         return panel;
+    }
+
+    /// <summary>A bar in a line of text's height, so the plate holds the text's place.</summary>
+    static Border Line(double width, double bar, double height, double below) => new()
+    {
+        Height = height,
+        Margin = new Thickness(0, 0, 0, below),
+        Child = new Border
+        {
+            Width = width,
+            Height = bar,
+            CornerRadius = new CornerRadius(3),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            Background = Ui.Res<Brush>("RaisedBrush"),
+        },
+    };
+
+    /// <summary>Home's first load: the spotlight's place, a Continue shelf and a poster shelf, in Home's own layout.</summary>
+    UIElement FirstPlates()
+    {
+        var column = new StackPanel { Padding = new Thickness(0, 8, 36, 48) };
+        var spot = new Grid { ColumnSpacing = 40 };
+        spot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        spot.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var words = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        words.Children.Add(Line(120, 12, 19, 8));
+        words.Children.Add(Line(320, 26, 38, 4));
+        words.Children.Add(Line(220, 10, 16, 10));
+        for (var i = 0; i < 3; i++)
+            words.Children.Add(Line(i == 2 ? 260 : 420, 12, 20, 0));
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 34, 0, 0) };
+        buttons.Children.Add(States.Plate(160, 32, 4));
+        buttons.Children.Add(States.Plate(90, 32, 4));
+        words.Children.Add(buttons);
+        spot.Children.Add(words);
+        // The art at the share of the width the spotlight gives it.
+        var art = States.Plate(HomeWording.ArtMaxWidth, HomeWording.ArtMaxWidth * 9 / 16, 16);
+        Grid.SetColumn(art, 1);
+        spot.Children.Add(art);
+        spot.SizeChanged += (_, e) =>
+        {
+            var w = Math.Min(HomeWording.ArtMaxWidth, Math.Round(e.NewSize.Width * HomeWording.ArtShare));
+            if (w > 0 && Math.Abs(art.Width - w) >= 0.5)
+            {
+                art.Width = w;
+                art.Height = Math.Round(w * 9 / 16);
+            }
+        };
+        column.Children.Add(spot);
+        column.Children.Add(Plates(HomeShape.Card));
+        column.Children.Add(Plates(HomeShape.Poster));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(column, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        return column;
     }
 
     void ShowActivity()
@@ -339,7 +470,7 @@ public sealed partial class HomePage : Page, IPageKeys
             case HomeEnd.SignIn:
                 line.Children.Add(Ui.Haze(T.HomeEndSignedOut, wrap: false));
                 var signIn = new Button { Content = T.HomeSignIn, MinHeight = 32 };
-                signIn.Click += (_, _) => ctx.Send(new Command.Connect("anilist"));
+                signIn.Click += (_, _) => ctx.SignIn("anilist");
                 line.Children.Add(signIn);
                 break;
             case HomeEnd.NoSources:
@@ -438,6 +569,7 @@ public sealed partial class HomePage : Page, IPageKeys
     internal void AddToPlanning(uint id)
     {
         ctx.Send(new Command.SetStatus(id, LibrarySegment.Planning));
+        ctx.Known.SetStatus(id, LibrarySegment.Planning);
         ctx.Known.PlannedFromUpNext(id);
         PlannedHere.Add(id);
         AddingHere.Add(id);
@@ -455,10 +587,12 @@ public sealed partial class HomePage : Page, IPageKeys
         ctx.Window.Say(T.HomeMarkedWatched(episode));
     }
 
+    /// <summary>Remove from Continue: the card fades and the gap closes at once, ahead of the engine's next Home.</summary>
     internal void RemoveFromContinue(uint id)
     {
         ctx.Known.HiddenFromContinue.Add(id);
         ctx.Send(new Command.HideFromContinue(id));
+        Show();
     }
 
     /// <summary>
@@ -470,19 +604,26 @@ public sealed partial class HomePage : Page, IPageKeys
         var id = entry.Id;
         ctx.Known.DismissedHere.Add(id);
         ctx.Send(new Command.DismissUpNext(id));
-        foreach (var shelf in shown.Values.OfType<HomeShelf>())
-            if (shelf.Cards.Any(c => c.Id == id))
-                shelf.Leave(id, () => { });
+        Show();
         ctx.Window.Say(untilAirs ? T.UpNextHiddenUntilAirs(entry.Title) : T.UpNextHidden(entry.Title), T.ActionUndo, () =>
         {
             ctx.Known.DismissedHere.Remove(id);
             ctx.Send(new Command.RestoreUpNext(id));
+            Show();
         });
     }
 
+    /// <summary>A card's menu, made as it opens, so it says what is true then: Add to Planning goes once the title is on a list.</summary>
     internal MenuFlyout MenuFor(HomeCard card, HomeShape shape)
     {
         var menu = new MenuFlyout();
+        menu.Opening += (_, _) => Fill(menu, card, shape);
+        return menu;
+    }
+
+    internal void Fill(MenuFlyout menu, HomeCard card, HomeShape shape)
+    {
+        menu.Items.Clear();
         var item = card.Item;
         MenuFlyoutItem Add(string text, string glyph, Action act, string? keys = null)
         {
@@ -510,14 +651,18 @@ public sealed partial class HomePage : Page, IPageKeys
         {
             if (item.Action == HomeAction.Play && item.Playable != Playable.NotFound)
                 Add(T.HomePlayEpisode(episode), "", () => ctx.Play(card.Id, episode.ToString()));
-            if (item.Action != HomeAction.Nothing && item.Reason != UpNextReason.Planning)
-                Add(T.UpNextAddPlanning, "", () => AddToPlanning(card.Id));
+            // A title already on a list, in any status, is not offered again.
+            if (item.Action != HomeAction.Nothing && item.Reason != UpNextReason.Planning && (ctx.Known.Entry(card.Id)?.ListStatus ?? item.Entry.ListStatus) is null)
+                Add(T.UpNextAddPlanning, "", () =>
+                {
+                    AddToPlanning(card.Id);
+                    ctx.Window.Say(T.LibraryAddedPlanning);
+                });
             if (shape == HomeShape.Poster)
                 Add(T.UpNextNotInterested, "", () => NotInterested(card.Item.Entry, card.Item.Starts is not null), "Delete");
         }
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(T.HomeDetails, "", () => ctx.OpenTitle(card.Id));
-        return menu;
     }
 
     internal void CardKey(HomeCard card, HomeShape shape, KeyRoutedEventArgs e)

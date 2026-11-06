@@ -28,9 +28,41 @@ public sealed partial class SettingsPage
             Show();
     }
 
+    static readonly SyncStatus NoSync = new(false, false, Devices: [], Notes: [], StoresToJoin: [], Clouds: []);
+
+    /// <summary>
+    /// What the Devices pane says, from the engine's last word on the group: each device's name,
+    /// kind and line, the kept watches, the cloud folder's state and the recovery key. This PC's
+    /// name and the devices' switches are left out, as they change in place; the pane is drawn
+    /// again only when this changes, so a click in it is not lost and a name being typed stays.
+    /// </summary>
+    string DevicesKey()
+    {
+        var status = ctx.Known.SyncGroup ?? NoSync;
+        var now = Now;
+        // A pass starting or ending, and a device's or the folder's line, change in place: they
+        // are not part of the key, so a sync pass never redraws the pane.
+        var words = new List<object?> { SyncWords.Bare(status), status.RecoveryKey, status.RecoveryKeyMade, ctx.Tv.Available };
+        foreach (var device in status.Devices.Where(d => !d.ThisDevice))
+            words.Add((device.Id, device.Name, device.Kind, device.RemoteKey is null));
+        foreach (var note in status.Notes)
+            words.Add((note, ctx.Known.Entries.TryGetValue(note.AnilistId, out var entry) ? entry.Title : ""));
+        if (status.Folder is { } folder)
+            words.Add((folder.Kind, folder.Account, CloudButtons(SyncWords.State(status, now, SyncDialogs.ByHand))));
+        return Drawn.Fingerprint(words);
+    }
+
+    /// <summary>Which buttons and title the cloud card has for a state: what redraws it, where its line alone does not.</summary>
+    static string CloudButtons(CloudState state) => state switch
+    {
+        CloudState.Problem problem => $"problem {problem.Fix}", // i18n-skip
+        CloudState.SignedOut => "signed out", // i18n-skip
+        _ => "",
+    };
+
     void ShowDevices()
     {
-        var status = ctx.Known.SyncGroup ?? new SyncStatus(false, false, Devices: [], Notes: [], StoresToJoin: [], Clouds: []);
+        var status = ctx.Known.SyncGroup ?? NoSync;
         ThisDevice(status);
         if (!SyncWords.Bare(status))
         {
@@ -97,6 +129,15 @@ public sealed partial class SettingsPage
             }
         };
         name.LostFocus += (_, _) => Save();
+        // The group's word on the name, in place, and never over what is being typed.
+        refresh.Add(() =>
+        {
+            if (name.FocusState != FocusState.Unfocused)
+                return;
+            var now = ctx.Known.SyncGroup?.DeviceName ?? SyncDialogs.TypedName;
+            if (name.Text != now)
+                name.Text = saved = now;
+        });
         Cards.Children.Add(CardFrame(T.DevicesName, null, name, ""));
     }
 
@@ -109,17 +150,32 @@ public sealed partial class SettingsPage
             : device.Name.Contains("phone", StringComparison.OrdinalIgnoreCase) ? "" : "",
     };
 
-    /// <summary>A switch with its word before it, as the board's device cards have them.</summary>
-    static StackPanel Labelled(string word, string name, bool on, Action<bool> said)
+    /// <summary>
+    /// A switch with its word before it, as the board's device cards have them. The group's later
+    /// word on it, from <paramref name="now"/>, is set in place.
+    /// </summary>
+    StackPanel Labelled(string word, string name, bool on, Action<bool> said, Func<bool?> now)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         row.Children.Add(new TextBlock { Text = word, VerticalAlignment = VerticalAlignment.Center });
         var toggle = new ToggleSwitch { IsOn = on, OnContent = "", OffContent = "", MinWidth = 0 };
         AutomationProperties.SetName(toggle, name);
-        toggle.Toggled += (_, _) => said(toggle.IsOn);
+        toggle.Toggled += (_, _) =>
+        {
+            if (!quiet)
+                said(toggle.IsOn);
+        };
+        refresh.Add(() =>
+        {
+            if (now() is { } value && toggle.IsOn != value)
+                toggle.IsOn = value;
+        });
         row.Children.Add(toggle);
         return row;
     }
+
+    /// <summary>The device as the group last said, by its id.</summary>
+    SyncDeviceView? Device(string id) => ctx.Known.SyncGroup?.Devices.FirstOrDefault(d => d.Id == id);
 
     SettingsCard DeviceCard(SyncDeviceView device)
     {
@@ -128,11 +184,13 @@ public sealed partial class SettingsPage
         var switches = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
         // The group's switch: off holds the group back from the device, and it from the group.
         switches.Children.Add(Labelled(T.DevicesSyncSwitch, T.DevicesSyncSwitchName(device.Name), !device.Paused,
-            on => ctx.Send(new Command.SyncGroup(new SyncCommand.SetDeviceSync(device.Id, on)))));
+            on => ctx.Send(new Command.SyncGroup(new SyncCommand.SetDeviceSync(device.Id, on))),
+            () => Device(device.Id) is { } now ? !now.Paused : null));
         // Only for a pair that is a TV and a device that drives TVs.
         if (device.RemoteKey is not null)
             switches.Children.Add(Labelled(T.DevicesRemoteSwitch, $"{T.DevicesRemoteSwitch} {device.Name}", !device.RemoteOff,
-                on => ctx.Send(new Command.SyncGroup(new SyncCommand.SetDeviceRemote(device.Id, on)))));
+                on => ctx.Send(new Command.SyncGroup(new SyncCommand.SetDeviceRemote(device.Id, on))),
+                () => Device(device.Id) is { } now ? !now.RemoteOff : null));
         var card = new SettingsCard
         {
             Header = device.Name,
@@ -143,8 +201,22 @@ public sealed partial class SettingsPage
         };
         if (Marked(line, mark) is { } described)
             card.Description = described;
+        var drawn = (line, mark);
+        refresh.Add(() =>
+        {
+            if (Device(device.Id) is not { } now)
+                return;
+            var said = SyncWords.DeviceLine(now, Now, ctx.Tv.Paired.Any(tv => tv.Name == now.Name));
+            if (said == drawn)
+                return;
+            drawn = said;
+            if (Marked(said.Item1, said.Item2) is { } again)
+                card.Description = again;
+            else
+                card.ClearValue(SettingsCard.DescriptionProperty);
+        });
         AutomationProperties.SetName(card, T.DevicesOpenName(device.Name));
-        card.Click += (_, _) => SyncDialogs.DevicePage(device);
+        card.Click += (_, _) => SyncDialogs.DevicePage(Device(device.Id) ?? device);
         return card;
     }
 
@@ -231,7 +303,7 @@ public sealed partial class SettingsPage
         }
         var service = SyncWords.ServiceName(folder.Kind);
         var state = SyncWords.State(status, Now, SyncDialogs.ByHand);
-        var (line, mark) = state switch
+        static (string, SyncMark) Line(CloudState state, SyncFolderView folder) => state switch
         {
             CloudState.Synced synced => (folder.Account is { } account ? $"{synced.Line} · {account}" : synced.Line, SyncMark.Water),
             CloudState.Syncing => (T.SyncSyncing, SyncMark.Water),
@@ -239,6 +311,8 @@ public sealed partial class SettingsPage
             CloudState.Problem problem => (problem.Line, SyncMark.Vermilion),
             _ => (T.CloudOffline(SyncWords.Kind), SyncMark.Amber),
         };
+        var (line, mark) = Line(state, folder);
+        Button? syncNow = null;
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         switch (state)
         {
@@ -256,7 +330,7 @@ public sealed partial class SettingsPage
                 buttons.Children.Add(choose);
                 break;
             default:
-                var now = new Button { Content = T.CloudSyncNow, IsEnabled = !status.Syncing };
+                var now = syncNow = new Button { Content = T.CloudSyncNow, IsEnabled = !status.Syncing };
                 now.Click += (_, _) => ctx.Send(new Command.SyncFolderNow());
                 buttons.Children.Add(now);
                 break;
@@ -272,6 +346,22 @@ public sealed partial class SettingsPage
             card.Description = described;
         AutomationProperties.SetName(card, $"{card.Header}, {line}");
         Cards.Children.Add(card);
+        // A pass starting or ending changes the line and Sync now in place.
+        var drawn = (line, mark);
+        refresh.Add(() =>
+        {
+            if (ctx.Known.SyncGroup is not { Folder: { } nowFolder } nowStatus)
+                return;
+            if (syncNow is not null && syncNow.IsEnabled == nowStatus.Syncing)
+                syncNow.IsEnabled = !nowStatus.Syncing;
+            var said = Line(SyncWords.State(nowStatus, Now, SyncDialogs.ByHand), nowFolder);
+            if (said == drawn)
+                return;
+            drawn = said;
+            if (Marked(said.Item1, said.Item2) is { } again)
+                card.Description = again;
+            AutomationProperties.SetName(card, $"{card.Header}, {said.Item1}");
+        });
     }
 
     /// <summary>

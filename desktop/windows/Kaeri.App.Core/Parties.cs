@@ -54,6 +54,20 @@ public static class Parties
         };
     }
 
+    /// <summary>
+    /// The lobby's start line, as on the Mac: the countdown, alone, everyone ready, nobody ready
+    /// yet, or who the room waits for. A room that plays says the same, so a member who is not
+    /// ready is still named.
+    /// </summary>
+    public static string StartLine(long? startingIn, IReadOnlyCollection<PartyMember> members)
+    {
+        if (startingIn is { } seconds)
+            return T.PartyStarting(seconds);
+        if (members.Count >= 2 && !AllReady(members) && members.All(m => m.Ready != true))
+            return T.PartyStartsLine;
+        return ReadyLine(members);
+    }
+
     static string Named(PartyMember member) => member.You ? T.PartyYou : member.Name;
 
     /// <summary>How the connection stands, for the panel's header.</summary>

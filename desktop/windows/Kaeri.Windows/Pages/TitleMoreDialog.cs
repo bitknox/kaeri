@@ -98,7 +98,8 @@ sealed class TitleMoreDialog
             Content = page,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0, 0, 16, 0),
-            Width = 780,
+            // At most 780: the card is narrower in a small window, and the right column stays in it.
+            MaxWidth = 780,
         };
     }
 
@@ -166,6 +167,7 @@ sealed class TitleMoreDialog
         var art = new Grid { Width = 40, Height = 40, CornerRadius = new CornerRadius(20), Background = Ui.Res<Brush>("RaisedBrush") };
         var image = new Image { Stretch = Stretch.UniformToFill };
         art.Children.Add(image);
+        ArtFade.Watch(image);
         ctx.Art.Bind(c.ImageUrl, s => image.Source = s);
         cell.Children.Add(art);
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -218,7 +220,7 @@ sealed class TitleMoreDialog
         var spoilerText = Ui.Haze(string.Join(" · ", hidden));
         spoilerText.Opacity = 0;
         spoilerText.Visibility = Visibility.Collapsed;
-        spoilerText.OpacityTransition = new ScalarTransition { Duration = TimeSpan.FromMilliseconds(200) };
+        spoilerText.OpacityTransition = new ScalarTransition { Duration = Motion.Quick };
         var toggle = new HyperlinkButton { Padding = new Thickness(0), Content = T.MoreShowSpoilerTags(hidden.Count) };
         toggle.Click += (_, _) =>
         {
@@ -250,6 +252,7 @@ sealed class TitleMoreDialog
             var art = new Grid { Width = 88, Height = 132, CornerRadius = new CornerRadius(6), Background = Ui.Res<Brush>("RaisedBrush") };
             var image = new Image { Stretch = Stretch.UniformToFill };
             art.Children.Add(image);
+            ArtFade.Watch(image);
             ctx.Art.Bind(t.CoverUrl, s => image.Source = s);
             button.Content = art;
             AutomationProperties.SetName(button, t.Title);

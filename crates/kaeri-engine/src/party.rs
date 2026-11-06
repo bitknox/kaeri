@@ -46,6 +46,16 @@ use crate::{
 
 /// The count before a room that is all ready plays, in seconds.
 const COUNT: u32 = 3;
+/// How long after a move on the room may take to play before it is asked again, and how many
+/// times it is asked.
+const RESUME_AGAIN: Duration = Duration::from_secs(2);
+const RESUME_TRIES: u32 = 5;
+/// The longest the room waits after moving on for a member still on the episode before.
+const MOVE_ON_WAIT: Duration = Duration::from_secs(15);
+/// After a move on plays, how long a seek well into the episode is taken for the episode
+/// before's, and how far in is well into it.
+const STALE_AFTER_MOVE_ON: Duration = Duration::from_secs(5);
+const STALE_PAST: f64 = 15.0;
 /// How long a look into a room waits for its members to be listed.
 const LOOK_SETTLE: Duration = Duration::from_millis(1500);
 
@@ -635,8 +645,16 @@ struct Task {
     cover: Option<String>,
     /// The episode this device plays for the room.
     playing: Option<(AnilistId, String)>,
-    /// The room moved on and plays when everyone has the new episode open.
+    /// The room moved on and plays when everyone has the new episode open, and when it did.
     moving_on: bool,
+    moved_on_at: tokio::time::Instant,
+    /// When the room was asked to play after the last move on.
+    resumed_at: Option<tokio::time::Instant>,
+    /// After a move on, when to ask the room to play again if it has not played yet. Each
+    /// member who reaches the end moves the room on, and a play sent while another member's
+    /// move is on its way is overtaken by it: on a real server both can be, and the room would
+    /// wait at the start of the next episode with everyone ready.
+    resume_again: Option<(tokio::time::Instant, u32)>,
     /// The room plays, as the server last said: a member who is in the lobby when it does
     /// opens the player and joins in.
     room_plays: bool,
@@ -670,6 +688,9 @@ impl Task {
             cover: None,
             playing: None,
             moving_on: false,
+            moved_on_at: tokio::time::Instant::now(),
+            resumed_at: None,
+            resume_again: None,
             room_plays: false,
             countdown: None,
             tick,
@@ -768,6 +789,38 @@ impl Task {
         }
     }
 
+    /// Who is in the room, for the front end. A plain Syncplay member whose file is the one the
+    /// room was matched from plays the episode this device plays, though its name has no tag
+    /// to compare.
+    fn say_members(&self) {
+        let plain = self.view.room_episode.as_ref().filter(|room| {
+            room.plain_by.is_some()
+                && room.id.is_some_and(|id| {
+                    self.view
+                        .episode
+                        .as_ref()
+                        .is_some_and(|e| e.id == id && e.episode == room.episode)
+                })
+        });
+        let members = self
+            .members
+            .iter()
+            .cloned()
+            .map(|m| {
+                let mut said = member(m);
+                if !said.you
+                    && said.file_matches == Some(false)
+                    && plain
+                        .is_some_and(|room| said.file.as_deref() == Some(room.file.as_str()))
+                {
+                    said.file_matches = Some(true);
+                }
+                said
+            })
+            .collect();
+        self.say(Event::PartyMembers(members));
+    }
+
     fn say(&self, event: Event) {
         let _ = self.env.tx.send(event);
     }
@@ -779,6 +832,28 @@ impl Task {
 
     fn all_ready(&self) -> bool {
         self.members.len() >= 2 && self.members.iter().all(|m| m.ready.unwrap_or(true))
+    }
+
+    /// After a move on, whether the others have the new episode open: none of them still has
+    /// another file. Everyone was ready for the episode before, so ready alone would play the
+    /// room before they got here, and their old file's end would be the room's position. A
+    /// member who stays on another file holds the room back for [`MOVE_ON_WAIT`] at most.
+    fn here_together(&self) -> bool {
+        let mine = self.cues.is_some()
+            && self.playing.as_ref().is_some_and(|(id, episode)| {
+                self.view.episode.as_ref().is_some_and(|e| e.id == *id && e.episode == *episode)
+            });
+        mine && (self.members.iter().all(|m| m.you || m.file_matches != Some(false))
+            || self.moved_on_at.elapsed() >= MOVE_ON_WAIT)
+    }
+
+    /// A seek the room asks for that belongs to the episode before: while the room moves on,
+    /// and in the first moments after it plays again, a position well past the start is where
+    /// a member's old file was, not a place in this one.
+    fn stale_seek(&self, to: f64) -> bool {
+        self.moving_on
+            || self.resumed_at.is_some_and(|at| at.elapsed() < STALE_AFTER_MOVE_ON)
+                && to > STALE_PAST
     }
 
     /// Work out what the view derives from the rest, and say it.
@@ -827,11 +902,31 @@ impl Task {
         } else if !can {
             self.countdown = None;
         }
-        if self.moving_on && self.view.playing && self.all_ready() {
+        if self.moving_on && self.view.playing && self.all_ready() && self.here_together() {
             self.moving_on = false;
             self.party.play();
+            self.resumed_at = Some(tokio::time::Instant::now());
+            self.resume_again = Some((tokio::time::Instant::now() + RESUME_AGAIN, 0));
+            self.tick.reset();
         }
         self.refresh();
+    }
+
+    /// The room was asked to play after a move on and has not: ask again, while everyone is
+    /// still ready and in the same episode, a few times.
+    fn resume_tick(&mut self) {
+        let Some((at, tries)) = self.resume_again else { return };
+        if self.room_plays || !self.view.playing || self.moving_on || tries >= RESUME_TRIES {
+            self.resume_again = None;
+            return;
+        }
+        let now = tokio::time::Instant::now();
+        if now < at || !self.all_ready() {
+            return;
+        }
+        tracing::info!(tries, "the room has not played since moving on; asking again");
+        self.party.play();
+        self.resume_again = Some((now + RESUME_AGAIN, tries + 1));
     }
 
     /// The room plays now (`kind`), or moves on: every app opens its player.
@@ -848,7 +943,13 @@ impl Task {
         }
         match kind {
             PartyStartKind::Start => self.party.play(),
-            PartyStartKind::MoveOn => self.moving_on = true,
+            PartyStartKind::MoveOn => {
+                // The room played the episode before; this one plays once it is asked to.
+                self.moving_on = true;
+                self.moved_on_at = tokio::time::Instant::now();
+                self.room_plays = false;
+                self.tick.reset();
+            }
             PartyStartKind::Rejoin => {}
         }
         self.say(Event::PartyStarted { id, episode: room.episode, kind });
@@ -979,9 +1080,7 @@ impl Task {
             }
             PartyEvent::Members(members) => {
                 self.members = members;
-                self.say(Event::PartyMembers(
-                    self.members.iter().cloned().map(member).collect(),
-                ));
+                self.say_members();
                 self.evaluate();
             }
             PartyEvent::Playlist(playlist) => {
@@ -995,7 +1094,15 @@ impl Task {
             }
             PartyEvent::RoomPlays(plays) => {
                 self.room_plays = plays;
+                if plays {
+                    self.resume_again = None;
+                }
                 self.join_in();
+            }
+            // While the room moves on, a position is the episode before's: the new one starts
+            // at the beginning, whatever a member still on the old file reports.
+            PartyEvent::Player(PlayerAction::Seek(to)) if self.stale_seek(to) => {
+                tracing::debug!(to, "a seek while the room moves on, let go");
             }
             PartyEvent::Player(action) => self.cue(match action {
                 PlayerAction::Pause => SeatCue::Pause(true),
@@ -1075,6 +1182,7 @@ impl Task {
                 }
                 if changed && self.joined {
                     self.say(Event::PartyState(self.view.clone()));
+                    self.say_members();
                 }
                 if self.moving_on {
                     self.evaluate();
@@ -1139,6 +1247,9 @@ impl Task {
                 self.guesses = guesses;
                 self.set_room(room, next, media);
                 self.remember();
+                if self.joined {
+                    self.say_members();
+                }
                 let target = self.room_target();
                 // Another episode: the room playing was the one before, until it says so again.
                 if before.is_some() && before != target {
@@ -1324,8 +1435,12 @@ impl Task {
                     }
                 },
                 Some(message) = internals.recv() => self.on_internal(message),
-                _ = self.tick.tick(), if self.countdown.is_some() || self.chat.busy() => {
+                _ = self.tick.tick(), if self.countdown.is_some() || self.chat.busy() || self.resume_again.is_some() || self.moving_on => {
                     self.chat_tick();
+                    self.resume_tick();
+                    if self.moving_on {
+                        self.evaluate();
+                    }
                     match self.countdown {
                         Some(left) if left > 1 => {
                             self.countdown = Some(left - 1);

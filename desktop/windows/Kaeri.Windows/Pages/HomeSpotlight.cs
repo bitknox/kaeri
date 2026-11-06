@@ -6,6 +6,8 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Size = Windows.Foundation.Size;
+using Rect = Windows.Foundation.Rect;
 
 namespace Kaeri.Windows.Pages;
 
@@ -57,7 +59,16 @@ public sealed partial class HomeSpotlight : Grid
             face.Opacity = 0;
             Motion.Fade(face, 1);
             Motion.Fade(old, 0);
-            _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => Children.Remove(old)));
+            _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            {
+                // Both faces share the cell while they cross, so it is as tall as the taller.
+                // With the old one gone the cell eases to the new face's height, and the
+                // shelves under it glide rather than jump.
+                var before = ActualHeight;
+                Children.Remove(old);
+                if (shown == face && face.ActualHeight > 0)
+                    Motion.Height(this, before, face.ActualHeight);
+            }));
         }
         else
         {
@@ -72,6 +83,19 @@ public sealed partial class HomeSpotlight : Grid
     /// <summary>The planned state of the shown title changed (Adding, then On your Planning list).</summary>
     public void Refresh() => shown?.Words();
 
+    /// <summary>
+    /// The same title in the same case, as the engine now has it: an episode watched, a sources
+    /// check answered. The face's words, buttons and menu take it in place, with no crossfade,
+    /// and the art and focus stay.
+    /// </summary>
+    public void Update(Spotlight spot)
+    {
+        if (shown is { } face && face.Spot.Entry.Id == spot.Entry.Id)
+            face.Take(spot);
+        else
+            Show(spot, crossfade: true);
+    }
+
     sealed partial class SpotFace : Grid
     {
         readonly HomePage page;
@@ -82,12 +106,60 @@ public sealed partial class HomeSpotlight : Grid
         readonly RowDefinition textRow = new() { Height = GridLength.Auto };
         readonly Border art;
         readonly StackPanel text = new() { VerticalAlignment = VerticalAlignment.Center };
+
+        // The words, made once and changed in place when a newer record says something else.
+        readonly TextBlock label = new() { Style = Ui.Res<Style>("HazeBodyStyle"), FontSize = 14, LineHeight = 19, Margin = new Thickness(0, 0, 0, 8) };
+        readonly TextBlock title = new()
+        {
+            FontFamily = Ui.Res<FontFamily>("ShowFont"),
+            FontWeight = FontWeights.Bold,
+            FontSize = 30,
+            LineHeight = 38,
+            MaxLines = 2,
+            TextWrapping = TextWrapping.Wrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        };
+        readonly TextBlock secondary = new() { Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 4, 0, 0) };
+        readonly TextBlock facts = new()
+        {
+            Style = Ui.Res<Style>("HazeCaptionStyle"),
+            CharacterSpacing = 80,
+            FontWeight = FontWeights.Medium,
+            Margin = new Thickness(0, 10, 0, 0),
+        };
+        readonly TextBlock synopsis = new()
+        {
+            Style = Ui.Res<Style>("HazeBodyStyle"),
+            FontSize = 14,
+            LineHeight = 20,
+            MaxLines = 3,
+            MaxWidth = 440,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            TextWrapping = TextWrapping.Wrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Margin = new Thickness(0, 12, 0, 0),
+        };
+        /// <summary>What the synopsis was filled from, so it is filled again only when that changes.</summary>
+        (string?, SynopsisSpan[]?)? synopsisFrom;
+        readonly StackPanel lineRow = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 16, 0, 0) };
+        readonly Border track = new() { Width = 200, Height = 3, CornerRadius = new CornerRadius(2), VerticalAlignment = VerticalAlignment.Center };
+        readonly Border fill = new() { Height = 3, HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(2) };
+        readonly FrameworkElement dot = Ui.Dot(Colours.Water, false);
+        readonly TextBlock lineText = new() { Style = Ui.Res<Style>("HazeCaptionStyle"), TextWrapping = TextWrapping.Wrap, MaxLines = 2, VerticalAlignment = VerticalAlignment.Center };
+
+        /// <summary>
+        /// The actions: main, Details or Add to Planning, Trailer when there is one, and More. One
+        /// row while it fits; else the main action over the others, never squeezed beside them.
+        /// </summary>
+        readonly ActionRow buttons = new() { Spacing = 10, Margin = new Thickness(0, 18, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        readonly TextBlock notFound = new() { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) };
         readonly Button main = new() { Style = Ui.Res<Style>("AccentButtonStyle"), MinHeight = 32 };
         readonly Button second = new() { MinHeight = 32 };
+        readonly Button trailer = new() { MinHeight = 32, Content = T.TitleTrailer };
         readonly Button more = new() { MinHeight = 32, MinWidth = 32, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
         bool wide = true;
 
-        public Spotlight Spot { get; }
+        public Spotlight Spot { get; private set; }
         public Button Main => main;
 
         public SpotFace(HomePage page, Spotlight spot)
@@ -102,10 +174,40 @@ public sealed partial class HomeSpotlight : Grid
 
             var cover = new CoverItem(spot.Entry).Load(Ctx.Current.Art, withBanner: true);
             art = HomeArt.Make(cover, HomeWording.ArtMaxWidth, HomeWording.ArtMaxWidth * 9 / 16, 16, wide: true);
-            art.Tapped += (_, _) => page.OpenTitle(spot.Entry.Id);
+            art.Tapped += (_, _) => page.OpenTitle(Spot.Entry.Id);
             AutomationProperties.SetAccessibilityView(art, AccessibilityView.Raw);
 
-            BuildText();
+            AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
+            track.Background = Ui.Res<Brush>("RuleBrush");
+            fill.Background = Ui.Res<Brush>("SilkBrush");
+            track.Child = fill;
+            dot.Width = dot.Height = 6;
+            dot.VerticalAlignment = VerticalAlignment.Center;
+            lineRow.Children.Add(track);
+            lineRow.Children.Add(dot);
+            lineRow.Children.Add(lineText);
+            text.Children.Add(label);
+            text.Children.Add(title);
+            text.Children.Add(secondary);
+            text.Children.Add(facts);
+            text.Children.Add(synopsis);
+            text.Children.Add(lineRow);
+            buttons.Children.Add(main);
+            buttons.Children.Add(second);
+            buttons.Children.Add(trailer);
+            buttons.Children.Add(more);
+            text.Children.Add(buttons);
+            text.Children.Add(notFound);
+            AutomationProperties.SetName(more, T.HomeMore);
+            ToolTipService.SetToolTip(more, T.HomeMore);
+            // More is made as it opens, from the record shown then.
+            var menu = new MenuFlyout();
+            menu.Opening += (_, _) => FillMore(menu);
+            more.Flyout = menu;
+            main.Click += (_, _) => page.MainAction(Spot, Effective());
+            second.Click += (_, _) => page.SecondAction(Spot, Secondary());
+            trailer.Click += (_, _) => TrailerWindow.Play(Ctx.Current, Spot.Entry);
+            Say();
             Children.Add(text);
             Children.Add(art);
             Arrange(true);
@@ -116,14 +218,13 @@ public sealed partial class HomeSpotlight : Grid
                     Arrange(side);
                 SizeArt(e.NewSize.Width);
             };
-            AutomationProperties.SetName(text, HomeWording.Name(spot));
             AutomationProperties.SetLocalizedLandmarkType(text, T.HomeSpotlightContinuing);
         }
 
         void Arrange(bool side)
         {
             wide = side;
-            textColumn.Width = side ? new GridLength(1, GridUnitType.Star) : new GridLength(1, GridUnitType.Star);
+            textColumn.Width = new GridLength(1, GridUnitType.Star);
             gap.Width = side ? new GridLength(40) : new GridLength(0);
             artColumn.Width = side ? GridLength.Auto : new GridLength(0);
             Grid.SetColumn(text, 0);
@@ -133,9 +234,7 @@ public sealed partial class HomeSpotlight : Grid
             Grid.SetRow(art, 0);
             text.Margin = new Thickness(0, side ? 0 : 16, 0, 0);
             if (!side)
-            {
                 art.HorizontalAlignment = HorizontalAlignment.Left;
-            }
         }
 
         void SizeArt(double width)
@@ -147,87 +246,64 @@ public sealed partial class HomeSpotlight : Grid
             art.Height = Math.Round(w * 9 / 16);
         }
 
-        void BuildText()
+        /// <summary>Takes a newer record of the same title: only what it says differently changes.</summary>
+        public void Take(Spotlight spot)
+        {
+            if (spot == Spot)
+                return;
+            Spot = spot;
+            Say();
+        }
+
+        static void Set(TextBlock block, string? words)
+        {
+            var text = words ?? "";
+            if (block.Text != text)
+                block.Text = text;
+            var visibility = text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (block.Visibility != visibility)
+                block.Visibility = visibility;
+        }
+
+        /// <summary>The words from the record, each set only where it changed.</summary>
+        void Say()
         {
             var s = Spot;
             var entry = s.Entry;
-            text.Children.Add(new TextBlock { Text = s.Label.Text(), Style = Ui.Res<Style>("HazeBodyStyle"), FontSize = 14, LineHeight = 19, Margin = new Thickness(0, 0, 0, 8) });
-            var title = new TextBlock
-            {
-                Text = entry.Title,
-                FontFamily = Ui.Res<FontFamily>("ShowFont"),
-                FontWeight = FontWeights.Bold,
-                FontSize = 30,
-                LineHeight = 38,
-                MaxLines = 2,
-                TextWrapping = TextWrapping.Wrap,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-            };
-            AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
-            text.Children.Add(title);
-            if (entry.Secondary is { Length: > 0 } secondary && secondary != entry.Title)
-                text.Children.Add(new TextBlock { Text = secondary, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 4, 0, 0) });
-            var facts = HomeWording.Facts(entry);
+            AutomationProperties.SetName(text, HomeWording.Name(s));
+            Set(label, s.Label.Text());
+            Set(title, entry.Title);
+            Set(secondary, entry.Secondary is { Length: > 0 } other && other != entry.Title ? other : null);
+            var line = HomeWording.Facts(entry);
             if (s.Starts is { } starts)
-                facts = string.Join(" · ", new[] { facts, T.UpNextStarts(UpNextWording.Date(starts, DateTimeOffset.Now)) }.Where(x => x.Length > 0));
-            if (facts.Length > 0)
-                text.Children.Add(new TextBlock
-                {
-                    Text = facts.ToUpper(System.Globalization.CultureInfo.CurrentCulture),
-                    Style = Ui.Res<Style>("HazeCaptionStyle"),
-                    CharacterSpacing = 80,
-                    FontWeight = FontWeights.Medium,
-                    Margin = new Thickness(0, 10, 0, 0),
-                });
-            var synopsis = new TextBlock
+                line = string.Join(" · ", new[] { line, T.UpNextStarts(UpNextWording.Date(starts, DateTimeOffset.Now)) }.Where(x => x.Length > 0));
+            Set(facts, line.ToUpper(System.Globalization.CultureInfo.CurrentCulture));
+            if (synopsisFrom is not { } from || from.Item1 != entry.Synopsis || !ReferenceEquals(from.Item2, entry.SynopsisSpans))
             {
-                Style = Ui.Res<Style>("HazeBodyStyle"),
-                FontSize = 14,
-                LineHeight = 20,
-                MaxLines = 3,
-                MaxWidth = 440,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                TextWrapping = TextWrapping.Wrap,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                Margin = new Thickness(0, 12, 0, 0),
-            };
-            SynopsisText.Fill(synopsis, entry);
-            if (synopsis.Inlines.Count > 0 || synopsis.Text.Length > 0)
-                text.Children.Add(synopsis);
-
-            if (s.Line is { } line)
-            {
-                var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 16, 0, 0) };
-                if (s.Resume?.Fraction is { } fraction)
-                {
-                    var track = new Border { Width = 200, Height = 3, CornerRadius = new CornerRadius(2), Background = Ui.Res<Brush>("RuleBrush"), VerticalAlignment = VerticalAlignment.Center };
-                    track.Child = new Border { Height = 3, Width = 200 * Math.Clamp(fraction, 0, 1), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(2), Background = Ui.Res<Brush>("SilkBrush") };
-                    row.Children.Add(track);
-                    row.Children.Add(new TextBlock { Text = line.Text(), Style = Ui.Res<Style>("HazeCaptionStyle") });
-                }
-                else
-                {
-                    var dot = Ui.Dot(Colours.Water, false);
-                    dot.Width = dot.Height = 6;
-                    row.Spacing = 6;
-                    row.Children.Add(dot);
-                    row.Children.Add(new TextBlock { Text = line.Text(), Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = Ui.Res<Brush>("SilkBrush") });
-                }
-                text.Children.Add(row);
+                synopsisFrom = (entry.Synopsis, entry.SynopsisSpans);
+                SynopsisText.Fill(synopsis, entry);
+                synopsis.Visibility = synopsis.Inlines.Count > 0 || synopsis.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
 
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 18, 0, 0) };
-            buttons.Children.Add(main);
-            buttons.Children.Add(second);
-            buttons.Children.Add(more);
-            text.Children.Add(buttons);
-            AutomationProperties.SetName(more, T.HomeMore);
-            ToolTipService.SetToolTip(more, T.HomeMore);
-            more.Flyout = MoreMenu();
-            main.Click += (_, _) => page.MainAction(Spot, Effective());
-            second.Click += (_, _) => page.SecondAction(Spot, Secondary());
-            if (s.Playable == Playable.NotFound)
-                text.Children.Add(new TextBlock { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) });
+            // Under the synopsis: the track and the time left, where another device stopped, or
+            // the new episode with the water dot.
+            if (HomeWording.Line(s) is { } words)
+            {
+                var resume = s.Resume?.Fraction is not null;
+                track.Visibility = resume ? Visibility.Visible : Visibility.Collapsed;
+                fill.Width = 200 * Math.Clamp(s.Resume?.Fraction ?? 0, 0, 1);
+                dot.Visibility = resume ? Visibility.Collapsed : Visibility.Visible;
+                lineRow.Spacing = resume ? 12 : 6;
+                lineText.Foreground = Ui.Res<Brush>(resume ? "HazeBrush" : "SilkBrush");
+                if (lineText.Text != words)
+                    lineText.Text = words;
+                lineRow.Visibility = Visibility.Visible;
+            }
+            else
+                lineRow.Visibility = Visibility.Collapsed;
+
+            trailer.Visibility = entry.TrailerUrl is not null ? Visibility.Visible : Visibility.Collapsed;
+            notFound.Visibility = s.Playable == Playable.NotFound ? Visibility.Visible : Visibility.Collapsed;
             Words();
         }
 
@@ -257,8 +333,9 @@ public sealed partial class HomeSpotlight : Grid
             if (action == HomeAction.AddToPlanning && planned)
                 label = null;
             main.Visibility = label is null ? Visibility.Collapsed : Visibility.Visible;
-            if (label is not null)
+            if (label is not null && main.Tag as string != $"{action}|{label}")
             {
+                main.Tag = $"{action}|{label}";
                 var icon = action == HomeAction.AddToPlanning ? "" : "";
                 main.Content = action == HomeAction.Details ? label : Button(icon, label);
                 AutomationProperties.SetName(main, label);
@@ -270,11 +347,15 @@ public sealed partial class HomeSpotlight : Grid
                 SpotSecond.Planned => ("", page.AddingHere.Contains(Spot.Entry.Id) ? T.HomeAdding : T.UpNextReasonPlanning),
                 _ => ("", T.HomeDetails),
             };
-            second.Content = glyph.Length > 0 ? Button(glyph, words) : words;
+            if (second.Tag as string != $"{glyph}|{words}")
+            {
+                second.Tag = $"{glyph}|{words}";
+                second.Content = glyph.Length > 0 ? Button(glyph, words) : words;
+                AutomationProperties.SetName(second, words);
+            }
             second.IsEnabled = s != SpotSecond.Planned;
             // When Details is the main action, it is not said twice.
             second.Visibility = action == HomeAction.Details ? Visibility.Collapsed : Visibility.Visible;
-            AutomationProperties.SetName(second, words);
         }
 
         static StackPanel Button(string glyph, string words) => new()
@@ -284,15 +365,19 @@ public sealed partial class HomeSpotlight : Grid
             Children = { new FontIcon { Glyph = glyph, FontSize = 12 }, new TextBlock { Text = words } },
         };
 
-        MenuFlyout MoreMenu()
+        void FillMore(MenuFlyout menu)
         {
-            var menu = new MenuFlyout();
+            menu.Items.Clear();
             var s = Spot;
             if (s.Case == SpotlightCase.Continuing)
             {
-                var watched = new MenuFlyoutItem { Text = T.HomeMarkWatched(s.Episode), Icon = new FontIcon { Glyph = "" } };
-                watched.Click += (_, _) => page.MarkWatched(s.Entry.Id, s.Episode);
-                menu.Items.Add(watched);
+                // Only an episode there is to play is offered as watched, as on the Mac.
+                if (s.Action is HomeAction.Resume or HomeAction.Play)
+                {
+                    var watched = new MenuFlyoutItem { Text = T.HomeMarkWatched(s.Episode), Icon = new FontIcon { Glyph = "" } };
+                    watched.Click += (_, _) => page.MarkWatched(s.Entry.Id, s.Episode);
+                    menu.Items.Add(watched);
+                }
                 var remove = new MenuFlyoutItem { Text = T.HomeRemoveContinue, Icon = new FontIcon { Glyph = "" }, KeyboardAcceleratorTextOverride = "Delete" };
                 remove.Click += (_, _) => page.RemoveFromContinue(s.Entry.Id);
                 menu.Items.Add(remove);
@@ -307,7 +392,6 @@ public sealed partial class HomeSpotlight : Grid
             var details = new MenuFlyoutItem { Text = T.HomeDetails, Icon = new FontIcon { Glyph = "" } };
             details.Click += (_, _) => page.OpenTitle(s.Entry.Id);
             menu.Items.Add(details);
-            return menu;
         }
     }
 }
@@ -318,4 +402,66 @@ enum SpotSecond
     Details,
     Add,
     Planned,
+}
+
+/// <summary>
+/// A row of buttons side by side while they fit; when they do not, the first goes on a line of
+/// its own over the rest, as the Mac's spotlight does, so a long label is never clipped.
+/// </summary>
+sealed partial class ActionRow : Panel
+{
+    public double Spacing { get; set; } = 10;
+
+    bool stacked;
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        double firstWidth = 0, firstHeight = 0, restWidth = 0, restHeight = 0;
+        var shown = 0;
+        foreach (var child in Children)
+        {
+            child.Measure(new Size(double.PositiveInfinity, availableSize.Height));
+            if (child.Visibility != Visibility.Visible)
+                continue;
+            var size = child.DesiredSize;
+            if (shown == 0)
+                (firstWidth, firstHeight) = (size.Width, size.Height);
+            else
+            {
+                restWidth += (shown > 1 ? Spacing : 0) + size.Width;
+                restHeight = Math.Max(restHeight, size.Height);
+            }
+            shown++;
+        }
+        var row = firstWidth + (shown > 1 ? Spacing + restWidth : 0);
+        stacked = shown > 1 && row > availableSize.Width;
+        return stacked
+            ? new Size(Math.Max(firstWidth, restWidth), firstHeight + Spacing + restHeight)
+            : new Size(row, Math.Max(firstHeight, restHeight));
+    }
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        double x = 0, y = 0;
+        var index = 0;
+        foreach (var child in Children)
+        {
+            if (child.Visibility != Visibility.Visible)
+            {
+                child.Arrange(new Rect(0, 0, 0, 0));
+                continue;
+            }
+            var size = child.DesiredSize;
+            child.Arrange(new Rect(x, y, size.Width, size.Height));
+            if (stacked && index == 0)
+            {
+                x = 0;
+                y += size.Height + Spacing;
+            }
+            else
+                x += size.Width + Spacing;
+            index++;
+        }
+        return finalSize;
+    }
 }

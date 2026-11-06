@@ -71,9 +71,9 @@ sealed class TvDialog
             secondary?.Invoke();
         };
         // Pairing's Back, and Escape there, go back to the picker rather than closing.
-        dialog.Closing += (_, e) =>
+        dialog.Closing += (sender, e) =>
         {
-            if (!closing && e.Result == ContentDialogResult.None && tv.Pairing is not null)
+            if (!closing && !Dialogs.Forced(sender) && e.Result == ContentDialogResult.None && tv.Pairing is not null)
             {
                 e.Cancel = true;
                 tv.CancelPairing();
@@ -143,7 +143,8 @@ sealed class TvDialog
     public void Close()
     {
         closing = true;
-        dialog.Hide();
+        // One still waiting its turn behind another dialog never opens.
+        Dialogs.Close(dialog);
     }
 
     /// <summary>The view for what the remote shows now, made once per kind and then kept up to date.</summary>

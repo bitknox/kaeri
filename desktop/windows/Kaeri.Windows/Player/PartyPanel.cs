@@ -128,12 +128,16 @@ sealed class PartyPanel
             Flyout.Hide();
             return;
         }
+        // Once per batch: Show refreshes the conversation itself.
         if (batch.Any(e => e is Event.PartyState or Event.PartyJoined or Event.PartyMembers))
             Show();
-        else if (batch.Any(e => e is Event.PartyChatState))
-            ShowMembers();
-        if (batch.Any(e => e is Event.PartyChat or Event.PartyChatState))
-            chat.Refresh();
+        else
+        {
+            if (batch.Any(e => e is Event.PartyChatState))
+                ShowMembers();
+            if (batch.Any(e => e is Event.PartyChat or Event.PartyChatState))
+                chat.Refresh();
+        }
     }
 
     void Show()
@@ -163,25 +167,91 @@ sealed class PartyPanel
         leave.IsEnabled = !leaving;
     }
 
+    /// <summary>
+    /// The members' rows, kept by name and what they show: a row that has not changed stays the
+    /// same element, so its focus and an open Mute menu stay with it.
+    /// </summary>
     void ShowMembers()
     {
-        members.Children.Clear();
+        var rows = new List<(string Key, Func<FrameworkElement> Make)>();
         if (ctx.Known.PartyMembers is { } list)
         {
             var muted = ctx.Known.PartyChatState?.Muted ?? [];
+            var offers = (ctx.Known.PartyChatState?.Allowed ?? true) && !ChatSetting.Hidden;
             foreach (var member in list)
-                members.Children.Add(Row(member, muted.Contains(member.Name)));
+            {
+                var mutes = muted.Contains(member.Name);
+                // Kept by who it is and what its menu offers; ready, state and file change in place.
+                rows.Add(($"{member.Name}|{member.You}|{Parties.MemberFile(member) is null}|{mutes}|{offers}", () => Row(member, mutes)));
+            }
             readyLine.Text = Parties.ReadyLine(list);
         }
         else
         {
             // Before the room lists its members: one row's height, waiting.
-            var wait = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, MinHeight = 36 };
-            wait.Children.Add(new ProgressRing { Width = 16, Height = 16, IsActive = true });
-            wait.Children.Add(Ui.Text(T.PartyWaitingMembers, "HazeBodyStyle"));
-            members.Children.Add(wait);
+            rows.Add(("waiting", () =>
+            {
+                var wait = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, MinHeight = 36 };
+                wait.Children.Add(new ProgressRing { Width = 16, Height = 16, IsActive = true });
+                wait.Children.Add(Ui.Text(T.PartyWaitingMembers, "HazeBodyStyle"));
+                return wait;
+            }));
             readyLine.Text = "";
         }
+        var old = members.Children.OfType<FrameworkElement>().Where(e => e.Tag is string).ToDictionary(e => (string)e.Tag, e => e);
+        var wanted = rows.Select(r =>
+        {
+            if (old.TryGetValue(r.Key, out var kept))
+                return kept;
+            var made = r.Make();
+            made.Tag = r.Key;
+            return made;
+        }).ToList();
+        for (var i = members.Children.Count - 1; i >= 0; i--)
+            if (members.Children[i] is not FrameworkElement e || !wanted.Contains(e))
+                members.Children.RemoveAt(i);
+        for (var i = 0; i < wanted.Count; i++)
+        {
+            if (i < members.Children.Count && members.Children[i] == wanted[i])
+                continue;
+            var at = members.Children.IndexOf(wanted[i]);
+            if (at >= 0)
+                members.Children.RemoveAt(at);
+            members.Children.Insert(i, wanted[i]);
+        }
+        if (ctx.Known.PartyMembers is { } now)
+        {
+            var muted = ctx.Known.PartyChatState?.Muted ?? [];
+            foreach (var row in members.Children.OfType<Grid>())
+                if (now.FirstOrDefault(m => (row.Tag as string)?.StartsWith($"{m.Name}|{m.You}|", StringComparison.Ordinal) == true) is { } member)
+                    Dress(row, member, muted.Contains(member.Name));
+        }
+    }
+
+    /// <summary>A member's row brought up to date in place: the ready mark, the file line and the state.</summary>
+    static void Dress(Grid row, PartyMember member, bool muted)
+    {
+        var isReady = member.Ready == true;
+        if (row.Children.OfType<FontIcon>().FirstOrDefault() is { } mark)
+        {
+            var glyph = isReady ? "" : "";
+            if (mark.Glyph != glyph)
+                mark.Glyph = glyph;
+            mark.Opacity = isReady ? 1 : 0.6;
+        }
+        if (row.Children.OfType<StackPanel>().FirstOrDefault() is { } names && names.Children.Count > 1
+            && names.Children[1] is TextBlock fileLine && Parties.MemberFile(member) is { } file && fileLine.Text != file)
+            fileLine.Text = file;
+        var said = muted ? T.PartyMemberMuted : Parties.MemberState(member);
+        if (row.Children.OfType<TextBlock>().LastOrDefault() is { } state)
+        {
+            if (state.Text != said)
+                state.Text = said;
+            var style = Ui.Res<Style>(isReady && !muted ? "CaptionTextBlockStyle" : "HazeCaptionStyle");
+            if (state.Style != style)
+                state.Style = style;
+        }
+        AutomationProperties.SetName(row, $"{Parties.MemberName(member)}, {said}");
     }
 
     /// <summary>

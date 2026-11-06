@@ -9391,6 +9391,9 @@ public enum L {
         Self.format("cloud-browser-title", fallback: "Sign in to %1$@ in your browser", service)
     }
 
+    /// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.") }
+
     /// Word for this device in sentences such as “Turn off sync on this computer”.
     public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }
 
@@ -10703,6 +10706,9 @@ public enum L {
 
     /// Button: choose a torrent file from the device.
     public static var openedChooseFile: String { string("opened-choose-file", fallback: "Choose a torrent file") }
+
+    /// Line under the field when the link or file could not be read, and the engine gave no reason.
+    public static var openedUnreadable: String { string("opened-unreadable", fallback: "Kaeri couldn't read that link or file.") }
 
     /// The question once the link's name matched a title and an episode.
     public static func openedConfirm(title: String, episode: String) -> String {

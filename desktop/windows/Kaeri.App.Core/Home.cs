@@ -16,10 +16,13 @@ public enum HomeShape
     Week,
 }
 
-/// <summary>A heading in two runs, so a title that is the viewer's own can be set bold: "Because you finished " and "Lantern Street".</summary>
-public readonly record struct HomeHeading(string Lead, string Title = "")
+/// <summary>
+/// A heading in three runs, so a title that is the viewer's own can be set bold: "Because you
+/// finished ", "Lantern Street", and whatever the language puts after the title.
+/// </summary>
+public readonly record struct HomeHeading(string Lead, string Title = "", string Tail = "")
 {
-    public override string ToString() => Lead + Title;
+    public override string ToString() => Lead + Title + Tail;
 }
 
 /// <summary>
@@ -51,7 +54,7 @@ public static class HomeWording
         _ => HomeShape.Poster,
     };
 
-    /// <summary>The section's heading. The title of "Because you finished X" is the second run.</summary>
+    /// <summary>The section's heading. The title of "Because you finished X" is the second run, and only the title.</summary>
     public static HomeHeading Heading(HomeSection section)
     {
         var whole = section.Title.Text();
@@ -59,7 +62,7 @@ public static class HomeWording
         {
             var at = whole.LastIndexOf(because.Title, StringComparison.Ordinal);
             if (at >= 0)
-                return new(whole[..at], whole[at..]);
+                return new(whole[..at], because.Title, whole[(at + because.Title.Length)..]);
         }
         return new(whole);
     }
@@ -136,6 +139,8 @@ public static class HomeWording
     /// <summary>The line under a card or a poster. The engine's own words win; otherwise the date, the air time or the reason.</summary>
     public static string Line(HomeItem item, DateTimeOffset now, TimeZoneInfo zone, CultureInfo? culture = null)
     {
+        if (Elsewhere(item.Episode, item.Resume, item.LastDevice) is { } elsewhere)
+            return elsewhere;
         if (item.Line is { } line)
             return line.Text();
         if (item.Starts is { } starts)
@@ -144,6 +149,17 @@ public static class HomeWording
             return item.Episode is { } ep ? T.UpNextBroadcast(ep, When(at, now, zone, culture)) : When(at, now, zone, culture);
         return item.Reason is { } reason ? Reason(reason) : "";
     }
+
+    /// <summary>
+    /// "Episode 7 · stopped at 12:04 on Study Mac", in place of the engine's line, when another
+    /// device played the title last within a day and there is a place to resume from.
+    /// </summary>
+    public static string? Elsewhere(uint? episode, ResumePoint? resume, string? device) =>
+        device is { Length: > 0 } && resume is { } r && episode is { } ep ? T.ContinueFromDevice(ep, Wording.Clock(r.Position), device) : null;
+
+    /// <summary>The spotlight's line under the synopsis: where another device stopped, else the engine's line.</summary>
+    public static string? Line(Spotlight spot) =>
+        (spot.Case == SpotlightCase.Continuing ? Elsewhere(spot.Episode, spot.Resume, spot.LastDevice) : null) ?? spot.Line?.Text();
 
     /// <summary>"Out 2 hours ago" for an episode that is out, or its clock time.</summary>
     public static string When(long at, DateTimeOffset now, TimeZoneInfo zone, CultureInfo? culture = null) =>
@@ -178,8 +194,8 @@ public static class HomeWording
     public static string Name(Spotlight spot)
     {
         var parts = new List<string> { spot.Label.Text(), spot.Entry.Title };
-        if (spot.Line is { } line)
-            parts.Add(line.Text());
+        if (Line(spot) is { } line)
+            parts.Add(line);
         var facts = Facts(spot.Entry);
         if (facts.Length > 0)
             parts.Add(facts);

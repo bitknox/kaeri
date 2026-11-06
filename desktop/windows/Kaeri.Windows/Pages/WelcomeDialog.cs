@@ -17,7 +17,14 @@ sealed class WelcomeDialog
 {
     readonly Ctx ctx;
     readonly ContentDialog dialog;
-    readonly StackPanel body = new() { Spacing = 12, MinWidth = 480, MaxWidth = 520 };
+    readonly StackPanel body = new() { Spacing = 12 };
+    /// <summary>
+    /// One size for every page, as the Mac's sheet is, so the dialog does not grow and move between
+    /// them; a page taller than it scrolls. The Welcome page has no title, so its box takes the
+    /// title's room too.
+    /// </summary>
+    readonly ScrollViewer frame = new() { Width = 500, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    const double PageHeight = 440, TitleRoom = 40;
     readonly TextBox invite = new() { PlaceholderText = T.StoresInviteLinkHint, AcceptsReturn = false };
     readonly TextBlock problem = Ui.Text("", "HazeCaptionStyle");
     readonly Button join = new() { Content = T.OnboardingJoin, MinWidth = 72, IsEnabled = false };
@@ -27,7 +34,10 @@ sealed class WelcomeDialog
     /// <summary>An invite link to join once the dialog has closed: the join dialog takes it from there.</summary>
     public string? Invite { get; private set; }
 
-    /// <summary>"folder" or "server" when the viewer chose to add their own media: that dialog opens once this closes.</summary>
+    /// <summary>
+    /// "folder" or "server" when the viewer chose to add their own media, "pair" when they set
+    /// this PC up from another device: that dialog opens once this closes.
+    /// </summary>
     public string? Then { get; private set; }
 
     public WelcomeDialog(Ctx ctx, XamlRoot root)
@@ -45,7 +55,8 @@ sealed class WelcomeDialog
                 JoinNow();
             }
         };
-        dialog = new ContentDialog { XamlRoot = root, Content = body };
+        frame.Content = body;
+        dialog = new ContentDialog { XamlRoot = root, Content = frame };
         dialog.PrimaryButtonClick += OnPrimary;
         dialog.SecondaryButtonClick += OnSecondary;
         Show(0);
@@ -68,6 +79,8 @@ sealed class WelcomeDialog
     {
         page = to;
         body.Children.Clear();
+        frame.Height = to == 0 ? PageHeight + TitleRoom : PageHeight;
+        frame.ChangeView(null, 0, null, true);
         dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
         dialog.SecondaryButtonText = "";
         dialog.CloseButtonText = "";
@@ -84,6 +97,11 @@ sealed class WelcomeDialog
                 AutomationProperties.SetHeadingLevel(name, AutomationHeadingLevel.Level1);
                 body.Children.Add(name);
                 body.Children.Add(Ui.Text(T.OnboardingTagline, "BodyTextBlockStyle"));
+                // As on the Mac, a quiet button under the words: a device already set up shows
+                // this one a code, and that brings everything over. Its dialog opens once this closes.
+                var elsewhere = Ui.Label(T.FirstSetupOther, (_, _) => Leave("pair"));
+                elsewhere.Margin = new Thickness(0, 12, 0, 0);
+                body.Children.Add(elsewhere);
                 dialog.PrimaryButtonText = T.OnboardingContinue;
                 dialog.CloseButtonText = T.OnboardingSkip;
                 break;
@@ -160,7 +178,7 @@ sealed class WelcomeDialog
                 break;
             case 1:
                 args.Cancel = true;
-                ctx.Send(new Command.Connect("anilist"));
+                ctx.SignIn("anilist");
                 Show(2);
                 break;
             default:

@@ -77,7 +77,16 @@ public sealed partial class PlayerView
     {
         BuildReactions();
         var live = ChatLive;
-        Reactions.Visibility = live && !mini ? Visibility.Visible : Visibility.Collapsed;
+        // They fade in and out, as on the Mac, rather than cutting the title short in one frame.
+        var reacting = live && !mini;
+        if (reacting != (Reactions.Visibility == Visibility.Visible && Reactions.IsHitTestVisible))
+        {
+            Reactions.IsHitTestVisible = reacting;
+            if (reacting)
+                Motion.Show(Reactions);
+            else
+                Motion.Hide(Reactions);
+        }
         if (ChatHidden || !InParty)
         {
             ChatClear();
@@ -90,8 +99,13 @@ public sealed partial class PlayerView
                 CloseChatField();
             chatMarks = ctx?.Known.PartyChat?.Marks ?? [];
         }
-        DrawTimeline();
+        // The ticks only when what they mark changed: the chat's state comes often.
+        if (!chatMarks.AsSpan().SequenceEqual(ticksDrawn))
+            DrawTimeline();
     }
+
+    /// <summary>The reactions the seek line's ticks were last drawn for.</summary>
+    PartyReactionMark[] ticksDrawn = [];
 
     /// <summary>Everything on the video goes at once: leaving the party, Hide chat, the player closing.</summary>
     void ChatClear()
@@ -428,11 +442,16 @@ public sealed partial class PlayerView
         timer.Start();
     }
 
-    /// <summary>The corner's cards rise above the moments while any are up.</summary>
+    /// <summary>
+    /// The moments sit above the corner's card, which never moves for them: Skip and Up next
+    /// stay under the pointer heading for them (as the Mac places the moment, not the card).
+    /// </summary>
     void LiftCorner()
     {
-        var count = ChatMoments.Children.Count;
-        Corner.Margin = new Thickness(0, 0, 24, 80 + (count > 0 ? count * 46 : 0));
+        var card = Corner.Visibility == Visibility.Visible ? Corner.ActualHeight : 0;
+        var bottom = 76 + (card > 0 ? card + 8 : 0);
+        if (Math.Abs(ChatMoments.Margin.Bottom - bottom) >= 0.5)
+            ChatMoments.Margin = new Thickness(0, 0, 12, bottom);
     }
 
     // The field.
@@ -498,16 +517,21 @@ public sealed partial class PlayerView
     void DrawTicks(Func<double, double> x, double top, double width)
     {
         tickPlaces.Clear();
+        ticksDrawn = chatMarks;
         if (ChatHidden || !InParty || chatMarks.Length == 0 || duration <= 0)
             return;
         var haze = (Brush)Application.Current.Resources["HazeBrush"];
         foreach (var tick in Chat.Ticks(chatMarks, duration, width, TickNear))
         {
             var at = x(tick.At);
-            var mark = new Microsoft.UI.Xaml.Shapes.Rectangle { Width = 2, Height = 5, Fill = haze };
+            var mark = NextBar();
+            mark.Width = 2;
+            mark.Height = 5;
+            mark.Fill = haze;
+            mark.Opacity = 1;
+            mark.RadiusX = mark.RadiusY = 0;
             Canvas.SetLeft(mark, at - 1);
             Canvas.SetTop(mark, top - 3 - 5);
-            TimelineUnder.Children.Add(mark);
             tickPlaces.Add((at, tick));
         }
     }

@@ -229,3 +229,7 @@ search-result-on-service = On { $service }
 # @arg parts: text
 # @arg percent: int
 match-choice-line = { $parts } · { $percent }% match
+
+# Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.
+# @only windows
+search-rate-limit-enter = Searching as you type is paused for a moment, to stay within AniList's limits. Press Enter to search now.
