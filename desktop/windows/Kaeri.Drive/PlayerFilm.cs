@@ -17,6 +17,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using FlaUI.Core.Input;
+using FlaUI.Core.WindowsAPI;
 
 static partial class PlayerFilm
 {
@@ -78,17 +79,20 @@ static partial class PlayerFilm
         });
         await run.Step("film: a seek into the ending, then Up next", async () =>
         {
-            // Through SendInput, as a hand moves: WinUI's slider does not see FlaUI's cursor moves.
+            // By keys, which the player hears wherever the pointer is: three Shift+Right (30 s
+            // each) and one L (10 s) from about 0:50 land near 2:30 of the 3:00 clip, where Up
+            // next shows.
+            run.Front();
             PlayerChecks.Move(video);
-            await Task.Delay(200);
-            PlayerChecks.Move(new Point(lineFrom + (int)((lineTo - lineFrom) * 0.82), barY));
-            await Task.Delay(400);
+            await Task.Delay(300);
             await Record(run, "4-ending", 26000, async () =>
             {
-                PlayerChecks.Button(down: true);
-                PlayerChecks.Button(down: false);
-                await Task.Delay(500);
-                PlayerChecks.Move(video);
+                for (var i = 0; i < 3; i++)
+                {
+                    Keyboard.TypeSimultaneously(VirtualKeyShort.SHIFT, VirtualKeyShort.RIGHT);
+                    await Task.Delay(150);
+                }
+                Keyboard.Type(VirtualKeyShort.KEY_L);
             });
         });
     }
