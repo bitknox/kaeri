@@ -21,7 +21,7 @@ sealed class PartyDialog
     /// <summary>What the party is started for.</summary>
     public abstract record For
     {
-        /// <summary>From a title's More: this episode plays with the room.</summary>
+        /// <summary>From a title's More: this episode is picked for the room, in its lobby.</summary>
         public sealed record Episode(uint Id, string Number) : For;
 
         /// <summary>From the player's people button: what plays now plays with the room.</summary>
@@ -271,9 +271,13 @@ sealed class PartyDialog
         server.IsEnabled = room.IsEnabled = name.IsEnabled = false;
         Say(T.PartyJoining(roomText, serverText), busy: true);
         Update();
-        // The room first, and the episode once in it: a server that can't be reached leaves
-        // nothing playing behind the dialog.
-        ctx.Send(new Command.PartyJoin(serverText, roomText, who));
+        // From a title page the room opens on its lobby with this episode picked for it, and
+        // plays once everyone is ready, as on the Mac. Otherwise the room first, and what plays
+        // once in it: a server that can't be reached leaves nothing playing behind the dialog.
+        if (what is For.Episode ep)
+            ctx.Send(new Command.Party(new PartyCommand.Lobby(serverText, roomText, who, new PartyEpisode(ep.Id, ep.Number))));
+        else
+            ctx.Send(new Command.PartyJoin(serverText, roomText, who));
     }
 
     void Heard(IReadOnlyList<Event> batch)
@@ -287,12 +291,11 @@ sealed class PartyDialog
                     break;
                 case Event.PartyJoined when joining:
                     joining = false;
-                    // In the room: the episode plays with it, or says it has no source here.
-                    if (what is For.Episode ep)
-                        ctx.Send(new Command.PlayParty(ep.Id, ep.Number));
-                    else if (what is For.Invite inv)
+                    // In the room: the lobby, where the picked episode waits for everyone to be
+                    // ready; an invite's episode plays with the room, or says it has no source here.
+                    if (what is For.Invite inv)
                         ctx.Send(new Command.PlayParty(inv.Link.Id, inv.Link.Episode));
-                    else if (what is For.Room)
+                    else if (what is For.Room or For.Episode)
                         ctx.Go("together");
                     dialog.Hide();
                     return;
