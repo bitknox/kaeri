@@ -19,7 +19,9 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+        <!-- One line, cut short, so a long query never pushes the filters and results down. -->
+        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1"
+                   MaxLines="1" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
         <ContentControl x:Name="SurpriseHost" Grid.Column="1" VerticalAlignment="Center" />
       </Grid>
       <local:OfflineLine />

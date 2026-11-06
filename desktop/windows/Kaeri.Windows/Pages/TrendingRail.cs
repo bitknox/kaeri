@@ -66,7 +66,7 @@ sealed class TrendingRail : StackPanel
         Grid.SetColumn(all, 1);
         head.Children.Add(all);
         Children.Add(head);
-        state.Placeholders = () => States.Covers();
+        state.Placeholders = () => States.Covers(Shown, rail: true);
         state.ActivityText = T.StateLoading;
         state.Children.Add(covers);
         Children.Add(state);

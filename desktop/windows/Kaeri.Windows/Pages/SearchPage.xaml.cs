@@ -64,11 +64,9 @@ public sealed partial class SearchPage : Page
             if (box is not null)
                 box.TextChanged -= OnBoxText;
         };
-        for (var i = 0; i < 8; i++)
-            plates.Children.Add(States.Plate(150, 225, 8));
         MoreRow.Children.Add(new ScrollViewer
         {
-            Content = plates,
+            Content = States.Covers(8, rail: true),
             HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
             VerticalScrollMode = ScrollMode.Disabled,
@@ -77,8 +75,6 @@ public sealed partial class SearchPage : Page
         // The frame keeps the page for Back and the next visit: the results, the filters and the scroll stay.
         NavigationCacheMode = NavigationCacheMode.Enabled;
     }
-
-    readonly StackPanel plates = new() { Orientation = Orientation.Horizontal, Spacing = 16 };
 
     /// <summary>
     /// The box typed in while the page is up: the results follow it, as on the Mac. The engine
@@ -437,21 +433,24 @@ public sealed partial class SearchPage : Page
     /// <summary>Each drop-down says its name, or in amber what it has.</summary>
     void ShowFilters()
     {
-        Say(GenreButton, SearchFilters.Say(T.FilterGenre, [.. filters.Genres.Select(Searches.GenreName)]), filters.Genres.Length > 0);
-        Say(FormatButton, SearchFilters.Say(T.FilterFormat, [.. filters.Formats.Select(Searches.FormatName)]), filters.Formats.Length > 0);
-        Say(SeasonButton, filters.Season is { } s ? Wording.SeasonName(s) : T.FilterSeason, filters.Season is not null);
-        Say(YearButton, filters.Year?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? T.FilterYear, filters.Year is not null);
-        Say(AvailableButton, filters.Available is { } a ? Searches.AvailableName(a) : T.SearchAvailableName, filters.Available is not null);
-        Say(SortButton, filters.Sort is { } o ? Searches.SortName(o, filters.Period) : T.SearchSortName, filters.Sort is not null);
+        Say(GenreButton, T.FilterGenre, SearchFilters.Say(T.FilterGenre, [.. filters.Genres.Select(Searches.GenreName)]), filters.Genres.Length > 0);
+        Say(FormatButton, T.FilterFormat, SearchFilters.Say(T.FilterFormat, [.. filters.Formats.Select(Searches.FormatName)]), filters.Formats.Length > 0);
+        Say(SeasonButton, T.FilterSeason, filters.Season is { } s ? Wording.SeasonName(s) : T.FilterSeason, filters.Season is not null);
+        Say(YearButton, T.FilterYear, filters.Year?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? T.FilterYear, filters.Year is not null);
+        Say(AvailableButton, T.SearchAvailableName, filters.Available is { } a ? Searches.AvailableName(a) : T.SearchAvailableName, filters.Available is not null);
+        Say(SortButton, T.SearchSortName, filters.Sort is { } o ? Searches.SortName(o, filters.Period) : T.SearchSortName, filters.Sort is not null);
         if (filters.IsEmpty)
             Motion.Hide(ClearButton);
         else
             Motion.Show(ClearButton);
     }
 
-    static void Say(DropDownButton button, string text, bool set)
+    /// <summary>A filter's words, set only when they change, and its spoken name: the filter, then what it has.</summary>
+    static void Say(DropDownButton button, string name, string text, bool set)
     {
-        button.Content = text;
+        if (button.Content as string != text)
+            button.Content = text;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, set ? $"{name}, {text}" : name);
         if (set)
             button.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"];
         else
