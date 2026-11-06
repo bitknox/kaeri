@@ -153,10 +153,11 @@ public sealed partial class HomeSpotlight : Grid
         /// </summary>
         readonly ActionRow buttons = new() { Spacing = 10, Margin = new Thickness(0, 18, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
         readonly TextBlock notFound = new() { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) };
-        readonly Button main = new() { Style = Ui.Res<Style>("AccentButtonStyle"), MinHeight = 32 };
-        readonly Button second = new() { MinHeight = 32 };
-        readonly Button trailer = new() { MinHeight = 32, Content = T.TitleTrailer };
-        readonly Button more = new() { MinHeight = 32, MinWidth = 32, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
+        // 40 high, as the title page's and the hover card's actions are: the main one amber and semibold.
+        readonly Button main = new() { Style = Ui.Res<Style>("PrimaryActionStyle") };
+        readonly Button second = new() { MinHeight = 40 };
+        readonly Button trailer = new() { MinHeight = 40, Content = T.TitleTrailer };
+        readonly Button more = new() { Width = 40, Height = 40, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
         bool wide = true;
 
         public Spotlight Spot { get; private set; }

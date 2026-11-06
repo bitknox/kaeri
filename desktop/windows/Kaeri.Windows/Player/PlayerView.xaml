@@ -332,7 +332,7 @@
            Undo note, Up next, the Skip button. A grid, so a card fading out sits under the next. -->
       <Grid x:Name="Corner" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,80">
         <Border x:Name="SkipSlot" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-          <Button x:Name="SkipCard" AllowFocusOnInteraction="False" Style="{StaticResource AccentButtonStyle}" Click="OnSkip" MinHeight="40" Padding="16,0"
+          <Button x:Name="SkipCard" AllowFocusOnInteraction="False" Style="{StaticResource PrimaryActionStyle}" Click="OnSkip"
                   PointerEntered="OnSkipEntered" PointerExited="OnSkipExited" />
         </Border>
         <Grid x:Name="UndoCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8,8,8"

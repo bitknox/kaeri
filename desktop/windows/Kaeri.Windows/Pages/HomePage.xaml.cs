@@ -412,8 +412,8 @@ public sealed partial class HomePage : Page, IPageKeys
         for (var i = 0; i < 3; i++)
             words.Children.Add(Line(i == 2 ? 260 : 420, 12, 20, 0));
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 34, 0, 0) };
-        buttons.Children.Add(States.Plate(160, 32, 4));
-        buttons.Children.Add(States.Plate(90, 32, 4));
+        buttons.Children.Add(States.Plate(160, 40, 4));
+        buttons.Children.Add(States.Plate(90, 40, 4));
         words.Children.Add(buttons);
         spot.Children.Add(words);
         // The art at the share of the width the spotlight gives it.
