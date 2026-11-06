@@ -109,7 +109,11 @@ static class PagesScenario
     {
         await FeelScenario.Go(run, "Settings");
         await Task.Delay(800);
+        // The switch is on Playback; Settings opens on the pane it was left on, General at first.
+        Named(run, "Playback", ControlType.ListItem)?.Click();
+        await Task.Delay(800);
         var toggle = Named(run, "Auto-play next", ControlType.Button);
+        Check(run, "settings: the Auto-play next switch is there", toggle is not null);
         var id = Id(toggle);
         var cards = Ids(run, ControlType.Group).Concat(Ids(run, ControlType.Button)).ToArray();
         await Feel.Click(run, "settings: Auto-play next off", toggle);

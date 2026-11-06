@@ -207,6 +207,8 @@ static class FeelScenario
 
         // Settings: a switch both ways, each pane, and a scroll.
         await Go(run, "Settings");
+        // The switch is on Playback; Settings opens on the pane it was left on, General at first.
+        await Feel.Click(run, "settings: Playback pane", Find(run, "Playback", ControlType.ListItem));
         await Feel.Click(run, "settings: Auto-play next off", Find(run, "Auto-play next", ControlType.Button));
         await Feel.Click(run, "settings: Auto-play next on", Find(run, "Auto-play next", ControlType.Button));
         var left = run.Window.BoundingRectangle.Left;
