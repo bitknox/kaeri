@@ -42,7 +42,7 @@
       </StackPanel>
     </Grid>
     <!-- No sources: the empty state in place of both columns. -->
-    <Border x:Name="NoSources" Grid.Row="1" Visibility="Collapsed" Margin="0,0,0,80" />
+    <Border x:Name="NoSources" Grid.Row="1" Visibility="Collapsed" />
     <!-- The list beside the selected source; below about 760 the detail goes under the list. -->
     <Grid x:Name="Columns" Grid.Row="1" ColumnSpacing="24" RowSpacing="16" SizeChanged="OnColumnsSizeChanged">
       <Grid.ColumnDefinitions>

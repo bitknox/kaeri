@@ -21,7 +21,8 @@
         <local:OfflineLine />
         <TextBlock Text="{x:Bind app:T.StoresIntro}" Style="{StaticResource HazeBodyStyle}" />
       </StackPanel>
-      <Button Grid.Column="1" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind app:T.StoresJoinShort}" Click="OnJoin" MinHeight="32" VerticalAlignment="Center" />
+      <!-- A plain button: the amber Join is the empty state's, where joining is the one next thing. -->
+      <Button Grid.Column="1" Content="{x:Bind app:T.StoresJoinShort}" Click="OnJoin" MinHeight="32" VerticalAlignment="Center" />
     </Grid>
     <!-- The stores beside the selected one; below about 760 the detail goes under the list. -->
     <Grid Grid.Row="1" ColumnSpacing="24" RowSpacing="16" SizeChanged="OnColumnsSizeChanged">
