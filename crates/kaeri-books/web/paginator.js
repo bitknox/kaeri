@@ -184,9 +184,25 @@
     h.classList.toggle('k-v', state.vertical);
     h.classList.toggle('k-h', !state.vertical);
     if (S.fixed) fit();
+    openingMargins();
     state.nodes = null;
     void (state.axis === 'y' ? scroller().scrollHeight : scroller().scrollWidth); // lay out now
     state.pages = count();
+  }
+
+  // A margin above the first thing in the text (a chapter title's) is kept at the top of the
+  // first column and dropped at the top of every other, so the columns would start at
+  // different heights. The elements down the first branch lose theirs, in every column.
+  function openingMargins() {
+    var el = document.body && document.body.firstElementChild;
+    while (el) {
+      el.classList.add('k-first');
+      var hasText = Array.prototype.some.call(el.childNodes, function (n) {
+        return n.nodeType === 3 && /\S/.test(n.data);
+      });
+      if (hasText) break;
+      el = el.firstElementChild;
+    }
   }
 
   // A fixed-layout page at its own size, scaled into the window and centred.

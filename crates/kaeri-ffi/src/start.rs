@@ -284,6 +284,11 @@ impl FfiPlatform {
         matches!(self, Self::Ios | Self::IpadOs | Self::Android | Self::AndroidTablet)
     }
 
+    /// A phone, not a tablet: novel text defaults to left-aligned there.
+    pub fn phone(self) -> bool {
+        matches!(self, Self::Ios | Self::Android)
+    }
+
     /// What a plugin store calls a device of this kind that joins with an invite, unless the
     /// person joining names it otherwise. The kind of device, never its own name, which is
     /// often its owner's.

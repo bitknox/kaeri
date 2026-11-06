@@ -23,15 +23,18 @@ pub struct Screen {
     pub refresh_hook: bool,
     /// A phone or a tablet.
     pub handheld: bool,
+    /// A phone, not a tablet.
+    pub phone: bool,
 }
 
 impl Screen {
-    pub fn new(profile: Option<&EinkProfile>, handheld: bool) -> Self {
+    pub fn new(profile: Option<&EinkProfile>, handheld: bool, phone: bool) -> Self {
         let profile = profile.filter(|p| p.eink != EinkMatch::No);
         Self {
             eink: profile.map(|p| p.panel),
             refresh_hook: profile.is_some_and(|p| p.refresh_hook),
             handheld,
+            phone,
         }
     }
 
@@ -83,7 +86,7 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::Spreads => choice("split"),
         Key::TextSize | Key::Margins | Key::Contrast => amount(1.0),
         Key::LineSpacing => amount(1.4),
-        Key::Justify => on(medium == Medium::Novel),
+        Key::Justify => on(medium == Medium::Novel && (screen.eink.is_some() || !screen.phone)),
         Key::TapLayout => choice("edges"),
         Key::VolumeKeysTurn => on(screen.eink.is_some()),
         Key::StripWidth => amount(0.6),
@@ -385,8 +388,12 @@ mod tests {
         assert!(!manga.contains(&Key::StripWidth));
         let novel = keys(Medium::Novel, phone);
         assert!(novel.contains(&Key::Font) && !novel.contains(&Key::Direction));
-        let kaleido =
-            Screen { eink: Some(Panel::Kaleido3), refresh_hook: true, handheld: true };
+        let kaleido = Screen {
+            eink: Some(Panel::Kaleido3),
+            refresh_hook: true,
+            handheld: true,
+            phone: true,
+        };
         let rows = keys(Medium::Manga, kaleido);
         assert!(rows.contains(&Key::RainbowFilter) && rows.contains(&Key::RefreshText));
         assert!(!rows.contains(&Key::PaperMode) && !rows.contains(&Key::GallerySpeed));
@@ -395,5 +402,22 @@ mod tests {
         assert_eq!(layers.word(Key::Look), "paper");
         let grey = Screen { eink: Some(Panel::Grey), ..kaleido };
         assert!(!keys(Medium::Manga, grey).contains(&Key::Colour));
+    }
+
+    #[test]
+    fn novel_text_is_justified_unless_the_screen_is_a_phone() {
+        let store = Store::open_in_memory().unwrap();
+        let config = ReadingConfig::default();
+        let justified = |medium, screen| {
+            Layers::read(&store, &config, medium, None, screen).on(Key::Justify)
+        };
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let tablet = Screen { handheld: true, ..Screen::default() };
+        let eink_phone = Screen { eink: Some(Panel::Grey), ..phone };
+        assert!(!justified(Medium::Novel, phone));
+        assert!(justified(Medium::Novel, tablet));
+        assert!(justified(Medium::Novel, Screen::default()));
+        assert!(justified(Medium::Novel, eink_phone));
+        assert!(!justified(Medium::Manga, tablet));
     }
 }

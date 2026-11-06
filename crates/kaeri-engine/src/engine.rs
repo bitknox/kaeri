@@ -218,6 +218,7 @@ impl Engine {
             app_clients,
             device_label,
             handheld,
+            phone,
             device_kind,
             language,
             sources: given,
@@ -388,6 +389,7 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
+        state.config.set_phone(phone);
         let account = {
             use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
             let store = &services.store;

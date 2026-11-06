@@ -80,6 +80,9 @@ html.kaeri.k-paged.k-v svg {
   max-width: calc(100vw - 2 * var(--k-top));
 }
 
+/* The first branch of the text starts flush, so every column begins at the same height. */
+html.kaeri.k-paged .k-first { margin-block-start: 0 !important; }
+
 /* Scrolled: one column down the page, as wide as a column may be. */
 html.kaeri.k-scrolled {
   padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
