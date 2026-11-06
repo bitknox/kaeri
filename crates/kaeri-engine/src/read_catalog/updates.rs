@@ -10,7 +10,10 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use kaeri_core::books::{BookHints, ChapterId, WorkId};
+use kaeri_core::{
+    books::{BookHints, ChapterId, WorkId},
+    config::NewChapters,
+};
 use kaeri_model::reading::{
     ChapterReadState, ChapterRow, NewChapter, ReadingEvent, UpdateDay, UpdateFailure,
     UpdateRow, UpdatesView, WorkTile,
@@ -18,7 +21,11 @@ use kaeri_model::reading::{
 use kaeri_store::Store;
 
 use super::{Ask, Kit, chapters, send, tiles};
-use crate::{outbox::Outbox, read_sources::BookSources};
+use crate::{
+    downloads::books::{Lent, Wanted},
+    outbox::Outbox,
+    read_sources::BookSources,
+};
 
 /// How far back Updates goes.
 const UPDATES_FOR: i64 = 30 * 86_400;
@@ -180,21 +187,48 @@ pub fn check(kit: &Kit, ask: Ask, tx: &Outbox) {
     tokio::spawn(async move {
         let turn = kit.sources.catalog.check_turn.clone();
         let _turn = turn.lock().await;
-        let found = run(&kit, ask).await;
+        let checked = run(&kit, ask).await;
         flag.store(false, Ordering::Release);
         load(&kit, ask, &tx);
-        if !found.is_empty() {
-            send(&tx, ReadingEvent::NewChapters(found));
+        if checked.queued > 0 {
+            let lent = Lent {
+                sources: kit.sources.clone(),
+                plugins: kit.plugins.clone(),
+                clock: kit.clock.clone(),
+                tx: tx.clone(),
+            };
+            kit.sources.downloads.publish(&kit.store, &tx);
+            kit.sources.downloads.start(&lent);
+        }
+        if !checked.found.is_empty() {
+            send(&tx, ReadingEvent::NewChapters(checked.found));
         }
     });
 }
 
-/// Ask every followed series' source again, and give the chapters to tell of.
-pub(crate) async fn run(kit: &Kit, ask: Ask) -> Vec<NewChapter> {
+/// What a check found.
+#[derive(Debug, Default)]
+pub(crate) struct Checked {
+    /// The chapters to tell of.
+    pub found: Vec<NewChapter>,
+    /// How many new chapters went into the download queue.
+    pub queued: usize,
+}
+
+/// Ask every followed series' source again, give the chapters to tell of, and queue the new
+/// chapters the New chapters setting downloads.
+pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
     let (store, sources) = (&kit.store, &kit.sources);
     sources.adopt_plugins(&kit.plugins);
     let zone = kit.clock.zone();
     let tell = ask.chapter_notices && ask.answer.reads();
+    let download = sources.downloads.setup().new_chapters == NewChapters::Reading;
+    let statuses: HashMap<String, String> = if download {
+        store.read_statuses().unwrap_or_default().into_iter().collect()
+    } else {
+        HashMap::new()
+    };
+    let mut queued = 0;
     let mut found = Vec::new();
     let mut failures = Vec::new();
     let mut asked = HashSet::new();
@@ -229,10 +263,26 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Vec<NewChapter> {
         {
             tracing::warn!(error = %e, "a series' rhythm was not kept");
         }
-        if !tell || fresh.is_empty() {
+        if fresh.is_empty() {
             continue;
         }
         let read = chapters::Read::of(store, &work);
+        // New chapters of a series on the Reading list download when the setting says so,
+        // whether or not anyone is told of them.
+        if download && statuses.get(&work).map(String::as_str) == Some("reading") {
+            let wanted: Vec<Wanted> = fresh
+                .iter()
+                .filter(|c| !read.is_read(&c.id))
+                .map(|c| Wanted {
+                    chapter: ChapterId::new(c.id.clone()),
+                    version_label: c.version_label.clone(),
+                })
+                .collect();
+            queued += sources.downloads.queue(store, &id, &source, &wanted, true, ask.now);
+        }
+        if !tell {
+            continue;
+        }
         // Only a series the person reads: one never opened is not followed for its news.
         if !read.any() {
             continue;
@@ -270,7 +320,7 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Vec<NewChapter> {
         tracing::warn!(error = %e, "the check's time was not kept");
     }
     *sources.catalog.failures.lock().unwrap_or_else(|e| e.into_inner()) = failures;
-    found
+    Checked { found, queued }
 }
 
 #[cfg(test)]
@@ -391,18 +441,18 @@ mod tests {
         kit.store.set_read_status(work, Some("reading"), 2).unwrap();
 
         // The first answer is what was out before: nothing to tell.
-        assert!(run(&kit, ask(1_000, true)).await.is_empty());
+        assert!(run(&kit, ask(1_000, true)).await.found.is_empty());
         shelf.listed.lock().unwrap().push(chapter(13));
         // With the switch off the chapter is kept, and nobody is told.
-        assert!(run(&kit, ask(2_000, false)).await.is_empty());
+        assert!(run(&kit, ask(2_000, false)).await.found.is_empty());
         shelf.listed.lock().unwrap().push(chapter(14));
-        let found = run(&kit, ask(3_000, true)).await;
+        let found = run(&kit, ask(3_000, true)).await.found;
         assert_eq!(found.len(), 1, "{found:?}");
         assert_eq!(found[0].chapter.as_str(), "14");
         assert_eq!(found[0].next_for_you.as_ref().map(ChapterId::as_str), Some("13"));
         assert_eq!(found[0].source_name.as_deref(), Some("Shelf"));
         // Asked again, the same chapter is not told twice.
-        assert!(run(&kit, ask(4_000, true)).await.is_empty());
+        assert!(run(&kit, ask(4_000, true)).await.found.is_empty());
 
         // Updates lists both new chapters, newest first, neither read.
         let view = view(&kit, ask(4_000, true));
@@ -411,6 +461,62 @@ mod tests {
             view.days.iter().flat_map(|d| &d.rows).map(|r| r.chapter.id.as_str()).collect();
         assert_eq!(rows, ["14", "13"]);
         assert_eq!(view.unread, 2);
+    }
+
+    #[tokio::test]
+    async fn new_chapters_of_series_on_reading_download_when_the_setting_says_so() {
+        use crate::downloads::books::Setup;
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Native,
+            media: vec![Medium::Manga],
+            languages: Vec::new(),
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        let shelf =
+            Arc::new(Shelf { manifest, listed: Mutex::new((1..=5).map(chapter).collect()) });
+        let kit = kit(dir.path(), shelf.clone());
+        let (reading, paused) = ("a:900311", "a:900312");
+        for (work, series, status) in [(reading, "s-1", "reading"), (paused, "s-2", "paused")] {
+            kit.store.set_book_match("shelf", series, work, 100, true, false, 1).unwrap();
+            kit.store.adopt_read(work, "5", None, 2).unwrap();
+            kit.store.set_read_status(work, Some(status), 2).unwrap();
+        }
+        let queued = |work: &str| -> Vec<String> {
+            kit.store
+                .book_downloads(Some(work))
+                .unwrap()
+                .into_iter()
+                .map(|d| d.chapter)
+                .collect()
+        };
+
+        // Off: a new chapter is told of and nothing downloads.
+        assert_eq!(run(&kit, ask(1_000, false)).await.queued, 0);
+        shelf.listed.lock().unwrap().push(chapter(6));
+        assert_eq!(run(&kit, ask(2_000, false)).await.queued, 0);
+        assert!(queued(reading).is_empty());
+
+        // Series on Reading: the Reading list's new chapter queues, kept ready so it goes once
+        // read, with notices off too. The paused series' does not.
+        let setup = Setup {
+            keep_ready: true,
+            new_chapters: NewChapters::Reading,
+            hold: true,
+            ..Setup::default()
+        };
+        kit.sources.downloads.configure(setup);
+        shelf.listed.lock().unwrap().push(chapter(7));
+        assert_eq!(run(&kit, ask(3_000, false)).await.queued, 1);
+        assert_eq!(queued(reading), ["7"]);
+        assert!(queued(paused).is_empty());
+        assert!(kit.store.book_downloads(Some(reading)).unwrap()[0].keep_ready);
+        // Asked again, nothing new queues.
+        assert_eq!(run(&kit, ask(4_000, false)).await.queued, 0);
     }
 
     #[tokio::test]
@@ -434,7 +540,7 @@ mod tests {
         run(&kit, ask(1_000, true)).await;
         shelf.listed.lock().unwrap().push(chapter(2));
         let watch = Ask { answer: KaeriIsFor::Watch, ..ask(2_000, true) };
-        assert!(run(&kit, watch).await.is_empty());
+        assert!(run(&kit, watch).await.found.is_empty());
         // The chapter was kept all the same: Updates has it.
         let rows =
             view(&kit, ask(2_000, true)).days.iter().map(|d| d.rows.len()).sum::<usize>();
