@@ -181,7 +181,8 @@ async fn a_hostile_book_reads_with_nothing_active_and_nothing_remote() {
     let doc = h.get(&novel.entry);
     assert_eq!(doc.status, 200);
     let body = text(&doc);
-    assert!(body.contains("Harbour lights."), "{body}");
+    let plain = body.replace('\u{AD}', "");
+    assert!(plain.contains("Harbour lights."), "{body}");
     for gone in [
         "<script",
         "onload",
