@@ -20,6 +20,9 @@ pub mod fixtures;
 pub mod golden;
 pub mod home_world;
 pub mod jellyfin;
+pub mod lookups;
+pub mod mangaupdates;
+pub mod readlists;
 pub mod seed;
 pub mod sources;
 

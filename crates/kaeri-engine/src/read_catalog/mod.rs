@@ -153,13 +153,16 @@ pub(crate) fn command(
             {
                 tracing::warn!(error = %e, "the reading list was not kept");
             }
+            crate::read_tracking::queue_status(services, &work, status, ask.now, tx);
             series::header(kit, ask, &work, tx);
         }
         ReadingCommand::SetScore { work, score } => {
-            let score = (score > 0.0).then_some(f64::from(score));
+            let wanted = (score > 0.0).then_some(score);
+            let score = wanted.map(f64::from);
             if let Err(e) = kit.store.set_read_score(work.as_str(), score, ask.now) {
                 tracing::warn!(error = %e, "the score was not kept");
             }
+            crate::read_tracking::queue_score(services, &work, wanted, ask.now, tx);
             series::header(kit, ask, &work, tx);
         }
         other => tracing::debug!(command = ?other, "not a catalogue command"),

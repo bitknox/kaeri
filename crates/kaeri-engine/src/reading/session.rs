@@ -1083,12 +1083,15 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
     let Some(number) = chapter.key().and_then(|k| k.range()).map(|r| r.last().whole()) else {
         return Vec::new();
     };
+    // The highest whole chapter read, and the volume a watermark named: half chapters go as
+    // the chapter below them, and a tracker never holds less than it was told.
+    let (read, volume) = crate::read_tracking::progress_of(cx.services, work);
     let op = TrackOp::SetReadProgress {
         anilist_id: AnilistId::new(id),
-        chapter: number,
-        volume: None,
+        chapter: number.max(read),
+        volume,
     };
-    crate::tracking::commands::signed_in_tracker_ids(&cx.services.sync)
+    crate::tracking::commands::signed_in_reading_tracker_ids(&cx.services.sync)
         .into_iter()
         .filter(|tracker| cx.services.store.enqueue(tracker, &op, at).is_ok())
         .collect()

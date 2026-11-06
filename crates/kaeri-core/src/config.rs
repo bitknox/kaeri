@@ -1326,7 +1326,7 @@ impl Default for TrackersConfig {
             // on the Accounts screen, one sign-in away. Nothing is queued and nothing is
             // pulled until credentials exist, so local history still stands alone. Every
             // other tracker needs config anyway, and enabling rides along with that.
-            enabled: vec!["kitsu".into()],
+            enabled: vec!["kitsu".into(), "mangaupdates".into()],
             anilist: AniListAuthConfig::default(),
             mal: MalAuthConfig::default(),
             simkl: DeviceAuthConfig::default(),
@@ -1664,7 +1664,7 @@ mod tests {
         // the Accounts screen out of the box — while sync stays inert until a sign-in,
         // which the enqueue and pull gates on `is_authenticated` guarantee.
         let cfg = Config::default();
-        assert_eq!(cfg.trackers.enabled, vec!["kitsu".to_string()]);
+        assert_eq!(cfg.trackers.enabled, vec!["kitsu".to_string(), "mangaupdates".to_string()]);
         assert!(!cfg.trackers.is_enabled("anilist"));
         assert!(cfg.trackers.is_enabled("kitsu"));
         // And it must validate without any [trackers.kitsu] section existing.
