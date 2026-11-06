@@ -1241,7 +1241,11 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
         Some(listener) => listener,
         None => {
             // The usual port when it is free, so an address typed by hand needs none; any other.
-            let any = |port: u16| std::net::SocketAddr::from(([0, 0, 0, 0], port));
+            // A fixture engine on Windows listens on loopback alone: its tests and the testing
+            // app pair on 127.0.0.1, and a listener on every interface makes Windows Firewall
+            // ask about each new test binary.
+            let host = if services.fixture && cfg!(windows) { [127, 0, 0, 1] } else { [0; 4] };
+            let any = |port: u16| std::net::SocketAddr::from((host, port));
             let bound = match Listener::bind(
                 me.clone(),
                 services.store.clone(),

@@ -632,12 +632,13 @@ fn hello(
             "features": features,
         }
     });
-    let _ = lines.send(wire::line(&welcome));
+    // The room's playlist comes before the welcome, as a Syncplay server sends it.
     if let Some(found) = inner.rooms.get(&room).filter(|r| !r.playlist.is_empty()) {
         let by = found.playlist_by.clone().unwrap_or_default();
         let _ = lines.send(wire::line(&playlist_json(&by, found)));
         let _ = lines.send(wire::line(&index_json(&by, found)));
     }
+    let _ = lines.send(wire::line(&welcome));
     inner.broadcast(&room, None, &user(&name, &room, Some(json!({ "joined": {} })), None));
     inner.conns.insert(
         id,
