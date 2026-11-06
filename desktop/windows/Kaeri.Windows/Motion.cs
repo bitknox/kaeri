@@ -135,37 +135,82 @@ static class Motion
     /// Eases a value from one number to another on the standard token, calling <paramref name="set"/>
     /// with each step: what a property no animation can reach (a padding) follows. With animation
     /// effects off it takes the end value at once. Starting another for the same <paramref name="owner"/>
-    /// replaces the first.
+    /// replaces the first. It runs on Fluent's point-to-point curve, a step each frame drawn rather
+    /// than on a timer, whose 15.6 ms ticks made the move uneven.
     /// </summary>
     public static void Ease(object owner, double from, double to, Action<double> set)
     {
         if (eases.Remove(owner, out var was))
-            was.Stop();
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= was;
         if (!Enabled || Math.Abs(from - to) < 0.5)
         {
             set(to);
             return;
         }
-        var queue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        var timer = queue.CreateTimer();
-        timer.Interval = TimeSpan.FromMilliseconds(16);
-        var started = DateTime.UtcNow;
-        timer.Tick += (_, _) =>
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        EventHandler<object>? step = null;
+        step = (_, _) =>
         {
-            var t = Math.Min(1, (DateTime.UtcNow - started) / Standard);
-            var eased = 1 - Math.Pow(1 - t, 3);
-            set(from + (to - from) * eased);
+            var t = Math.Min(1, clock.Elapsed / Standard);
+            set(from + (to - from) * PointToPoint(t));
             if (t >= 1)
             {
-                timer.Stop();
-                eases.Remove(owner);
+                Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= step;
+                if (eases.TryGetValue(owner, out var current) && current == step)
+                    eases.Remove(owner);
             }
         };
-        eases[owner] = timer;
-        timer.Start();
+        eases[owner] = step;
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += step;
     }
 
-    static readonly Dictionary<object, Microsoft.UI.Dispatching.DispatcherQueueTimer> eases = [];
+    static readonly Dictionary<object, EventHandler<object>> eases = [];
+
+    /// <summary>
+    /// Fluent's point-to-point curve, cubic-bezier(0.55, 0.55, 0, 1), for something on screen
+    /// moving or resizing in place: how far it has come at <paramref name="t"/> of its time.
+    /// </summary>
+    internal static double PointToPoint(double t)
+    {
+        if (t <= 0)
+            return 0;
+        if (t >= 1)
+            return 1;
+        static double Bezier(double a, double b, double u) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u;
+        double lo = 0, hi = 1;
+        for (var i = 0; i < 30; i++)
+        {
+            var mid = (lo + hi) / 2;
+            if (Bezier(0.55, 0, mid) < t)
+                lo = mid;
+            else
+                hi = mid;
+        }
+        return Bezier(0.55, 1, (lo + hi) / 2);
+    }
+
+    /// <summary>Fluent's point-to-point curve for a keyframe animation.</summary>
+    static KeySpline PointToPointSpline() => new()
+    {
+        ControlPoint1 = new global::Windows.Foundation.Point(0.55, 0.55),
+        ControlPoint2 = new global::Windows.Foundation.Point(0, 1),
+    };
+
+    /// <summary>Fluent's decelerate curve, cubic-bezier(0, 0, 0, 1), for something coming in on the composition layer.</summary>
+    public static CubicBezierEasingFunction Decelerate(Compositor compositor) =>
+        compositor.CreateCubicBezierEasingFunction(new(0, 0), new(0, 1));
+
+    /// <summary>Fluent's accelerate curve, cubic-bezier(1, 0, 1, 1), for something leaving on the composition layer.</summary>
+    public static CubicBezierEasingFunction Accelerate(Compositor compositor) =>
+        compositor.CreateCubicBezierEasingFunction(new(1, 0), new(1, 1));
+
+    /// <summary>The fade-in token's curve, cubic-bezier(0, 0, 0.58, 1), on the composition layer.</summary>
+    public static CubicBezierEasingFunction FadeInEasing(Compositor compositor) =>
+        compositor.CreateCubicBezierEasingFunction(new(0, 0), new(0.58f, 1));
+
+    /// <summary>The fade-out token's curve, cubic-bezier(0.42, 0, 1, 1), on the composition layer.</summary>
+    public static CubicBezierEasingFunction FadeOutEasing(Compositor compositor) =>
+        compositor.CreateCubicBezierEasingFunction(new(0.42f, 0), new(1, 1));
 
     /// <summary>Stops any fade and sets the element where it would have ended.</summary>
     public static void Set(UIElement element, bool shown)
@@ -206,8 +251,8 @@ static class Motion
     }
 
     /// <summary>
-    /// An element's height eased from one value to another on the standard token, then left to its
-    /// content again: a dialog moving to a taller or shorter step. With animation effects off it
+    /// An element's height eased from one value to another on the standard token and Fluent's
+    /// point-to-point curve, then left to its content again: a dialog moving to a taller or shorter step. With animation effects off it
     /// simply takes the new height.
     /// </summary>
     public static void Height(FrameworkElement element, double from, double to)
@@ -217,14 +262,9 @@ static class Motion
         element.Height = double.NaN;
         if (!Enabled || Math.Abs(from - to) < 1)
             return;
-        var animation = new DoubleAnimation
-        {
-            From = from,
-            To = to,
-            Duration = Standard,
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true,
-        };
+        var animation = new DoubleAnimationUsingKeyFrames { EnableDependentAnimation = true };
+        animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = Standard, Value = to, KeySpline = PointToPointSpline() });
         Storyboard.SetTarget(animation, element);
         Storyboard.SetTargetProperty(animation, "Height");
         var board = new Storyboard();
