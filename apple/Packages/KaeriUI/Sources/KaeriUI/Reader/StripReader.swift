@@ -20,6 +20,7 @@ struct StripReader: View {
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
     @State private var restoring = true
+    @State private var follow: Task<Void, Never>?
 
     private struct Metrics: Equatable {
         var y: CGFloat
@@ -69,7 +70,7 @@ struct StripReader: View {
                     .clipped()
                     .onAppear { if model.file(of: part, chapter: chapter) == nil { model.needPage(part.page) } }
                 }
-                ReaderEndPage(model: model, theme: theme, size: CGSize(width: column, height: max(size.height * 0.8, 420)))
+                foot
             }
             .frame(maxWidth: .infinity)
         }
@@ -78,10 +79,13 @@ struct StripReader: View {
             Metrics(
                 y: geometry.contentOffset.y + geometry.contentInsets.top,
                 atFoot: geometry.contentOffset.y + geometry.containerSize.height >= geometry.contentSize.height - 40)
-        } action: { _, metrics in
+        } action: { old, metrics in
             track(metrics)
+            if metrics.atFoot, !old.atFoot, !restoring { followOn() }
         }
-        .onScrollPhaseChange { _, phase in if phase == .interacting { restoring = false } }
+        .onScrollPhaseChange { _, phase in
+            if phase == .interacting { restoring = false; model.hideChrome() }
+        }
         .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
         .frame(width: size.width, height: size.height)
         .onAppear {
@@ -93,6 +97,11 @@ struct StripReader: View {
             restore()
         }
         .onChange(of: loaded) { _, _ in if restoring { restore() } }
+        .onChange(of: model.view?.chapter.id) { _, _ in
+            follow?.cancel()
+            restoring = true
+            position.scrollTo(y: 0)
+        }
         .onChange(of: model.stripRestore) { _, _ in restoring = true; restore() }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
@@ -113,11 +122,41 @@ struct StripReader: View {
         return parts.filter { model.file(of: $0, chapter: chapter) != nil }.count
     }
 
+    /// After the last image: a divider with the next chapter, and the chapter follows once the
+    /// person has stayed at the foot. The end page is only for the last chapter there is.
+    @ViewBuilder private var foot: some View {
+        if let next = model.end?.next ?? model.view?.next {
+            VStack(alignment: .leading, spacing: 4) {
+                Rectangle().fill(theme.rule).frame(height: 1).padding(.bottom, 28)
+                Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze)
+                Text(next.title ?? next.label).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
+                Text(next.pages.map { L.readerEndNextDetail(chapter: next.label, pages: Int($0)) } ?? next.label)
+                    .font(.ui(15)).foregroundStyle(theme.haze)
+            }
+            .padding(.horizontal, 28)
+            .frame(width: column, height: max(size.height * 0.6, 320), alignment: .topLeading)
+            .accessibilityElement(children: .combine)
+        } else {
+            ReaderEndPage(model: model, theme: theme, size: CGSize(width: column, height: max(size.height * 0.8, 420)))
+        }
+    }
+
     private func restore() {
         let at = model.stripRestore ?? model.view?.start.strip
         guard let at, restoring, !parts.isEmpty else { return }
         let image = min(Int(at.image), parts.count - 1)
         position.scrollTo(y: top(of: image) + CGFloat(at.offset) * height(of: parts[image]))
+    }
+
+    /// The person reached the foot: a moment later, if they are still there, the next chapter follows.
+    private func followOn() {
+        guard model.view?.next != nil else { return }
+        follow?.cancel()
+        follow = Task {
+            try? await Task.sleep(for: .milliseconds(1400))
+            guard !Task.isCancelled, offsetY > 0 else { return }
+            model.flowOn()
+        }
     }
 
     private func track(_ metrics: Metrics) {

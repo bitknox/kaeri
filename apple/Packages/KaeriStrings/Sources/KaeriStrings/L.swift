@@ -1957,6 +1957,17 @@ public enum L {
     /// The reader's scrubber, spoken.
     public static var readerScrubber: String { string("reader-scrubber", fallback: "Page") }
 
+    /// The scrubber's value, spoken.
+    public static func readerScrubberValue(page: Int, total: Int) -> String {
+        Self.format("reader-scrubber-value", fallback: "Page %1$lld of %2$lld", page, total)
+    }
+
+    /// Title of the row that picks the look: paper, light, sepia, dark or the system's.
+    public static var readerLook: String { string("reader-look", fallback: "Look") }
+
+    /// The settings button's label in the control group.
+    public static var readerTextLabel: String { string("reader-text-label", fallback: "Aa") }
+
     /// The control group's line under the title. The chapter label comes from the source.
     public static func readerGroupLine(chapter: String, page: Int, total: Int) -> String {
         Self.format("reader-group-line", fallback: "%1$@ · page %2$lld of %3$lld", chapter, page, total)

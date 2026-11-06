@@ -77,6 +77,29 @@ public final class ReaderModel {
     public var sheet: Sheet?
     /// Whether the control group shows.
     public var chromeShown = false
+    /// A screen reader is running: the group stays shown, as the board has it.
+    public var pinChrome = false {
+        didSet { if pinChrome { chromeShown = true } }
+    }
+
+    /// A turn or a scroll hides the group, unless a sheet is up or a screen reader needs it.
+    public func hideChrome() {
+        guard !pinChrome, sheet == nil, chromeShown else { return }
+        chromeShown = false
+    }
+
+    /// The paginator has laid a page out and said where it is.
+    public private(set) var novelPainted = false
+    /// Screenshots only: pages stay unloaded, to show the plate.
+    public var holdPages = false
+    /// Screenshots only: the scrubber starts held at this index.
+    public var shotScrub: Int?
+
+    /// Screenshots only: the phase held as a state the engine rarely stays in.
+    func hold(_ phase: Phase) {
+        self.phase = phase
+        openedAt = .now
+    }
 
     /// Go to page is open.
     public var askingPage = false
@@ -199,6 +222,7 @@ public final class ReaderModel {
         guard session != 0, let chapter = view?.chapter.id, leaves.indices.contains(leaf) else { return }
         if how == .jump, leaf != current { ring = current }
         current = leaf
+        if how == .turn || how == .swipe || how == .key { hideChrome() }
         if end != nil, !leaves[leaf].endPage { end = end }
         send?(.reader(.shown(session: session, chapter: chapter, leaf: UInt32(leaves[leaf].index), how: how)))
     }
@@ -227,6 +251,7 @@ public final class ReaderModel {
     /// The paginator turned a page.
     public func novelAt(_ pos: NovelPos, page: Int, pages: Int, how: TurnHow) {
         guard session != 0, let chapter = view?.chapter.id else { return }
+        novelPainted = true
         send?(.reader(.novelAt(
             session: session, chapter: chapter, pos: pos, page: UInt32(max(page, 0)),
             pages: UInt32(max(pages, 0)), how: how)))
@@ -240,6 +265,15 @@ public final class ReaderModel {
         phase = .opening
         openedAt = .now
         sheet = nil
+    }
+
+    /// A strip reached its foot and the next chapter follows: it opens without the opening screen,
+    /// so the reader goes on from the divider.
+    public func flowOn() {
+        guard session != 0, let next = view?.next else { return }
+        end = nil
+        read = false
+        send?(.reader(.openChapter(session: session, chapter: next.id)))
     }
 
     public func retry(page: UInt32?) {
@@ -518,6 +552,7 @@ public final class ReaderModel {
         pages = [:]
         failures = [:]
         novel = nil
+        novelPainted = false
         novelStyle = ""
         end = nil
         notice = nil
@@ -560,7 +595,8 @@ public final class ReaderModel {
 
     /// The file a part shows, once it has landed.
     public func file(of part: LeafPart, chapter: String) -> PageFile? {
-        part.file ?? pages[ReaderPageKey(chapter: chapter, page: part.page, half: part.half)]
+        if holdPages { return nil }
+        return part.file ?? pages[ReaderPageKey(chapter: chapter, page: part.page, half: part.half)]
             ?? pages[ReaderPageKey(chapter: chapter, page: part.page)]
     }
 

@@ -18,6 +18,17 @@ reader-page-label = Page { $page } of { $total }, { $title }
 # The reader's scrubber, spoken.
 reader-scrubber = Page
 
+# The scrubber's value, spoken.
+# @arg page: int
+# @arg total: int
+reader-scrubber-value = Page { $page } of { $total }
+
+# Title of the row that picks the look: paper, light, sepia, dark or the system's.
+reader-look = Look
+
+# The settings button's label in the control group.
+reader-text-label = Aa
+
 # The control group's line under the title. The chapter label comes from the source.
 # @arg chapter: text
 # @arg page: int

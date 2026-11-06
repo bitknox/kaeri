@@ -28,6 +28,7 @@ struct ReaderChrome: View {
                 .padding(.horizontal, wide ? 0 : 12)
                 .padding(.bottom, mac ? 20 : (wide ? 24 : 28))
         }
+        .onChange(of: model.shotScrub) { _, held in if let held { scrub = held } }
         .opacity(model.chromeShown ? 1 : 0)
         .allowsHitTesting(model.chromeShown)
         .accessibilityHidden(!model.chromeShown)
@@ -36,11 +37,12 @@ struct ReaderChrome: View {
     private var group: some View {
         VStack(spacing: 0) {
             ReaderScrubber(model: model, theme: theme, rtl: rtl, scrub: $scrub)
+                .accessibilitySortPriority(0)
                 .frame(height: 28)
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
             HStack(spacing: 4) {
-                button("xmark", L.readerClose, action: onClose)
+                button("xmark", L.readerClose, action: onClose).accessibilitySortPriority(4)
                 Button { model.askingPage = true } label: {
                     Text(line).font(.ui(15, weight: .medium)).foregroundStyle(theme.silk)
                         .monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
@@ -49,12 +51,15 @@ struct ReaderChrome: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(L.readerGoToPage)
+                .accessibilitySortPriority(1)
                 .popover(isPresented: $model.askingPage) { goTo }
                 button("list.bullet", L.readerChapters) { model.sheet = .chapters }
+                    .accessibilitySortPriority(3)
                     .popover(isPresented: sheetBinding(.chapters), attachmentAnchor: .point(.top)) {
                         ReaderChaptersSheet(model: model, theme: theme)
                     }
-                button("slider.horizontal.3", L.readerSettingsOpen) { model.sheet = .settings }
+                textButton(L.readerTextLabel, L.readerSettingsOpen, on: model.sheet == .settings) { model.sheet = .settings }
+                    .accessibilitySortPriority(2)
                     .popover(isPresented: sheetBinding(.settings), attachmentAnchor: .point(.top)) {
                         ReaderSettingsSheet(model: model, theme: theme, mac: mac)
                     }
@@ -70,6 +75,17 @@ struct ReaderChrome: View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 17, weight: .medium)).foregroundStyle(theme.silk)
                 .frame(width: 44, height: 44).contentShape(.circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+
+    private func textButton(_ text: String, _ label: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(text).font(.ui(17, weight: .semibold)).foregroundStyle(theme.silk)
+                .frame(width: 44, height: 44)
+                .background(on ? theme.selected : Color.clear, in: .circle)
+                .contentShape(.circle)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -169,11 +185,19 @@ struct ReaderScrubber: View {
                     })
             .accessibilityElement()
             .accessibilityLabel(L.readerScrubber)
-            .accessibilityValue("\(index + 1) / \(count)")
+            .accessibilityValue(spoken(index: index, count: count))
             .accessibilityAdjustableAction { direction in
                 model.requestJump(min(max(model.position.index + (direction == .increment ? 1 : -1), 0), count - 1))
             }
         }
+    }
+
+    /// "Page 8 of 38": pages as the chapter counts them, not leaves, so a spread is its first page.
+    private func spoken(index: Int, count: Int) -> String {
+        if model.novel == nil, model.view?.mode != .strip {
+            return L.readerScrubberValue(page: model.pageNumber(of: index), total: max(model.pageCount, 1))
+        }
+        return L.readerScrubberValue(page: index + 1, total: count)
     }
 
     /// A 96 pt thumbnail of the page under the thumb, with its number.
@@ -193,6 +217,13 @@ struct ReaderScrubber: View {
         }
         .frame(width: 96)
         .offset(y: model.novel == nil ? -40 : 0)
+        .task(id: index) {
+            // The page under the thumb may not have been asked for yet.
+            guard model.novel == nil, model.leaves.indices.contains(index), let part = model.leaves[index].parts.first,
+                let chapter = model.view?.chapter.id, model.file(of: part, chapter: chapter) == nil
+            else { return }
+            model.needPage(part.page)
+        }
     }
 }
 
@@ -201,12 +232,12 @@ struct ReaderNotices: View {
     let model: ReaderModel
     let theme: ReaderTheme
     let mac: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.readerPaper) private var paper
 
     var body: some View {
         ZStack {
             VStack {
-                if let notice = model.notice { capsule(notice).transition(.opacity.combined(with: .offset(y: -8))) }
+                if let notice = model.notice { capsule(notice).transition(.opacity) }
                 Spacer()
             }
             .padding(.top, 62)
@@ -219,8 +250,8 @@ struct ReaderNotices: View {
                 .padding(.leading, 16).padding(.bottom, 40)
             }
         }
-        .animation(reduceMotion ? nil : .standard, value: model.notice?.id)
-        .animation(reduceMotion ? nil : .standard, value: model.backTo?.id)
+        .animation(paper ? nil : (model.notice == nil ? .fadeOut : .fadeIn), value: model.notice?.id)
+        .animation(paper ? nil : (model.backTo == nil ? .fadeOut : .fadeIn), value: model.backTo?.id)
     }
 
     private func capsule(_ notice: ReaderNoticeLine) -> some View {

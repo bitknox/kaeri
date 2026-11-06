@@ -27,11 +27,14 @@ struct PagedReader: View {
 
     var body: some View {
         ZStack {
-            if let under = fading, model.leaves.indices.contains(under) { leaf(under) }
-            ForEach(visible, id: \.self) { index in
+            // The neighbours stay mounted off screen, so a drag starts with its page already there,
+            // and the page a tap turn leaves is the same view held under the one that fades in.
+            ForEach(mounted, id: \.self) { index in
                 leaf(index)
                     .offset(x: offset(of: index))
                     .opacity(index == current && fading != nil ? fade : 1)
+                    .zIndex(index == current ? 1 : 0)
+                    .accessibilityHidden(index != current)
             }
         }
         .frame(width: size.width, height: size.height)
@@ -55,17 +58,17 @@ struct PagedReader: View {
         .accessibilityScrollAction { edge in turn(forward: edge == .trailing || edge == .bottom, how: .turn) }
     }
 
-    private var visible: [Int] {
-        var all = [current]
-        if drag != 0 || settling {
-            if model.leaves.indices.contains(current + 1) { all.append(current + 1) }
-            if model.leaves.indices.contains(current - 1) { all.append(current - 1) }
-        }
-        return all
+    private var mounted: [Int] {
+        var all = Set([current])
+        if model.leaves.indices.contains(current + 1) { all.insert(current + 1) }
+        if model.leaves.indices.contains(current - 1) { all.insert(current - 1) }
+        if let fading, model.leaves.indices.contains(fading) { all.insert(fading) }
+        return all.sorted()
     }
 
     private func offset(of index: Int) -> CGFloat {
         if index == current { return drag }
+        if index == fading { return 0 }
         return drag + (index > current ? -sign : sign) * size.width
     }
 
@@ -90,8 +93,10 @@ struct PagedReader: View {
     private func tap(_ x: Double) {
         let layout = model.choice(.tapLayout) ?? "edges"
         if model.chromeShown || layout == "off" { onTap(x); return }
-        let edge = layout == "sides" ? 0.5 : 0.33
-        if x < edge || (layout == "sides" && x >= 0.5) || x > 1 - edge {
+        // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
+        // still brings the chrome up.
+        let edge = layout == "sides" ? 0.4 : 0.33
+        if x < edge || x > 1 - edge {
             let leftSide = x < 0.5
             // Left is forward when the book runs right to left.
             turn(forward: leftSide == rtl, how: .turn)
@@ -102,6 +107,7 @@ struct PagedReader: View {
 
     private func turn(forward: Bool, how: TurnHow) {
         guard model.leaves.indices.contains(current) else { return }
+        model.hideChrome()
         if forward, model.leaves[current].endPage {
             if let next = model.view?.next { model.openChapter(next.id) }
             return
@@ -191,7 +197,7 @@ struct ReaderEndPage: View {
                 .padding(.top, 6)
             if let next {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(.uppercase)
+                    Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
                     Text(next.title ?? next.label).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
                     Text(detail(next)).font(.ui(15)).foregroundStyle(theme.haze)
                 }

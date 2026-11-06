@@ -166561,6 +166561,18 @@
         }
       }
     },
+    "reader-look" : {
+      "comment" : "Title of the row that picks the look: paper, light, sepia, dark or the system's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look"
+          }
+        }
+      }
+    },
     "reader-look-dark" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -167279,6 +167291,18 @@
         }
       }
     },
+    "reader-scrubber-value" : {
+      "comment" : "The scrubber's value, spoken. Argument 1: page (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "reader-search-settings" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -167443,6 +167467,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap zones"
+          }
+        }
+      }
+    },
+    "reader-text-label" : {
+      "comment" : "The settings button's label in the control group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aa"
           }
         }
       }

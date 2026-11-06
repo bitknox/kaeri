@@ -72,4 +72,6 @@ enum ReaderDefaults {
     static let background = "reader.background"
     static let gap = "reader.gap"
     static let step = "reader.step"
+    /// The look follows the system's light or dark, which the engine has no choice for.
+    static let system = "reader.systemLook"
 }

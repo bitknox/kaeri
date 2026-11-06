@@ -10,7 +10,7 @@ import KaeriStrings
 import UniformTypeIdentifiers
 
 extension ReaderModel {
-    /// `-KaeriReader chrome|settings|chapters|ask` after a reader scene.
+    /// `-KaeriReader chrome|settings|chapters|ask|end|scrub|plate|opening|error` after a reader scene.
     public static let argument = "-KaeriReader"
 
     /// The work a reader scene reads.
@@ -27,6 +27,9 @@ extension ReaderModel {
     /// Open the scene's work and wait until it has pages to show. False when it never did.
     public func stage(arguments: [String] = ProcessInfo.processInfo.arguments) async -> Bool {
         guard let work = Self.shotWork(arguments: arguments) else { return true }
+        if let at = arguments.firstIndex(of: Self.argument), arguments.indices.contains(at + 1), arguments[at + 1] == "plate" {
+            holdPages = true
+        }
         open(work: work)
         let drawn = arguments.contains("-KaeriReaderDrawn")
         let deadline = ContinuousClock.now + .seconds(drawn ? 6 : 25)
@@ -40,7 +43,11 @@ extension ReaderModel {
             playFixture(work: work, scene: arguments)
             try? await Task.sleep(for: .milliseconds(800))
         }
-        try? await Task.sleep(for: .milliseconds(1500))
+        // A novel is shot once its paginator has put a page on screen.
+        while novel != nil, !novelPainted, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        try? await Task.sleep(for: .milliseconds(novel != nil ? 2500 : 1500))
         let shown = phase == .open
         if let at = arguments.firstIndex(of: Self.argument), arguments.indices.contains(at + 1) {
             switch arguments[at + 1] {
@@ -48,6 +55,11 @@ extension ReaderModel {
             case "settings": chromeShown = true; sheet = .settings
             case "chapters": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
+            case "end": requestJump(max(leaves.count - 1, 0))
+            case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
+            case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
+            case "opening": hold(.opening)
+            case "error": hold(.failed(.offline))
             default: break
             }
             try? await Task.sleep(for: .milliseconds(900))

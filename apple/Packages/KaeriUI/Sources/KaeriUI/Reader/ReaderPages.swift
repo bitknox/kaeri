@@ -17,8 +17,19 @@ struct PageImage: View {
     let longest: CGFloat
     var tone = PageTone()
     var fill = false
+    var onPaint: (() -> Void)?
     @State private var image: CGImage?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(file: PageFile, longest: CGFloat, tone: PageTone = PageTone(), fill: Bool = false, onPaint: (() -> Void)? = nil) {
+        self.file = file
+        self.longest = longest
+        self.tone = tone
+        self.fill = fill
+        self.onPaint = onPaint
+        // A page that is already decoded draws on the first frame, with no fade.
+        _image = State(initialValue: PageImages.cached(file, longestSide: longest))
+    }
 
     var body: some View {
         ZStack {
@@ -34,7 +45,11 @@ struct PageImage: View {
             }
         }
         .animation(reduceMotion ? nil : .fadeIn, value: image != nil)
-        .task(id: file.path) { image = await PageImages.load(file, longestSide: longest) }
+        .onAppear { if image != nil { onPaint?() } }
+        .task(id: file.path) {
+            image = await PageImages.load(file, longestSide: longest)
+            if image != nil { onPaint?() }
+        }
     }
 }
 
@@ -173,12 +188,15 @@ struct PartView: View {
     let scale: CGFloat
     var align: Alignment = .center
     var fitWidth = false
+    @State private var painted = false
 
     var body: some View {
         let number = Int(part.page) + 1
         ZStack(alignment: align) {
+            // The plate holds the place until the image is on screen, and the image fades in over it.
+            if !painted, model.failure(of: part, chapter: chapter) == nil { PagePlate(page: number, theme: theme) }
             if let file = model.file(of: part, chapter: chapter) {
-                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone)
+                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: { painted = true })
                     .accessibilityElement()
                     .accessibilityLabel(L.readerPageLabel(page: number, total: max(model.pageCount, number), title: model.view?.title ?? ""))
                     .accessibilityAddTraits(.isImage)
@@ -194,8 +212,6 @@ struct PartView: View {
                 }
             } else if let failure = model.failure(of: part, chapter: chapter) {
                 PageFailed(page: number, failure: failure, theme: theme) { model.retry(page: part.page) }
-            } else {
-                PagePlate(page: number, theme: theme)
             }
         }
         .frame(width: box.width, height: box.height, alignment: align)

@@ -17,7 +17,7 @@
 # that day, for one with broadcasts, mine=1 the calendar on My list,
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
-# reader=<chrome|settings|chapters|ask> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
+# reader=<chrome|settings|chapters|ask|end|scrub|pill|plate|opening|error> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
 # reader-moved), the reader open with its chrome or a sheet up,
 # party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing

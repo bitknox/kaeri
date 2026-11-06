@@ -14,8 +14,17 @@ enum PageImages {
     }()
 
     /// The page as an image, cropped when the file says so; nil when the file cannot be read.
+    private static func key(_ file: PageFile, _ longestSide: CGFloat) -> NSString {
+        "\(file.path)|\(Int(longestSide))" as NSString
+    }
+
+    /// The decoded page when it is already in the cache, so a view can draw it on its first frame.
+    static func cached(_ file: PageFile, longestSide: CGFloat) -> CGImage? {
+        cache.object(forKey: key(file, longestSide))
+    }
+
     static func load(_ file: PageFile, longestSide: CGFloat) async -> CGImage? {
-        let key = "\(file.path)|\(Int(longestSide))" as NSString
+        let key = key(file, longestSide)
         if let hit = cache.object(forKey: key) { return hit }
         let image = await Task.detached(priority: .userInitiated) { decode(file, longestSide: longestSide) }.value
         if let image { cache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height) }

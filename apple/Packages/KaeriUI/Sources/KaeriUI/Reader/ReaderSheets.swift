@@ -18,14 +18,19 @@ struct ReaderSettingsSheet: View {
     @AppStorage(ReaderDefaults.background) private var background = "theme"
     @AppStorage(ReaderDefaults.gap) private var gap = "none"
     @AppStorage(ReaderDefaults.step) private var step = "panel"
+    @AppStorage(ReaderDefaults.system) private var system = false
 
     private var novel: Bool { model.medium == .novel }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                modeSection
-                if novel { textSection } else { imageSection }
+            VStack(alignment: .leading, spacing: 22) {
+                ForEach(groups, id: \.scope.hashValue) { group in
+                    VStack(alignment: .leading, spacing: 14) {
+                        header(group.title)
+                        ForEach(group.items) { $0.view }
+                    }
+                }
                 paperSection
                 moreSection
             }
@@ -38,15 +43,90 @@ struct ReaderSettingsSheet: View {
         .presentationBackgroundInteraction(.enabled)
         .presentationBackground(theme.glassSolid)
         .presentationCompactAdaptation(.sheet)
-        .preferredColorScheme(theme.scheme)
+        .preferredColorScheme(system ? nil : theme.scheme)
         .foregroundStyle(theme.silk)
+    }
+
+    // MARK: Groups by scope
+
+    private struct Item: Identifiable {
+        let id: String
+        let view: AnyView
+    }
+
+    private struct ScopeGroup {
+        let scope: SettingScope
+        let title: String
+        let items: [Item]
+    }
+
+    private func item(_ id: String, _ view: some View) -> Item { Item(id: id, view: AnyView(view)) }
+
+    /// The rows, each under the heading of where its change applies: this series, every title of
+    /// the medium, or this device.
+    private var groups: [ScopeGroup] {
+        var rows: [(SettingScope, Item)] = []
+        func add(_ key: ReaderSettingKey, _ view: some View) {
+            guard model.row(key) != nil else { return }
+            rows.append((model.row(key)?.scope ?? .device, item("\(key)", view)))
+        }
+        rows.append((.series, item("mode", modeSection)))
+        add(.look, lookRow)
+        if novel {
+            add(.font, segments(L.readerFont, [(L.readerFontSerif, "serif"), (L.readerFontSans, "sans")], .font))
+            add(.textSize, stepper(L.readerTextSize, .textSize, 0.1, 0.5...3.0))
+            add(.lineSpacing, amounts(L.readerLineSpacing, .lineSpacing, [(L.readerLineTight, 1.2), (L.readerLineNormal, 1.55), (L.readerLineLoose, 1.8)]))
+            add(.margins, amounts(L.readerMargins, .margins, [(L.readerMarginsNarrow, 0.6), (L.readerMarginsNormal, 1.0), (L.readerMarginsWide, 1.6)]))
+            add(.justify, toggle(L.readerJustify, .justify))
+        } else {
+            add(.fit, segments(L.readerFit, [(L.readerFitScreen, "screen"), (L.readerFitWidth, "width")], .fit))
+            add(.cropBorders, toggle(L.readerCropBorders, .cropBorders))
+            rows.append((.device, item("background", chips(
+                L.readerBackground, [(L.readerBackgroundTheme, "theme"), (L.readerBackgroundBlack, "black"), (L.readerBackgroundWhite, "white")],
+                background) { background = $0 })))
+        }
+        let strip = model.view?.mode == .strip
+        let medium = novel ? L.readerAllNovels : (strip ? L.readerAllStrips : L.readerAllManga)
+        let device = novel ? medium : L.readerAllMangaHere
+        var out: [ScopeGroup] = []
+        for scope in [SettingScope.series, .medium, .device] {
+            let items = rows.filter { row in
+                switch (scope, row.0) {
+                case (.series, .series), (.series, .seriesHere), (.medium, .medium), (.device, .device): true
+                default: false
+                }
+            }.map(\.1)
+            guard !items.isEmpty else { continue }
+            let title = scope == .series ? L.readerThisSeries : (scope == .medium ? medium : device)
+            // A novel has no separate device heading: its device rows join the medium's.
+            if novel, scope == .device, let at = out.firstIndex(where: { $0.scope == .medium }) {
+                out[at] = ScopeGroup(scope: .medium, title: medium, items: out[at].items + items)
+            } else {
+                out.append(ScopeGroup(scope: scope, title: title, items: items))
+            }
+        }
+        return out
+    }
+
+    private var lookRow: some View {
+        let options = [
+            (L.readerLookSystem, "system"), (L.readerLookPaper, "paper"), (L.readerLookLight, "light"),
+            (L.readerLookSepia, "sepia"), (L.readerLookDark, "dark"),
+        ]
+        return chips(L.readerLook, options, system ? "system" : (model.choice(.look) ?? "dark")) { name in
+            if name == "system" {
+                system = true
+            } else {
+                system = false
+                model.set(.look, .choice(name: name))
+            }
+        }
     }
 
     // MARK: Sections
 
     private var modeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header(L.readerThisSeries)
             if novel {
                 segments(L.readerReadingMode, [(L.readerModePaged, "paged"), (L.readerModeScrolled, "scrolled")], .mode)
             } else {
@@ -74,29 +154,6 @@ struct ReaderSettingsSheet: View {
         guard model.modeOverridden else { return .auto }
         if model.choice(.mode) == "strip" { return .strip }
         return model.choice(.direction) == "ltr" ? .leftToRight : .rightToLeft
-    }
-
-    private var imageSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            segments(L.readerFit, [(L.readerFitScreen, "screen"), (L.readerFitWidth, "width")], .fit)
-            toggle(L.readerCropBorders, .cropBorders)
-            chips(L.readerBackground, [(L.readerBackgroundTheme, "theme"), (L.readerBackgroundBlack, "black"), (L.readerBackgroundWhite, "white")], background) {
-                background = $0
-            }
-        }
-    }
-
-    private var textSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            segments(L.readerLookPaper, [], .look, custom: [
-                (L.readerLookPaper, "paper"), (L.readerLookLight, "light"), (L.readerLookSepia, "sepia"), (L.readerLookDark, "dark"),
-            ])
-            segments(L.readerFont, [(L.readerFontSerif, "serif"), (L.readerFontSans, "sans")], .font)
-            stepper(L.readerTextSize, .textSize, 0.1, 0.5...3.0)
-            amounts(L.readerLineSpacing, .lineSpacing, [(L.readerLineTight, 1.2), (L.readerLineNormal, 1.4), (L.readerLineLoose, 1.8)])
-            amounts(L.readerMargins, .margins, [(L.readerMarginsNarrow, 0.6), (L.readerMarginsNormal, 1.0), (L.readerMarginsWide, 1.6)])
-            toggle(L.readerJustify, .justify)
-        }
     }
 
     @ViewBuilder private var paperSection: some View {
@@ -148,11 +205,6 @@ struct ReaderSettingsSheet: View {
                     chips(L.readerKeyStep, [(L.readerKeyStepPanel, "panel"), (L.readerKeyStepScreen, "screen")], step) { step = $0 }
                 }
                 if show(L.readerVolumeKeys), model.row(.volumeKeysTurn) != nil { toggle(L.readerVolumeKeys, .volumeKeysTurn) }
-                if !novel, show(L.readerLookPaper) {
-                    segments(L.readerLookPaper, [], .look, custom: [
-                        (L.readerLookPaper, "paper"), (L.readerLookLight, "light"), (L.readerLookSepia, "sepia"), (L.readerLookDark, "dark"),
-                    ])
-                }
             }
         }
     }
@@ -164,7 +216,7 @@ struct ReaderSettingsSheet: View {
     // MARK: Controls
 
     private func header(_ text: String) -> some View {
-        Text(text).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(.uppercase)
+        Text(text).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
     }
 
     private func label(_ text: String) -> some View { Text(text).font(.ui(15, weight: .medium)) }
@@ -190,7 +242,7 @@ struct ReaderSettingsSheet: View {
                     Button { set(options[index].1) } label: {
                         Text(options[index].0).font(.ui(14, weight: .medium))
                             .lineLimit(1).minimumScaleFactor(0.75)
-                            .frame(maxWidth: .infinity, minHeight: 38)
+                            .frame(maxWidth: .infinity, minHeight: 44)
                             .foregroundStyle(on ? theme.silk : theme.haze)
                             .background(on ? theme.selected : Color.clear, in: .capsule)
                             .contentShape(.capsule)
@@ -278,7 +330,7 @@ struct ReaderChaptersSheet: View {
             }
             if hasPages && tab == 0 { pages } else { chapters }
         }
-        .frame(width: ReaderDevice.isPhone ? nil : 380, height: ReaderDevice.isPhone ? nil : 520)
+        .frame(width: ReaderDevice.isPhone ? nil : 520, height: ReaderDevice.isPhone ? nil : 520)
         .presentationDetents([.fraction(0.55), .large])
         .presentationBackgroundInteraction(.enabled)
         .presentationBackground(theme.glassSolid)
@@ -287,42 +339,55 @@ struct ReaderChaptersSheet: View {
         .foregroundStyle(theme.silk)
     }
 
+    /// Every page of the chapter, as the person counts them: both halves of a spread are here.
+    private var pageList: [(number: Int, leaf: Int, part: LeafPart)] {
+        var all: [(Int, Int, LeafPart)] = []
+        for (index, leaf) in model.leaves.enumerated() where !leaf.endPage {
+            for part in leaf.parts { all.append((Int(part.page) + 1, index, part)) }
+        }
+        return all.sorted { $0.0 < $1.0 }
+    }
+
     private var pages: some View {
-        ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                ForEach(0..<model.leaves.count, id: \.self) { index in
-                    let leaf = model.leaves[index]
-                    if !leaf.endPage {
-                        Button {
-                            model.requestJump(index)
-                            model.sheet = nil
-                        } label: {
-                            thumb(leaf, index)
-                        }
-                        .buttonStyle(.plain)
+        let rtl = model.view?.direction == .rightToLeft
+        let columns = ReaderDevice.isPhone
+            ? Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
+            : Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
+        return ScrollView {
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(pageList, id: \.number) { entry in
+                    Button {
+                        model.requestJump(entry.leaf)
+                        model.sheet = nil
+                    } label: {
+                        thumb(entry.part, number: entry.number, open: entry.leaf == model.current)
                     }
+                    .buttonStyle(.plain)
+                    .environment(\.layoutDirection, .leftToRight)
                 }
             }
             .padding(.horizontal, 16).padding(.bottom, 16)
+            // A right-to-left series lays its grid out from the right.
+            .environment(\.layoutDirection, rtl ? .rightToLeft : .leftToRight)
         }
     }
 
-    private func thumb(_ leaf: Leaf, _ index: Int) -> some View {
+    private func thumb(_ part: LeafPart, number: Int, open: Bool) -> some View {
         let chapter = model.view?.chapter.id ?? ""
+        let file = model.file(of: part, chapter: chapter)
         return VStack(spacing: 4) {
             ZStack {
                 Rectangle().fill(theme.raised)
-                if let part = leaf.parts.first, let file = model.file(of: part, chapter: chapter) {
-                    PageImage(file: file, longest: 240)
-                }
+                if let file { PageImage(file: file, longest: 240, fill: true) }
             }
             .aspectRatio(0.7, contentMode: .fit)
             .clipShape(.rect(cornerRadius: 8))
             .overlay {
-                if index == model.current { RoundedRectangle(cornerRadius: 8).stroke(theme.silk, lineWidth: 2) }
+                if open { RoundedRectangle(cornerRadius: 8).stroke(theme.silk, lineWidth: 2) }
             }
-            Text("\(model.pageNumber(of: index))").font(.ui(13)).monospacedDigit().foregroundStyle(theme.haze)
+            Text("\(number)").font(.ui(13)).monospacedDigit().foregroundStyle(theme.haze)
         }
+        .onAppear { if file == nil { model.needPage(part.page) } }
     }
 
     private var chapters: some View {
@@ -334,7 +399,7 @@ struct ReaderChaptersSheet: View {
                 ForEach(0..<model.chapters.count, id: \.self) { group in
                     let volume = model.chapters[group]
                     if let name = volume.title ?? volume.volume.map({ L.readerVolume(volume: $0) }) {
-                        Text(name).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(.uppercase)
+                        Text(name).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
                             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 6)
                     }
                     ForEach(0..<volume.chapters.count, id: \.self) { row in chapterRow(volume.chapters[row]) }

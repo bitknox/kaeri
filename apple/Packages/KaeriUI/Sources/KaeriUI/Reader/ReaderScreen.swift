@@ -12,9 +12,12 @@ public struct ReaderScreen: View {
     let onClose: () -> Void
     @Environment(\.displayScale) private var displayScale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var size = CGSize(width: 390, height: 844)
     @State private var hideTask: Task<Void, Never>?
     @AppStorage(ReaderDefaults.background) private var background = "theme"
+    @AppStorage(ReaderDefaults.system) private var system = false
+    @Environment(\.colorScheme) private var colorScheme
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -30,25 +33,31 @@ public struct ReaderScreen: View {
     }
 
     var look: String { model.choice(.look) ?? "dark" }
-    var theme: ReaderTheme { .forLook(look) }
+    var theme: ReaderTheme { .forLook(system ? (colorScheme == .dark ? "dark" : "light") : look) }
     var paper: Bool { model.isOn(.paperMode) || model.focusPaper }
     var tone: PageTone { PageTone(dim: paper, grey: model.isOn(.greyscalePages)) }
     var rtl: Bool { model.view?.direction == .rightToLeft }
 
     public var body: some View {
-        ZStack {
-            (model.medium == .manga ? theme.backdrop(background) : theme.page).ignoresSafeArea()
-            content
-            ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close)
-            ReaderNotices(model: model, theme: theme, mac: mac)
+        // The whole screen in every state: the pages and the chrome are laid out in a box that
+        // ignores the safe area, so the status bar coming and going moves nothing.
+        GeometryReader { proxy in
+            ZStack {
+                (model.medium == .manga ? theme.backdrop(background) : theme.page)
+                content
+                ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close)
+                ReaderNotices(model: model, theme: theme, mac: mac)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .onAppear { resize(proxy.size) }
+            .onChange(of: proxy.size) { _, new in resize(new) }
         }
-        .background(GeometryReader { proxy in
-            Color.clear.onAppear { resize(proxy.size) }.onChange(of: proxy.size) { _, new in resize(new) }
-        })
-        .preferredColorScheme(theme.scheme)
+        .ignoresSafeArea()
+        .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
+        .preferredColorScheme(system ? nil : theme.scheme)
         .environment(\.readerPaper, paper)
         .environment(\.readerClose, close)
-        .animation(reduceMotion || paper ? nil : .fadeIn, value: model.chromeShown)
+        .animation(paper ? nil : (model.chromeShown ? .fadeIn : .fadeOut), value: model.chromeShown)
         #if os(macOS)
         .onContinuousHover { phase in
             if case .active = phase { pointerMoved() }
@@ -97,7 +106,7 @@ public struct ReaderScreen: View {
     /// A tap at the horizontal fraction `x`. The middle third shows the chrome; the next tap hides it.
     private func tap(_ x: Double) {
         if model.sheet != nil { return }
-        if model.chromeShown { model.chromeShown = false } else if x > 0.33 && x < 0.67 { model.chromeShown = true }
+        if model.chromeShown { model.hideChrome() } else if x > 0.33 && x < 0.67 { model.chromeShown = true }
     }
 
     #if os(macOS)
@@ -106,7 +115,7 @@ public struct ReaderScreen: View {
         hideTask?.cancel()
         hideTask = Task {
             try? await Task.sleep(for: .seconds(2))
-            guard !Task.isCancelled, model.sheet == nil else { return }
+            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome else { return }
             model.chromeShown = false
             NSCursor.setHiddenUntilMouseMoves(true)
         }
@@ -207,18 +216,26 @@ struct ReaderOpening: View {
     let model: ReaderModel
     let theme: ReaderTheme
     @State private var seconds = 0
+    @State private var shown = false
 
     var body: some View {
         let chapter = model.view?.chapter.label ?? ""
         VStack(spacing: 14) {
-            ProgressView().controlSize(.regular).tint(theme.haze)
-            Text(seconds >= 3 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: chapter))
-                .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
-                .contentTransition(.opacity)
+            if shown {
+                ProgressView().controlSize(.regular).tint(theme.haze)
+                Text(seconds >= 4 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: chapter))
+                    .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
+                    .contentTransition(.opacity)
+            }
         }
+        .transition(.opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
+            // Nothing for 600 ms, then the spinner and its line; the slow line comes at 4 s.
             seconds = 0
+            try? await Task.sleep(for: .milliseconds(600))
+            withAnimation(.fadeIn) { shown = true }
+            seconds = 1
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 seconds += 1
@@ -244,6 +261,8 @@ struct ReaderChapterFailed: View {
                 Button(L.readerChooseSource, action: close).buttonStyle(ReaderPillStyle(theme: theme, height: 44))
             }
             .padding(.top, 6)
+            Button(L.readerClose, action: close).buttonStyle(.plain)
+                .font(.ui(15, weight: .semibold)).foregroundStyle(theme.haze).frame(minHeight: 44)
         }
         .frame(maxWidth: 360, alignment: .leading)
         .padding(28)

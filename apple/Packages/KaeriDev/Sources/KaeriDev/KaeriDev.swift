@@ -221,6 +221,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         do {
             guard let window = Snapshot.window else { throw Snapshot.Problem.noWindow }
+            await Snapshot.snapshotWebViews(in: window)
             try Snapshot.write(window, to: url)
             if options.playerShot == .pictureInPicture {
                 // The system's floating window is another process's: what it shows is the frame
