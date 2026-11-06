@@ -289,7 +289,8 @@ public sealed partial class ProvidersPage : Page
             update.Children.Add(Ui.Text(T.SourcesVersionReady(next), "BodyStrongTextBlockStyle"));
             if (row.Update?.NewHosts is { Length: > 0 } added)
                 update.Children.Add(Ui.Haze(T.StoresUpdateContacts(string.Join(", ", added))));
-            var install = Ui.Label(T.ActionUpdate, (_, _) => ConfirmUpdate(info, store.Id, listing.Id, row.Update?.NewHosts ?? []), accent: true);
+            // Held with a ring until the update ends.
+            var install = JobButton.Make(ctx, listing.Id, T.ActionUpdate, () => ConfirmUpdate(info, store.Id, listing.Id, row.Update?.NewHosts ?? []), accent: true);
             install.HorizontalAlignment = HorizontalAlignment.Left;
             update.Children.Add(install);
             Detail.Children.Add(Ui.Card(update));
@@ -336,7 +337,7 @@ public sealed partial class ProvidersPage : Page
     }
 
     /// <summary>An update that would contact new hosts says which, and asks; otherwise it installs.</summary>
-    async void ConfirmUpdate(ProviderInfo info, string store, string plugin, string[] added)
+    async Task<ulong?> ConfirmUpdate(ProviderInfo info, string store, string plugin, string[] added)
     {
         if (added.Length > 0)
         {
@@ -350,9 +351,9 @@ public sealed partial class ProvidersPage : Page
                 DefaultButton = ContentDialogButton.Close,
             };
             if (await Dialogs.Show(dialog) != ContentDialogResult.Primary)
-                return;
+                return null;
         }
-        ctx.Send(new Command.InstallPlugin(store, plugin));
+        return ctx.Send(new Command.InstallPlugin(store, plugin));
     }
 
     /// <summary>Below about 760 the detail goes under the list, as one column.</summary>

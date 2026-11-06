@@ -180,10 +180,11 @@ public sealed partial class StoresPage : Page
         switch (plugin.Status)
         {
             case StorePluginStatus.Available:
-                buttons.Children.Add(Ui.Label(T.ActionInstall, (_, _) => ctx.Send(new Command.InstallPlugin(store.Id, plugin.Id))));
+                // Held with a ring until the install ends: the row then says it is installed.
+                buttons.Children.Add(JobButton.Make(ctx, plugin.Id, T.ActionInstall, () => Task.FromResult(ctx.Send(new Command.InstallPlugin(store.Id, plugin.Id)))));
                 break;
             case StorePluginStatus.Update:
-                buttons.Children.Add(Ui.Label(T.ActionUpdate, (_, _) => Update(store, plugin)));
+                buttons.Children.Add(JobButton.Make(ctx, plugin.Id, T.ActionUpdate, () => Update(store, plugin)));
                 buttons.Children.Add(Ui.Label(T.ActionRemove, (_, _) => RemovePlugin(plugin)));
                 break;
             case StorePluginStatus.Installed or StorePluginStatus.AddedByHand:
@@ -440,12 +441,12 @@ public sealed partial class StoresPage : Page
     }
 
     /// <summary>An update that would contact new hosts names them and asks first.</summary>
-    async void Update(StoreRow store, StorePluginRow plugin)
+    async Task<ulong?> Update(StoreRow store, StorePluginRow plugin)
     {
         if (plugin.Status is StorePluginStatus.Update { NewHosts: { Length: > 0 } added }
             && !await Ui.Confirm(XamlRoot, T.SourcesUpdateTitle(plugin.Name), T.StoresUpdateContacts(string.Join(", ", added)), T.ActionUpdate))
-            return;
-        ctx.Send(new Command.InstallPlugin(store.Id, plugin.Id));
+            return null;
+        return ctx.Send(new Command.InstallPlugin(store.Id, plugin.Id));
     }
 
     /// <summary>Below about 760 the detail goes under the list, as one column.</summary>
