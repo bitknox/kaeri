@@ -71,6 +71,7 @@ import app.kaeri.reader.readerSurface
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
 import app.kaeri.reader.text
+import app.kaeri.store.text
 
 /** What the phone reader leaves to the app around it. */
 class PhoneReaderActions(

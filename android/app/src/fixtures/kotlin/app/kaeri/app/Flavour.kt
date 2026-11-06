@@ -309,7 +309,7 @@ internal object Flavour {
         // Left to the app's own screens when the launch asked for one.
         if (intent.getStringExtra("reader") == "off") return
         app.kaeri.reader.phone.ReaderLauncher.open(
-            app.kaeri.reader.phone.ReaderRequest(app.kaeri.engine.core.WorkId(work), eink = eink),
+            app.kaeri.reader.phone.ReaderRequest(work, eink = eink),
         )
     }
 

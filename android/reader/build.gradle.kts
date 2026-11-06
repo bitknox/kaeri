@@ -23,6 +23,8 @@ dependencies {
     implementation(project(":i18n"))
     // The novel host's document-start script and message listener.
     implementation(libs.webkit)
+    // Back closes what is over the pages before the reader.
+    implementation(libs.activity.compose)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
