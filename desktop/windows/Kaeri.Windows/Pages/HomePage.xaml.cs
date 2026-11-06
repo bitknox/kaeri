@@ -236,11 +236,21 @@ public sealed partial class HomePage : Page, IPageKeys
         FirstMargin();
     }
 
-    /// <summary>The first shelf sits 40 under the spotlight; with no spotlight it has nothing to clear.</summary>
+    /// <summary>
+    /// Every shelf sits 40 under what is above it; the first, with no spotlight, has nothing to
+    /// clear. Set for all of them each time, since a shelf that was first once (a week drawn
+    /// before Continue arrived) is not first later and needs its gap back.
+    /// </summary>
     void FirstMargin()
     {
-        if (Shelves.Children.FirstOrDefault() is FrameworkElement first && Spot.Visibility != Visibility.Visible)
-            first.Margin = new Thickness(0);
+        for (var i = 0; i < Shelves.Children.Count; i++)
+        {
+            if (Shelves.Children[i] is not FrameworkElement shelf)
+                continue;
+            var top = i == 0 && Spot.Visibility != Visibility.Visible ? 0 : HomeWording.ShelfGap;
+            if (shelf.Margin.Top != top)
+                shelf.Margin = new Thickness(0, top, 0, 0);
+        }
     }
 
     FrameworkElement Make(HomeSection section, HomeView home) =>
