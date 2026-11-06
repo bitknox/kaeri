@@ -3256,6 +3256,7 @@ dependencies = [
  "image",
  "jiff",
  "kaeri-audio-tap",
+ "kaeri-books",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",
@@ -3264,6 +3265,7 @@ dependencies = [
  "kaeri-meta",
  "kaeri-model",
  "kaeri-net",
+ "kaeri-pages",
  "kaeri-party",
  "kaeri-playback",
  "kaeri-player",
@@ -3285,7 +3287,9 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "toml",
  "tracing",
+ "zip",
 ]
 
 [[package]]

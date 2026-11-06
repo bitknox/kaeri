@@ -70,6 +70,11 @@ impl ConfigState {
         self.fill();
     }
 
+    /// A phone or a tablet, as the app said.
+    pub fn handheld(&self) -> bool {
+        self.handheld
+    }
+
     /// Tell `store`'s sync log of every shared setting written from here on.
     pub fn set_sync(&mut self, store: kaeri_store::Store) {
         self.sync = Some(store);

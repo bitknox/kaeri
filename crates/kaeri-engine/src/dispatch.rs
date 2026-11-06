@@ -466,8 +466,8 @@ pub(crate) fn dispatch(
         }
 
         // Reading: refused in place while it ships dark. See `reading`.
-        Command::Reading(command) => crate::reading::reading(&engine.reading, command, tx),
-        Command::Reader(command) => crate::reading::reader(&engine.reading, command, tx),
+        Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
+        Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
         Command::BookSources(command) => {
             crate::reading::book_sources(&engine.reading, command, tx)
         }
@@ -631,6 +631,11 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
+            if phase != kaeri_model::command::AppState::Foreground {
+                let EngineState { config, reader, .. } = engine;
+                let cx = reader.cx(config, services, tx);
+                reader.background(&cx);
+            }
             ahead::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
@@ -1147,6 +1152,16 @@ pub(crate) async fn handle_internal(
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
         Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::Reader { session, wake } => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.wake(&mut cx, session, wake);
+        }
+        Internal::ReadingSynced => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.synced(&mut cx);
+        }
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);
