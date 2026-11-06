@@ -744,6 +744,32 @@ impl SourceChapter {
         }
     }
 
+    /// A chapter built from the parts a folder or a server knows: its volume, its number as
+    /// written (`10.5`), and a title or file name to fall back on. A numbered chapter reads
+    /// "Chapter 10.5"; a book that is a whole volume and has no chapter number reads "Volume 2";
+    /// anything else keeps `fallback`.
+    pub fn of(
+        id: impl Into<String>,
+        volume: Option<&str>,
+        number: Option<&str>,
+        title: Option<&str>,
+        fallback: &str,
+    ) -> Self {
+        let label = match (number, volume) {
+            (Some(number), _) => format!("Chapter {number}"),
+            (None, Some(volume)) => format!("Volume {volume}"),
+            (None, None) => title.filter(|t| !t.is_empty()).unwrap_or(fallback).to_owned(),
+        };
+        let mut chapter = Self::new(id, label);
+        // A whole-volume book has no chapter number, whatever its label parses to.
+        if number.is_none() && volume.is_some() {
+            chapter.number = None;
+        }
+        chapter.volume = volume.map(str::to_owned);
+        chapter.title = title.filter(|t| !t.is_empty()).map(str::to_owned);
+        chapter
+    }
+
     /// Its key, in a work whose numbering restarts per volume or not.
     pub fn key(&self, restarts_per_volume: bool) -> ChapterKey {
         match (self.number, self.volume.as_deref()) {
@@ -888,6 +914,18 @@ mod tests {
         chapter.volume = Some("2".into());
         assert_eq!(chapter.key(true).as_str(), "v2/10.5");
         assert_eq!(SourceChapter::new("c-2", "Extra").key(false).as_str(), "x/-/extra");
+    }
+
+    #[test]
+    fn a_chapter_built_from_parts_reads_as_a_chapter_a_volume_or_a_title() {
+        let chapter = SourceChapter::of("a", Some("2"), Some("10.5"), None, "x");
+        assert_eq!(chapter.number_raw, "Chapter 10.5");
+        assert_eq!(chapter.key(true).as_str(), "v2/10.5");
+        let volume = SourceChapter::of("b", Some("3"), None, Some("Moonlit v03"), "x");
+        assert_eq!((volume.number_raw.as_str(), volume.number), ("Volume 3", None));
+        assert_eq!(volume.key(false).as_str(), "x/3/volume 3");
+        let loose = SourceChapter::of("c", None, None, None, "Special");
+        assert_eq!(loose.key(false).as_str(), "x/-/special");
     }
 
     #[test]

@@ -30,6 +30,8 @@ thiserror.workspace = true
 tokio.workspace = true
 futures.workspace = true
 tracing.workspace = true
+# A book chapter's publication date, RFC 3339 or a bare date.
+jiff.workspace = true
 # `cache` is what keeps plugin compilation off the critical path a second time: wasmtime manages
 # the on-disk artefact cache itself, so we get it without the `unsafe` that hand-rolling
 # `deserialize_file` would require in a crate whose entire job is running untrusted code.

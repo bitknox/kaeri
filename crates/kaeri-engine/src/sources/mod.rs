@@ -201,22 +201,35 @@ pub fn spawn_plugin_load(
     config: Config,
     http: HttpClient,
     paths: Paths,
+    books: Option<crate::book_plugins::BookPlugins>,
 ) -> tokio::task::JoinHandle<Option<Msg>> {
+    let shows = plugins_enabled(&config);
     // Said before the task is spawned, so a play sent the moment the engine is up sees it.
-    let arriving = plugins_enabled(&config).then(|| Arrivals::expected(&registry));
+    let arriving = shows.then(|| Arrivals::expected(&registry));
     tokio::spawn(async move {
-        let _arriving = arriving?;
+        if !shows && books.is_none() {
+            return None;
+        }
+        let _arriving = arriving;
         let started = std::time::Instant::now();
-        match load_plugins(&config, &http, &paths).await {
-            Ok((loaded, outdated)) => {
-                let count = loaded.len();
-                registry.extend(loaded);
+        match load_plugins(&config, &http, &paths, books.is_some()).await {
+            Ok(loaded) => {
+                if let Some(holder) = &books {
+                    let count = loaded.books.len();
+                    holder.extend(loaded.books);
+                    tracing::info!(count, "book plugins loaded");
+                }
+                if !shows {
+                    return None;
+                }
+                let count = loaded.providers.len();
+                registry.extend(loaded.providers);
                 arrange(&registry, &config);
                 tracing::info!(count, elapsed = ?started.elapsed(), "plugins registered");
-                (!outdated.is_empty()).then(|| {
+                (!loaded.outdated.is_empty()).then(|| {
                     Msg::Store(StoreMsg::PluginsOutdated {
-                        count: outdated.len() as i64,
-                        names: outdated.join(", "),
+                        count: loaded.outdated.len() as i64,
+                        names: loaded.outdated.join(", "),
                     })
                 })
             }
@@ -304,45 +317,75 @@ pub enum PluginLoadError {
     Failed(String),
 }
 
-/// Load one plugin file as a provider, for a plugin installed while the app runs.
+/// One plugin file, loaded: a show source for the chain, or a book source.
+pub enum LoadedPlugin {
+    Shows(Arc<dyn kaeri_core::traits::Provider>),
+    Books(Arc<kaeri_plugin::WasmBookSource>),
+}
+
+/// Load one plugin file, for a plugin installed while the app runs. A book source loads only
+/// when `books` says reading is available; otherwise it is refused as a source of another kind.
 pub async fn load_plugin(
     config: &Config,
     http: &HttpClient,
     paths: &Paths,
     path: &std::path::Path,
-) -> std::result::Result<Arc<dyn kaeri_core::traits::Provider>, PluginLoadError> {
+    books: bool,
+) -> std::result::Result<LoadedPlugin, PluginLoadError> {
     let host = plugin_host(config, http, paths).map_err(PluginLoadError::Failed)?;
-    let plugin = host.load(path).await.map_err(|e| match e {
+    let refused = |e| match e {
         kaeri_plugin::PluginError::OutdatedAbi { .. } => PluginLoadError::Outdated,
         e => PluginLoadError::Failed(e.to_string()),
-    })?;
-    Ok(Arc::new(kaeri_plugin::WasmProvider::new(plugin)))
+    };
+    if !books {
+        let plugin = host.load(path).await.map_err(refused)?;
+        return Ok(LoadedPlugin::Shows(Arc::new(kaeri_plugin::WasmProvider::new(plugin))));
+    }
+    Ok(match host.load_any(path).await.map_err(refused)? {
+        kaeri_plugin::AnyPlugin::Shows(plugin) => {
+            LoadedPlugin::Shows(Arc::new(kaeri_plugin::WasmProvider::new(plugin)))
+        }
+        kaeri_plugin::AnyPlugin::Books(plugin) => {
+            LoadedPlugin::Books(Arc::new(kaeri_plugin::WasmBookSource::new(plugin)))
+        }
+    })
 }
 
-/// Load every plugin in the plugin directory as a provider.
+/// Every plugin in the plugin directory: the show sources, the book sources when `books` asks
+/// for them, and the names of those built for an older interface.
+struct LoadedPlugins {
+    providers: Vec<Arc<dyn kaeri_core::traits::Provider>>,
+    books: Vec<kaeri_plugin::WasmBookSource>,
+    outdated: Vec<String>,
+}
+
+/// Load every plugin in the plugin directory.
 async fn load_plugins(
     config: &Config,
     http: &HttpClient,
     paths: &Paths,
-) -> std::result::Result<(Vec<Arc<dyn kaeri_core::traits::Provider>>, Vec<String>), String> {
+    books: bool,
+) -> std::result::Result<LoadedPlugins, String> {
     let host = plugin_host(config, http, paths)?;
 
     let dir = paths.plugin_dir();
-    let loaded = kaeri_plugin::load_providers_reporting(&host, &dir).await;
+    let loaded = kaeri_plugin::load_plugins_reporting(&host, &dir, books).await;
     tracing::info!(
         dir = %dir.display(),
         count = loaded.providers.len(),
-        "plugins registered"
+        books = loaded.books.len(),
+        "plugins loaded"
     );
 
-    Ok((
-        loaded
+    Ok(LoadedPlugins {
+        providers: loaded
             .providers
             .into_iter()
             .map(|p| Arc::new(p) as Arc<dyn kaeri_core::traits::Provider>)
             .collect(),
-        loaded.outdated,
-    ))
+        books: loaded.books,
+        outdated: loaded.outdated,
+    })
 }
 
 /// Torrent playback, up: its route, and its session.

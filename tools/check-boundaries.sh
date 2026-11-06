@@ -43,6 +43,9 @@ rules=(
   # Fetching books is kaeri-bookserver's and the engine's.
   "kaeri-books|$terminal"
   "kaeri-books|^(kaeri-engine|kaeri-net|reqwest|hyper|tokio) "
+  # Clients for book servers: the protocols and the core types, never the engine.
+  "kaeri-bookserver|$terminal"
+  "kaeri-bookserver|^kaeri-engine "
   "kaeri-tui|^kaeri-engine "
   # The reader's image pipeline: pixels in, pixels out, run on the engine's prefetch worker.
   # No runtime, socket, database or FFI, no thread pool of its own, and no other Kaeri crate.

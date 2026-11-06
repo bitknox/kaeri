@@ -19,6 +19,7 @@ kaeri-core = { path = "crates/kaeri-core" }
 kaeri-net = { path = "crates/kaeri-net" }
 kaeri-meta = { path = "crates/kaeri-meta" }
 kaeri-jellyfin = { path = "crates/kaeri-jellyfin" }
+kaeri-bookserver = { path = "crates/kaeri-bookserver" }
 kaeri-model = { path = "crates/kaeri-model" }
 # Without its defaults, so each crate says whether it wants the desktop's parts: the binary
 # does, and a phone's build of the FFI does not. See the engine's `desktop` feature.

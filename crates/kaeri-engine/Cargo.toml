@@ -57,6 +57,8 @@ kaeri-plugin = { workspace = true, features = ["fetch"] }
 kaeri-plugin-store.workspace = true
 kaeri-store-server.workspace = true
 kaeri-providers.workspace = true
+kaeri-books.workspace = true
+kaeri-bookserver.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true
@@ -64,7 +66,6 @@ kaeri-sync.workspace = true
 hex = "0.4"
 kaeri-track.workspace = true
 # The reader: book files opened and pages processed on the page worker.
-kaeri-books.workspace = true
 kaeri-pages.workspace = true
 toml.workspace = true
 open = { workspace = true, optional = true }

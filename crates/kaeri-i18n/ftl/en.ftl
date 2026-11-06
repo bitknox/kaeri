@@ -757,6 +757,9 @@ plugin-publish-failed = Couldn't publish { $plugin }. { $reason }
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } is no longer in the plugin folder.
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } doesn't list book sources yet. Its owner can update the plugin store to add them.
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = This device joined { $store } with its link. Paste the same link on the other device.
 

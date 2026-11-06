@@ -267,6 +267,7 @@ extension StoreMsg {
         case .pluginInstallFailed(let plugin, let reason): L.pluginInstallFailed(plugin: plugin, reason: reason)
         case .pluginPublishFailed(let plugin, let reason): L.pluginPublishFailed(plugin: plugin, reason: reason)
         case .pluginMissingLocally(let plugin): L.pluginMissingLocally(plugin: plugin)
+        case .storeTakesNoBooks(let store): L.storeTakesNoBooks(store: store)
         case .storeInviteNeedsLink(let store): L.storeInviteNeedsLink(store: store)
         case .storeLinkMalformed(let reason): L.storeLinkMalformed(reason: reason)
         case .storeLinkWrongKey: L.storeLinkWrongKey

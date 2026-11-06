@@ -268,6 +268,7 @@ public static class MsgText
         StoreMsg.PluginInstallFailed x => T.PluginInstallFailed(x.Plugin, x.Reason),
         StoreMsg.PluginPublishFailed x => T.PluginPublishFailed(x.Plugin, x.Reason),
         StoreMsg.PluginMissingLocally x => T.PluginMissingLocally(x.Plugin),
+        StoreMsg.StoreTakesNoBooks x => T.StoreTakesNoBooks(x.Store),
         StoreMsg.StoreInviteNeedsLink x => T.StoreInviteNeedsLink(x.Store),
         StoreMsg.StoreLinkMalformed x => T.StoreLinkMalformed(x.Reason),
         StoreMsg.StoreLinkWrongKey => T.StoreLinkWrongKey,

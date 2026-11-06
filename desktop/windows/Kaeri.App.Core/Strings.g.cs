@@ -720,6 +720,9 @@ public static partial class T
     /// <summary>Error: a plugin to publish is no longer in the plugin folder.</summary>
     public static string PluginMissingLocally(string plugin) => Fill(Get("PluginMissingLocally"), ("plugin", plugin));
 
+    /// <summary>Error: a book source cannot be published to a store whose server is too old to list book sources.</summary>
+    public static string StoreTakesNoBooks(string store) => Fill(Get("StoreTakesNoBooks"), ("store", store));
+
     /// <summary>Error: an invite for another device cannot be made from a device that joined with the open link.</summary>
     public static string StoreInviteNeedsLink(string store) => Fill(Get("StoreInviteNeedsLink"), ("store", store));
 
@@ -9045,6 +9048,7 @@ public static partial class T
         ["PluginInstallFailed"] = "Couldn't install {plugin}. {reason}",
         ["PluginPublishFailed"] = "Couldn't publish {plugin}. {reason}",
         ["PluginMissingLocally"] = "{plugin} is no longer in the plugin folder.",
+        ["StoreTakesNoBooks"] = "{store} doesn't list book sources yet. Its owner can update the plugin store to add them.",
         ["StoreInviteNeedsLink"] = "This device joined {store} with its link. Paste the same link on the other device.",
         ["StoreLinkMalformed"] = "The plugin store sent a link that doesn't work. Ask its owner to check the plugin store. {reason}",
         ["StoreLinkWrongKey"] = "The plugin store made a link with a different key. Check the address it was started with.",

@@ -511,6 +511,8 @@
     <string name="plugin_publish_failed">Couldn\'t publish %1$s. %2$s</string>
     <!-- Error: a plugin to publish is no longer in the plugin folder. -->
     <string name="plugin_missing_locally">%1$s is no longer in the plugin folder.</string>
+    <!-- Error: a book source cannot be published to a store whose server is too old to list book sources. -->
+    <string name="store_takes_no_books">%1$s doesn\'t list book sources yet. Its owner can update the plugin store to add them.</string>
     <!-- Error: an invite for another device cannot be made from a device that joined with the open link. -->
     <string name="store_invite_needs_link">This device joined %1$s with its link. Paste the same link on the other device.</string>
     <!-- Error: the store sent an invite link that does not parse. The reason comes from the link parser. -->

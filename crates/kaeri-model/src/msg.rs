@@ -949,6 +949,8 @@ pub enum StoreMsg {
     PluginPublishFailed { plugin: String, reason: String },
     /// Error: a plugin to publish is no longer in the plugin folder.
     PluginMissingLocally { plugin: String },
+    /// Error: a book source cannot be published to a store whose server is too old to list book sources.
+    StoreTakesNoBooks { store: String },
     /// Error: an invite for another device cannot be made from a device that joined with the open link.
     StoreInviteNeedsLink { store: String },
     /// Error: the store sent an invite link that does not parse. The reason comes from the link parser.
@@ -1060,6 +1062,7 @@ impl StoreMsg {
             Self::PluginInstallFailed { .. } => "plugin-install-failed",
             Self::PluginPublishFailed { .. } => "plugin-publish-failed",
             Self::PluginMissingLocally { .. } => "plugin-missing-locally",
+            Self::StoreTakesNoBooks { .. } => "store-takes-no-books",
             Self::StoreInviteNeedsLink { .. } => "store-invite-needs-link",
             Self::StoreLinkMalformed { .. } => "store-link-malformed",
             Self::StoreLinkWrongKey => "store-link-wrong-key",
@@ -1142,6 +1145,7 @@ impl StoreMsg {
             Self::PluginInstallFailed { plugin, reason } => vec![("plugin", Value::Text(plugin.clone())), ("reason", Value::Text(reason.clone()))],
             Self::PluginPublishFailed { plugin, reason } => vec![("plugin", Value::Text(plugin.clone())), ("reason", Value::Text(reason.clone()))],
             Self::PluginMissingLocally { plugin } => vec![("plugin", Value::Text(plugin.clone()))],
+            Self::StoreTakesNoBooks { store } => vec![("store", Value::Text(store.clone()))],
             Self::StoreInviteNeedsLink { store } => vec![("store", Value::Text(store.clone()))],
             Self::StoreLinkMalformed { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::StoreLinkWrongKey => Vec::new(),

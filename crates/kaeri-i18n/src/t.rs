@@ -1180,6 +1180,11 @@ pub fn plugin_missing_locally(plugin: &str) -> String {
     text("plugin-missing-locally", &[("plugin", Arg::Text(plugin))])
 }
 
+/// Error: a book source cannot be published to a store whose server is too old to list book sources.
+pub fn store_takes_no_books(store: &str) -> String {
+    text("store-takes-no-books", &[("store", Arg::Text(store))])
+}
+
 /// Error: an invite for another device cannot be made from a device that joined with the open link.
 pub fn store_invite_needs_link(store: &str) -> String {
     text("store-invite-needs-link", &[("store", Arg::Text(store))])

@@ -757,6 +757,9 @@ plugin-publish-failed = [Çöüļðñ'ţ þüƀļîšĥ { $plugin }. { $reason }
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = [{ $plugin } îš ñö ļöñĝéŕ îñ ţĥé þļüĝîñ ƒöļðéŕ.~~~~~~~~~~~~]
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = [{ $store } ðöéšñ'ţ ļîšţ ƀööķ šöüŕçéš ýéţ. Îţš öŵñéŕ çàñ üþðàţé ţĥé þļüĝîñ šţöŕé ţö àðð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = [Ţĥîš ðéṽîçé ĵöîñéð { $store } ŵîţĥ îţš ļîñķ. Þàšţé ţĥé šàɱé ļîñķ öñ ţĥé öţĥéŕ ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~]
 

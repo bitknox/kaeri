@@ -271,6 +271,7 @@ fun StoreMsg.text(context: Context): String =
         is StoreMsg.PluginInstallFailed -> Strings.pluginInstallFailed(context, this.plugin, this.reason)
         is StoreMsg.PluginPublishFailed -> Strings.pluginPublishFailed(context, this.plugin, this.reason)
         is StoreMsg.PluginMissingLocally -> Strings.pluginMissingLocally(context, this.plugin)
+        is StoreMsg.StoreTakesNoBooks -> Strings.storeTakesNoBooks(context, this.store)
         is StoreMsg.StoreInviteNeedsLink -> Strings.storeInviteNeedsLink(context, this.store)
         is StoreMsg.StoreLinkMalformed -> Strings.storeLinkMalformed(context, this.reason)
         is StoreMsg.StoreLinkWrongKey -> Strings.storeLinkWrongKey(context)

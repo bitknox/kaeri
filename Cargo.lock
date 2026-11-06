@@ -3203,6 +3203,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaeri-bookserver"
+version = "0.3.1"
+dependencies = [
+ "async-trait",
+ "kaeri-books",
+ "kaeri-core",
+ "reqwest 0.13.1",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "kaeri-cast"
 version = "0.3.1"
 dependencies = [
@@ -3257,6 +3275,7 @@ dependencies = [
  "jiff",
  "kaeri-audio-tap",
  "kaeri-books",
+ "kaeri-bookserver",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",
@@ -3471,6 +3490,7 @@ dependencies = [
  "async-trait",
  "futures",
  "http",
+ "jiff",
  "kaeri-core",
  "kaeri-net",
  "regex",

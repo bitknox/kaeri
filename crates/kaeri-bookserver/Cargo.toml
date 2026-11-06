@@ -1,0 +1,30 @@
+[package]
+name = "kaeri-bookserver"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Clients for the book servers a person runs: Komga, Kavita and OPDS catalogues, as book sources"
+
+[lib]
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+kaeri-books.workspace = true
+async-trait.workspace = true
+reqwest.workspace = true
+roxmltree.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url = "2"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "io-util"] }
+tempfile = "3"
+
+[lints]
+workspace = true

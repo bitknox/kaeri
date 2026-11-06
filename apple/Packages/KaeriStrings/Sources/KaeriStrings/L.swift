@@ -986,6 +986,11 @@ public enum L {
         Self.format("plugin-missing-locally", fallback: "%1$@ is no longer in the plugin folder.", plugin)
     }
 
+    /// Error: a book source cannot be published to a store whose server is too old to list book sources.
+    public static func storeTakesNoBooks(store: String) -> String {
+        Self.format("store-takes-no-books", fallback: "%1$@ doesn't list book sources yet. Its owner can update the plugin store to add them.", store)
+    }
+
     /// Error: an invite for another device cannot be made from a device that joined with the open link.
     public static func storeInviteNeedsLink(store: String) -> String {
         Self.format("store-invite-needs-link", fallback: "This device joined %1$@ with its link. Paste the same link on the other device.", store)

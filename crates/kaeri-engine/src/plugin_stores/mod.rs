@@ -58,6 +58,9 @@ pub struct Stores {
     /// What an invite join calls this device unless the person joining names it otherwise: the
     /// kind of device the app runs on, as [`Self::labelled`] sets it.
     device_label: Arc<str>,
+    /// Reading is available, so book sources are shown, installed and published. Without it a
+    /// store's book sources are left out, as Kaeri 0.3 leaves them out.
+    reading: bool,
 }
 
 /// A link the store would not join with, and how to reach whoever runs it: the store's contact,
@@ -128,6 +131,7 @@ impl Stores {
             lock: Arc::new(tokio::sync::Mutex::new(())),
             offline: Arc::new(Mutex::new(HashMap::new())),
             device_label: stores::COMPUTER.into(),
+            reading: false,
         })
     }
 
@@ -150,6 +154,12 @@ impl Stores {
     #[must_use]
     pub fn labelled(self, kind: &str) -> Self {
         Self { device_label: stores::device_label(Some(kind), stores::COMPUTER).into(), ..self }
+    }
+
+    /// These stores, with book sources shown when reading is available.
+    #[must_use]
+    pub fn reading(self, available: bool) -> Self {
+        Self { reading: available, ..self }
     }
 
     pub fn plugin_dir(&self) -> &Path {
@@ -210,7 +220,7 @@ impl Stores {
     pub fn rows(&self) -> Result<Vec<StoreRow>, Msg> {
         let state = self.load()?;
         let offline = self.offline.lock().unwrap_or_else(|e| e.into_inner()).clone();
-        Ok(rows(&state, &self.plugin_dir, &offline))
+        Ok(rows(&state, &self.plugin_dir, &offline, self.reading))
     }
 
     /// Where each plugin a store installed came from, and the newer version that store offers
@@ -377,7 +387,7 @@ impl Stores {
             owners: index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
             plugins: index
                 .as_ref()
-                .map(|index| plugin_rows(&state, &id, index, &self.plugin_dir))
+                .map(|index| plugin_rows(&state, &id, index, &self.plugin_dir, self.reading))
                 .unwrap_or_default(),
             open: invite.open || index.as_ref().is_some_and(|index| index.open),
             anonymous: invite.open,
@@ -522,7 +532,9 @@ impl Stores {
         let (joined, token) = self.joined_with_token(store)?;
         let shown = joined.index.as_ref().and_then(|i| i.plugin(plugin)).cloned();
         let index = self.refresh_one(&joined, &token).await?;
-        let entry = index.plugin(plugin).cloned().ok_or_else(|| {
+        // A book source is not offered to a device without reading, whatever it asks for.
+        let offered = |entry: &&IndexEntry| self.reading || !entry.is_books();
+        let entry = index.plugin(plugin).filter(offered).cloned().ok_or_else(|| {
             Msg::Store(StoreMsg::StorePluginWithdrawn {
                 store: joined.name.clone(),
                 plugin: plugin.to_owned(),
@@ -846,12 +858,15 @@ impl Stores {
             .local_files(inspector.as_ref())
             .await
             .into_iter()
+            .filter(|(_, info)| self.reading || !info.is_books())
             .map(|(_, info)| LocalPluginRow {
                 published: joined
                     .index
                     .as_ref()
                     .and_then(|i| i.plugin(&info.id))
                     .map(|e| e.version.clone()),
+                books: info.is_books(),
+                media: reading_media(&info.media),
                 id: info.id,
                 name: info.name,
                 version: info.version,
@@ -911,6 +926,17 @@ impl Stores {
             .inspect(&bytes)
             .await
             .map_err(|e| publish_failed(plugin, Msg::verbatim(e)))?;
+        // A store from before book sources reads the manifest section and ignores the kind, so
+        // it would list a book source as a show source. Its info says whether it knows them.
+        if info.is_books() {
+            let takes_books = self.client.info(&joined.base).await.is_ok_and(|i| i.books);
+            if !takes_books {
+                return Err(publish_failed(
+                    plugin,
+                    Msg::Store(StoreMsg::StoreTakesNoBooks { store: joined.name.clone() }),
+                ));
+            }
+        }
         let stamped =
             manifest::stamp(&bytes, &info).map_err(|e| publish_failed(plugin, foreign(e)))?;
         let entry = self
@@ -1080,6 +1106,7 @@ pub fn rows(
     state: &LocalState,
     plugin_dir: &Path,
     offline: &HashMap<String, String>,
+    reading: bool,
 ) -> Vec<StoreRow> {
     state
         .stores
@@ -1105,7 +1132,7 @@ pub fn rows(
             plugins: joined
                 .index
                 .as_ref()
-                .map(|index| plugin_rows(state, &joined.id, index, plugin_dir))
+                .map(|index| plugin_rows(state, &joined.id, index, plugin_dir, reading))
                 .unwrap_or_default(),
             owners: joined.index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
             open: joined.index.as_ref().is_some_and(|index| index.open),
@@ -1120,15 +1147,20 @@ fn plugin_rows(
     store: &str,
     index: &Index,
     plugin_dir: &Path,
+    reading: bool,
 ) -> Vec<StorePluginRow> {
     index
         .plugins
         .iter()
+        // Book sources only where reading is available, as for the install itself.
+        .filter(|entry| reading || !entry.is_books())
         .map(|entry| StorePluginRow {
             id: entry.id.clone(),
             name: entry.name.clone(),
             version: entry.version.clone(),
             hosts: entry.allowed_hosts.clone(),
+            books: entry.is_books(),
+            media: reading_media(&entry.media),
             status: match state.status(store, entry, plugin_dir) {
                 PluginStatus::Available => StorePluginStatus::Available,
                 PluginStatus::Installed => StorePluginStatus::Installed,
@@ -1142,6 +1174,18 @@ fn plugin_rows(
             },
         })
         .collect()
+}
+
+/// A book source's media as an index or a manifest names them: those this version reads, each
+/// once. A medium a newer Kaeri knows and this one does not is left out.
+fn reading_media(media: &[String]) -> Vec<kaeri_core::media::Medium> {
+    let mut out = Vec::new();
+    for medium in media.iter().filter_map(|m| kaeri_core::media::Medium::parse(m.trim())) {
+        if medium.is_reading() && !out.contains(&medium) {
+            out.push(medium);
+        }
+    }
+    out
 }
 
 /// [`Stores::origins`], from the state file read.
@@ -1198,6 +1242,8 @@ mod tests {
             sha256: String::new(),
             size: 0,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 
@@ -1221,7 +1267,19 @@ mod tests {
                 key: key.encode(),
                 sequence: 1,
                 issued_at: 0,
-                plugins: vec![entry("new", "1.0.0"), entry("old", "2.0.0")],
+                plugins: vec![
+                    entry("new", "1.0.0"),
+                    entry("old", "2.0.0"),
+                    IndexEntry {
+                        kind: Some("books".into()),
+                        media: vec![
+                            "manga".into(),
+                            "comics-of-the-future".into(),
+                            "manga".into(),
+                        ],
+                        ..entry("pages", "1.0.0")
+                    },
+                ],
                 owners: vec!["Alex".into(), "Sam".into()],
                 open: true,
                 contact: None,
@@ -1241,7 +1299,7 @@ mod tests {
         );
 
         let offline = HashMap::from([("abc".to_owned(), "timed out".to_owned())]);
-        let rows = rows(&state, dir.path(), &offline);
+        let rows = rows(&state, dir.path(), &offline, false);
         assert_eq!(rows.len(), 1);
         let row = &rows[0];
         assert!(row.owner);
@@ -1261,6 +1319,14 @@ mod tests {
         assert_eq!(row.owners, ["Alex", "Sam"], "who runs it, from its signed list");
         assert!(row.open, "anyone can join it, from its signed list");
         assert!(!row.anonymous);
+        assert_eq!(row.plugins.len(), 2, "no book source without reading");
+        assert!(row.plugins.iter().all(|p| !p.books && p.media.is_empty()));
+
+        // With reading, the book source is listed as one, with the media this version reads.
+        let reading = super::rows(&state, dir.path(), &offline, true);
+        let pages = reading[0].plugins.iter().find(|p| p.id == "pages").unwrap();
+        assert!(pages.books);
+        assert_eq!(pages.media, [kaeri_core::media::Medium::Manga]);
 
         // What the Providers rows say of the plugin installed from it, and of its update.
         let store = ProviderOrigin::Store { id: "abc".into(), name: Some("Ours".into()) };

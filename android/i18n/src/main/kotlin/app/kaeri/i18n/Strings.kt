@@ -949,6 +949,10 @@ object Strings {
     fun pluginMissingLocally(context: Context, plugin: String): String =
         context.getString(R.string.plugin_missing_locally, plugin)
 
+    /** Error: a book source cannot be published to a store whose server is too old to list book sources. */
+    fun storeTakesNoBooks(context: Context, store: String): String =
+        context.getString(R.string.store_takes_no_books, store)
+
     /** Error: an invite for another device cannot be made from a device that joined with the open link. */
     fun storeInviteNeedsLink(context: Context, store: String): String =
         context.getString(R.string.store_invite_needs_link, store)

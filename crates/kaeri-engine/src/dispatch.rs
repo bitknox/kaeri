@@ -469,7 +469,7 @@ pub(crate) fn dispatch(
         Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
         Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
         Command::BookSources(command) => {
-            crate::reading::book_sources(&engine.reading, command, tx)
+            crate::reading::book_sources(&engine.reading, services, command, tx)
         }
         Command::Medium(command) => crate::reading::medium(engine, services, command, tx),
 

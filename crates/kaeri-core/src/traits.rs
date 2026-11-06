@@ -11,8 +11,8 @@ use async_trait::async_trait;
 
 use crate::{
     books::{
-        BookHints, BookIds, BookSourceManifest, ChapterContent, SeriesDetail, SeriesHit,
-        SourceChapter,
+        BookHints, BookIds, BookSourceManifest, ChapterContent, PageRef, SeriesDetail,
+        SeriesHit, SourceChapter,
     },
     error::ProviderError,
     ids::{AnilistId, ExternalIds, ProviderKey},
@@ -279,6 +279,38 @@ pub trait BookSource: Send + Sync {
     /// Cheap liveness probe. The default says it is answering.
     async fn health_check(&self) -> Result<(), ProviderError> {
         Ok(())
+    }
+
+    /// Whether local policy lets this source be asked right now: a drive that is not
+    /// connected, a server signed out here. Not a health event, as for [`Provider`]; the reason
+    /// is shown where the source is listed.
+    fn is_available(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Fetch one page image this source named, with the headers it carries. A source that
+    /// names pages the host can fetch plainly (a server's, with its sign-in header) keeps the
+    /// default, which the engine's own client answers; a plugin's goes through its allowlist.
+    /// The status is told as it came, so the registry can ask for fresh addresses on a 403 or 410.
+    async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
+        Err(PageError::Unsupported)
+    }
+}
+
+/// Why a page image could not be fetched.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PageError {
+    /// This source does not fetch its own pages: the engine's client does.
+    Unsupported,
+    /// The address answered with this status. 403 and 410 mean the address has expired.
+    Status(u16),
+    Failed(ProviderError),
+}
+
+impl PageError {
+    /// Whether asking the source for fresh addresses may help.
+    pub const fn expired(&self) -> bool {
+        matches!(self, Self::Status(403 | 410))
     }
 }
 
