@@ -238,15 +238,53 @@ sealed class Ctx
             });
             return null;
         }
+        // The join answered as the engine would, with its job's end: at once, after a second and
+        // a half (join-slow, for the ring), or refused with the store's reason (join-refused).
         if (Options.Showcase && command is Command.JoinStore)
         {
+            const ulong job = 9_000_001;
+            var refused = Options.Show == "join-refused";
+            _ = Task.Delay(Options.Show is "join-slow" or "join-refused" ? 1500 : 0).ContinueWith(_ => Window.DispatcherQueue.TryEnqueue(() =>
+            {
+                Event[] events = refused
+                    ? [new Event.Toast(new Notice(NoticeKind.Alert, "", Msg: new Msg.Store(new StoreMsg.StoreInviteUsedUp("Ren")))), new Event.JobDone(job)]
+                    : [new Event.StoreJoined("hotaru"), new Event.JobDone(job)];
+                foreach (var e in events)
+                    Session.Known.Take(e);
+                Heard(events);
+            }));
+            return job;
+        }
+        // A plugin's install that takes a second and a half to end, for the ring on its button.
+        if (Options.Showcase && command is Command.InstallPlugin && Options.Show == "install-slow")
+        {
+            const ulong job = 9_000_004;
+            _ = Task.Delay(1500).ContinueWith(_ => Window.DispatcherQueue.TryEnqueue(() => Inject(new Event.JobDone(job))));
+            return job;
+        }
+        // Sign-ins answered without any tracker, for Accounts' shots: Kitsu refused or signed in
+        // after a second and a half, and a browser sign-in left waiting for the browser.
+        if (command is Command.ConnectKitsu && Options.Show is "kitsu-refused" or "kitsu-signed-in")
+        {
+            const ulong job = 9_000_002;
+            _ = Task.Delay(1500).ContinueWith(_ => Window.DispatcherQueue.TryEnqueue(() =>
+            {
+                Inject(Options.Show == "kitsu-refused"
+                    ? new Event.Toast(new Notice(NoticeKind.Alert, "", Msg: new Msg.NoticeSignInFailed("Kitsu", "invalid credentials")))
+                    : new Event.Sync(new SyncState("kitsu", true, 0, 0, User: "mika")));
+                Inject(new Event.JobDone(job));
+            }));
+            return job;
+        }
+        if (command is Command.Connect connect && Options.Show == "accounts-states")
+        {
+            const ulong job = 9_000_003;
             Window.DispatcherQueue.TryEnqueue(() =>
             {
-                var events = new Event[] { new Event.StoreJoined("hotaru") };
-                Session.Known.Take(events[0]);
-                Heard(events);
+                Inject(new Event.Authorize(connect.Tracker, "https://tracker.example/authorize", "kaeri"));
+                Inject(new Event.JobDone(job));
             });
-            return null;
+            return job;
         }
         // A proxy dialog's check held while it checks, or answered as failed, for a screenshot:
         // the fixture's own check always passes.

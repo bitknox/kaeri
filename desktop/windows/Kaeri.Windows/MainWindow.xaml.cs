@@ -496,6 +496,16 @@ public sealed partial class MainWindow : Window
                 AskBeforeClosing();
             });
 #if KAERI_TESTING
+        // --show=accounts-states: Settings › Accounts with an expired AniList sign-in, a
+        // MyAnimeList pull that failed and Simkl synced, as the engine would say them.
+        if (options.Show == "accounts-states")
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(2500);
+                ctx.Inject(new Event.Sync(new SyncState("anilist", true, 0, 0, User: "mika", NeedsReauth: true)));
+                ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
+                ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
+            });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
