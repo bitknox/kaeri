@@ -55,9 +55,12 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("wheel", FeelScenario.Wheels, "watching", false),
     // The player's checks: clicks on the bar, Space, dragging the seek and volume lines, the ending. By name only.
     ("player-checks", PlayerChecks.All, "playing", true),
+    // The browsing screens left alone while the engine sends its events (IdleScenario.cs). By name only.
+    ("idle", IdleScenario.All, "watching", false),
+    ("idle-real", IdleScenario.All, "", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "idle" or "idle-real"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
