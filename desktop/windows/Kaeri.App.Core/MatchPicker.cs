@@ -43,6 +43,7 @@ public sealed class MatchBook
     readonly HashSet<uint> known = [];
     readonly Dictionary<uint, MatchSearch> searches = [];
     readonly Dictionary<uint, string> picking = [];
+    readonly Dictionary<uint, DateTime> pickedAt = [];
     readonly Dictionary<uint, string> pickFailed = [];
     readonly Dictionary<uint, (string Title, string Source)> pickedTitle = [];
     int serial;
@@ -63,8 +64,20 @@ public sealed class MatchBook
 
     public MatchSearch? Search(uint id) => searches.GetValueOrDefault(id);
 
-    /// <summary>The key picked, while the source lists its episodes.</summary>
-    public string? Picking(uint id) => picking.GetValueOrDefault(id);
+    /// <summary>
+    /// The key picked, while the source lists its episodes. A pick the engine never answered is
+    /// let go after two minutes, so a later picker's rows are not held for it.
+    /// </summary>
+    public string? Picking(uint id)
+    {
+        if (pickedAt.TryGetValue(id, out var at) && DateTime.UtcNow - at > TimeSpan.FromMinutes(2))
+        {
+            picking.Remove(id);
+            pickedAt.Remove(id);
+            pickedTitle.Remove(id);
+        }
+        return picking.GetValueOrDefault(id);
+    }
 
     /// <summary>Why the last pick could not be used.</summary>
     public string? PickFailed(uint id) => pickFailed.GetValueOrDefault(id);
@@ -142,6 +155,7 @@ public sealed class MatchBook
     public void Pick(uint id, MatchCandidate candidate, string source)
     {
         picking[id] = candidate.Key;
+        pickedAt[id] = DateTime.UtcNow;
         pickFailed.Remove(id);
         pickedTitle[id] = (candidate.Title, source);
     }
