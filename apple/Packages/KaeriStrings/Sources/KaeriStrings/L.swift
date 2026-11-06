@@ -8545,7 +8545,7 @@ public enum L {
     public static var settingsReaderDefaults: String { string("settings-reader-defaults", fallback: "Reader defaults") }
 
     /// Under the reader defaults.
-    public static var settingsReaderDefaultsFooter: String { string("settings-reader-defaults-footer", fallback: "A series you change keeps its own mode, direction and colour.") }
+    public static var settingsReaderDefaultsFooter: String { string("settings-reader-defaults-footer", fallback: "A series you change keeps its own mode, direction and look.") }
 
     /// Row: manga's reader default.
     public static var settingsReaderManga: String { string("settings-reader-manga", fallback: "Manga") }
@@ -8596,6 +8596,33 @@ public enum L {
     public static func settingsFollowFooter(device: String) -> String {
         Self.format("settings-follow-footer", fallback: "Text size, margins, tap zones and refresh stay on this %1$@.", device)
     }
+
+    /// Line under Look in Series settings that follow you.
+    public static var settingsLookFollowsNote: String { string("settings-look-follows-note", fallback: "Colour or greys") }
+
+    /// Value of New chapters in Downloads: the series on the Reading list.
+    public static var settingsNewChaptersReading: String { string("settings-new-chapters-reading", fallback: "Series on Reading") }
+
+    /// Line under New chapters in Downloads.
+    public static var settingsNewChaptersNote: String { string("settings-new-chapters-note", fallback: "A series being read also keeps its next chapters ready") }
+
+    /// Group in Accounts: how reading progress goes to the trackers.
+    public static var settingsProgressGroup: String { string("settings-progress-group", fallback: "Progress") }
+
+    /// Value of Send progress after: as each chapter counts as read.
+    public static var settingsProgressChapter: String { string("settings-progress-chapter", fallback: "A chapter is read") }
+
+    /// Value of Send progress after: once, when the reader closes.
+    public static var settingsProgressClose: String { string("settings-progress-close", fallback: "Closing the reader") }
+
+    /// Value of When trackers disagree: the higher chapter wins.
+    public static var settingsDisagreeFurthest: String { string("settings-disagree-furthest", fallback: "Keep the furthest") }
+
+    /// Value of When trackers disagree: the newest change wins, even a lower chapter.
+    public static var settingsDisagreeLatest: String { string("settings-disagree-latest", fallback: "The latest change") }
+
+    /// Line under When trackers disagree.
+    public static var settingsDisagreeNote: String { string("settings-disagree-note", fallback: "Status and score follow the latest change") }
 
     /// Line under Keep next chapters ready.
     public static var settingsKeepChaptersReadyNote: String { string("settings-keep-chapters-ready-note", fallback: "The next chapters of series on your Reading list") }
@@ -9624,6 +9651,21 @@ public enum L {
 
     /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
     public static var settingsSeriesChoicesFollow: String { string("settings-series-choices-follow", fallback: "Series settings follow you") }
+
+    /// Row in Downloads: which series' new chapters download by themselves.
+    public static var settingsNewChaptersDownload: String { string("settings-new-chapters-download", fallback: "New chapters") }
+
+    /// Row: whether a series' own reader mode and direction follow you to your other devices.
+    public static var settingsModeFollows: String { string("settings-mode-follows", fallback: "Mode and direction") }
+
+    /// Row: whether a series' own look (colour or greys) follows you to your other devices.
+    public static var settingsLookFollows: String { string("settings-look-follows", fallback: "Look") }
+
+    /// Row: when chapter progress goes to the reading trackers.
+    public static var settingsSendProgressAfter: String { string("settings-send-progress-after", fallback: "Send progress after") }
+
+    /// Row: which chapter progress wins when a tracker and this device disagree.
+    public static var settingsWhenTrackersDisagree: String { string("settings-when-trackers-disagree", fallback: "When trackers disagree") }
 
     /// Row: whether a new chapter of a series on your Reading list sends a notification.
     public static var settingsChapterNotifications: String { string("settings-chapter-notifications", fallback: "New chapters") }

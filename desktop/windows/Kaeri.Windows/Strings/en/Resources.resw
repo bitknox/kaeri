@@ -7993,7 +7993,7 @@
     <comment>Group: how the reader opens each kind of book.</comment>
   </data>
   <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
-    <value>A series you change keeps its own mode, direction and colour.</value>
+    <value>A series you change keeps its own mode, direction and look.</value>
     <comment>Under the reader defaults.</comment>
   </data>
   <data name="SettingsReaderManga" xml:space="preserve">
@@ -8059,6 +8059,42 @@
   <data name="SettingsFollowFooter" xml:space="preserve">
     <value>Text size, margins, tap zones and refresh stay on this {device}.</value>
     <comment>Under the group: what stays on this device.</comment>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>Colour or greys</value>
+    <comment>Line under Look in Series settings that follow you.</comment>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>Series on Reading</value>
+    <comment>Value of New chapters in Downloads: the series on the Reading list.</comment>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>A series being read also keeps its next chapters ready</value>
+    <comment>Line under New chapters in Downloads.</comment>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>Progress</value>
+    <comment>Group in Accounts: how reading progress goes to the trackers.</comment>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>A chapter is read</value>
+    <comment>Value of Send progress after: as each chapter counts as read.</comment>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>Closing the reader</value>
+    <comment>Value of Send progress after: once, when the reader closes.</comment>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>Keep the furthest</value>
+    <comment>Value of When trackers disagree: the higher chapter wins.</comment>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>The latest change</value>
+    <comment>Value of When trackers disagree: the newest change wins, even a lower chapter.</comment>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>Status and score follow the latest change</value>
+    <comment>Line under When trackers disagree.</comment>
   </data>
   <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
     <value>The next chapters of series on your Reading list</value>
@@ -9319,6 +9355,26 @@
   <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
     <value>Series settings follow you</value>
     <comment>Row: whether a series' reader mode, direction and colour follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>New chapters</value>
+    <comment>Row in Downloads: which series' new chapters download by themselves.</comment>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>Mode and direction</value>
+    <comment>Row: whether a series' own reader mode and direction follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>Look</value>
+    <comment>Row: whether a series' own look (colour or greys) follows you to your other devices.</comment>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>Send progress after</value>
+    <comment>Row: when chapter progress goes to the reading trackers.</comment>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>When trackers disagree</value>
+    <comment>Row: which chapter progress wins when a tracker and this device disagree.</comment>
   </data>
   <data name="SettingsChapterNotifications" xml:space="preserve">
     <value>New chapters</value>

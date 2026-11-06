@@ -897,7 +897,7 @@ settings-aside-reading = Reader defaults are where every series starts. A series
 settings-reader-defaults = Reader defaults
 
 # Under the reader defaults.
-settings-reader-defaults-footer = A series you change keeps its own mode, direction and colour.
+settings-reader-defaults-footer = A series you change keeps its own mode, direction and look.
 
 # Row: manga's reader default.
 settings-reader-manga = Manga
@@ -947,6 +947,33 @@ settings-follow-mode-note = A series you change reads the same on your other { -
 # Under the group: what stays on this device.
 # @arg device: text
 settings-follow-footer = Text size, margins, tap zones and refresh stay on this { $device }.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Colour or greys
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Series on Reading
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = A series being read also keeps its next chapters ready
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Progress
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = A chapter is read
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Closing the reader
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Keep the furthest
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = The latest change
+
+# Line under When trackers disagree.
+settings-disagree-note = Status and score follow the latest change
 
 # Line under Keep next chapters ready.
 settings-keep-chapters-ready-note = The next chapters of series on your Reading list

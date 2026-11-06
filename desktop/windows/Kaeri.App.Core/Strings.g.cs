@@ -5833,6 +5833,33 @@ public static partial class T
     /// <summary>Under the group: what stays on this device.</summary>
     public static string SettingsFollowFooter(string device) => Fill(Get("SettingsFollowFooter"), ("device", device));
 
+    /// <summary>Line under Look in Series settings that follow you.</summary>
+    public static string SettingsLookFollowsNote => Get("SettingsLookFollowsNote");
+
+    /// <summary>Value of New chapters in Downloads: the series on the Reading list.</summary>
+    public static string SettingsNewChaptersReading => Get("SettingsNewChaptersReading");
+
+    /// <summary>Line under New chapters in Downloads.</summary>
+    public static string SettingsNewChaptersNote => Get("SettingsNewChaptersNote");
+
+    /// <summary>Group in Accounts: how reading progress goes to the trackers.</summary>
+    public static string SettingsProgressGroup => Get("SettingsProgressGroup");
+
+    /// <summary>Value of Send progress after: as each chapter counts as read.</summary>
+    public static string SettingsProgressChapter => Get("SettingsProgressChapter");
+
+    /// <summary>Value of Send progress after: once, when the reader closes.</summary>
+    public static string SettingsProgressClose => Get("SettingsProgressClose");
+
+    /// <summary>Value of When trackers disagree: the higher chapter wins.</summary>
+    public static string SettingsDisagreeFurthest => Get("SettingsDisagreeFurthest");
+
+    /// <summary>Value of When trackers disagree: the newest change wins, even a lower chapter.</summary>
+    public static string SettingsDisagreeLatest => Get("SettingsDisagreeLatest");
+
+    /// <summary>Line under When trackers disagree.</summary>
+    public static string SettingsDisagreeNote => Get("SettingsDisagreeNote");
+
     /// <summary>Line under Keep next chapters ready.</summary>
     public static string SettingsKeepChaptersReadyNote => Get("SettingsKeepChaptersReadyNote");
 
@@ -6744,6 +6771,21 @@ public static partial class T
 
     /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
     public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
+
+    /// <summary>Row in Downloads: which series' new chapters download by themselves.</summary>
+    public static string SettingsNewChaptersDownload => Get("SettingsNewChaptersDownload");
+
+    /// <summary>Row: whether a series' own reader mode and direction follow you to your other devices.</summary>
+    public static string SettingsModeFollows => Get("SettingsModeFollows");
+
+    /// <summary>Row: whether a series' own look (colour or greys) follows you to your other devices.</summary>
+    public static string SettingsLookFollows => Get("SettingsLookFollows");
+
+    /// <summary>Row: when chapter progress goes to the reading trackers.</summary>
+    public static string SettingsSendProgressAfter => Get("SettingsSendProgressAfter");
+
+    /// <summary>Row: which chapter progress wins when a tracker and this device disagree.</summary>
+    public static string SettingsWhenTrackersDisagree => Get("SettingsWhenTrackersDisagree");
 
     /// <summary>Row: whether a new chapter of a series on your Reading list sends a notification.</summary>
     public static string SettingsChapterNotifications => Get("SettingsChapterNotifications");
@@ -11818,7 +11860,7 @@ public static partial class T
         ["SettingsGroupShows"] = "Shows",
         ["SettingsAsideReading"] = "Reader defaults are where every series starts. A series you change in the reader keeps its own choices.",
         ["SettingsReaderDefaults"] = "Reader defaults",
-        ["SettingsReaderDefaultsFooter"] = "A series you change keeps its own mode, direction and colour.",
+        ["SettingsReaderDefaultsFooter"] = "A series you change keeps its own mode, direction and look.",
         ["SettingsReaderManga"] = "Manga",
         ["SettingsReaderWebtoons"] = "Webtoons",
         ["SettingsReaderWebtoonsNote"] = "Webtoons always open as a long strip",
@@ -11835,6 +11877,15 @@ public static partial class T
         ["SettingsFollowMode"] = "Mode, direction and colour",
         ["SettingsFollowModeNote"] = "A series you change reads the same on your other devices",
         ["SettingsFollowFooter"] = "Text size, margins, tap zones and refresh stay on this {device}.",
+        ["SettingsLookFollowsNote"] = "Colour or greys",
+        ["SettingsNewChaptersReading"] = "Series on Reading",
+        ["SettingsNewChaptersNote"] = "A series being read also keeps its next chapters ready",
+        ["SettingsProgressGroup"] = "Progress",
+        ["SettingsProgressChapter"] = "A chapter is read",
+        ["SettingsProgressClose"] = "Closing the reader",
+        ["SettingsDisagreeFurthest"] = "Keep the furthest",
+        ["SettingsDisagreeLatest"] = "The latest change",
+        ["SettingsDisagreeNote"] = "Status and score follow the latest change",
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
@@ -12150,6 +12201,11 @@ public static partial class T
         ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
         ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
         ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
+        ["SettingsNewChaptersDownload"] = "New chapters",
+        ["SettingsModeFollows"] = "Mode and direction",
+        ["SettingsLookFollows"] = "Look",
+        ["SettingsSendProgressAfter"] = "Send progress after",
+        ["SettingsWhenTrackersDisagree"] = "When trackers disagree",
         ["SettingsChapterNotifications"] = "New chapters",
         ["SettingsOpenAt"] = "Open at",
         ["SettingsSeedAfter"] = "Seed after watching",

@@ -557,14 +557,34 @@ pub struct ReadingConfig {
     /// For development in the terminal: turns reading on, which release builds leave off.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub dev: bool,
-    /// Whether a series' own mode, direction and colour follow the person to their other
-    /// devices.
+    /// The one switch of earlier versions for whether a series' own choices follow the person
+    /// to their other devices. Read only where [`Self::mode_follows`] or [`Self::look_follows`]
+    /// is unset, and kept so an earlier version still reads the file.
     pub series_choices_follow: bool,
+    /// Whether a series' own mode and direction follow the person to their other devices.
+    /// Unset takes `series_choices_follow`: read it through [`Self::mode_follows`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode_follows: Option<bool>,
+    /// Whether a series' own look (its colour) follows the person to their other devices.
+    /// Unset takes `series_choices_follow`: read it through [`Self::look_follows`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub look_follows: Option<bool>,
     /// Download chapters on a cellular connection, not only on Wi-Fi.
     pub downloads_on_cellular: bool,
-    /// Keep the next chapters of what you read downloaded. Unset is the edition's own: on for
-    /// the e-reader build, off elsewhere.
+    /// The switch of earlier versions for keeping the next chapters downloaded. Read only where
+    /// [`Self::new_chapters`] is unset: on is [`NewChapters::Reading`], off is
+    /// [`NewChapters::Off`].
     pub keep_chapters_ready: Option<bool>,
+    /// Which series' new chapters download by themselves. Unset takes `keep_chapters_ready`,
+    /// then the edition's own: read it through [`Self::new_chapters`].
+    #[serde(rename = "new_chapters", skip_serializing_if = "Option::is_none")]
+    pub new_chapters_choice: Option<NewChapters>,
+    /// How a webtoon opens when the series has no mode of its own.
+    pub webtoon: WebtoonConfig,
+    /// When chapter progress goes to the reading trackers.
+    pub send_progress_after: SendProgressAfter,
+    /// Which progress wins when a tracker and this device disagree.
+    pub when_trackers_disagree: WhenTrackersDisagree,
     /// Delete a downloaded chapter once it is read.
     pub delete_after_reading: bool,
     /// Which Home the app opens at while it is for both: `watch` or `read`.
@@ -584,8 +604,14 @@ impl Default for ReadingConfig {
             kaeri_is_for: None,
             dev: false,
             series_choices_follow: true,
+            mode_follows: None,
+            look_follows: None,
             downloads_on_cellular: false,
             keep_chapters_ready: None,
+            new_chapters_choice: None,
+            webtoon: WebtoonConfig::default(),
+            send_progress_after: SendProgressAfter::default(),
+            when_trackers_disagree: WhenTrackersDisagree::default(),
             delete_after_reading: false,
             open_at: "watch".into(),
             manga: BTreeMap::new(),
@@ -594,6 +620,37 @@ impl Default for ReadingConfig {
             feed: FeedConfig::default(),
         }
     }
+}
+
+impl ReadingConfig {
+    /// Whether a series' own mode and direction follow the person, with the file of an earlier
+    /// version read as its one switch said.
+    pub fn mode_follows(&self) -> bool {
+        self.mode_follows.unwrap_or(self.series_choices_follow)
+    }
+
+    /// Whether a series' own look follows the person, with the file of an earlier version read
+    /// as its one switch said.
+    pub fn look_follows(&self) -> bool {
+        self.look_follows.unwrap_or(self.series_choices_follow)
+    }
+
+    /// Which series' new chapters download by themselves: the choice, else the earlier
+    /// version's switch, else `edition_default` (the e-reader edition keeps them ready).
+    pub fn new_chapters(&self, edition_default: NewChapters) -> NewChapters {
+        self.new_chapters_choice
+            .or(self
+                .keep_chapters_ready
+                .map(|on| if on { NewChapters::Reading } else { NewChapters::Off }))
+            .unwrap_or(edition_default)
+    }
+}
+
+/// `[reading.webtoon]`: how a series in the webtoon format opens.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WebtoonConfig {
+    pub mode: WebtoonMode,
 }
 
 /// The OPDS feed: off until turned on.
@@ -643,6 +700,47 @@ macro_rules! choices {
     };
 }
 
+choices! {
+    /// How a webtoon opens when the series has no mode of its own.
+    WebtoonMode {
+        /// One long strip, scrolled.
+        #[default]
+        Strip => "strip",
+        /// Page by page.
+        Paged => "paged",
+    }
+}
+choices! {
+    /// Which series' new chapters download by themselves. A series being read also keeps its
+    /// next chapters ready.
+    NewChapters {
+        #[default]
+        Off => "off",
+        /// The series on the Reading list.
+        Reading => "reading",
+    }
+}
+choices! {
+    /// When chapter progress goes to the reading trackers.
+    SendProgressAfter {
+        /// As each chapter counts as read.
+        #[default]
+        Chapter => "chapter",
+        /// Once, with the furthest chapter, when the reader closes.
+        Close => "close",
+    }
+}
+choices! {
+    /// Which chapter progress wins when a tracker and this device disagree. Status and score
+    /// always follow the latest change.
+    WhenTrackersDisagree {
+        /// The higher chapter, wherever it was read. Progress never goes back.
+        #[default]
+        Furthest => "furthest",
+        /// The newest change, here or on the tracker, even when it is lower.
+        Latest => "latest",
+    }
+}
 choices! {
     /// The typeface of subtitles.
     SubtitleFont {
@@ -1512,6 +1610,46 @@ mod tests {
             data_dir: dir.join("data"),
             cache_dir: dir.join("cache"),
         }
+    }
+
+    #[test]
+    fn an_earlier_versions_reading_switches_feed_the_settings_that_replaced_them() {
+        // The one follow switch feeds both follows, and keeping chapters ready is the
+        // Reading list's new chapters.
+        let old = Config::parse(
+            "[reading]\nseries_choices_follow = false\nkeep_chapters_ready = true\n",
+        )
+        .unwrap();
+        assert!(!old.reading.mode_follows() && !old.reading.look_follows());
+        assert_eq!(old.reading.new_chapters(NewChapters::Off), NewChapters::Reading);
+        let off = Config::parse("[reading]\nkeep_chapters_ready = false\n").unwrap();
+        assert_eq!(off.reading.new_chapters(NewChapters::Reading), NewChapters::Off);
+        // Nothing set: on, and the edition's own.
+        let fresh = Config::parse("").unwrap();
+        assert!(fresh.reading.mode_follows() && fresh.reading.look_follows());
+        assert_eq!(fresh.reading.new_chapters(NewChapters::Reading), NewChapters::Reading);
+        assert_eq!(fresh.reading.webtoon.mode, WebtoonMode::Strip);
+        assert_eq!(fresh.reading.send_progress_after, SendProgressAfter::Chapter);
+        assert_eq!(fresh.reading.when_trackers_disagree, WhenTrackersDisagree::Furthest);
+
+        // A new key wins over the old one, and each follow is its own.
+        let new = Config::parse(
+            "[reading]\nseries_choices_follow = true\nlook_follows = false\n\
+             keep_chapters_ready = true\nnew_chapters = \"off\"\n\
+             send_progress_after = \"close\"\nwhen_trackers_disagree = \"latest\"\n\
+             [reading.webtoon]\nmode = \"paged\"\n",
+        )
+        .unwrap();
+        assert!(new.reading.mode_follows() && !new.reading.look_follows());
+        assert_eq!(new.reading.new_chapters(NewChapters::Reading), NewChapters::Off);
+        assert_eq!(new.reading.webtoon.mode, WebtoonMode::Paged);
+        assert_eq!(new.reading.send_progress_after, SendProgressAfter::Close);
+        assert_eq!(new.reading.when_trackers_disagree, WhenTrackersDisagree::Latest);
+        let text = toml::to_string(&new).unwrap();
+        assert!(unknown_keys(&text, &new).is_empty(), "every new key is known");
+        // An earlier version still reads the file: the old keys stay as they were.
+        assert!(text.contains("series_choices_follow = true"), "{text}");
+        assert!(text.contains("keep_chapters_ready = true"), "{text}");
     }
 
     #[test]

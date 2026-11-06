@@ -14000,6 +14000,51 @@ pub fn settings_follow_footer(device: &str) -> String {
     text("settings-follow-footer", &[("device", Arg::Text(device))])
 }
 
+/// Line under Look in Series settings that follow you.
+pub fn settings_look_follows_note() -> String {
+    text("settings-look-follows-note", &[])
+}
+
+/// Value of New chapters in Downloads: the series on the Reading list.
+pub fn settings_new_chapters_reading() -> String {
+    text("settings-new-chapters-reading", &[])
+}
+
+/// Line under New chapters in Downloads.
+pub fn settings_new_chapters_note() -> String {
+    text("settings-new-chapters-note", &[])
+}
+
+/// Group in Accounts: how reading progress goes to the trackers.
+pub fn settings_progress_group() -> String {
+    text("settings-progress-group", &[])
+}
+
+/// Value of Send progress after: as each chapter counts as read.
+pub fn settings_progress_chapter() -> String {
+    text("settings-progress-chapter", &[])
+}
+
+/// Value of Send progress after: once, when the reader closes.
+pub fn settings_progress_close() -> String {
+    text("settings-progress-close", &[])
+}
+
+/// Value of When trackers disagree: the higher chapter wins.
+pub fn settings_disagree_furthest() -> String {
+    text("settings-disagree-furthest", &[])
+}
+
+/// Value of When trackers disagree: the newest change wins, even a lower chapter.
+pub fn settings_disagree_latest() -> String {
+    text("settings-disagree-latest", &[])
+}
+
+/// Line under When trackers disagree.
+pub fn settings_disagree_note() -> String {
+    text("settings-disagree-note", &[])
+}
+
 /// Line under Keep next chapters ready.
 pub fn settings_keep_chapters_ready_note() -> String {
     text("settings-keep-chapters-ready-note", &[])
@@ -15518,6 +15563,31 @@ pub fn settings_delete_after_reading() -> String {
 /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
 pub fn settings_series_choices_follow() -> String {
     text("settings-series-choices-follow", &[])
+}
+
+/// Row in Downloads: which series' new chapters download by themselves.
+pub fn settings_new_chapters_download() -> String {
+    text("settings-new-chapters-download", &[])
+}
+
+/// Row: whether a series' own reader mode and direction follow you to your other devices.
+pub fn settings_mode_follows() -> String {
+    text("settings-mode-follows", &[])
+}
+
+/// Row: whether a series' own look (colour or greys) follows you to your other devices.
+pub fn settings_look_follows() -> String {
+    text("settings-look-follows", &[])
+}
+
+/// Row: when chapter progress goes to the reading trackers.
+pub fn settings_send_progress_after() -> String {
+    text("settings-send-progress-after", &[])
+}
+
+/// Row: which chapter progress wins when a tracker and this device disagree.
+pub fn settings_when_trackers_disagree() -> String {
+    text("settings-when-trackers-disagree", &[])
 }
 
 /// Row: whether a new chapter of a series on your Reading list sends a notification.

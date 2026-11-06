@@ -8958,6 +8958,42 @@ object Strings {
     fun settingsFollowFooter(context: Context, device: String): String =
         context.getString(R.string.settings_follow_footer, device)
 
+    /** Line under Look in Series settings that follow you. */
+    fun settingsLookFollowsNote(context: Context): String =
+        context.getString(R.string.settings_look_follows_note)
+
+    /** Value of New chapters in Downloads: the series on the Reading list. */
+    fun settingsNewChaptersReading(context: Context): String =
+        context.getString(R.string.settings_new_chapters_reading)
+
+    /** Line under New chapters in Downloads. */
+    fun settingsNewChaptersNote(context: Context): String =
+        context.getString(R.string.settings_new_chapters_note)
+
+    /** Group in Accounts: how reading progress goes to the trackers. */
+    fun settingsProgressGroup(context: Context): String =
+        context.getString(R.string.settings_progress_group)
+
+    /** Value of Send progress after: as each chapter counts as read. */
+    fun settingsProgressChapter(context: Context): String =
+        context.getString(R.string.settings_progress_chapter)
+
+    /** Value of Send progress after: once, when the reader closes. */
+    fun settingsProgressClose(context: Context): String =
+        context.getString(R.string.settings_progress_close)
+
+    /** Value of When trackers disagree: the higher chapter wins. */
+    fun settingsDisagreeFurthest(context: Context): String =
+        context.getString(R.string.settings_disagree_furthest)
+
+    /** Value of When trackers disagree: the newest change wins, even a lower chapter. */
+    fun settingsDisagreeLatest(context: Context): String =
+        context.getString(R.string.settings_disagree_latest)
+
+    /** Line under When trackers disagree. */
+    fun settingsDisagreeNote(context: Context): String =
+        context.getString(R.string.settings_disagree_note)
+
     /** Line under Keep next chapters ready. */
     fun settingsKeepChaptersReadyNote(context: Context): String =
         context.getString(R.string.settings_keep_chapters_ready_note)
@@ -10173,6 +10209,26 @@ object Strings {
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =
         context.getString(R.string.settings_series_choices_follow)
+
+    /** Row in Downloads: which series' new chapters download by themselves. */
+    fun settingsNewChaptersDownload(context: Context): String =
+        context.getString(R.string.settings_new_chapters_download)
+
+    /** Row: whether a series' own reader mode and direction follow you to your other devices. */
+    fun settingsModeFollows(context: Context): String =
+        context.getString(R.string.settings_mode_follows)
+
+    /** Row: whether a series' own look (colour or greys) follows you to your other devices. */
+    fun settingsLookFollows(context: Context): String =
+        context.getString(R.string.settings_look_follows)
+
+    /** Row: when chapter progress goes to the reading trackers. */
+    fun settingsSendProgressAfter(context: Context): String =
+        context.getString(R.string.settings_send_progress_after)
+
+    /** Row: which chapter progress wins when a tracker and this device disagree. */
+    fun settingsWhenTrackersDisagree(context: Context): String =
+        context.getString(R.string.settings_when_trackers_disagree)
 
     /** Row: whether a new chapter of a series on your Reading list sends a notification. */
     fun settingsChapterNotifications(context: Context): String =

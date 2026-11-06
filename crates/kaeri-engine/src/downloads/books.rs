@@ -32,7 +32,7 @@ use std::{
 
 use kaeri_core::{
     books::{ChapterContent, ChapterId, WorkId},
-    config::Config,
+    config::{Config, NewChapters},
 };
 use kaeri_model::{
     command::AppState,
@@ -92,7 +92,11 @@ pub struct Setup {
     pub hold: bool,
     /// The hold is for Wi-Fi: rows show it.
     pub wifi: bool,
+    /// The next chapters of what is read are kept downloaded: new chapters download for
+    /// some series.
     pub keep_ready: bool,
+    /// Which series' new chapters the update check queues.
+    pub new_chapters: NewChapters,
     pub delete_after: bool,
 }
 
@@ -101,14 +105,24 @@ impl Setup {
         let reading = &config.reading;
         let wifi = network.constrained || (network.cellular && !reading.downloads_on_cellular);
         let away = matches!(phase, AppState::Background { .. });
+        let new_chapters = reading.new_chapters(new_chapters_default(edition));
         Self {
             hold: wifi || network.offline || away,
             wifi,
-            keep_ready: reading
-                .keep_chapters_ready
-                .unwrap_or(matches!(edition, AppEdition::ReadOnly)),
+            keep_ready: new_chapters != NewChapters::Off,
+            new_chapters,
             delete_after: reading.delete_after_reading,
         }
+    }
+}
+
+/// Which series' new chapters download where the person has not said: the Reading list's in
+/// the e-reader edition, none elsewhere.
+pub fn new_chapters_default(edition: AppEdition) -> NewChapters {
+    if matches!(edition, AppEdition::ReadOnly) {
+        NewChapters::Reading
+    } else {
+        NewChapters::Off
     }
 }
 

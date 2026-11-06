@@ -8693,7 +8693,7 @@ settings-aside-reading = [Ŕéàðéŕ ðéƒàüļţš àŕé ŵĥéŕé éṽ�
 settings-reader-defaults = [Ŕéàðéŕ ðéƒàüļţš~~~~~]
 
 # Under the reader defaults.
-settings-reader-defaults-footer = [Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð çöļöüŕ.~~~~~~~~~~~~~~~~~~~]
+settings-reader-defaults-footer = [Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð ļööķ.~~~~~~~~~~~~~~~~~~]
 
 # Row: manga's reader default.
 settings-reader-manga = [Ṁàñĝà~~]
@@ -8742,6 +8742,33 @@ settings-follow-mode-note = [Å šéŕîéš ýöü çĥàñĝé ŕéàðš ţĥ
 
 # Under the group: what stays on this device.
 settings-follow-footer = [Ţéẋţ šîžé, ɱàŕĝîñš, ţàþ žöñéš àñð ŕéƒŕéšĥ šţàý öñ ţĥîš { $device }.~~~~~~~~~~~~~~~~~~]
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = [Çöļöüŕ öŕ ĝŕéýš~~~~~]
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = [Šéŕîéš öñ Ŕéàðîñĝ~~~~~~]
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = [Å šéŕîéš ƀéîñĝ ŕéàð àļšö ķééþš îţš ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~~~~~~~~~~]
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = [Þŕöĝŕéšš~~~]
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = [Å çĥàþţéŕ îš ŕéàð~~~~~~]
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = [Çļöšîñĝ ţĥé ŕéàðéŕ~~~~~~]
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = [Ķééþ ţĥé ƒüŕţĥéšţ~~~~~~]
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = [Ţĥé ļàţéšţ çĥàñĝé~~~~~~]
+
+# Line under When trackers disagree.
+settings-disagree-note = [Šţàţüš àñð šçöŕé ƒöļļöŵ ţĥé ļàţéšţ çĥàñĝé~~~~~~~~~~~~~]
 
 # Line under Keep next chapters ready.
 settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~~~~~~~]
@@ -9698,6 +9725,21 @@ settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéà
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = [Ñéŵ çĥàþţéŕš~~~~]
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = [Ṁöðé àñð ðîŕéçţîöñ~~~~~~]
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = [Ļööķ~~]
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = [Šéñð þŕöĝŕéšš àƒţéŕ~~~~~~]
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = [Ŵĥéñ ţŕàçķéŕš ðîšàĝŕéé~~~~~~~]
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = [Ñéŵ çĥàþţéŕš~~~~]

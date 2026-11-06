@@ -6,9 +6,9 @@
 
 use kaeri_core::{
     config::{
-        Config, StyledSubtitles, SubtitleBackground, SubtitleColour, SubtitleEdge,
-        SubtitleFont, SubtitleThickness, SubtitlesConfig, ThemeMode, TitleChoice,
-        TrailerAutoplay,
+        Config, NewChapters, SendProgressAfter, StyledSubtitles, SubtitleBackground,
+        SubtitleColour, SubtitleEdge, SubtitleFont, SubtitleThickness, SubtitlesConfig,
+        ThemeMode, TitleChoice, TrailerAutoplay, WebtoonMode, WhenTrackersDisagree,
     },
     media::Translation,
     settings::SettingValue,
@@ -101,14 +101,28 @@ pub enum SettingKey {
     DownloadsOnCellular,
     /// Whether chapter downloads run over a cellular connection.
     ChapterDownloadsOnCellular,
-    /// Whether the next chapters of what you read are kept downloaded. Unset follows the
-    /// build: on for the e-reader, off elsewhere.
+    /// The switch form of [`Self::NewChapters`], for a front end that draws one: on is the
+    /// Reading list, off is off. Written as `reading.new_chapters`.
     KeepChaptersReady,
     /// Whether a downloaded chapter is deleted once it is read; bookmarked chapters stay.
     DeleteAfterReading,
-    /// Whether a series' own mode, direction and colour follow the person to their other
-    /// devices. On by default.
+    /// Whether a series' own mode and direction follow the person to their other devices. On
+    /// by default. Set by the switch "Mode and direction".
     SeriesChoicesFollow,
+    /// Whether a series' own look (its colour) follows the person to their other devices. On
+    /// by default.
+    LookFollows,
+    /// Which series' new chapters download by themselves: `off` or `reading` (the Reading
+    /// list). Unset follows the build: the Reading list in the e-reader edition, off elsewhere.
+    NewChapters,
+    /// How a webtoon opens when the series has no mode of its own: `strip` or `paged`.
+    WebtoonMode,
+    /// When chapter progress goes to the reading trackers: `chapter` (as each is read) or
+    /// `close` (once, when the reader closes).
+    SendProgressAfter,
+    /// Which chapter progress wins when a tracker and this device disagree: `furthest` or
+    /// `latest`. Status and score always follow the latest change.
+    WhenTrackersDisagree,
     /// Whether the app notifies of new chapters in the series on the Reading list, on its own
     /// channel. Off by default; the check runs only while reading is on.
     ChapterNotifications,
@@ -239,7 +253,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 24] = [
+    pub const NATIVE_ROWS: [Self; 29] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -259,11 +273,17 @@ impl SettingKey {
         Self::HoverCards,
         Self::FindSkipTimes,
         Self::ChapterDownloadsOnCellular,
+        // Before its switch form, which shares its key: the key names this row.
+        Self::NewChapters,
         Self::KeepChaptersReady,
         Self::DeleteAfterReading,
         Self::SeriesChoicesFollow,
         Self::ChapterNotifications,
         Self::OpenAt,
+        Self::LookFollows,
+        Self::WebtoonMode,
+        Self::SendProgressAfter,
+        Self::WhenTrackersDisagree,
     ];
 
     /// Where the file keeps it: the containing table, as the dotted path
@@ -336,9 +356,13 @@ impl SettingKey {
             Self::KeepNextEpisodes => (&["downloads"], "keep_next"),
             Self::DownloadsOnCellular => (&["downloads"], "on_cellular"),
             Self::ChapterDownloadsOnCellular => (&["reading"], "downloads_on_cellular"),
-            Self::KeepChaptersReady => (&["reading"], "keep_chapters_ready"),
+            Self::KeepChaptersReady | Self::NewChapters => (&["reading"], "new_chapters"),
             Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
-            Self::SeriesChoicesFollow => (&["reading"], "series_choices_follow"),
+            Self::SeriesChoicesFollow => (&["reading"], "mode_follows"),
+            Self::LookFollows => (&["reading"], "look_follows"),
+            Self::WebtoonMode => (&["reading", "webtoon"], "mode"),
+            Self::SendProgressAfter => (&["reading"], "send_progress_after"),
+            Self::WhenTrackersDisagree => (&["reading"], "when_trackers_disagree"),
             Self::ChapterNotifications => (&["notifications"], "chapters"),
             Self::OpenAt => (&["reading"], "open_at"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
@@ -465,14 +489,27 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => {
                 to.reading.downloads_on_cellular = from.reading.downloads_on_cellular;
             }
-            Self::KeepChaptersReady => {
+            Self::KeepChaptersReady | Self::NewChapters => {
+                to.reading.new_chapters_choice = from.reading.new_chapters_choice;
                 to.reading.keep_chapters_ready = from.reading.keep_chapters_ready;
             }
             Self::DeleteAfterReading => {
                 to.reading.delete_after_reading = from.reading.delete_after_reading;
             }
             Self::SeriesChoicesFollow => {
+                to.reading.mode_follows = from.reading.mode_follows;
                 to.reading.series_choices_follow = from.reading.series_choices_follow;
+            }
+            Self::LookFollows => {
+                to.reading.look_follows = from.reading.look_follows;
+                to.reading.series_choices_follow = from.reading.series_choices_follow;
+            }
+            Self::WebtoonMode => to.reading.webtoon = from.reading.webtoon,
+            Self::SendProgressAfter => {
+                to.reading.send_progress_after = from.reading.send_progress_after;
+            }
+            Self::WhenTrackersDisagree => {
+                to.reading.when_trackers_disagree = from.reading.when_trackers_disagree;
             }
             Self::ChapterNotifications => {
                 to.notifications.chapters = from.notifications.chapters;
@@ -541,8 +578,10 @@ impl SettingKey {
             | Self::DownloadsOnCellular
             | Self::ChapterDownloadsOnCellular
             | Self::KeepChaptersReady
+            | Self::NewChapters
             | Self::DeleteAfterReading => "downloads",
-            Self::SeriesChoicesFollow => "reading",
+            Self::SeriesChoicesFollow | Self::LookFollows | Self::WebtoonMode => "reading",
+            Self::SendProgressAfter | Self::WhenTrackersDisagree => "accounts",
             Self::Torrents
             | Self::TorrentProxy
             | Self::SeedRatio
@@ -622,8 +661,13 @@ impl SettingKey {
             Self::DownloadsOnCellular => "downloads on cellular",
             Self::ChapterDownloadsOnCellular => "chapter downloads on cellular",
             Self::KeepChaptersReady => "keep chapters ready",
+            Self::NewChapters => "new chapters",
             Self::DeleteAfterReading => "delete after reading",
-            Self::SeriesChoicesFollow => "series choices follow you",
+            Self::SeriesChoicesFollow => "mode and direction follow you",
+            Self::LookFollows => "look follows you",
+            Self::WebtoonMode => "webtoons",
+            Self::SendProgressAfter => "send progress after",
+            Self::WhenTrackersDisagree => "when trackers disagree",
             Self::ChapterNotifications => "new chapter notifications",
             Self::OpenAt => "open at",
             Self::TorrentsOnCellular => "torrents on cellular",
@@ -985,11 +1029,28 @@ pub fn step(
         SettingKey::ChapterDownloadsOnCellular => {
             V::Bool(!effective.reading.downloads_on_cellular)
         }
-        SettingKey::KeepChaptersReady => {
-            V::Bool(!effective.reading.keep_chapters_ready.unwrap_or(false))
-        }
+        SettingKey::KeepChaptersReady => V::Bool(!keeps_ready(effective)),
+        SettingKey::NewChapters => V::Str(stepped(
+            NewChapters::ALL,
+            effective.reading.new_chapters(NewChapters::Off),
+            delta,
+        )),
         SettingKey::DeleteAfterReading => V::Bool(!effective.reading.delete_after_reading),
-        SettingKey::SeriesChoicesFollow => V::Bool(!effective.reading.series_choices_follow),
+        SettingKey::SeriesChoicesFollow => V::Bool(!effective.reading.mode_follows()),
+        SettingKey::LookFollows => V::Bool(!effective.reading.look_follows()),
+        SettingKey::WebtoonMode => {
+            V::Str(stepped(WebtoonMode::ALL, effective.reading.webtoon.mode, delta))
+        }
+        SettingKey::SendProgressAfter => V::Str(stepped(
+            SendProgressAfter::ALL,
+            effective.reading.send_progress_after,
+            delta,
+        )),
+        SettingKey::WhenTrackersDisagree => V::Str(stepped(
+            WhenTrackersDisagree::ALL,
+            effective.reading.when_trackers_disagree,
+            delta,
+        )),
         SettingKey::ChapterNotifications => V::Bool(!effective.notifications.chapters),
         SettingKey::OpenAt => {
             const LADDER: [&str; 2] = ["watch", "read"];
@@ -1188,13 +1249,31 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             config.reading.downloads_on_cellular = *on;
         }
         (SettingKey::KeepChaptersReady, V::Bool(on)) => {
-            config.reading.keep_chapters_ready = Some(*on);
+            config.reading.new_chapters_choice =
+                Some(if *on { NewChapters::Reading } else { NewChapters::Off });
+        }
+        (SettingKey::KeepChaptersReady | SettingKey::NewChapters, V::Str(name)) => {
+            let Some(choice) = NewChapters::from_name(name) else { return false };
+            config.reading.new_chapters_choice = Some(choice);
         }
         (SettingKey::DeleteAfterReading, V::Bool(on)) => {
             config.reading.delete_after_reading = *on;
         }
         (SettingKey::SeriesChoicesFollow, V::Bool(on)) => {
-            config.reading.series_choices_follow = *on;
+            config.reading.mode_follows = Some(*on);
+        }
+        (SettingKey::LookFollows, V::Bool(on)) => config.reading.look_follows = Some(*on),
+        (SettingKey::WebtoonMode, V::Str(name)) => {
+            let Some(choice) = WebtoonMode::from_name(name) else { return false };
+            config.reading.webtoon.mode = choice;
+        }
+        (SettingKey::SendProgressAfter, V::Str(name)) => {
+            let Some(choice) = SendProgressAfter::from_name(name) else { return false };
+            config.reading.send_progress_after = choice;
+        }
+        (SettingKey::WhenTrackersDisagree, V::Str(name)) => {
+            let Some(choice) = WhenTrackersDisagree::from_name(name) else { return false };
+            config.reading.when_trackers_disagree = choice;
         }
         (SettingKey::ChapterNotifications, V::Bool(on)) => config.notifications.chapters = *on,
         (SettingKey::OpenAt, V::Str(name)) => {
@@ -1386,11 +1465,18 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::ChapterDownloadsOnCellular => {
             on_off(effective.reading.downloads_on_cellular)
         }
-        SettingKey::KeepChaptersReady => {
-            on_off(effective.reading.keep_chapters_ready.unwrap_or(false))
+        SettingKey::KeepChaptersReady => on_off(keeps_ready(effective)),
+        SettingKey::NewChapters => {
+            effective.reading.new_chapters(NewChapters::Off).name().into()
         }
         SettingKey::DeleteAfterReading => on_off(effective.reading.delete_after_reading),
-        SettingKey::SeriesChoicesFollow => on_off(effective.reading.series_choices_follow),
+        SettingKey::SeriesChoicesFollow => on_off(effective.reading.mode_follows()),
+        SettingKey::LookFollows => on_off(effective.reading.look_follows()),
+        SettingKey::WebtoonMode => effective.reading.webtoon.mode.name().into(),
+        SettingKey::SendProgressAfter => effective.reading.send_progress_after.name().into(),
+        SettingKey::WhenTrackersDisagree => {
+            effective.reading.when_trackers_disagree.name().into()
+        }
         SettingKey::ChapterNotifications => on_off(effective.notifications.chapters),
         SettingKey::OpenAt => effective.reading.open_at.clone(),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
@@ -1499,9 +1585,10 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         }
         S::DownloadsOnCellular => c.downloads.on_cellular,
         S::ChapterDownloadsOnCellular => c.reading.downloads_on_cellular,
-        S::KeepChaptersReady => c.reading.keep_chapters_ready.unwrap_or(false),
+        S::KeepChaptersReady => keeps_ready(c),
         S::DeleteAfterReading => c.reading.delete_after_reading,
-        S::SeriesChoicesFollow => c.reading.series_choices_follow,
+        S::SeriesChoicesFollow => c.reading.mode_follows(),
+        S::LookFollows => c.reading.look_follows(),
         S::ChapterNotifications => c.notifications.chapters,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
         S::EpisodeNotifications => c.notifications.episodes,
@@ -1533,6 +1620,14 @@ fn ladder_value(effective: &Config, key: SettingKey) -> Option<SettingValue> {
         S::Upscaling => V::Str(playback.upscaling.name().into()),
         S::Titles => V::Str(effective.meta.title_language.name().into()),
         S::OpenAt => V::Str(effective.reading.open_at.clone()),
+        S::NewChapters => {
+            V::Str(effective.reading.new_chapters(NewChapters::Off).name().into())
+        }
+        S::WebtoonMode => V::Str(effective.reading.webtoon.mode.name().into()),
+        S::SendProgressAfter => V::Str(effective.reading.send_progress_after.name().into()),
+        S::WhenTrackersDisagree => {
+            V::Str(effective.reading.when_trackers_disagree.name().into())
+        }
         S::Trailers => V::Str(effective.theme.trailers.name().into()),
         S::SeedRatio => V::Float(seeding.ratio),
         S::SeedHours => V::Int(i64::from(seeding.hours)),
@@ -1589,6 +1684,21 @@ fn upscaling_label(mode: kaeri_core::config::Upscaling) -> &'static str {
     }
 }
 
+/// The value as the file takes it: the switch form of new chapters writes the picker's choice.
+pub fn as_written(key: SettingKey, value: SettingValue) -> SettingValue {
+    match (key, value) {
+        (SettingKey::KeepChaptersReady, SettingValue::Bool(on)) => SettingValue::Str(
+            if on { NewChapters::Reading } else { NewChapters::Off }.name().into(),
+        ),
+        (_, value) => value,
+    }
+}
+
+/// Whether new chapters download, as the switch form of the setting shows it.
+fn keeps_ready(config: &Config) -> bool {
+    config.reading.new_chapters(NewChapters::Off) != NewChapters::Off
+}
+
 fn on_off(yes: bool) -> String {
     if yes { "on".into() } else { "off".into() }
 }
@@ -1630,7 +1740,11 @@ named!(
     SubtitleEdge,
     SubtitleThickness,
     SubtitleBackground,
-    StyledSubtitles
+    StyledSubtitles,
+    NewChapters,
+    WebtoonMode,
+    SendProgressAfter,
+    WhenTrackersDisagree
 );
 
 /// Step to the next value in an ascending ladder, clamping at both ends.
@@ -1759,6 +1873,8 @@ mod tests {
     fn every_setting_written_is_found_again_where_the_file_keeps_it() {
         // So a write named by the file's table and key names one setting, and only one.
         let every = SettingKey::ROWS.into_iter().chain(SettingKey::NATIVE_ROWS);
+        // The switch form of new chapters writes the picker's key, which names the picker.
+        let every = every.filter(|key| *key != SettingKey::KeepChaptersReady);
         for setting in every.chain([SettingKey::SourceOrder]) {
             if let Some((table, key)) = setting.path() {
                 assert_eq!(SettingKey::at(table, key), Some(setting), "{table:?}.{key}");
@@ -1813,11 +1929,16 @@ mod tests {
                 (SettingKey::HoverCards, "on"),
                 (SettingKey::FindSkipTimes, "on"),
                 (SettingKey::ChapterDownloadsOnCellular, "off"),
+                (SettingKey::NewChapters, "off"),
                 (SettingKey::KeepChaptersReady, "off"),
                 (SettingKey::DeleteAfterReading, "off"),
                 (SettingKey::SeriesChoicesFollow, "on"),
                 (SettingKey::ChapterNotifications, "off"),
                 (SettingKey::OpenAt, "watch"),
+                (SettingKey::LookFollows, "on"),
+                (SettingKey::WebtoonMode, "strip"),
+                (SettingKey::SendProgressAfter, "chapter"),
+                (SettingKey::WhenTrackersDisagree, "furthest"),
             ]
         );
         assert!(view.rows.iter().all(|row| !SettingKey::NATIVE_ROWS.contains(&row.key)));
@@ -1857,6 +1978,44 @@ mod tests {
         assert_eq!(value(&config, &config, SettingKey::UpNextCountdown), "off");
         assert!(put(&mut config, SettingKey::KeepNextEpisodes, &SettingValue::Int(3)));
         assert_eq!(value(&config, &config, SettingKey::KeepNextEpisodes), "3 episodes");
+    }
+
+    #[test]
+    fn the_reading_choices_write_their_own_keys_and_the_follows_part() {
+        let mut config = Config::default();
+        // The switch form of new chapters is written as the picker's choice.
+        let on = SettingValue::Bool(true);
+        assert_eq!(
+            as_written(SettingKey::KeepChaptersReady, on.clone()),
+            SettingValue::Str("reading".into())
+        );
+        assert!(put(&mut config, SettingKey::KeepChaptersReady, &on));
+        assert_eq!(value(&config, &config, SettingKey::NewChapters), "reading");
+        assert_eq!(value(&config, &config, SettingKey::KeepChaptersReady), "on");
+        assert!(!put(&mut config, SettingKey::NewChapters, &SettingValue::Str("all".into())));
+        // One follow off leaves the other on.
+        assert!(put(&mut config, SettingKey::LookFollows, &SettingValue::Bool(false)));
+        assert!(config.reading.mode_follows() && !config.reading.look_follows());
+        assert_eq!(
+            SettingKey::SeriesChoicesFollow.path(),
+            Some((&["reading"][..], "mode_follows"))
+        );
+        // Webtoons step to pages, the trackers' choices to their second.
+        let step_to = |config: &Config, key| step(config, config, key, 1);
+        assert_eq!(
+            step_to(&config, SettingKey::WebtoonMode),
+            Some(SettingValue::Str("paged".into()))
+        );
+        assert_eq!(
+            step_to(&config, SettingKey::SendProgressAfter),
+            Some(SettingValue::Str("close".into()))
+        );
+        assert_eq!(
+            step_to(&config, SettingKey::WhenTrackersDisagree),
+            Some(SettingValue::Str("latest".into()))
+        );
+        assert_eq!(SettingKey::WebtoonMode.path(), Some((&["reading", "webtoon"][..], "mode")));
+        assert!(kaeri_core::shared_settings::is_shared(&["reading", "webtoon"], "mode"));
     }
 
     #[test]

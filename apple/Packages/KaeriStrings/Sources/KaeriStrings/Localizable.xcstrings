@@ -194451,6 +194451,42 @@
         }
       }
     },
+    "settings-disagree-furthest" : {
+      "comment" : "Value of When trackers disagree: the higher chapter wins.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the furthest"
+          }
+        }
+      }
+    },
+    "settings-disagree-latest" : {
+      "comment" : "Value of When trackers disagree: the newest change wins, even a lower chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The latest change"
+          }
+        }
+      }
+    },
+    "settings-disagree-note" : {
+      "comment" : "Line under When trackers disagree.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status and score follow the latest change"
+          }
+        }
+      }
+    },
     "settings-discord" : {
       "comment" : "Row: Discord presence.",
       "extractionState" : "manual",
@@ -198339,6 +198375,30 @@
         }
       }
     },
+    "settings-look-follows" : {
+      "comment" : "Row: whether a series' own look (colour or greys) follows you to your other devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look"
+          }
+        }
+      }
+    },
+    "settings-look-follows-note" : {
+      "comment" : "Line under Look in Series settings that follow you.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colour or greys"
+          }
+        }
+      }
+    },
     "settings-mark-opening" : {
       "comment" : "Row: mark the opening and ending.",
       "extractionState" : "manual",
@@ -198615,6 +198675,18 @@
         }
       }
     },
+    "settings-mode-follows" : {
+      "comment" : "Row: whether a series' own reader mode and direction follow you to your other devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode and direction"
+          }
+        }
+      }
+    },
     "settings-mpv-options" : {
       "comment" : "Setting: extra options passed to mpv, the player. mpv stays lower case.",
       "extractionState" : "manual",
@@ -198695,6 +198767,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tùy chọn mpv"
+          }
+        }
+      }
+    },
+    "settings-new-chapters-download" : {
+      "comment" : "Row in Downloads: which series' new chapters download by themselves.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New chapters"
+          }
+        }
+      }
+    },
+    "settings-new-chapters-note" : {
+      "comment" : "Line under New chapters in Downloads.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A series being read also keeps its next chapters ready"
+          }
+        }
+      }
+    },
+    "settings-new-chapters-reading" : {
+      "comment" : "Value of New chapters in Downloads: the series on the Reading list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series on Reading"
           }
         }
       }
@@ -202735,6 +202843,42 @@
         }
       }
     },
+    "settings-progress-chapter" : {
+      "comment" : "Value of Send progress after: as each chapter counts as read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A chapter is read"
+          }
+        }
+      }
+    },
+    "settings-progress-close" : {
+      "comment" : "Value of Send progress after: once, when the reader closes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closing the reader"
+          }
+        }
+      }
+    },
+    "settings-progress-group" : {
+      "comment" : "Group in Accounts: how reading progress goes to the trackers.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress"
+          }
+        }
+      }
+    },
     "settings-quality" : {
       "comment" : "Row: quality.",
       "extractionState" : "manual",
@@ -203174,7 +203318,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A series you change keeps its own mode, direction and colour."
+            "value" : "A series you change keeps its own mode, direction and look."
           }
         }
       }
@@ -204607,6 +204751,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Việc chia sẻ chỉ chạy khi Kaeri đang mở."
+          }
+        }
+      }
+    },
+    "settings-send-progress-after" : {
+      "comment" : "Row: when chapter progress goes to the reading trackers.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send progress after"
           }
         }
       }
@@ -215687,6 +215843,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ngày mai %1$@"
+          }
+        }
+      }
+    },
+    "settings-when-trackers-disagree" : {
+      "comment" : "Row: which chapter progress wins when a tracker and this device disagree.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When trackers disagree"
           }
         }
       }
