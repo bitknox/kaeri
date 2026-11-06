@@ -104,7 +104,7 @@
           <Button Grid.Column="1" Content="{x:Bind app:T.TogetherOpenLobby}" Click="OnPartyBarOpen" />
           <Button Grid.Column="2" Content="{x:Bind app:T.PartyLeave}" Click="OnPartyBarLeave" />
         </Grid>
-        <Frame x:Name="ContentFrame" Grid.Row="1" Navigating="OnFrameNavigating" Navigated="OnFrameNavigated" />
+        <Frame x:Name="ContentFrame" Grid.Row="1" Navigating="OnFrameNavigating" Navigated="OnFrameNavigated" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
       </Grid>
     </NavigationView>
 
