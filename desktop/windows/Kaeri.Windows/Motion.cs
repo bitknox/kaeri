@@ -303,7 +303,10 @@ static class Motion
         }
         var spring = visual.Compositor.CreateSpringVector3Animation();
         spring.DampingRatio = 1f;
-        spring.Period = quick ? Quick : Standard;
+        // Composition's period is the spring's 1/ω, not a full turn: a critically damped spring
+        // settles in about 2π periods. The Mac's spring(duration:) settles in its duration, so
+        // the token is divided by 2π; taken as it was, the hover card grew for over 1.5 s.
+        spring.Period = TimeSpan.FromTicks((long)((quick ? Quick : Standard).Ticks / (2 * Math.PI)));
         spring.FinalValue = to;
         if (from is { } start)
             spring.InitialValue = start;
