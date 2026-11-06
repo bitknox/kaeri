@@ -23,14 +23,17 @@ CLAUDE.local.md
 /kaeri.db*
 /.kaeri/
 
-# This repository carries no plugins apart from the two references and two test fixtures. The
-# references exist to be read. The fixtures are what the tests run against: the hostile plugin,
-# and a made-up listing source on index.example. If plugins are ever distributed it will be
-# through a separate registry, not this tree.
+# This repository carries no plugins apart from three references and three test fixtures. The
+# references exist to be read: two show sources and a book source. The fixtures are what the
+# tests run against: a hostile show source, a hostile book source, and a made-up listing source
+# on index.example. If plugins are ever distributed it will be through a separate registry, not
+# this tree.
 /plugins/*
 !/plugins/example-rust/
 !/plugins/example-ts/
+!/plugins/example-books/
 !/plugins/test-hostile/
+!/plugins/test-hostile-books/
 !/plugins/test-torrent-source/
 
 # Plugins build out of tree and are their own workspaces, so their artefacts are not covered by
