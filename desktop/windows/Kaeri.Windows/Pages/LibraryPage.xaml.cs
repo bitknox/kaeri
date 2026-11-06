@@ -30,7 +30,7 @@ public sealed partial class LibraryPage : Page
     {
         InitializeComponent();
         SurpriseHost.Content = surprise;
-        SignedOut.Child = States.Empty(T.LibrarySignedOutTitle, T.LibrarySignedOutDetail, T.LibrarySignedOutAction, () => ctx.Send(new Command.Connect("anilist")));
+        SignedOut.Child = States.Empty(T.LibrarySignedOutTitle, T.LibrarySignedOutDetail, T.LibrarySignedOutAction, () => ctx.SignIn("anilist"));
         if (SignedOut.Child is StackPanel panel && panel.Children[^1] is Button signIn)
             signIn.Style = Ui.Res<Style>("AccentButtonStyle");
         State.Placeholders = () => States.Covers();

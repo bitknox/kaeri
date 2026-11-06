@@ -186,3 +186,17 @@ start-failed-open-folder = Open the folder
 # Button in that window: closes it and the app.
 # @only windows
 start-failed-quit = Quit
+
+# Title of the window shown instead of the app when the engine stopped while the app was open.
+# @only windows
+engine-stopped-title = { -app-name } stopped working
+
+# Line under that title: what happened and what to do.
+# @only windows
+# @allow proceed
+engine-stopped-detail = The part of the app that does the work has stopped. Open { -app-name } again to carry on.
+
+# Button in that window: opens the app again.
+# @only windows
+# @max 24
+engine-stopped-open-again = Open again

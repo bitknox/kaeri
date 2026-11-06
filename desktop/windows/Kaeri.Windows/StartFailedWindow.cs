@@ -9,21 +9,13 @@ namespace Kaeri.Windows;
 
 /// <summary>
 /// What shows instead of the app when the engine could not start: why, in the engine's words
-/// (which name the file and what to do), the folder it lives in, and Quit.
+/// (which name the file and what to do), the folder it lives in, and Quit. The same window says
+/// when the engine stopped while the app was open, with Open again in place of the folder.
 /// </summary>
 sealed class StartFailedWindow : Window
 {
     public StartFailedWindow(string reason, string folder)
-    {
-        Title = T.AppName;
-        var body = new StackPanel { Spacing = 16, Padding = new Thickness(32), MaxWidth = 560, VerticalAlignment = VerticalAlignment.Center };
-        body.Children.Add(Ui.Text(T.StartFailedTitle, "SubtitleTextBlockStyle"));
-        var why = Ui.Text(reason, "BodyTextBlockStyle");
-        why.IsTextSelectionEnabled = true;
-        body.Children.Add(why);
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        var open = new Button { Content = T.StartFailedOpenFolder };
-        open.Click += async (_, _) =>
+        : this(T.StartFailedTitle, reason, T.StartFailedOpenFolder, async () =>
         {
             try
             {
@@ -34,7 +26,29 @@ sealed class StartFailedWindow : Window
             {
                 KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"the folder did not open: {e.Message}");
             }
-        };
+        })
+    {
+    }
+
+    /// <summary>The engine stopped with the window open: what happened, Open again and Quit.</summary>
+    public static StartFailedWindow Stopped() =>
+        new(T.EngineStoppedTitle, T.EngineStoppedDetail, T.EngineStoppedOpenAgain, () =>
+        {
+            if (Relaunch.Start("the engine stopped"))
+                Application.Current.Exit();
+        });
+
+    StartFailedWindow(string title, string reason, string action, Action act)
+    {
+        Title = T.AppName;
+        var body = new StackPanel { Spacing = 16, Padding = new Thickness(32), MaxWidth = 560, VerticalAlignment = VerticalAlignment.Center };
+        body.Children.Add(Ui.Text(title, "SubtitleTextBlockStyle"));
+        var why = Ui.Text(reason, "BodyTextBlockStyle");
+        why.IsTextSelectionEnabled = true;
+        body.Children.Add(why);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var open = new Button { Content = action };
+        open.Click += (_, _) => act();
         var quit = new Button { Content = T.StartFailedQuit, Style = Ui.Res<Style>("AccentButtonStyle") };
         quit.Click += (_, _) => Application.Current.Exit();
         buttons.Children.Add(open);

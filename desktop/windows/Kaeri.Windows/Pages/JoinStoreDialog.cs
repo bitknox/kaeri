@@ -9,7 +9,9 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// Joining a plugin store in two steps, as the other apps do: paste the invite link and let the
 /// engine check it, then see who runs the store, what it offers and which hosts those plugins
-/// contact, and confirm. Nothing is joined or installed until the second step's Join.
+/// contact, and confirm. Nothing is joined or installed until the second step's Join, and the
+/// dialog stays up with a ring until the engine says the store was joined or why it was not.
+/// Both steps sit in a box of one size, so the dialog does not jump between them.
 /// </summary>
 sealed class JoinStoreDialog
 {
@@ -17,9 +19,18 @@ sealed class JoinStoreDialog
     readonly ContentDialog dialog;
     readonly TextBox invite = new() { PlaceholderText = T.StoresInviteLinkHint, AcceptsReturn = false };
     readonly TextBlock problem = Ui.Text("", "HazeCaptionStyle");
-    readonly StackPanel body = new() { Spacing = 12, MinWidth = 420 };
+    readonly StackPanel body = new() { Spacing = 12 };
+    readonly ProgressRing ring = new() { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
     InvitedStore? preview;
     TextBox? deviceName, yourName;
+    /// <summary>Join was pressed and the engine has not answered yet; its job, when it gave one.</summary>
+    bool joining;
+    ulong? joinJob;
+    /// <summary>The last alert while joining: why the store would not take this device.</summary>
+    string? refusal;
+
+    /// <summary>The store to open once the dialog has closed: the one just joined, or the one joined before.</summary>
+    public string? Store { get; private set; }
 
     public JoinStoreDialog(Ctx ctx, XamlRoot root, string? pasted = null)
     {
@@ -30,7 +41,7 @@ sealed class JoinStoreDialog
         {
             XamlRoot = root,
             Title = T.StoresAddTitle,
-            Content = body,
+            Content = new ScrollViewer { Content = body, Width = 460, Height = 360, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
             PrimaryButtonText = T.StoresCheckInvite,
             CloseButtonText = T.ActionCancel,
             DefaultButton = ContentDialogButton.Primary,
@@ -48,6 +59,7 @@ sealed class JoinStoreDialog
             _ = Task.Delay(700).ContinueWith(_ => dialog.DispatcherQueue.TryEnqueue(Check));
         ctx.Known.Preview = null;
         ctx.Known.Joined = null;
+        Store = null;
         ctx.Batch += Heard;
         try
         {
@@ -62,6 +74,9 @@ sealed class JoinStoreDialog
     /// <summary>Another invite link opened while this is up: back to the first step, filled in with it.</summary>
     public void Fill(string link)
     {
+        // A join on its way finishes first.
+        if (joining)
+            return;
         invite.Text = link;
         FirstStep();
     }
@@ -96,9 +111,35 @@ sealed class JoinStoreDialog
             Check();
             return;
         }
+        // Joined before: Open store goes to it, and nothing is sent.
+        if (preview.AlreadyJoined)
+        {
+            Store = ctx.Known.Stores.FirstOrDefault(s => s.Url == preview.Url)?.Id
+                ?? ctx.Known.Stores.FirstOrDefault(s => s.Fingerprint == preview.Fingerprint)?.Id;
+            return;
+        }
+        args.Cancel = true;
+        if (joining)
+            return;
         var label = preview.Anonymous ? null : deviceName?.Text.Trim() is { Length: > 0 } name ? name : null;
         var joiner = preview.NamesJoiner && yourName?.Text.Trim() is { Length: > 0 } given ? given : null;
-        ctx.Send(new Command.JoinStore(preview.Link, label, joiner));
+        joining = true;
+        refusal = null;
+        problem.Text = "";
+        Working(true);
+        joinJob = ctx.Send(new Command.JoinStore(preview.Link, label, joiner));
+    }
+
+    /// <summary>The ring while the join runs, with Join and the fields held.</summary>
+    void Working(bool on)
+    {
+        ring.IsActive = on;
+        ring.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        dialog.IsPrimaryButtonEnabled = !on;
+        if (deviceName is not null)
+            deviceName.IsEnabled = !on;
+        if (yourName is not null)
+            yourName.IsEnabled = !on;
     }
 
     /// <summary>Step one: ask the engine what the link leads to, and stay until it answers.</summary>
@@ -117,15 +158,34 @@ sealed class JoinStoreDialog
         {
             switch (e)
             {
-                case Event.StorePreview { V1: InvitePreview.Store s }:
+                case Event.StorePreview { V1: InvitePreview.Store s } when !joining:
                     SecondStep(s.V1);
                     break;
                 case Event.StorePreview { V1: InvitePreview.Failed f }:
                     problem.Text = Failure(f.Reason) + (f.Contact is { Length: > 0 } contact ? "\n" + T.StoreInviteContact(contact) : "");
-                    dialog.IsPrimaryButtonEnabled = true;
+                    if (joining)
+                    {
+                        // The invite stopped working since it was checked: joining again won't help.
+                        joining = false;
+                        Working(false);
+                        dialog.IsPrimaryButtonEnabled = false;
+                    }
+                    else
+                        dialog.IsPrimaryButtonEnabled = true;
                     break;
-                case Event.StoreJoined:
+                case Event.StoreJoined joined:
+                    joining = false;
+                    Store = joined.Store;
                     dialog.Hide();
+                    break;
+                case Event.Toast { V1.Kind: NoticeKind.Alert } toast when joining:
+                    refusal = toast.V1.Msg?.Text();
+                    break;
+                case Event.JobDone done when joining && joinJob is { } job && done.V1 == job:
+                    // Over without a join: why, in place, and Join to try again.
+                    joining = false;
+                    Working(false);
+                    problem.Text = refusal is { Length: > 0 } why ? why : T.StoresUnreachable;
                     break;
             }
         }
@@ -170,6 +230,10 @@ sealed class JoinStoreDialog
             body.Children.Add(yourName);
             body.Children.Add(Ui.Text(T.StoresJoinYourNameDetail, "HazeCaptionStyle"));
         }
+        // The ring and why a join failed, under the rest.
+        problem.Text = "";
+        body.Children.Add(ring);
+        body.Children.Add(problem);
         dialog.PrimaryButtonText = store.AlreadyJoined ? T.StoresOpenStore : T.StoresJoinButton;
         dialog.IsPrimaryButtonEnabled = true;
         dialog.DefaultButton = ContentDialogButton.Primary;

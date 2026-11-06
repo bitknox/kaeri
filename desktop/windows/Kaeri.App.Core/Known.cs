@@ -67,6 +67,19 @@ public sealed class Known
     public HashSet<TrendPeriod> TrendingFailed { get; } = [];
     public Dictionary<string, SyncState> Sync { get; } = [];
 
+    /// <summary>
+    /// Sign-ins started here and not over yet: the tracker, with the engine's job for the step
+    /// under way, or none while the person is in the browser. Signed in, or the job ending
+    /// without it, takes the tracker out.
+    /// </summary>
+    public Dictionary<string, ulong?> SigningIn { get; } = [];
+
+    /// <summary>When each signed-in tracker was last seen synced, with nothing waiting and nothing failed.</summary>
+    public Dictionary<string, DateTimeOffset> SyncedAt { get; } = [];
+
+    /// <summary>A sign-in to <paramref name="tracker"/> was asked for, as <paramref name="job"/>.</summary>
+    public void SignInStarted(string tracker, ulong? job) => SigningIn[tracker] = job;
+
     /// <summary>Sync between the person's own devices, as the engine last said; null before it has.</summary>
     public SyncStatus? SyncGroup { get; set; }
 
@@ -433,6 +446,26 @@ public sealed class Known
                 break;
             case Event.Sync s:
                 Sync[s.V1.Tracker] = s.V1;
+                if (s.V1 is { Connected: true, NeedsReauth: false })
+                    SigningIn.Remove(s.V1.Tracker);
+                // Synced as the Mac counts it: an outcome, nothing waiting and no failed pull.
+                if (!s.V1.Connected)
+                    SyncedAt.Remove(s.V1.Tracker);
+                else if (s.V1.Last is not null && s.V1.Outbox == 0 && s.V1.PullError is null)
+                    SyncedAt[s.V1.Tracker] = DateTimeOffset.UtcNow;
+                break;
+            case Event.Authorize authorize when SigningIn.ContainsKey(authorize.Tracker):
+                // In the browser now: the job that opened it ends, the sign-in goes on.
+                SigningIn[authorize.Tracker] = null;
+                break;
+            case Event.DeviceCode { V1: null }:
+                // A code's sign-in is over, however it ended.
+                SigningIn.Remove("simkl");
+                SigningIn.Remove("trakt");
+                break;
+            case Event.JobDone done:
+                foreach (var tracker in SigningIn.Where(p => p.Value == done.V1).Select(p => p.Key).ToList())
+                    SigningIn.Remove(tracker);
                 break;
             case Event.SyncStatus group:
                 // A pass that works clears the problem, except those only a dialog can answer.

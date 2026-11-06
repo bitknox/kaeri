@@ -351,7 +351,8 @@ public sealed partial class SettingsPage : Page
     /// <summary>What decides which cards the pane has, and for Accounts and Devices what they say.</summary>
     string Shape() => pane.Name switch
     {
-        "accounts" => Drawn.Fingerprint(AccountLines().ToList()),
+        // Its cards keep themselves current, so the pane itself never changes shape.
+        "accounts" => "accounts",
         "devices" => DevicesKey(),
         "profiles" => Drawn.Fingerprint(ctx.Known.Profiles),
         "library" => Drawn.Fingerprint((ctx.Known.HiddenLoaded, ctx.Known.Hidden, ctx.Known.RestoredHere.Order())),
@@ -458,7 +459,12 @@ public sealed partial class SettingsPage : Page
                     if (pane.Name == "playback" && group == "player")
                     {
                         var clear = new Button { Content = T.PlayerSkipClear };
-                        clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
+                        // Asks first, as the Mac does: what Kaeri found is gone with it.
+                        clear.Click += async (_, _) =>
+                        {
+                            if (await Ui.Confirm(XamlRoot, T.SettingsClearSkips, T.SettingsClearSkipsConfirm, T.PlayerSkipClear))
+                                ctx.Send(new Command.ClearSkipMarks());
+                        };
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
                         Cards.Children.Add(HideChatCard());
                     }
@@ -685,13 +691,22 @@ public sealed partial class SettingsPage : Page
                 parts.Add(T.LanguageRestartNote);
             return parts.Count == 0 ? null : string.Join(" ", parts);
         }
-        var card = CardFrame(T.SettingsLanguageApp, Description(), box, "\uF2B7");
+        // Restart beside the picker once another language is chosen, as the Mac has it.
+        var restart = new Button { Content = T.SettingsLanguageRestart };
+        restart.Click += (_, _) => Relaunch.Now("a new app language");
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        row.Children.Add(restart);
+        row.Children.Add(box);
+        void ShowRestart() => restart.Visibility = StringResources.Chosen != StringResources.AtStart ? Visibility.Visible : Visibility.Collapsed;
+        ShowRestart();
+        var card = CardFrame(T.SettingsLanguageApp, Description(), row, "\uF2B7");
         box.SelectionChanged += (_, _) =>
         {
             if (quiet || box.SelectedIndex < 0)
                 return;
             StringResources.Choose(box.SelectedIndex == 0 ? null : languages[box.SelectedIndex - 1].Tag);
             card.Description = Description();
+            ShowRestart();
         };
         return card;
     }
@@ -1041,26 +1056,52 @@ public sealed partial class SettingsPage : Page
             }
             case SettingControl.Text:
             {
+                // mpv's options are one to a line: a box that takes several, where Enter starts the
+                // next line and leaving the box saves them. The box breaks its lines at , where
+                // the engine's text breaks at 
+. It takes several lines before its text is set, or
+                // it keeps only the first.
+                var lines = key == K.MpvOptions;
                 var text = SettingsCatalog.TypedText(row) ?? "";
-                var box = new TextBox { Text = text, MinWidth = 220, PlaceholderText = T.SettingsNotSet };
+                string Shown(string engine) => lines ? engine.Replace('
+', '') : engine;
+                var box = new TextBox { MinWidth = lines ? 320 : 220, PlaceholderText = T.SettingsNotSet };
+                if (lines)
+                {
+                    box.AcceptsReturn = true;
+                    box.TextWrapping = TextWrapping.Wrap;
+                    box.MinHeight = 96;
+                }
+                box.Text = Shown(text);
                 Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
+                string Typed() => box.Text.Replace("
+", "
+").Replace('', '
+').Trim();
                 void Commit()
                 {
-                    if (!quiet && box.Text.Trim() != text)
-                        ctx.Send(new Command.SetSetting(key, new SettingValue.Str(box.Text.Trim())));
+                    if (!quiet && Typed() != text.Trim())
+                    {
+                        // The options go as a list, one to a line, as the config file keeps them.
+                        SettingValue value = lines
+                            ? new SettingValue.Strings([.. Typed().Split('
+').Select(l => l.Trim()).Where(l => l.Length > 0)])
+                            : new SettingValue.Str(Typed());
+                        ctx.Send(new Command.SetSetting(key, value));
+                    }
                 }
                 box.LostFocus += (_, _) => Commit();
                 box.KeyDown += (_, e) =>
                 {
-                    if (e.Key == global::Windows.System.VirtualKey.Enter)
+                    if (e.Key == global::Windows.System.VirtualKey.Enter && !lines)
                         Commit();
                 };
                 take = now =>
                 {
                     text = SettingsCatalog.TypedText(now) ?? "";
                     // What is being typed is never replaced.
-                    if (box.FocusState == FocusState.Unfocused && box.Text != text)
-                        box.Text = text;
+                    if (box.FocusState == FocusState.Unfocused && Typed() != text.Trim())
+                        box.Text = Shown(text);
                 };
                 control = box;
                 break;
@@ -1132,57 +1173,12 @@ public sealed partial class SettingsPage : Page
         return description;
     }
 
-    /// <summary>
-    /// Each tracker's card as it reads: signed in or not, and the line under it. The pane is drawn
-    /// again only when these words change, so a sync's many replies do not take a click away.
-    /// </summary>
-    IEnumerable<(string Tracker, string Name, bool Connected, string Description)> AccountLines()
-    {
-        foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
-        {
-            var name = KaeriFfiMethods.TrackerName(tracker);
-            var state = ctx.Known.Sync.GetValueOrDefault(tracker);
-            if (state is { Connected: true })
-            {
-                var waiting = (long)state.Outbox;
-                yield return (tracker, name, true, (state.User, waiting) switch
-                {
-                    ({ } user, > 0) => T.AccountsStateSignedInWaiting(name, user, waiting),
-                    ({ } user, _) => T.AccountsStateSignedIn(name, user),
-                    (null, > 0) => T.SettingsSignedInWaiting(waiting),
-                    _ => T.SettingsSignedIn,
-                });
-            }
-            else
-                yield return (tracker, name, false, tracker is "simkl" or "trakt" ? T.SettingsSignedOutCode : T.AccountsStateSignedOut);
-        }
-    }
-
     void ShowAccounts()
     {
         Cards.Children.Add(Heading(T.SettingsTrackers));
-        foreach (var (tracker, name, connected, description) in AccountLines())
-        {
-            Button action;
-            if (connected)
-            {
-                action = new Button { Content = T.AccountsSignOut };
-                action.Click += (_, _) => ctx.Send(new Command.Disconnect(tracker));
-            }
-            else
-            {
-                action = new Button { Content = T.AccountsSignIn };
-                // Kitsu takes a user name and password here; the others sign in in the browser or with a code.
-                action.Click += (_, _) =>
-                {
-                    if (tracker == "kitsu")
-                        KitsuDialog.Show(ctx, XamlRoot);
-                    else
-                        ctx.Send(new Command.Connect(tracker));
-                };
-            }
-            Cards.Children.Add(CardFrame(name, description, action));
-        }
+        // Each card keeps itself current: sync, an expired sign-in, and one under way.
+        foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
+            Cards.Children.Add(AccountCard.For(ctx, tracker));
         var sync = new Button { Content = T.AccountsSyncNow };
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));

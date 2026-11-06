@@ -1739,6 +1739,10 @@
     <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš ÞÇ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>[Ŕéšţàŕţ~~~]</value>
+    <comment>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</comment>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>[Ķàéŕî îš šţîļļ ðöŵñļöàðîñĝ~~~~~~~~]</value>
     <comment>The notification area icon's balloon, the first time the window closes with downloads running: its title.</comment>
@@ -1910,6 +1914,18 @@
   <data name="StartFailedQuit" xml:space="preserve">
     <value>[Ǫüîţ~~]</value>
     <comment>Button in that window: closes it and the app.</comment>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>[Ķàéŕî šţöþþéð ŵöŕķîñĝ~~~~~~~]</value>
+    <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>[Ţĥé þàŕţ öƒ ţĥé àþþ ţĥàţ ðöéš ţĥé ŵöŕķ ĥàš šţöþþéð. Öþéñ Ķàéŕî àĝàîñ ţö çàŕŕý öñ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that title: what happened and what to do.</comment>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>[Öþéñ àĝàîñ~~~]</value>
+    <comment>Button in that window: opens the app again.</comment>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>[{title}, éþîšöðé {episode}~~~~~]</value>

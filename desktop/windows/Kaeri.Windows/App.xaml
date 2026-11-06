@@ -32,7 +32,7 @@
           <Color x:Key="CardStrokeColorDefault">#2F3242</Color>
           <Color x:Key="DividerStrokeColorDefault">#2F3242</Color>
           <Color x:Key="TextFillColorPrimary">#E4E0D6</Color>
-          <Color x:Key="TextFillColorSecondary">#9298B5</Color>
+          <Color x:Key="TextFillColorSecondary">#A3A9C4</Color>
           <Color x:Key="TextFillColorDisabled">#5C6073</Color>
           <Color x:Key="TextOnAccentFillColorPrimary">#161A2E</Color>
           <Color x:Key="SystemFillColorCritical">#E06B54</Color>
@@ -56,7 +56,7 @@
           <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#2F3242" />
           <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#2F3242" />
           <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#E4E0D6" />
-          <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#9298B5" />
+          <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#A3A9C4" />
           <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#5C6073" />
           <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#161A2E" />
           <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#161A2E" />
@@ -80,7 +80,7 @@
           <SolidColorBrush x:Key="InfoBarWarningSeverityBackgroundBrush" Color="#222638" />
           <SolidColorBrush x:Key="InfoBarSuccessSeverityBackgroundBrush" Color="#222638" />
           <SolidColorBrush x:Key="InfoBarErrorSeverityBackgroundBrush" Color="#222638" />
-          <SolidColorBrush x:Key="InfoBarInformationalSeverityIconBackground" Color="#9298B5" />
+          <SolidColorBrush x:Key="InfoBarInformationalSeverityIconBackground" Color="#A3A9C4" />
           <SolidColorBrush x:Key="InfoBarWarningSeverityIconBackground" Color="#9298B5" />
           <SolidColorBrush x:Key="InfoBarSuccessSeverityIconBackground" Color="#7FC7D9" />
           <SolidColorBrush x:Key="InfoBarErrorSeverityIconBackground" Color="#E06B54" />

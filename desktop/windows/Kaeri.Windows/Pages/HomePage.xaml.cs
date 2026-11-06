@@ -461,7 +461,7 @@ public sealed partial class HomePage : Page, IPageKeys
             case HomeEnd.SignIn:
                 line.Children.Add(Ui.Haze(T.HomeEndSignedOut, wrap: false));
                 var signIn = new Button { Content = T.HomeSignIn, MinHeight = 32 };
-                signIn.Click += (_, _) => ctx.Send(new Command.Connect("anilist"));
+                signIn.Click += (_, _) => ctx.SignIn("anilist");
                 line.Children.Add(signIn);
                 break;
             case HomeEnd.NoSources:

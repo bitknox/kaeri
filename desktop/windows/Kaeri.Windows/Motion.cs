@@ -9,8 +9,9 @@ namespace Kaeri.Windows;
 /// <summary>
 /// The motion tokens on Windows' animation APIs. Springs are critically damped (quick: 200 ms
 /// period, standard: 300 ms); fade-in is 200 ms decelerating, fade-out 300 ms accelerating.
-/// With "Animation effects" off (<see cref="UISettings.AnimationsEnabled"/>) the spatial
-/// motions (drill-in, the connected cover) become crossfades; fades stay, as the brief says.
+/// With "Animation effects" off (<see cref="UISettings.AnimationsEnabled"/>), or Motion off in
+/// Settings, the spatial motions (drill-in, the connected cover) become crossfades; fades stay,
+/// as the brief says.
 /// </summary>
 static class Motion
 {
@@ -19,7 +20,13 @@ static class Motion
     /// <summary>A screenshot run's: reduced motion on or off whatever the system says.</summary>
     internal static bool? Override { get; set; }
 
-    public static bool Enabled => Override ?? settings.AnimationsEnabled;
+    /// <summary>
+    /// Settings › Playback › Motion, as the engine last said it: off reduces motion as the
+    /// system's Animation effects off does; on leaves it to the system.
+    /// </summary>
+    internal static bool Chosen { get; set; } = true;
+
+    public static bool Enabled => Override ?? (Chosen && settings.AnimationsEnabled);
 
     public static readonly TimeSpan Quick = TimeSpan.FromMilliseconds(200);
     public static readonly TimeSpan Standard = TimeSpan.FromMilliseconds(300);
