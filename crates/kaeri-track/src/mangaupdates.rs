@@ -36,7 +36,7 @@ use crate::{
     secret::{TokenPair, TokenStore},
 };
 
-const API: &str = "https://api.mangaupdates.com/v1";
+pub const API: &str = "https://api.mangaupdates.com/v1";
 
 /// The gap between any two requests.
 const READ_GAP: Duration = Duration::from_secs(1);
