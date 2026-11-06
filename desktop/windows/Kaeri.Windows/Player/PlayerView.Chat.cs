@@ -428,11 +428,16 @@ public sealed partial class PlayerView
         timer.Start();
     }
 
-    /// <summary>The corner's cards rise above the moments while any are up.</summary>
+    /// <summary>
+    /// The moments sit above the corner's card, which never moves for them: Skip and Up next
+    /// stay under the pointer heading for them (as the Mac places the moment, not the card).
+    /// </summary>
     void LiftCorner()
     {
-        var count = ChatMoments.Children.Count;
-        Corner.Margin = new Thickness(0, 0, 24, 80 + (count > 0 ? count * 46 : 0));
+        var card = Corner.Visibility == Visibility.Visible ? Corner.ActualHeight : 0;
+        var bottom = 76 + (card > 0 ? card + 8 : 0);
+        if (Math.Abs(ChatMoments.Margin.Bottom - bottom) >= 0.5)
+            ChatMoments.Margin = new Thickness(0, 0, 12, bottom);
     }
 
     // The field.
