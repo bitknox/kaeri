@@ -48,6 +48,8 @@ public sealed partial class CalendarPage : Page
     /// its element, art and all, so nothing that did not change is drawn again or flashes.
     /// </summary>
     Dictionary<string, (FrameworkElement Cell, TextBlock? Status, Button Button, Broadcast Broadcast)> cells = [], lastCells = [];
+    /// <summary>The column or agenda day each drawn cell is in, to take it out when it is drawn again.</summary>
+    readonly Dictionary<FrameworkElement, Panel> holders = [];
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer silence, activity, minute;
 
     public CalendarPage()
@@ -280,6 +282,9 @@ public sealed partial class CalendarPage : Page
         plated = false;
         lastCells = cells;
         cells = [];
+        var keep = lastCells.Values.Select(c => c.Cell).ToHashSet();
+        foreach (var gone in holders.Keys.Where(c => !keep.Contains(c)).ToList())
+            holders.Remove(gone);
         Days.Children.Clear();
         Days.ColumnDefinitions.Clear();
         Days.RowDefinitions.Clear();
@@ -536,7 +541,9 @@ public sealed partial class CalendarPage : Page
                 into.Children.Add(NowLine());
                 placed = true;
             }
-            into.Children.Add(Kept(b, grid));
+            var cell = Kept(b, grid);
+            into.Children.Add(cell);
+            holders[cell] = into;
         }
         if (line && !placed)
             into.Children.Add(NowLine());
@@ -549,8 +556,10 @@ public sealed partial class CalendarPage : Page
         var key = $"{grid}|{b.Entry.Id}|{b.Episode}|{b.Airs}|{b.Was}|{b.Watched}|{b.Dubbed}|{b.Entry.AiringApproximate}|{b.Entry.Title}|{b.Entry.BannerUrl ?? b.Entry.CoverUrl}|{b.IsNew(now)}";
         if (lastCells.Remove(key, out var kept) && !cells.ContainsKey(key))
         {
-            if (kept.Cell.Parent is Panel parent)
-                parent.Children.Remove(kept.Cell);
+            // Its old column is off the page by now, and a cell in a panel off the page has no
+            // Parent to ask, so the column is kept beside it.
+            if (holders.Remove(kept.Cell, out var old))
+                old.Children.Remove(kept.Cell);
             cells[key] = kept;
             if (kept.Status is { } status)
                 live.Add((status, kept.Button, b));
