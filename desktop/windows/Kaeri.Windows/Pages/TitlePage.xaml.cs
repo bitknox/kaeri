@@ -410,11 +410,13 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>The page's own layout as raised plates: banner, cover and title, then episode rows.</summary>
-    static UIElement Placeholders()
+    UIElement Placeholders()
     {
+        // The band as tall as the real one, and the cover and title where they will stand on it.
+        var band = double.IsNaN(Banner.Height) ? 220 : Banner.Height;
         var page = new StackPanel { Spacing = 20 };
-        page.Children.Add(new Border { Height = 220, Background = Ui.Res<Brush>("RaisedBrush") });
-        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, 0, 36, 0) };
+        page.Children.Add(new Border { Height = band, Background = Ui.Res<Brush>("RaisedBrush") });
+        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, -120 - 20, 36, 0) };
         head.Children.Add(States.Plate(120, 180, 8));
         var bars = new StackPanel { Spacing = 10, VerticalAlignment = VerticalAlignment.Bottom };
         bars.Children.Add(States.Plate(320, 28, 4));
@@ -430,14 +432,16 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>
-    /// The episode rows while they load, in the rows' own layout: a still and two lines, 72 high
-    /// with 8 between. As many as the title has, where that is known, up to a screenful, so the
-    /// rows that replace them take the room they kept.
+    /// The episode rows while they load, in the rows' own layout and size: the still and two
+    /// lines, each row as high as a real one with its margin. As many as the title has, where
+    /// that is known, up to a screenful, so the rows that replace them take the room they kept.
     /// </summary>
     UIElement EpisodePlaceholders()
     {
         var count = (int)Math.Clamp(ctx.Known.Entry(id)?.Episodes ?? 4, 1, 12);
-        var rows = States.Rows(count, 128, 72, rowHeight: 72, spacing: 8);
+        var narrow = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
+        var still = narrow ? global::Kaeri.App.Synopsis.StillNarrow : global::Kaeri.App.Synopsis.StillWide;
+        var rows = States.Rows(count, still, Math.Round(still * 9 / 16), rowHeight: global::Kaeri.App.Synopsis.RowHeight(narrow, true) + 4, spacing: 0);
         if (rows is FrameworkElement f)
             f.Margin = new Thickness(0, 8, 0, 0);
         return rows;
@@ -1011,6 +1015,11 @@ public sealed partial class TitlePage : Page, IPageKeys
         WaitingLine.Visibility = action.Waiting is not null ? Visibility.Visible : Visibility.Collapsed;
         // A party plays the episode the primary action would.
         PartyItem.IsEnabled = action is { Playable: true };
+        // Items that would do nothing are greyed, not left to fail in silence: nothing to
+        // download yet, or no episode before the next one left unwatched.
+        var table = ctx.Known.Episodes.GetValueOrDefault(id);
+        DownloadItem.IsEnabled = table is { } listed && EpisodeSources.Downloadable(listed).Length > 0;
+        MarkPreviousItem.IsEnabled = table is { } all && all.Any(r => uint.TryParse(r.Number, out var n) && n < action.Episode && !r.Completed);
         TvAction.Visibility = action is { Playable: true } && ctx.Tv.Available ? Visibility.Visible : Visibility.Collapsed;
         // Case B: it does not play here, so the amber action opens the service that has it.
         if (Avail is { Case: AvailabilityCase.OnService, Main: { } main } && action is not { Playable: true })
