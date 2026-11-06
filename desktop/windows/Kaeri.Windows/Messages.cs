@@ -42,6 +42,7 @@ static class Messages
         {
             Content = list,
             Height = 360,
+            Width = 512,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0, 0, 16, 0),
         };

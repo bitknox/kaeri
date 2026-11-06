@@ -29,7 +29,7 @@ public static class SettingsCatalog
         SettingKey.PresenceRich,
         SettingKey.Torrents, SettingKey.Syncplay, SettingKey.UpdateCheck, SettingKey.UpdateBeta, SettingKey.SpoilerProtection,
         SettingKey.DownloadsOnCellular, SettingKey.TorrentsOnCellular, SettingKey.EpisodeNotifications,
-        SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting,
+        SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.AdultTitles,
     ];
 
     /// <summary>
