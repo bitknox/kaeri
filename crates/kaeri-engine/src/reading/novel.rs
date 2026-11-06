@@ -469,6 +469,8 @@ pub(crate) struct NovelBook {
     pub fixed: bool,
     /// What counts are kept under, before the settings and the screen.
     pub identity: String,
+    /// Each spine document's words: see [`words`].
+    pub words: Vec<u32>,
 }
 
 impl NovelBook {
@@ -525,6 +527,12 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
         format!("{:016x}", h.finish())
     };
     let last_linear = spine.iter().rposition(|(_, l)| *l).unwrap_or(0);
+    let words = spine
+        .iter()
+        .map(|(path, _)| {
+            epub.resource(path).map_or(0, |r| words(&String::from_utf8_lossy(&r.data)))
+        })
+        .collect();
     let served = Arc::new(ServedBook {
         session: opening.session,
         content: Content::Epub(Mutex::new(epub)),
@@ -558,6 +566,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
         progression,
         fixed,
         identity,
+        words,
     }))
 }
 
@@ -648,7 +657,59 @@ pub(crate) fn open_text(
         },
         fixed: false,
         identity,
+        words: vec![words(xhtml)],
     }
+}
+
+/// A document's words, for the time left in it: the words of its body, two Chinese, Japanese
+/// or Korean characters counting as one (they read about twice as many characters a minute as
+/// other scripts read words).
+pub(crate) fn words(markup: &str) -> u32 {
+    let body = markup
+        .find("<body")
+        .and_then(|at| markup[at..].find('>').map(|end| at + end + 1))
+        .map_or(markup, |start| &markup[start..]);
+    let (mut words, mut cjk, mut in_tag, mut in_word) = (0u32, 0u32, false, false);
+    let mut entity = false;
+    for c in body.chars() {
+        match c {
+            '<' => {
+                in_tag = true;
+                in_word = false;
+            }
+            '>' if in_tag => in_tag = false,
+            _ if in_tag => {}
+            // "&amp;" and "&#8217;" are one character, not a word.
+            '&' => entity = true,
+            ';' if entity => entity = false,
+            c if entity && c.is_alphanumeric() || c == '#' && entity => {}
+            c if is_cjk(c) => {
+                cjk = cjk.saturating_add(1);
+                in_word = false;
+            }
+            c if c.is_alphanumeric() || (in_word && matches!(c, '\'' | '\u{2019}' | '-')) => {
+                if !in_word {
+                    words = words.saturating_add(1);
+                    in_word = true;
+                }
+            }
+            _ => {
+                entity = false;
+                in_word = false;
+            }
+        }
+    }
+    words.saturating_add(cjk / 2)
+}
+
+fn is_cjk(c: char) -> bool {
+    matches!(u32::from(c),
+        0x3040..=0x30FF   // kana
+        | 0x3400..=0x4DBF // CJK extension A
+        | 0x4E00..=0x9FFF // CJK unified ideographs
+        | 0xAC00..=0xD7AF // Hangul syllables
+        | 0xF900..=0xFAFF // compatibility ideographs
+        | 0x20000..=0x2FA1F)
 }
 
 /// The looks' colours (the reader board). `ink` turns the book's own colours off.
@@ -745,6 +806,22 @@ pub(crate) fn count_key(identity: &str, style: &str, surface: &ReaderSurface) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn words_are_the_body_s_with_two_cjk_characters_as_one() {
+        let page = "<html><head><title>Not counted here</title></head>\
+            <body><h1>Chapter 4</h1><p>The ferryman&#8217;s lamp &amp; the keeper&apos;s \
+            well-worn map.</p></body></html>";
+        // Chapter, 4, The, ferryman's, lamp, the, keeper's, well-worn, map: an entity is a
+        // character, never a word.
+        assert_eq!(words(page), 9);
+        assert_eq!(
+            words("<body><p>\u{6E21}\u{3057}\u{5B88}\u{306E}\u{706F}\u{308A}</p></body>"),
+            3
+        );
+        assert_eq!(words("<p>No body, so all of it.</p>"), 6);
+        assert_eq!(words(""), 0);
+    }
 
     fn text_book(scheme: Scheme, dir: &Path) -> (NovelBooks, Arc<ServedBook>) {
         let books = NovelBooks::with_scheme(scheme);
