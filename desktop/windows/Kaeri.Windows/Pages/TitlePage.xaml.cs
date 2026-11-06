@@ -1020,7 +1020,15 @@ public sealed partial class TitlePage : Page, IPageKeys
         var table = ctx.Known.Episodes.GetValueOrDefault(id);
         DownloadItem.IsEnabled = table is { } listed && EpisodeSources.Downloadable(listed).Length > 0;
         MarkPreviousItem.IsEnabled = table is { } all && all.Any(r => uint.TryParse(r.Number, out var n) && n < action.Episode && !r.Completed);
-        TvAction.Visibility = action is { Playable: true } && ctx.Tv.Available ? Visibility.Visible : Visibility.Collapsed;
+        // Play on TV comes and goes with a fade, not a snap of the buttons beside it.
+        var tv = action is { Playable: true } && ctx.Tv.Available;
+        if (tv != (TvAction.Visibility == Visibility.Visible))
+        {
+            if (tv)
+                Motion.Show(TvAction);
+            else
+                Motion.Hide(TvAction);
+        }
         // Case B: it does not play here, so the amber action opens the service that has it.
         if (Avail is { Case: AvailabilityCase.OnService, Main: { } main } && action is not { Playable: true })
         {
