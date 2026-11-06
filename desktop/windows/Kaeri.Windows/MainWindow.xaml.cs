@@ -910,10 +910,14 @@ public sealed partial class MainWindow : Window
             if (joining == dialog)
                 joining = null;
         }
-        if (ctx.Known.Joined is { } store)
+        // The store just joined, or the one joined before: Plugin stores opens on it.
+        if ((dialog.Store ?? ctx.Known.Joined) is { } store)
         {
             ctx.Known.Joined = null;
-            ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
+            if (ContentFrame.Content is StoresPage stores)
+                stores.Select(store);
+            else
+                ContentFrame.Navigate(typeof(StoresPage), store, new SuppressNavigationTransitionInfo());
         }
     }
 

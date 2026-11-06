@@ -486,5 +486,5 @@ public sealed partial class StoresPage : Page
 
     void OnJoinEmpty(object sender, RoutedEventArgs e) => ctx.Window.ShowJoinStore();
 
-    async void OnJoin(object sender, RoutedEventArgs e) => await new JoinStoreDialog(ctx, XamlRoot).ShowAsync();
+    void OnJoin(object sender, RoutedEventArgs e) => ctx.Window.ShowJoinStore();
 }
