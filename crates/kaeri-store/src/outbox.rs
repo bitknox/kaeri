@@ -130,6 +130,32 @@ impl Store {
         })
     }
 
+    /// Queue reading progress that takes a tracker's count down, when the person chose that the
+    /// latest change wins: whatever progress is queued for the title gives way to it.
+    pub fn requeue_read_progress(
+        &self,
+        tracker_id: &str,
+        op: &TrackOp,
+        at: i64,
+    ) -> Result<Option<i64>> {
+        if !matches!(op, TrackOp::SetReadProgress { .. })
+            || op.anilist_id().is_own()
+            || op.anilist_id() == kaeri_core::demo::DEMO_ANILIST_ID
+        {
+            return self.enqueue(tracker_id, op, at);
+        }
+        self.with_personal(|c| {
+            c.execute(
+                "DELETE FROM read_outbox
+                  WHERE tracker_id = ?1 AND anilist_id = ?2
+                    AND json_extract(op, '$.op') = 'set_read_progress'",
+                rusqlite::params![tracker_id, op.anilist_id().get()],
+            )?;
+            Ok(())
+        })?;
+        self.enqueue(tracker_id, op, at)
+    }
+
     /// Queue a reading op in its own outbox. Chapters and volumes only move forward: a queued
     /// progress takes the higher of each, and one that raises neither is dropped.
     fn enqueue_read(

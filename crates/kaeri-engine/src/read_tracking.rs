@@ -162,6 +162,31 @@ pub(crate) fn queue_score(
     queue(services, &TrackOp::SetReadScore { anilist_id: id, score, at }, at, tx);
 }
 
+/// Queue `progress` for the trackers when it took the work's count down: an unread, when the
+/// person chose that the latest change wins. It replaces any higher count still queued.
+pub(crate) fn queue_lower(
+    services: &Services,
+    work: &WorkId,
+    (chapter, volume): (u32, Option<u32>),
+    at: i64,
+    tx: &Outbox,
+) {
+    let Some(id) = anilist_of(work) else { return };
+    let op = TrackOp::SetReadProgress { anilist_id: id, chapter, volume };
+    let mut queued = false;
+    for tracker in signed_in_reading_tracker_ids(&services.sync) {
+        match services.store.requeue_read_progress(&tracker, &op, at) {
+            Ok(_) => queued = true,
+            Err(e) => tracing::warn!(error = %e, "a reading change was not queued"),
+        }
+    }
+    if queued {
+        for state in services.sync.state_after_read_enqueue() {
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+    }
+}
+
 fn queue(services: &Services, op: &TrackOp, at: i64, tx: &Outbox) {
     let mut queued = false;
     for tracker in signed_in_reading_tracker_ids(&services.sync) {

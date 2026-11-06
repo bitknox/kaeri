@@ -73,6 +73,9 @@ pub fn set_setting(
     if key == SettingKey::CastTvs {
         services.casts.set_show_tvs(engine.config.effective().cast.show_tvs);
     }
+    if key == SettingKey::WhenTrackersDisagree {
+        services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
+    }
     // What the file now holds, put in effect: titles are named the new way from here.
     if key == SettingKey::Titles {
         let choice = engine.config.effective().meta.title_language;

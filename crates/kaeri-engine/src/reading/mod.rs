@@ -410,7 +410,11 @@ fn mark_read(
     }
     services.book_sources.report(&work, ids, read, now);
     // What the trackers hold follows the catalogue.
-    let _ = crate::read_tracking::progress_of(services, &work);
+    let progress = crate::read_tracking::progress_of(services, &work);
+    // When the latest change wins, the trackers come down with an unread too.
+    if !read && services.sync.read_rule() == kaeri_core::config::WhenTrackersDisagree::Latest {
+        crate::read_tracking::queue_lower(services, &work, progress, now, tx);
+    }
 }
 
 /// Read again puts the series on Rereading here and on the trackers, which keep their chapter
