@@ -41,9 +41,11 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("real", Scenarios.Real, "", false),
     // The same profile, only moving around: the sidebar's pages, and titles opened from Home.
     ("real-nav", Scenarios.RealNav, "", false),
+    // How it feels: every action filmed, for jumps and slow answers (Feel.cs). Only when asked for by name.
+    ("feel", FeelScenario.All, "watching", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -63,6 +65,7 @@ foreach (var (name, body, scene, playerScene) in all.Where(s => options.Only is 
     }
     results.Add(await run.Finish());
 }
+Feel.Write(options.Out);
 var report = Report.Write(results, Native.RefreshHz());
 File.WriteAllText(Path.Combine(options.Out, "report.md"), report);
 Console.WriteLine(report);
