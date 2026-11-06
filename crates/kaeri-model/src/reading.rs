@@ -251,7 +251,6 @@ pub struct TrackerReadRow {
     pub score: Option<f32>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub divergent: bool,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub mapping: TrackerMapping,
     /// "Chapter 10.5 goes to trackers as 10".
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -456,7 +455,6 @@ pub struct StorageMeter {
 pub struct BookDownloadsView {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rows: Vec<BookDownloadRow>,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub meter: StorageMeter,
 }
 
@@ -610,7 +608,7 @@ impl ReadingFailure {
                 format: format.clone(),
             },
             Self::Unsupported { extension } => {
-                ReadingMsg::ReadingFailedUnsupported { extension: extension.clone() }
+                ReadingMsg::ReadingFailedUnsupported { kind: extension.clone() }
             }
             Self::Protected => ReadingMsg::ReadingFailedProtected,
             Self::DiskFull => ReadingMsg::ReadingFailedDiskFull,

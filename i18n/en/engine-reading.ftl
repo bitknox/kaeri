@@ -129,9 +129,9 @@ reading-failed-file-missing = { $path } isn't there anymore. If it's on a drive,
 # @arg format: text
 reading-failed-unreadable = { $path } couldn't be read as { $format }. The file may be damaged.
 
-# Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-# @arg extension: text
-reading-failed-unsupported = { -app-name } can't read { $extension } files.
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+# @arg kind: text
+reading-failed-unsupported = { -app-name } can't read { $kind } files.
 
 # Why a book could not open: it is copy-protected or encrypted.
 reading-failed-protected = This book is copy-protected, so { -app-name } can't open it.

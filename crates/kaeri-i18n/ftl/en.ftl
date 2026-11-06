@@ -579,8 +579,8 @@ reading-failed-file-missing = { $path } isn't there anymore. If it's on a drive,
 # Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
 reading-failed-unreadable = { $path } couldn't be read as { $format }. The file may be damaged.
 
-# Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-reading-failed-unsupported = Kaeri can't read { $extension } files.
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri can't read { $kind } files.
 
 # Why a book could not open: it is copy-protected or encrypted.
 reading-failed-protected = This book is copy-protected, so Kaeri can't open it.

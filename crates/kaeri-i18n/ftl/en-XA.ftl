@@ -579,8 +579,8 @@ reading-failed-file-missing = [{ $path } îšñ'ţ ţĥéŕé àñýɱöŕé. Î
 # Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
 reading-failed-unreadable = [{ $path } çöüļðñ'ţ ƀé ŕéàð àš { $format }. Ţĥé ƒîļé ɱàý ƀé ðàɱàĝéð.~~~~~~~~~~~~~~~~]
 
-# Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-reading-failed-unsupported = [Ķàéŕî çàñ'ţ ŕéàð { $extension } ƒîļéš.~~~~~~~~~]
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = [Ķàéŕî çàñ'ţ ŕéàð { $kind } ƒîļéš.~~~~~~~~~]
 
 # Why a book could not open: it is copy-protected or encrypted.
 reading-failed-protected = [Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, šö Ķàéŕî çàñ'ţ öþéñ îţ.~~~~~~~~~~~~~~~~]

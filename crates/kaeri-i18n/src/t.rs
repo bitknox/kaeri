@@ -910,9 +910,9 @@ pub fn reading_failed_unreadable(path: &str, format: &str) -> String {
     text("reading-failed-unreadable", &[("path", Arg::Text(path)), ("format", Arg::Text(format))])
 }
 
-/// Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-pub fn reading_failed_unsupported(extension: &str) -> String {
-    text("reading-failed-unsupported", &[("extension", Arg::Text(extension))])
+/// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+pub fn reading_failed_unsupported(kind: &str) -> String {
+    text("reading-failed-unsupported", &[("kind", Arg::Text(kind))])
 }
 
 /// Why a book could not open: it is copy-protected or encrypted.

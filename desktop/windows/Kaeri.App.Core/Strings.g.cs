@@ -558,8 +558,8 @@ public static partial class T
     /// <summary>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</summary>
     public static string ReadingFailedUnreadable(string path, string format) => Fill(Get("ReadingFailedUnreadable"), ("path", path), ("format", format));
 
-    /// <summary>Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.</summary>
-    public static string ReadingFailedUnsupported(string extension) => Fill(Get("ReadingFailedUnsupported"), ("extension", extension));
+    /// <summary>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</summary>
+    public static string ReadingFailedUnsupported(string kind) => Fill(Get("ReadingFailedUnsupported"), ("kind", kind));
 
     /// <summary>Why a book could not open: it is copy-protected or encrypted.</summary>
     public static string ReadingFailedProtected => Get("ReadingFailedProtected");
@@ -8987,7 +8987,7 @@ public static partial class T
         ["ReadingFailedSignIn"] = "Sign in to {what} again to keep reading.",
         ["ReadingFailedFileMissing"] = "{path} isn't there anymore. If it's on a drive, connect it and try again.",
         ["ReadingFailedUnreadable"] = "{path} couldn't be read as {format}. The file may be damaged.",
-        ["ReadingFailedUnsupported"] = "Kaeri can't read {extension} files.",
+        ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
         ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
         ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
         ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
