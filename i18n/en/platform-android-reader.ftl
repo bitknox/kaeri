@@ -356,7 +356,7 @@ reader-close = Close
 # Button in the reader's controls that opens the page grid.
 # @only android
 # @max 16
-reader-chapters = Pages
+reader-chapters = Chapters
 
 # Button in the reader's controls that opens its settings, drawn as Aa.
 # @only android
@@ -834,7 +834,7 @@ reader-settings-back = Back
 # Line under the Paper mode switch.
 # @only android
 # @max 100
-reader-paper-line = Turns pages at once, stops all motion and lets the volume keys turn pages.
+reader-paper-line = Pages turn at once and nothing in the reader moves. Change any part below.
 
 # What a screen reader says for a page in the page grid.
 # @only android
@@ -851,3 +851,194 @@ reader-scrubber = Page in chapter
 # @only android
 # @max 40
 reader-failed-novel = Couldn't show this chapter
+
+# Under the end of chapter line, naming the trackers the read went to.
+# @only android
+# @arg trackers: text
+# @max 60
+reader-end-tracker = Read · { $trackers } updated
+
+# Under the end of chapter line when the phone is offline.
+# @only android
+# @arg tracker: text
+# @max 70
+reader-end-tracker-offline = Read · { $tracker } updates when you're back online
+
+# Title of the end page when no source has the next chapter.
+# @only android
+# @arg chapter: text
+# @max 60
+reader-end-none = No chapter { $chapter } in your { -source-pl } yet
+
+# Line under the no next chapter title.
+# @only android
+# @max 120
+reader-end-none-line = { -app-name } checks for new chapters in the background and adds them to Updates.
+
+# Title of the end page when the series has no newer chapter.
+# @only android
+# @max 40
+reader-end-caught-up = You're caught up
+
+# Title of the end page after the last chapter of a finished series.
+# @only android
+# @max 30
+reader-end-finished = The end
+
+# Line under the end title of a finished series.
+# @only android
+# @max 60
+reader-end-finished-line = This series has no more chapters.
+
+# Title of the end page when the next chapter needs a connection.
+# @only android
+# @arg chapter: text
+# @max 60
+reader-end-offline = Chapter { $chapter } isn't downloaded
+
+# Line under the offline end page title.
+# @only android
+# @max 140
+reader-end-offline-line = You're offline. It opens here once you're connected, or download it on the series page for next time.
+
+# The name of the Do Not Disturb mode in the system's list.
+# @only android
+# @max 30
+reader-quiet-rule = Reading in { -app-name }
+
+# What the system says starts the reading mode.
+# @only android
+# @max 40
+reader-quiet-trigger = While the reader is open
+
+# Shown when access to Do Not Disturb was refused.
+# @only android
+# @max 100
+reader-quiet-denied = Do Not Disturb access wasn't allowed, so notifications keep coming.
+
+# Setting row for the ground behind a page.
+# @only android
+# @max 24
+reader-row-background = Background
+
+# Background choice.
+# @only android
+# @max 16
+reader-background-theme = Theme
+
+# Background choice.
+# @only android
+# @max 16
+reader-background-black = Black
+
+# Background choice.
+# @only android
+# @max 16
+reader-background-white = White
+
+# Fit choice.
+# @only android
+# @max 16
+reader-fit-height = Height
+
+# Look choice that follows the system's light or dark.
+# @only android
+# @max 16
+reader-look-system = System
+
+# Reading mode.
+# @only android
+# @max 24
+reader-mode-vertical = Vertical pages
+
+# Line under the vertical pages mode.
+# @only android
+# @max 40
+reader-mode-vertical-line = Pages one under another
+
+# Heading of a volume in the chapter list.
+# @only android
+# @arg volume: text
+# @max 24
+reader-volume-line = Volume { $volume }
+
+# A folded volume whose chapters are all read.
+# @only android
+# @arg volume: text
+# @max 30
+reader-volume-read = Volume { $volume } · read
+
+# Heading for chapters outside any volume.
+# @only android
+# @max 24
+reader-volume-none = Chapters
+
+# Shown while the chapter list loads.
+# @only android
+# @max 30
+reader-chapters-loading = Loading chapters
+
+# On the plate of a page that is still loading.
+# @only android
+# @arg page: int
+# @max 20
+reader-page-plate = Page { $page }
+
+# Under Opening chapter when it takes more than three seconds.
+# @only android
+# @max 30
+reader-opening-slow = Finding a { -source }
+
+# Button on a chapter that could not open.
+# @only android
+# @max 24
+reader-failed-choose = Choose { -source }
+
+# Hint in the settings search field.
+# @only android
+# @max 30
+reader-search-settings = Search settings
+
+# Paper mode part.
+# @only android
+# @max 30
+reader-paper-turn = Turn pages at once
+
+# Label on the previous page tap zone.
+# @only android
+# @max 24
+reader-zone-previous = Previous page
+
+# Label on the middle tap zone.
+# @only android
+# @max 24
+reader-zone-controls = Controls
+
+# Description of the small A at the start of the text size slider.
+# @only android
+# @max 24
+reader-size-small = Smaller text
+
+# Description of the large A at the end of the text size slider.
+# @only android
+# @max 24
+reader-size-large = Larger text
+
+# The next chapter's length on the page between chapters.
+# @only android
+# @arg count: int
+# @max 24
+reader-end-pages = { $count ->
+    [one] One page
+   *[other] { $count } pages
+ }
+
+# The value of Paper mode in the settings list when it is on.
+# @only android
+# @max 12
+reader-value-on = On
+
+# The value of Paper mode in the settings list when it is off.
+# @only android
+# @max 12
+reader-value-off = Off

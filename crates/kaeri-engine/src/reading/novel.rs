@@ -697,7 +697,7 @@ pub(crate) fn style(
     let base = if eink {
         20.0
     } else if handheld {
-        18.0
+        17.0
     } else {
         19.0
     };
@@ -705,12 +705,12 @@ pub(crate) fn style(
     let margin_base = if eink {
         26.0
     } else if handheld {
-        22.0
+        24.0
     } else {
         40.0
     };
     let margin = (margin_base * layers.amount(Key::Margins).clamp(0.0, 4.0)).round();
-    let top = if handheld { 36.0 } else { 48.0 };
+    let top = if handheld { 64.0 } else { 48.0 };
     let scrolled = !eink && layers.word(Key::Mode) == "scrolled";
     let value = serde_json::json!({
         "look": { "name": layers.word(Key::Look), "bg": bg, "fg": fg, "link": link, "ink": ink },

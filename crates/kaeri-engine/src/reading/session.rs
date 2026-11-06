@@ -669,6 +669,7 @@ impl Session {
         };
         let layout = l.word(Key::PageLayout);
         let strip = self.hinted_strip || l.word(Key::Mode) == "strip";
+        let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
             target: Target {
                 panel,
@@ -682,7 +683,13 @@ impl Session {
                 "whole" => SpreadOnSingle::Whole,
                 _ => SpreadOnSingle::Split,
             },
-            mode: if strip { ReaderMode::Strip } else { ReaderMode::Paged },
+            mode: if strip {
+                ReaderMode::Strip
+            } else if vertical {
+                ReaderMode::Vertical
+            } else {
+                ReaderMode::Paged
+            },
             direction: if l.word(Key::Direction) == "ltr" {
                 ReadDirection::LeftToRight
             } else {
@@ -930,12 +937,13 @@ impl Session {
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
         event.source_id = Some("local".into());
         let queued_for = queue_trackers(cx, &self.work, &chapter, at);
+        let trackers = queued_for.iter().map(|id| crate::tracking::tracker_name(id)).collect();
         if let Err(e) = cx.services.store.record_read(&event, queued_for) {
             tracing::warn!(error = %e, "a read chapter was not kept");
         }
         self.dirty = false;
         let _ = cx.tx.send(Event::ProgressQueued);
-        cx.send(ReaderEvent::ChapterRead { work: self.work.clone(), chapter });
+        cx.send(ReaderEvent::ChapterRead { work: self.work.clone(), chapter, trackers });
     }
 
     fn note_place(&mut self, cx: &Cx<'_>) {

@@ -405,11 +405,11 @@ impl Worker {
             (plan.mode, false)
         };
         let (direction, guessed_direction) = match info_rtl {
-            Some(rtl) if plan.guess_direction && mode != ReaderMode::Strip => (
+            Some(rtl) if plan.guess_direction && !mode.flows() => (
                 if rtl { ReadDirection::RightToLeft } else { ReadDirection::LeftToRight },
                 true,
             ),
-            _ if mode == ReaderMode::Strip => (ReadDirection::TopToBottom, false),
+            _ if mode.flows() => (ReadDirection::TopToBottom, false),
             _ => (plan.direction, false),
         };
         let eink = plan.target.panel.is_eink();
@@ -471,7 +471,7 @@ impl Worker {
                 } else {
                     Direction::LeftToRight
                 },
-                spread_on_single: if mode == ReaderMode::Strip {
+                spread_on_single: if mode.flows() {
                     SpreadOnSingle::Whole
                 } else {
                     plan.spreads

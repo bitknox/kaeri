@@ -247,6 +247,8 @@ pub enum ReaderSettingKey {
     Font,
     CropBorders,
     Fit,
+    /// The ground behind a page: the theme's, black or white.
+    Background,
     /// Auto, single or double.
     PageLayout,
     /// Split or rotate spreads on a single-page screen.
@@ -307,6 +309,7 @@ impl ReaderSettingKey {
         Self::Font,
         Self::CropBorders,
         Self::Fit,
+        Self::Background,
         Self::PageLayout,
         Self::Spreads,
         Self::TextSize,
@@ -340,6 +343,7 @@ impl ReaderSettingKey {
             Self::Font => "font",
             Self::CropBorders => "crop",
             Self::Fit => "fit",
+            Self::Background => "background",
             Self::PageLayout => "page_layout",
             Self::Spreads => "spreads",
             Self::TextSize => "text_size",
@@ -378,6 +382,7 @@ impl ReaderSettingKey {
             | Self::Colour
             | Self::CropBorders
             | Self::Fit
+            | Self::Background
             | Self::PageLayout
             | Self::Spreads
             | Self::StripWidth => matches!(medium, Medium::Manga),
@@ -479,9 +484,18 @@ pub struct ReaderSettingsView {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderMode {
     Paged,
+    /// Pages one under another, each fitted to the screen.
+    Vertical,
     Strip,
     /// Novels only: one long page.
     Scrolled,
+}
+
+impl ReaderMode {
+    /// Pages run one under another rather than turning.
+    pub const fn flows(self) -> bool {
+        matches!(self, Self::Strip | Self::Vertical)
+    }
 }
 
 /// Which way pages turn.
@@ -862,6 +876,9 @@ pub enum ReaderEvent {
     ChapterRead {
         work: WorkId,
         chapter: ChapterId,
+        /// The trackers the read was queued for, by name.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        trackers: Vec<String>,
     },
     /// The last leaf is showing: what the end page names next.
     EndPage {

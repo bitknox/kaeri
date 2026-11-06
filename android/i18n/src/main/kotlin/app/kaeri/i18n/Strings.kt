@@ -2169,6 +2169,150 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
+    /** Under the end of chapter line, naming the trackers the read went to. */
+    fun readerEndTracker(context: Context, trackers: String): String =
+        context.getString(R.string.reader_end_tracker, trackers)
+
+    /** Under the end of chapter line when the phone is offline. */
+    fun readerEndTrackerOffline(context: Context, tracker: String): String =
+        context.getString(R.string.reader_end_tracker_offline, tracker)
+
+    /** Title of the end page when no source has the next chapter. */
+    fun readerEndNone(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_none, chapter)
+
+    /** Line under the no next chapter title. */
+    fun readerEndNoneLine(context: Context): String =
+        context.getString(R.string.reader_end_none_line)
+
+    /** Title of the end page when the series has no newer chapter. */
+    fun readerEndCaughtUp(context: Context): String =
+        context.getString(R.string.reader_end_caught_up)
+
+    /** Title of the end page after the last chapter of a finished series. */
+    fun readerEndFinished(context: Context): String =
+        context.getString(R.string.reader_end_finished)
+
+    /** Line under the end title of a finished series. */
+    fun readerEndFinishedLine(context: Context): String =
+        context.getString(R.string.reader_end_finished_line)
+
+    /** Title of the end page when the next chapter needs a connection. */
+    fun readerEndOffline(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_offline, chapter)
+
+    /** Line under the offline end page title. */
+    fun readerEndOfflineLine(context: Context): String =
+        context.getString(R.string.reader_end_offline_line)
+
+    /** The name of the Do Not Disturb mode in the system's list. */
+    fun readerQuietRule(context: Context): String =
+        context.getString(R.string.reader_quiet_rule)
+
+    /** What the system says starts the reading mode. */
+    fun readerQuietTrigger(context: Context): String =
+        context.getString(R.string.reader_quiet_trigger)
+
+    /** Shown when access to Do Not Disturb was refused. */
+    fun readerQuietDenied(context: Context): String =
+        context.getString(R.string.reader_quiet_denied)
+
+    /** Setting row for the ground behind a page. */
+    fun readerRowBackground(context: Context): String =
+        context.getString(R.string.reader_row_background)
+
+    /** Background choice. */
+    fun readerBackgroundTheme(context: Context): String =
+        context.getString(R.string.reader_background_theme)
+
+    /** Background choice. */
+    fun readerBackgroundBlack(context: Context): String =
+        context.getString(R.string.reader_background_black)
+
+    /** Background choice. */
+    fun readerBackgroundWhite(context: Context): String =
+        context.getString(R.string.reader_background_white)
+
+    /** Fit choice. */
+    fun readerFitHeight(context: Context): String =
+        context.getString(R.string.reader_fit_height)
+
+    /** Look choice that follows the system's light or dark. */
+    fun readerLookSystem(context: Context): String =
+        context.getString(R.string.reader_look_system)
+
+    /** Reading mode. */
+    fun readerModeVertical(context: Context): String =
+        context.getString(R.string.reader_mode_vertical)
+
+    /** Line under the vertical pages mode. */
+    fun readerModeVerticalLine(context: Context): String =
+        context.getString(R.string.reader_mode_vertical_line)
+
+    /** Heading of a volume in the chapter list. */
+    fun readerVolumeLine(context: Context, volume: String): String =
+        context.getString(R.string.reader_volume_line, volume)
+
+    /** A folded volume whose chapters are all read. */
+    fun readerVolumeRead(context: Context, volume: String): String =
+        context.getString(R.string.reader_volume_read, volume)
+
+    /** Heading for chapters outside any volume. */
+    fun readerVolumeNone(context: Context): String =
+        context.getString(R.string.reader_volume_none)
+
+    /** Shown while the chapter list loads. */
+    fun readerChaptersLoading(context: Context): String =
+        context.getString(R.string.reader_chapters_loading)
+
+    /** On the plate of a page that is still loading. */
+    fun readerPagePlate(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_plate, page)
+
+    /** Under Opening chapter when it takes more than three seconds. */
+    fun readerOpeningSlow(context: Context): String =
+        context.getString(R.string.reader_opening_slow)
+
+    /** Button on a chapter that could not open. */
+    fun readerFailedChoose(context: Context): String =
+        context.getString(R.string.reader_failed_choose)
+
+    /** Hint in the settings search field. */
+    fun readerSearchSettings(context: Context): String =
+        context.getString(R.string.reader_search_settings)
+
+    /** Paper mode part. */
+    fun readerPaperTurn(context: Context): String =
+        context.getString(R.string.reader_paper_turn)
+
+    /** Label on the previous page tap zone. */
+    fun readerZonePrevious(context: Context): String =
+        context.getString(R.string.reader_zone_previous)
+
+    /** Label on the middle tap zone. */
+    fun readerZoneControls(context: Context): String =
+        context.getString(R.string.reader_zone_controls)
+
+    /** Description of the small A at the start of the text size slider. */
+    fun readerSizeSmall(context: Context): String =
+        context.getString(R.string.reader_size_small)
+
+    /** Description of the large A at the end of the text size slider. */
+    fun readerSizeLarge(context: Context): String =
+        context.getString(R.string.reader_size_large)
+
+    /** The next chapter's length on the page between chapters. */
+    fun readerEndPages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_end_pages, count, count)
+
+    /** The value of Paper mode in the settings list when it is on. */
+    fun readerValueOn(context: Context): String =
+        context.getString(R.string.reader_value_on)
+
+    /** The value of Paper mode in the settings list when it is off. */
+    fun readerValueOff(context: Context): String =
+        context.getString(R.string.reader_value_off)
+
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
         context.getString(R.string.tv_pair_request_held, phone, code)

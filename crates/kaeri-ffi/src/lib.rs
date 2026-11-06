@@ -421,7 +421,11 @@ mod tests {
             novels: NovelSupport::Full,
             policy: Some(EinkPolicy::defaults(Panel::Kaleido3)),
         })));
-        crosses_intact(Event::Reader(ReaderEvent::ChapterRead { work, chapter }));
+        crosses_intact(Event::Reader(ReaderEvent::ChapterRead {
+            work,
+            chapter,
+            trackers: vec!["AniList".into()],
+        }));
         crosses_intact(Event::BookSources(BookSourceEvent::ServerFailed {
             step: ServerStep::Address,
             failure: BookServerFailure::Server { failure: ServerFailure::PlainHttp },
