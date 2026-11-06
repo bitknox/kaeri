@@ -236,6 +236,8 @@ public sealed partial class HomeSpotlight : Grid
             // Stacked, as on phones: the main action full width, the others in a row under it.
             buttons.Full = !side;
             buttons.HorizontalAlignment = side ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+            // A button keeps to its own width unless told to fill what it is given.
+            main.HorizontalAlignment = side ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         }
 
         void SizeArt(double width)
