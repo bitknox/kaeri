@@ -29,9 +29,17 @@ private struct ReaderHost: ViewModifier {
         }
         #else
         if inline {
-            content.overlay {
-                if model.request != nil { ReaderScreen(model: model) {} }
-            }
+            // The real reader is a window with a hidden title bar; the harness has one window, so
+            // the open reader takes the toolbar and title away, as that window has none.
+            content
+                .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
+                .overlay {
+                    if model.request != nil {
+                        ReaderScreen(model: model) {}
+                            .ignoresSafeArea()
+                            .background(TrafficLights(visible: model.chromeShown))
+                    }
+                }
         } else {
             content.modifier(ReaderWindowOpener(model: model))
         }
