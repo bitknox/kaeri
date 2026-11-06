@@ -122,6 +122,39 @@ fn each_scene_asks_its_own_question() {
 }
 
 #[test]
+fn the_downloads_scene_fills_the_screen_and_fetches_nothing_by_itself() {
+    use kaeri_model::reading::ChapterDownloadState as S;
+    let (_root, engine) = start(FfiScene::ReadingDownloads);
+    engine.send(Command::Reading(ReadingCommand::LoadDownloads));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Downloads(_)))
+    });
+    let view = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Downloads(view)) => Some(view),
+            _ => None,
+        })
+        .expect("the downloads");
+    let states: Vec<_> =
+        view.rows.iter().map(|r| (r.chapter.id.as_str().to_owned(), r.state.clone())).collect();
+    assert_eq!(
+        states,
+        [
+            ("14".to_owned(), S::Done),
+            ("15".to_owned(), S::Downloading { done: 6, total: 20 }),
+            ("16".to_owned(), S::Queued),
+            ("17".to_owned(), S::Queued),
+            ("4".to_owned(), S::Done),
+            ("2".to_owned(), S::Failed { failure: ReadingFailure::Offline }),
+        ]
+    );
+    assert_eq!(view.rows[0].title, "The Lantern Ferry");
+    assert_eq!((view.meter.chapters, view.meter.used), (2, 10_600_000));
+    engine.shutdown();
+}
+
+#[test]
 fn the_dark_scene_is_watch_and_refuses_reading() {
     let (_root, engine) = start(FfiScene::ReadingDark);
     let view = medium(&engine);
