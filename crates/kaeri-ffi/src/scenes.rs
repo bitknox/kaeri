@@ -1010,13 +1010,19 @@ fn from_the_ipad(store: &Store, now: i64, bodies: Vec<kaeri_store::sync::OpBody>
             pubkey: "00".into(),
         },
     );
+    // Stamped after this device's own reads, which the store stamps by the wall clock: a scene
+    // clock in the past would make the iPad's reads the older ones.
+    let wall = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() as i64);
+    let base = stamp_of_secs((now - 60).max(wall + 1));
     let ops = bodies
         .into_iter()
         .enumerate()
         .map(|(i, body)| Op {
             device: READING_PEER.into(),
             seq: i as u64 + 1,
-            stamp: stamp_of_secs(now - 60) + i as u64,
+            stamp: base + i as u64,
             body,
         })
         .collect();

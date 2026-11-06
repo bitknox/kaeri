@@ -115,6 +115,11 @@ class NovelWebHost(
     private var scriptByHand = false
 
     init {
+        // A web view left at wrap-content gives vh and percentages no height, and the columns one line.
+        view.layoutParams = android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+        )
         view.settings.apply {
             javaScriptEnabled = true
             allowFileAccess = false

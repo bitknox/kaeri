@@ -60,7 +60,8 @@ class EinkModel(private val send: (Command) -> Unit) {
     /** Tell the engine about this device: before the first screen. */
     fun sendFacts(facts: ScreenFacts) = send(Command.Reading(ReadingCommand.DeviceFacts(facts)))
 
-    fun sendFacts(context: Context, wideColourGamut: Boolean? = null) = sendFacts(ScreenFactsReader.read(context, wideColourGamut))
+    fun sendFacts(context: Context, wideColourGamut: Boolean? = null, einkSupport: String? = null) =
+        sendFacts(ScreenFactsReader.read(context, wideColourGamut, einkSupport))
 
     /** "Is this an e-ink screen?": Use the e-ink layout, or Keep the standard layout. */
     fun answerEink(eink: Boolean) = send(Command.Reading(ReadingCommand.AnswerEink(eink, colourAnswer)))

@@ -221,7 +221,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         }
         // The screen's facts before the first screen, and again for each engine started since.
         scope.launch {
-            store.phase.filter { it == AppStore.Phase.Running }.collect { eink.sendFacts(this@KaeriApp, Flavour.wideColourGamut) }
+            store.phase.filter { it == AppStore.Phase.Running }.collect { eink.sendFacts(this@KaeriApp, Flavour.wideColourGamut, Flavour.einkSupport) }
         }
         // A profile switched to: remembered, and the engine started again on it.
         store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }

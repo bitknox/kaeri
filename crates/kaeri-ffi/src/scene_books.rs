@@ -225,7 +225,12 @@ fn epub(path: &Path, chapter: usize, title: &str) {
     for i in 0..parts {
         let mut body = format!("<h2>{title}</h2>");
         for n in 0..14 {
-            body.push_str(&format!("<p>{}</p>", paragraph(chapter + i, n)));
+            // Two spans, so a saved place such as 0.4.1 names an element that is there.
+            body.push_str(&format!(
+                "<p><span>{}</span> <span>{}</span></p>",
+                paragraph(chapter + i, n),
+                paragraph(chapter + i, n + 14)
+            ));
         }
         put(
             &format!("OEBPS/p{i}.xhtml"),

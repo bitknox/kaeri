@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.engine.model.Panel
+import app.kaeri.eink.EinkModel
 import app.kaeri.eink.EinkPainter
+import app.kaeri.eink.EinkQuestions
 import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
 import app.kaeri.eink.NoRefresh
@@ -31,14 +33,14 @@ import app.kaeri.reader.readerSurface
 import app.kaeri.store.AppStore
 
 @Composable
-fun ReaderOverlay(store: AppStore) {
+fun ReaderOverlay(store: AppStore, eink: EinkModel) {
     val request by ReaderLauncher.request.collectAsState()
     val current = request ?: return
-    key(current) { OpenReader(store, current) }
+    key(current) { OpenReader(store, eink, current) }
 }
 
 @Composable
-private fun OpenReader(store: AppStore, request: ReaderRequest) {
+private fun OpenReader(store: AppStore, einkModel: EinkModel, request: ReaderRequest) {
     val context = LocalContext.current
     val density = LocalDensity.current
     val session = remember { ReaderSession { store.send(it) } }
@@ -67,14 +69,22 @@ private fun OpenReader(store: AppStore, request: ReaderRequest) {
     ) {
         val close = { ReaderLauncher.close() }
         if (request.eink) {
-            val painter = remember { EinkPainter.defaults(Panel.GREY, NoRefresh) }
-            EinkReader(
-                session = session,
-                state = state,
-                images = images,
-                painter = painter,
-                actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close),
-            )
+            val profile by einkModel.state.collectAsState()
+            // The panel's questions come first when the engine is unsure of it.
+            if (profile.question != null) {
+                EinkQuestions(profile, einkModel)
+            } else {
+                val painter = remember(profile.profile?.panel) {
+                    EinkPainter.defaults(profile.profile?.panel ?: Panel.GREY, NoRefresh)
+                }
+                EinkReader(
+                    session = session,
+                    state = state,
+                    images = images,
+                    painter = painter,
+                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close),
+                )
+            }
         } else {
             PhoneReader(
                 session = session,

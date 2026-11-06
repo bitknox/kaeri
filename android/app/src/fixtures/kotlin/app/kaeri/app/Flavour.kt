@@ -107,11 +107,16 @@ internal object Flavour {
     var wideColourGamut: Boolean? = null
         private set
 
+    /** What the e-ink detection is told of the system's e-ink flag: the colour question's scene says yes. */
+    var einkSupport: String? = null
+        private set
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
         appContext = context.applicationContext
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
         wideColourGamut = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) true else null
+        einkSupport = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) "1" else null
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
@@ -296,11 +301,11 @@ internal object Flavour {
         delay(1_200)
     }
 
-    /** The reading scenes open their book in the reader, as the Read switch will. */
+    /** The reading scenes open their book in the reader, as the Read switch will. Reading-dark is the build with reading off: no reader to open. */
     private fun openReaderScene(intent: Intent) {
         val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
         val (work, eink) = when (scene) {
-            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED, FixtureScene.READING_DARK -> "a:900301" to false
+            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED -> "a:900301" to false
             FixtureScene.READER_STRIP -> "a:900303" to false
             FixtureScene.READER_NOVEL -> "a:900302" to false
             FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE -> "a:900301" to true

@@ -26,6 +26,9 @@ internal object Flavour {
     /** What the e-ink detection is told of a wide colour gamut in place of the display's answer: nothing. */
     val wideColourGamut: Boolean? = null
 
+    /** The same for the system's e-ink flag: nothing. */
+    val einkSupport: String? = null
+
     /** The engine background work starts while the app is not running: the app's own files. */
     fun background(context: Context): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))

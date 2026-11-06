@@ -14,8 +14,8 @@ import app.kaeri.engine.model.ScreenFacts
 import kotlin.math.roundToInt
 
 object ScreenFactsReader {
-    /** This device's facts. [wideColourGamut] overrides the display's answer, for the Fixtures scenes. */
-    fun read(context: Context, wideColourGamut: Boolean? = null): ScreenFacts {
+    /** This device's facts. [wideColourGamut] and [einkSupport] override the display's and the system's answers, for the Fixtures scenes. */
+    fun read(context: Context, wideColourGamut: Boolean? = null, einkSupport: String? = null): ScreenFacts {
         val metrics = context.resources.displayMetrics
         val windows = context.getSystemService(WindowManager::class.java)
         val bounds = guarded { windows?.maximumWindowMetrics?.bounds }
@@ -35,7 +35,7 @@ object ScreenFactsReader {
             heightPx = (bounds?.height() ?: metrics.heightPixels).coerceAtLeast(0).toUInt(),
             dpi = dpi.coerceAtLeast(0).toUInt(),
             refreshHz = display?.refreshRate ?: 0f,
-            einkSupport = systemProperty("ro.eink.support"),
+            einkSupport = einkSupport ?: systemProperty("ro.eink.support"),
             onyxName = systemProperty("ro.onyx.devicename"),
             wideColourGamut = wideColourGamut ?: (guarded { display?.isWideColorGamut } ?: false),
             hooks = RefreshControllers.hooks(context),
