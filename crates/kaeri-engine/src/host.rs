@@ -51,6 +51,39 @@ pub trait Host: Send + Sync {
     fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
         None
     }
+
+    /// The platform's image decoder for page formats the engine cannot read itself, such as
+    /// AVIF on an e-ink screen. `None`, the default, for a host with none: such a page then
+    /// fails as unsupported.
+    fn page_decoder(&self) -> Option<Arc<dyn PageDecoder>> {
+        None
+    }
+}
+
+/// A page the platform decoded: `width` by `height` pixels as packed RGBA8 rows.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DecodedImage {
+    pub width: u32,
+    pub height: u32,
+    pub rgba: Vec<u8>,
+}
+
+/// The platform's image decoder, for page formats the engine has no decoder for.
+///
+/// Called on the page worker's thread, never the engine's, and only for a page the engine
+/// cannot read. It may take a moment but the page service gives up on it after a budget.
+pub trait PageDecoder: Send + Sync {
+    /// Decode `bytes`, a file of `format` (a MIME type such as `image/avif`), to RGBA8. A
+    /// decoder that can shrink while it decodes keeps the picture inside `max_width` by
+    /// `max_height` and its aspect ratio, never enlarging it, so a big scan costs little memory.
+    /// `None` when it cannot read the file.
+    fn decode(
+        &self,
+        bytes: Vec<u8>,
+        format: String,
+        max_width: u32,
+        max_height: u32,
+    ) -> Option<DecodedImage>;
 }
 
 /// Where tokens go for a host with no store to offer: `0600` files under the data directory
@@ -163,13 +196,19 @@ impl Host for DesktopHost {
 /// A host for the engine's own tests: it opens nothing and notifies nobody, and keeps tokens in
 /// `0600` files under a directory of the test's, never in a keychain.
 #[cfg(test)]
-pub(crate) struct QuietHost(Arc<dyn SecretStore>);
+pub(crate) struct QuietHost(Arc<dyn SecretStore>, Option<Arc<dyn PageDecoder>>);
 
 #[cfg(test)]
 impl QuietHost {
     /// Tokens kept under `dir`.
     pub(crate) fn in_dir(dir: &std::path::Path) -> Self {
-        Self(Arc::new(LocalSecrets::new(dir, Backend::File)))
+        Self(Arc::new(LocalSecrets::new(dir, Backend::File)), None)
+    }
+
+    /// With `decoder` as the platform's image decoder.
+    pub(crate) fn decoding(mut self, decoder: Arc<dyn PageDecoder>) -> Self {
+        self.1 = Some(decoder);
+        self
     }
 }
 
@@ -183,5 +222,9 @@ impl Host for QuietHost {
 
     fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
         Some(self.0.clone())
+    }
+
+    fn page_decoder(&self) -> Option<Arc<dyn PageDecoder>> {
+        self.1.clone()
     }
 }

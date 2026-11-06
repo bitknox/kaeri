@@ -225,7 +225,7 @@ impl Reader {
         self.pages
             .get_or_insert_with(|| {
                 let dir = super::pages::cache_dir(&cx.services.paths.cache_dir);
-                Pages::start(dir)
+                Pages::start(dir, cx.services.host.page_decoder())
             })
             .clone()
     }
@@ -1119,6 +1119,8 @@ mod tests {
         seen: std::collections::VecDeque<ReaderEvent>,
         /// Sessions whose leaves went out.
         laid: std::collections::HashSet<u64>,
+        /// Whether a failed page is expected, and kept as an event instead of a panic.
+        failures: bool,
         _dir: tempfile::TempDir,
     }
 
@@ -1162,6 +1164,16 @@ mod tests {
         medium: &str,
         files: impl FnOnce(&Path) -> Vec<ShelfFile>,
     ) -> Harness {
+        harness_on(store, medium, files, None)
+    }
+
+    /// As [`harness_of`], on a host that has `decoder` for the formats the engine cannot read.
+    fn harness_on(
+        store: Store,
+        medium: &str,
+        files: impl FnOnce(&Path) -> Vec<ShelfFile>,
+        decoder: Option<Arc<dyn crate::host::PageDecoder>>,
+    ) -> Harness {
         let dir = tempfile::tempdir().unwrap();
         let books = dir.path().join("books");
         std::fs::create_dir_all(&books).unwrap();
@@ -1184,7 +1196,11 @@ mod tests {
         };
         let config = Config::default();
         let http = HttpClient::offline(&config.network).unwrap();
-        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let mut host = QuietHost::in_dir(&dir.path().join("tokens"));
+        if let Some(decoder) = decoder {
+            host = host.decoding(decoder);
+        }
+        let host = Arc::new(host);
         let registry = ProviderRegistry::new(Vec::new());
         let services =
             Services::build(&config, paths.clone(), http, store, registry, theme(), host)
@@ -1199,6 +1215,7 @@ mod tests {
             inbox,
             seen: Default::default(),
             laid: Default::default(),
+            failures: false,
             _dir: dir,
         }
     }
@@ -1238,7 +1255,7 @@ mod tests {
                 }
                 Envelope::Event(Event::Reader(event)) => {
                     match &event {
-                        ReaderEvent::PageFailed { failure, .. } => {
+                        ReaderEvent::PageFailed { failure, .. } if !self.failures => {
                             panic!("a page failed: {failure:?}")
                         }
                         ReaderEvent::Leaves { session, .. } => {
@@ -1638,6 +1655,187 @@ mod tests {
             _ => None,
         });
         assert_eq!(lasts, Some(0));
+    }
+
+    /// A made-up AVIF file: the header a decoder reads the size from and nothing the engine can
+    /// decode, for a host decoder to stand in for.
+    fn avif(width: u32, height: u32) -> Vec<u8> {
+        let mut bytes = b"\0\0\0\x1cftypavif\0\0\0\0mif1avif".to_vec();
+        bytes.extend_from_slice(&20u32.to_be_bytes());
+        bytes.extend_from_slice(b"ispe\0\0\0\0");
+        bytes.extend_from_slice(&width.to_be_bytes());
+        bytes.extend_from_slice(&height.to_be_bytes());
+        bytes
+    }
+
+    /// A one-page archive whose page is an AVIF file.
+    fn avif_book(books: &Path) -> Vec<ShelfFile> {
+        let path = books.join("Chapter 1.cbz");
+        let file = std::fs::File::create(&path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let stored = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        zip.start_file("000.avif", stored).unwrap();
+        zip.write_all(&avif(300, 450)).unwrap();
+        zip.finish().unwrap();
+        vec![ShelfFile {
+            path: path.display().to_string(),
+            chapter: None,
+            label: "Chapter 1".into(),
+            volume: None,
+            number_milli: Some(1000),
+            format: "cbz".into(),
+            pages: Some(1),
+            comicinfo: None,
+        }]
+    }
+
+    /// A host decoder that answers `image` after `delay`, and keeps what it was asked.
+    struct FakeDecoder {
+        image: Option<crate::host::DecodedImage>,
+        delay: std::time::Duration,
+        asked: std::sync::Mutex<Vec<(String, u32, u32, std::thread::ThreadId)>>,
+    }
+
+    impl FakeDecoder {
+        fn new(
+            image: Option<crate::host::DecodedImage>,
+            delay: std::time::Duration,
+        ) -> Arc<Self> {
+            Arc::new(Self { image, delay, asked: Default::default() })
+        }
+
+        /// A grey ramp, 300 by 450 pixels.
+        fn ramp() -> crate::host::DecodedImage {
+            let rgba = (0..300 * 450)
+                .flat_map(|i| {
+                    let v = (i % 300 * 255 / 299) as u8;
+                    [v, v, v, 255]
+                })
+                .collect();
+            crate::host::DecodedImage { width: 300, height: 450, rgba }
+        }
+    }
+
+    impl crate::host::PageDecoder for FakeDecoder {
+        fn decode(
+            &self,
+            bytes: Vec<u8>,
+            format: String,
+            max_width: u32,
+            max_height: u32,
+        ) -> Option<crate::host::DecodedImage> {
+            assert!(bytes.starts_with(b"\0\0\0\x1cftyp"));
+            self.asked.lock().unwrap().push((
+                format,
+                max_width,
+                max_height,
+                std::thread::current().id(),
+            ));
+            std::thread::sleep(self.delay);
+            self.image.clone()
+        }
+    }
+
+    /// A reader on an Onyx-like grey e-ink screen, over an AVIF book, on `decoder`.
+    fn avif_eink(decoder: Option<Arc<dyn crate::host::PageDecoder>>) -> Harness {
+        let mut h = harness_on(Store::open_in_memory().unwrap(), "manga", avif_book, decoder);
+        h.failures = true;
+        h.reader.facts = Some(kaeri_model::eink::ScreenFacts {
+            manufacturer: "ONYX".into(),
+            brand: "ONYX".into(),
+            model: "Reader 7".into(),
+            device: String::new(),
+            product: String::new(),
+            hardware: String::new(),
+            sdk: 33,
+            width_px: 600,
+            height_px: 900,
+            dpi: 300,
+            refresh_hz: 60.0,
+            eink_support: None,
+            onyx_name: None,
+            wide_colour_gamut: false,
+            hooks: vec!["onyx".into()],
+            page_keys: true,
+            webview: Some(120),
+        });
+        let profile = h.reader.detect(h.config.effective()).unwrap();
+        assert_eq!(profile.panel, kaeri_model::eink::Panel::Grey);
+        let work = WorkId::new(WORK);
+        let surface = ReaderSurface { eink: true, ..surface() };
+        h.send(ReaderCommand::Open { work, chapter: None, at: OpenAt::Resume, surface });
+        h
+    }
+
+    #[tokio::test]
+    async fn an_avif_page_on_e_ink_is_decoded_by_the_host_and_comes_dithered() {
+        let decoder = FakeDecoder::new(Some(FakeDecoder::ramp()), Default::default());
+        let mut h = avif_eink(Some(decoder.clone()));
+        let file = h
+            .until(|e| match e {
+                ReaderEvent::PageReady { file, .. } => Some(file.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(
+            file.encoding,
+            PageEncoding::Raw {
+                format: kaeri_model::reader::PixelFormat::Gray8,
+                stride: file.width
+            }
+        );
+        let bytes = std::fs::read(&file.path).unwrap();
+        assert_eq!(bytes.len() as u32, file.width * file.height);
+        // The ramp runs from black to white, so the dither used the whole range.
+        assert!(bytes.iter().any(|&v| v < 40) && bytes.iter().any(|&v| v > 215));
+        let asked = decoder.asked.lock().unwrap();
+        // The page worker asked, once, for the page's own size: the screen shows it larger.
+        assert_eq!(asked.len(), 1);
+        assert_eq!((asked[0].0.as_str(), asked[0].1, asked[0].2), ("image/avif", 300, 450));
+        assert_ne!(asked[0].3, std::thread::current().id());
+    }
+
+    #[tokio::test]
+    async fn an_avif_page_on_e_ink_fails_as_unsupported_without_a_host_decoder() {
+        let mut h = avif_eink(None);
+        let failure = h
+            .until(|e| match e {
+                ReaderEvent::PageFailed { failure, .. } => Some(failure.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(failure, ReadingFailure::Unsupported { extension: "avif".into() });
+    }
+
+    #[tokio::test]
+    async fn an_avif_page_the_host_cannot_read_fails_as_unsupported() {
+        let decoder = FakeDecoder::new(None, Default::default());
+        let mut h = avif_eink(Some(decoder));
+        let failure = h
+            .until(|e| match e {
+                ReaderEvent::PageFailed { failure, .. } => Some(failure.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(failure, ReadingFailure::Unsupported { extension: "avif".into() });
+    }
+
+    #[tokio::test]
+    async fn a_host_decoder_over_its_budget_fails_the_page() {
+        let slow =
+            crate::reading::pages::HOST_DECODE_BUDGET + std::time::Duration::from_millis(600);
+        let decoder = FakeDecoder::new(Some(FakeDecoder::ramp()), slow);
+        let mut h = avif_eink(Some(decoder));
+        let started = std::time::Instant::now();
+        let failure = h
+            .until(|e| match e {
+                ReaderEvent::PageFailed { failure, .. } => Some(failure.clone()),
+                _ => None,
+            })
+            .await;
+        assert!(matches!(failure, ReadingFailure::Unreadable { .. }), "{failure:?}");
+        assert!(started.elapsed() < slow, "the page waited for the decoder");
     }
 
     /// A PDF of `pages` vector pages, each a red square on white.

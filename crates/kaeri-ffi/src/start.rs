@@ -1,8 +1,12 @@
 //! What a start takes beside the app's host, and how it fails: the only types that cross which
 //! are this crate's own rather than the model's.
 
+use std::sync::Arc;
+
 use kaeri_engine::options::{AppClients, Background};
 use kaeri_model::{Msg, playback::PlayerTheme};
+
+use crate::host::FfiPageDecoder;
 
 /// Where the engine keeps its files: directories the app chooses, such as its Application
 /// Support and Caches directories on macOS, or its container's on iOS.
@@ -119,7 +123,7 @@ impl From<FfiBackground> for Background {
 /// it started before there was a choice: the terminal app's palette and the app's keychain. The
 /// two enums are optional only because UniFFI cannot give an enum field a default; `None` is
 /// the default named on each.
-#[derive(Debug, Clone, Default, PartialEq, Eq, uniffi::Record)]
+#[derive(Clone, Default, uniffi::Record)]
 pub struct FfiStart {
     /// How the player's own interface is dressed: the app's palette. `None` for the terminal
     /// app's immersive palette.
@@ -195,6 +199,72 @@ pub struct FfiStart {
     /// Android TV, which is always `WatchOnly`.
     #[uniffi(default = None)]
     pub edition: Option<kaeri_model::medium::AppEdition>,
+    /// The app's image decoder for page formats the engine cannot read, AVIF on an e-ink
+    /// screen. `None` when it has none, and such a page fails as unsupported.
+    #[uniffi(default = None)]
+    pub page_decoder: Option<Arc<dyn FfiPageDecoder>>,
+}
+
+impl PartialEq for FfiStart {
+    /// Field by field, the decoder by identity.
+    fn eq(&self, other: &Self) -> bool {
+        let Self {
+            theme,
+            platform,
+            anilist_client_id,
+            anilist_redirect_uri,
+            mal_client_id,
+            mal_redirect_uri,
+            simkl_client_id,
+            trakt_client_id,
+            trakt_client_secret,
+            google_client_id,
+            google_client_secret,
+            dropbox_app_key,
+            onedrive_client_id,
+            secrets,
+            language,
+            profile,
+            audio_tap,
+            reading,
+            edition,
+            page_decoder,
+        } = self;
+        *theme == other.theme
+            && *platform == other.platform
+            && *anilist_client_id == other.anilist_client_id
+            && *anilist_redirect_uri == other.anilist_redirect_uri
+            && *mal_client_id == other.mal_client_id
+            && *mal_redirect_uri == other.mal_redirect_uri
+            && *simkl_client_id == other.simkl_client_id
+            && *trakt_client_id == other.trakt_client_id
+            && *trakt_client_secret == other.trakt_client_secret
+            && *google_client_id == other.google_client_id
+            && *google_client_secret == other.google_client_secret
+            && *dropbox_app_key == other.dropbox_app_key
+            && *onedrive_client_id == other.onedrive_client_id
+            && *secrets == other.secrets
+            && *language == other.language
+            && *profile == other.profile
+            && *audio_tap == other.audio_tap
+            && *reading == other.reading
+            && *edition == other.edition
+            && match (page_decoder, &other.page_decoder) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Arc::ptr_eq(a, b),
+                _ => false,
+            }
+    }
+}
+
+impl std::fmt::Debug for FfiStart {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FfiStart")
+            .field("platform", &self.platform)
+            .field("reading", &self.reading)
+            .field("page_decoder", &self.page_decoder.is_some())
+            .finish_non_exhaustive()
+    }
 }
 
 /// The address of the engine's audio tap callback, for the app to give its libmpv's

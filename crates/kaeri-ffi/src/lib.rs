@@ -58,7 +58,7 @@ mod words;
 
 pub use bug_report::bug_report_url;
 pub use engine::FfiEngine;
-pub use host::FfiHost;
+pub use host::{FfiDecodedImage, FfiHost, FfiPageDecoder};
 pub use log::{FfiLogLevel, log_line, start_log};
 #[cfg(all(feature = "party", feature = "testing"))]
 pub use party::{FfiChatFixture, FfiFakeParty};
@@ -464,6 +464,7 @@ mod tests {
             audio_tap: true,
             reading: true,
             edition: Some(kaeri_model::medium::AppEdition::ReadOnly),
+            page_decoder: None,
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(start.edition(), kaeri_model::medium::AppEdition::ReadOnly);
