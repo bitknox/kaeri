@@ -493,7 +493,7 @@ impl Engine {
         }
 
         crate::syncing::keep_syncing(&services, &inbox.sender());
-        for tracker in services.sync.initial_states() {
+        for tracker in services.sync.states_shown(state.reading.answer()) {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }
         // Home's first screen goes first: AniList's background work waits for it.

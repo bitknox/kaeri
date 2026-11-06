@@ -398,6 +398,30 @@ pub trait Tracker: Send + Sync {
         true
     }
 
+    /// Whether this tracker keeps manga and novel lists.
+    fn serves_reading(&self) -> bool {
+        false
+    }
+
+    /// Whether this tracker keeps anime lists.
+    fn serves_watching(&self) -> bool {
+        true
+    }
+
+    /// The manga and novel list, as far as it syncs. Trackers without one answer empty.
+    async fn pull_read_library(&self) -> Result<Vec<TrackedReadEntry>, crate::Error> {
+        Ok(Vec::new())
+    }
+
+    /// Apply a batch of reading operations, naming the titles the tracker answered for without
+    /// applying anything, as [`Self::push_checked`] does. Safe to call twice with the same input.
+    async fn push_read(
+        &self,
+        _ops: &[TrackOp],
+    ) -> Result<Vec<crate::ids::AnilistId>, crate::Error> {
+        Ok(Vec::new())
+    }
+
     /// Drop any in-memory credential.
     ///
     /// Signing out clears the stored token, but a tracker that cached one at construction would

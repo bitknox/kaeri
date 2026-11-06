@@ -1140,6 +1140,16 @@ impl Store {
         })
     }
 
+    /// When a work's status or score was last set here or by a synced device.
+    pub fn read_status_at(&self, work: &str) -> Result<Option<i64>> {
+        self.with_personal(|c| {
+            Ok(c.query_row("SELECT updated_at FROM read_status WHERE work = ?1", [work], |r| {
+                r.get(0)
+            })
+            .optional()?)
+        })
+    }
+
     pub fn set_bookmark(&self, work: &str, chapter: &str, on: bool, at: i64) -> Result<()> {
         self.with_personal_tx(|tx| {
             write_bookmark(tx, work, chapter, on, at)?;
@@ -1214,6 +1224,77 @@ impl Store {
                 })?
                 .collect::<rusqlite::Result<_>>()?)
         })
+    }
+
+    /// The work a tracker's entry was mapped to: the other way round from [`Self::track_map`].
+    pub fn track_map_work(&self, tracker: &str, tracker_id: &str) -> Result<Option<String>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT work FROM read_track_map WHERE tracker = ?1 AND tracker_id = ?2 LIMIT 1",
+                params![tracker, tracker_id],
+                |r| r.get(0),
+            )
+            .optional()?)
+        })
+    }
+
+    /// The tracker's id for a work, when one is kept.
+    pub fn track_map_id(&self, work: &str, tracker: &str) -> Result<Option<String>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT tracker_id FROM read_track_map WHERE work = ?1 AND tracker = ?2",
+                params![work, tracker],
+                |r| r.get::<_, Option<String>>(0),
+            )
+            .optional()?
+            .flatten())
+        })
+    }
+
+    /// How far a work is read, as trackers count: the highest whole chapter read, a watermark
+    /// counting, and the volume a watermark named. `(0, None)` for a work not read.
+    pub fn read_progress(&self, work: &str) -> Result<(u32, Option<u32>)> {
+        let mut milli = self
+            .read_chapters(work)?
+            .iter()
+            .filter(|c| c.read)
+            .filter_map(|c| number_of(&c.chapter))
+            .map(|(milli, _)| milli)
+            .max()
+            .unwrap_or(0);
+        let mut volume = None;
+        if let Some(held) = self.read_work(work)? {
+            if let Some(adopted) = held.adopt_milli {
+                milli = milli.max(adopted);
+            }
+            volume = held.adopt_volume.as_deref().and_then(|v| v.trim().parse::<u32>().ok());
+        }
+        Ok((u32::try_from(milli / 1000).unwrap_or(u32::MAX), volume))
+    }
+
+    /// What the chapter catalogue says a work's trackers should hold: whole chapters read in
+    /// reading order, and the highest volume whose every known chapter is read. Kept by the
+    /// engine, which knows the catalogue; [`Self::read_progress`] is the floor.
+    pub fn set_tracked_progress(
+        &self,
+        work: &str,
+        chapters: u32,
+        volume: Option<u32>,
+    ) -> Result<()> {
+        let text = format!("{chapters}/{}", volume.map(|v| v.to_string()).unwrap_or_default());
+        self.set_meta_text(&format!("read_tracked:{work}"), &text)
+    }
+
+    /// The figures [`Self::set_tracked_progress`] kept, and never fewer than [`Self::read_progress`].
+    pub fn tracked_progress(&self, work: &str) -> Result<(u32, Option<u32>)> {
+        let (mut chapters, mut volume) = self.read_progress(work)?;
+        if let Some(text) = self.get_meta_text(&format!("read_tracked:{work}"))?
+            && let Some((c, v)) = text.split_once('/')
+        {
+            chapters = chapters.max(c.parse().unwrap_or(0));
+            volume = volume.max(v.parse().ok());
+        }
+        Ok((chapters, volume))
     }
 
     /// Which work a source's series is. `share` for a plugin's or a server's match, which

@@ -20,7 +20,7 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, WatchStatus},
+    traits::{TrackOp, TrackedEntry, TrackedReadEntry, WatchStatus},
 };
 
 /// Local state for one title, as the merge sees it.
@@ -213,6 +213,122 @@ pub fn reconcile_at(
         }
     }
     merged.push = kept;
+    merged
+}
+
+/// Local state for one manga or novel, as the merge sees it.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ReadLocal {
+    /// The highest whole chapter read.
+    pub chapters: u32,
+    /// The volume known to be finished, where there is one.
+    pub volumes: Option<u32>,
+    pub status: Option<WatchStatus>,
+    /// Read again from the start: the status goes out as Repeating.
+    pub rereading: bool,
+    pub status_at: Option<i64>,
+    pub score: Option<f32>,
+    pub score_at: Option<i64>,
+    /// The chapters and volumes this tracker was last sent for the work.
+    pub last_pushed: Option<(u32, Option<u32>)>,
+}
+
+/// What reconciling one manga or novel produced.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ReadMerged {
+    pub push: Vec<TrackOp>,
+    /// The chapters and volumes local should adopt, when the remote is ahead.
+    pub adopt: Option<(u32, Option<u32>)>,
+    pub conflicts: Vec<Conflict>,
+}
+
+/// Reconcile one manga or novel with the rules of [`reconcile_at`]: chapters and volumes are
+/// each `max(local, remote)` and never walk back, status and score are last write wins.
+///
+/// `pending` is what the outbox already holds for the work. Volumes are left alone where the
+/// remote has no field for them (`None`, as Kitsu).
+pub fn reconcile_read_at(
+    local: &ReadLocal,
+    remote: &TrackedReadEntry,
+    pending: Option<(u32, Option<u32>)>,
+    remote_observed_at: i64,
+) -> ReadMerged {
+    let mut merged = ReadMerged::default();
+    let id = remote.anilist_id;
+
+    let (pending_chapters, pending_volumes) = pending.unwrap_or((0, None));
+    let chapters = local.chapters.max(pending_chapters);
+    let volumes = local.volumes.max(pending_volumes);
+
+    let chapters_ahead = chapters > remote.chapters;
+    let volumes_ahead = match (volumes, remote.volumes) {
+        (Some(local), Some(remote)) => local > remote,
+        _ => false,
+    };
+    // A value already queued, or already sent, is not queued again.
+    let queued = pending == Some((chapters, volumes));
+    let sent = local.last_pushed.is_some_and(|(c, v)| c >= chapters && v >= volumes);
+    if (chapters_ahead || volumes_ahead) && !queued && !sent {
+        merged.push.push(TrackOp::SetReadProgress {
+            anilist_id: id,
+            chapter: chapters.max(remote.chapters),
+            volume: if remote.volumes.is_some() { volumes } else { None },
+        });
+    }
+    let chapters_behind = chapters < remote.chapters;
+    let volumes_behind = match (volumes, remote.volumes) {
+        (Some(local), Some(remote)) => local < remote,
+        (None, Some(remote)) => remote > 0,
+        _ => false,
+    };
+    if chapters_behind || volumes_behind {
+        merged.adopt = Some((
+            remote.chapters.max(chapters),
+            remote.volumes.filter(|v| *v > 0).or(local.volumes),
+        ));
+    }
+
+    let remote_status = if remote.rereading { WatchStatus::Repeating } else { remote.status };
+    if let Some(status) = local.status {
+        let local_status = if local.rereading { WatchStatus::Repeating } else { status };
+        if local_status != remote_status {
+            match local.status_at {
+                Some(at) if at >= remote_observed_at => {
+                    merged.push.push(TrackOp::SetReadStatus {
+                        anilist_id: id,
+                        status: if local_status == WatchStatus::Repeating {
+                            WatchStatus::Current
+                        } else {
+                            local_status
+                        },
+                        rereading: local_status == WatchStatus::Repeating,
+                        at,
+                    })
+                }
+                _ => merged.conflicts.push(Conflict {
+                    anilist_id: id,
+                    field: Field::Status,
+                    local: format!("{local_status:?}"),
+                    remote: format!("{remote_status:?}"),
+                }),
+            }
+        }
+    }
+    if let Some(score) = local.score
+        && !scores_match(Some(score), remote.score)
+    {
+        match local.score_at {
+            Some(at) if at >= remote_observed_at => {
+                merged.push.push(TrackOp::SetReadScore { anilist_id: id, score, at });
+            }
+            _ => merged.conflicts.push(Conflict {
+                anilist_id: id,
+                field: Field::Score,
+                local: format!("{score}"),
+                remote: remote.score.map_or_else(|| "-".into(), |s| format!("{s}")),
+            }),
+        }
+    }
     merged
 }
 
@@ -454,5 +570,102 @@ mod tests {
         for op in &merged.push {
             assert_eq!(op.anilist_id(), HOSHIKUZU);
         }
+    }
+
+    fn read_remote(
+        chapters: u32,
+        volumes: Option<u32>,
+        status: WatchStatus,
+    ) -> TrackedReadEntry {
+        TrackedReadEntry {
+            anilist_id: HOSHIKUZU,
+            medium: kaeri_core::media::Medium::Manga,
+            chapters,
+            volumes,
+            status,
+            rereading: false,
+            score: None,
+        }
+    }
+
+    #[test]
+    fn a_read_chapter_count_only_moves_forward_in_either_direction() {
+        let local = ReadLocal { chapters: 12, ..ReadLocal::default() };
+        let ahead =
+            reconcile_read_at(&local, &read_remote(8, None, WatchStatus::Current), None, 0);
+        assert_eq!(
+            ahead.push,
+            [TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 12, volume: None }]
+        );
+        assert_eq!(ahead.adopt, None);
+        let behind =
+            reconcile_read_at(&local, &read_remote(20, None, WatchStatus::Current), None, 0);
+        assert!(behind.push.is_empty());
+        assert_eq!(behind.adopt, Some((20, None)));
+    }
+
+    #[test]
+    fn a_count_already_sent_or_queued_is_not_sent_again() {
+        let local =
+            ReadLocal { chapters: 12, last_pushed: Some((12, None)), ..ReadLocal::default() };
+        let remote = read_remote(8, None, WatchStatus::Current);
+        assert!(reconcile_read_at(&local, &remote, None, 0).push.is_empty());
+        let fresh = ReadLocal { chapters: 12, ..ReadLocal::default() };
+        assert!(reconcile_read_at(&fresh, &remote, Some((12, None)), 0).push.is_empty());
+    }
+
+    #[test]
+    fn volumes_are_left_alone_where_the_tracker_has_no_field() {
+        let local = ReadLocal { chapters: 12, volumes: Some(2), ..ReadLocal::default() };
+        let merged =
+            reconcile_read_at(&local, &read_remote(8, None, WatchStatus::Current), None, 0);
+        assert_eq!(
+            merged.push,
+            [TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 12, volume: None }]
+        );
+        let with =
+            reconcile_read_at(&local, &read_remote(12, Some(1), WatchStatus::Current), None, 0);
+        assert_eq!(
+            with.push,
+            [TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 12, volume: Some(2) }]
+        );
+    }
+
+    #[test]
+    fn a_newer_local_status_is_sent_and_an_undated_one_is_a_conflict() {
+        let remote = read_remote(5, None, WatchStatus::Current);
+        let newer = ReadLocal {
+            chapters: 5,
+            status: Some(WatchStatus::Completed),
+            status_at: Some(100),
+            ..ReadLocal::default()
+        };
+        let merged = reconcile_read_at(&newer, &remote, None, 50);
+        assert!(matches!(
+            merged.push.as_slice(),
+            [TrackOp::SetReadStatus { status: WatchStatus::Completed, rereading: false, .. }]
+        ));
+        let older = ReadLocal { status_at: None, ..newer };
+        let conflict = reconcile_read_at(&older, &remote, None, 50);
+        assert!(conflict.push.is_empty());
+        assert_eq!(conflict.conflicts.len(), 1);
+        assert_eq!(conflict.conflicts[0].field, Field::Status);
+    }
+
+    #[test]
+    fn read_again_goes_out_as_current_with_the_flag() {
+        let local = ReadLocal {
+            chapters: 5,
+            status: Some(WatchStatus::Current),
+            rereading: true,
+            status_at: Some(100),
+            ..ReadLocal::default()
+        };
+        let merged =
+            reconcile_read_at(&local, &read_remote(5, None, WatchStatus::Completed), None, 50);
+        assert!(matches!(
+            merged.push.as_slice(),
+            [TrackOp::SetReadStatus { status: WatchStatus::Current, rereading: true, .. }]
+        ));
     }
 }

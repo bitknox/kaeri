@@ -56,6 +56,14 @@ pub struct Sync {
     pub kitsu: Option<Arc<kaeri_track::KitsuTracker>>,
     /// Where a Kitsu sign-in and the Kitsu tracker go: Kitsu itself, or a fixture build's fake.
     pub kitsu_site: kaeri_track::kitsu::Site,
+    /// The MangaUpdates tracker as its concrete type: its session has no refresh, but a sign-in
+    /// hands it the token.
+    pub mangaupdates: Option<Arc<kaeri_track::MangaUpdatesTracker>>,
+    /// Where a MangaUpdates sign-in goes: the service, or a fixture build's fake.
+    pub mangaupdates_api: String,
+    /// The public lookups that match a work to tracker entries: asked only while a tracker that
+    /// needs the answer is signed in.
+    pub lookups: Arc<kaeri_track::lookup::Lookups>,
     /// The Simkl tracker as its concrete type, for the same reason: a sign-in through its
     /// OAuth 2.0 lasts a week, and the pair renewed mid-call has to be written back.
     pub simkl: Option<Arc<kaeri_track::SimklTracker>>,
@@ -120,6 +128,9 @@ impl Sync {
         let mut mal = None;
         let mut kitsu = None;
         let mut simkl = None;
+        let mut mangaupdates = None;
+        let reads: Arc<dyn kaeri_track::read::ReadMapping> =
+            Arc::new(StoreReadMapping { store: store.clone() });
 
         if config.trackers.is_enabled("anilist") {
             let token = tokens.get("anilist").ok();
@@ -152,6 +163,7 @@ impl Sync {
                     Arc::new(StoreMapping { store: store.clone() }),
                     tokens_for_mal,
                 )
+                .with_read_mapping(reads.clone())
                 .with_token_store(tokens.clone()),
             );
             trackers.push(tracker.clone());
@@ -174,6 +186,20 @@ impl Sync {
             );
             trackers.push(tracker.clone());
             kitsu = Some(tracker);
+        }
+
+        // MangaUpdates needs no registration either: a form signs in with a name and password.
+        if config.trackers.is_enabled("mangaupdates") {
+            let tracker = Arc::new(
+                kaeri_track::MangaUpdatesTracker::new(
+                    http.plain().clone(),
+                    reads,
+                    tokens.get_pair("mangaupdates").ok(),
+                )
+                .with_token_store(tokens.clone()),
+            );
+            trackers.push(tracker.clone());
+            mangaupdates = Some(tracker);
         }
 
         // Simkl bridges through `mal_id`, which the mapping table already holds for MAL's sake —
@@ -214,6 +240,9 @@ impl Sync {
             mal,
             kitsu,
             kitsu_site: kaeri_track::kitsu::Site::default(),
+            mangaupdates,
+            mangaupdates_api: kaeri_track::mangaupdates::API.to_owned(),
+            lookups: Arc::new(kaeri_track::lookup::Lookups::new(http.plain().clone())),
             simkl,
             tokens,
             store: store.clone(),
@@ -265,6 +294,35 @@ impl Sync {
         self
     }
 
+    /// MangaUpdates at `api` in place of the service, its sign-in and its tracker alike: a
+    /// fixture build's fake, which no password typed into it leaves the machine for.
+    #[must_use]
+    pub fn with_mangaupdates_at(mut self, api: &str) -> Self {
+        if let Some(at) = self.trackers.iter().position(|t| t.id() == "mangaupdates") {
+            let pair = self.tokens.get_pair("mangaupdates").ok();
+            let tracker = Arc::new(
+                kaeri_track::MangaUpdatesTracker::new(
+                    self.http.plain().clone(),
+                    Arc::new(StoreReadMapping { store: self.store.clone() }),
+                    pair,
+                )
+                .with_api(api)
+                .with_token_store(self.tokens.clone()),
+            );
+            self.trackers[at] = tracker.clone();
+            self.mangaupdates = Some(tracker);
+        }
+        self.mangaupdates_api = api.to_owned();
+        self
+    }
+
+    /// The lookups answered by stand-ins: a test's.
+    #[must_use]
+    pub fn with_lookups(mut self, lookups: kaeri_track::lookup::Lookups) -> Self {
+        self.lookups = Arc::new(lookups);
+        self
+    }
+
     fn pull_error(&self, tracker_id: &str) -> Option<PullError> {
         self.pull_errors.lock().ok()?.get(tracker_id).cloned()
     }
@@ -278,10 +336,27 @@ impl Sync {
         }
     }
 
+    /// Whether Accounts lists a tracker for what Kaeri is for: MangaUpdates only with reading,
+    /// the watching-only trackers only with watching.
+    pub fn shown_for(tracker: &dyn Tracker, answer: kaeri_model::medium::KaeriIsFor) -> bool {
+        use kaeri_model::medium::KaeriIsFor as F;
+        match answer {
+            F::Both => true,
+            F::Read => tracker.serves_reading(),
+            F::Watch => tracker.serves_watching(),
+        }
+    }
+
     /// The initial state for each tracker, so the badge is right before any sync runs.
     pub fn initial_states(&self) -> Vec<SyncState> {
+        self.states_shown(kaeri_model::medium::KaeriIsFor::Both)
+    }
+
+    /// The states of the trackers Accounts lists for this answer.
+    pub fn states_shown(&self, answer: kaeri_model::medium::KaeriIsFor) -> Vec<SyncState> {
         self.trackers
             .iter()
+            .filter(|tracker| Self::shown_for(tracker.as_ref(), answer))
             .map(|tracker| {
                 let id = tracker.id();
                 let storage = self.tokens.storage_for(id);
@@ -332,7 +407,16 @@ impl Sync {
     pub fn state_after_enqueue(&self) -> Vec<SyncState> {
         self.trackers
             .iter()
-            .filter(|t| t.is_authenticated())
+            .filter(|t| t.is_authenticated() && t.serves_watching())
+            .map(|t| self.state_for(t.as_ref(), false, Some("queued".into())))
+            .collect()
+    }
+
+    /// The same after a reading change was queued: the trackers that keep a reading list.
+    pub fn state_after_read_enqueue(&self) -> Vec<SyncState> {
+        self.trackers
+            .iter()
+            .filter(|t| t.is_authenticated() && t.serves_reading())
             .map(|t| self.state_for(t.as_ref(), false, Some("queued".into())))
             .collect()
     }
@@ -435,8 +519,52 @@ fn kitsu_tracker(
             pair,
         )
         .at(site)
+        .with_read_mapping(Arc::new(StoreReadMapping { store: store.clone() }))
         .with_token_store(tokens.clone()),
     )
+}
+
+/// The reading side of the id mapping: a work's entry on each tracker, kept in `read_track_map`
+/// and looked up the other way for a pull. A work is `a:{anilist id}`.
+struct StoreReadMapping {
+    store: Store,
+}
+
+impl StoreReadMapping {
+    fn id(&self, anilist_id: AnilistId, tracker: &str) -> Option<String> {
+        self.store.track_map_id(&sync::read_work(anilist_id), tracker).ok().flatten()
+    }
+
+    fn work(&self, tracker: &str, tracker_id: &str) -> Option<AnilistId> {
+        let work = self.store.track_map_work(tracker, tracker_id).ok().flatten()?;
+        work.strip_prefix("a:")?.parse().ok().map(AnilistId::new)
+    }
+}
+
+impl kaeri_track::read::ReadMapping for StoreReadMapping {
+    fn mal_id(&self, anilist_id: AnilistId) -> Option<u32> {
+        self.id(anilist_id, "mal")?.parse().ok()
+    }
+
+    fn anilist_for_mal(&self, mal_id: u32) -> Option<AnilistId> {
+        self.work("mal", &mal_id.to_string())
+    }
+
+    fn kitsu_id(&self, anilist_id: AnilistId) -> Option<u32> {
+        self.id(anilist_id, "kitsu")?.parse().ok()
+    }
+
+    fn anilist_for_kitsu(&self, kitsu_id: u32) -> Option<AnilistId> {
+        self.work("kitsu", &kitsu_id.to_string())
+    }
+
+    fn mangaupdates_id(&self, anilist_id: AnilistId) -> Option<u64> {
+        self.id(anilist_id, "mangaupdates")?.parse().ok()
+    }
+
+    fn anilist_for_mangaupdates(&self, series_id: u64) -> Option<AnilistId> {
+        self.work("mangaupdates", &series_id.to_string())
+    }
 }
 
 impl kaeri_track::kitsu::IdMapping for StoreMapping {
@@ -702,6 +830,7 @@ pub(crate) fn tracker_name(id: &str) -> String {
         "anilist" => "AniList",
         "mal" => "MyAnimeList",
         "kitsu" => "Kitsu",
+        "mangaupdates" => "MangaUpdates",
         "simkl" => "Simkl",
         "trakt" => "Trakt",
         other => other,
@@ -753,6 +882,10 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
     // is shared between them, and a progress update reaches all of them in the time the
     // slowest takes rather than the sum.
     let drains = sync.trackers.iter().map(|tracker| async move {
+        drain_reading(sync, tracker.as_ref(), now, tx).await;
+        if !tracker.serves_watching() {
+            return;
+        }
         match sync::drain(&sync.store, tracker.as_ref(), now).await {
             Ok(report) => {
                 let last = if report.ignored > 0 {
@@ -782,6 +915,77 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
     futures::future::join_all(drains).await;
 }
 
+/// A tracker's reading outbox, drained to its manga and novel list.
+async fn drain_reading(sync: &Sync, tracker: &dyn Tracker, now: i64, tx: &Outbox) {
+    if !tracker.serves_reading() {
+        return;
+    }
+    match sync::drain_read(&sync.store, tracker, now).await {
+        Ok(report) => {
+            if !report.did_nothing() {
+                let last = (report.sent > 0).then(|| format!("sent {}", report.sent));
+                let state = sync.state_for(tracker, report.needs_reauth, last);
+                let _ = tx.send(Event::Sync(Box::new(state)));
+            }
+        }
+        Err(e) => tracing::warn!(tracker = tracker.id(), error = %e, "reading drain failed"),
+    }
+}
+
+/// A tracker's manga and novel list, pulled and merged with what was read here.
+async fn pull_reading(sync: &Sync, tracker: &dyn Tracker, now: i64, tx: &Outbox) {
+    if !tracker.serves_reading() || !tracker.is_authenticated() {
+        return;
+    }
+    let last_pull = sync
+        .store
+        .get_meta_i64(&format!("{}:read", pull_key(tracker.id())))
+        .unwrap_or(None)
+        .unwrap_or(0);
+    match sync::pull_read(&sync.store, tracker, now, last_pull).await {
+        Ok(report) => {
+            let _ = sync.store.set_meta_i64(&format!("{}:read", pull_key(tracker.id())), now);
+            sync.note_pull(tracker.id(), None);
+            if !report.conflicts.is_empty() {
+                let rows = report
+                    .conflicts
+                    .iter()
+                    .map(|c| ConflictRow {
+                        anilist_id: c.anilist_id,
+                        title: sync
+                            .store
+                            .cached_title(c.anilist_id)
+                            .unwrap_or(None)
+                            .unwrap_or_else(|| format!("anilist {}", c.anilist_id.get())),
+                        field: c.field.label().to_owned(),
+                        local: c.local.clone(),
+                        remote: c.remote.clone(),
+                    })
+                    .collect();
+                let _ = tx.send(Event::Conflicts(rows));
+            }
+            for conflict in &report.conflicts {
+                crate::read_tracking::note_conflict(
+                    &sync.store,
+                    conflict.anilist_id,
+                    tracker.id(),
+                );
+            }
+            let state = sync.state_for(tracker, false, Some("pulled".into()));
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+        Err(kaeri_core::Error::Auth(_)) => {
+            let state = sync.state_for(tracker, true, Some("sign in again".into()));
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+        Err(e) => {
+            tracing::warn!(tracker = tracker.id(), error = %e, "reading pull failed");
+            sync.note_pull(tracker.id(), Some(PullError { reason: e.to_string(), at: now }));
+            let _ = tx.send(Event::Sync(Box::new(sync.state_for(tracker, false, None))));
+        }
+    }
+}
+
 /// One library pull across every tracker.
 pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     let now = kaeri_store::now();
@@ -790,7 +994,8 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     // but merged one at a time in tracker order. Every merge reads and writes the same local
     // history, so merging in arrival order would let network timing decide which tracker's
     // disagreement is reported as the conflict.
-    let pulling: Vec<_> = sync.trackers.iter().filter(|t| t.is_authenticated()).collect();
+    let pulling: Vec<_> =
+        sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching()).collect();
     let libraries = futures::future::join_all(pulling.iter().map(|t| t.pull_library())).await;
     // AniList's answer carries the viewer, whose title language may have changed since.
     if let (Some(titles), Some(anilist)) = (&sync.titles, &sync.anilist)
@@ -871,6 +1076,10 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
                 ))));
             }
         }
+    }
+
+    for tracker in &sync.trackers {
+        pull_reading(sync, tracker.as_ref(), now, tx).await;
     }
 }
 
@@ -1087,6 +1296,40 @@ pub async fn connect_kitsu(sync: Sync, username: String, password: String, tx: O
     }
 }
 
+/// Sign in to MangaUpdates from inside the app, with the name and password from the form.
+///
+/// The password goes to the login call once and is dropped when this returns, as Kitsu's does.
+pub async fn connect_mangaupdates(sync: Sync, username: String, password: String, tx: Outbox) {
+    let pair = match kaeri_track::mangaupdates::login(
+        sync.http.plain(),
+        &sync.mangaupdates_api,
+        &username,
+        &password,
+    )
+    .await
+    {
+        Ok(pair) => pair,
+        Err(e) => {
+            let _ = tx.send(Event::Toast(sign_in_failed("mangaupdates", &e)));
+            return;
+        }
+    };
+    match sync.tokens.set_pair(
+        "mangaupdates",
+        &pair.access,
+        pair.refresh.as_deref(),
+        pair.expires_at,
+    ) {
+        Ok(storage) => {
+            let _ = tx.send(Event::Toast(signed_in("mangaupdates", storage.is_degraded())));
+            activate(&sync, "mangaupdates", &pair, &tx).await;
+        }
+        Err(e) => {
+            let _ = tx.send(Event::Toast(token_not_saved(&e)));
+        }
+    }
+}
+
 /// Sign in to MyAnimeList from inside the app.
 ///
 /// There was no interactive flow at all — the Accounts screen answered "mal: no sign-in flow yet"
@@ -1197,6 +1440,7 @@ pub(crate) async fn activate(
     let _ = kaeri_track::sync::clear_reauth_hold(&sync.store, tracker_id);
     // Possibly another account: what was sent to the last one says nothing about this one.
     kaeri_track::sync::forget_pushed(&sync.store, tracker_id);
+    kaeri_track::sync::forget_pushed_read(&sync.store, tracker_id);
     for state in sync.initial_states() {
         let _ = tx.send(Event::Sync(Box::new(state)));
     }
@@ -1362,7 +1606,8 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
 pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
     let now = kaeri_store::now();
     let op = TrackOp::SetStatus { anilist_id: id, status: segment_to_status(status), at: now };
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
         if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
             tracing::warn!(error = %e, "could not queue a status change");
         }
@@ -1377,7 +1622,8 @@ pub fn set_score(sync: &Sync, id: AnilistId, score: f32) {
     let now = kaeri_store::now();
     let op = TrackOp::SetScore { anilist_id: id, score, at: now };
     // Signed-in only, for the same reason as `set_status`.
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
         if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
             tracing::warn!(error = %e, "could not queue a score");
         }
@@ -1398,7 +1644,8 @@ pub fn resolve_conflict(sync: &Sync, id: AnilistId, keep_local: bool) {
         return;
     }
     let op = TrackOp::SetProgress { anilist_id: id, episode: episodes };
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
         let _ = sync.store.enqueue(tracker.id(), &op, now);
     }
 }
@@ -1528,9 +1775,40 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let tokens = files_in(dir.path());
         let sync = Sync::with_tokens(&config, &store, &http, tokens);
-        assert_eq!(sync.trackers.len(), 1);
-        assert_eq!(sync.trackers[0].id(), "kitsu");
-        assert!(!sync.trackers[0].is_authenticated());
+        let ids: Vec<_> = sync.trackers.iter().map(|t| t.id()).collect();
+        assert_eq!(ids, ["kitsu", "mangaupdates"]);
+        assert!(sync.trackers.iter().all(|t| !t.is_authenticated()));
+    }
+
+    #[test]
+    fn accounts_lists_each_tracker_for_the_media_it_serves() {
+        use kaeri_model::medium::KaeriIsFor as F;
+        let config = Config::default();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let sync = Sync::with_tokens(&config, &store, &http, files_in(dir.path()));
+        let ids = |answer| -> Vec<String> {
+            sync.states_shown(answer).into_iter().map(|s| s.tracker).collect()
+        };
+        assert_eq!(ids(F::Watch), ["kitsu"]);
+        assert_eq!(ids(F::Read), ["kitsu", "mangaupdates"]);
+        assert_eq!(ids(F::Both), ["kitsu", "mangaupdates"]);
+    }
+
+    #[test]
+    fn the_reading_mapping_reads_the_store_both_ways() {
+        use kaeri_track::read::ReadMapping;
+        let store = Store::open_in_memory().unwrap();
+        store.set_track_map("a:7", "mangaupdates", Some("9000000001"), "hand", 1).unwrap();
+        store.set_track_map("a:7", "mal", Some("55"), "anilist", 1).unwrap();
+        let map = StoreReadMapping { store };
+        let id = AnilistId::new(7);
+        assert_eq!(map.mangaupdates_id(id), Some(9_000_000_001));
+        assert_eq!(map.anilist_for_mangaupdates(9_000_000_001), Some(id));
+        assert_eq!(map.mal_id(id), Some(55));
+        assert_eq!(map.anilist_for_mal(55), Some(id));
+        assert_eq!(map.kitsu_id(id), None);
     }
 
     #[test]

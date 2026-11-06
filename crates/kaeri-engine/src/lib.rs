@@ -136,6 +136,7 @@ pub mod profile;
 pub mod proxy;
 pub mod read_catalog;
 pub mod read_sources;
+mod read_tracking;
 pub mod reading;
 #[cfg(feature = "remote")]
 pub mod remote;

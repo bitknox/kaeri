@@ -29,6 +29,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             let Some(id) = id.filter(|_| wants_page) else { return };
             match kit.meta.book(id).await {
                 Ok(book) => {
+                    crate::read_tracking::note_book(&kit.store, book.id, book.id_mal, ask.now);
                     send(&tx, ReadingEvent::Series(Box::new(view(&kit, ask, &work, false))));
                     // More like this: the ones nothing is kept of, behind the page.
                     let works: Vec<String> =
