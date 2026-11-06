@@ -319,6 +319,7 @@ struct TogetherSourcesLine: View {
 /// own states (nothing open, the last episode out).
 struct TogetherActions: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     var height: CGFloat = 34
     var fills = false
     var showsSecondary = true
@@ -347,11 +348,12 @@ struct TogetherActions: View {
                 .buttonStyle(PrimaryCapsuleStyle(height: height))
                 .disabled(party.entering || party.lobbyLook == .looking)
         } else if let view = party.party {
+            // Picked as anything is played: browsing the app, where Play is the room's.
             if view.roomEpisode == nil, !view.looking {
-                Button { party.beginStart() } label: { wide(Text(L.partyRoomPick)) }
+                Button { navigator.browseForRoom(store: store) } label: { wide(Text(L.partyRoomPick)) }
                     .buttonStyle(PrimaryCapsuleStyle(height: height))
             } else if party.lastOut != nil {
-                Button { party.beginStart() } label: { wide(Text(L.partyWatchSomethingElse)) }
+                Button { navigator.browseForRoom(store: store) } label: { wide(Text(L.partyWatchSomethingElse)) }
                     .buttonStyle(PrimaryCapsuleStyle(height: height))
             } else if view.playing {
                 Button { party.openPlayer() } label: { wide(Label(L.togetherOpenPlayer, systemImage: "play.fill")) }
@@ -382,7 +384,7 @@ struct TogetherActions: View {
                 Button(L.partyLeave) { party.leave() }
                     .buttonStyle(SecondaryCapsuleStyle(height: height))
                 if view.roomEpisode != nil, !view.playing, party.lastOut == nil {
-                    Button(L.partyChangeEpisode) { party.beginStart() }
+                    Button(L.partyChangeEpisode) { navigator.browseForRoom(store: store) }
                         .buttonStyle(SecondaryCapsuleStyle(height: height))
                 }
             }
@@ -998,47 +1000,28 @@ struct TogetherLobbyBack: View {
 
 // MARK: - The start sheet
 
-/// What are you watching?, then the server and your name the first time. Change episode, Pick
-/// what to watch and Watch something else use its first step, and their pick changes the room's
+/// The server and your name, the first time a party starts. Start a party brings nothing: in the
+/// room, Play on any episode picks it for the room. Watch together on a title page brings its
 /// episode.
 struct TogetherStartSheet: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
     let step: TogetherPick
-    @State private var query = ""
-    @State private var chosen: PartyEpisode?
 
     var body: some View {
         let party = store.party
         VStack(alignment: .leading, spacing: 0) {
-            switch step {
-            case .title: titles
-            case .server: server
-            }
+            server
             Spacer(minLength: 0)
             Divider()
             HStack(spacing: 8) {
                 Spacer()
-                switch step {
-                case .title:
-                    Button(L.actionCancel) { party.cancelStart() }
-                        .keyboardShortcut(.cancelAction)
-                        .buttonStyle(SecondaryCapsuleStyle())
-                    #if os(macOS)
-                    // On iPhone and iPad a row's tap picks it.
-                    Button(L.partyPickContinue) { if let chosen { pick(chosen) } }
-                        .keyboardShortcut(.defaultAction)
-                        .buttonStyle(PrimaryCapsuleStyle(height: 28))
-                        .disabled(chosen == nil)
-                    #endif
-                case .server:
-                    Button(L.actionBack) { party.backToTitles() }
-                        .buttonStyle(SecondaryCapsuleStyle())
-                    Button(L.partyStartParty) { party.startOnServer() }
-                        .keyboardShortcut(.defaultAction)
-                        .buttonStyle(PrimaryCapsuleStyle(height: 28))
-                        .disabled(!party.canStartOnServer)
-                }
+                Button(L.actionCancel) { party.cancelStart() }
+                    .keyboardShortcut(.cancelAction)
+                    .buttonStyle(SecondaryCapsuleStyle())
+                Button(L.partyStartParty) { party.startOnServer() }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(PrimaryCapsuleStyle(height: 28))
+                    .disabled(!party.canStartOnServer)
             }
             .padding(16)
         }
@@ -1046,87 +1029,13 @@ struct TogetherStartSheet: View {
         .frame(width: 560, height: 520)
         #endif
         .background(.raised)
-        .task { store.loadContinue() }
     }
 
-    private func pick(_ episode: PartyEpisode) {
-        if store.party.inLobbyRoom {
-            store.party.changeEpisode(episode)
-        } else {
-            store.party.start(episode)
+    /// Nothing picked yet: the room's episode comes from a Play once in it.
+    private var picksLater: Bool {
+        switch step {
+        case .server(let pick): pick == nil
         }
-    }
-
-    /// Continue's titles, each with its next episode; the search narrows them and the titles
-    /// this device knows.
-    private var choices: [(entry: Entry, episode: String, note: String?)] {
-        let queue = store.continuing.queue(store.titles).all
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-        var rows = queue.map { item in
-            (entry: item.entry, episode: String(item.episode), note: String?.none)
-        }
-        if !q.isEmpty {
-            rows = rows.filter { $0.entry.showTitle.lowercased().contains(q) }
-            let shown = Set(rows.map(\.entry.id))
-            let more = store.titles.entries.values
-                .filter { !shown.contains($0.id) && $0.showTitle.lowercased().contains(q) }
-                .sorted { $0.showTitle < $1.showTitle }
-                .prefix(20)
-                .map { (entry: $0, episode: "1", note: String?.none) }
-            rows += more
-        }
-        return rows
-    }
-
-    private var titles: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(L.partyPickTitle).font(.board(15, weight: .semibold)).foregroundStyle(.silk)
-                .padding(.bottom, 12)
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass").foregroundStyle(.haze)
-                TextField(L.partyPickSearch, text: $query).textFieldStyle(.plain).font(.board(13))
-            }
-            .padding(.horizontal, 10)
-            .frame(height: 30)
-            .background(.ground.opacity(0.5), in: .rect(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.faintRule, lineWidth: 1))
-            if query.isEmpty {
-                Text(L.navContinue).font(.board(11, weight: .medium)).tracking(0.88).textCase(.uppercase)
-                    .foregroundStyle(.haze).padding(.top, 16).padding(.bottom, 6)
-            }
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(choices, id: \.entry.id) { row in
-                        let pick = PartyEpisode(id: row.entry.id, episode: row.episode)
-                        Button {
-                            #if os(macOS)
-                            chosen = pick
-                            #else
-                            self.pick(pick)
-                            #endif
-                        } label: {
-                            HStack(spacing: 14) {
-                                CoverArt(entry: row.entry, width: 30)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(row.entry.showTitle).font(.showTitle(size: 14)).foregroundStyle(.silk).lineLimit(1)
-                                    Text([L.partyPickNext(episode: row.episode), row.note].compactMap { $0 }.joined(separator: " · "))
-                                        .font(.board(12)).foregroundStyle(.haze)
-                                }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 10)
-                            .frame(minHeight: 62)
-                            .background(chosen == pick ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
-                            .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
-                        .simultaneousGesture(TapGesture(count: 2).onEnded { self.pick(pick) })
-                    }
-                }
-            }
-            .padding(.horizontal, -10)
-        }
-        .padding(EdgeInsets(top: 22, leading: 22, bottom: 0, trailing: 22))
     }
 
     private var server: some View {
@@ -1134,6 +1043,10 @@ struct TogetherStartSheet: View {
         let form = party.form
         return VStack(alignment: .leading, spacing: 0) {
             Text(L.partyFirstServerTitle).font(.board(15, weight: .semibold)).foregroundStyle(.silk)
+            if picksLater {
+                Text(L.partyFormPickLater).font(.board(13)).foregroundStyle(.silk)
+                    .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
+            }
             Text(L.partyPrivacy).font(.board(13)).foregroundStyle(.haze)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             Text(L.partyServer).font(.board(12, weight: .semibold)).foregroundStyle(.silk).padding(.top, 20)

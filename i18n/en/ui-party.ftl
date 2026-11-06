@@ -108,6 +108,9 @@ party-joining = Joining { $room } on { $server }…
 # Line on the form when no episode is playing yet.
 party-form-nothing = What's playing now plays with the room.
 
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = Once you're in, press Play on any episode to watch it with the room.
+
 # Line naming the episode of the form.
 # @arg episode: int
 # @arg title: text
@@ -293,7 +296,7 @@ together-people-button = { -watch-together-cap }
 together-start = Start a party
 
 # Line under Start a party.
-together-start-line = Pick something you're watching, then invite friends with a link or a code.
+together-start-line = Open a room and invite friends with a link or a code, then press Play on what you want to watch.
 
 # Heading of the field that joins a watch party.
 together-join = Join a party
@@ -550,6 +553,10 @@ party-bar-line = { $count } in the room · { $ready } ready
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = In the room · nothing playing for you
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks
+# the episode for the room.
+party-bar-pick = Press Play on any episode to watch it with the room
 
 # Notice in the player when someone pauses.
 # @arg name: text

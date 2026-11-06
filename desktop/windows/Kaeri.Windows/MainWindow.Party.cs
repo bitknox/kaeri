@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
@@ -126,7 +126,8 @@ public sealed partial class MainWindow
         else
         {
             PartyBarTitle.Text = party.RoomEpisode is { } r ? T.PartyBarTitle(r.Title.Length > 0 ? r.Title : r.File, r.Episode) : T.TogetherTitle;
-            PartyBarLine.Text = party.RoomEpisode is null ? T.PartyBarLine(members.Length, members.Count(m => m.Ready == true)) : T.PartyBarIdle;
+            // Nothing picked yet: Play anywhere is how the room gets its episode.
+            PartyBarLine.Text = party.RoomEpisode is null ? T.PartyBarPick : T.PartyBarIdle;
         }
         PartyBar.Visibility = Visibility.Visible;
     }
@@ -317,6 +318,36 @@ public sealed partial class MainWindow
             {
                 await Task.Delay(2500);
                 PartyDialog.Showing?.Rehearse(null, start: true);
+            }
+            return;
+        }
+        if (state is "party-follow" or "party-follow-ready" or "party-follow-plain" or "party-reopen")
+        {
+            // Somebody else's room: Mika picks the episode and plays it while this device is in the lobby.
+            fakeParty.AddMember(FixtureRoom, "Mika");
+            ctx.Send(new Command.PartyJoin(server, FixtureRoom, "Ada"));
+            for (var i = 0; i < 50 && ctx.Known.Party is null; i++)
+                await Task.Delay(200);
+            Go("together");
+            await Task.Delay(1500);
+            // Another Kaeri tags its file with the title and episode; a plain Syncplay client has a file name.
+            var picked = state == "party-follow-plain" ? "Stardust Wayfarer - 07 (1080p).mkv" : "Stardust Wayfarer, episode 7 [anilist:900001:7]";
+            fakeParty.MemberSetsPlaylist("Mika", [picked]);
+            fakeParty.MemberSetsIndex("Mika", 0);
+            fakeParty.MemberOpens("Mika", picked, 1400);
+            fakeParty.MemberReady("Mika", true);
+            await Task.Delay(2500);
+            if (state is "party-follow-ready" or "party-reopen")
+                ctx.Send(new Command.PartyReady(true));
+            fakeParty.MemberPlays("Mika");
+            if (state == "party-reopen")
+            {
+                // The room plays on while this device closes its player and goes back to the lobby.
+                for (var i = 0; i < 50 && !Player.Showing; i++)
+                    await Task.Delay(200);
+                await Task.Delay(1500);
+                Player.Close();
+                Go("together");
             }
             return;
         }

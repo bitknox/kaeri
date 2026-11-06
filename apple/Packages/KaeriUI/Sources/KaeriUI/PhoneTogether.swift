@@ -143,6 +143,7 @@ struct PhoneInParty: View {
 /// and Leave and Change episode under More.
 struct PhoneTogetherLobby: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     /// The keyboard is up, for the chat's field.
     @State private var typing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -239,7 +240,7 @@ struct PhoneTogetherLobby: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         if view.roomEpisode != nil, !view.playing {
-                            Button(L.partyChangeEpisode, systemImage: "list.bullet") { party.beginStart() }
+                            Button(L.partyChangeEpisode, systemImage: "list.bullet") { navigator.browseForRoom(store: store) }
                         }
                         Button(L.partyLeave, systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
                             party.leave()
@@ -295,8 +296,7 @@ struct PartyBar: View {
                                 (Text(said.you ? L.partyChatYou : said.from).fontWeight(.semibold) + Text(" ") + Text(said.text))
                                     .foregroundStyle(.silk)
                             } else {
-                                Text(view.playing && !party.playerUp() ? L.partyBarIdle
-                                     : L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count))
+                                Text(line(view, members: members))
                                     .foregroundStyle(.haze)
                             }
                         }
@@ -328,6 +328,14 @@ struct PartyBar: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { open() }
         }
+    }
+
+    /// The second line: what Play does while the room has nothing picked, nothing playing for you
+    /// while the room plays without you, or the room's count.
+    private func line(_ view: PartyView, members: [PartyMember]) -> String {
+        if view.roomEpisode == nil { return L.partyBarPick }
+        if view.playing, !store.party.playerUp() { return L.partyBarIdle }
+        return L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count)
     }
 
     private func open() {

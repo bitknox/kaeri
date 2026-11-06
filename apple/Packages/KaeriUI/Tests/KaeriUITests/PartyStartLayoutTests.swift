@@ -85,10 +85,13 @@ struct PartyStartLayoutTests {
         let place = toolbar(window)
         #expect(place.contains(Self.search), "\(place)")
 
-        // Start a party: What are you watching?, then the first time the server and a name.
+        // Start a party: nothing to pick first, so the first time the server and a name. Watch
+        // together on a title page comes to the same step with its episode.
         party.beginStart()
-        try await waitFor("Continue", { !store.continuing.queue(store.titles).all.isEmpty }, layout: layout)
+        #expect(party.picking == .server(nil))
         try await settle(layout)
+        store.loadContinue()
+        try await waitFor("Continue", { !store.continuing.queue(store.titles).all.isEmpty }, layout: layout)
         let pick = try #require(store.continuing.queue(store.titles).all.first)
         let episode = PartyEpisode(id: pick.entry.id, episode: String(pick.episode))
         party.start(episode)
@@ -113,7 +116,8 @@ struct PartyStartLayoutTests {
         #expect(!lobby.contains(Self.stackBack), "\(lobby)")
         #expect(lobby.count == place.count + 1, "\(place) then \(lobby)")
 
-        // Back, and start again on the server used last: the sheet goes as the lobby comes.
+        // Back, and start again on the server used last: straight into a new lobby, with
+        // nothing picked and no sheet.
         party.lobbyShown = false
         try await settle(layout)
         #expect(toolbar(window) == place)
@@ -122,8 +126,6 @@ struct PartyStartLayoutTests {
             recentServers: [fake.server()], suggestedServer: form.suggestedServer,
             suggestedRunBy: form.suggestedRunBy, room: form.room, name: "Ada")))
         party.beginStart()
-        try await settle(layout)
-        party.start(episode)
         #expect(party.picking == nil)
         #expect(party.lobbyShown)
         try await waitFor("the room again", { party.inLobbyRoom && party.members != nil }, layout: layout)

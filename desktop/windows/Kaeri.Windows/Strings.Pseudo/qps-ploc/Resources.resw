@@ -5019,6 +5019,10 @@
     <value>[Ŵĥàţ'š þļàýîñĝ ñöŵ þļàýš ŵîţĥ ţĥé ŕööɱ.~~~~~~~~~~~~]</value>
     <comment>Line on the form when no episode is playing yet.</comment>
   </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>[Öñçé ýöü'ŕé îñ, þŕéšš Þļàý öñ àñý éþîšöðé ţö ŵàţçĥ îţ ŵîţĥ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on the form that starts a party with nothing picked yet.</comment>
+  </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>[Éþîšöðé {episode} öƒ {title}~~~~~~]</value>
     <comment>Line naming the episode of the form.</comment>
@@ -5220,7 +5224,7 @@
     <comment>Button that starts a watch party from the place. The one amber button there.</comment>
   </data>
   <data name="TogetherStartLine" xml:space="preserve">
-    <value>[Þîçķ šöɱéţĥîñĝ ýöü'ŕé ŵàţçĥîñĝ, ţĥéñ îñṽîţé ƒŕîéñðš ŵîţĥ à ļîñķ öŕ à çöðé.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öþéñ à ŕööɱ àñð îñṽîţé ƒŕîéñðš ŵîţĥ à ļîñķ öŕ à çöðé, ţĥéñ þŕéšš Þļàý öñ ŵĥàţ ýöü ŵàñţ ţö ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under Start a party.</comment>
   </data>
   <data name="TogetherJoin" xml:space="preserve">
@@ -5498,6 +5502,10 @@
   <data name="PartyBarIdle" xml:space="preserve">
     <value>[Îñ ţĥé ŕööɱ · ñöţĥîñĝ þļàýîñĝ ƒöŕ ýöü~~~~~~~~~~~~]</value>
     <comment>Second line of the bar when nothing plays for you.</comment>
+  </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>[Þŕéšš Þļàý öñ àñý éþîšöðé ţö ŵàţçĥ îţ ŵîţĥ ţĥé ŕööɱ~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.</comment>
   </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>[Þàüšéð ƀý {name}~~~~]</value>

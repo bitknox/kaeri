@@ -203,6 +203,9 @@ pub enum PartyEvent {
     Playlist(Playlist),
     /// Something for the player to do.
     Player(PlayerAction),
+    /// The room plays (`true`) or is paused, as its state says: told when that changes, and
+    /// once after joining, whether or not a player is open here.
+    RoomPlays(bool),
     /// Something to show on the player.
     Notice(Notice),
     /// What the server takes, from its welcome: said after [`PartyEvent::Joined`] and
@@ -452,6 +455,8 @@ struct Membership {
     listed: bool,
     /// Every member said they are ready, as last seen.
     all_ready: bool,
+    /// Whether the room plays, as last told with [`PartyEvent::RoomPlays`].
+    room_plays: Option<bool>,
     /// Changes this member made that the server has not taken in yet.
     ignoring_client: u32,
     /// Changes the server made that this member has to acknowledge, once.
@@ -487,6 +492,7 @@ impl Membership {
             members: BTreeMap::new(),
             listed: false,
             all_ready: false,
+            room_plays: None,
             ignoring_client: 0,
             ignoring_server: 0,
             held: None,
@@ -563,6 +569,7 @@ impl Membership {
         self.outbox.clear();
         if self.joined_once {
             self.sync.rejoin();
+            self.room_plays = None;
             self.emit(PartyEvent::Rejoined { name: self.me.clone(), encrypted });
             self.emit(PartyEvent::Features(self.features));
         } else {
@@ -764,6 +771,10 @@ impl Membership {
             && self.listed
             && self.ignoring_client == 0
         {
+            if self.room_plays != Some(!play.paused) {
+                self.room_plays = Some(!play.paused);
+                self.emit(PartyEvent::RoomPlays(!play.paused));
+            }
             let room = RoomState {
                 position: play.position,
                 paused: play.paused,

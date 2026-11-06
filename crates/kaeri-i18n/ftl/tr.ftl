@@ -6595,9 +6595,6 @@ together-people-button = Birlikte izle
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Oda aç
 
-# Line under Start a party.
-together-start-line = İzlediğiniz bir şeyi seçin, sonra arkadaşlarınızı bağlantı ya da kodla davet edin.
-
 # Heading of the field that joins a watch party.
 together-join = Odaya katıl
 

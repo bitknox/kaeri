@@ -1575,7 +1575,6 @@
     <string name="together_line">Herkes bölümü kendi kaynaklarından oynatır. Sunucu yalnızca sizi aynı noktada tutar.</string>
     <string name="together_people_button">Birlikte izle</string>
     <string name="together_start">Oda aç</string>
-    <string name="together_start_line">İzlediğiniz bir şeyi seçin, sonra arkadaşlarınızı bağlantı ya da kodla davet edin.</string>
     <string name="together_join">Odaya katıl</string>
     <string name="together_join_line">Bir arkadaşınızın davet bağlantısını yapıştırın ya da okuduğu kodu yazın.</string>
     <string name="together_join_field">Bağlantı ya da kod</string>

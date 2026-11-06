@@ -1575,7 +1575,6 @@
     <string name="together_line">Alla spelar avsnittet från sina egna källor. Servern håller bara er i takt.</string>
     <string name="together_people_button">Titta tillsammans</string>
     <string name="together_start">Starta ett watch party</string>
-    <string name="together_start_line">Välj något du tittar på och bjud in vänner med en länk eller kod.</string>
     <string name="together_join">Gå med i ett watch party</string>
     <string name="together_join_line">Klistra in en väns inbjudningslänk, eller skriv koden de läser upp.</string>
     <string name="together_join_field">Länk eller kod</string>

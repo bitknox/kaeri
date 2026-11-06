@@ -67,6 +67,9 @@ enum Control {
     StartAnyway,
     /// Open the player in the room's episode again.
     OpenPlayer,
+    /// A play anywhere in the app: the room's episode opens the player again, any other is
+    /// picked for the room.
+    Play(AnilistId, String),
     /// Say something in chat.
     Say(String),
     /// React at the player's position.
@@ -166,6 +169,7 @@ pub fn join_with(
         playback: engine.config.effective().playback.clone(),
         tx: tx.clone(),
         internal,
+        terminal: services.every_play_a_party,
     };
     let view = PartyView {
         server: address.clone(),
@@ -367,6 +371,25 @@ pub fn open_player(engine: &EngineState, tx: &Outbox) {
     steer(Control::OpenPlayer, engine, tx);
 }
 
+/// A play in the apps while a party is going is the room's: its own episode opens the player
+/// again, any other is picked for the room, which starts it as it starts any. `false`, for a
+/// play of this device's own, with no party going or on the terminal, where every play joins
+/// one ([`join_by_default`]).
+pub fn play_in_room(
+    id: AnilistId,
+    episode: &str,
+    engine: &EngineState,
+    services: &Services,
+) -> bool {
+    if services.every_play_a_party {
+        return false;
+    }
+    match going(engine) {
+        Some(running) => running.control.send(Control::Play(id, episode.to_owned())).is_ok(),
+        None => false,
+    }
+}
+
 /// Turn the terminal's Hide chat over: kept in the config for every party, and told to the one
 /// going, which says it back in its chat state. Out of a party it is only kept.
 fn hide_chat(hidden: bool, engine: &mut EngineState, services: &Services, tx: &Outbox) {
@@ -492,6 +515,8 @@ struct Env {
     tx: Outbox,
     /// Where lookups running beside the task leave their answers.
     internal: mpsc::UnboundedSender<Internal>,
+    /// The terminal, which has no lobby to go back to: closing its player leaves the party.
+    terminal: bool,
 }
 
 /// The two episodes a room is set to: the one it watches and the one after it.
@@ -612,6 +637,9 @@ struct Task {
     playing: Option<(AnilistId, String)>,
     /// The room moved on and plays when everyone has the new episode open.
     moving_on: bool,
+    /// The room plays, as the server last said: a member who is in the lobby when it does
+    /// opens the player and joins in.
+    room_plays: bool,
     countdown: Option<u32>,
     tick: tokio::time::Interval,
     /// The conversation, in memory for this party.
@@ -642,6 +670,7 @@ impl Task {
             cover: None,
             playing: None,
             moving_on: false,
+            room_plays: false,
             countdown: None,
             tick,
             chat: Chat::new(""),
@@ -826,6 +855,24 @@ impl Task {
         self.evaluate();
     }
 
+    /// The title and episode the room watches, once known.
+    fn room_target(&self) -> Option<(AnilistId, String)> {
+        self.view.room_episode.as_ref().and_then(|r| r.id.map(|id| (id, r.episode.clone())))
+    }
+
+    /// The room plays while this device is in the lobby, started by someone else: the player
+    /// opens and is brought to where the room is, without waiting for this member's Ready.
+    fn join_in(&mut self) {
+        if self.joined
+            && self.room_plays
+            && !self.view.playing
+            && self.cues.is_none()
+            && self.room_target().is_some()
+        {
+            self.start(PartyStartKind::Rejoin);
+        }
+    }
+
     /// Look the room's playlist up again: the title, the next, and the sources.
     fn look_up(&mut self) {
         self.seq += 1;
@@ -946,6 +993,10 @@ impl Task {
                 }
                 self.refresh();
             }
+            PartyEvent::RoomPlays(plays) => {
+                self.room_plays = plays;
+                self.join_in();
+            }
             PartyEvent::Player(action) => self.cue(match action {
                 PlayerAction::Pause => SeatCue::Pause(true),
                 PlayerAction::Play => SeatCue::Pause(false),
@@ -1038,7 +1089,8 @@ impl Task {
                 self.party.detach();
                 self.party.file(None);
                 self.cues = None;
-                if leave {
+                // In the apps the member stays in the room, whose lobby opens the player again.
+                if leave && self.env.terminal {
                     self.party.leave();
                 } else if finished {
                     self.finished();
@@ -1083,14 +1135,15 @@ impl Task {
                     Some(found) => (Some(found.room), found.guesses, found.media),
                     None => (None, Vec::new(), None),
                 };
+                let before = self.room_target();
                 self.guesses = guesses;
                 self.set_room(room, next, media);
                 self.remember();
-                let target = self
-                    .view
-                    .room_episode
-                    .as_ref()
-                    .and_then(|r| r.id.map(|id| (id, r.episode.clone())));
+                let target = self.room_target();
+                // Another episode: the room playing was the one before, until it says so again.
+                if before.is_some() && before != target {
+                    self.room_plays = false;
+                }
                 match (target, self.playing.clone()) {
                     // Somebody moved the room on: so does this device.
                     (Some(target), Some(playing)) if self.view.playing && playing != target => {
@@ -1101,6 +1154,7 @@ impl Task {
                     _ => {}
                 }
                 self.evaluate();
+                self.join_in();
             }
             Internal::Picked(pair) => {
                 self.seq += 1;
@@ -1111,6 +1165,7 @@ impl Task {
                 self.view.playing = false;
                 self.playing = None;
                 self.moving_on = false;
+                self.room_plays = false;
                 self.countdown = None;
                 self.set_room(Some(pair.current), pair.next, pair.media);
                 self.remember();
@@ -1131,6 +1186,7 @@ impl Task {
                     self.remember();
                     self.look_for_sources();
                     self.evaluate();
+                    self.join_in();
                 }
             }
             Internal::Advance { seq, pair } if seq == self.seq => {
@@ -1199,6 +1255,14 @@ impl Task {
                 }
             }
             Control::OpenPlayer => self.start(PartyStartKind::Rejoin),
+            Control::Play(id, episode) => {
+                if self.room_target() != Some((id, episode.clone())) {
+                    self.pick_episode(id, episode);
+                } else if self.view.playing && self.cues.is_none() {
+                    // The room's episode, with the player closed: back to the room.
+                    self.start(PartyStartKind::Rejoin);
+                }
+            }
             Control::Say(text) => self.on_say(&text),
             Control::React(reaction) => self.on_react(reaction),
             Control::Mute(name, muted) => {

@@ -6529,9 +6529,6 @@ together-people-button = Nonton bareng
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Mulai nonton bareng
 
-# Line under Start a party.
-together-start-line = Pilih sesuatu yang sedang Anda tonton, lalu undang teman dengan tautan atau kode.
-
 # Heading of the field that joins a watch party.
 together-join = Gabung nonton bareng
 

@@ -2,9 +2,9 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ▸  Home                   │  Watch together                         Server
   ▤  Calendar               │  ────────────────────────────────────   party.example:8999
-  ▦  Seasonal               │  Pick something you're watching, then
-  /  Search                 │  invite friends with a link or a        Room
-  ▥  Library                │  code.                                  kite-7qm4-xr9d
+  ▦  Seasonal               │  Open a room and invite friends with
+  /  Search                 │  a link or a code, then press Play on   Room
+  ▥  Library                │  what you want to watch.                kite-7qm4-xr9d
   ↓  Downloads              │
   ◇  Sources                │    Join a party  [link or code]
   ◎  Accounts               │
@@ -50,16 +50,16 @@ r03 c70-87 fg=text
 r04 c02-02 fg=text-dim
 r04 c05-12 fg=text-dim
 r04 c28-28 fg=rule
-r04 c31-66 fg=text-dim
+r04 c31-65 fg=text-dim
 r05 c02-02 fg=text-dim
 r05 c05-10 fg=text-dim
 r05 c28-28 fg=rule
-r05 c31-61 fg=text-dim
+r05 c31-66 fg=text-dim
 r05 c70-73 fg=text-dim
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
-r06 c31-35 fg=text-dim
+r06 c31-53 fg=text-dim
 r06 c70-83 fg=text
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim

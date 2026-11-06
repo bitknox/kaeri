@@ -1679,7 +1679,6 @@
     <string name="together_line">Każdy odtwarza odcinek ze swoich źródeł. Serwer tylko pilnuje, byście byli w tym samym miejscu.</string>
     <string name="together_people_button">Oglądaj razem</string>
     <string name="together_start">Zacznij oglądać razem</string>
-    <string name="together_start_line">Wybierz coś, co oglądasz, i zaproś znajomych linkiem lub kodem.</string>
     <string name="together_join">Dołącz do oglądania</string>
     <string name="together_join_line">Wklej link z zaproszeniem od znajomego albo wpisz kod, który ci podyktuje.</string>
     <string name="together_join_field">Link lub kod</string>

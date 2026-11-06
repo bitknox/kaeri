@@ -5481,6 +5481,10 @@ object Strings {
     fun partyFormNothing(context: Context): String =
         context.getString(R.string.party_form_nothing)
 
+    /** Line on the form that starts a party with nothing picked yet. */
+    fun partyFormPickLater(context: Context): String =
+        context.getString(R.string.party_form_pick_later)
+
     /** Line naming the episode of the form. */
     fun partyFormEpisodeOf(context: Context, episode: Int, title: String): String =
         context.getString(R.string.party_form_episode_of, episode, title)
@@ -5948,6 +5952,10 @@ object Strings {
     /** Second line of the bar when nothing plays for you. */
     fun partyBarIdle(context: Context): String =
         context.getString(R.string.party_bar_idle)
+
+    /** Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room. */
+    fun partyBarPick(context: Context): String =
+        context.getString(R.string.party_bar_pick)
 
     /** Notice in the player when someone pauses. */
     fun partyPausedBy(context: Context, name: String): String =

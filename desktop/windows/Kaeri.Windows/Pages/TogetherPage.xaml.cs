@@ -105,14 +105,8 @@ public sealed partial class TogetherPage : Page
         ctx.Send(new Command.Party(new PartyCommand.Lobby(server, target.Room, ctx.Known.PartyForm?.Name, null)));
     }
 
-    /// <summary>What are you watching?, then the party dialog for that title's next episode.</summary>
-    async Task StartParty()
-    {
-        if (XamlRoot is not { } root)
-            return;
-        if (await new PartyTitleDialog(ctx, root).ShowAsync() is { } pick)
-            ctx.Window.ShowParty(new PartyDialog.For.Episode(pick.Id, pick.Episode));
-    }
+    /// <summary>The party dialog for a room with nothing picked: in it, Play on any episode picks for the room.</summary>
+    void StartParty() => ctx.Window.ShowParty(new PartyDialog.For.Room());
 
     /// <summary>The row the join field is in. WinUI leaves Parent null for a child added in code, so it is kept here.</summary>
     Panel? joinRow;
@@ -149,7 +143,7 @@ public sealed partial class TogetherPage : Page
 
         Stack.Children.Add(Section(T.TogetherStart));
         Stack.Children.Add(Ui.Haze(T.TogetherStartLine));
-        Stack.Children.Add(Ui.Label(T.PartyStartParty, async (_, _) => await StartParty(), accent: true));
+        Stack.Children.Add(Ui.Label(T.PartyStartParty, (_, _) => StartParty(), accent: true));
 
         Stack.Children.Add(Section(T.TogetherJoin));
         Stack.Children.Add(Ui.Haze(T.TogetherJoinLine));
@@ -242,7 +236,8 @@ public sealed partial class TogetherPage : Page
         {
             Stack.Children.Add(Ui.Text(T.PartyRoomNothing, "SubtitleTextBlockStyle"));
             Stack.Children.Add(Ui.Haze(T.PartyRoomNothingLine));
-            Stack.Children.Add(Ui.Label(T.PartyRoomPick, (_, _) => ctx.Window.Go("search")));
+            // Picked as anything is played: browsing the app, where Play is the room's.
+            Stack.Children.Add(Ui.Label(T.PartyRoomPick, (_, _) => ctx.Window.Go("home")));
         }
 
         // Your own sources, checked for that episode. Never anyone else's.
@@ -276,16 +271,20 @@ public sealed partial class TogetherPage : Page
             Stack.Children.Add(Ui.Haze(T.PartyLobbyCount(ready, members.Length)));
         Stack.Children.Add(Ui.Haze(party.StartingIn is { } secs ? T.PartyStarting(secs) : party.Playing || members.Length > 0 && ready == members.Length ? T.PartyAllReady : T.PartyStartsLine));
 
-        // Ready is the one amber; once ready it is tonal with a check and the word.
+        // While the room plays, Open player is the way back to it, as on the Mac and Android.
+        // Before, Ready is the one amber; once ready it is tonal with a check and the word.
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-        var readyButton = party.Ready
-            ? Ui.Label("✓ " + T.PartyReadyOn, (_, _) => ctx.Send(new Command.PartyReady(false)))
-            : Ui.Label(T.PartyReadyAction, (_, _) => ctx.Send(new Command.PartyReady(true)), accent: true);
-        actions.Children.Add(readyButton);
-        if (party.CanStartAnyway)
-            actions.Children.Add(Ui.Label(T.PartyStartAnyway, (_, _) => ctx.Send(new Command.Party(new PartyCommand.StartAnyway()))));
-        if (!party.Playing)
-            actions.Children.Add(Ui.Label(T.TogetherOpenPlayer, (_, _) => ctx.Send(new Command.Party(new PartyCommand.OpenPlayer()))));
+        if (party.Playing)
+            actions.Children.Add(Ui.Label(T.TogetherOpenPlayer, (_, _) => ctx.Send(new Command.Party(new PartyCommand.OpenPlayer())), accent: true));
+        else
+        {
+            var readyButton = party.Ready
+                ? Ui.Label("✓ " + T.PartyReadyOn, (_, _) => ctx.Send(new Command.PartyReady(false)))
+                : Ui.Label(T.PartyReadyAction, (_, _) => ctx.Send(new Command.PartyReady(true)), accent: true);
+            actions.Children.Add(readyButton);
+            if (party.CanStartAnyway)
+                actions.Children.Add(Ui.Label(T.PartyStartAnyway, (_, _) => ctx.Send(new Command.Party(new PartyCommand.StartAnyway()))));
+        }
         Stack.Children.Add(actions);
 
         // Invite: the https link and the code, for reading out.
