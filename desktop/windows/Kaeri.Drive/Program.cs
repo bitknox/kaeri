@@ -48,9 +48,12 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     // The feel scenario on a copy of the person's profile (KAERI_PROFILE_ROOT): real sources and network.
     ("feel-real", FeelScenario.All, "", false),
     ("scroll-real", ScrollScenario.Real, "", false),
+    // Downloads, Sources, Settings and Plugin stores kept in place under the engine's events (PagesScenario.cs). Only when asked for by name.
+    ("pages", PagesScenario.All, "watching", true),
+    ("pages-sources", PagesScenario.Sourced, "demo-and-store", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -133,6 +136,9 @@ sealed class Run(string name, Args options, string scene, string? media)
             info.ArgumentList.Add($"--media={media}");
             // No --play: the scenario clicks Play on Home, as a person does, which also gives the
             // window the keyboard; a launched window may not have it.
+            // The pages scenario wants the fixture's three downloads, the finished one at the clip.
+            if (Name == "pages")
+                info.ArgumentList.Add("--downloads");
         }
         info.Environment["KAERI_PROBE_DIR"] = dir;
         if (scene.Length > 0)

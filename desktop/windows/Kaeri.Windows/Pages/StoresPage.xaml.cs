@@ -32,6 +32,12 @@ public sealed partial class StoresPage : Page
         // The joined stores are kept on this device; offline, the list still comes.
         State.NeedsConnection = false;
         ctx.Hear(this, Heard);
+        // A detail held back while a box in it was typed in is drawn once the box is left.
+        Detail.LostFocus += (_, _) => DispatcherQueue.TryEnqueue(() =>
+        {
+            if (detailHeld && !Ui.TypingIn(Detail))
+                Show();
+        });
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -73,30 +79,71 @@ public sealed partial class StoresPage : Page
             State.Done();
         else
             State.Wait();
-        StoreList.Items.Clear();
+        // The rows stay from one event to the next, with their words changed in place, so the
+        // selected row keeps its focus.
+        var items = new List<object>();
+        ListViewItem? chosen = null;
         foreach (var store in stores)
         {
-            var item = new ListViewItem { Content = Line(store), Tag = store.Id };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(item, store.Name);
-            StoreList.Items.Add(item);
+            if (!rows.TryGetValue(store.Id, out var row))
+                rows[store.Id] = row = new StoreLine(store.Id);
+            row.Update(store);
+            items.Add(row.Item);
             if (store.Id == current?.Id)
-                StoreList.SelectedItem = item;
+                chosen = row.Item;
         }
+        foreach (var gone in rows.Keys.Except(stores.Select(s => s.Id)).ToList())
+            rows.Remove(gone);
+        Drawn.Arrange(StoreList.Items, items, Ui.HoldingFocus(StoreList, StoreList.Items.OfType<ListViewItem>()));
+        if (!ReferenceEquals(StoreList.SelectedItem, chosen))
+            StoreList.SelectedItem = chosen;
         ShowDetail(current);
         quiet = false;
     }
 
-    static Grid Line(StoreRow store)
+    readonly Dictionary<string, StoreLine> rows = [];
+
+    /// <summary>A store's row in the list: its name over its host, and how it stands.</summary>
+    sealed class StoreLine
     {
-        var grid = new Grid { Height = 56, ColumnSpacing = 10 };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Ui.Text(store.Name, "BodyStrongTextBlockStyle", wrap: false));
-        text.Children.Add(Ui.Text(store.Host, "HazeCaptionStyle", wrap: false));
-        grid.Children.Add(text);
-        var state = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-        Grid.SetColumn(state, 1);
+        public readonly ListViewItem Item;
+        readonly TextBlock name = Ui.Text("", "BodyStrongTextBlockStyle", wrap: false);
+        readonly TextBlock host = Ui.Text("", "HazeCaptionStyle", wrap: false);
+        readonly StackPanel state = new() { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+        string? stateDrawn;
+
+        public StoreLine(string id)
+        {
+            var grid = new Grid { Height = 56, ColumnSpacing = 10 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            text.Children.Add(name);
+            text.Children.Add(host);
+            grid.Children.Add(text);
+            Grid.SetColumn(state, 1);
+            grid.Children.Add(state);
+            Item = new ListViewItem { Content = grid, Tag = id };
+        }
+
+        public void Update(StoreRow store)
+        {
+            if (name.Text != store.Name)
+                name.Text = store.Name;
+            if (host.Text != store.Host)
+                host.Text = store.Host;
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(Item, store.Name);
+            var said = $"{store.State}|{Stores.Updates(store)}";
+            if (said == stateDrawn)
+                return;
+            stateDrawn = said;
+            state.Children.Clear();
+            Fill(state, store);
+        }
+    }
+
+    static void Fill(StackPanel state, StoreRow store)
+    {
         switch (store.State)
         {
             case StoreState.Offline:
@@ -115,15 +162,79 @@ public sealed partial class StoresPage : Page
                 }
                 break;
         }
-        grid.Children.Add(state);
-        return grid;
     }
 
+    /// <summary>What the detail last said, and whether a redraw waits for a box in it to be left.</summary>
+    string? detailDrawn;
+    bool detailHeld;
+    ToggleSwitch? openSwitch;
+    TextBlock? openSays;
+
+    /// <summary>
+    /// Everything the selected store's detail says, apart from Who can join, whose switch changes
+    /// in place: the store, its members and invites, the invite just made, and the choices made here.
+    /// </summary>
+    string DetailKey(StoreRow store) => Drawn.Fingerprint((
+        store with { Open = false },
+        ctx.Known.Members.ContainsKey(store.Id),
+        ctx.Known.Members.GetValueOrDefault(store.Id),
+        ctx.Known.Invite is { } link && link.Store == store.Id ? link : null,
+        uses, lasts, usesOpen.Order(StringComparer.Ordinal)));
+
+    /// <summary>
+    /// The selected store's detail, drawn again only when what it says changed, and never while
+    /// a box in it is being typed in: then it waits until the box is left. The focus and the
+    /// scroll stay where they were.
+    /// </summary>
     void ShowDetail(StoreRow? store)
     {
+        var key = store is null ? null : DetailKey(store);
+        if (key == detailDrawn && (store is null || Detail.Children.Count > 0))
+        {
+            detailHeld = false;
+            UpdateOpen(store);
+            return;
+        }
+        if (store is not null && detailDrawn is not null && Ui.TypingIn(Detail))
+        {
+            detailHeld = true;
+            UpdateOpen(store);
+            return;
+        }
+        var same = store is not null && Detail.Children.Count > 0 && Detail.Tag as string == store.Id;
+        var focus = same ? Ui.MarkFocus(Detail) : null;
+        var offset = DetailScroll.VerticalOffset;
+        detailDrawn = key;
+        detailHeld = false;
+        openSwitch = null;
+        openSays = null;
+        Detail.Tag = store?.Id;
         Detail.Children.Clear();
         if (store is null)
             return;
+        DrawDetail(store);
+        if (!same)
+            return;
+        DetailScroll.UpdateLayout();
+        DetailScroll.ChangeView(null, offset, null, disableAnimation: true);
+        Ui.RestoreFocus(Detail, focus);
+    }
+
+    /// <summary>Who can join, as the store last said, set in place without sending it back.</summary>
+    void UpdateOpen(StoreRow? store)
+    {
+        if (store is null || openSwitch is not { } open || open.IsOn == store.Open)
+            return;
+        var was = quiet;
+        quiet = true;
+        open.IsOn = store.Open;
+        quiet = was;
+        if (openSays is { } says)
+            says.Text = store.Open ? T.StoresAnyoneWithLink : T.StoresOnlyInvited;
+    }
+
+    void DrawDetail(StoreRow store)
+    {
         Detail.Children.Add(Ui.Text(store.Name, "SubtitleTextBlockStyle"));
         Detail.Children.Add(Ui.Haze(Stores.RunBy(store.Owners, store.Host)));
         Detail.Children.Add(Ui.Text(T.StoresKeyLine(store.Fingerprint, Stores.JoinedAs(store)), "HazeCaptionStyle"));
@@ -249,6 +360,8 @@ public sealed partial class StoresPage : Page
         };
         Detail.Children.Add(open);
         Detail.Children.Add(says);
+        openSwitch = open;
+        openSays = says;
     }
 
     InviteUses uses = InviteUses.Once;

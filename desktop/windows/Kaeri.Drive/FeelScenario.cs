@@ -28,7 +28,7 @@ static class FeelScenario
     static AutomationElement? Poster(Run run) =>
         run.Covers().FirstOrDefault(c => Run.Safe(() => c.BoundingRectangle) is { } r && r.Height > r.Width * 1.2);
 
-    static async Task Go(Run run, string page)
+    internal static async Task Go(Run run, string page)
     {
         // A step that opened the player (a card under a hidden button, say) hides the sidebar:
         // Escape closes it first.
