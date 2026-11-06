@@ -114437,6 +114437,18 @@
         }
       }
     },
+    "opened-unreadable" : {
+      "comment" : "Line under the field when the link or file could not be read, and the engine gave no reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri couldn't read that link or file."
+          }
+        }
+      }
+    },
     "opened-untracked-detail" : {
       "comment" : "Line under Play without tracking.",
       "extractionState" : "manual",

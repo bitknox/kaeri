@@ -11008,6 +11008,10 @@
     <value>[Çĥööšé à ţöŕŕéñţ ƒîļé~~~~~~~]</value>
     <comment>Button: choose a torrent file from the device.</comment>
   </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŕéàð ţĥàţ ļîñķ öŕ ƒîļé.~~~~~~~~~~~~]</value>
+    <comment>Line under the field when the link or file could not be read, and the engine gave no reason.</comment>
+  </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>[Îš ţĥîš {title}, éþîšöðé {episode}?~~~~~~~~]</value>
     <comment>The question once the link's name matched a title and an episode.</comment>

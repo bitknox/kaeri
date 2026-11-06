@@ -10945,6 +10945,9 @@ opened-paste-placeholder = Magnet link or info hash
 # Button: choose a torrent file from the device.
 opened-choose-file = Choose a torrent file
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri couldn't read that link or file.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = Is this { $title }, episode { $episode }?
 

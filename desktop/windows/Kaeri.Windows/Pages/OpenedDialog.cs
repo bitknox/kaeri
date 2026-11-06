@@ -29,6 +29,9 @@ sealed class OpenedDialog
     TextBox? search;
     string lastQuery = "";
     bool reading;
+    /// <summary>The engine's job reading the link.</summary>
+    ulong? readJob;
+    readonly TextBlock problem = Ui.Text("", "HazeCaptionStyle");
 
     public OpenedDialog(Ctx ctx, XamlRoot root, string? given)
     {
@@ -81,6 +84,10 @@ sealed class OpenedDialog
         var file = new Button { Content = T.OpenedChooseFile };
         file.Click += async (_, _) => await ChooseFile();
         body.Children.Add(file);
+        // Why the last link or file was not read: said here, where the viewer is looking, as the
+        // engine's notice is under the dialog.
+        problem.Visibility = problem.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        body.Children.Add(problem);
         dialog.Title = T.OpenedPasteTitle;
         dialog.PrimaryButtonText = T.ActionOpen;
         dialog.SecondaryButtonText = "";
@@ -114,11 +121,32 @@ sealed class OpenedDialog
         body.Children.Add(new ProgressRing { IsActive = true, Width = 32, Height = 32, HorizontalAlignment = HorizontalAlignment.Center });
         dialog.PrimaryButtonText = "";
         dialog.SecondaryButtonText = "";
+        problem.Text = "";
         var path = text.Trim().Trim('"');
         if (path.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase) && File.Exists(path))
-            ctx.Send(new Command.Opened(new OpenedCommand.OpenTorrentFile(File.ReadAllBytes(path))));
+        {
+            byte[] bytes;
+            try
+            {
+                bytes = File.ReadAllBytes(path);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                Unread(T.OpenedUnreadable);
+                return;
+            }
+            readJob = ctx.Send(new Command.Opened(new OpenedCommand.OpenTorrentFile(bytes)));
+        }
         else
-            ctx.Send(new Command.Opened(new OpenedCommand.OpenLink(text.Trim())));
+            readJob = ctx.Send(new Command.Opened(new OpenedCommand.OpenLink(text.Trim())));
+    }
+
+    /// <summary>The link or file was not read: back to step one, saying why, to try another.</summary>
+    void Unread(string why)
+    {
+        readJob = null;
+        problem.Text = why;
+        Ask();
     }
 
     void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -166,7 +194,16 @@ sealed class OpenedDialog
             switch (e)
             {
                 case Event.LinkOpened l:
+                    readJob = null;
                     Confirm(l.V1);
+                    break;
+                // A link the engine could not read: it says why in an alert and ends the job, with
+                // no answer to wait for.
+                case Event.Toast { V1.Kind: NoticeKind.Alert } t when reading:
+                    Unread(t.V1.Msg?.Text() is { Length: > 0 } why ? why : T.OpenedUnreadable);
+                    break;
+                case Event.JobDone d when reading && readJob is { } job && d.V1 == job:
+                    Unread(T.OpenedUnreadable);
                     break;
                 case Event.OpenedChoices c when opened is not null && c.Link == opened.Link && c.Query == lastQuery:
                     ShowChoices(c.Candidates ?? [], c.Failed);

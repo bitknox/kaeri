@@ -17642,6 +17642,11 @@ pub fn opened_choose_file() -> String {
     text("opened-choose-file", &[])
 }
 
+/// Line under the field when the link or file could not be read, and the engine gave no reason.
+pub fn opened_unreadable() -> String {
+    text("opened-unreadable", &[])
+}
+
 /// The question once the link's name matched a title and an episode.
 pub fn opened_confirm(title: &str, episode: &str) -> String {
     text("opened-confirm", &[("title", Arg::Text(title)), ("episode", Arg::Text(episode))])

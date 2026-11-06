@@ -11342,6 +11342,10 @@ object Strings {
     fun openedChooseFile(context: Context): String =
         context.getString(R.string.opened_choose_file)
 
+    /** Line under the field when the link or file could not be read, and the engine gave no reason. */
+    fun openedUnreadable(context: Context): String =
+        context.getString(R.string.opened_unreadable)
+
     /** The question once the link's name matched a title and an episode. */
     fun openedConfirm(context: Context, title: String, episode: String): String =
         context.getString(R.string.opened_confirm, title, episode)

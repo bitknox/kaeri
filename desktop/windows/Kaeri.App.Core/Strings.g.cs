@@ -8027,6 +8027,9 @@ public static partial class T
     /// <summary>Button: choose a torrent file from the device.</summary>
     public static string OpenedChooseFile => Get("OpenedChooseFile");
 
+    /// <summary>Line under the field when the link or file could not be read, and the engine gave no reason.</summary>
+    public static string OpenedUnreadable => Get("OpenedUnreadable");
+
     /// <summary>The question once the link's name matched a title and an episode.</summary>
     public static string OpenedConfirm(string title, string episode) => Fill(Get("OpenedConfirm"), ("title", title), ("episode", episode));
 
@@ -11467,6 +11470,7 @@ public static partial class T
         ["OpenedPasteTitle"] = "Open a magnet link or torrent file",
         ["OpenedPastePlaceholder"] = "Magnet link or info hash",
         ["OpenedChooseFile"] = "Choose a torrent file",
+        ["OpenedUnreadable"] = "Kaeri couldn't read that link or file.",
         ["OpenedConfirm"] = "Is this {title}, episode {episode}?",
         ["OpenedConfirmTitle"] = "Is this {title}? Choose the episode.",
         ["OpenedNoGuess"] = "Kaeri couldn't tell what this is. Choose the title it is, or play it without tracking.",

@@ -10707,6 +10707,9 @@ public enum L {
     /// Button: choose a torrent file from the device.
     public static var openedChooseFile: String { string("opened-choose-file", fallback: "Choose a torrent file") }
 
+    /// Line under the field when the link or file could not be read, and the engine gave no reason.
+    public static var openedUnreadable: String { string("opened-unreadable", fallback: "Kaeri couldn't read that link or file.") }
+
     /// The question once the link's name matched a title and an episode.
     public static func openedConfirm(title: String, episode: String) -> String {
         Self.format("opened-confirm", fallback: "Is this %1$@, episode %2$@?", title, episode)

@@ -10945,6 +10945,9 @@ opened-paste-placeholder = [Ṁàĝñéţ ļîñķ öŕ îñƒö ĥàšĥ~~~~~~~
 # Button: choose a torrent file from the device.
 opened-choose-file = [Çĥööšé à ţöŕŕéñţ ƒîļé~~~~~~~]
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = [Ķàéŕî çöüļðñ'ţ ŕéàð ţĥàţ ļîñķ öŕ ƒîļé.~~~~~~~~~~~~]
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = [Îš ţĥîš { $title }, éþîšöðé { $episode }?~~~~~~~~]
 
