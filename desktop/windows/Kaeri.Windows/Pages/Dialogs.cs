@@ -32,6 +32,7 @@ static class Dialogs
             await wait.Task;
         }
         open = dialog;
+        Palette(dialog);
         var done = closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
@@ -53,6 +54,33 @@ static class Dialogs
             }
             done.TrySetResult();
         }
+    }
+
+    static readonly global::Windows.UI.ViewManagement.AccessibilitySettings accessibility = new();
+
+    /// <summary>
+    /// Gives the dialog the app's palette. A ContentDialog opens in the popup layer, where WinUI
+    /// reads Fluent's own dark theme and not the app's overrides, so dialogs came up in Fluent's
+    /// greys. The app's Dark dictionary is copied onto the dialog, whose own resources its template
+    /// reads first: content on Raised, buttons on the ground, controls in the palette. Under a
+    /// contrast theme the system's colours rule, so nothing is copied.
+    /// </summary>
+    static void Palette(ContentDialog dialog)
+    {
+        if (accessibility.HighContrast || dialog.Resources.ContainsKey("GroundBrush"))
+            return;
+        if (!Microsoft.UI.Xaml.Application.Current.Resources.ThemeDictionaries.TryGetValue("Dark", out var found) || found is not Microsoft.UI.Xaml.ResourceDictionary dark)
+            return;
+        foreach (var (key, value) in dark)
+            if (!dialog.Resources.ContainsKey(key))
+                dialog.Resources[key] = value;
+        // The style set these from Fluent's dictionary before the copy; the dialog's own values win.
+        if (dialog.ReadLocalValue(Control.BackgroundProperty) == Microsoft.UI.Xaml.DependencyProperty.UnsetValue && dark.TryGetValue("ContentDialogBackground", out var ground))
+            dialog.Background = (Microsoft.UI.Xaml.Media.Brush)ground;
+        if (dialog.ReadLocalValue(Control.BorderBrushProperty) == Microsoft.UI.Xaml.DependencyProperty.UnsetValue && dark.TryGetValue("ContentDialogBorderBrush", out var edge))
+            dialog.BorderBrush = (Microsoft.UI.Xaml.Media.Brush)edge;
+        if (dialog.ReadLocalValue(Control.ForegroundProperty) == Microsoft.UI.Xaml.DependencyProperty.UnsetValue && dark.TryGetValue("TextFillColorPrimaryBrush", out var silk))
+            dialog.Foreground = (Microsoft.UI.Xaml.Media.Brush)silk;
     }
 
     /// <summary>Closes the dialog that is up, if any, as Cancel.</summary>
