@@ -156,6 +156,20 @@
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
   </Style>
 
+  <!-- A card over the video (the corner's cards, the alert, the flash, chat lines, stats, the mark
+       panel): raised, with the hair edge Fluent's flyouts carry, at the overlay radius. A card's
+       padding is a pixel less than the room it means, for the edge. -->
+  <Style x:Key="OverVideoCardStyle" TargetType="Border">
+    <Setter Property="Background" Value="{ThemeResource RaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{ThemeResource HairBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <!-- The bottom corner's cards (Up next, the stall prompt, the skip prompt): 12 in from the edge,
+       and one width, so the corner keeps its size as one card takes another's place. -->
+  <Thickness x:Key="OverVideoCornerPadding">11</Thickness>
+  <x:Double x:Key="OverVideoCornerWidth">380</x:Double>
+
   <!-- The skip glyphs: Segoe Fluent's open circle arrow, mirrored for back, with the seconds
        inside it. Fluent has a back-10 glyph but its forward twin says 30. The player's bar and
        the TV's remote both draw them. -->

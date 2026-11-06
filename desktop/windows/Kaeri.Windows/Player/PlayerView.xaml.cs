@@ -924,7 +924,7 @@ public sealed partial class PlayerView : UserControl
             var from = AlertCard.ActualWidth;
             back.Text = text;
             back.Measure(new global::Windows.Foundation.Size(480, double.PositiveInfinity));
-            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right;
+            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right + AlertCard.BorderThickness.Left + AlertCard.BorderThickness.Right;
             Motion.Crossfade(front, back);
             var leaving = front;
             alertFront = front = back;
