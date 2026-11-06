@@ -595,13 +595,22 @@ public sealed partial class SettingsPage : Page
                 parts.Add(T.LanguageRestartNote);
             return parts.Count == 0 ? null : string.Join(" ", parts);
         }
-        var card = CardFrame(T.SettingsLanguageApp, Description(), box, "\uF2B7");
+        // Restart beside the picker once another language is chosen, as the Mac has it.
+        var restart = new Button { Content = T.SettingsLanguageRestart };
+        restart.Click += (_, _) => Relaunch.Now("a new app language");
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        row.Children.Add(restart);
+        row.Children.Add(box);
+        void ShowRestart() => restart.Visibility = StringResources.Chosen != StringResources.AtStart ? Visibility.Visible : Visibility.Collapsed;
+        ShowRestart();
+        var card = CardFrame(T.SettingsLanguageApp, Description(), row, "\uF2B7");
         box.SelectionChanged += (_, _) =>
         {
             if (quiet || box.SelectedIndex < 0)
                 return;
             StringResources.Choose(box.SelectedIndex == 0 ? null : languages[box.SelectedIndex - 1].Tag);
             card.Description = Description();
+            ShowRestart();
         };
         return card;
     }

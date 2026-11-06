@@ -1739,6 +1739,10 @@
     <value>Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Restart</value>
+    <comment>Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.</comment>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeri is still downloading</value>
     <comment>The notification area icon's balloon, the first time the window closes with downloads running: its title.</comment>
@@ -1910,6 +1914,18 @@
   <data name="StartFailedQuit" xml:space="preserve">
     <value>Quit</value>
     <comment>Button in that window: closes it and the app.</comment>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeri stopped working</value>
+    <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>The part of the app that does the work has stopped. Open Kaeri again to carry on.</value>
+    <comment>Line under that title: what happened and what to do.</comment>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>Open again</value>
+    <comment>Button in that window: opens the app again.</comment>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, episode {episode}</value>

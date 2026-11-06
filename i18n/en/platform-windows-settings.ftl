@@ -206,3 +206,8 @@ settings-note-cast-tvs-pc = They appear under Chromecast in Play on TV. This PC 
 # Note under the Torrents while casting setting, shown while torrents are on.
 # @only windows
 settings-note-torrents-while-casting-pc = Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.
+
+# Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.
+# @only windows
+# @max 20
+settings-language-restart = Restart
