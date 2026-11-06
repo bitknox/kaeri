@@ -60,6 +60,16 @@
 
         <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
         <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8">
+          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
+               rather than taking the palette's solid control fill, which reads as a block. -->
+          <Grid.Resources>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
+          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -121,6 +131,16 @@
 
         <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
         <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized">
+          <!-- Over the video a hover lightens the button a little, as Fluent's subtle buttons do,
+               rather than taking the palette's solid control fill, which reads as a block. -->
+          <Grid.Resources>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
+          </Grid.Resources>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
