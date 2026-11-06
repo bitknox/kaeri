@@ -207,7 +207,7 @@ impl Reader {
         services: &'a Services,
         tx: &'a Outbox,
     ) -> Cx<'a> {
-        let screen = Screen::new(self.eink.as_ref(), config.handheld());
+        let screen = Screen::new(self.eink.as_ref(), config.handheld(), config.phone());
         let webview = self.facts.as_ref().and_then(|f| f.webview);
         Cx { config, services, tx, screen, eink: self.eink.clone(), webview }
     }

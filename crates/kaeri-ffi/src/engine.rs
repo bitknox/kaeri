@@ -324,6 +324,7 @@ impl Opened {
         if let Some(platform) = start.platform {
             platform.device_label().clone_into(&mut options.device_label);
             options.handheld = platform.handheld();
+            options.phone = platform.phone();
             options.device_kind = Some(platform.sync_kind());
         }
         options.language.clone_from(&start.language);

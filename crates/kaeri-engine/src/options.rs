@@ -51,6 +51,9 @@ pub struct EngineOptions {
     /// The engine runs on a phone or a tablet, for the defaults that depend on the device:
     /// torrents while casting is off there. `false` for a computer and the terminal.
     pub handheld: bool,
+    /// The engine runs on a phone, not a tablet, for the defaults that depend on the screen's
+    /// size: novel text left-aligned there. `false` for a tablet, a computer and the terminal.
+    pub phone: bool,
     /// What kind of device this is, for the other devices' lists in sync. `None` leaves it
     /// unsaid (the terminal).
     pub device_kind: Option<kaeri_model::group::SyncDeviceKind>,
@@ -115,6 +118,7 @@ impl EngineOptions {
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,
+            phone: false,
             device_kind: None,
             language: None,
             sources: None,
