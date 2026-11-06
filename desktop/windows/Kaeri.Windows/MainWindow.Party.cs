@@ -45,9 +45,10 @@ public sealed partial class MainWindow
             ShowToast(InfoBarSeverity.Informational, T.PartyAlreadyIn);
             return;
         }
-        // The lobby opens in its invited state: it looks in, reads what the room watches and waits for Join.
+        // The lobby opens in its invited state: it looks in, reads what the room watches and waits
+        // for Join. A party this device is in is left only when Join is pressed.
         var server = target.Server.Length > 0 ? target.Server : ctx.Known.PartyForm?.SuggestedServer ?? "";
-        ctx.Send(new Command.Party(new PartyCommand.Lobby(server, target.Room, ctx.Known.PartyForm?.Name, null)));
+        TogetherPage.LookIn(ctx, server, target.Room);
         Go("together");
     }
 

@@ -181,7 +181,8 @@ sealed class PartyPanel
             foreach (var member in list)
             {
                 var mutes = muted.Contains(member.Name);
-                rows.Add(($"{member.Name}|{member.You}|{member.Ready}|{Parties.MemberFile(member)}|{Parties.MemberState(member)}|{mutes}|{offers}", () => Row(member, mutes)));
+                // Kept by who it is and what its menu offers; ready, state and file change in place.
+                rows.Add(($"{member.Name}|{member.You}|{Parties.MemberFile(member) is null}|{mutes}|{offers}", () => Row(member, mutes)));
             }
             readyLine.Text = Parties.ReadyLine(list);
         }
@@ -218,6 +219,39 @@ sealed class PartyPanel
                 members.Children.RemoveAt(at);
             members.Children.Insert(i, wanted[i]);
         }
+        if (ctx.Known.PartyMembers is { } now)
+        {
+            var muted = ctx.Known.PartyChatState?.Muted ?? [];
+            foreach (var row in members.Children.OfType<Grid>())
+                if (now.FirstOrDefault(m => (row.Tag as string)?.StartsWith($"{m.Name}|{m.You}|", StringComparison.Ordinal) == true) is { } member)
+                    Dress(row, member, muted.Contains(member.Name));
+        }
+    }
+
+    /// <summary>A member's row brought up to date in place: the ready mark, the file line and the state.</summary>
+    static void Dress(Grid row, PartyMember member, bool muted)
+    {
+        var isReady = member.Ready == true;
+        if (row.Children.OfType<FontIcon>().FirstOrDefault() is { } mark)
+        {
+            var glyph = isReady ? "" : "";
+            if (mark.Glyph != glyph)
+                mark.Glyph = glyph;
+            mark.Opacity = isReady ? 1 : 0.6;
+        }
+        if (row.Children.OfType<StackPanel>().FirstOrDefault() is { } names && names.Children.Count > 1
+            && names.Children[1] is TextBlock fileLine && Parties.MemberFile(member) is { } file && fileLine.Text != file)
+            fileLine.Text = file;
+        var said = muted ? T.PartyMemberMuted : Parties.MemberState(member);
+        if (row.Children.OfType<TextBlock>().LastOrDefault() is { } state)
+        {
+            if (state.Text != said)
+                state.Text = said;
+            var style = Ui.Res<Style>(isReady && !muted ? "CaptionTextBlockStyle" : "HazeCaptionStyle");
+            if (state.Style != style)
+                state.Style = style;
+        }
+        AutomationProperties.SetName(row, $"{Parties.MemberName(member)}, {said}");
     }
 
     /// <summary>
