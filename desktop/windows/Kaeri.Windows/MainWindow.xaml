@@ -116,6 +116,12 @@
     <InfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="480"
              HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24"
              AutomationProperties.LiveSetting="Polite"
-             PointerEntered="OnToastPointerEntered" PointerExited="OnToastPointerExited" />
+             PointerEntered="OnToastPointerEntered" PointerExited="OnToastPointerExited">
+      <!-- Every notice on the raised surface: an alert differs by its vermilion mark only. -->
+      <InfoBar.Resources>
+        <StaticResource x:Key="InfoBarErrorSeverityBackgroundBrush" ResourceKey="InfoBarInformationalSeverityBackgroundBrush" />
+        <StaticResource x:Key="InfoBarWarningSeverityBackgroundBrush" ResourceKey="InfoBarInformationalSeverityBackgroundBrush" />
+      </InfoBar.Resources>
+    </InfoBar>
   </Grid>
 </Window>
