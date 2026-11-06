@@ -46,7 +46,7 @@ public sealed partial class ProvidersPage : Page
     {
         base.OnNavigatedTo(e);
         selected = e.Parameter as string ?? ctx.Options.Select;
-        ctx.Send(new Command.CheckProviders());
+        Check();
         ctx.Send(new Command.Local(new LocalCommand.Load()));
         ctx.Send(new Command.Server(new ServerCommand.Load()));
         ctx.Send(new Command.Licensed(new LicensedCommand.Load(System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName)));
@@ -60,8 +60,23 @@ public sealed partial class ProvidersPage : Page
 
     Microsoft.UI.Dispatching.DispatcherQueueTimer? countdown;
 
+    /// <summary>The source check running, whose end lets Check sources be pressed again.</summary>
+    ulong? checking;
+
+    /// <summary>Checks every source; Check sources waits, greyed, until the check's job ends (the title bar's status names it meanwhile).</summary>
+    void Check()
+    {
+        checking = ctx.Send(new Command.CheckProviders());
+        CheckButton.IsEnabled = checking is null;
+    }
+
     void Heard(IReadOnlyList<Event> batch)
     {
+        if (checking is { } job && batch.Any(e => e is Event.JobDone done && done.V1 == job))
+        {
+            checking = null;
+            CheckButton.IsEnabled = true;
+        }
         if (batch.Any(e => e is Event.Providers or Event.ProviderNote or Event.SourcesChanged or Event.Stores or Event.Settings or Event.Local or Event.Server or Event.Licensed))
             Show();
     }
@@ -592,7 +607,7 @@ public sealed partial class ProvidersPage : Page
 
     void OnOpenLink(object sender, RoutedEventArgs e) => ctx.Window.ShowOpenLink();
 
-    void OnCheck(object sender, RoutedEventArgs e) => ctx.Send(new Command.CheckProviders());
+    void OnCheck(object sender, RoutedEventArgs e) => Check();
 
     void OnAddFolder(object sender, RoutedEventArgs e) => ctx.Window.AddFolder();
 
