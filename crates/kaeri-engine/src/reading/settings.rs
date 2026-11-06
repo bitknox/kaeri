@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use kaeri_core::{config::ReadingConfig, media::Medium, settings::SettingValue};
 use kaeri_model::{
-    eink::{EinkMatch, EinkProfile, Panel},
+    eink::{EinkMatch, EinkPanel, EinkProfile},
     reader::{ReaderSettingKey as Key, ReaderSettingRow, ReaderValue, SettingScope},
 };
 use kaeri_store::{Store, reading::SeriesSetting};
@@ -18,7 +18,7 @@ use kaeri_store::{Store, reading::SeriesSetting};
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Screen {
     /// The panel, on an e-ink screen.
-    pub eink: Option<Panel>,
+    pub eink: Option<EinkPanel>,
     /// The family's refresh hook resolved: the Refresh rows show.
     pub refresh_hook: bool,
     /// A phone or a tablet.
@@ -39,7 +39,7 @@ impl Screen {
     }
 
     fn colour_eink(self) -> bool {
-        self.eink.is_some_and(|p| p.colour() && p != Panel::Lcd)
+        self.eink.is_some_and(|p| p.colour() && p != EinkPanel::Lcd)
     }
 }
 
@@ -93,13 +93,15 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::RefreshImage => on(true),
         Key::RefreshText => amount(6.0),
         Key::RefreshList => {
-            amount(if screen.eink == Some(Panel::Kaleido3) { 3.0 } else { 5.0 })
+            amount(if screen.eink == Some(EinkPanel::Kaleido3) { 3.0 } else { 5.0 })
         }
         Key::GallerySpeed => choice("standard"),
         Key::RainbowFilter | Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
             on(false)
         }
-        Key::Saturation => amount(if screen.eink == Some(Panel::Kaleido3) { 1.2 } else { 1.0 }),
+        Key::Saturation => {
+            amount(if screen.eink == Some(EinkPanel::Kaleido3) { 1.2 } else { 1.0 })
+        }
         Key::FootValue => choice("pages_left"),
         Key::Folio => on(true),
     }
@@ -112,13 +114,13 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
     }
     match key {
         Key::RefreshImage | Key::RefreshText | Key::RefreshList => screen.refresh_hook,
-        Key::GallerySpeed => screen.eink == Some(Panel::Gallery3),
-        Key::RainbowFilter => screen.eink == Some(Panel::Kaleido3),
+        Key::GallerySpeed => screen.eink == Some(EinkPanel::Gallery3),
+        Key::RainbowFilter => screen.eink == Some(EinkPanel::Kaleido3),
         Key::Saturation | Key::Contrast => screen.colour_eink(),
         Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
             screen.handheld && screen.eink.is_none()
         }
-        Key::Colour => screen.eink != Some(Panel::Grey),
+        Key::Colour => screen.eink != Some(EinkPanel::Grey),
         Key::StripWidth => !screen.handheld,
         Key::VolumeKeysTurn => screen.handheld || screen.eink.is_some(),
         _ => true,
@@ -389,7 +391,7 @@ mod tests {
         let novel = keys(Medium::Novel, phone);
         assert!(novel.contains(&Key::Font) && !novel.contains(&Key::Direction));
         let kaleido = Screen {
-            eink: Some(Panel::Kaleido3),
+            eink: Some(EinkPanel::Kaleido3),
             refresh_hook: true,
             handheld: true,
             phone: true,
@@ -400,7 +402,7 @@ mod tests {
         let layers = Layers::read(&store, &config, Medium::Manga, None, kaleido);
         assert_eq!(layers.amount(Key::RefreshList), 3.0);
         assert_eq!(layers.word(Key::Look), "paper");
-        let grey = Screen { eink: Some(Panel::Grey), ..kaleido };
+        let grey = Screen { eink: Some(EinkPanel::Grey), ..kaleido };
         assert!(!keys(Medium::Manga, grey).contains(&Key::Colour));
     }
 
@@ -413,7 +415,7 @@ mod tests {
         };
         let phone = Screen { handheld: true, phone: true, ..Screen::default() };
         let tablet = Screen { handheld: true, ..Screen::default() };
-        let eink_phone = Screen { eink: Some(Panel::Grey), ..phone };
+        let eink_phone = Screen { eink: Some(EinkPanel::Grey), ..phone };
         assert!(!justified(Medium::Novel, phone));
         assert!(justified(Medium::Novel, tablet));
         assert!(justified(Medium::Novel, Screen::default()));

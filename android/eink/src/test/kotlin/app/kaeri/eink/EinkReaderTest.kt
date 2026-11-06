@@ -63,7 +63,7 @@ class EinkReaderTest {
         session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
-        val painter = EinkPainter.defaults(app.kaeri.engine.model.Panel.GREY, fake)
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
         val actions = EinkReaderActions({}, {}, {}, {}, {})
         val images = PageImages()
         compose.setContent {

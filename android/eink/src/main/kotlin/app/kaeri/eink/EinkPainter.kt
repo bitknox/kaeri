@@ -11,7 +11,7 @@ import app.kaeri.engine.model.EinkCounter
 import app.kaeri.engine.model.EinkDecision
 import app.kaeri.engine.model.EinkPaint
 import app.kaeri.engine.model.EinkPolicy
-import app.kaeri.engine.model.Panel
+import app.kaeri.engine.model.EinkPanel
 import app.kaeri.engine.model.Refresh
 
 class EinkPainter(
@@ -39,6 +39,6 @@ class EinkPainter(
 
     companion object {
         /** A painter for [panel] with the engine's default policy. */
-        fun defaults(panel: Panel, controller: RefreshController): EinkPainter = EinkPainter(einkPolicyDefaults(panel), controller)
+        fun defaults(panel: EinkPanel, controller: RefreshController): EinkPainter = EinkPainter(einkPolicyDefaults(panel), controller)
     }
 }

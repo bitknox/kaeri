@@ -8,7 +8,7 @@ import app.kaeri.engine.model.EinkMatch
 import app.kaeri.engine.model.EinkProfile
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.NovelSupport
-import app.kaeri.engine.model.Panel
+import app.kaeri.engine.model.EinkPanel
 import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.VendorFamily
@@ -28,7 +28,7 @@ class EinkModelTest {
     private val sent = mutableListOf<ReadingCommand>()
     private val model = EinkModel { sent += (it as Command.Reading).v1 }
 
-    private fun profile(eink: EinkMatch, panel: Panel, colourSure: Boolean = true) = EinkProfile(
+    private fun profile(eink: EinkMatch, panel: EinkPanel, colourSure: Boolean = true) = EinkProfile(
         eink = eink, panel = panel, ppi = 300u, family = VendorFamily.OTHER, refreshHook = false,
         pageButtons = false, colourSure = colourSure, novels = NovelSupport.FULL, policy = null,
     )
@@ -55,7 +55,7 @@ class EinkModelTest {
 
     @Test
     fun an_unsure_match_asks_if_this_is_eink() {
-        hear(profile(EinkMatch.UNSURE, Panel.GREY))
+        hear(profile(EinkMatch.UNSURE, EinkPanel.GREY))
         assertEquals(EinkQuestion.EINK, model.state.value.question)
         model.answerEink(true)
         assertEquals(ReadingCommand.AnswerEink(true, null), sent.single())
@@ -63,7 +63,7 @@ class EinkModelTest {
 
     @Test
     fun a_sure_match_with_an_unsure_colour_asks_the_colour_and_keeps_colour() {
-        hear(profile(EinkMatch.SURE, Panel.UNKNOWN_COLOUR, colourSure = false))
+        hear(profile(EinkMatch.SURE, EinkPanel.UNKNOWN_COLOUR, colourSure = false))
         val state = model.state.value
         assertEquals(EinkQuestion.COLOUR, state.question)
         assertTrue(state.eink)
@@ -78,7 +78,7 @@ class EinkModelTest {
 
     @Test
     fun skipping_the_colour_question_keeps_pictures_in_colour() {
-        hear(profile(EinkMatch.SURE, Panel.UNKNOWN_COLOUR, colourSure = false))
+        hear(profile(EinkMatch.SURE, EinkPanel.UNKNOWN_COLOUR, colourSure = false))
         model.skipColour()
         assertNull(model.state.value.question)
         assertTrue(model.state.value.colour)
@@ -87,10 +87,10 @@ class EinkModelTest {
 
     @Test
     fun a_sure_kaleido_is_amber_and_a_phone_asks_nothing() {
-        hear(profile(EinkMatch.SURE, Panel.KALEIDO3))
+        hear(profile(EinkMatch.SURE, EinkPanel.KALEIDO3))
         assertTrue(model.state.value.amber)
         assertNull(model.state.value.question)
-        hear(profile(EinkMatch.NO, Panel.LCD))
+        hear(profile(EinkMatch.NO, EinkPanel.LCD))
         assertFalse(model.state.value.eink)
         assertFalse(model.state.value.amber)
         assertNull(model.state.value.question)

@@ -1,6 +1,6 @@
 //! The reading rules an app runs on its own thread. See `kaeri_model::eink`.
 
-use kaeri_model::eink::{self, EinkCounter, EinkDecision, EinkPaint, EinkPolicy, Panel};
+use kaeri_model::eink::{self, EinkCounter, EinkDecision, EinkPaint, EinkPanel, EinkPolicy};
 
 /// The refresh for one paint on an e-ink screen, and the counter to keep for the next. Called on
 /// every page turn and list page, so it never waits on the engine.
@@ -19,7 +19,7 @@ pub fn novel_assets() -> kaeri_model::reader::NovelAssets {
 }
 
 #[uniffi::export]
-pub fn eink_policy_defaults(panel: Panel) -> EinkPolicy {
+pub fn eink_policy_defaults(panel: EinkPanel) -> EinkPolicy {
     EinkPolicy::defaults(panel)
 }
 

@@ -10,7 +10,7 @@ import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.EinkMatch
 import app.kaeri.engine.model.EinkProfile
 import app.kaeri.engine.model.Event
-import app.kaeri.engine.model.Panel
+import app.kaeri.engine.model.EinkPanel
 import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ScreenFacts
@@ -32,10 +32,10 @@ data class EinkState(
     val eink: Boolean get() = profile?.eink == EinkMatch.SURE
 
     /** The panel shows colour, or might: pictures stay in colour until a grey answer. */
-    val colour: Boolean get() = profile?.panel?.let { it != Panel.GREY } ?: false
+    val colour: Boolean get() = profile?.panel?.let { it != EinkPanel.GREY } ?: false
 
     /** Amber for the one primary action, only once the colour is sure. */
-    val amber: Boolean get() = eink && colour && profile?.colourSure == true && profile.panel != Panel.LCD
+    val amber: Boolean get() = eink && colour && profile?.colourSure == true && profile.panel != EinkPanel.LCD
 
     val question: EinkQuestion?
         get() {

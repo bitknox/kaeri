@@ -280,8 +280,8 @@ mod tests {
         use kaeri_model::{
             book_sources::{BookServerFailure, BookSourceCommand, BookSourceEvent, FolderRef},
             eink::{
-                EinkCounter, EinkMatch, EinkPaint, EinkPolicy, EinkProfile, NovelSupport,
-                Panel, VendorFamily,
+                EinkCounter, EinkMatch, EinkPaint, EinkPanel, EinkPolicy, EinkProfile,
+                NovelSupport, VendorFamily,
             },
             medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
             reader::{
@@ -412,14 +412,14 @@ mod tests {
         }));
         crosses_intact(Event::Reading(ReadingEvent::Eink(EinkProfile {
             eink: EinkMatch::Sure,
-            panel: Panel::Kaleido3,
+            panel: EinkPanel::Kaleido3,
             ppi: 300,
             family: VendorFamily::Onyx,
             refresh_hook: true,
             page_buttons: true,
             colour_sure: true,
             novels: NovelSupport::Full,
-            policy: Some(EinkPolicy::defaults(Panel::Kaleido3)),
+            policy: Some(EinkPolicy::defaults(EinkPanel::Kaleido3)),
         })));
         crosses_intact(Event::Reader(ReaderEvent::ChapterRead { work, chapter }));
         crosses_intact(Event::BookSources(BookSourceEvent::ServerFailed {
@@ -427,7 +427,7 @@ mod tests {
             failure: BookServerFailure::Server { failure: ServerFailure::PlainHttp },
         }));
         let decision = crate::reading::eink_paint(
-            EinkPolicy::defaults(Panel::Grey),
+            EinkPolicy::defaults(EinkPanel::Grey),
             EinkCounter { partials: 5 },
             EinkPaint::TextPage,
         );

@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use kaeri_model::{
     eink::{
-        EinkMatch, EinkPolicy, EinkProfile, GallerySpeed, NovelSupport, Panel, ScreenFacts,
+        EinkMatch, EinkPanel, EinkPolicy, EinkProfile, GallerySpeed, NovelSupport, ScreenFacts,
         VendorFamily,
     },
     reader::ReaderSettingKey,
@@ -96,31 +96,31 @@ pub fn detect(
     });
     let galy = has(&facts.model, &["galy"]);
     let (mut panel, mut colour_sure) = match eink {
-        EinkMatch::No => (Panel::Lcd, true),
+        EinkMatch::No => (EinkPanel::Lcd, true),
         _ if family == VendorFamily::Onyx => {
-            (if facts.wide_colour_gamut { Panel::Kaleido3 } else { Panel::Grey }, true)
+            (if facts.wide_colour_gamut { EinkPanel::Kaleido3 } else { EinkPanel::Grey }, true)
         }
-        _ if galy => (Panel::Gallery3, true),
-        _ if facts.wide_colour_gamut => (Panel::UnknownColour, false),
-        _ => (Panel::Grey, true),
+        _ if galy => (EinkPanel::Gallery3, true),
+        _ if facts.wide_colour_gamut => (EinkPanel::UnknownColour, false),
+        _ => (EinkPanel::Grey, true),
     };
     match answers.eink {
         Some(true) => {
             eink = EinkMatch::Sure;
-            if panel == Panel::Lcd {
-                panel = Panel::Grey;
+            if panel == EinkPanel::Lcd {
+                panel = EinkPanel::Grey;
             }
         }
         Some(false) => {
             eink = EinkMatch::No;
-            panel = Panel::Lcd;
+            panel = EinkPanel::Lcd;
         }
         None => {}
     }
-    if panel != Panel::Lcd {
+    if panel != EinkPanel::Lcd {
         match answers.colour {
-            Some(true) if !panel.colour() => panel = Panel::UnknownColour,
-            Some(false) => panel = Panel::Grey,
+            Some(true) if !panel.colour() => panel = EinkPanel::UnknownColour,
+            Some(false) => panel = EinkPanel::Grey,
             _ => {}
         }
         if answers.colour.is_some() {
@@ -143,7 +143,7 @@ pub fn detect(
 }
 
 /// The refresh rule for `panel` with this device's Refresh settings over the board's defaults.
-pub fn policy(panel: Panel, device: &BTreeMap<String, toml::Value>) -> EinkPolicy {
+pub fn policy(panel: EinkPanel, device: &BTreeMap<String, toml::Value>) -> EinkPolicy {
     let mut policy = EinkPolicy::defaults(panel);
     let number = |key: ReaderSettingKey| {
         device
@@ -175,11 +175,11 @@ pub fn policy(panel: Panel, device: &BTreeMap<String, toml::Value>) -> EinkPolic
 /// The pipeline's panel for a profile, when the screen is e-ink; `None` draws as LCD.
 pub fn pages_panel(profile: Option<&EinkProfile>) -> kaeri_pages::Panel {
     match profile.filter(|p| p.eink != EinkMatch::No).map(|p| p.panel) {
-        Some(Panel::Grey) => kaeri_pages::Panel::Grey,
-        Some(Panel::Kaleido3) => kaeri_pages::Panel::Kaleido3,
-        Some(Panel::Gallery3) => kaeri_pages::Panel::Gallery3,
-        Some(Panel::UnknownColour) => kaeri_pages::Panel::UnknownColour,
-        Some(Panel::Lcd) | None => kaeri_pages::Panel::Lcd,
+        Some(EinkPanel::Grey) => kaeri_pages::Panel::Grey,
+        Some(EinkPanel::Kaleido3) => kaeri_pages::Panel::Kaleido3,
+        Some(EinkPanel::Gallery3) => kaeri_pages::Panel::Gallery3,
+        Some(EinkPanel::UnknownColour) => kaeri_pages::Panel::UnknownColour,
+        Some(EinkPanel::Lcd) | None => kaeri_pages::Panel::Lcd,
     }
 }
 
@@ -218,21 +218,21 @@ mod tests {
         let p = detect(&boox, EinkAnswers::default(), &none);
         assert_eq!(
             (p.eink, p.panel, p.family),
-            (EinkMatch::Sure, Panel::Grey, VendorFamily::Onyx)
+            (EinkMatch::Sure, EinkPanel::Grey, VendorFamily::Onyx)
         );
         assert!(p.refresh_hook && p.page_buttons && p.colour_sure);
-        assert_eq!(p.policy, Some(EinkPolicy::defaults(Panel::Grey)));
+        assert_eq!(p.policy, Some(EinkPolicy::defaults(EinkPanel::Grey)));
         boox.wide_colour_gamut = true;
-        assert_eq!(detect(&boox, EinkAnswers::default(), &none).panel, Panel::Kaleido3);
+        assert_eq!(detect(&boox, EinkAnswers::default(), &none).panel, EinkPanel::Kaleido3);
 
         // The NTX call resolving says nothing about the family.
         let mut other = facts("Example", "Pad");
         other.hooks = vec!["ntx".into()];
         let p = detect(&other, EinkAnswers::default(), &none);
-        assert_eq!((p.eink, p.panel, p.policy), (EinkMatch::No, Panel::Lcd, None));
+        assert_eq!((p.eink, p.panel, p.policy), (EinkMatch::No, EinkPanel::Lcd, None));
 
         let galy = detect(&facts("Bigme", "Galy"), EinkAnswers::default(), &none);
-        assert_eq!((galy.panel, galy.family), (Panel::Gallery3, VendorFamily::Rockchip));
+        assert_eq!((galy.panel, galy.family), (EinkPanel::Gallery3, VendorFamily::Rockchip));
     }
 
     #[test]
@@ -244,13 +244,13 @@ mod tests {
         let p = detect(&slow, EinkAnswers::default(), &none);
         assert_eq!(
             (p.eink, p.panel, p.colour_sure),
-            (EinkMatch::Unsure, Panel::UnknownColour, false)
+            (EinkMatch::Unsure, EinkPanel::UnknownColour, false)
         );
         let yes = EinkAnswers { eink: Some(true), colour: Some(false) };
         let p = detect(&slow, yes, &none);
-        assert_eq!((p.eink, p.panel, p.colour_sure), (EinkMatch::Sure, Panel::Grey, true));
+        assert_eq!((p.eink, p.panel, p.colour_sure), (EinkMatch::Sure, EinkPanel::Grey, true));
         let no = EinkAnswers { eink: Some(false), colour: None };
-        assert_eq!(detect(&slow, no, &none).panel, Panel::Lcd);
+        assert_eq!(detect(&slow, no, &none).panel, EinkPanel::Lcd);
         let mut old = facts("Example", "Note");
         old.webview = Some(90);
         assert_eq!(
@@ -265,7 +265,7 @@ mod tests {
         device.insert("refresh_text".to_owned(), toml::Value::Integer(9));
         device.insert("refresh_image".to_owned(), toml::Value::Boolean(false));
         device.insert("gallery_speed".to_owned(), toml::Value::String("fast".into()));
-        let p = policy(Panel::Gallery3, &device);
+        let p = policy(EinkPanel::Gallery3, &device);
         assert_eq!((p.text_every, p.text_every_dark, p.image_full), (9, 6, false));
         assert_eq!(p.gallery_speed, GallerySpeed::Fast);
         let mut cfg = BTreeMap::new();

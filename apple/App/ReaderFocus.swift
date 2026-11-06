@@ -11,11 +11,11 @@ struct ReaderFocusFilter: SetFocusFilterIntent {
     static let description = IntentDescription("Turns on Paper mode in the reader while this Focus is on.")
 
     /// Off by default, so a Focus that ends puts the reader back as it was.
-    @Parameter(title: "Paper mode", default: false)
+    @Parameter(title: "Paper mode", default: false) // i18n-skip
     var paper: Bool
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "Reading")
+        DisplayRepresentation(title: "Reading") // i18n-skip
     }
 
     func perform() async throws -> some IntentResult {

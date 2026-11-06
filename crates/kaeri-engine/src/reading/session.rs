@@ -1708,7 +1708,7 @@ mod tests {
             webview: Some(120),
         });
         let profile = h.reader.detect(h.config.effective()).unwrap();
-        assert_eq!(profile.panel, kaeri_model::eink::Panel::Grey);
+        assert_eq!(profile.panel, kaeri_model::eink::EinkPanel::Grey);
         let work = WorkId::new(WORK);
         let surface = ReaderSurface { eink: true, ..surface() };
         h.send(ReaderCommand::Open { work, chapter: None, at: OpenAt::Resume, surface });
@@ -1840,7 +1840,7 @@ mod tests {
             webview: Some(120),
         });
         let profile = h.reader.detect(h.config.effective()).unwrap();
-        assert_eq!(profile.panel, kaeri_model::eink::Panel::Grey);
+        assert_eq!(profile.panel, kaeri_model::eink::EinkPanel::Grey);
         let work = WorkId::new(WORK);
         let surface = ReaderSurface { eink: true, ..surface() };
         h.send(ReaderCommand::Open { work, chapter: None, at: OpenAt::Resume, surface });

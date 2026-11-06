@@ -45,7 +45,7 @@ pub struct ScreenFacts {
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct EinkProfile {
     pub eink: EinkMatch,
-    pub panel: Panel,
+    pub panel: EinkPanel,
     pub ppi: u32,
     /// From the device's identity, not from which hook resolves.
     pub family: VendorFamily,
@@ -75,7 +75,7 @@ pub enum EinkMatch {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
-pub enum Panel {
+pub enum EinkPanel {
     Grey,
     Kaleido3,
     Gallery3,
@@ -83,7 +83,7 @@ pub enum Panel {
     Lcd,
 }
 
-impl Panel {
+impl EinkPanel {
     pub const fn colour(self) -> bool {
         matches!(self, Self::Kaleido3 | Self::Gallery3 | Self::UnknownColour | Self::Lcd)
     }
@@ -138,7 +138,7 @@ pub enum GallerySpeed {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct EinkPolicy {
-    pub panel: Panel,
+    pub panel: EinkPanel,
     /// A full refresh on every image page.
     pub image_full: bool,
     /// A full refresh every this many text pages; 0 never.
@@ -156,13 +156,13 @@ pub struct EinkPolicy {
 impl EinkPolicy {
     /// The e-ink board's defaults for `panel`: full on every image page, a full every sixth text
     /// page (fourth on Dark), every fifth list page (third on Kaleido).
-    pub const fn defaults(panel: Panel) -> Self {
+    pub const fn defaults(panel: EinkPanel) -> Self {
         Self {
             panel,
             image_full: true,
             text_every: 6,
             text_every_dark: 4,
-            list_every: if matches!(panel, Panel::Kaleido3) { 3 } else { 5 },
+            list_every: if matches!(panel, EinkPanel::Kaleido3) { 3 } else { 5 },
             gallery_speed: GallerySpeed::Standard,
             dark: false,
         }
@@ -231,7 +231,7 @@ pub fn eink_paint(policy: EinkPolicy, counter: EinkCounter, paint: EinkPaint) ->
     };
     let keep = |refresh| EinkDecision { refresh, counter };
     match paint {
-        EinkPaint::ImagePage { colour } if policy.panel == Panel::Gallery3 => {
+        EinkPaint::ImagePage { colour } if policy.panel == EinkPanel::Gallery3 => {
             let refresh = match (colour, policy.gallery_speed) {
                 (false, _) => Refresh::BlackWhite,
                 (true, GallerySpeed::Standard) => Refresh::ColourStandard,
@@ -274,7 +274,7 @@ mod tests {
     #[test]
     fn text_pages_go_full_every_sixth_and_every_fourth_on_dark() {
         let text = [EinkPaint::TextPage; 12];
-        let grey = EinkPolicy::defaults(Panel::Grey);
+        let grey = EinkPolicy::defaults(EinkPanel::Grey);
         let fulls: Vec<usize> = run(grey, &text)
             .iter()
             .enumerate()
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn images_chrome_and_lists_follow_the_board() {
-        let grey = EinkPolicy::defaults(Panel::Grey);
+        let grey = EinkPolicy::defaults(EinkPanel::Grey);
         assert_eq!(
             run(grey, &[EinkPaint::TextPage, EinkPaint::ImagePage { colour: false }]),
             [Refresh::Partial, Refresh::Full]
@@ -298,11 +298,11 @@ mod tests {
             run(grey, &[EinkPaint::ChromeOpen, EinkPaint::ChromeClose, EinkPaint::EndPage]),
             [Refresh::Fast, Refresh::Full, Refresh::Full]
         );
-        let kaleido = EinkPolicy::defaults(Panel::Kaleido3);
+        let kaleido = EinkPolicy::defaults(EinkPanel::Kaleido3);
         let lists = run(kaleido, &[EinkPaint::ListPage { covers: true }; 3]);
         assert_eq!(lists, [Refresh::Partial, Refresh::Partial, Refresh::Full]);
-        assert_eq!(EinkPolicy::defaults(Panel::Grey).list_every, 5);
-        let gallery = EinkPolicy::defaults(Panel::Gallery3);
+        assert_eq!(EinkPolicy::defaults(EinkPanel::Grey).list_every, 5);
+        let gallery = EinkPolicy::defaults(EinkPanel::Gallery3);
         assert_eq!(
             run(
                 gallery,

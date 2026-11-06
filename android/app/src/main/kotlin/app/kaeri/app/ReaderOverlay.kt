@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import app.kaeri.engine.model.Panel
+import app.kaeri.engine.model.EinkPanel
 import app.kaeri.eink.EinkModel
 import app.kaeri.eink.EinkPainter
 import app.kaeri.eink.EinkQuestions
@@ -75,7 +75,7 @@ private fun OpenReader(store: AppStore, einkModel: EinkModel, request: ReaderReq
                 EinkQuestions(profile, einkModel)
             } else {
                 val painter = remember(profile.profile?.panel) {
-                    EinkPainter.defaults(profile.profile?.panel ?: Panel.GREY, NoRefresh)
+                    EinkPainter.defaults(profile.profile?.panel ?: EinkPanel.GREY, NoRefresh)
                 }
                 EinkReader(
                     session = session,
