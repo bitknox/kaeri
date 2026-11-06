@@ -30,23 +30,38 @@ static partial class PlayerFilm
         var lineFrom = (int)(w.Left + (12 + 3 * 40 + 3 * 6 + 70) * s);
         var lineTo = (int)(w.Right - (12 + 2 * 40 + 3 * 6 + 70) * s);
 
-        await run.Step("film: Play and the first frame", async () =>
+        // Home can still be filling in when Play is first pressed: again until the player loaded.
+        var marks = Path.Combine(run.Options.Out, run.Name, "marks.csv");
+        for (var attempt = 0; attempt < 3 && !Loaded(marks); attempt++)
+            await run.Step("film: Play and the first frame", async () =>
+            {
+                FlaUI.Core.AutomationElements.AutomationElement? found = null;
+                for (var i = 0; i < 20 && found is null; i++)
+                {
+                    found = run.NameStarts("Resume") ?? run.NameStarts("Play episode");
+                    if (found is null)
+                        await Task.Delay(500);
+                }
+                if (found is null)
+                {
+                    run.Note("no Play on Home");
+                    return;
+                }
+                // Pressed through UI Automation: the film is of what follows, not of the pointer.
+                await Record(run, "1-handover", 7000, () =>
+                {
+                    if (found.Patterns.Invoke.PatternOrDefault is { } invoke)
+                        invoke.Invoke();
+                    else
+                        found.Click();
+                    return Task.CompletedTask;
+                });
+            });
+        if (!Loaded(marks))
         {
-            AutomationElementHolder? found = null;
-            for (var i = 0; i < 20 && found is null; i++)
-            {
-                if ((run.NameStarts("Resume") ?? run.NameStarts("Play episode")) is { } b)
-                    found = new(b);
-                else
-                    await Task.Delay(500);
-            }
-            if (found is null)
-            {
-                run.Note("no Play on Home");
-                return;
-            }
-            await Record(run, "1-handover", 7000, () => { run.Click(found.Element); return Task.CompletedTask; });
-        });
+            run.Note("the player never loaded");
+            return;
+        }
         await run.Step("film: playing, controls hidden", async () =>
         {
             PlayerChecks.Move(video);
@@ -86,7 +101,18 @@ static partial class PlayerFilm
         await run.Step("film: the rehearsal, untouched", async () => await Record(run, "party", 20000));
     }
 
-    sealed record AutomationElementHolder(FlaUI.Core.AutomationElements.AutomationElement Element);
+    static bool Loaded(string marks)
+    {
+        try
+        {
+            using var stream = new FileStream(marks, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return new StreamReader(stream).ReadToEnd().Contains("loaded player", StringComparison.Ordinal);
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Films the window for <paramref name="ms"/>, <paramref name="act"/> at its start.</summary>
     static async Task Record(Run run, string label, int ms, Func<Task>? act = null)
