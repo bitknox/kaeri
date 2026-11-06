@@ -480,6 +480,31 @@ pub(crate) fn dispatch(
         }
 
         // Reading: refused in place while it ships dark. See `reading`.
+        Command::Reading(kaeri_model::reading::ReadingCommand::LoadTracking { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::load(services, work, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ChooseMapping {
+            work,
+            tracker,
+            tracker_id,
+        }) if engine.reading.available => {
+            crate::read_tracking::choose(services, work, &tracker, tracker_id, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ResolveConflict {
+            work,
+            tracker,
+            keep_local,
+        }) if engine.reading.available => {
+            crate::read_tracking::resolve(services, work, &tracker, keep_local, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ConnectMangaUpdates {
+            username,
+            password,
+        }) if engine.reading.available => {
+            crate::read_tracking::connect_mangaupdates(services, username, password.0, tx)
+        }
         Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
         Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
         Command::BookSources(command) => {

@@ -173,12 +173,31 @@ pub fn load_library(
 /// and a tracker signed into *later* catches up anyway, since the first pull reconciles
 /// progress out of the watch log.
 pub fn signed_in_tracker_ids(sync: &tracking::Sync) -> Vec<String> {
-    sync.trackers.iter().filter(|t| t.is_authenticated()).map(|t| t.id().to_owned()).collect()
+    sync.trackers
+        .iter()
+        .filter(|t| t.is_authenticated() && t.serves_watching())
+        .map(|t| t.id().to_owned())
+        .collect()
+}
+
+/// The same for a reading list: the signed-in trackers that keep one.
+pub fn signed_in_reading_tracker_ids(sync: &tracking::Sync) -> Vec<String> {
+    sync.trackers
+        .iter()
+        .filter(|t| t.is_authenticated() && t.serves_reading())
+        .map(|t| t.id().to_owned())
+        .collect()
 }
 
 /// Tell the sync log which trackers this device is signed in to, for the lead rule.
 pub fn announce_signed_in(store: &kaeri_store::Store, sync: &tracking::Sync) {
-    if let Err(e) = store.sync_set_my_trackers(&signed_in_tracker_ids(sync)) {
+    let mut signed_in = signed_in_tracker_ids(sync);
+    for id in signed_in_reading_tracker_ids(sync) {
+        if !signed_in.contains(&id) {
+            signed_in.push(id);
+        }
+    }
+    if let Err(e) = store.sync_set_my_trackers(&signed_in) {
         tracing::warn!(error = %e, "could not tell the sync log which trackers this device has");
     }
 }
