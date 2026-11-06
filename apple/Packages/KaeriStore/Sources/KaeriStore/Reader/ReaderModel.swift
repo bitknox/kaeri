@@ -53,11 +53,11 @@ public final class ReaderModel {
     public private(set) var novelStyle = ""
     public private(set) var end: ReaderEnd?
     public private(set) var settings: ReaderSettingsView?
-    public private(set) var notice: ReaderNoticeLine?
+    public internal(set) var notice: ReaderNoticeLine?
     /// "Back to page 8", waiting in the corner.
-    public private(set) var backTo: ReaderNoticeLine?
+    public internal(set) var backTo: ReaderNoticeLine?
     /// The leaf shown now.
-    public private(set) var current = 0
+    public internal(set) var current = 0
     /// Where the person was before the last jump, as a leaf, for the ring on the scrubber.
     public private(set) var ring: Int?
     /// Where a strip is asked to scroll to once its images are in.
@@ -116,7 +116,7 @@ public final class ReaderModel {
     }
 
     /// The Focus filter's switch: it is written by the app's intent and read here.
-    public static let focusKey = "reader.focusPaper"
+    public nonisolated static let focusKey = "reader.focusPaper"
     nonisolated(unsafe) static var defaults = UserDefaults.standard
     @ObservationIgnored private var focusWatch: NSObjectProtocol?
 
@@ -504,7 +504,7 @@ public final class ReaderModel {
         }
     }
 
-    private func bump() -> Int {
+    func bump() -> Int {
         ticks += 1
         return ticks
     }
