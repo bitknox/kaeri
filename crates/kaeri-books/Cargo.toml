@@ -19,6 +19,9 @@ cb7 = ["dep:sevenz-rust2"]
 pdf = ["dep:hayro"]
 # hayro's embedded standard fonts and CMaps, for PDFs that leave their fonts out.
 pdf-fonts = ["pdf", "hayro/embed-fonts", "hayro/embed-cmaps"]
+# Soft hyphens from hypher's patterns, for the web views without hyphenation of their own
+# (WebView2 and WebKitGTK); the engine turns it on for Windows and Linux only.
+hyphenation = ["dep:hypher"]
 # For the fuzz targets only: lets a panic inside a third-party decoder through instead of reporting
 # a damaged file, so fuzzing finds it.
 fuzzing = []
@@ -35,6 +38,7 @@ sha1.workspace = true
 rars = { workspace = true, optional = true }
 sevenz-rust2 = { workspace = true, optional = true }
 hayro = { workspace = true, optional = true }
+hypher = { workspace = true, optional = true }
 
 [dev-dependencies]
 # Writes the CB7 fixtures; only tests compile the compressor.

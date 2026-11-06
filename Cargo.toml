@@ -132,6 +132,9 @@ rars = { version = "0.12", default-features = false }
 hayro = { version = "0.9", default-features = false }
 # The IDPF font obfuscation key in EPUBs.
 sha1 = "0.11"
+# Soft hyphens for novels on Windows and Linux, with only the languages the reading spec names
+# (about 350 KB of patterns; their licences are in assets/THIRD-PARTY.md).
+hypher = { version = "0.1.8", default-features = false, features = ["alloc", "english", "german", "french", "dutch", "spanish", "portuguese", "italian", "russian"] }
 
 # --- matching / parsing ---
 nucleo = "0.5"
