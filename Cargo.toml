@@ -46,6 +46,7 @@ kaeri-track = { path = "crates/kaeri-track", default-features = false }
 kaeri-testkit = { path = "crates/kaeri-testkit" }
 kaeri-tui = { path = "crates/kaeri-tui" }
 kaeri-i18n = { path = "crates/kaeri-i18n" }
+kaeri-pages = { path = "crates/kaeri-pages" }
 
 # --- async ---
 tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
@@ -105,6 +106,16 @@ crossterm = { version = "0.29", features = ["event-stream"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 terminal-colorsaurus = "1.0"
 
+# --- reading pages ---
+# kaeri-pages: SIMD resizing (NEON on phones and e-readers), and the real FFT behind the
+# rainbow filter. rustfft and realfft were already in the tree for the audio fingerprints.
+fast_image_resize = "6"
+rustfft = "6.4"
+realfft = "3.5"
+# 4-bit grey PNG export, which the image crate's encoder does not write. Already in the tree
+# through image.
+png = "0.18"
+
 # --- matching / parsing ---
 nucleo = "0.5"
 
@@ -159,6 +170,14 @@ opt-level = 3
 [profile.dev.package.rustfft]
 opt-level = 3
 [profile.dev.package.rubato]
+opt-level = 3
+# The reader's page pipeline decodes, resizes and filters pages of several megapixels in its
+# tests and in a dev build of an app; unoptimised, a page takes seconds.
+[profile.dev.package.fast_image_resize]
+opt-level = 3
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+[profile.dev.package.realfft]
 opt-level = 3
 
 # The engine as the Apple app links it while it is developed: apple/scripts/engine.sh builds every
