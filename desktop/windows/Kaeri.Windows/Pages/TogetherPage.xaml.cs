@@ -419,7 +419,7 @@ public sealed partial class TogetherPage : Page
         // No count before the room has listed anyone.
         if (ctx.Known.PartyMembers is not null)
             Line("count", T.PartyLobbyCount(ready, members.Length));
-        Line("starts", party.StartingIn is { } secs ? T.PartyStarting(secs) : party.Playing || members.Length > 0 && ready == members.Length ? T.PartyAllReady : T.PartyStartsLine);
+        Line("starts", Parties.StartLine(party.StartingIn is { } secs ? (long)secs : null, members));
 
         // The room finished its last episode out: Ready would only replay it.
         if (ctx.Known.PartyLastOut is { } lastOut)

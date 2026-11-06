@@ -1338,6 +1338,17 @@ public class PartyTests
     }
 
     [Fact]
+    public void TheLobbyLineNamesWhoIsNotReadyEvenWhileTheRoomPlays()
+    {
+        var you = Member("Ada", true, you: true);
+        Assert.Equal("Play starts once Ren is ready", Parties.StartLine(null, [you, Member("Ren", false)]));
+        Assert.Equal("Everyone is ready", Parties.StartLine(null, [you, Member("Ren", true)]));
+        Assert.Equal("Starts at 0:00 when everyone is ready", Parties.StartLine(null, [you with { Ready = false }, Member("Ren", false)]));
+        Assert.Equal("Nobody else is here yet. Send the invite link.", Parties.StartLine(null, [you]));
+        Assert.StartsWith("Starting", Parties.StartLine(3, [you, Member("Ren", false)]));
+    }
+
+    [Fact]
     public void AMemberSaysTheirStateAndAFileThatDiffers()
     {
         Assert.Equal("Ada (you)", Parties.MemberName(Member("Ada", true, you: true)));
