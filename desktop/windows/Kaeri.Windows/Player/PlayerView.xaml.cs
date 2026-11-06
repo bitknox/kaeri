@@ -2033,6 +2033,9 @@ public sealed partial class PlayerView : UserControl
     {
         if (!Showing)
             return;
+        // A dialog over the player takes the keys: Escape closes it, not the player under it.
+        if (Dialogs.Open)
+            return;
         // Typing in the discussion's field, or pressing a key on one of its buttons, is not a player key.
         if (discussion is { } pane && XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focus && Within(focus, pane))
             return;

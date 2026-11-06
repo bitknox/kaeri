@@ -613,7 +613,7 @@ public sealed partial class PlayerView
                 XamlRoot = root, RequestedTheme = ElementTheme.Dark, Title = T.PlayerShareTitle, Content = text,
                 PrimaryButtonText = T.PlayerShareYes, CloseButtonText = T.PlayerShareNo, DefaultButton = ContentDialogButton.Primary,
             };
-            var answer = await dialog.ShowAsync();
+            var answer = await Pages.Dialogs.Show(dialog);
             var share = answer == ContentDialogResult.Primary;
             KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card answered: {(share ? "share" : "don't share")}, on share skip times");
             Send(new PlayerCommand.AnswerShareSkipTimes(share));
@@ -711,6 +711,6 @@ public sealed partial class PlayerView
             XamlRoot = root, RequestedTheme = ElementTheme.Dark, Title = T.PlayerSkipTimes, Content = list,
             CloseButtonText = T.ActionClose,
         };
-        await dialog.ShowAsync();
+        await Pages.Dialogs.Show(dialog);
     }
 }

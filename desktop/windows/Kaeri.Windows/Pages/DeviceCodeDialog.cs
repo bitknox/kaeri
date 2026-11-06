@@ -56,7 +56,9 @@ sealed class DeviceCodeDialog
         Pending = prompt;
         if (prompt is null)
         {
-            open?.dialog.Hide();
+            // One still waiting behind another dialog never opens on a code that has ended.
+            if (open is { } ended)
+                Dialogs.Close(ended.dialog);
             open = null;
             return;
         }

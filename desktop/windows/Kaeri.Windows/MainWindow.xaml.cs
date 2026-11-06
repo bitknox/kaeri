@@ -1612,6 +1612,12 @@ public sealed partial class MainWindow : Window
     bool CloseDialogs()
     {
         var closed = InfoCard.HideOpen();
+        // Closed even when it would hold itself open, as a sign-in's wait does.
+        if (Dialogs.Open)
+        {
+            Dialogs.HideOpen();
+            closed = true;
+        }
         foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(Root.XamlRoot))
             if (popup.Child is ContentDialog dialog)
             {
