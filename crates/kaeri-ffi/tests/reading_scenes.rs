@@ -135,3 +135,76 @@ fn the_dark_scene_is_watch_and_refuses_reading() {
     )));
     engine.shutdown();
 }
+
+fn surface() -> kaeri_model::reader::ReaderSurface {
+    kaeri_model::reader::ReaderSurface {
+        width_px: 1080,
+        height_px: 2340,
+        scale: 2.75,
+        eink: false,
+        two_pages: false,
+        dark: true,
+    }
+}
+
+/// Opens `work` at its resume place and returns the first chapter's events up to its leaves.
+fn open_reader(scene: FfiScene, work: &str) -> Vec<Event> {
+    use kaeri_core::books::WorkId;
+    use kaeri_model::reader::{OpenAt, ReaderCommand, ReaderEvent};
+    let (_root, engine) = start(scene);
+    engine.send(Command::Reader(ReaderCommand::Open {
+        work: WorkId::new(work),
+        chapter: None,
+        at: OpenAt::Resume,
+        surface: surface(),
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(
+            event,
+            Event::Reader(ReaderEvent::Leaves { .. } | ReaderEvent::NovelOpen(_))
+                | Event::Reading(ReadingEvent::Failed { .. })
+        )
+    });
+    engine.shutdown();
+    read
+}
+
+#[test]
+fn the_reader_scenes_have_generated_books_to_open() {
+    use kaeri_model::reader::{ReaderEvent, ReaderMode};
+    let manga = open_reader(FfiScene::ReaderMangaRtl, "a:900301");
+    let leaves = manga
+        .iter()
+        .find_map(|e| match e {
+            Event::Reader(ReaderEvent::Leaves { leaves, .. }) => Some(leaves.len()),
+            _ => None,
+        })
+        .expect("the manga's leaves");
+    assert!(leaves >= 20, "{leaves} leaves");
+    let opened = manga
+        .iter()
+        .find_map(|e| match e {
+            Event::Reader(ReaderEvent::Opened(view)) => Some(view.clone()),
+            _ => None,
+        })
+        .expect("opened");
+    assert_eq!(opened.title, "The Lantern Ferry");
+    assert_eq!(opened.chapter.id.as_str(), "13");
+    assert_eq!(opened.start.page, Some(9));
+
+    let strip = open_reader(FfiScene::ReaderStrip, "a:900303");
+    let opened = strip
+        .iter()
+        .find_map(|e| match e {
+            Event::Reader(ReaderEvent::Opened(view)) => Some(view.clone()),
+            _ => None,
+        })
+        .expect("opened");
+    assert_eq!((opened.chapter.id.as_str(), opened.mode), ("2", ReaderMode::Strip));
+
+    let novel = open_reader(FfiScene::ReaderNovel, "a:900302");
+    assert!(
+        novel.iter().any(|e| matches!(e, Event::Reader(ReaderEvent::NovelOpen(_)))),
+        "{novel:?}"
+    );
+}

@@ -242,6 +242,7 @@ class MainActivity : ComponentActivity() {
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
                 )
+                ReaderOverlay(app.store, app.eink)
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()

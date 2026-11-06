@@ -160,6 +160,31 @@ impl Store {
         })
     }
 
+    /// Record a work's kind and title as the catalogue would, for the scenes whose books are
+    /// made on the spot. An earlier row of the work is replaced.
+    pub fn seed_book_work(
+        &self,
+        work: &str,
+        medium: &str,
+        format: Option<&str>,
+        origin: Option<&str>,
+        title: &str,
+        now: i64,
+    ) -> Result<()> {
+        let titles = serde_json::to_string(&[title]).unwrap_or_else(|_| "[]".to_owned());
+        self.with_conn(|c| {
+            c.execute(
+                "INSERT INTO book_work (work, medium, format, origin, titles, fetched_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+                 ON CONFLICT(work) DO UPDATE SET medium = excluded.medium,
+                    format = excluded.format, origin = excluded.origin,
+                    titles = excluded.titles, fetched_at = excluded.fetched_at",
+                params![work, medium, format, origin, titles, now],
+            )?;
+            Ok(())
+        })
+    }
+
     /// What the catalogue holds of a work's kind, when it has fetched the work.
     pub fn book_work_kind(&self, work: &str) -> Result<Option<BookWorkKind>> {
         self.with_conn(|c| {

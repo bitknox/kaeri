@@ -3,6 +3,7 @@
 package app.kaeri.app
 
 import app.kaeri.i18n.Strings
+import app.kaeri.eink.EinkModel
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.core.SettingValue
@@ -124,6 +126,9 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val notifier: Notifier by lazy { Notifier(this) }
 
+    /** The e-ink profile the engine makes from this device's facts, and the questions it leaves. */
+    val eink: EinkModel by lazy { EinkModel(store::send).also { it.bind(store) } }
+
     override val episodeNotifier: EpisodeNotifier by lazy { EpisodeNotifier(this) }
 
     /** What the home-screen widgets show, as the engine last made it. */
@@ -213,6 +218,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
             }
         } else {
             store.start(launch, host(), prepare)
+        }
+        // The screen's facts before the first screen, and again for each engine started since.
+        scope.launch {
+            store.phase.filter { it == AppStore.Phase.Running }.collect { eink.sendFacts(this@KaeriApp, Flavour.wideColourGamut, Flavour.einkSupport) }
         }
         // A profile switched to: remembered, and the engine started again on it.
         store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }

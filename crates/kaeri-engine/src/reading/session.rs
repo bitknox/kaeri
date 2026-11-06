@@ -143,6 +143,8 @@ pub struct Session {
     direction: ReadDirection,
     /// `Opened` went out for the open chapter.
     opened: bool,
+    /// The first layout has asked whether another device read further.
+    moved_checked: bool,
     start: ReadPlace,
     /// Where the person is, from the last report.
     place: Option<ReadPlace>,
@@ -444,6 +446,7 @@ impl Reader {
             mode: ReaderMode::Paged,
             direction: ReadDirection::RightToLeft,
             opened: false,
+            moved_checked: false,
             start,
             place: None,
             resumed: resumed.then_some(page),
@@ -782,6 +785,11 @@ impl Session {
         }
         let start = self.leaf_of_page(self.start.page.unwrap_or(0));
         pages.want(self.id, self.generation, vec![start, start + 1], cx.tx);
+        // Another device that read further while this one was away moves the reader, as it
+        // would had it read while the reader was open.
+        if !std::mem::replace(&mut self.moved_checked, true) {
+            self.moved_on(cx, pages);
+        }
     }
 
     fn report(&mut self, cx: &mut Cx<'_>, pages: &Pages, command: ReaderCommand) {
@@ -1561,6 +1569,40 @@ mod tests {
             })
             .await;
         assert_eq!(view.as_str(), "2");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_device_that_read_further_while_this_one_was_away_moves_the_reader_on_open() {
+        let mine = Store::open_in_memory().unwrap();
+        mine.sync_enable("phone").unwrap();
+        let desk = Store::open_in_memory().unwrap();
+        desk.set_sync_clock(|| 4_000_000_000_000);
+        desk.sync_enable("desk").unwrap();
+        mine.sync_device_add("desk", "Desk", "").unwrap();
+        let mut here = ReadEvent::new(WORK, "1", 1);
+        here.page = Some(1);
+        mine.record_read(&here, Vec::new()).unwrap();
+        let mut ahead = ReadEvent::new(WORK, "2", 2);
+        ahead.page = Some(2);
+        desk.record_read(&ahead, Vec::new()).unwrap();
+        let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+        mine.apply_ops(ops).unwrap();
+        let mut h = harness(mine);
+        h.send(ReaderCommand::Open {
+            work: WorkId::new(WORK),
+            chapter: Some(ChapterId::new("1")),
+            at: OpenAt::Resume,
+            surface: surface(),
+        });
+        let said = h
+            .until(|e| match e {
+                ReaderEvent::Moved { to, from_device, .. } => {
+                    Some((to.chapter.0.clone(), from_device.clone()))
+                }
+                _ => None,
+            })
+            .await;
+        assert_eq!(said, ("2".into(), "Desk".into()));
     }
 
     #[tokio::test(start_paused = true)]

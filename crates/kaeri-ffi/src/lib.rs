@@ -43,6 +43,8 @@ mod reading;
 #[cfg(feature = "remote")]
 mod remote;
 #[cfg(feature = "testing")]
+mod scene_books;
+#[cfg(feature = "testing")]
 mod scenes;
 #[cfg(feature = "remote")]
 mod sender;

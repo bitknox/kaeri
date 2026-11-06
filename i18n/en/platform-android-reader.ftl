@@ -1,0 +1,853 @@
+## The Android reader and its e-ink layout: the words the phone app and the e-reader build share.
+
+# Under a page that is still loading after four seconds.
+# @only android
+# @arg page: int
+# @max 40
+reader-page-loading = Loading page { $page }
+
+# Heading where a page could not be loaded.
+# @only android
+# @arg page: int
+# @max 40
+reader-page-failed = Couldn't load page { $page }
+
+# Under the failed page's reason on a phone: turning on skips the missing page.
+# @only android
+# @max 60
+reader-page-failed-swipe = Swipe to go on without it.
+
+# Button that loads a failed page again.
+# @only android
+# @max 20
+reader-try-again = Try again
+
+# Button that goes on past a page that could not be loaded.
+# @only android
+# @max 20
+reader-skip-page = Skip page
+
+# What a screen reader says for the page on screen.
+# @only android
+# @arg page: int
+# @arg pages: int
+# @max 40
+reader-page-of = Page { $page } of { $pages }
+
+# What a screen reader says for two pages side by side.
+# @only android
+# @arg first: int
+# @arg second: int
+# @arg pages: int
+# @max 40
+reader-pages-of = Pages { $first } and { $second } of { $pages }
+
+# A screen reader action, and the label of the tap zone that turns forward.
+# @only android
+# @max 24
+reader-action-next = Next page
+
+# A screen reader action, and the label of the tap zone that turns back.
+# @only android
+# @max 24
+reader-action-previous = Previous page
+
+# A screen reader action, and the label of the tap zone in the middle that shows the reader's controls.
+# @only android
+# @max 24
+reader-action-controls = Controls
+
+# Under Next page on the e-ink tap zone guide, for a book read right to left.
+# @only android
+# @max 30
+eink-zone-next-rtl = Tap, or swipe right
+
+# Under Next page on the e-ink tap zone guide, for a book read left to right.
+# @only android
+# @max 30
+eink-zone-next-ltr = Tap, or swipe left
+
+# Under Controls on the e-ink tap zone guide.
+# @only android
+# @max 20
+eink-zone-tap = Tap
+
+# The page number in the page's margin on an e-ink screen.
+# @only android
+# @arg page: int
+# @arg pages: int
+# @max 20
+eink-folio-one = { $page } of { $pages }
+
+# The page numbers in the margin when two pages show side by side.
+# @only android
+# @arg first: int
+# @arg second: int
+# @arg pages: int
+# @max 30
+eink-folio-two = { $first } and { $second } of { $pages }
+
+# Under the series title in the e-ink reader's top bar. The chapter is its number, such as 12.
+# @only android
+# @arg chapter: text
+# @arg title: text
+# @max 60
+eink-chapter-titled = Chapter { $chapter } · { $title }
+
+# Under the series title when the chapter has no title of its own.
+# @only android
+# @arg chapter: text
+# @max 30
+eink-chapter = Chapter { $chapter }
+
+# Button in the e-ink reader's top bar that lists the chapters.
+# @only android
+# @max 16
+eink-contents = Contents
+
+# Button that goes back out of the reader.
+# @only android
+# @max 16
+eink-back = Back
+
+# Under the page number in the e-ink reader's bottom bar.
+# @only android
+# @arg count: int
+# @max 40
+eink-pages-left = { $count ->
+    [one] One page left in chapter
+   *[other] { $count } pages left in chapter
+ }
+
+# Button in the e-ink reader's bottom bar.
+# @only android
+# @max 20
+eink-next-chapter = Next chapter
+
+# Button in the e-ink reader's bottom bar.
+# @only android
+# @max 24
+eink-previous-chapter = Previous chapter
+
+# Button in the e-ink reader's bottom bar that opens the reader's settings.
+# @only android
+# @max 16
+eink-settings = Settings
+
+# Button that asks the e-ink screen for a full refresh, to clear what earlier pages left behind.
+# @only android
+# @max 20
+eink-clean-screen = Clean screen
+
+# Top line of the page between chapters. The chapter is its number, such as 12.
+# @only android
+# @arg chapter: text
+# @max 40
+eink-end-of-chapter = End of chapter { $chapter }
+
+# On the page between chapters, once the chapter counts as read.
+# @only android
+# @max 40
+eink-counted-read = Counted as read
+
+# Small heading above the next chapter on the page between chapters.
+# @only android
+# @max 16
+eink-end-next = Next
+
+# The next chapter's length on the page between chapters.
+# @only android
+# @arg count: int
+# @max 20
+eink-end-pages = { $count ->
+    [one] One page
+   *[other] { $count } pages
+ }
+
+# How the next chapter reads, on the page between chapters.
+# @only android
+# @max 20
+eink-reads-rtl = right to left
+
+# How the next chapter reads, on the page between chapters.
+# @only android
+# @max 20
+eink-reads-ltr = left to right
+
+# How the next chapter reads, on the page between chapters.
+# @only android
+# @max 20
+eink-reads-strip = long strip
+
+# The next chapter is downloaded, on the page between chapters.
+# @only android
+# @max 20
+eink-on-device = on this { -device }
+
+# The main button on the page between chapters.
+# @only android
+# @arg chapter: text
+# @max 32
+eink-continue-to = { -continue-cap } to chapter { $chapter }
+
+# Button on the page between chapters that leaves the reader for the series page.
+# @only android
+# @max 24
+eink-back-to-series = Back to series
+
+# Line at the foot of the page between chapters.
+# @only android
+# @max 40
+eink-turn-to-continue = Turn the page to { -continue }
+
+# Heading on the page between chapters when no source has the next chapter yet.
+# @only android
+# @arg chapter: text
+# @max 60
+eink-next-missing = Chapter { $chapter } isn't in your { -source-pl } yet
+
+# Heading on the page between chapters when the next chapter is not out.
+# @only android
+# @max 60
+eink-next-not-out = The next chapter isn't out yet
+
+# Heading on the page between chapters when every chapter out so far is read.
+# @only android
+# @max 60
+eink-caught-up = You're caught up
+
+# Line under those headings.
+# @only android
+# @max 140
+eink-checks-again = { -app-name } checks your { -source-pl } again when you open Updates or this series. It will show under New chapters.
+
+# Heading on the page between chapters when the series has no more chapters.
+# @only android
+# @max 60
+eink-finished = That was the last chapter
+
+# Line under it.
+# @only android
+# @max 60
+eink-finished-line = The series is finished.
+
+# Heading on the page between chapters when the next chapter needs a connection.
+# @only android
+# @max 60
+eink-next-offline = Not on this { -device }, and you're offline
+
+# Line under it.
+# @only android
+# @max 100
+eink-next-offline-line = Connect to Wi-Fi to load it, or open something already here.
+
+# Button on the page between chapters that opens the downloads.
+# @only android
+# @max 20
+eink-open-downloads = Open downloads
+
+# The one line an e-ink screen shows while a chapter loads.
+# @only android
+# @arg chapter: text
+# @max 30
+eink-loading-chapter = Loading chapter { $chapter }
+
+# Under a failed page on an e-ink screen.
+# @only android
+# @max 60
+eink-page-failed-details = The details are in More, under Messages.
+
+# Heading of the question asked when the device may have an e-ink screen.
+# @only android
+# @max 40
+eink-ask-title = Is this an e-ink screen?
+
+# Line under it.
+# @only android
+# @max 240
+eink-ask-body = { -app-name } found signs of an e-ink screen but couldn't confirm it. The e-ink layout pages instead of scrolling, never animates and asks the screen to clear itself when it needs to.
+
+# The answer that turns the e-ink layout on.
+# @only android
+# @max 28
+eink-ask-yes = Use the e-ink layout
+
+# The answer that keeps the phone layout.
+# @only android
+# @max 34
+eink-ask-no = Keep the standard layout
+
+# Foot of the e-ink question.
+# @only android
+# @max 80
+eink-ask-later = You can change this later in Settings, under Screen.
+
+# Heading of the question asked when an e-ink screen may or may not show colour.
+# @only android
+# @max 40
+eink-colour-title = Does this screen show colour?
+
+# Line under it, above four coloured squares.
+# @only android
+# @max 90
+eink-colour-body = { -app-name } couldn't tell from this { -device }. Look at the four squares.
+
+# What a screen reader says for the four squares.
+# @only android
+# @max 60
+eink-colour-squares = Four squares: red, green, blue and amber
+
+# Line under the squares.
+# @only android
+# @max 120
+eink-colour-hint = If they look like four greys, choose Only greys. You can change this in Settings › Screen.
+
+# The answer for a colour screen.
+# @only android
+# @max 20
+eink-colour-yes = I see colour
+
+# The answer for a grey screen.
+# @only android
+# @max 20
+eink-colour-no = Only greys
+
+# Leaves the colour question unanswered.
+# @only android
+# @max 12
+eink-colour-skip = Skip
+
+# Shown after the colour question was skipped.
+# @only android
+# @max 90
+eink-colour-skipped = Skipped, pictures stay in colour, which a grey screen shows as greys.
+
+# A one-line hint on e-readers whose page buttons may be set to something other than Volume.
+# @only android
+# @max 100
+eink-page-keys-hint = Set the page buttons to Volume in the { -device }'s settings to turn pages.
+
+# Beside a dot on a chapter or series that is new since it was last opened.
+# @only android
+# @max 12
+eink-new = New
+
+# The action on the notice that says a chapter opened where it was left: back to its first page.
+# @only android
+# @max 16
+reader-notice-start-over = Start over
+
+# The action on the notice that says another device read further: back to where this one was.
+# @only android
+# @max 16
+reader-notice-go-back = Go back
+
+# The action on the notice that says how a series was detected to read: change it.
+# @only android
+# @max 16
+reader-notice-change = Change
+
+
+# Closes the reader and goes back to the series.
+# @only android
+# @max 16
+reader-close = Close
+
+# Button in the reader's controls that opens the page grid.
+# @only android
+# @max 16
+reader-chapters = Pages
+
+# Button in the reader's controls that opens its settings, drawn as Aa.
+# @only android
+# @max 24
+reader-settings = Reader settings
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# @only android
+# @arg chapter: text
+# @max 30
+reader-chapter-line = Chapter { $chapter }
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# @only android
+# @arg chapter: text
+# @arg title: text
+# @max 60
+reader-chapter-line-titled = Chapter { $chapter } · { $title }
+
+# Under the novel's title in the reader's controls, while its pages turn. The chapter is its number, such as 4.
+# @only android
+# @arg chapter: text
+# @max 50
+reader-novel-line = Chapter { $chapter } · paged
+
+# Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4.
+# @only android
+# @arg chapter: text
+# @max 50
+reader-novel-line-scroll = Chapter { $chapter } · scroll
+
+# The only line on a novel's page at rest: how much of the chapter is left, in the bottom margin.
+# @only android
+# @arg count: int
+# @max 24
+reader-pages-left = { $count -> 
+    [one] One page left
+   *[other] { $count } pages left
+ }
+
+# At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace.
+# @only android
+# @arg minutes: int
+# @max 12
+reader-minutes-left = { $minutes } min
+
+# Name of the tap zone on the reading side, shown once on the first chapter.
+# @only android
+# @max 24
+reader-zone-next = Next page
+
+# Heading of the page grid.
+# @only android
+# @max 20
+reader-grid-title = Pages
+
+# Top line of the page between chapters. The chapter is its number, such as 12.
+# @only android
+# @arg chapter: text
+# @max 40
+reader-end-of-chapter = End of chapter { $chapter }
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+# @only android
+# @max 16
+reader-end-read = Read
+
+# Small heading above the next chapter on the page between chapters.
+# @only android
+# @max 16
+reader-end-next = Next
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+# @only android
+# @arg chapter: text
+# @arg facts: text
+# @max 60
+reader-end-facts = Chapter { $chapter } · { $facts }
+
+# Main button on the page between chapters.
+# @only android
+# @max 16
+reader-end-continue = { -continue-cap }
+
+# Line above the main button on the page between chapters.
+# @only android
+# @max 30
+reader-end-swipe = Swipe to keep reading
+
+# Quiet button on the page between chapters that leaves the reader for the series page.
+# @only android
+# @max 24
+reader-end-series = Back to the series
+
+# Button on the last page of a finished series that starts it from the first chapter.
+# @only android
+# @max 34
+reader-end-again = Read again from the start
+
+# The one line while a chapter opens. The chapter is its number, such as 13.
+# @only android
+# @arg chapter: text
+# @max 40
+reader-opening = Opening chapter { $chapter }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+# @only android
+# @arg chapter: text
+# @max 50
+reader-failed-chapter = Couldn't open chapter { $chapter }
+
+# Heading in the reader's settings above the choices that belong to this series only.
+# @only android
+# @max 20
+reader-sheet-series = This series
+
+# Heading in the reader's settings above the choices every manga shares.
+# @only android
+# @max 20
+reader-sheet-all-manga = All manga
+
+# Heading in the reader's settings above the choices every light novel shares.
+# @only android
+# @max 24
+reader-sheet-all-novels = All light novels
+
+# Row in the reader's settings that opens the rest of the settings.
+# @only android
+# @max 30
+reader-sheet-more = More reader settings
+
+# Row in the reader's settings: how the pages are read.
+# @only android
+# @max 20
+reader-row-reading-mode = Reading mode
+
+# Value of the reading mode when the reader worked it out. The way is how it reads, such as right to left.
+# @only android
+# @arg way: text
+# @max 30
+reader-mode-auto = Auto · { $way }
+
+# A reading mode, and a reading direction.
+# @only android
+# @max 20
+reader-mode-rtl = Right to left
+
+# A reading mode, and a reading direction.
+# @only android
+# @max 20
+reader-mode-ltr = Left to right
+
+# A reading mode: one long scroll of images.
+# @only android
+# @max 12
+reader-mode-strip = Strip
+
+# The first choice in the reading mode picker: let the reader work it out.
+# @only android
+# @max 12
+reader-mode-auto-name = Auto
+
+# Line under Auto in the reading mode picker. The way is how it reads, such as right to left.
+# @only android
+# @arg way: text
+# @max 50
+reader-mode-auto-line = { $way }, from the series details
+
+# Line under Strip in the reading mode picker.
+# @only android
+# @max 40
+reader-mode-strip-line = For webtoons and long images
+
+# Note under the reading mode when the reader guessed it.
+# @only android
+# @max 44
+reader-mode-detected = Detected from the series details.
+
+# Note under the reading mode after a choice for this series. The title is the series'.
+# @only android
+# @arg title: text
+# @max 60
+reader-mode-set = Set for { $title } on all your { -device-pl }.
+
+# Link in that note that drops the series' own choice.
+# @only android
+# @max 16
+reader-mode-use-default = Use default
+
+# Foot of the reading mode picker.
+# @only android
+# @max 110
+reader-mode-saved = Your choice is saved for this series and follows it to your other { -device-pl }.
+
+# Row in the reader's settings: how a page is fitted to the screen.
+# @only android
+# @max 12
+reader-row-fit = Fit
+
+# A choice for how a page is fitted.
+# @only android
+# @max 12
+reader-fit-screen = Screen
+
+# A choice for how a page is fitted.
+# @only android
+# @max 12
+reader-fit-width = Width
+
+# Row in the reader's settings: cut the blank borders off pages.
+# @only android
+# @max 20
+reader-row-crop = Crop borders
+
+# Row in the reader's settings: the switch for Paper mode.
+# @only android
+# @max 20
+reader-row-paper = Paper mode
+
+# Row in the reader's settings: how big the text is.
+# @only android
+# @max 16
+reader-row-text-size = Text size
+
+# Row in the reader's settings: the typeface of a novel.
+# @only android
+# @max 12
+reader-row-font = Font
+
+# A choice of typeface.
+# @only android
+# @max 12
+reader-font-serif = Serif
+
+# A choice of typeface.
+# @only android
+# @max 12
+reader-font-sans = Sans
+
+# Row in the reader's settings: the colours the page is read in.
+# @only android
+# @max 12
+reader-row-look = Look
+
+# A look for reading: warm paper.
+# @only android
+# @max 12
+reader-look-paper = Paper
+
+# A look for reading: a light page.
+# @only android
+# @max 12
+reader-look-light = Light
+
+# A look for reading: a brown page.
+# @only android
+# @max 12
+reader-look-sepia = Sepia
+
+# A look for reading: a dark page.
+# @only android
+# @max 12
+reader-look-dark = Dark
+
+# Row in the reader's settings: the space between lines.
+# @only android
+# @max 20
+reader-row-line-spacing = Line spacing
+
+# A choice of line spacing or margins.
+# @only android
+# @max 12
+reader-spacing-tight = Tight
+
+# A choice of line spacing or margins.
+# @only android
+# @max 12
+reader-spacing-normal = Normal
+
+# A choice of line spacing.
+# @only android
+# @max 12
+reader-spacing-loose = Loose
+
+# A choice of margins.
+# @only android
+# @max 12
+reader-margins-narrow = Narrow
+
+# A choice of margins.
+# @only android
+# @max 12
+reader-margins-wide = Wide
+
+# Row in the reader's settings: the space around the text.
+# @only android
+# @max 12
+reader-row-margins = Margins
+
+# Row in the reader's settings: whether a novel turns pages or scrolls.
+# @only android
+# @max 12
+reader-row-pages = Pages
+
+# A choice for how a novel moves.
+# @only android
+# @max 12
+reader-pages-paged = Paged
+
+# A choice for how a novel moves.
+# @only android
+# @max 12
+reader-pages-scroll = Scroll
+
+# Row in the reader's settings: even text edges.
+# @only android
+# @max 20
+reader-row-justify = Justify text
+
+# Row in the reader's settings: one page or two side by side.
+# @only android
+# @max 20
+reader-row-page-layout = Page layout
+
+# A choice for page layout.
+# @only android
+# @max 12
+reader-layout-auto = Auto
+
+# A choice for page layout.
+# @only android
+# @max 12
+reader-layout-single = One
+
+# A choice for page layout.
+# @only android
+# @max 12
+reader-layout-double = Two
+
+# Row in the reader's settings: what happens to a page that is two pages wide.
+# @only android
+# @max 20
+reader-row-spreads = Wide pages
+
+# A choice for wide pages: cut in two.
+# @only android
+# @max 12
+reader-spreads-split = Split
+
+# A choice for wide pages: turned to fill the screen.
+# @only android
+# @max 12
+reader-spreads-rotate = Turn
+
+# A choice for wide pages: shown whole.
+# @only android
+# @max 12
+reader-spreads-whole = Whole
+
+# Row in the reader's settings: whether pages are shown in colour.
+# @only android
+# @max 20
+reader-row-colour = Colour pages
+
+# A choice for colour.
+# @only android
+# @max 16
+reader-colour-auto = As drawn
+
+# A choice for colour.
+# @only android
+# @max 12
+reader-colour-colour = Colour
+
+# A choice for colour: only greys.
+# @only android
+# @max 12
+reader-colour-greys = Greys
+
+# Row in the reader's settings: where taps turn the page.
+# @only android
+# @max 20
+reader-row-tap = Tap zones
+
+# A choice for tap zones: the sides turn.
+# @only android
+# @max 12
+reader-tap-edges = Edges
+
+# A choice for tap zones: left and right halves.
+# @only android
+# @max 12
+reader-tap-sides = Halves
+
+# A choice for tap zones: taps do not turn.
+# @only android
+# @max 12
+reader-tap-off = Off
+
+# Row in the reader's settings: the volume keys turn pages.
+# @only android
+# @max 30
+reader-row-volume = Volume keys turn pages
+
+# Row in the reader's settings: how wide a strip is on a big screen.
+# @only android
+# @max 20
+reader-row-strip-width = Strip width
+
+# Row in the reader's settings, inside Paper mode: show pages in greys.
+# @only android
+# @max 20
+reader-row-greyscale = Greyscale pages
+
+# Row in the reader's settings, inside Paper mode: hold notifications back while reading.
+# @only android
+# @max 40
+reader-row-quiet = Quiet the phone while reading
+
+# Line under that row.
+# @only android
+# @max 130
+reader-quiet-line = Notifications wait until you close the reader. Android asks for access to Do Not Disturb first.
+
+# Notice the first time the phone is quiet while reading.
+# @only android
+# @max 44
+reader-quiet-notice = Notifications wait while you read
+
+# Row in the reader's settings: the line at the foot of a novel's page.
+# @only android
+# @max 30
+reader-row-foot = Pages left in chapter
+
+# Row in the reader's settings: the page number in the margin.
+# @only android
+# @max 24
+reader-row-folio = Show page number
+
+# Row in the reader's settings: the reading direction.
+# @only android
+# @max 16
+reader-row-direction = Direction
+
+# Heading in the reader's settings page.
+# @only android
+# @max 16
+reader-more-heading-layout = Layout
+
+# Heading in the reader's settings page.
+# @only android
+# @max 16
+reader-more-heading-navigation = Navigation
+
+# Heading in the reader's settings page.
+# @only android
+# @max 16
+reader-more-heading-text = Text
+
+# Heading in the reader's settings page.
+# @only android
+# @max 16
+reader-more-heading-images = Images
+
+# Heading in the reader's settings page.
+# @only android
+# @max 16
+reader-more-heading-paper = Paper mode
+
+# Button that goes back from the reader's settings page to the sheet.
+# @only android
+# @max 12
+reader-settings-back = Back
+
+# Line under the Paper mode switch.
+# @only android
+# @max 100
+reader-paper-line = Turns pages at once, stops all motion and lets the volume keys turn pages.
+
+# What a screen reader says for a page in the page grid.
+# @only android
+# @arg page: int
+# @max 30
+reader-grid-page = Go to page { $page }
+
+# What a screen reader says for the slider that moves through the chapter.
+# @only android
+# @max 24
+reader-scrubber = Page in chapter
+
+# Heading when a novel could not be shown.
+# @only android
+# @max 40
+reader-failed-novel = Couldn't show this chapter
