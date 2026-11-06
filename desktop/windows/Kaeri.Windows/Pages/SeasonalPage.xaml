@@ -32,7 +32,7 @@
         <FontIcon Glyph="&#xE76C;" FontSize="12" />
       </Button>
     </StackPanel>
-    <SelectorBar x:Name="Formats" Grid.Row="2" SelectionChanged="OnFormatChanged" Margin="-8,0,0,0">
+    <SelectorBar x:Name="Formats" Grid.Row="2" SelectionChanged="OnFormatChanged" Margin="-12,0,0,0">
       <SelectorBarItem Text="{x:Bind s:T.FilterAllFormats}" Tag="" IsSelected="True" />
       <SelectorBarItem Text="{x:Bind s:T.FormatTv}" Tag="TV,TV_SHORT" />
       <SelectorBarItem Text="{x:Bind s:T.FormatMovie}" Tag="MOVIE" />
