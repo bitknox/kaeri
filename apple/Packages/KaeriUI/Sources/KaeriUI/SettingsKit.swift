@@ -258,6 +258,9 @@ extension SettingKey {
         case .chapterDownloadsOnCellular: L.settingsChapterDownloadsCellular
         case .keepChaptersReady: L.settingsKeepChaptersReady
         case .deleteAfterReading: L.settingsDeleteAfterReading
+        case .seriesChoicesFollow: L.settingsSeriesChoicesFollow
+        case .chapterNotifications: L.settingsChapterNotifications
+        case .openAt: L.settingsOpenAt
         case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel
         case .torrentsWhileCasting: L.castTorrentsLabel
@@ -334,6 +337,8 @@ extension SettingKey {
         case (_, "on"): return L.valueOn
         case (.upscaling, "natural · ArtCNN"): return L.settingsOptionNatural // i18n-skip: the engine's words
         case (.upscaling, "sharp · Anime4K"): return L.settingsOptionSharp // i18n-skip: the engine's words
+        case (.openAt, "watch"): return L.navWatch
+        case (.openAt, "read"): return L.navRead
         case (.downloadQuality, "standard"): return L.settingsOptionStandard
         case (.downloadQuality, "higher"): return L.settingsOptionHigher
         case (.theme, "adaptive"): return L.settingsOptionAdaptive

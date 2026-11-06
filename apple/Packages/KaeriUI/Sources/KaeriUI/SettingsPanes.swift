@@ -14,7 +14,17 @@ struct DownloadsPane: View {
     @State private var confirmDelete = false
 
     var body: some View {
-        SettingsGroup(title: L.settingsGroupFiles) {
+        if store.medium.reads {
+            ReadingDownloadsGroup()
+        }
+        if store.medium.watches {
+            showGroups
+        }
+    }
+
+    @ViewBuilder
+    private var showGroups: some View {
+        SettingsGroup(title: store.medium.both ? L.settingsGroupShows : L.settingsGroupFiles) {
             SettingsRow(title: SettingKey.downloadDir.title, note: DownloadFolder.note(store)) {
                 DownloadFolderMenu()
             }
@@ -408,8 +418,8 @@ struct AccountsPane: View {
         #if !os(macOS)
         DiscussionsGroup()
         #endif
-        SettingsGroup(title: L.accountsOtherTrackers, footnote: AccountWords.tokens(store.accounts)) {
-            ForEach(["mal", "kitsu", "simkl", "trakt"], id: \.self) { tracker in
+        SettingsGroup(title: L.accountsOtherTrackers, footnote: AccountWords.footnote(store)) {
+            ForEach(AccountWords.others(store.medium.answer), id: \.self) { tracker in
                 TrackerRow(tracker: tracker, sheet: $sheet)
             }
         }
@@ -423,6 +433,7 @@ struct AccountsPane: View {
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case .kitsu: KitsuSheet()
+                case .mangaUpdates: KitsuSheet(tracker: "mangaupdates")
                 case .conflicts: ConflictsSheet()
                 }
             }
@@ -465,7 +476,7 @@ struct AccountRow<Accessory: View>: View {
 
 /// A sheet an account row opens.
 enum AccountSheet: String, Identifiable {
-    case kitsu, conflicts
+    case kitsu, mangaUpdates, conflicts
     var id: String { rawValue }
 }
 
@@ -488,6 +499,8 @@ struct TrackerRow: View {
                     switch tracker {
                     case "kitsu":
                         Button(L.actionSignIn) { sheet = .kitsu }
+                    case "mangaupdates":
+                        Button(L.actionSignIn) { sheet = .mangaUpdates }
                     default:
                         // MyAnimeList through the system's sign-in sheet, Simkl and Trakt with a
                         // code to type on another device.
@@ -525,6 +538,22 @@ enum AccountWords {
     static func dot(_ state: SyncState, _ accounts: AccountsModel) -> SyncSummary.State {
         if state.needsReauth || state.pullError != nil { return .problem }
         return state.outbox == 0 && !accounts.isWorking("sync") ? .synced : .waiting
+    }
+
+    /// The trackers after AniList that serve what Kaeri is for: MangaUpdates only with reading
+    /// on, Simkl and Trakt only with watching on.
+    static func others(_ answer: KaeriIsFor) -> [String] {
+        switch answer {
+        case .watch: ["mal", "kitsu", "simkl", "trakt"]
+        case .read: ["mal", "kitsu", "mangaupdates"]
+        case .both: ["mal", "kitsu", "mangaupdates", "simkl", "trakt"]
+        }
+    }
+
+    /// Under the trackers: where tokens are kept, and with reading on, MangaUpdates' credit.
+    static func footnote(_ store: AppStore) -> String {
+        let tokens = tokens(store.accounts)
+        return store.medium.reads ? tokens + " " + L.accountsMangaupdatesCredit : tokens
     }
 
     /// Where the sign-in tokens are kept, as the trackers say it.

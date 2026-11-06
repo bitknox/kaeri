@@ -241,3 +241,27 @@ fn the_reader_scenes_have_generated_books_to_open() {
         "{novel:?}"
     );
 }
+
+#[test]
+fn the_series_scene_lists_the_manga_chapters_from_its_folder() {
+    use kaeri_core::books::WorkId;
+    let (_root, engine) = start(FfiScene::ReadingSeries);
+    engine.send(Command::Reading(ReadingCommand::LoadChapters {
+        work: WorkId::new("a:900301"),
+        edition: None,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let (volumes, failure) = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
+                Some((volumes, failure))
+            }
+            _ => None,
+        })
+        .expect("the chapters");
+    assert_eq!(failure, None, "the folder series the catalogue names is the generated one");
+    assert!(volumes.iter().any(|v| !v.chapters.is_empty()), "chapters listed: {volumes:?}");
+}

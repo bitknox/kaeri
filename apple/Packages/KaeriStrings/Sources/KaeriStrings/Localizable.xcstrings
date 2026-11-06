@@ -6409,6 +6409,18 @@
         }
       }
     },
+    "accounts-mangaupdates-credit" : {
+      "comment" : "Credit under the trackers with reading on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MangaUpdates is reached through its public API."
+          }
+        }
+      }
+    },
     "accounts-no-extras" : {
       "comment" : "Line when the tracker has nothing for the show. Argument 1: tracker (Text).",
       "extractionState" : "manual",
@@ -10253,6 +10265,18 @@
         }
       }
     },
+    "accounts-username" : {
+      "comment" : "Placeholder of the user name field when signing in to MangaUpdates.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User name"
+          }
+        }
+      }
+    },
     "accounts-welcome-detail" : {
       "comment" : "Line on the welcome screen: why to sign in. Argument 1: tracker (Text).",
       "extractionState" : "manual",
@@ -11005,6 +11029,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kết nối"
+          }
+        }
+      }
+    },
+    "action-continue-chapter" : {
+      "comment" : "The main action when a chapter is part read. Argument 1: n (Text). Argument 2: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue chapter %1$@ · page %2$lld"
+          }
+        }
+      }
+    },
+    "action-continue-part" : {
+      "comment" : "The main action for a light novel part, part read. Argument 1: n (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue part %1$@ · %2$lld%%"
           }
         }
       }
@@ -13025,6 +13073,30 @@
         }
       }
     },
+    "action-read-again" : {
+      "comment" : "The main action when every chapter is read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read again"
+          }
+        }
+      }
+    },
+    "action-read-chapter" : {
+      "comment" : "The series page's main action, and the spotlight's. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read chapter %1$@"
+          }
+        }
+      }
+    },
     "action-remove" : {
       "comment" : "Button that takes something away from a list or from this device.",
       "extractionState" : "manual",
@@ -14365,6 +14437,424 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Có phụ đề"
+          }
+        }
+      }
+    },
+    "book-add-folder" : {
+      "comment" : "A kind in the Add a source sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folder"
+          }
+        }
+      }
+    },
+    "book-add-folder-line" : {
+      "comment" : "Line under it. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CBZ, EPUB, PDF and folders of images on this %1$@ or a drive"
+          }
+        }
+      }
+    },
+    "book-add-line" : {
+      "comment" : "Line in the Add a source sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Books you already have, or plugins from a store whose owner invited you."
+          }
+        }
+      }
+    },
+    "book-add-server" : {
+      "comment" : "A kind in the Add a source sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A server"
+          }
+        }
+      }
+    },
+    "book-add-server-button" : {
+      "comment" : "The sheet's amber button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add server"
+          }
+        }
+      }
+    },
+    "book-add-server-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komga, Kavita or an OPDS catalogue you can sign in to"
+          }
+        }
+      }
+    },
+    "book-add-server-title" : {
+      "comment" : "Title of the Add a server sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a server"
+          }
+        }
+      }
+    },
+    "book-add-store" : {
+      "comment" : "A kind in the Add a source sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A plugin store"
+          }
+        }
+      }
+    },
+    "book-add-store-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste an invite from the store's owner"
+          }
+        }
+      }
+    },
+    "book-server-looking" : {
+      "comment" : "While the address is tried.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking at this address…"
+          }
+        }
+      }
+    },
+    "book-server-note" : {
+      "comment" : "Line under the password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri sends your reading progress back to this server. The password stays in the Keychain."
+          }
+        }
+      }
+    },
+    "book-sources-check-matches" : {
+      "comment" : "Button on a folder: series whose match needs a look. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check matches · %1$lld"
+          }
+        }
+      }
+    },
+    "book-sources-check-matches-title" : {
+      "comment" : "Title of the Check matches sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check matches"
+          }
+        }
+      }
+    },
+    "book-sources-find" : {
+      "comment" : "Button: search for the match by hand.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find"
+          }
+        }
+      }
+    },
+    "book-sources-folders" : {
+      "comment" : "Heading in Your sources.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folders"
+          }
+        }
+      }
+    },
+    "book-sources-from-store" : {
+      "comment" : "A plugin's store. Argument 1: store (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@"
+          }
+        }
+      }
+    },
+    "book-sources-keep" : {
+      "comment" : "Button: keep the series as Your files, unmatched.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep unmatched"
+          }
+        }
+      }
+    },
+    "book-sources-missing" : {
+      "comment" : "A folder that can't be found, such as a drive that isn't plugged in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not found. Is the drive connected?"
+          }
+        }
+      }
+    },
+    "book-sources-no-match" : {
+      "comment" : "A folder name with no match.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No match"
+          }
+        }
+      }
+    },
+    "book-sources-not-a-book-server" : {
+      "comment" : "An address that answered but serves no books.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This address answers, but not as a book server."
+          }
+        }
+      }
+    },
+    "book-sources-off" : {
+      "comment" : "A source that is turned off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "book-sources-opds" : {
+      "comment" : "A server's kind.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPDS catalogue"
+          }
+        }
+      }
+    },
+    "book-sources-plugins" : {
+      "comment" : "Heading in Your sources.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugins"
+          }
+        }
+      }
+    },
+    "book-sources-plugins-footer" : {
+      "comment" : "Under the plugins, before a link to the plugin stores.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugins come from plugin stores you join."
+          }
+        }
+      }
+    },
+    "book-sources-progress-back" : {
+      "comment" : "On a server's line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "progress goes back to the server"
+          }
+        }
+      }
+    },
+    "book-sources-report-progress" : {
+      "comment" : "A server menu switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send progress to the server"
+          }
+        }
+      }
+    },
+    "book-sources-scan" : {
+      "comment" : "A folder menu item: look through the folders again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look again"
+          }
+        }
+      }
+    },
+    "book-sources-scanning" : {
+      "comment" : "A folder being looked through. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking through · %1$lld found"
+          }
+        }
+      }
+    },
+    "book-sources-series" : {
+      "comment" : "How many series a folder or server holds. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 series"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld series"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "book-sources-servers" : {
+      "comment" : "Heading in Your sources.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servers"
+          }
+        }
+      }
+    },
+    "book-sources-unmatched-note" : {
+      "comment" : "Footnote of the Check matches sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmatched series still read from the folder. They have no tracker progress until matched."
+          }
+        }
+      }
+    },
+    "book-sources-use" : {
+      "comment" : "A server menu switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use this server"
+          }
+        }
+      }
+    },
+    "book-sources-version" : {
+      "comment" : "A plugin's version. Argument 1: version (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "version %1$@"
           }
         }
       }
@@ -22789,6 +23279,280 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không khớp được tựa này: %1$@"
+          }
+        }
+      }
+    },
+    "chapter-download-delete" : {
+      "comment" : "Chapter menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete download"
+          }
+        }
+      }
+    },
+    "chapter-download-stop" : {
+      "comment" : "Button: stop a chapter's download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop download"
+          }
+        }
+      }
+    },
+    "chapter-retry" : {
+      "comment" : "Button: try a failed chapter's download again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
+    "chapter-state-downloaded" : {
+      "comment" : "A downloaded chapter, after its state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded"
+          }
+        }
+      }
+    },
+    "chapter-state-downloading" : {
+      "comment" : "A chapter downloading. Argument 1: done (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading · %1$lld of %2$lld pages"
+          }
+        }
+      }
+    },
+    "chapter-state-failed" : {
+      "comment" : "A chapter that failed to download, with the reason. Argument 1: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't download. %1$@"
+          }
+        }
+      }
+    },
+    "chapter-state-new" : {
+      "comment" : "A chapter that came out since you last looked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        }
+      }
+    },
+    "chapter-state-page" : {
+      "comment" : "A part-read chapter whose length isn't known. Argument 1: page (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld"
+          }
+        }
+      }
+    },
+    "chapter-state-page-of" : {
+      "comment" : "A part-read chapter. Argument 1: page (Int). Argument 2: of (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "chapter-state-queued" : {
+      "comment" : "A chapter waiting to download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        }
+      }
+    },
+    "chapter-state-read" : {
+      "comment" : "A read chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "chapter-state-wifi" : {
+      "comment" : "A chapter waiting for Wi-Fi to download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued · waits for Wi-Fi"
+          }
+        }
+      }
+    },
+    "chapter-updates-checked-caught-up" : {
+      "comment" : "Line above Updates on the Mac: when it checked, and which series it checks. Argument 1: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked %1$@ · series you are caught up on"
+          }
+        }
+      }
+    },
+    "chapter-updates-checking" : {
+      "comment" : "Line while Updates asks every followed series now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking for new chapters…"
+          }
+        }
+      }
+    },
+    "chapter-updates-empty-line" : {
+      "comment" : "Line under Updates' empty title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri checks series on your Reading list that you are caught up on, a few times a day."
+          }
+        }
+      }
+    },
+    "chapter-updates-open-chapter-hint" : {
+      "comment" : "Accessibility hint on an Updates row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the chapter"
+          }
+        }
+      }
+    },
+    "chapter-updates-open-series" : {
+      "comment" : "Accessibility label on an Updates row's cover, which opens the series. Argument 1: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open %1$@"
+          }
+        }
+      }
+    },
+    "chapter-updates-open-series-menu" : {
+      "comment" : "Context menu item on an Updates row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open series"
+          }
+        }
+      }
+    },
+    "chapter-updates-today" : {
+      "comment" : "Day heading in Updates.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "chapter-updates-versions" : {
+      "comment" : "After a chapter on an Updates row, when several groups put it out. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 version"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld versions"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chapter-updates-yesterday" : {
+      "comment" : "Day heading in Updates.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
           }
         }
       }
@@ -45877,6 +46641,134 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Video"
+          }
+        }
+      }
+    },
+    "download-chapters" : {
+      "comment" : "The amber button in the Choose chapters bar. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Download 1 chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Download %1$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "download-choose" : {
+      "comment" : "Download menu item: turns on choosing chapters in the list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose chapters…"
+          }
+        }
+      }
+    },
+    "download-delete-series" : {
+      "comment" : "Download menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete downloads of this series"
+          }
+        }
+      }
+    },
+    "download-next" : {
+      "comment" : "Download menu item. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next %1$lld unread"
+          }
+        }
+      }
+    },
+    "download-over-wifi" : {
+      "comment" : "Line above that button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over Wi-Fi"
+          }
+        }
+      }
+    },
+    "download-unread" : {
+      "comment" : "Download menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every unread chapter"
+          }
+        }
+      }
+    },
+    "download-volume-count" : {
+      "comment" : "Download menu item: a volume's chapters not yet downloaded. Argument 1: volume (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · 1 chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · %2$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -69637,6 +70529,54 @@
         }
       }
     },
+    "home-read-checked-on-open" : {
+      "comment" : "Line under the spotlight of a popular series, when the engine gives no line of its own.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked when you open Kaeri"
+          }
+        }
+      }
+    },
+    "home-read-end" : {
+      "comment" : "Line at the end of Read, under the last shelf.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's everything for now. Updates and Search have the full lists."
+          }
+        }
+      }
+    },
+    "home-read-no-sources" : {
+      "comment" : "Line at the end of Read with no book sources yet. A button to add one follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a folder, a server or a plugin store to read from Home."
+          }
+        }
+      }
+    },
+    "home-read-releasing" : {
+      "comment" : "Shelf heading on Read: series releasing now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releasing now"
+          }
+        }
+      }
+    },
     "home-reason-new-season" : {
       "comment" : "Short reason under a poster: a new season of a show the person finished.",
       "extractionState" : "manual",
@@ -79701,6 +80641,42 @@
         }
       }
     },
+    "library-scope-label" : {
+      "comment" : "Accessibility label of the control that sets Shows or Reading in the Library and Search.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or Reading"
+          }
+        }
+      }
+    },
+    "library-scope-reading" : {
+      "comment" : "A side of that control.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "library-scope-shows" : {
+      "comment" : "A side of that control.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows"
+          }
+        }
+      }
+    },
     "library-season" : {
       "comment" : "Stepper label.",
       "extractionState" : "manual",
@@ -89405,6 +90381,372 @@
         }
       }
     },
+    "medium-answer-both" : {
+      "comment" : "The answer, as the Settings row says it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching and reading"
+          }
+        }
+      }
+    },
+    "medium-answer-read" : {
+      "comment" : "The answer, as the Settings row says it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "medium-answer-watch" : {
+      "comment" : "The answer, as the Settings row says it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching"
+          }
+        }
+      }
+    },
+    "medium-both" : {
+      "comment" : "A choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Both"
+          }
+        }
+      }
+    },
+    "medium-both-line" : {
+      "comment" : "Line under the Both choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching and reading, each in its own place"
+          }
+        }
+      }
+    },
+    "medium-change-later" : {
+      "comment" : "Under the choices in the sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change it in Settings."
+          }
+        }
+      }
+    },
+    "medium-choice-position" : {
+      "comment" : "Accessibility value of a choice row: its place among the three. Argument 1: n (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "medium-join-line" : {
+      "comment" : "Line of the sheet on joining. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick what Kaeri is for on this %1$@. Each device keeps its own answer."
+          }
+        }
+      }
+    },
+    "medium-join-title-both" : {
+      "comment" : "Title of the sheet when the other devices answer Both. Argument 1: devices (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is set to watching and reading"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are set to watching and reading"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "medium-join-title-read" : {
+      "comment" : "Title of the sheet when the other devices answer Read. Argument 1: devices (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is set to reading"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are set to reading"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "medium-join-title-watch" : {
+      "comment" : "Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are. Argument 1: devices (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is set to watching"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are set to watching"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "medium-off-confirm-read" : {
+      "comment" : "The confirmation's main button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off reading"
+          }
+        }
+      }
+    },
+    "medium-off-confirm-watch" : {
+      "comment" : "The confirmation's main button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off watching"
+          }
+        }
+      }
+    },
+    "medium-off-delete-read" : {
+      "comment" : "Switch in the confirmation, off by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete downloaded chapters"
+          }
+        }
+      }
+    },
+    "medium-off-delete-size" : {
+      "comment" : "Under the switch: how much the downloads take. Argument 1: size (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ on this %2$@"
+          }
+        }
+      }
+    },
+    "medium-off-delete-watch" : {
+      "comment" : "Switch in the confirmation, off by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete downloaded episodes"
+          }
+        }
+      }
+    },
+    "medium-off-read-body" : {
+      "comment" : "What turning reading off does. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates and your reading leave Kaeri on this %1$@. Your list, progress and downloads stay, and come back if you turn reading on again."
+          }
+        }
+      }
+    },
+    "medium-off-title-read" : {
+      "comment" : "Title of the confirmation before reading is turned off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off reading?"
+          }
+        }
+      }
+    },
+    "medium-off-title-watch" : {
+      "comment" : "Title of the confirmation before watching is turned off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off watching?"
+          }
+        }
+      }
+    },
+    "medium-off-watch-body" : {
+      "comment" : "What turning watching off does. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendar, Seasonal, Watch together and your shows leave Kaeri on this %1$@. Your list, progress and downloads stay, and come back if you turn watching on again."
+          }
+        }
+      }
+    },
+    "medium-read" : {
+      "comment" : "A choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "medium-read-line" : {
+      "comment" : "Line under the Read choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga, webtoons and light novels from your sources"
+          }
+        }
+      }
+    },
+    "medium-update-line" : {
+      "comment" : "Line of the sheet over Home after the update that brought reading. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri can now read manga, webtoons and light novels from your sources. Pick what Kaeri is for on this %1$@."
+          }
+        }
+      }
+    },
+    "medium-watch" : {
+      "comment" : "A choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch"
+          }
+        }
+      }
+    },
+    "medium-watch-line" : {
+      "comment" : "Line under the Watch choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows and films from your sources"
+          }
+        }
+      }
+    },
     "menu-check-for-updates" : {
       "comment" : "Mac menu bar item that checks the plugin stores for plugin updates.",
       "extractionState" : "manual",
@@ -96861,6 +98203,18 @@
         }
       }
     },
+    "nav-read" : {
+      "comment" : "Sidebar and tab label: reading's Home.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
     "nav-search" : {
       "comment" : "Tab and sidebar row for finding a show.",
       "extractionState" : "manual",
@@ -97193,6 +98547,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cài đặt"
+          }
+        }
+      }
+    },
+    "nav-updates" : {
+      "comment" : "Sidebar and tab label: new chapters from followed series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        }
+      }
+    },
+    "nav-watch" : {
+      "comment" : "Sidebar and tab label: the shows' Home when both media are on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch"
           }
         }
       }
@@ -111233,6 +112611,126 @@
         }
       }
     },
+    "onboarding-books-folder" : {
+      "comment" : "Row on the books page: add a folder of books.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a folder"
+          }
+        }
+      }
+    },
+    "onboarding-books-folder-line" : {
+      "comment" : "Line under Add a folder on the books page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CBZ, EPUB, PDF and folders of images"
+          }
+        }
+      }
+    },
+    "onboarding-books-invite-heading" : {
+      "comment" : "Heading over the invite field on the books page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin store invite"
+          }
+        }
+      }
+    },
+    "onboarding-books-invite-placeholder" : {
+      "comment" : "Placeholder of the invite field on the books page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste an invite"
+          }
+        }
+      }
+    },
+    "onboarding-books-line" : {
+      "comment" : "Line under the title of the books page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri comes with no books. Add what you already have, or join a plugin store with an invite from its owner."
+          }
+        }
+      }
+    },
+    "onboarding-books-plugin-line" : {
+      "comment" : "Line under the invite field: whose code a plugin is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugins run code from people you trust. Only join plugin stores whose owner you know."
+          }
+        }
+      }
+    },
+    "onboarding-books-server" : {
+      "comment" : "Row on the books page: add a book server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a server"
+          }
+        }
+      }
+    },
+    "onboarding-books-server-line" : {
+      "comment" : "Line under Add a server on the books page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komga, Kavita or an OPDS catalogue"
+          }
+        }
+      }
+    },
+    "onboarding-books-title" : {
+      "comment" : "Title of the last first-run page after Read or Both.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where your books come from"
+          }
+        }
+      }
+    },
+    "onboarding-connect" : {
+      "comment" : "The first-run page's main button: sign in to the tracker. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect %1$@"
+          }
+        }
+      }
+    },
     "onboarding-continue" : {
       "comment" : "Button that goes to the next page.",
       "extractionState" : "manual",
@@ -111905,6 +113403,138 @@
         }
       }
     },
+    "onboarding-lists-anilist-line" : {
+      "comment" : "Line under AniList's name on the first-run page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists, progress and suggestions"
+          }
+        }
+      }
+    },
+    "onboarding-lists-later-both" : {
+      "comment" : "Under AniList on the first-run page after Both: the other trackers, for later.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts."
+          }
+        }
+      }
+    },
+    "onboarding-lists-later-read" : {
+      "comment" : "Under AniList on the first-run page after Read: the other trackers, for later.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts."
+          }
+        }
+      }
+    },
+    "onboarding-lists-later-watch" : {
+      "comment" : "Under AniList on the first-run page after Watch: the other trackers, for later.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts."
+          }
+        }
+      }
+    },
+    "onboarding-lists-line-both" : {
+      "comment" : "Line on the AniList page after Both. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri keeps your reading and watching in step with %1$@."
+          }
+        }
+      }
+    },
+    "onboarding-lists-line-read" : {
+      "comment" : "Line on the AniList page after Read. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri keeps your reading in step with %1$@."
+          }
+        }
+      }
+    },
+    "onboarding-lists-line-watch" : {
+      "comment" : "Line on the AniList page after Watch. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri keeps your watching in step with %1$@."
+          }
+        }
+      }
+    },
+    "onboarding-lists-title" : {
+      "comment" : "Title of the first-run page that offers AniList.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bring in your lists"
+          }
+        }
+      }
+    },
+    "onboarding-medium-hint" : {
+      "comment" : "Accessibility hint on Continue while nothing is chosen on the medium page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose one of the three first"
+          }
+        }
+      }
+    },
+    "onboarding-medium-line" : {
+      "comment" : "Line under the title of the medium page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri shows only what you pick. You can change it in Settings."
+          }
+        }
+      }
+    },
+    "onboarding-medium-title" : {
+      "comment" : "Title of the page that asks what Kaeri is for, and of the sheet after the update.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch, read, or both?"
+          }
+        }
+      }
+    },
     "onboarding-not-now" : {
       "comment" : "Button that declines the sign-in page for now.",
       "extractionState" : "manual",
@@ -112493,6 +114123,18 @@
         }
       }
     },
+    "onboarding-step" : {
+      "comment" : "Over a first-run page's title: which page of how many. Argument 1: step (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "onboarding-tagline" : {
       "comment" : "Line under the title.",
       "extractionState" : "manual",
@@ -112657,6 +114299,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chào mừng"
+          }
+        }
+      }
+    },
+    "onboarding-welcome-line" : {
+      "comment" : "Line under \"Welcome to Kaeri\" on the first page, naming both media.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep track of what you watch and read, from your own sources."
+          }
+        }
+      }
+    },
+    "onboarding-welcome-note" : {
+      "comment" : "Note under the welcome line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your lists and progress stay on your devices. Trackers and sources are yours to add."
           }
         }
       }
@@ -165721,6 +167387,716 @@
         }
       }
     },
+    "read-again-confirm" : {
+      "comment" : "The confirming button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read again"
+          }
+        }
+      }
+    },
+    "read-again-line" : {
+      "comment" : "What happens on each side.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your place goes back to chapter 1 on all your devices. Chapters stay marked read on your trackers, and AniList counts a reread."
+          }
+        }
+      }
+    },
+    "read-again-title" : {
+      "comment" : "Title of the question before reading a series again. Argument 1: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read %1$@ again from the start?"
+          }
+        }
+      }
+    },
+    "read-downloads-active" : {
+      "comment" : "A series' line in Downloads while a chapter downloads. Argument 1: chapter (Text). Argument 2: done (Int). Argument 3: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld of %3$lld pages"
+          }
+        }
+      }
+    },
+    "read-downloads-delete-read" : {
+      "comment" : "Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete read"
+          }
+        }
+      }
+    },
+    "read-downloads-failed" : {
+      "comment" : "A series' line in Downloads when a chapter failed, with the reason. Argument 1: chapter (Text). Argument 2: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ couldn't download. %2$@"
+          }
+        }
+      }
+    },
+    "read-downloads-kept" : {
+      "comment" : "A series' line in Downloads: how many chapters are kept. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-downloads-more-queued" : {
+      "comment" : "After the chapter downloading: how many more wait. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more queued"
+          }
+        }
+      }
+    },
+    "read-downloads-queued" : {
+      "comment" : "A series' line in Downloads when its chapters wait to start. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapter queued"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters queued"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-downloads-read" : {
+      "comment" : "After the kept count: how many of them are read. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld read"
+          }
+        }
+      }
+    },
+    "read-downloads-total" : {
+      "comment" : "Beside the Reading heading in Downloads: how many chapters are kept and their size. Argument 1: n (Int). Argument 2: size (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapter · %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters · %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-filter-any" : {
+      "comment" : "Accessibility value of a filter with nothing chosen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any"
+          }
+        }
+      }
+    },
+    "read-filter-format" : {
+      "comment" : "A filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        }
+      }
+    },
+    "read-filter-genres" : {
+      "comment" : "A filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genres"
+          }
+        }
+      }
+    },
+    "read-filter-genres-count" : {
+      "comment" : "How many genres are set. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 genre"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld genres"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-filter-included" : {
+      "comment" : "A genre's state: only series with it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Included"
+          }
+        }
+      }
+    },
+    "read-filter-left-out" : {
+      "comment" : "A genre's state: no series with it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left out"
+          }
+        }
+      }
+    },
+    "read-filter-many" : {
+      "comment" : "A filter with several values: the first, then how many more. Argument 1: first (Text). Argument 2: more (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$lld more"
+          }
+        }
+      }
+    },
+    "read-filter-not-genre" : {
+      "comment" : "A genre left out. Argument 1: genre (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not %1$@"
+          }
+        }
+      }
+    },
+    "read-filter-origin" : {
+      "comment" : "A filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origin"
+          }
+        }
+      }
+    },
+    "read-filter-reset" : {
+      "comment" : "Button in that sheet that clears every filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        }
+      }
+    },
+    "read-filter-set" : {
+      "comment" : "A filter's name before its value, once set: \"Origin: Korea\". Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@:"
+          }
+        }
+      }
+    },
+    "read-filter-status" : {
+      "comment" : "A filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "read-filter-title" : {
+      "comment" : "Title of the iPhone's filters sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filters"
+          }
+        }
+      }
+    },
+    "read-library-empty" : {
+      "comment" : "A reading list with nothing on it. A Search button follows. Argument 1: list (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing on %1$@ yet"
+          }
+        }
+      }
+    },
+    "read-library-empty-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series you add from Search or a series page show here."
+          }
+        }
+      }
+    },
+    "read-library-files-add" : {
+      "comment" : "The button under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a folder or server"
+          }
+        }
+      }
+    },
+    "read-library-files-empty-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series in your folders and servers that are on no list show here."
+          }
+        }
+      }
+    },
+    "read-library-files-empty-title" : {
+      "comment" : "Your files with nothing in it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing in your files yet"
+          }
+        }
+      }
+    },
+    "read-library-list-value" : {
+      "comment" : "Accessibility value of the list menu: the list and how many series are on it. Argument 1: list (Text). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@, 1 series"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@, %2$lld series"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-list-completed" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        }
+      }
+    },
+    "read-list-dropped" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dropped"
+          }
+        }
+      }
+    },
+    "read-list-paused" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "read-list-planning" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning"
+          }
+        }
+      }
+    },
+    "read-list-reading" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "read-list-rereading" : {
+      "comment" : "AniList's list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rereading"
+          }
+        }
+      }
+    },
+    "read-list-your-files" : {
+      "comment" : "Series in folders and servers that are on no list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your files"
+          }
+        }
+      }
+    },
+    "read-search-browse-line" : {
+      "comment" : "The line over browsing: what is shown, and where the list comes from. Argument 1: what (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · from AniList"
+          }
+        }
+      }
+    },
+    "read-search-clear-filters" : {
+      "comment" : "The button under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear filters"
+          }
+        }
+      }
+    },
+    "read-search-failed" : {
+      "comment" : "Search couldn't ask AniList.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't search"
+          }
+        }
+      }
+    },
+    "read-search-nothing" : {
+      "comment" : "No results for what was typed. Argument 1: query (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found for %1$@"
+          }
+        }
+      }
+    },
+    "read-search-nothing-browse" : {
+      "comment" : "No results while browsing with filters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing matches these filters"
+          }
+        }
+      }
+    },
+    "read-search-nothing-filters-line" : {
+      "comment" : "Line under no results with filters set. A Clear filters button follows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fewer filters may find more."
+          }
+        }
+      }
+    },
+    "read-search-nothing-line" : {
+      "comment" : "Line under no results.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try other words, or a title in another language."
+          }
+        }
+      }
+    },
+    "read-search-placeholder" : {
+      "comment" : "The search field's prompt while Search looks for reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search reading"
+          }
+        }
+      }
+    },
+    "read-sort-last-read" : {
+      "comment" : "The reading library's order: as the engine sends it, most recently read first.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last read"
+          }
+        }
+      }
+    },
+    "read-sort-newest" : {
+      "comment" : "A sort of reading's Search, AniList's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Newest"
+          }
+        }
+      }
+    },
+    "read-sort-popular" : {
+      "comment" : "A sort of reading's Search, AniList's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular"
+          }
+        }
+      }
+    },
+    "read-sort-score" : {
+      "comment" : "A sort of reading's Search, AniList's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score"
+          }
+        }
+      }
+    },
+    "read-sort-trending" : {
+      "comment" : "A sort of reading's Search, AniList's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending"
+          }
+        }
+      }
+    },
     "reader-all-manga" : {
       "comment" : "Heading of the manga settings.",
       "extractionState" : "manual",
@@ -176297,6 +178673,40 @@
         }
       }
     },
+    "search-other-scope" : {
+      "comment" : "The last row of reading's results with both media on: matches in the other scope. Argument 1: n (Int). Argument 2: scope (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 match in %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld matches in %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "search-placeholder" : {
       "comment" : "Placeholder of the search field.",
       "extractionState" : "manual",
@@ -177049,6 +179459,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xem tất cả"
+          }
+        }
+      }
+    },
+    "search-show-them" : {
+      "comment" : "The button on that row, which switches the scope.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show them"
           }
         }
       }
@@ -179633,6 +182055,826 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keychain của bạn"
+          }
+        }
+      }
+    },
+    "series-add-to-list" : {
+      "comment" : "Status menu's label before the series is on a list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to list"
+          }
+        }
+      }
+    },
+    "series-bookmark" : {
+      "comment" : "Chapter menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmark"
+          }
+        }
+      }
+    },
+    "series-bookmarked" : {
+      "comment" : "Accessibility label of the bookmark mark on a chapter row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarked"
+          }
+        }
+      }
+    },
+    "series-change" : {
+      "comment" : "Button beside a row on the series page that opens its sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        }
+      }
+    },
+    "series-chapter-number" : {
+      "comment" : "A chapter row's title. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@"
+          }
+        }
+      }
+    },
+    "series-chapter-range" : {
+      "comment" : "After a volume's heading: which chapters it holds. Argument 1: from (Text). Argument 2: to (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chapters %1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "series-chapters" : {
+      "comment" : "Heading of the chapter list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
+          }
+        }
+      }
+    },
+    "series-chapters-failed" : {
+      "comment" : "The chapter list when the source failed. Downloaded chapters are listed under it. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load chapters from %1$@."
+          }
+        }
+      }
+    },
+    "series-collapsed" : {
+      "comment" : "Accessibility value of a volume heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapsed"
+          }
+        }
+      }
+    },
+    "series-download" : {
+      "comment" : "Chapter menu and swipe action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download"
+          }
+        }
+      }
+    },
+    "series-expanded" : {
+      "comment" : "Accessibility value of a volume heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded"
+          }
+        }
+      }
+    },
+    "series-mark-read" : {
+      "comment" : "Chapter menu and swipe action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark read"
+          }
+        }
+      }
+    },
+    "series-mark-read-up-to" : {
+      "comment" : "Chapter menu item: every chapter before this one is read too.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark read up to here"
+          }
+        }
+      }
+    },
+    "series-mark-unread" : {
+      "comment" : "Chapter menu and swipe action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark unread"
+          }
+        }
+      }
+    },
+    "series-newest-first" : {
+      "comment" : "Chapter order.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Newest first"
+          }
+        }
+      }
+    },
+    "series-no-chapters-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another source may have them."
+          }
+        }
+      }
+    },
+    "series-no-chapters-title" : {
+      "comment" : "The chapter list when the source has none.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No chapters in this source yet"
+          }
+        }
+      }
+    },
+    "series-no-volume" : {
+      "comment" : "The heading for chapters that are in no volume yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not in a volume yet"
+          }
+        }
+      }
+    },
+    "series-not-tracked" : {
+      "comment" : "Heading for trackers that don't track this series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not tracked here"
+          }
+        }
+      }
+    },
+    "series-oldest-first" : {
+      "comment" : "Chapter order.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oldest first"
+          }
+        }
+      }
+    },
+    "series-order" : {
+      "comment" : "Accessibility label of the chapter order menu.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order"
+          }
+        }
+      }
+    },
+    "series-prefer-version" : {
+      "comment" : "Make another group the one used for this series. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefer %1$@ for this series"
+          }
+        }
+      }
+    },
+    "series-preferred-group" : {
+      "comment" : "Value of the group row: the chosen group is used for this series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your preferred group here"
+          }
+        }
+      }
+    },
+    "series-read-again-menu" : {
+      "comment" : "The More menu: start again from chapter 1.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read again from the start…"
+          }
+        }
+      }
+    },
+    "series-read-chapter-menu" : {
+      "comment" : "Chapter menu item: open the chapter in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "series-read-from-another" : {
+      "comment" : "Main place when the source can't be read from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read from another source"
+          }
+        }
+      }
+    },
+    "series-read-from-asking" : {
+      "comment" : "While the sheet asks every source.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking your sources…"
+          }
+        }
+      }
+    },
+    "series-read-from-chapters" : {
+      "comment" : "A source's chapters, first on its line. Argument 1: latest (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters 1 to %1$@"
+          }
+        }
+      }
+    },
+    "series-read-from-chapters-later" : {
+      "comment" : "A source's chapters, after its kind on the line. Argument 1: latest (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chapters 1 to %1$@"
+          }
+        }
+      }
+    },
+    "series-read-from-menu" : {
+      "comment" : "The More menu: the Read from sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change source…"
+          }
+        }
+      }
+    },
+    "series-read-from-none-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a folder, a server or a plugin store in Your sources."
+          }
+        }
+      }
+    },
+    "series-read-from-none-title" : {
+      "comment" : "The sheet with no source that has the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source has this series"
+          }
+        }
+      }
+    },
+    "series-read-from-note" : {
+      "comment" : "Footnote of the Read from sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read marks belong to the series, so they carry over when you change. Downloads from the old source stay until you delete them."
+          }
+        }
+      }
+    },
+    "series-read-from-on-device" : {
+      "comment" : "After a folder's chapters. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "on this %1$@"
+          }
+        }
+      }
+    },
+    "series-read-from-title" : {
+      "comment" : "Title of the sheet that changes where a series' chapters come from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read from"
+          }
+        }
+      }
+    },
+    "series-reading-from" : {
+      "comment" : "Label of the source row on the series page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading from"
+          }
+        }
+      }
+    },
+    "series-remove-bookmark" : {
+      "comment" : "Chapter menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove bookmark"
+          }
+        }
+      }
+    },
+    "series-score" : {
+      "comment" : "Status menu item: a score submenu.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score…"
+          }
+        }
+      }
+    },
+    "series-select-chapters" : {
+      "comment" : "The More menu: turn on choosing chapters in the list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select chapters"
+          }
+        }
+      }
+    },
+    "series-sources-more" : {
+      "comment" : "After the source's name: how many other sources have the series. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 more"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld more"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "series-tracker-ahead" : {
+      "comment" : "A tracker ahead of Kaeri. Argument 1: has (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has chapter %1$lld, further than Kaeri."
+          }
+        }
+      }
+    },
+    "series-tracker-ask" : {
+      "comment" : "Value of the trackers row while a tracker asks which series this is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which series is this? Choose"
+          }
+        }
+      }
+    },
+    "series-tracker-behind" : {
+      "comment" : "A tracker that is behind, and catches up on the next sync. Argument 1: has (Int). Argument 2: gets (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has chapter %1$lld. Gets %2$lld on the next sync."
+          }
+        }
+      }
+    },
+    "series-tracker-chapters" : {
+      "comment" : "A tracker's progress in chapters, total unknown. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "series-tracker-chapters-of" : {
+      "comment" : "A tracker's progress in chapters, with the total. Argument 1: n (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@total@"
+          },
+          "substitutions" : {
+            "total" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "series-tracker-connect" : {
+      "comment" : "A tracker that isn't connected.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect in Settings to track this series"
+          }
+        }
+      }
+    },
+    "series-tracker-keep-kaeri" : {
+      "comment" : "Menu item on a tracker that differs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Kaeri's place"
+          }
+        }
+      }
+    },
+    "series-tracker-looking" : {
+      "comment" : "A tracker looking for the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for this series…"
+          }
+        }
+      }
+    },
+    "series-tracker-none-of-these" : {
+      "comment" : "Under a tracker's guesses for the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of these"
+          }
+        }
+      }
+    },
+    "series-tracker-not-there" : {
+      "comment" : "A tracker that has no such series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No match on this tracker"
+          }
+        }
+      }
+    },
+    "series-tracker-score" : {
+      "comment" : "A tracker's score out of ten. Argument 1: score (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / 10"
+          }
+        }
+      }
+    },
+    "series-tracker-take-theirs" : {
+      "comment" : "Menu item on a tracker that differs. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use %1$@'s place"
+          }
+        }
+      }
+    },
+    "series-tracker-volumes" : {
+      "comment" : "A light novel tracker's progress in volumes. Argument 1: volume (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "series-tracker-with-volume" : {
+      "comment" : "A tracker's progress in chapters, then the volume. Argument 1: chapters (Text). Argument 2: volume (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · volume %2$lld"
+          }
+        }
+      }
+    },
+    "series-tracking" : {
+      "comment" : "The More menu: the Tracking sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tracking"
+          }
+        }
+      }
+    },
+    "series-version-in-use" : {
+      "comment" : "The version in use, in that menu. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ in use"
+          }
+        }
+      }
+    },
+    "series-versions" : {
+      "comment" : "Menu of a chapter that several groups put out. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 version"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld versions"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "series-versions-loading" : {
+      "comment" : "In that menu while the versions load.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for versions…"
+          }
+        }
+      }
+    },
+    "series-volume" : {
+      "comment" : "A volume's heading in the chapter list. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume %1$@"
+          }
+        }
+      }
+    },
+    "series-volume-read" : {
+      "comment" : "After a volume's heading when every chapter in it is read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "read"
+          }
+        }
+      }
+    },
+    "series-volumes" : {
+      "comment" : "Heading of the chapter list when the series has volumes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumes"
           }
         }
       }
@@ -187369,6 +190611,18 @@
         }
       }
     },
+    "settings-aside-reading" : {
+      "comment" : "The Reading pane's column beside it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader defaults are where every series starts. A series you change in the reader keeps its own choices."
+          }
+        }
+      }
+    },
     "settings-aside-sources-apple" : {
       "comment" : "Side note in Sources while torrents are off.",
       "extractionState" : "manual",
@@ -188281,6 +191535,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapter downloads on mobile data"
+          }
+        }
+      }
+    },
+    "settings-chapter-notifications" : {
+      "comment" : "Row: whether a new chapter of a series on your Reading list sends a notification.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New chapters"
+          }
+        }
+      }
+    },
+    "settings-chapter-notifications-footer" : {
+      "comment" : "Under New chapters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters have their own system channel, so they can be silenced on their own."
+          }
+        }
+      }
+    },
+    "settings-chapter-notifications-note" : {
+      "comment" : "Line under New chapters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series on your Reading list"
           }
         }
       }
@@ -189269,6 +192559,42 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "settings-counts-read" : {
+      "comment" : "Row: when a chapter counts as read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Counts as read"
+          }
+        }
+      }
+    },
+    "settings-counts-read-note" : {
+      "comment" : "Line under Counts as read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A short stay on the last page, or moving on to the next chapter"
+          }
+        }
+      }
+    },
+    "settings-counts-read-value" : {
+      "comment" : "Value of Counts as read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the last page"
           }
         }
       }
@@ -190629,6 +193955,18 @@
         }
       }
     },
+    "settings-delete-after-reading-note" : {
+      "comment" : "Line under Delete chapters after reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarked chapters are kept"
+          }
+        }
+      }
+    },
     "settings-delete-watched-detail" : {
       "comment" : "Message of the dialog that deletes the watched downloads.",
       "extractionState" : "manual",
@@ -191785,6 +195123,54 @@
         }
       }
     },
+    "settings-follow-footer" : {
+      "comment" : "Under the group: what stays on this device. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text size, margins, tap zones and refresh stay on this %1$@."
+          }
+        }
+      }
+    },
+    "settings-follow-group" : {
+      "comment" : "Group: series settings that follow you to your other devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series settings that follow you"
+          }
+        }
+      }
+    },
+    "settings-follow-mode" : {
+      "comment" : "Row in that group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode, direction and colour"
+          }
+        }
+      }
+    },
+    "settings-follow-mode-note" : {
+      "comment" : "Line under that row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A series you change reads the same on your other devices"
+          }
+        }
+      }
+    },
     "settings-group-advanced" : {
       "comment" : "Group heading.",
       "extractionState" : "manual",
@@ -192705,6 +196091,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trình phát"
+          }
+        }
+      }
+    },
+    "settings-group-reading" : {
+      "comment" : "Settings pane and group: reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "settings-group-shows" : {
+      "comment" : "Downloads group with both media on: shows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows"
           }
         }
       }
@@ -193885,6 +197295,18 @@
         }
       }
     },
+    "settings-kaeri-is-for" : {
+      "comment" : "Settings row and page: what Kaeri is for on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri is for"
+          }
+        }
+      }
+    },
     "settings-keep-chapters-ready" : {
       "comment" : "Row: keep the next chapters of what you read downloaded.",
       "extractionState" : "manual",
@@ -193893,6 +197315,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keep next chapters ready"
+          }
+        }
+      }
+    },
+    "settings-keep-chapters-ready-note" : {
+      "comment" : "Line under Keep next chapters ready.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The next chapters of series on your Reading list"
           }
         }
       }
@@ -194985,6 +198419,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đánh dấu phần mở đầu và kết thúc"
+          }
+        }
+      }
+    },
+    "settings-medium-footer" : {
+      "comment" : "Under the choices on the iPhone's page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each device keeps its own answer. Turning one off keeps its list, progress and downloads."
+          }
+        }
+      }
+    },
+    "settings-medium-note" : {
+      "comment" : "Line under Kaeri is for on the Mac and iPad.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each device keeps its own answer"
           }
         }
       }
@@ -196581,6 +200039,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Khi tập của tựa này ra mắt"
+          }
+        }
+      }
+    },
+    "settings-open-at" : {
+      "comment" : "Row: which Home the app opens at while it is for watching and reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open at"
+          }
+        }
+      }
+    },
+    "settings-open-at-note" : {
+      "comment" : "Line under Open at.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which Home Kaeri starts on"
           }
         }
       }
@@ -199673,6 +203155,138 @@
         }
       }
     },
+    "settings-reader-defaults" : {
+      "comment" : "Group: how the reader opens each kind of book.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader defaults"
+          }
+        }
+      }
+    },
+    "settings-reader-defaults-footer" : {
+      "comment" : "Under the reader defaults.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A series you change keeps its own mode, direction and colour."
+          }
+        }
+      }
+    },
+    "settings-reader-ltr" : {
+      "comment" : "A reader default: pages turned left to right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages, left to right"
+          }
+        }
+      }
+    },
+    "settings-reader-manga" : {
+      "comment" : "Row: manga's reader default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga"
+          }
+        }
+      }
+    },
+    "settings-reader-novels" : {
+      "comment" : "Row: light novels' reader default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels"
+          }
+        }
+      }
+    },
+    "settings-reader-pages" : {
+      "comment" : "A reader default for novels: pages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages"
+          }
+        }
+      }
+    },
+    "settings-reader-rtl" : {
+      "comment" : "A reader default: pages turned right to left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages, right to left"
+          }
+        }
+      }
+    },
+    "settings-reader-scrolled" : {
+      "comment" : "A reader default for novels: one scrolling column.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrolling"
+          }
+        }
+      }
+    },
+    "settings-reader-strip" : {
+      "comment" : "A reader default: one long strip.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long strip"
+          }
+        }
+      }
+    },
+    "settings-reader-webtoons" : {
+      "comment" : "Row: webtoons' reader default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons"
+          }
+        }
+      }
+    },
+    "settings-reader-webtoons-note" : {
+      "comment" : "Line under Webtoons.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons always open as a long strip"
+          }
+        }
+      }
+    },
     "settings-reset" : {
       "comment" : "Button on the screen shown on iPhone, iPad and Android when Kaeri could not start because its settings file has something it can't use. It asks first.",
       "extractionState" : "manual",
@@ -200993,6 +204607,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Việc chia sẻ chỉ chạy khi Kaeri đang mở."
+          }
+        }
+      }
+    },
+    "settings-series-choices-follow" : {
+      "comment" : "Row: whether a series' reader mode, direction and colour follow you to your other devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series settings follow you"
           }
         }
       }
@@ -220173,6 +223799,18 @@
         }
       }
     },
+    "sources-add-title" : {
+      "comment" : "Title of the sheet and the toolbar button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a source"
+          }
+        }
+      }
+    },
     "sources-contacts-label" : {
       "comment" : "Row label: the hosts a plugin contacts.",
       "extractionState" : "manual",
@@ -223173,6 +226811,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa có các nguồn"
+          }
+        }
+      }
+    },
+    "sources-found-server" : {
+      "comment" : "What the address answered, before the sign-in. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found a %1$@ server"
           }
         }
       }
@@ -282225,6 +285875,18 @@
         }
       }
     },
+    "updates-checked" : {
+      "comment" : "Line under Updates' title on iPhone and iPad. Argument 1: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked %1$@"
+          }
+        }
+      }
+    },
     "updates-checking" : {
       "comment" : "Line while the app checks.",
       "extractionState" : "manual",
@@ -282981,6 +286643,18 @@
         }
       }
     },
+    "updates-download-new" : {
+      "comment" : "Toolbar button: queue every unread chapter in Updates.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download new"
+          }
+        }
+      }
+    },
     "updates-downloading" : {
       "comment" : "Line while downloading, with the version. Argument 1: version (Text).",
       "extractionState" : "manual",
@@ -283481,6 +287155,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tải phiên bản %1$@ · %2$@ trên %3$@"
+          }
+        }
+      }
+    },
+    "updates-empty-title" : {
+      "comment" : "Updates with nothing in it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No new chapters"
           }
         }
       }
@@ -289025,6 +292711,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dùng mặc định · %1$@"
+          }
+        }
+      }
+    },
+    "week-nothing-usually" : {
+      "comment" : "Under a day in Read's week with nothing due.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing usually"
+          }
+        }
+      }
+    },
+    "week-usually" : {
+      "comment" : "Under a day in Read's week: what usually comes out that day, when the time isn't known.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usually"
           }
         }
       }

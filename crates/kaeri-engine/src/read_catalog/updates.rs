@@ -150,7 +150,7 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         label: chapter.label.clone(),
         state,
         number: chapter.number.clone(),
-        title: chapter.title.clone(),
+        title: chapter.own_title().map(str::to_owned),
         volume: chapter.volume.clone(),
         published: chapter.published,
         pages: chapter.pages,
@@ -258,7 +258,7 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Vec<NewChapter> {
                 published: chapter.published,
                 next_for_you: next.clone().filter(|n| n.as_str() != chapter.id),
                 source_name: Some(source_name(sources, &source)),
-                chapter_title: chapter.title.clone(),
+                chapter_title: chapter.own_title().map(str::to_owned),
             });
         }
     }

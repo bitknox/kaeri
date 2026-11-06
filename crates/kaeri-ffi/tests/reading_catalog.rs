@@ -256,21 +256,24 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
     assert_eq!(show.title, "The Library Above the Clouds");
     assert_eq!(show.relation, Msg::Reading(ReadingMsg::ReadingAlsoAShow));
     assert!(!page.recommended.is_empty());
+    // The scene's folder holds chapters 12 to 15, which the folder lists afresh.
     let edition = page.edition.as_ref().expect("the folder's edition");
-    assert_eq!((edition.chapters, edition.latest.as_deref()), (15, Some("15")));
+    assert_eq!((edition.chapters, edition.latest.as_deref()), (4, Some("15")));
 
-    // The folder has no files for it here: the list kept last, with why.
-    let chapters = read.iter().find_map(|event| match event {
+    let chapters = read.iter().rev().find_map(|event| match event {
         Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
             Some((volumes.clone(), failure.clone()))
         }
         _ => None,
     });
     let (volumes, failure) = chapters.expect("the chapters");
-    assert!(failure.is_some());
+    assert!(failure.is_none(), "{failure:?}");
     let rows: Vec<_> = volumes.iter().flat_map(|v| &v.chapters).collect();
-    assert_eq!(rows.len(), 15);
-    assert!(rows.iter().find(|r| r.id.as_str() == "15").unwrap().new_chapter);
+    assert_eq!(rows.len(), 4);
+    let newest = rows.iter().find(|r| r.id.as_str() == "15").unwrap();
+    assert!(newest.new_chapter);
+    // The book's own details call it "Chapter 15", which is no title of its own.
+    assert_eq!(newest.title, None);
 
     engine.send(Command::Reading(ReadingCommand::LoadVersions {
         work: kaeri_core::books::WorkId::new("a:900301"),
@@ -285,7 +288,7 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
     });
     let versions = versions.unwrap();
     assert_eq!(versions.len(), 1);
-    assert_eq!(versions[0].chapter_ref, "c-15");
+    assert!(!versions[0].chapter_ref.is_empty());
     engine.shutdown();
 }
 

@@ -638,10 +638,12 @@ impl Home {
             };
             let Some(next) = unread.first() else { continue };
             let number = newest.number.clone().unwrap_or_else(|| newest.label.clone());
-            let line = match (&newest.title, newest.out_at().is_some_and(|at| at >= today)) {
-                (Some(title), true) => {
-                    ReadingMsg::ReadingOutTodayTitled { chapter: number, title: title.clone() }
-                }
+            let line = match (newest.own_title(), newest.out_at().is_some_and(|at| at >= today))
+            {
+                (Some(title), true) => ReadingMsg::ReadingOutTodayTitled {
+                    chapter: number,
+                    title: title.to_owned(),
+                },
                 (None, true) => ReadingMsg::ReadingOutToday { chapter: number },
                 (_, false) => ReadingMsg::ReadingChapterNew { chapter: number },
             };

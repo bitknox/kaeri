@@ -1220,9 +1220,9 @@ fn seed_reading_catalog(store: &Store, now: i64) {
     let strip: Vec<_> =
         (1..=8).map(|n| chapter(n, now - 3 * DAY - (8 - n) * 7 * DAY, None, None)).collect();
     for (work, series, list) in [
-        (READING_MANGA, "fx-lantern", manga),
-        (READING_NOVEL, "fx-orchard", novel),
-        (READING_STRIP, "fx-kites", strip),
+        (READING_MANGA, MANGA_SERIES.id, manga),
+        (READING_NOVEL, NOVEL_SERIES.id, novel),
+        (READING_STRIP, STRIP_SERIES.id, strip),
     ] {
         let _ = store
             .set_book_match("folders", series, work, 100, true, false, now - 40 * DAY)

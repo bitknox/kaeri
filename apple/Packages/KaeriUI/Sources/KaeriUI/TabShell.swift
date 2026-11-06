@@ -36,9 +36,14 @@ struct TabShell: View {
             }
         )
         return TabView(selection: section) {
-            ForEach([AppSection.home, .calendar, .seasonal, .library]) { section in
-                Tab(section.title, systemImage: section.symbol, value: section) {
-                    TabStack(section: section) { screen(section) }
+            // The places for what Kaeri is for, in the sidebar's order. On iPhone and in a narrow
+            // window the bar keeps three or four of them; the rest are pushed from Home and Read.
+            // Home and Read are named for the answer (Watch, Read, or Home alone), so their
+            // identity carries it and the sidebar draws the new name when the answer changes.
+            ForEach((sizeClass == .regular ? Self.places(store.medium.answer) : Self.barTabs(store.medium.answer))
+                .map { NamedPlace(section: $0, answer: store.medium.answer) }) { place in
+                Tab(place.section.title, systemImage: place.section.symbol, value: place.section) {
+                    TabStack(section: place.section, place: { AnyView(screen($0)) }) { screen(place.section) }
                 }
             }
             if sizeClass == .regular {
@@ -47,10 +52,12 @@ struct TabShell: View {
                     TabStack(section: .downloads) { screen(.downloads) }
                 }
                 .defaultVisibility(.hidden, for: .tabBar)
-                Tab(AppSection.together.title, systemImage: AppSection.together.symbol, value: AppSection.together) {
-                    TabStack(section: .together) { screen(.together) }
+                if store.medium.answer != .read {
+                    Tab(AppSection.together.title, systemImage: AppSection.together.symbol, value: AppSection.together) {
+                        TabStack(section: .together) { screen(.together) }
+                    }
+                    .defaultVisibility(.hidden, for: .tabBar)
                 }
-                .defaultVisibility(.hidden, for: .tabBar)
                 TabSection(L.sourcesTitle) {
                     ForEach([AppSection.providers, .pluginStores]) { section in
                         Tab(section.title, systemImage: section.symbol, value: section) {
@@ -68,16 +75,25 @@ struct TabShell: View {
                 TabStack(section: .search) { PhoneSearch() }
                     .titleSearchField(
                         text: $navigator.query,
+                        titles: !ReadSearchScope.active(store: store, navigator: navigator),
                         // The iPhone's field holds only what was typed; the pinned row names the
                         // genres and tags.
                         tokensShown: sizeClass != .compact,
                         // On the iPhone the field always shows under the large title, with the
                         // pinned filter row beneath it, instead of waiting for a pull.
                         placement: sizeClass == .compact ? .navigationBarDrawer(displayMode: .always) : .automatic,
-                        prompt: L.searchPlaceholder)
+                        prompt: ReadSearchScope.active(store: store, navigator: navigator) ? L.readSearchPlaceholder : L.searchPlaceholder)
+                    .modifier(ReadSearchTyping())
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        // A place with no tab here goes onto the tab that leads to it, as the headings on each
+        // Home do.
+        .onChange(of: navigator.section, initial: true) { _, now in
+            guard sizeClass == .compact, let parent = Self.parent(of: now, store.medium.answer) else { return }
+            navigator.placePushed = now
+            navigator.section = parent
+        }
         // Watch together has no tab on iPhone and in a narrow window: Home's people button
         // pushes it there.
         .onChange(of: navigator.section == .together && sizeClass == .compact, initial: true) { _, narrow in
@@ -116,11 +132,41 @@ struct TabShell: View {
         .modifier(AppSheets())
     }
 
+    /// The sections with a tab, in the sidebar's order: Search has its own, and Downloads and
+    /// Watch together come after.
+    static func places(_ answer: KaeriIsFor) -> [AppSection] {
+        AppSection.groups(answer).flatMap { $0 }.filter { ![.search, .downloads, .together].contains($0) }
+    }
+
+    /// The tab a place with no tab of its own is pushed onto, on iPhone and in a narrow window.
+    static func parent(of section: AppSection, _ answer: KaeriIsFor) -> AppSection? {
+        guard [.calendar, .seasonal, .updates].contains(section), !barTabs(answer).contains(section) else { return nil }
+        return section == .updates ? .read : .home
+    }
+
+    /// The tabs the iPhone's bar shows.
+    /// A place as a tab: Home's and Read's identity carries the answer they are named for.
+    struct NamedPlace: Identifiable {
+        let section: AppSection
+        let answer: KaeriIsFor
+        var id: String { [.home, .read].contains(section) ? "\(section.rawValue).\(answer)" : section.rawValue }
+    }
+
+    static func barTabs(_ answer: KaeriIsFor) -> [AppSection] {
+        switch answer {
+        case .watch: [.home, .calendar, .seasonal, .library]
+        case .read: [.read, .updates, .library]
+        case .both: [.home, .read, .library]
+        }
+    }
+
     @ViewBuilder
     private func screen(_ section: AppSection) -> some View {
         let wide = sizeClass == .regular
         switch section {
         case .home: HomeScreen()
+        case .read: ReadHomeScreen()
+        case .updates: UpdatesScreen()
         case .calendar:
             if wide {
                 // The week's paging and My list or All airing, as on the Mac (PadCalendar).
@@ -131,7 +177,7 @@ struct TabShell: View {
         case .seasonal: SeasonalScreen(minimum: wide ? 128 : 100).toolbar { ToolbarItem { SeasonalToolbar() } }
         case .library: PhoneLibrary()
         case .downloads: DownloadsScreen().toolbar { IPadDownloadsToolbar() }
-        case .providers: ProvidersScreen().toolbar { IPadProvidersToolbar() }
+        case .providers: SourcesScreen().toolbar { IPadProvidersToolbar() }
         case .pluginStores: PluginStoresScreen().toolbar { IPadStoresToolbar() }
         case .settings: SettingsScreen()
         case .together: TogetherScreen()
@@ -213,6 +259,8 @@ struct TabStack<Screen: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Namespace private var zoom
     let section: AppSection
+    /// The screen of a place pushed onto this tab (Navigator.placePushed), where it can be.
+    var place: ((AppSection) -> AnyView)?
     @ViewBuilder let screen: () -> Screen
 
     var body: some View {
@@ -242,39 +290,59 @@ struct TabStack<Screen: View>: View {
                 ) : .constant(false)) {
                     PhoneDownloadsPage()
                 }
+                .navigationDestination(isPresented: Binding(
+                    get: { place != nil && navigator.section == section && navigator.placePushed != nil },
+                    set: { if !$0 { navigator.placePushed = nil } }
+                )) {
+                    if let pushed = navigator.placePushed, let place {
+                        place(pushed)
+                            .navigationTitle(pushed.title)
+                            .background(.ground)
+                    }
+                }
                 .background(.ground)
                 // The ground under the whole stack, edge to edge, however narrow the screen in
                 // it: never the window's black at its sides.
                 .containerBackground(.ground, for: .navigation)
                 .navigationDestination(for: TitleRoute.self) { route in
-                    let id = navigator.shownInPlace[route.id] ?? route.id
-                    // A wide iPad has the Mac's page (PadTitleMeta); an iPhone, a narrow window
-                    // and the accessibility text sizes, the iPhone's, whose one column wraps
-                    // what the Mac's side-by-side header would cut.
-                    // Another swaps the title in place: a crossfade with both sides drawn.
-                    ZStack {
-                        Group {
-                            if sizeClass == .regular, !typeSize.isAccessibilitySize {
-                                TitlePage(id: id).toolbar { PadTitleToolbar(id: id) }
-                            } else {
-                                PhoneTitle(id: id)
-                            }
-                        }
-                        .id(id)
-                        .transition(.opacity)
+                    if let work = route.work {
+                        SeriesPage(work: work)
+                    } else {
+                        title(route)
                     }
-                    .animation(.standard, value: id)
-                    // Out of the element clicked, and back into it.
-                    .navigationTransition(.zoom(sourceID: route.zoomID, in: zoom))
                 }
         }
         .environment(\.zoomNamespace, zoom)
     }
+
+    @ViewBuilder
+    private func title(_ route: TitleRoute) -> some View {
+        let id = navigator.shownInPlace[route.id] ?? route.id
+        // A wide iPad has the Mac's page (PadTitleMeta); an iPhone, a narrow window
+        // and the accessibility text sizes, the iPhone's, whose one column wraps
+        // what the Mac's side-by-side header would cut.
+        // Another swaps the title in place: a crossfade with both sides drawn.
+        ZStack {
+            Group {
+                if sizeClass == .regular, !typeSize.isAccessibilitySize {
+                    TitlePage(id: id).toolbar { PadTitleToolbar(id: id) }
+                } else {
+                    PhoneTitle(id: id)
+                }
+            }
+            .id(id)
+            .transition(.opacity)
+        }
+        .animation(.standard, value: id)
+        // Out of the element clicked, and back into it.
+        .navigationTransition(.zoom(sourceID: route.zoomID, in: zoom))
+    }
 }
 
 /// The iPad's sidebar as the brief draws it: the brief's navy glass, and its rows with the
-/// selection tint under an amber label and icon, every other row silk with a haze icon, and the
-/// Sources header in haze. UIKit draws the sidebar itself, grey glass with a solid capsule in the
+/// selection silk on the raised selected fill (amber stays on the one main action), every other
+/// row silk with a haze icon, and the Sources header in haze.
+/// UIKit draws the sidebar itself, grey glass with a solid capsule in the
 /// tint under white text, and gives no style for either; this view, in the sidebar's bottom bar,
 /// reaches both from there. It draws nothing, and takes no room.
 ///
@@ -359,8 +427,14 @@ struct PadSidebarStyle: UIViewRepresentable {
     func makeUIView(context: Context) -> Hook { Hook() }
 
     func updateUIView(_ uiView: Hook, context: Context) {
-        // After this update, once the tab bar controller has the section selected.
-        Task { @MainActor in uiView.restyle() }
+        // After this update, once the tab bar controller has the section selected. When the
+        // section changes twice in one turn, as Open at does once the medium is known, UIKit
+        // can select the tab after the first pass, so a second pass follows.
+        Task { @MainActor in
+            uiView.restyle()
+            try? await Task.sleep(for: .milliseconds(250))
+            uiView.restyle()
+        }
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: Hook, context: Context) -> CGSize? {
@@ -433,9 +507,9 @@ final class SidebarRows: NSObject, UITabBarController.Sidebar.Delegate {
         // The controller's selected tab, which is current before the row's own state is.
         let selected = controller.selectedTab.map { $0.identifier == tab.identifier }
             ?? item.configurationState.isSelected
-        content.textProperties.color = UIColor(selected ? Palette.amber : Palette.silk)
+        content.textProperties.color = UIColor(Palette.silk)
         content.imageProperties.tintColorTransformer = nil
-        content.imageProperties.tintColor = UIColor(selected ? Palette.amber : Palette.haze)
+        content.imageProperties.tintColor = UIColor(selected ? Palette.silk : Palette.haze)
         if selected {
             let font = content.textProperties.font
             let medium = font.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.medium]])
@@ -444,7 +518,7 @@ final class SidebarRows: NSObject, UITabBarController.Sidebar.Delegate {
         item.contentConfiguration = content
         var background = item.defaultBackgroundConfiguration()
         background.backgroundColorTransformer = nil
-        background.backgroundColor = selected ? UIColor(Palette.selection) : .clear
+        background.backgroundColor = selected ? UIColor(Palette.raisedSelected) : .clear
         background.cornerRadius = 12
         item.backgroundConfiguration = background
     }
@@ -453,15 +527,10 @@ final class SidebarRows: NSObject, UITabBarController.Sidebar.Delegate {
 /// A finger on one of the sidebar's rows. UIKit tells neither the sidebar's delegate nor the rows'
 /// configurations that a row is pressed, and its own press was drawn on the colours `SidebarRows`
 /// replaces, so this watches the list's touches, alongside the list's own gestures, and lays a
-/// layer under the pressed row: a faint silk, or under the selected row enough amber that the two
-/// make `Palette.selectionPressed`. It goes when the finger lifts or moves away.
+/// layer under the pressed row: a faint silk, over the selected row's fill too. It goes when the
+/// finger lifts or moves away.
 final class RowPress: UILongPressGestureRecognizer, UIGestureRecognizerDelegate {
-    private static let underSelection: UIColor = {
-        let environment = EnvironmentValues()
-        let shown = Double(Palette.selection.resolve(in: environment).opacity)
-        let pressed = Double(Palette.selectionPressed.resolve(in: environment).opacity)
-        return UIColor(Palette.amber.opacity(1 - (1 - pressed) / (1 - shown)))
-    }()
+    private static let underSelection = UIColor(Palette.silk.opacity(0.06))
 
     private var pressLayer: UIView?
     private var start: CGPoint = .zero

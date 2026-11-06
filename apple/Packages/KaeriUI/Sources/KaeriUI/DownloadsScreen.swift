@@ -16,9 +16,14 @@ struct DownloadsScreen: View {
     private enum Phase { case waiting, empty, rows }
 
     var body: some View {
-        let groups = store.downloads.groups
-        let phase = !store.downloads.loaded ? Phase.waiting
-            : groups.isEmpty && store.downloads.seeding.isEmpty ? .empty : .rows
+        let groups = store.medium.watches ? store.downloads.groups : []
+        let seeding = store.medium.watches ? store.downloads.seeding : []
+        let books = store.medium.reads ? (store.reading.downloads?.rows ?? []) : []
+        let loaded = (!store.medium.watches || store.downloads.loaded)
+            && (!store.medium.reads || store.reading.downloads != nil)
+        let phase = !loaded ? Phase.waiting
+            : groups.isEmpty && seeding.isEmpty && books.isEmpty ? .empty : .rows
+        let both = !books.isEmpty && !(groups.isEmpty && seeding.isEmpty)
         // A stack, not a Group, so what the engine answers fades in over the ground rather than
         // cutting in, and the empty state and the list crossfade.
         ZStack(alignment: .topLeading) {
@@ -41,11 +46,18 @@ struct DownloadsScreen: View {
                                 .padding(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 0))
                         }
                         #endif
+                        if !books.isEmpty {
+                            ReadDownloadsSection(headed: both)
+                        }
+                        if both {
+                            DownloadsSectionHeading(title: L.settingsGroupShows, total: showsTotal)
+                                .padding(.top, 28)
+                        }
                         ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
                             if index > 0 { Rectangle().fill(.faintRule).frame(height: 1) }
                             DownloadGroupView(group: group, rotor: rotor)
                         }
-                        if !store.downloads.seeding.isEmpty {
+                        if !seeding.isEmpty {
                             Rectangle().fill(.faintRule).frame(height: 1).padding(.top, 8)
                             SeedingList()
                         }
@@ -60,7 +72,20 @@ struct DownloadsScreen: View {
         .animation(.fadeIn, value: phase)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .pullToRefresh(store, .downloads)
-        .task { store.loadDownloads() }
+        // Again once the engine says what Kaeri is for: before that the answer is Watch.
+        .task(id: store.medium.answer) {
+            if store.medium.watches { store.loadDownloads() }
+            if store.medium.reads { store.reading.loadDownloads() }
+        }
+    }
+}
+
+extension DownloadsScreen {
+    /// Beside Shows with both media on: how many episodes and their size.
+    private var showsTotal: String {
+        let count = L.episodesCount(count: store.downloads.rows.count)
+        let bytes = store.downloads.bytesOnDisk
+        return bytes > 0 ? L.downloadsGroupSummaryApple(count: count, size: Wording.bytes(bytes)) : count
     }
 }
 
@@ -111,7 +136,9 @@ struct DownloadsTitle: View {
 /// What the toolbar says under Downloads: what is free, and what downloads take.
 @MainActor
 func downloadsSubtitle(_ store: AppStore) -> String {
-    let used = Wording.bytes(store.downloads.bytesOnDisk)
+    // Chapters count toward what downloads take, with reading on.
+    let books = store.medium.reads ? (store.reading.downloads?.meter.used ?? 0) : 0
+    let used = Wording.bytes(store.downloads.bytesOnDisk + books)
     guard let free = FreeSpace.bytes else { return L.downloadsSpaceUsed(size: used) }
     return L.downloadsSubtitleFree(free: Wording.bytes(free), size: used)
 }

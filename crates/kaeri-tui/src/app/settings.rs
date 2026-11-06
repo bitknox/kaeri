@@ -206,6 +206,9 @@ impl App {
             | S::ChapterDownloadsOnCellular
             | S::KeepChaptersReady
             | S::DeleteAfterReading
+            | S::SeriesChoicesFollow
+            | S::ChapterNotifications
+            | S::OpenAt
             | S::TorrentsOnCellular
             | S::EpisodeNotifications
             | S::MpvOptions
@@ -338,6 +341,9 @@ fn label_text(key: SettingKey) -> String {
         S::ChapterDownloadsOnCellular => t::settings_chapter_downloads_cellular(),
         S::KeepChaptersReady => t::settings_keep_chapters_ready(),
         S::DeleteAfterReading => t::settings_delete_after_reading(),
+        S::SeriesChoicesFollow => t::settings_series_choices_follow(),
+        S::ChapterNotifications => t::settings_chapter_notifications(),
+        S::OpenAt => t::settings_open_at(),
         S::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
         S::EpisodeNotifications => t::settings_label_episode_notifications(),
         S::MpvOptions => t::settings_label_mpv_options(),

@@ -228,6 +228,30 @@ pub(crate) fn reading(
             mark_read(services, work, ids, read, tx);
             return;
         }
+        ReadingCommand::MarkReadUpTo { .. }
+        | ReadingCommand::ReadAgain { .. }
+        | ReadingCommand::UndoReadAgain { .. }
+        | ReadingCommand::Bookmark { .. } => {
+            let now = services.clock.now();
+            let (work, read) = match &command {
+                ReadingCommand::MarkReadUpTo { work, .. } => (work.clone(), true),
+                ReadingCommand::ReadAgain { work } | ReadingCommand::UndoReadAgain { work } => {
+                    (work.clone(), false)
+                }
+                ReadingCommand::Bookmark { work, .. } => (work.clone(), false),
+                _ => return,
+            };
+            if let Err(e) = marks(&services.store, command, now) {
+                tracing::warn!(error = %e, "a reading mark was not kept");
+                return;
+            }
+            if read {
+                let lent = crate::downloads::books::Lent::of(services, tx);
+                services.book_sources.downloads.sweep(&lent, Some(work.as_str()));
+            }
+            let _ = crate::read_tracking::progress_of(services, &work);
+            return;
+        }
         ReadingCommand::LoadDownloads => {
             ReadingEvent::Downloads(services.book_sources.downloads.view(&services.store))
         }
@@ -365,6 +389,31 @@ fn mark_read(
     let _ = crate::read_tracking::progress_of(services, &work);
 }
 
+/// Marks on many chapters at once, and bookmarks, kept in the store. Like [`mark_read`] they
+/// send nothing; the app asks for the series and its chapters again.
+fn marks(
+    store: &kaeri_store::Store,
+    command: ReadingCommand,
+    now: i64,
+) -> kaeri_store::Result<()> {
+    match command {
+        ReadingCommand::MarkReadUpTo { work, chapter } => {
+            store.adopt_read(work.as_str(), chapter.as_str(), None, now)
+        }
+        ReadingCommand::ReadAgain { work } => store.reset_read(work.as_str(), now).map(drop),
+        ReadingCommand::UndoReadAgain { work } => {
+            match store.read_reset_in_force(work.as_str())? {
+                Some(reset) => store.undo_read_reset(work.as_str(), &reset, now),
+                None => Ok(()),
+            }
+        }
+        ReadingCommand::Bookmark { work, chapter, on } => {
+            store.set_bookmark(work.as_str(), chapter.as_str(), on, now)
+        }
+        _ => Ok(()),
+    }
+}
+
 /// A reader command.
 pub(crate) fn reader(
     engine: &mut EngineState,
@@ -489,5 +538,37 @@ mod tests {
         let mut dark = ReadingState::at_launch(false, AppEdition::Full, None, None, true);
         dark.account_received(Some(KaeriIsFor::Read), None);
         assert_eq!(dark.view().ask, None);
+    }
+
+    #[test]
+    fn up_to_here_read_again_and_its_undo_and_bookmarks_are_kept() {
+        use kaeri_core::books::ChapterId;
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let work = WorkId::new("a:900301");
+        let read = |chapter: &str| store.chapter_is_read("a:900301", chapter).unwrap();
+
+        let up_to =
+            ReadingCommand::MarkReadUpTo { work: work.clone(), chapter: ChapterId::new("12") };
+        marks(&store, up_to, 10).unwrap();
+        assert!(read("1") && read("12") && !read("13"));
+
+        marks(&store, ReadingCommand::ReadAgain { work: work.clone() }, 20).unwrap();
+        assert!(!read("1") && !read("12"));
+        marks(&store, ReadingCommand::UndoReadAgain { work: work.clone() }, 30).unwrap();
+        assert!(read("1") && read("12"));
+        // Nothing to undo leaves the marks as they are.
+        marks(&store, ReadingCommand::UndoReadAgain { work: work.clone() }, 40).unwrap();
+        assert!(read("12"));
+
+        let on = ReadingCommand::Bookmark {
+            work: work.clone(),
+            chapter: ChapterId::new("7"),
+            on: true,
+        };
+        marks(&store, on, 50).unwrap();
+        assert_eq!(store.bookmarks("a:900301").unwrap(), vec!["7".to_owned()]);
+        let off = ReadingCommand::Bookmark { work, chapter: ChapterId::new("7"), on: false };
+        marks(&store, off, 60).unwrap();
+        assert!(store.bookmarks("a:900301").unwrap().is_empty());
     }
 }

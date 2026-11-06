@@ -163,6 +163,16 @@ struct NotificationsPane: View {
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
+        if store.medium.reads {
+            ChapterNoticesGroup()
+        }
+        if store.medium.watches {
+            episodeGroups
+        }
+    }
+
+    @ViewBuilder
+    private var episodeGroups: some View {
         SettingsGroup(title: L.settingsNewEpisodes, footnote: NoticeWords.permission) {
             SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
                 EpisodeNoticesToggle { Text(L.settingsNewEpisodes) }
@@ -347,6 +357,24 @@ struct PhoneNotificationsPage: View {
     var body: some View {
         let overrides = Int(store.notifications.week?.overrides ?? 0)
         PhoneList {
+            if store.medium.reads {
+                PhoneChapterNoticesSection()
+            }
+            if store.medium.watches {
+                episodeSections(overrides)
+            }
+            systemSection
+        }
+        .navigationTitle(L.settingsGroupNotifications)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await store.notifications.refreshPermission()
+            store.refreshNotices()
+        }
+    }
+
+    @ViewBuilder
+    private func episodeSections(_ overrides: Int) -> some View {
             Section {
                 EpisodeNoticesToggle {
                     PhoneRowTitle(title: L.settingsNewEpisodes, note: NoticeWords.line(store, counts: false))
@@ -375,6 +403,9 @@ struct PhoneNotificationsPage: View {
             } footer: {
                 Text(NoticeWords.leftOut(store))
             }
+    }
+
+    private var systemSection: some View {
             Section {
                 Button {
                     NoticeWords.settingsURL.map { openURL($0) }
@@ -387,13 +418,6 @@ struct PhoneNotificationsPage: View {
                 }
                 .listRowBackground(Palette.raised)
             }
-        }
-        .navigationTitle(L.settingsGroupNotifications)
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await store.notifications.refreshPermission()
-            store.refreshNotices()
-        }
     }
 }
 

@@ -25,7 +25,7 @@ extension SettingKey {
         case .motion, .autoNext, .skipOpening, .skipRecap, .findSkipTimes, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
              .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
              .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
-             .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading,
+             .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading, .seriesChoicesFollow, .chapterNotifications,
              .episodeDiscussions, .commentImages, .hoverCards:
             true
         default:
@@ -78,6 +78,8 @@ extension SettingKey {
             [0, 5, 10, 15, 20, 30].map { SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : "\($0) s") }
         case .downloadQuality:
             ["standard", "higher"].map { SettingOption(value: .str($0), label: $0) }
+        case .openAt:
+            ["watch", "read"].map { SettingOption(value: .str($0), label: $0) }
         case .keepNextEpisodes:
             [0, 1, 2, 3, 5, 10].map {
                 SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : Wording.plural($0, "episode"))

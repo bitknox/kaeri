@@ -106,6 +106,14 @@ pub enum SettingKey {
     KeepChaptersReady,
     /// Whether a downloaded chapter is deleted once it is read; bookmarked chapters stay.
     DeleteAfterReading,
+    /// Whether a series' own mode, direction and colour follow the person to their other
+    /// devices. On by default.
+    SeriesChoicesFollow,
+    /// Whether the app notifies of new chapters in the series on the Reading list, on its own
+    /// channel. Off by default; the check runs only while reading is on.
+    ChapterNotifications,
+    /// Which Home the app opens at while it is for watching and reading: `watch` or `read`.
+    OpenAt,
     /// Whether torrents run over a cellular connection.
     TorrentsOnCellular,
     /// Whether the app notifies of new episodes of the shows being watched, from
@@ -231,7 +239,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 18] = [
+    pub const NATIVE_ROWS: [Self; 24] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -250,6 +258,12 @@ impl SettingKey {
         Self::TorrentsWhileCasting,
         Self::HoverCards,
         Self::FindSkipTimes,
+        Self::ChapterDownloadsOnCellular,
+        Self::KeepChaptersReady,
+        Self::DeleteAfterReading,
+        Self::SeriesChoicesFollow,
+        Self::ChapterNotifications,
+        Self::OpenAt,
     ];
 
     /// Where the file keeps it: the containing table, as the dotted path
@@ -324,6 +338,9 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => (&["reading"], "downloads_on_cellular"),
             Self::KeepChaptersReady => (&["reading"], "keep_chapters_ready"),
             Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
+            Self::SeriesChoicesFollow => (&["reading"], "series_choices_follow"),
+            Self::ChapterNotifications => (&["notifications"], "chapters"),
+            Self::OpenAt => (&["reading"], "open_at"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
             Self::MpvOptions => (&["playback"], "mpv_args"),
@@ -454,6 +471,13 @@ impl SettingKey {
             Self::DeleteAfterReading => {
                 to.reading.delete_after_reading = from.reading.delete_after_reading;
             }
+            Self::SeriesChoicesFollow => {
+                to.reading.series_choices_follow = from.reading.series_choices_follow;
+            }
+            Self::ChapterNotifications => {
+                to.notifications.chapters = from.notifications.chapters;
+            }
+            Self::OpenAt => to.reading.open_at.clone_from(&from.reading.open_at),
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
             }
@@ -477,7 +501,8 @@ impl SettingKey {
             | Self::ControllerInput
             | Self::SwapFaceButtons
             | Self::CalendarMine
-            | Self::HoverCards => "appearance",
+            | Self::HoverCards
+            | Self::OpenAt => "appearance",
             Self::Translation
             | Self::Quality
             | Self::Subtitles
@@ -517,6 +542,7 @@ impl SettingKey {
             | Self::ChapterDownloadsOnCellular
             | Self::KeepChaptersReady
             | Self::DeleteAfterReading => "downloads",
+            Self::SeriesChoicesFollow => "reading",
             Self::Torrents
             | Self::TorrentProxy
             | Self::SeedRatio
@@ -537,7 +563,7 @@ impl SettingKey {
             | Self::EpisodeDiscussions
             | Self::CommentImages
             | Self::CastTvs => "integrations",
-            Self::EpisodeNotifications => "notifications",
+            Self::EpisodeNotifications | Self::ChapterNotifications => "notifications",
             Self::SaveCrashReports | Self::AskAfterCrash => "about",
             Self::MpvOptions => "advanced",
         }
@@ -597,6 +623,9 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => "chapter downloads on cellular",
             Self::KeepChaptersReady => "keep chapters ready",
             Self::DeleteAfterReading => "delete after reading",
+            Self::SeriesChoicesFollow => "series choices follow you",
+            Self::ChapterNotifications => "new chapter notifications",
+            Self::OpenAt => "open at",
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
@@ -960,6 +989,13 @@ pub fn step(
             V::Bool(!effective.reading.keep_chapters_ready.unwrap_or(false))
         }
         SettingKey::DeleteAfterReading => V::Bool(!effective.reading.delete_after_reading),
+        SettingKey::SeriesChoicesFollow => V::Bool(!effective.reading.series_choices_follow),
+        SettingKey::ChapterNotifications => V::Bool(!effective.notifications.chapters),
+        SettingKey::OpenAt => {
+            const LADDER: [&str; 2] = ["watch", "read"];
+            let at = LADDER.iter().position(|c| *c == effective.reading.open_at).unwrap_or(0);
+            V::Str(LADDER[(at as i64 + delta).clamp(0, 1) as usize].into())
+        }
         SettingKey::TorrentsOnCellular => V::Bool(!effective.providers.torrent.on_cellular),
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
@@ -1157,6 +1193,16 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::DeleteAfterReading, V::Bool(on)) => {
             config.reading.delete_after_reading = *on;
         }
+        (SettingKey::SeriesChoicesFollow, V::Bool(on)) => {
+            config.reading.series_choices_follow = *on;
+        }
+        (SettingKey::ChapterNotifications, V::Bool(on)) => config.notifications.chapters = *on,
+        (SettingKey::OpenAt, V::Str(name)) => {
+            if !matches!(name.as_str(), "watch" | "read") {
+                return false;
+            }
+            config.reading.open_at.clone_from(name);
+        }
         (SettingKey::EpisodeNotifications, V::Bool(on)) => config.notifications.episodes = *on,
         (SettingKey::AdultTitles, V::Bool(on)) => config.meta.adult = *on,
         (SettingKey::EpisodeDiscussions, V::Bool(on)) => config.meta.discussions = *on,
@@ -1344,6 +1390,9 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             on_off(effective.reading.keep_chapters_ready.unwrap_or(false))
         }
         SettingKey::DeleteAfterReading => on_off(effective.reading.delete_after_reading),
+        SettingKey::SeriesChoicesFollow => on_off(effective.reading.series_choices_follow),
+        SettingKey::ChapterNotifications => on_off(effective.notifications.chapters),
+        SettingKey::OpenAt => effective.reading.open_at.clone(),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
@@ -1452,6 +1501,8 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::ChapterDownloadsOnCellular => c.reading.downloads_on_cellular,
         S::KeepChaptersReady => c.reading.keep_chapters_ready.unwrap_or(false),
         S::DeleteAfterReading => c.reading.delete_after_reading,
+        S::SeriesChoicesFollow => c.reading.series_choices_follow,
+        S::ChapterNotifications => c.notifications.chapters,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
@@ -1481,6 +1532,7 @@ fn ladder_value(effective: &Config, key: SettingKey) -> Option<SettingValue> {
         S::CommitThreshold => V::Float((playback.commit_threshold * 100.0).round() / 100.0),
         S::Upscaling => V::Str(playback.upscaling.name().into()),
         S::Titles => V::Str(effective.meta.title_language.name().into()),
+        S::OpenAt => V::Str(effective.reading.open_at.clone()),
         S::Trailers => V::Str(effective.theme.trailers.name().into()),
         S::SeedRatio => V::Float(seeding.ratio),
         S::SeedHours => V::Int(i64::from(seeding.hours)),
@@ -1760,6 +1812,12 @@ mod tests {
                 (SettingKey::TorrentsWhileCasting, "on"),
                 (SettingKey::HoverCards, "on"),
                 (SettingKey::FindSkipTimes, "on"),
+                (SettingKey::ChapterDownloadsOnCellular, "off"),
+                (SettingKey::KeepChaptersReady, "off"),
+                (SettingKey::DeleteAfterReading, "off"),
+                (SettingKey::SeriesChoicesFollow, "on"),
+                (SettingKey::ChapterNotifications, "off"),
+                (SettingKey::OpenAt, "watch"),
             ]
         );
         assert!(view.rows.iter().all(|row| !SettingKey::NATIVE_ROWS.contains(&row.key)));

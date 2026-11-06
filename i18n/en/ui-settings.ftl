@@ -232,6 +232,15 @@ settings-keep-chapters-ready = Keep next chapters ready
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
 
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Series settings follow you
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = New chapters
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Open at
+
 # Row: seeding after watching.
 # @allow proceed
 settings-seed-after = Seed after watching

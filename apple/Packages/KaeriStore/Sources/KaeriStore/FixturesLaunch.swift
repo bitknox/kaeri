@@ -81,6 +81,7 @@ extension EngineLaunch {
         case "readingjoinask": return .readingJoinAsk
         case "readinghome": return .readingHome
         case "readingseries": return .readingSeries
+        case "readingdownloads": return .readingDownloads
         case "readermangartl": return .readerMangaRtl
         case "readerstrip": return .readerStrip
         case "readernovel": return .readerNovel

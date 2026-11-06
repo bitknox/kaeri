@@ -1006,12 +1006,19 @@ impl BookSources {
             let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
             let download = downloads.get(id.as_str()).cloned();
             let bookmarked = bookmarks.contains(id.as_str());
+            let number = chapter.number.map(|n| n.to_string());
+            let title = crate::read_catalog::chapters::own_title(
+                chapter.title.as_deref(),
+                &chapter.number_raw,
+                number.as_deref(),
+            )
+            .map(str::to_owned);
             let row = ChapterRow {
                 id,
                 label: chapter.number_raw.clone(),
                 state,
-                number: chapter.number.map(|n| n.to_string()),
-                title: chapter.title.clone(),
+                number,
+                title,
                 volume: chapter.volume.clone(),
                 published: chapter.published,
                 pages: chapter.page_count,

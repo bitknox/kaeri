@@ -53,12 +53,14 @@ extension PhoneSettingsPage {
         case .root: PhoneSettingsRoot()
         case .general: PhoneGeneralPage()
         case .playback: PhonePlaybackPage()
+        case .reading: PhoneReadingPage()
+        case .medium: PhoneMediumPage()
         case .downloads: PhoneDownloadsPage()
         case .notifications: PhoneNotificationsPage()
         case .showNotices(let id): PhoneShowNoticesPage(id: id)
         case .sources: PhoneSourcesPage()
         case .accounts: PhoneAccountsPage()
-        case .providers: PhoneProvidersPage()
+        case .providers: PhoneYourSourcesPage()
         case .stores: PhoneStoresPage()
         case .about: PhoneAboutPage()
         case .acknowledgements: PhoneAcknowledgementsPage()
@@ -143,10 +145,12 @@ struct PhoneSettingSwitch: View {
     let key: SettingKey
     var note: String?
     var status: String?
+    /// In place of the setting's own name, where the group's heading already says what it is.
+    var title: String?
 
     var body: some View {
         Toggle(isOn: Binding(get: { store.settings.isOn(key) }, set: { store.setSwitch(key, on: $0) })) {
-            PhoneRowTitle(title: key.title, note: note, status: status)
+            PhoneRowTitle(title: title ?? key.title, note: note, status: status)
         }
         .tint(.amber)
         .disabled(store.settings.row(key) == nil)
@@ -214,6 +218,18 @@ struct PhoneSettingsRoot: View {
     var body: some View {
         let anilist = store.accounts.tracker("anilist")
         PhoneList {
+            if store.medium.choosable {
+                Section {
+                    NavigationLink(value: PhoneSettingsPage.medium) {
+                        HStack {
+                            Text(L.settingsKaeriIsFor).font(.ui(17)).foregroundStyle(.silk)
+                            Spacer()
+                            Text(ReadWords.answer(store.medium.answer)).font(.ui(17)).foregroundStyle(.haze)
+                        }
+                    }
+                    .listRowBackground(Palette.raised)
+                }
+            }
             Section {
                 NavigationLink(value: PhoneSettingsPage.accounts) {
                     HStack(spacing: 14) {
@@ -240,9 +256,14 @@ struct PhoneSettingsRoot: View {
             }
             Section {
                 link(.general, L.settingsGroupGeneral, "gearshape", value: store.titleChoice.label)
-                link(.playback, L.settingsGroupPlayback, "play.rectangle", value: playbackValue)
-                link(.downloads, L.navDownloads, "arrow.down.to.line", value: Wording.bytes(store.downloads.bytesOnDisk))
-                link(.notifications, L.settingsGroupNotifications, "bell", value: store.settings.isOn(.episodeNotifications) ? L.valueOn : L.valueOff)
+                if store.medium.watches {
+                    link(.playback, L.settingsGroupPlayback, "play.rectangle", value: playbackValue)
+                }
+                if store.medium.reads {
+                    link(.reading, L.settingsGroupReading, "book", value: ReaderDefaultWords.manga(store)?.label ?? "")
+                }
+                link(.downloads, L.navDownloads, "arrow.down.to.line", value: Wording.bytes(downloadedBytes))
+                link(.notifications, L.settingsGroupNotifications, "bell", value: notificationsOn ? L.valueOn : L.valueOff)
                 link(.sources, L.sourcesTitle, "powerplug", value: store.settings.isOn(.torrents) ? L.settingsTorrentsValueOn : L.settingsTorrentsValueOff)
                 link(.accounts, L.navAccounts, "person", value: anilist?.connected == true ? AccountsModel.name("anilist") : L.valueNone)
                 link(.devices, L.devicesTitle, "laptopcomputer.and.iphone", value: SyncWords.rowValue(store.sync, tvs: store.tv.paired.count))
@@ -264,7 +285,19 @@ struct PhoneSettingsRoot: View {
         .navigationBarTitleDisplayMode(.large)
         .task {
             store.loadDownloads()
+            if store.medium.reads { store.reading.loadReaderDefaults() }
+            store.loadBookDownloadsIfReading()
         }
+    }
+
+    /// Episodes and chapters together, as the Downloads page holds both.
+    private var downloadedBytes: UInt64 {
+        store.downloads.bytesOnDisk + (store.medium.reads ? store.reading.downloads?.meter.used ?? 0 : 0)
+    }
+
+    private var notificationsOn: Bool {
+        (store.medium.watches && store.settings.isOn(.episodeNotifications))
+            || (store.medium.reads && store.settings.isOn(.chapterNotifications))
     }
 
     private var playbackValue: String {
@@ -457,14 +490,32 @@ struct PhoneDownloadsPage: View {
 
     var body: some View {
         let watched = WatchedDownloads(store)
+        let books = store.medium.reads ? BookDownloadSeries.group(store.reading.downloads?.rows ?? []) : []
+        let showsEmpty = !store.medium.watches || (store.downloads.loaded && store.downloads.groups.isEmpty)
+        let booksEmpty = !store.medium.reads || (store.reading.downloads != nil && books.isEmpty)
         PhoneList {
-            if store.downloads.loaded, store.downloads.groups.isEmpty {
+            if showsEmpty, booksEmpty {
                 NoDownloads()
                     .frame(minHeight: 280)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             }
-            ForEach(store.downloads.groups) { group in
+            if !books.isEmpty {
+                Section {
+                    ForEach(books) { series in
+                        BookDownloadSeriesRow(series: series)
+                            .listRowBackground(Palette.raised)
+                    }
+                } header: {
+                    PhoneSectionHeader(L.settingsGroupReading)
+                } footer: {
+                    if let meter = store.reading.downloads?.meter, meter.chapters > 0 {
+                        Text(L.readDownloadsTotal(n: Int(meter.chapters), size: Wording.bytes(meter.used)))
+                            .monospacedDigit()
+                    }
+                }
+            }
+            ForEach(store.medium.watches ? store.downloads.groups : []) { group in
                 Section {
                     ForEach(group.rows, id: \.id) { row in
                         PhoneDownloadRow(row: row)
@@ -488,25 +539,30 @@ struct PhoneDownloadsPage: View {
                     PhoneSectionHeader(L.downloadsSeedingAfterWatching)
                 }
             }
-            Section {
-                PhoneSettingPicker(key: .downloadQuality, note: L.settingsQualityDetail)
-                PhoneSettingPicker(key: .keepNextEpisodes, note: L.settingsKeepNextDetail)
-                PhoneSettingSwitch(key: .downloadsOnCellular)
-                PhoneSettingSwitch(key: .mergeSubtitles, note: L.settingsMergeSubtitlesDetail)
-                PhoneSettingSwitch(key: .keepSeeding, note: L.settingsKeepSeedingDetail)
-            } header: {
-                PhoneSectionHeader(L.settingsGroupFiles)
+            if store.medium.reads {
+                PhoneReadingDownloadsSection()
             }
-            Section {
-                Button(L.downloadsClearFinished) { store.clearCompletedDownloads() }
-                    .disabled(!store.downloads.groups.contains { $0.rows.contains { $0.state == .done } })
-                    .listRowBackground(Palette.raised)
-                Button(L.downloadsDeleteWatched, role: .destructive) { confirmDelete = true }
-                    .disabled(watched.rows.isEmpty)
-                    .listRowBackground(Palette.raised)
-            } footer: {
-                Text(FreeSpace.bytes.map { L.settingsStorageUsedFree(size: Wording.bytes(store.downloads.bytesOnDisk), free: Wording.bytes($0)) }
-                     ?? L.settingsStorageUsed(size: Wording.bytes(store.downloads.bytesOnDisk)))
+            if store.medium.watches {
+                Section {
+                    PhoneSettingPicker(key: .downloadQuality, note: L.settingsQualityDetail)
+                    PhoneSettingPicker(key: .keepNextEpisodes, note: L.settingsKeepNextDetail)
+                    PhoneSettingSwitch(key: .downloadsOnCellular)
+                    PhoneSettingSwitch(key: .mergeSubtitles, note: L.settingsMergeSubtitlesDetail)
+                    PhoneSettingSwitch(key: .keepSeeding, note: L.settingsKeepSeedingDetail)
+                } header: {
+                    PhoneSectionHeader(store.medium.both ? L.settingsGroupShows : L.settingsGroupFiles)
+                }
+                Section {
+                    Button(L.downloadsClearFinished) { store.clearCompletedDownloads() }
+                        .disabled(!store.downloads.groups.contains { $0.rows.contains { $0.state == .done } })
+                        .listRowBackground(Palette.raised)
+                    Button(L.downloadsDeleteWatched, role: .destructive) { confirmDelete = true }
+                        .disabled(watched.rows.isEmpty)
+                        .listRowBackground(Palette.raised)
+                } footer: {
+                    Text(FreeSpace.bytes.map { L.settingsStorageUsedFree(size: Wording.bytes(store.downloads.bytesOnDisk), free: Wording.bytes($0)) }
+                         ?? L.settingsStorageUsed(size: Wording.bytes(store.downloads.bytesOnDisk)))
+                }
             }
         }
         .inProgressRotor(store.downloads.groups, titles: store.titles, in: rotor)
@@ -521,7 +577,10 @@ struct PhoneDownloadsPage: View {
         .confirmationDialog(L.settingsDeleteWatchedTitle(count: watched.rows.count), isPresented: $confirmDelete) {
             Button(L.actionDelete, role: .destructive) { for row in watched.rows { store.deleteDownload(row.id) } }
         }
-        .task { store.loadDownloads() }
+        .task(id: store.medium.answer) {
+            store.loadDownloads()
+            if store.medium.reads { store.reading.loadDownloads() }
+        }
     }
 }
 
@@ -741,6 +800,7 @@ struct PhoneAccountsPage: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @State private var kitsu = false
+    @State private var mangaUpdates = false
     @State private var conflicts = false
 
     var body: some View {
@@ -800,18 +860,19 @@ struct PhoneAccountsPage: View {
                 PhoneSectionHeader(L.discussionSettingsGroup)
             }
             Section {
-                ForEach(["mal", "kitsu", "simkl", "trakt"], id: \.self) { tracker in
-                    PhoneTrackerRow(tracker: tracker, kitsu: $kitsu)
+                ForEach(AccountWords.others(store.medium.answer), id: \.self) { tracker in
+                    PhoneTrackerRow(tracker: tracker, kitsu: $kitsu, mangaUpdates: $mangaUpdates)
                 }
             } header: {
                 PhoneSectionHeader(L.accountsOtherTrackers)
             } footer: {
-                Text(AccountWords.tokens(store.accounts))
+                Text(AccountWords.footnote(store))
             }
         }
         .navigationTitle(L.navAccounts)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $kitsu) { KitsuSheet().presentationDetents([.medium]) }
+        .sheet(isPresented: $mangaUpdates) { KitsuSheet(tracker: "mangaupdates").presentationDetents([.medium]) }
         .onLaunchSheet("kitsu", navigator) { kitsu = true }
         .sheet(isPresented: $conflicts) { ConflictsSheet() }
     }
@@ -821,6 +882,7 @@ struct PhoneTrackerRow: View {
     @Environment(AppStore.self) private var store
     let tracker: String
     @Binding var kitsu: Bool
+    @Binding var mangaUpdates: Bool
 
     var body: some View {
         let state = store.accounts.tracker(tracker)
@@ -834,6 +896,7 @@ struct PhoneTrackerRow: View {
                 } else {
                     switch tracker {
                     case "kitsu": Button(L.actionSignIn) { kitsu = true }
+                    case "mangaupdates": Button(L.actionSignIn) { mangaUpdates = true }
                     default:
                         // MyAnimeList through the system's sign-in sheet, Simkl and Trakt with a
                         // code to type on another device.

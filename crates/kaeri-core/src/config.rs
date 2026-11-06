@@ -567,6 +567,8 @@ pub struct ReadingConfig {
     pub keep_chapters_ready: Option<bool>,
     /// Delete a downloaded chapter once it is read.
     pub delete_after_reading: bool,
+    /// Which Home the app opens at while it is for both: `watch` or `read`.
+    pub open_at: String,
     pub manga: BTreeMap<String, toml::Value>,
     pub novel: BTreeMap<String, toml::Value>,
     /// E-ink: `mode` (auto, on, off), `colour_panel` (the answer to "Is this a colour
@@ -585,6 +587,7 @@ impl Default for ReadingConfig {
             downloads_on_cellular: false,
             keep_chapters_ready: None,
             delete_after_reading: false,
+            open_at: "watch".into(),
             manga: BTreeMap::new(),
             novel: BTreeMap::new(),
             eink: BTreeMap::new(),
