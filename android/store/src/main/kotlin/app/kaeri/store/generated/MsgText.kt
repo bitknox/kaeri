@@ -332,7 +332,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingFailedSignIn -> Strings.readingFailedSignIn(context, this.what)
         is ReadingMsg.ReadingFailedFileMissing -> Strings.readingFailedFileMissing(context, this.path)
         is ReadingMsg.ReadingFailedUnreadable -> Strings.readingFailedUnreadable(context, this.path, this.format)
-        is ReadingMsg.ReadingFailedUnsupported -> Strings.readingFailedUnsupported(context, this.extension)
+        is ReadingMsg.ReadingFailedUnsupported -> Strings.readingFailedUnsupported(context, this.kind)
         is ReadingMsg.ReadingFailedProtected -> Strings.readingFailedProtected(context)
         is ReadingMsg.ReadingFailedDiskFull -> Strings.readingFailedDiskFull(context)
         is ReadingMsg.ReadingFailedWebview -> Strings.readingFailedWebview(context, this.version.toInt())

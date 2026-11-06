@@ -744,9 +744,9 @@ public enum L {
         Self.format("reading-failed-unreadable", fallback: "%1$@ couldn't be read as %2$@. The file may be damaged.", path, format)
     }
 
-    /// Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-    public static func readingFailedUnsupported(extension: String) -> String {
-        Self.format("reading-failed-unsupported", fallback: "Kaeri can't read %1$@ files.", extension)
+    /// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+    public static func readingFailedUnsupported(kind: String) -> String {
+        Self.format("reading-failed-unsupported", fallback: "Kaeri can't read %1$@ files.", kind)
     }
 
     /// Why a book could not open: it is copy-protected or encrypted.

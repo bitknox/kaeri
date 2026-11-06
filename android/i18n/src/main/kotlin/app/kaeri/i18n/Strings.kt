@@ -733,9 +733,9 @@ object Strings {
     fun readingFailedUnreadable(context: Context, path: String, format: String): String =
         context.getString(R.string.reading_failed_unreadable, path, format)
 
-    /** Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu. */
-    fun readingFailedUnsupported(context: Context, extension: String): String =
-        context.getString(R.string.reading_failed_unsupported, extension)
+    /** Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu. */
+    fun readingFailedUnsupported(context: Context, kind: String): String =
+        context.getString(R.string.reading_failed_unsupported, kind)
 
     /** Why a book could not open: it is copy-protected or encrypted. */
     fun readingFailedProtected(context: Context): String =

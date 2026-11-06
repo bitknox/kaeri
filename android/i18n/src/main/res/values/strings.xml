@@ -391,7 +391,7 @@
     <string name="reading_failed_file_missing">%1$s isn\'t there anymore. If it\'s on a drive, connect it and try again.</string>
     <!-- Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB. -->
     <string name="reading_failed_unreadable">%1$s couldn\'t be read as %2$s. The file may be damaged.</string>
-    <!-- Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu. -->
+    <!-- Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu. -->
     <string name="reading_failed_unsupported">Kaeri can\'t read %1$s files.</string>
     <!-- Why a book could not open: it is copy-protected or encrypted. -->
     <string name="reading_failed_protected">This book is copy-protected, so Kaeri can\'t open it.</string>

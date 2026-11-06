@@ -165912,7 +165912,7 @@
       }
     },
     "reading-failed-unsupported" : {
-      "comment" : "Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu. Argument 1: extension (Text).",
+      "comment" : "Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu. Argument 1: kind (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

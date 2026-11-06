@@ -608,7 +608,7 @@ impl ReadingFailure {
                 format: format.clone(),
             },
             Self::Unsupported { extension } => {
-                ReadingMsg::ReadingFailedUnsupported { extension: extension.clone() }
+                ReadingMsg::ReadingFailedUnsupported { kind: extension.clone() }
             }
             Self::Protected => ReadingMsg::ReadingFailedProtected,
             Self::DiskFull => ReadingMsg::ReadingFailedDiskFull,

@@ -1233,8 +1233,8 @@ pub enum ReadingMsg {
     ReadingFailedFileMissing { path: String },
     /// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
     ReadingFailedUnreadable { path: String, format: String },
-    /// Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
-    ReadingFailedUnsupported { extension: String },
+    /// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+    ReadingFailedUnsupported { kind: String },
     /// Why a book could not open: it is copy-protected or encrypted.
     ReadingFailedProtected,
     /// Why a chapter could not be saved: the disk is full.
@@ -1320,7 +1320,7 @@ impl ReadingMsg {
             Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
             Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],
-            Self::ReadingFailedUnsupported { extension } => vec![("extension", Value::Text(extension.clone()))],
+            Self::ReadingFailedUnsupported { kind } => vec![("kind", Value::Text(kind.clone()))],
             Self::ReadingFailedProtected => Vec::new(),
             Self::ReadingFailedDiskFull => Vec::new(),
             Self::ReadingFailedWebview { version } => vec![("version", Value::Int(*version))],

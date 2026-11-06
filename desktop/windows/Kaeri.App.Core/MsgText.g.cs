@@ -329,7 +329,7 @@ public static class MsgText
         ReadingMsg.ReadingFailedSignIn x => T.ReadingFailedSignIn(x.What),
         ReadingMsg.ReadingFailedFileMissing x => T.ReadingFailedFileMissing(x.Path),
         ReadingMsg.ReadingFailedUnreadable x => T.ReadingFailedUnreadable(x.Path, x.Format),
-        ReadingMsg.ReadingFailedUnsupported x => T.ReadingFailedUnsupported(x.Extension),
+        ReadingMsg.ReadingFailedUnsupported x => T.ReadingFailedUnsupported(x.Kind),
         ReadingMsg.ReadingFailedProtected => T.ReadingFailedProtected,
         ReadingMsg.ReadingFailedDiskFull => T.ReadingFailedDiskFull,
         ReadingMsg.ReadingFailedWebview x => T.ReadingFailedWebview(x.Version),

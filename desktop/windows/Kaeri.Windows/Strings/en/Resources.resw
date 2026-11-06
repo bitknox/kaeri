@@ -796,8 +796,8 @@
     <comment>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</comment>
   </data>
   <data name="ReadingFailedUnsupported" xml:space="preserve">
-    <value>Kaeri can't read {extension} files.</value>
-    <comment>Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.</comment>
+    <value>Kaeri can't read {kind} files.</value>
+    <comment>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</comment>
   </data>
   <data name="ReadingFailedProtected" xml:space="preserve">
     <value>This book is copy-protected, so Kaeri can't open it.</value>

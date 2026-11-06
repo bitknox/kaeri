@@ -331,7 +331,7 @@ extension ReadingMsg {
         case .readingFailedSignIn(let what): L.readingFailedSignIn(what: what)
         case .readingFailedFileMissing(let path): L.readingFailedFileMissing(path: path)
         case .readingFailedUnreadable(let path, let format): L.readingFailedUnreadable(path: path, format: format)
-        case .readingFailedUnsupported(let extension): L.readingFailedUnsupported(extension: extension)
+        case .readingFailedUnsupported(let kind): L.readingFailedUnsupported(kind: kind)
         case .readingFailedProtected: L.readingFailedProtected
         case .readingFailedDiskFull: L.readingFailedDiskFull
         case .readingFailedWebview(let version): L.readingFailedWebview(version: Int(version))
