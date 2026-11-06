@@ -421,8 +421,11 @@ pub fn play_party(
         return playback::refuse(job, tx);
     };
     let billing = named(id, &episode, engine);
+    // From the start: the room opens an episode at 0:00 and brings a member who joins late to
+    // its own position. This device's resume point would put it ahead of the room, and near the
+    // end of a file it ended at once and moved the whole room on.
     let staged =
-        play_staged(id, episode, None, false, true, billing, opener, job, engine, services, tx);
+        play_staged(id, episode, None, true, true, billing, opener, job, engine, services, tx);
     let _ = tx.send(staged);
 }
 

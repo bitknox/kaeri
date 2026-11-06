@@ -90,6 +90,8 @@ struct Device {
     seat: Option<Seat>,
     /// Every playback a file was loaded for, in order.
     loads: Vec<PlaybackId>,
+    /// Where each loaded file was told to start, in seconds.
+    starts: Vec<f64>,
     /// How long this device's files run.
     runtime: f64,
     _root: tempfile::TempDir,
@@ -131,6 +133,7 @@ impl Device {
             reactions: Vec::new(),
             seat: None,
             loads: Vec::new(),
+            starts: Vec::new(),
             runtime: RUNTIME,
             _root: root,
         }
@@ -255,6 +258,7 @@ impl Device {
                     );
                 }
                 self.loads.push(playback);
+                self.starts.push(start);
                 self.seat = Some(Seat {
                     playback,
                     position: start,
@@ -819,6 +823,69 @@ fn a_member_without_the_episode_stays_in_the_room_while_the_others_play() {
     for device in [ada, ben, cy] {
         device.engine.shutdown();
     }
+}
+
+/// A party's episode opens at 0:00 on every device, as the room's does, even on a device that
+/// left that episode part way: the room says where play is, not the device's own resume point.
+/// Opening at the resume point put a device ahead of the room, and with a short file at its end,
+/// which moved the whole room on to the next episode.
+#[test]
+fn a_party_episode_opens_at_the_start_on_a_device_that_left_it_part_way() {
+    let mut ada = Device::start("Ada", sources::registry());
+    let party: Arc<FfiFakeParty> = ada.engine.start_fake_party().expect("the fake server");
+    let server = party.server();
+    let room = "lark-3vd8-qm2t";
+    let mut ben = Device::start("Ben", sources::registry());
+    // Ben stopped episode 1 at 0:40 some time ago.
+    {
+        let store = kaeri_store::Store::open(ben._root.path().join("data/kaeri.db")).unwrap();
+        let mut left = kaeri_store::WatchEvent {
+            duration_secs: Some(RUNTIME),
+            watched_secs: 40.0,
+            ..kaeri_store::WatchEvent::new(FINISHED, "1", 40.0)
+        };
+        left.at -= 3_600;
+        store.record_event(&left).unwrap();
+    }
+
+    ada.party(PartyCommand::Lobby {
+        server: server.clone(),
+        room: room.into(),
+        name: Some("Ada".into()),
+        pick: Some(PartyEpisode { id: FINISHED, episode: "1".into() }),
+    });
+    wait("Ada's lobby", &mut [&mut ada], |d| {
+        d[0].view.as_ref().is_some_and(|v| v.link.is_some())
+    });
+    ben.party(PartyCommand::Lobby {
+        server,
+        room: room.into(),
+        name: Some("Ben".into()),
+        pick: None,
+    });
+    wait("both in the lobby", &mut [&mut ada, &mut ben], |d| {
+        d[1].room_episode() == Some((Some(FINISHED.get()), "1".into()))
+            && d.iter().all(|d| d.members.len() == 2)
+    });
+    ada.send(Command::PartyReady { ready: true });
+    ben.send(Command::PartyReady { ready: true });
+    wait("both to start episode 1", &mut [&mut ada, &mut ben], |d| {
+        d.iter().all(|d| d.started_episode("1") && d.playing())
+    });
+    assert_eq!(ada.starts.first(), Some(&0.0), "{}", ada.tail());
+    assert_eq!(
+        ben.starts.first(),
+        Some(&0.0),
+        "Ben opened at his own resume point:
+{}",
+        ben.tail()
+    );
+    assert!(
+        ada.room_episode() == Some((Some(FINISHED.get()), "1".into())),
+        "the room stayed on episode 1"
+    );
+    ada.engine.shutdown();
+    ben.engine.shutdown();
 }
 
 /// Not a test: a Kaeri member named Mika for a person or a script to watch together with from
