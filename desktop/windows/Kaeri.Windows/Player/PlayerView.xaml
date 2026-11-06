@@ -347,7 +347,17 @@
                        MaxLines="3" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
             <TextBlock x:Name="UpNextLine" Style="{StaticResource HazeCaptionStyle}" Typography.NumeralAlignment="Tabular" Margin="0,4,0,0" />
           </StackPanel>
-          <ProgressBar x:Name="UpNextBar" Grid.Row="1" Grid.ColumnSpan="2" Maximum="1" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+          <!-- The countdown's line, silk under amber, linear. Drawn here rather than a ProgressBar,
+               whose template failed inside XAML (E_INVALIDARG) as the card came and went. -->
+          <Grid x:Name="UpNextBar" Grid.Row="1" Grid.ColumnSpan="2" Height="3" CornerRadius="1.5" Visibility="Collapsed"
+                AutomationProperties.AccessibilityView="Raw">
+            <Rectangle Fill="{ThemeResource SilkBrush}" Opacity="0.25" />
+            <Rectangle Fill="{ThemeResource AmberBrush}" RenderTransformOrigin="0,0.5">
+              <Rectangle.RenderTransform>
+                <ScaleTransform x:Name="UpNextFill" ScaleX="1" />
+              </Rectangle.RenderTransform>
+            </Rectangle>
+          </Grid>
           <StackPanel x:Name="UpNextButtons" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button x:Name="UpNextCancel" AllowFocusOnInteraction="False" Content="{x:Bind app:T.ActionCancel}" Click="OnCancelNext" />
             <Button AllowFocusOnInteraction="False" Content="{x:Bind app:T.ActionPlayNow}" Style="{StaticResource AccentButtonStyle}" Click="OnPlayNext" />

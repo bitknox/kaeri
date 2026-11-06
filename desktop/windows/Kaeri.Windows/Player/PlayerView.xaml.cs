@@ -141,13 +141,19 @@ public sealed partial class PlayerView : UserControl
     /// </summary>
     void OnLosingFocus(UIElement sender, LosingFocusEventArgs e)
     {
-        if (!Showing || e.NewFocusedElement is not DependencyObject next || Within(next, this) || InPopup(next))
+        // Only a click's: a flyout, a dialog or the window moving focus on purpose is let be,
+        // as cancelling theirs fails inside XAML (E_INVALIDARG, with no stack).
+        if (!Showing || e.FocusState != FocusState.Pointer || e.NewFocusedElement is not DependencyObject next
+            || Within(next, this) || InPopup(next))
             return;
         e.TryCancel();
     }
 
     bool InPopup(DependencyObject element)
     {
+        for (var at = element; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at is Popup)
+                return true;
         if (XamlRoot is null)
             return false;
         foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot))
@@ -1541,17 +1547,18 @@ public sealed partial class PlayerView : UserControl
             UpNextLine.Visibility = Visibility.Visible;
             UpNextLine.Text = counting ? T.PartyNextLine((long)Math.Ceiling(Math.Max(0, toEnd))) : T.PartyNextOff;
             if (counting)
-                UpNextBar.Value = Math.Clamp(toEnd / span, 0, 1);
+                UpNextFill.ScaleX = Math.Clamp(toEnd / span, 0, 1);
             return;
         }
         // With a screen reader running the card waits for a choice instead of counting down, and
         // so does it in a party the room doesn't move on: Play now picks the episode for the room.
-        var left = DeviceWatch.ScreenReaderRunning() || InParty ? null : card.Remaining(position, duration);
+        // On the time shown, so a seek on its way holds the line full rather than hiding it.
+        var left = DeviceWatch.ScreenReaderRunning() || InParty ? null : card.Remaining(Shown, duration);
         UpNextBar.Visibility = left is null ? Visibility.Collapsed : Visibility.Visible;
         UpNextLine.Visibility = UpNextBar.Visibility;
         if (left is { } l)
         {
-            UpNextBar.Value = l / card.Countdown;
+            UpNextFill.ScaleX = Math.Clamp(l / card.Countdown, 0, 1);
             UpNextLine.Text = T.PlayerPlaysIn((long)Math.Ceiling(l));
             // Not while the viewer drags the line, whose keyframe seeks move the playhead, nor
             // while a seek is on its way.
