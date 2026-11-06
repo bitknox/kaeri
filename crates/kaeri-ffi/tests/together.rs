@@ -188,7 +188,15 @@ impl Device {
     }
 
     fn take(&mut self, event: Event) {
-        self.read.push(format!("{event:?}"));
+        if !matches!(
+            event,
+            Event::Playback { .. }
+                | Event::PlayerUi { .. }
+                | Event::PlayerStats { .. }
+                | Event::Settings(_)
+        ) {
+            self.read.push(format!("{event:?}"));
+        }
         if self.read.len() > 400 {
             self.read.drain(..100);
         }
@@ -364,8 +372,21 @@ impl Device {
     }
 
     fn tail(&self) -> String {
-        let from = self.read.len().saturating_sub(40);
-        format!("{} said, last:\n  {}", self.name, self.read[from..].join("\n  "))
+        let from = self.read.len().saturating_sub(300);
+        let members: Vec<String> =
+            self.members.iter().map(|m| format!("{} {:?}", m.name, m.file)).collect();
+        format!(
+            "{}: started {:?}, at {:?}, paused {}, left {:?}, members {members:?}, room {:?}\n\
+             {} said, last:\n  {}",
+            self.name,
+            self.started,
+            self.position(),
+            self.paused(),
+            self.left,
+            self.room_episode(),
+            self.name,
+            self.read[from..].join("\n  ")
+        )
     }
 }
 
@@ -417,11 +438,36 @@ fn without_the_title() -> ProviderRegistry {
 /// comes back to the room where it is.
 #[test]
 fn two_devices_watch_an_episode_together_from_the_lobby_to_the_next() {
+    let probe = Device::start("Probe", sources::registry());
+    let party: Arc<FfiFakeParty> = probe.engine.start_fake_party().expect("the fake server");
+    watch_through(&party.server(), "kite-7qm4-xr9d", false);
+    party.stop();
+    probe.engine.shutdown();
+}
+
+/// [`two_devices_watch_an_episode_together_from_the_lobby_to_the_next`] on the public suggested
+/// server, in a room of its own, with Ben joining by the room's code: real network conditions.
+/// Run by hand with `--ignored`; it reaches the internet.
+#[test]
+#[ignore = "reaches the public Syncplay server"]
+fn two_devices_watch_together_on_the_public_server() {
+    let stamp =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let letters: String = (0..8)
+        .map(|i| {
+            char::from(b"abcdefghjkmnpqrstuvwxyz23456789"[((stamp >> (i * 5)) % 31) as usize])
+        })
+        .collect();
+    let room = format!("kite-{}-{}", &letters[..4], &letters[4..]);
+    watch_through(kaeri_model::party::SUGGESTED_SERVER, &room, true);
+}
+
+/// The two-device walk through, on `server` in `room`; Ben joins by the code when `by_code`,
+/// as typed on the Watch together page, and by the link otherwise.
+fn watch_through(server: &str, room: &str, by_code: bool) {
+    let server = server.to_owned();
     let mut ada = Device::start("Ada", sources::registry());
     let mut ben = Device::start("Ben", sources::registry());
-    let party: Arc<FfiFakeParty> = ada.engine.start_fake_party().expect("the fake server");
-    let server = party.server();
-    let room = "kite-7qm4-xr9d";
 
     // Ada starts a party for episode 1.
     ada.party(PartyCommand::Lobby {
@@ -435,9 +481,21 @@ fn two_devices_watch_an_episode_together_from_the_lobby_to_the_next() {
     });
     let link = ada.view.as_ref().and_then(|v| v.link.clone()).unwrap();
 
-    // Ben opens the link: the room and its episode, found in Ben's own sources.
-    let target = parse_party_target(link.clone()).expect("the link leads to the room");
-    assert_eq!((target.server.as_str(), target.room.as_str()), (server.as_str(), room));
+    // Ben opens the link, or types the code: the room and its episode, found in Ben's own
+    // sources. A code names no server: the app uses the suggested one.
+    let mut target = if by_code {
+        let code = ada.view.as_ref().and_then(|v| v.code.clone()).expect("a code");
+        parse_party_target(code).expect("the code leads to the room")
+    } else {
+        parse_party_target(link.clone()).expect("the link leads to the room")
+    };
+    if target.server.is_empty() {
+        target.server = kaeri_model::party::SUGGESTED_SERVER.into();
+    }
+    assert_eq!(
+        (kaeri_party_server(&target.server), target.room.as_str()),
+        (kaeri_party_server(&server), room)
+    );
     ben.party(PartyCommand::Lobby {
         server: target.server,
         room: target.room,
@@ -452,7 +510,11 @@ fn two_devices_watch_an_episode_together_from_the_lobby_to_the_next() {
             && ben.members.len() == 2
     });
     let ben_view = ben.view.clone().unwrap();
-    assert_eq!(ben_view.starter.as_deref(), Some("Ada"));
+    // A Syncplay server names who set the playlist only to those in the room when it was set;
+    // the fake names them to newcomers too.
+    if !by_code {
+        assert_eq!(ben_view.starter.as_deref(), Some("Ada"), "{ben_view:?}");
+    }
     assert!(!ben_view.can_start_anyway, "Ada started it, so only Ada can start it anyway");
     assert!(ben_view.next_episode.as_ref().is_some_and(|n| n.episode == "2"));
 
@@ -541,7 +603,18 @@ fn two_devices_watch_an_episode_together_from_the_lobby_to_the_next() {
                 && d.playing()
         })
     });
-    wait("together on episode 2", &mut [&mut ada, &mut ben], |d| together(d[0], d[1]));
+    wait("playing together on episode 2", &mut [&mut ada, &mut ben], |d| {
+        d[0].playing() && d[1].playing() && together(d[0], d[1])
+    });
+    // And still, once both moves on have settled.
+    hold(&mut [&mut ada, &mut ben], Duration::from_secs(3));
+    assert!(
+        ada.playing() && ben.playing() && together(&ada, &ben),
+        "{}
+{}",
+        ada.tail(),
+        ben.tail()
+    );
 
     // Ben leaves: Ada is told and plays on; Ben's player plays on alone.
     ben.send(Command::PartyLeave);
@@ -568,9 +641,20 @@ fn two_devices_watch_an_episode_together_from_the_lobby_to_the_next() {
             && together(d[0], d[1])
     });
 
-    party.stop();
+    // Both leave, so a room on a real server is left empty.
+    let (before_ada, before_ben) = (ada.left.len(), ben.left.len());
+    ben.send(Command::PartyLeave);
+    ada.send(Command::PartyLeave);
+    wait("both out of the room", &mut [&mut ada, &mut ben], |d| {
+        d[0].left.len() > before_ada && d[1].left.len() > before_ben
+    });
     ada.engine.shutdown();
     ben.engine.shutdown();
+}
+
+/// A server as written, with the usual port when none is.
+fn kaeri_party_server(server: &str) -> String {
+    if server.contains(':') { server.to_owned() } else { format!("{server}:8999") }
 }
 
 /// A room joined while it plays, by a member who never says ready: this device follows the
