@@ -45,6 +45,22 @@ pub struct BookWorkKind {
     pub origin: Option<String>,
     /// The first of the titles kept.
     pub title: Option<String>,
+    /// AniList's publishing status: `RELEASING`, `FINISHED`, `CANCELLED`.
+    pub status: Option<String>,
+}
+
+impl BookWorkKind {
+    /// A webtoon: tagged as a long strip, or from Korea, China or Taiwan, where comics are
+    /// made as strips.
+    pub fn webtoon(&self) -> bool {
+        self.format.as_deref() == Some("webtoon")
+            || self.origin.as_deref().is_some_and(|o| matches!(o, "KR" | "CN" | "TW"))
+    }
+
+    /// No more chapters are coming: the series is finished or was cancelled.
+    pub fn ended(&self) -> bool {
+        matches!(self.status.as_deref(), Some("FINISHED" | "CANCELLED"))
+    }
 }
 
 impl Store {
@@ -189,7 +205,7 @@ impl Store {
     pub fn book_work_kind(&self, work: &str) -> Result<Option<BookWorkKind>> {
         self.with_conn(|c| {
             Ok(c.query_row(
-                "SELECT medium, format, origin, titles FROM book_work WHERE work = ?1",
+                "SELECT medium, format, origin, titles, status FROM book_work WHERE work = ?1",
                 [work],
                 |r| {
                     let titles: String = r.get(3)?;
@@ -198,6 +214,7 @@ impl Store {
                         format: r.get(1)?,
                         origin: r.get(2)?,
                         title: first_title(&titles),
+                        status: r.get(4)?,
                     })
                 },
             )

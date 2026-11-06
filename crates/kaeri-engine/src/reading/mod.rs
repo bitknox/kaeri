@@ -21,8 +21,8 @@ use kaeri_model::{
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
     reader::ReaderCommand,
     reading::{
-        FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
-        ReadingHomeView, UpdatesView,
+        FeedView, LibrarySegmentRead, ReadSearchQuery, ReadingAbout, ReadingCommand,
+        ReadingEvent, ReadingFailure, ReadingHomeView, UpdatesView,
     },
 };
 
@@ -241,9 +241,17 @@ pub(crate) fn reading(
                 ReadingCommand::Bookmark { work, .. } => (work.clone(), false),
                 _ => return,
             };
+            let again = match &command {
+                ReadingCommand::ReadAgain { .. } => Some(true),
+                ReadingCommand::UndoReadAgain { .. } => Some(false),
+                _ => None,
+            };
             if let Err(e) = marks(&services.store, command, now) {
                 tracing::warn!(error = %e, "a reading mark was not kept");
                 return;
+            }
+            if let Some(again) = again {
+                rereading(services, &work, again, now, tx);
             }
             if read {
                 let lent = crate::downloads::books::Lent::of(services, tx);
@@ -387,6 +395,34 @@ fn mark_read(
     services.book_sources.report(&work, ids, read, now);
     // What the trackers hold follows the catalogue.
     let _ = crate::read_tracking::progress_of(services, &work);
+}
+
+/// Read again puts the series on Rereading here and on the trackers, which keep their chapter
+/// count; its undo puts back the list the series was on.
+fn rereading(services: &Services, work: &WorkId, again: bool, now: i64, tx: &Outbox) {
+    let store = &services.store;
+    let key = format!("read_again_was:{}", work.as_str());
+    let status = if again {
+        let was = store.read_status(work.as_str()).ok().and_then(|(s, _)| s);
+        if was.as_deref() == Some(LibrarySegmentRead::Rereading.as_str()) {
+            return;
+        }
+        if let Err(e) = store.set_meta_text(&key, was.as_deref().unwrap_or("")) {
+            tracing::warn!(error = %e, "the list before Read again was not kept");
+        }
+        Some(LibrarySegmentRead::Rereading)
+    } else {
+        let Ok(Some(was)) = store.get_meta_text(&key) else { return };
+        let _ = store.delete_meta(&key);
+        LibrarySegmentRead::parse(&was)
+    };
+    let name = status.map(LibrarySegmentRead::as_str);
+    if let Err(e) = store.set_read_status(work.as_str(), name, now) {
+        tracing::warn!(error = %e, "the reading list was not kept");
+    }
+    if let Some(status) = status {
+        crate::read_tracking::queue_status(services, work, status, now, tx);
+    }
 }
 
 /// Marks on many chapters at once, and bookmarks, kept in the store. Like [`mark_read`] they

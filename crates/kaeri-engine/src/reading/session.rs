@@ -13,6 +13,7 @@ use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
+    config::WebtoonMode,
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -29,7 +30,7 @@ use kaeri_model::{
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
 use kaeri_pages::{ColourChoice, Look, Target, layout::SpreadOnSingle};
-use kaeri_store::reading::ReadEvent;
+use kaeri_store::{reading::ReadEvent, shelf::BookWorkKind};
 use tokio::time::Instant;
 
 use super::{
@@ -150,8 +151,10 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
-    /// A guess from the source's hint, kept and shown when the chapter is laid out.
-    hinted_strip: bool,
+    /// The Webtoons default, for a webtoon with no mode of its own.
+    webtoon: Option<WebtoonMode>,
+    /// The catalogue says no more chapters are coming.
+    ended: bool,
     /// The place before a jump, for Back to page.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
@@ -342,7 +345,14 @@ impl Reader {
         }
         self.next += 1;
         let id = self.next;
-        let chapters = shelf::chapters(&cx.services.store, work.as_str());
+        let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
+        if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
+            &cx.services.book_sources,
+            &cx.services.store,
+            &work,
+        ) {
+            shelf::name_downloads(&mut chapters, &list);
+        }
         if chapters.is_empty()
             && let Some(slot) = novel::list(cx, id, &work)
         {
@@ -421,19 +431,20 @@ impl Reader {
             OpenAt::Place { place } if place.chapter == chapters[index].id => place.clone(),
             _ => place(&work, &chapters[index].id, Some(page)),
         };
-        // The source's word comes before the pages' shape: a work from Korea or China is read
-        // as a strip unless the series says otherwise.
-        let hinted_strip = !layers.series_has(Key::Mode)
+        // The catalogue's word comes before the pages' shape: a webtoon (tagged a long strip,
+        // or from Korea or China) opens as the Webtoons default says, unless the series has a
+        // mode of its own.
+        let webtoon = (!layers.series_has(Key::Mode)
             && medium == Medium::Manga
-            && kind
-                .as_ref()
-                .and_then(|k| k.origin.as_deref())
-                .is_some_and(|o| matches!(o, "KR" | "CN" | "TW"));
+            && kind.as_ref().is_some_and(BookWorkKind::webtoon))
+        .then(|| cx.config.effective().reading.webtoon.mode);
+        let ended = kind.as_ref().is_some_and(BookWorkKind::ended);
         let mut session = Session {
             id,
             work,
             medium,
             title: kind.and_then(|k| k.title).unwrap_or_default(),
+            ended,
             chapters,
             at: index,
             surface,
@@ -450,7 +461,7 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
-            hinted_strip,
+            webtoon,
             back_to: None,
             moved_back: None,
             read_fired: false,
@@ -668,7 +679,10 @@ impl Session {
             ..Look::default()
         };
         let layout = l.word(Key::PageLayout);
-        let strip = self.hinted_strip || l.word(Key::Mode) == "strip";
+        let strip = match self.webtoon {
+            Some(mode) => mode == WebtoonMode::Strip,
+            None => l.word(Key::Mode) == "strip",
+        };
         Plan {
             target: Target {
                 panel,
@@ -688,7 +702,7 @@ impl Session {
             } else {
                 ReadDirection::RightToLeft
             },
-            guess_mode: !self.hinted_strip && !l.series_has(Key::Mode),
+            guess_mode: self.webtoon.is_none() && !l.series_has(Key::Mode),
             guess_direction: !l.series_has(Key::Direction),
         }
     }
@@ -737,7 +751,8 @@ impl Session {
         let now = cx.now();
         let store = &cx.services.store;
         let mut said = None;
-        if laid.guessed_mode || self.hinted_strip {
+        // A webtoon's mode is the Webtoons default, read at each open, so it is no guess.
+        if laid.guessed_mode {
             if store
                 .set_series_guess(self.work.as_str(), Key::Mode.name(), "strip", now)
                 .unwrap_or(false)
@@ -908,8 +923,30 @@ impl Session {
         }
         let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
         let next = self.chapters.get(self.at + 1).map(|c| c.row(&marks));
-        let why_none = next.is_none().then_some(NoNext::CaughtUp);
+        let why_none = next.is_none().then(|| self.why_no_next(cx));
         cx.send(ReaderEvent::EndPage { session: self.id, next, why_none });
+    }
+
+    /// Why the end page has no next chapter: the series ended with this one, which offers
+    /// Read again; the device is offline; or the person is caught up.
+    fn why_no_next(&self, cx: &Cx<'_>) -> NoNext {
+        let store = &cx.services.store;
+        let later = crate::read_catalog::chapters::of_work(
+            &cx.services.book_sources,
+            store,
+            &self.work,
+        )
+        .is_some_and(|(_, _, list)| {
+            let at = list.iter().position(|c| c.id == self.chapter().id.as_str());
+            at.is_some_and(|at| at + 1 < list.len())
+        });
+        if self.ended && !later {
+            NoNext::Finished
+        } else if cx.services.offline.load(std::sync::atomic::Ordering::Relaxed) {
+            NoNext::Offline
+        } else {
+            NoNext::CaughtUp
+        }
     }
 
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
@@ -1498,6 +1535,66 @@ mod tests {
             notices(&said).is_empty() && notices(&h.drain()).is_empty(),
             "nothing to resume"
         );
+    }
+
+    #[tokio::test]
+    async fn a_webtoon_opens_as_the_webtoons_default_and_its_last_chapter_offers_read_again() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .seed_book_work(WORK, "manga", Some("webtoon"), Some("JP"), "The Lantern Keeper", 1)
+            .unwrap();
+        let mut h = harness(store);
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip, "Long strip is the default");
+        assert!(notices(&said).is_empty(), "the person's default, nothing detected");
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // Paged for webtoons, and the series opens paged: the default is read at each open.
+        h.config.effective_mut().reading.webtoon.mode = WebtoonMode::Paged;
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Paged);
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // A series' own mode wins over the default.
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip);
+        h.services.store.set_series_setting(WORK, "mode", None, true, 3).unwrap();
+
+        // Still releasing, the last chapter's end page says caught up; finished, it offers
+        // Read again.
+        let end_of_last = async |h: &mut Harness| {
+            let session = h.session();
+            h.send(ReaderCommand::Close { session });
+            let work = WorkId::new(WORK);
+            let chapter = Some(ChapterId::new("2"));
+            let at = OpenAt::Resume;
+            h.send(ReaderCommand::Open { work, chapter, at, surface: surface() });
+            h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+            let session = h.session();
+            let chapter = ChapterId::new("2");
+            h.send(ReaderCommand::Shown { session, chapter, leaf: 2, how: TurnHow::Turn });
+            h.until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await
+        };
+        assert_eq!(end_of_last(&mut h).await, Some(NoNext::CaughtUp));
+        h.services
+            .store
+            .put_book_work(&kaeri_store::book_catalog::BookWork {
+                work: WORK.into(),
+                medium: "manga".into(),
+                format: Some("webtoon".into()),
+                titles: "[\"The Lantern Keeper\"]".into(),
+                status: Some("FINISHED".into()),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(end_of_last(&mut h).await, Some(NoNext::Finished));
     }
 
     #[tokio::test(start_paused = true)]

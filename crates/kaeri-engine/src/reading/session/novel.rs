@@ -163,6 +163,7 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
         .map(|row| ShelfChapter {
             id: row.id,
             label: row.title.clone().filter(|t| !t.is_empty()).unwrap_or(row.label),
+            title: None,
             volume: row.volume,
             path: PathBuf::new(),
             format: SOURCE.into(),
