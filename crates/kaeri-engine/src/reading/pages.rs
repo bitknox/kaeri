@@ -39,6 +39,9 @@ use crate::outbox::{Internal, ReaderWake, WeakOutbox};
 
 /// How long a book may take to open before the chapter fails.
 pub const OPEN_BUDGET: Duration = Duration::from_secs(8);
+/// How long one PDF page may take to render. The PDF reader cannot be stopped, so a page over
+/// this fails the chapter and the render is left to finish on its own thread.
+pub const PDF_PAGE_BUDGET: Duration = Duration::from_secs(2);
 
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
@@ -338,14 +341,15 @@ impl Worker {
             }
             #[allow(unreachable_patterns)]
             Book::Pdf(pdf) => {
-                for i in 0..pdf.page_count() {
-                    let bytes = match pdf.page_image(i) {
-                        Some(image) => Some(image.data),
-                        None => pdf
-                            .render(i, job.plan.target.width * 2, job.plan.target.height * 2)
-                            .ok()
-                            .and_then(|r| png_of(r.width, r.height, r.rgba)),
-                    };
+                let room = (job.plan.target.width * 2, job.plan.target.height * 2);
+                let pages = match pdf_pages(pdf, &dir, room, &self.opening) {
+                    Ok(pages) => pages,
+                    Err(()) => {
+                        let format = "PDF".to_owned();
+                        return self.fail(&job, ReadingFailure::Unreadable { path, format });
+                    }
+                };
+                for (i, bytes) in pages.into_iter().enumerate() {
                     kinds.push(layout::PageKind::Story);
                     originals.push(bytes.and_then(|b| keep_original(&dir, i, &b)));
                 }
@@ -524,6 +528,62 @@ fn open_book(path: &Path, opening: &Arc<AtomicBool>) -> Result<Book, ReadingFail
             Err(slow())
         }
     }
+}
+
+/// Every page of a PDF as image bytes: the page's own JPEG, a page kept from an earlier open,
+/// or a render no larger than `room`. The PDF reader has no way to stop it, so the pages are made
+/// on a thread of their own that holds the one-book slot until it ends, and a page that takes
+/// longer than [`PDF_PAGE_BUDGET`] gives the chapter up.
+fn pdf_pages(
+    pdf: kaeri_books::pdf::Pdf,
+    dir: &Path,
+    room: (u32, u32),
+    opening: &Arc<AtomicBool>,
+) -> Result<Vec<Option<Vec<u8>>>, ()> {
+    let since = Instant::now();
+    while opening.swap(true, Ordering::AcqRel) {
+        if since.elapsed() > OPEN_BUDGET {
+            return Err(());
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    let count = pdf.page_count();
+    let (tx, rx) = mpsc::channel();
+    let slot = opening.clone();
+    let dir = dir.to_owned();
+    let spawned = std::thread::Builder::new().name("kaeri-pdf-pages".into()).spawn(move || {
+        for i in 0..count {
+            let kept = ["jpg", "png"]
+                .iter()
+                .find_map(|ext| std::fs::read(dir.join(format!("p{i}.{ext}"))).ok());
+            let bytes = kept.or_else(|| match pdf.page_image(i) {
+                Some(image) => Some(image.data),
+                None => pdf
+                    .render(i, room.0, room.1)
+                    .ok()
+                    .and_then(|r| png_of(r.width, r.height, r.rgba)),
+            });
+            if tx.send(bytes).is_err() {
+                break;
+            }
+        }
+        slot.store(false, Ordering::Release);
+    });
+    if spawned.is_err() {
+        opening.store(false, Ordering::Release);
+        return Err(());
+    }
+    let mut pages = Vec::with_capacity(count);
+    for _ in 0..count {
+        match rx.recv_timeout(PDF_PAGE_BUDGET) {
+            Ok(bytes) => pages.push(bytes),
+            Err(_) => {
+                tracing::warn!(page = pages.len(), "a PDF page took too long to make");
+                return Err(());
+            }
+        }
+    }
+    Ok(pages)
 }
 
 fn failure_of(e: &kaeri_books::BookError, path: String, format: String) -> ReadingFailure {

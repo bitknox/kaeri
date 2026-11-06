@@ -1447,6 +1447,97 @@ mod tests {
         assert_eq!(lasts, Some(0));
     }
 
+    /// A PDF of `pages` vector pages, each a red square on white.
+    fn vector_pdf(pages: usize) -> Vec<u8> {
+        let content = b"1 0 0 rg 20 20 120 120 re f";
+        let mut objects = vec![
+            "<</Type/Catalog/Pages 2 0 R>>".to_owned(),
+            format!(
+                "<</Type/Pages/Kids[{}]/Count {pages}>>",
+                (0..pages).map(|i| format!("{} 0 R", 3 + i * 2)).collect::<Vec<_>>().join(" ")
+            ),
+        ];
+        for i in 0..pages {
+            objects.push(format!(
+                "<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 300]/Contents {} 0 R>>",
+                4 + i * 2
+            ));
+            objects.push(format!(
+                "<</Length {}>>\nstream\n{}\nendstream",
+                content.len(),
+                String::from_utf8_lossy(content)
+            ));
+        }
+        let mut out = b"%PDF-1.4\n".to_vec();
+        let mut offsets = Vec::new();
+        for (i, object) in objects.iter().enumerate() {
+            offsets.push(out.len());
+            out.extend(format!("{} 0 obj\n{object}\nendobj\n", i + 1).bytes());
+        }
+        let xref = out.len();
+        out.extend(format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).bytes());
+        for offset in offsets {
+            out.extend(format!("{offset:010} 00000 n \n").bytes());
+        }
+        out.extend(
+            format!(
+                "trailer\n<</Size {}/Root 1 0 R>>\nstartxref\n{xref}\n%%EOF\n",
+                objects.len() + 1
+            )
+            .bytes(),
+        );
+        out
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_pdf_chapter_opens_with_its_pages_made_off_the_worker() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness(store.clone());
+        let path = h._dir.path().join("books").join("Chapter 3.pdf");
+        std::fs::write(&path, vector_pdf(2)).unwrap();
+        let file = ShelfFile {
+            path: path.display().to_string(),
+            chapter: None,
+            label: "Chapter 3".into(),
+            volume: None,
+            number_milli: Some(3000),
+            format: "pdf".into(),
+            pages: None,
+            comicinfo: None,
+        };
+        store.put_local_file("s1", &file, 1, 1).unwrap();
+        for _ in 0..2 {
+            let work = WorkId::new(WORK);
+            let chapter = Some(ChapterId::new("3"));
+            h.send(ReaderCommand::Open {
+                work,
+                chapter,
+                at: OpenAt::Start,
+                surface: surface(),
+            });
+            let leaves = h
+                .until(|e| match e {
+                    ReaderEvent::Leaves { leaves, .. } => Some(leaves.len()),
+                    _ => None,
+                })
+                .await;
+            assert_eq!(leaves, 3, "two pages and the end page");
+            let file = h
+                .until(|e| match e {
+                    ReaderEvent::PageReady { page: 0, file, .. } => Some(file.clone()),
+                    _ => None,
+                })
+                .await;
+            assert!(
+                matches!(&file.encoding, PageEncoding::Original { mime } if mime == "image/png")
+            );
+            // Rendered at no more than twice the screen, whole: 600 wide by 900 high.
+            assert_eq!((file.width, file.height), (1200, 1800));
+            let session = h.session();
+            h.send(ReaderCommand::Close { session });
+        }
+    }
+
     #[tokio::test(start_paused = true)]
     async fn settings_load_with_their_rows_and_a_series_choice_lays_out_again() {
         let mut h = harness(Store::open_in_memory().unwrap());
