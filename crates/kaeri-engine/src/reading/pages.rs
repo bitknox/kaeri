@@ -178,6 +178,9 @@ struct Chapter {
     /// Parts already sent, by page and half.
     sent: HashSet<(u32, Option<PageHalf>)>,
     queue: VecDeque<u32>,
+    /// Pages made before the session sent the leaves, held until it asks for any: an app
+    /// never hears of a page before the leaf it belongs to.
+    held: Option<Vec<ReaderEvent>>,
 }
 
 struct Worker {
@@ -234,12 +237,17 @@ impl Worker {
         match job {
             Job::Open(job) => self.open_chapter(*job),
             Job::Want { session, generation, leaves } => {
+                let mut held = Vec::new();
                 if let Some(c) = self
                     .open
                     .as_mut()
                     .filter(|c| c.session == session && c.generation == generation)
                 {
                     c.queue = leaves.into();
+                    held = c.held.take().unwrap_or_default();
+                }
+                for event in held {
+                    self.send(event);
                 }
             }
             Job::Again { session, page } => {
@@ -385,6 +393,7 @@ impl Worker {
             strip: None,
             sent: HashSet::new(),
             queue: VecDeque::new(),
+            held: Some(Vec::new()),
         };
         let (leaves, cuts) = if mode == ReaderMode::Strip && eink {
             chapter.strip = cut_strip(&chapter, plan.target);
@@ -472,6 +481,10 @@ impl Worker {
         let Some(chapter) = self.open.as_mut() else { return };
         let Some(leaf) = chapter.queue.pop_front() else { return };
         let events = chapter.make_leaf(leaf);
+        if let Some(held) = chapter.held.as_mut() {
+            held.extend(events);
+            return;
+        }
         for event in events {
             self.send(event);
         }

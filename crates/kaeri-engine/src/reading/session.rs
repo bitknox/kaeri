@@ -981,6 +981,8 @@ mod tests {
         inbox: UnboundedReceiver<Envelope>,
         /// Reader events seen and not yet taken, in order.
         seen: std::collections::VecDeque<ReaderEvent>,
+        /// Sessions whose leaves went out.
+        laid: std::collections::HashSet<u64>,
         _dir: tempfile::TempDir,
     }
 
@@ -1046,6 +1048,7 @@ mod tests {
             tx,
             inbox,
             seen: Default::default(),
+            laid: Default::default(),
             _dir: dir,
         }
     }
@@ -1084,8 +1087,17 @@ mod tests {
                     self.reader.wake(&mut cx, session, wake);
                 }
                 Envelope::Event(Event::Reader(event)) => {
-                    if let ReaderEvent::PageFailed { failure, .. } = &event {
-                        panic!("a page failed: {failure:?}");
+                    match &event {
+                        ReaderEvent::PageFailed { failure, .. } => {
+                            panic!("a page failed: {failure:?}")
+                        }
+                        ReaderEvent::Leaves { session, .. } => {
+                            self.laid.insert(*session);
+                        }
+                        ReaderEvent::PageReady { session, .. } => {
+                            assert!(self.laid.contains(session), "a page before its leaves");
+                        }
+                        _ => {}
                     }
                     self.seen.push_back(event);
                 }
