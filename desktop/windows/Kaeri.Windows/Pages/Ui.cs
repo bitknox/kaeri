@@ -2,6 +2,7 @@ using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
@@ -96,21 +97,29 @@ static class Ui
         BorderThickness = new Thickness(0, 0, 0, 1),
     };
 
-    /// <summary>A cover thumbnail, in its placeholder colour until the engine's art arrives.</summary>
+    /// <summary>
+    /// A cover thumbnail, in its placeholder colour until the engine's art arrives, which then
+    /// fades in over it. Art the app already has shows at once, so a rebuilt row never flashes.
+    /// </summary>
     public static Border Cover(Ctx ctx, uint id, double width, double height)
     {
+        var image = new Image { Stretch = Stretch.UniformToFill };
+        AutomationProperties.SetAccessibilityView(image, AccessibilityView.Raw);
         var frame = new Border
         {
             Width = width,
             Height = height,
             // Small thumbnails round at 6, covers above 40 wide at 8.
             CornerRadius = new CornerRadius(width > 40 ? 8 : 6),
-            Background = new SolidColorBrush(Colours.Raised),
+            Background = Res<Brush>("RaisedBrush"),
+            Child = image,
         };
         if (ctx.Known.Entries.TryGetValue(id, out var entry))
         {
-            frame.Background = new SolidColorBrush(Colours.Parse(entry.CoverColor) ?? Colours.Raised);
-            ctx.Art.Bind(entry.CoverUrl, image => frame.Background = new ImageBrush { ImageSource = image, Stretch = Stretch.UniformToFill });
+            if (Colours.Parse(entry.CoverColor) is { } colour)
+                frame.Background = new SolidColorBrush(colour);
+            ArtFade.Watch(image);
+            ctx.Art.Bind(entry.CoverUrl, art => image.Source = art);
         }
         return frame;
     }

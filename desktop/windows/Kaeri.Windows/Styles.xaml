@@ -40,6 +40,54 @@
   <!-- A section on a page: Subtitle 20/28. -->
   <Style x:Key="SectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}" />
 
+  <!-- A link that is not the main action: at the end of a heading (View all, Full calendar, See all,
+       with a chevron), and Show or the watched fold on a title page. Silk and semibold, as the spec
+       has it; amber stays for the one main action. -->
+  <Style x:Key="SilkLinkStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource DefaultHyperlinkButtonStyle}">
+    <Setter Property="Padding" Value="4,2" />
+    <Setter Property="Margin" Value="0,0,-4,0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{ThemeResource SilkBrush}" />
+    <Setter Property="VerticalAlignment" Value="Bottom" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="HyperlinkButton">
+          <ContentPresenter x:Name="ContentPresenter" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}"
+                            CornerRadius="{TemplateBinding CornerRadius}" Foreground="{TemplateBinding Foreground}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" AutomationProperties.AccessibilityView="Raw">
+            <ContentPresenter.BackgroundTransition>
+              <BrushTransition Duration="0:0:0.083" />
+            </ContentPresenter.BackgroundTransition>
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Background" Value="{ThemeResource HyperlinkButtonBackgroundPointerOver}" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Pressed">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Background" Value="{ThemeResource HyperlinkButtonBackgroundPressed}" />
+                    <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource HazeBrush}" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Disabled">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                  </VisualState.Setters>
+                </VisualState>
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+          </ContentPresenter>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- The title page's primary action and the Continue preview's: 40 high, amber. -->
   <Style x:Key="PrimaryActionStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
     <Setter Property="MinHeight" Value="40" />

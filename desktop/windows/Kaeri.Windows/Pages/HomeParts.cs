@@ -309,7 +309,7 @@ sealed partial class HomeShelf : Grid
         heading.Inlines.Add(aside);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
         head.Children.Add(heading);
-        viewAll = new HyperlinkButton { Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Bottom };
+        viewAll = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle") };
         viewAll.Click += (_, _) => page.OpenViewAll(Kind, section.ViewAll);
         Grid.SetColumn(viewAll, 1);
         head.Children.Add(viewAll);
