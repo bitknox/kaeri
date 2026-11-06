@@ -225,8 +225,13 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += OnClosing;
         AppWindow.Changed += (_, e) =>
         {
+            // Kept half a second after a drag or resize settles, not on every pixel of it.
             if (e.DidPositionChange || e.DidSizeChange || e.DidPresenterChange)
-                RememberPlace();
+            {
+                placeLater ??= PlaceTimer();
+                placeLater.Stop();
+                placeLater.Start();
+            }
         };
         Closed += (_, _) => Shutdown();
         // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
@@ -278,6 +283,26 @@ public sealed partial class MainWindow : Window
     bool placed;
 
     string PlacePath => Path.Combine(dirs.Config, "windows-window.json");
+
+    DispatcherQueueTimer? placeLater;
+
+    DispatcherQueueTimer PlaceTimer()
+    {
+        var timer = ui.CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(500);
+        timer.IsRepeating = false;
+        timer.Tick += (_, _) => RememberPlace();
+        return timer;
+    }
+
+    /// <summary>A frame waiting to be kept is kept now: the window is closing or going to the notification area.</summary>
+    void KeepPlaceNow()
+    {
+        if (placeLater is not { IsRunning: true } waiting)
+            return;
+        waiting.Stop();
+        RememberPlace();
+    }
 
     /// <summary>Keeps the window's frame for the next launch: the normal frame, and whether it was maximised.</summary>
     void RememberPlace()
@@ -1201,6 +1226,7 @@ public sealed partial class MainWindow : Window
 
     void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
+        KeepPlaceNow();
         if (closing)
             return;
         if (AskLeavingParty())
