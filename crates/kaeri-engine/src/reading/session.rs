@@ -225,7 +225,7 @@ impl Reader {
         self.pages
             .get_or_insert_with(|| {
                 let dir = super::pages::cache_dir(&cx.services.paths.cache_dir);
-                Pages::start(dir, cx.tx.downgrade())
+                Pages::start(dir)
             })
             .clone()
     }
@@ -708,6 +708,7 @@ impl Session {
             plan: self.plan(cx),
             start_page: page,
             shared: self.laid.clone(),
+            out: cx.tx.clone(),
         });
     }
 
@@ -780,7 +781,7 @@ impl Session {
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
         let start = self.leaf_of_page(self.start.page.unwrap_or(0));
-        pages.want(self.id, self.generation, vec![start, start + 1]);
+        pages.want(self.id, self.generation, vec![start, start + 1], cx.tx);
     }
 
     fn report(&mut self, cx: &mut Cx<'_>, pages: &Pages, command: ReaderCommand) {
@@ -809,8 +810,8 @@ impl Session {
                 let page = self.page().unwrap_or(0);
                 self.lay_out(cx, pages, page);
             }
-            C::NeedPage { page, .. } => pages.again(self.id, page),
-            C::Retry { page: Some(page), .. } => pages.again(self.id, page),
+            C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
+            C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
             C::Retry { page: None, .. } => {
                 let page = self.page().unwrap_or(0);
                 self.lay_out(cx, pages, page);
@@ -889,7 +890,7 @@ impl Session {
         if let Some(before) = leaf.checked_sub(1) {
             want.push(before);
         }
-        pages.want(self.id, self.generation, want);
+        pages.want(self.id, self.generation, want, cx.tx);
     }
 
     fn say_end_page(&mut self, cx: &Cx<'_>) {
@@ -1327,6 +1328,49 @@ mod tests {
                 _ => None,
             })
             .collect()
+    }
+
+    /// The engine lends each piece of work a sender and holds none between them, so the page
+    /// worker must keep the one it was lent while it has pages to make.
+    #[tokio::test]
+    async fn the_page_worker_answers_when_nothing_else_holds_the_outbox() {
+        use std::time::Duration;
+        use tokio::time::timeout;
+
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let (tx, later) = Outbox::inbox();
+        let first = std::mem::replace(&mut h.inbox, later);
+        h.send(ReaderCommand::Open {
+            work: WorkId::new(WORK),
+            chapter: None,
+            at: OpenAt::Resume,
+            surface: surface(),
+        });
+        // The command's sender is gone, as when the actor finishes handling it; only the
+        // worker still holds the first channel.
+        drop(std::mem::replace(&mut h.tx, tx));
+        let mut first = first;
+        while let Some(envelope) = timeout(Duration::from_secs(20), first.recv())
+            .await
+            .expect("the first channel closes")
+        {
+            h.carry(envelope);
+        }
+        timeout(
+            Duration::from_secs(20),
+            h.until(|e| matches!(e, ReaderEvent::PageReady { .. }).then_some(())),
+        )
+        .await
+        .expect("a page was made");
+        // With the harness's sender let go too, the channel closes once the worker is done.
+        let (spare, _unused) = Outbox::inbox();
+        drop(std::mem::replace(&mut h.tx, spare));
+        while let Some(envelope) = timeout(Duration::from_secs(20), h.inbox.recv())
+            .await
+            .expect("the engine goes idle")
+        {
+            h.carry(envelope);
+        }
     }
 
     #[tokio::test(start_paused = true)]
