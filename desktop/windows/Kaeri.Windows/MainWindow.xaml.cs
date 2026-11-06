@@ -561,13 +561,20 @@ public sealed partial class MainWindow : Window
         if (options.Show == "messages")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
+                // Heard by the window as the engine's own notices are, so they show and are kept.
+                void Notice(NoticeKind kind, Msg msg)
+                {
+                    Event[] said = [new Event.Toast(new Notice(kind, "", Msg: msg))];
+                    Heard(said);
+                    ctx.Heard(said);
+                }
                 await Task.Delay(1500);
-                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Info, "", Msg: new Msg.NoticeSaved(T.SettingsQuality))));
-                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Alert, "", Msg: new Msg.NoticeSignInFailed("Kitsu", "invalid credentials"))));
+                Notice(NoticeKind.Info, new Msg.NoticeSaved(T.SettingsQuality));
+                Notice(NoticeKind.Alert, new Msg.NoticeSignInFailed("Kitsu", "invalid credentials")); // i18n-skip
                 await Task.Delay(1000);
                 ShowMessages();
                 await Task.Delay(2000);
-                ctx.Inject(new Event.Toast(new Notice(NoticeKind.Info, "", Msg: new Msg.NoticeSaved(T.SettingsAudio))));
+                Notice(NoticeKind.Info, new Msg.NoticeSaved(T.SettingsAudio));
             });
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
