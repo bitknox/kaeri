@@ -21,7 +21,7 @@ static class ScrollScenario
         {
             for (var i = 0; i < Math.Abs(notches); i++)
             {
-                Mouse.Scroll(notches < 0 ? -1 : 1);
+                Native.Wheel(notches < 0 ? -1 : 1);
                 await Task.Delay(gapMs);
             }
             await Task.Delay(700);

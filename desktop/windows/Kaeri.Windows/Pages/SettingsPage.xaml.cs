@@ -1057,14 +1057,12 @@ public sealed partial class SettingsPage : Page
             case SettingControl.Text:
             {
                 // mpv's options are one to a line: a box that takes several, where Enter starts the
-                // next line and leaving the box saves them. The box breaks its lines at , where
-                // the engine's text breaks at 
-. It takes several lines before its text is set, or
+                // next line and leaving the box saves them. The box breaks its lines at \r, where
+                // the engine's text breaks at \n. It takes several lines before its text is set, or
                 // it keeps only the first.
                 var lines = key == K.MpvOptions;
                 var text = SettingsCatalog.TypedText(row) ?? "";
-                string Shown(string engine) => lines ? engine.Replace('
-', '') : engine;
+                string Shown(string engine) => lines ? engine.Replace('\n', '\r') : engine;
                 var box = new TextBox { MinWidth = lines ? 320 : 220, PlaceholderText = T.SettingsNotSet };
                 if (lines)
                 {
@@ -1074,18 +1072,14 @@ public sealed partial class SettingsPage : Page
                 }
                 box.Text = Shown(text);
                 Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
-                string Typed() => box.Text.Replace("
-", "
-").Replace('', '
-').Trim();
+                string Typed() => box.Text.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
                 void Commit()
                 {
                     if (!quiet && Typed() != text.Trim())
                     {
                         // The options go as a list, one to a line, as the config file keeps them.
                         SettingValue value = lines
-                            ? new SettingValue.Strings([.. Typed().Split('
-').Select(l => l.Trim()).Where(l => l.Length > 0)])
+                            ? new SettingValue.Strings([.. Typed().Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0)])
                             : new SettingValue.Str(Typed());
                         ctx.Send(new Command.SetSetting(key, value));
                     }
