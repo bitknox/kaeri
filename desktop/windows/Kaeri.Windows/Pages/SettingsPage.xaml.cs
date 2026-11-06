@@ -183,7 +183,9 @@ public sealed partial class SettingsPage : Page
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Height = 36 };
             line.Children.Add(new FontIcon { Glyph = p.Glyph, FontSize = 16, VerticalAlignment = VerticalAlignment.Center });
             line.Children.Add(new TextBlock { Text = p.Title, VerticalAlignment = VerticalAlignment.Center });
-            Panes.Items.Add(new ListViewItem { Content = line, Tag = p });
+            var item = new ListViewItem { Content = line, Tag = p };
+            AutomationProperties.SetName(item, p.Title);
+            Panes.Items.Add(item);
         }
         State.Placeholders = () =>
         {
@@ -217,8 +219,10 @@ public sealed partial class SettingsPage : Page
         // Heard from each visit's start, before the page is loaded, until the frame moves on.
         ctx.Tv.Changed += TvChanged;
         Sync.SyncDialogs.Changed += SyncChanged;
+        ctx.Known.ConflictsChanged += ShowConflicts;
         ctx.Hear(this, Heard, () =>
         {
+            ctx.Known.ConflictsChanged -= ShowConflicts;
             ctx.Tv.Changed -= TvChanged;
             Sync.SyncDialogs.Changed -= SyncChanged;
             guardClock.Stop();
@@ -250,8 +254,6 @@ public sealed partial class SettingsPage : Page
     {
         if (batch.Any(e => e is Event.HiddenTitles) && pane.Name == "general")
             FillHidden();
-        if (batch.Any(e => e is Event.Conflicts) && pane.Name == "accounts")
-            ShowConflicts();
         if (batch.Any(e => e is Event.Settings || e is Event.Profiles && pane.Name == "profiles"
             || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
@@ -1322,6 +1324,105 @@ public sealed partial class SettingsPage : Page
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));
         Cards.Children.Add(CardFrame(T.AccountsSyncAll, T.SettingsSyncDetail, sync));
+    }
+
+    /// <summary>A setting found by Search settings: its row's name and the pane it is on.</summary>
+    sealed record Hit(string Name, Pane Pane)
+    {
+        public override string ToString() => $"{Name} · {Pane.Title}";
+    }
+
+    /// <summary>Every row Search settings finds, by the name it shows: the engine's rows and the app's own.</summary>
+    IEnumerable<Hit> Index()
+    {
+        foreach (var p in PaneList)
+        {
+            yield return new Hit(p.Title, p);
+            foreach (var (group, keys) in p.Groups)
+            {
+                yield return new Hit(GroupHeading(group), p);
+                foreach (var key in keys.Where(k => ctx.Known.Setting(k) is not null))
+                    yield return new Hit(Title(key), p);
+            }
+            string[] own = p.Name switch
+            {
+                "general" => [T.SettingsLanguageApp, T.SettingsHiddenTitles],
+                "playback" => [T.SettingsClearSkips, T.SettingsHideChat],
+                "downloads" => [T.DownloadsBackgroundTitle],
+                "sources" => [T.TorrentsProxyRoute],
+                "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll],
+                "devices" => [T.DevicesName, T.CloudGroup, T.TvPlayOn],
+                "integrations" => [T.SettingsDiscord],
+                "about" => [T.AboutReportBug, T.SettingsGroupCrashes, T.SettingsCrashSave, T.UpdatesTitle],
+                _ => [],
+            };
+            foreach (var name in own)
+                yield return new Hit(name, p);
+        }
+    }
+
+    /// <summary>Ctrl+F on Settings: the settings' own search.</summary>
+    internal void FocusFind() => Find.Focus(FocusState.Keyboard);
+
+    void OnFindChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+            return;
+        var text = sender.Text.Trim();
+        if (text.Length == 0)
+        {
+            sender.ItemsSource = null;
+            return;
+        }
+        var hits = Index().Where(h => h.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase))
+            .DistinctBy(h => (h.Name, h.Pane.Name)).Take(8).ToList();
+        sender.ItemsSource = hits.Count > 0 ? hits : new List<string> { T.SearchNothingFound(text) };
+    }
+
+    void OnFindSubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var text = args.QueryText.Trim();
+        var hit = args.ChosenSuggestion as Hit
+            ?? (text.Length == 0 ? null : Index().FirstOrDefault(h => h.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)));
+        if (hit is null)
+            return;
+        sender.Text = "";
+        sender.ItemsSource = null;
+        Go(hit);
+    }
+
+    /// <summary>Opens the hit's pane and brings its row into view with the focus on it.</summary>
+    void Go(Hit hit)
+    {
+        ShowPane(hit.Pane.Name);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (Named(Cards, hit.Name) is not { } found)
+                return;
+            found.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.3, AnimationDesired = Motion.Enabled });
+            if ((found as Control)?.IsTabStop == true)
+                ((Control)found).Focus(FocusState.Keyboard);
+            else
+                (FocusManager.FindFirstFocusableElement(found) as Control)?.Focus(FocusState.Keyboard);
+        });
+    }
+
+    /// <summary>The card or heading that shows <paramref name="name"/>, searched through the pane.</summary>
+    static FrameworkElement? Named(DependencyObject at, string name)
+    {
+        if (at is SettingsCard { Header: string header } card && header == name)
+            return card;
+        if (at is TextBlock { Text: var text } block && text == name)
+            return block;
+        if (at is Panel panel)
+        {
+            foreach (var child in panel.Children)
+                if (Named(child, name) is { } found)
+                    return found;
+        }
+        else if (at is Border { Child: { } inner })
+            return Named(inner, name);
+        return null;
     }
 
     SettingsCard? conflictsCard;

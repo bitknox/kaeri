@@ -12,7 +12,17 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <StackPanel>
-      <TextBlock Text="{x:Bind app:T.SettingsTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+      <Grid ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{x:Bind app:T.SettingsTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+        <!-- Finds a setting by its name, in any pane, as the Mac's Search settings. -->
+        <AutoSuggestBox x:Name="Find" Grid.Column="1" Width="280" VerticalAlignment="Center" QueryIcon="Find"
+                        PlaceholderText="{x:Bind app:T.SettingsSearch}" AutomationProperties.Name="{x:Bind app:T.SettingsSearch}"
+                        TextChanged="OnFindChanged" QuerySubmitted="OnFindSubmitted" />
+      </Grid>
       <!-- Narrow: where you are, as Windows Settings says it, with the panes one step back. -->
       <BreadcrumbBar x:Name="Crumbs" Visibility="Collapsed" ItemClicked="OnCrumb" Margin="0,4,0,0" />
     </StackPanel>

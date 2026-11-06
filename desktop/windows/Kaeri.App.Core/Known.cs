@@ -294,10 +294,14 @@ public sealed class Known
     /// <summary>What the last library pull found different from the tracker, less those settled here since.</summary>
     public List<ConflictRow> Conflicts { get; } = [];
 
+    /// <summary>Raised when the differences change, by a pull or by one settled here.</summary>
+    public event Action? ConflictsChanged;
+
     /// <summary>Settles one difference by keeping a side: the row goes at once, as the engine sends no new list.</summary>
     public Command Resolve(uint id, bool keepLocal)
     {
         Conflicts.RemoveAll(c => c.AnilistId == id);
+        ConflictsChanged?.Invoke();
         return new Command.ResolveConflict(id, keepLocal);
     }
 
@@ -340,6 +344,7 @@ public sealed class Known
             case Event.Conflicts conflicts:
                 Conflicts.Clear();
                 Conflicts.AddRange(conflicts.V1);
+                ConflictsChanged?.Invoke();
                 break;
             case Event.Content c:
                 // One key per search, whichever instance of its query asked it.

@@ -537,7 +537,7 @@ public sealed partial class MainWindow : Window
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
                 await Task.Delay(2500);
-                var titles = ctx.Known.Entries.Values.Take(2).ToArray();
+                (uint Id, string Title)[] titles = [(910_001, "Stardust Wayfarer"), (910_002, "The Steel Gardener")]; // i18n-skip
                 ctx.Inject(new Event.Conflicts([.. titles.Select((t, i) => new ConflictRow(t.Id, t.Title, i == 0 ? "progress" : "score", i == 0 ? "7" : "8", i == 0 ? "5" : "6"))])); // i18n-skip
                 if (options.Show == "conflicts-open")
                 {
@@ -1277,7 +1277,11 @@ public sealed partial class MainWindow : Window
         if (Player.Showing)
             return;
         args.Handled = true;
-        SearchBox.Focus(FocusState.Keyboard);
+        // On Settings, Ctrl+F finds a setting, as the Mac's toolbar field does there.
+        if (ContentFrame.Content is SettingsPage settings)
+            settings.FocusFind();
+        else
+            SearchBox.Focus(FocusState.Keyboard);
     }
 
     // The player over the window.
