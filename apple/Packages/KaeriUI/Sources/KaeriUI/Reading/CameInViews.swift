@@ -43,6 +43,7 @@ struct CameInCard<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
         VStack(spacing: 0) { content }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Palette.ground.opacity(0.4), in: .rect(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.faintRule, lineWidth: 1))
     }

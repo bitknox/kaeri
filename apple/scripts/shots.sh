@@ -66,6 +66,9 @@
 # KAERI_LAUNCH_ARGS adds launch arguments to every iPhone or iPad shot, split on spaces:
 # KAERI_LAUNCH_ARGS="-AppleLanguages (en-XA)" shoots the pseudo-locale.
 #
+# KAERI_APPEARANCE=light shoots the iPhone or iPad (and the Mac dev harness) in the light appearance;
+# dark is the default for the Simulator.
+#
 # KAERI_DERIVED_DATA picks where xcodebuild builds, apple/.derived unless it says otherwise.
 set -euo pipefail
 # Bash 4.4 and newer only. macOS's own /bin/bash is 3.2.
@@ -282,7 +285,7 @@ if [[ "$device" == ipad ]]; then
     xcrun simctl bootstatus "$udid" -b >/dev/null
   fi
 fi
-xcrun simctl ui "$udid" appearance dark
+xcrun simctl ui "$udid" appearance "${KAERI_APPEARANCE:-dark}"
 # Apple's clean status bar: 9:41, full Wi-Fi and battery, no carrier.
 xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi --wifiMode active \
   --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName '' \

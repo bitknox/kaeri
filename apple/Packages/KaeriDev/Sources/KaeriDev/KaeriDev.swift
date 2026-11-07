@@ -93,6 +93,12 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // Only an app in the Dock goes full screen, so `--full-screen` runs as one.
         let regular = options.snapshot == nil || options.fullScreenCycles > 0
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
+        // Shots: KAERI_APPEARANCE=light|dark overrides the system appearance for this process only.
+        switch ProcessInfo.processInfo.environment["KAERI_APPEARANCE"] {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: break
+        }
         if regular { NSApp.activate() }
     }
 

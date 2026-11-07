@@ -675,10 +675,7 @@ struct AddBookServerStep: View {
         CameInCard {
             ForEach(Array(found.libraries.enumerated()), id: \.element.id) { index, library in
                 if index > 0 { Rectangle().fill(Palette.faintRule).frame(height: 1).padding(.leading, 12) }
-                Toggle(isOn: Binding(
-                    get: { !unticked.contains(library.id) },
-                    set: { on in if on { unticked.remove(library.id) } else { unticked.insert(library.id) } }
-                )) {
+                HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(library.name).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
                         if let series = library.series {
@@ -686,11 +683,17 @@ struct AddBookServerStep: View {
                                 .font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)
                         }
                     }
+                    Spacer(minLength: 8)
+                    Toggle(library.name, isOn: Binding(
+                        get: { !unticked.contains(library.id) },
+                        set: { on in if on { unticked.remove(library.id) } else { unticked.insert(library.id) } }
+                    ))
+                    .labelsHidden()
+                    #if os(macOS)
+                    .toggleStyle(.checkbox)
+                    #endif
+                    .tint(.amber)
                 }
-                #if os(macOS)
-                .toggleStyle(.checkbox)
-                #endif
-                .tint(.amber)
                 .padding(.horizontal, 12).padding(.vertical, 8)
             }
         }
@@ -707,7 +710,7 @@ struct AddBookServerStep: View {
                 }
             }
             .toggleStyle(.switch)
-            .tint(.silk)
+            .tint(.amber)
             .padding(.horizontal, 12).padding(.vertical, 10)
         }
     }
