@@ -131,13 +131,6 @@ pub struct SeriesView {
     /// More like this: what people who liked it rated highest.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub recommended: Vec<WorkTile>,
-    /// The reading demo's work this series is, for its credit and licence. `None` for every
-    /// other series.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub demo: Option<crate::sources::DemoWorkInfo>,
-    /// For a demo series: the demo's other work, for "Also in the demo".
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub demo_other: Option<WorkId>,
     /// The series page is still waiting for the catalogue: the header is from what was kept.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub partial: bool,
