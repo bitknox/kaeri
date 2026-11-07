@@ -51,8 +51,8 @@ fun CalendarModel.Window.broadcasts(now: Instant = AppClock.now()): List<Broadca
 
 /** The broadcasts that air on [now]'s date where the phone is. */
 fun List<Broadcast>.today(now: Instant = AppClock.now(), zone: ZoneId = AppClock.zone): List<Broadcast> {
-    val today = LocalDate.ofInstant(now, zone)
-    return filter { LocalDate.ofInstant(it.airs, zone) == today }
+    val today = now.atZone(zone).toLocalDate()
+    return filter { it.airs.atZone(zone).toLocalDate() == today }
 }
 
 /** The other forms beneath the title, joined: "Stardust Wayfarer · 星屑の旅人". */

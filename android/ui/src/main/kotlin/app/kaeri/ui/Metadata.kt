@@ -67,7 +67,7 @@ data class AiringState(val label: String, val value: String, val line: String)
  * Aired, Airing or Airs, from the dates until the engine carries a status: finished once the end
  * has passed, airing once the start has, upcoming before; nothing with no dates at all.
  */
-fun Entry.airingState(context: Context, today: LocalDate = LocalDate.ofInstant(AppClock.now(), AppClock.zone)): AiringState? {
+fun Entry.airingState(context: Context, today: LocalDate = AppClock.now().atZone(AppClock.zone).toLocalDate()): AiringState? {
     val start = startDate ?: return null
     val end = endDate
     return when {
@@ -235,8 +235,8 @@ fun airsWords(
     locale: Locale = Locale.getDefault(),
 ): String {
     val time = DateTimeFormatter.ofPattern(AirTime.bestPattern(if (twentyFourHour) "Hm" else "hm", if (twentyFourHour) "HH:mm" else "h:mm a"), locale).format(at.atZone(zone))
-    val day = LocalDate.ofInstant(at, zone)
-    val today = LocalDate.ofInstant(now, zone)
+    val day = at.atZone(zone).toLocalDate()
+    val today = now.atZone(zone).toLocalDate()
     val days = ChronoUnit.DAYS.between(today, day)
     return when {
         days == 0L -> Strings.causeAirsToday(context, time)

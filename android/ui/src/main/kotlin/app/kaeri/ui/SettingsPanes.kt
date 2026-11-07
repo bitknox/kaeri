@@ -477,6 +477,7 @@ private fun LanguageRow(place: Place) {
     ) { picked ->
         chosen = picked
         AppLanguage.choose(context, picked)
+        AppLanguage.applyToApp(context.applicationContext)
         // From Android 13 the system recreates the activity; below, the app does.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) generateSequence(context) { (it as? android.content.ContextWrapper)?.baseContext }.filterIsInstance<android.app.Activity>().firstOrNull()?.recreate()
     }

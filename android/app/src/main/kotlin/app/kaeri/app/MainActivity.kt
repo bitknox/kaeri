@@ -23,7 +23,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -44,9 +43,11 @@ import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.player.takeBackBeforeShown
+import app.kaeri.player.ui.PictureInPictureOnLeave
 import app.kaeri.player.ui.PlayerFrame
 import app.kaeri.store.DownloadsModel
 import app.kaeri.store.InviteLinks
+import app.kaeri.store.readAtMost
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.TvRemoteModel
 import app.kaeri.store.traced
@@ -112,12 +113,12 @@ class MainActivity : ComponentActivity() {
      * not at all, with the system's settings open instead.
      */
     private fun permitNotifications(then: () -> Unit) {
-        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val granted = NotificationPermission.granted(this)
         when (EpisodeAlerts.Turn.of(true, app.episodeNotifier.canPost, granted)) {
             EpisodeAlerts.Turn.On -> then()
-            EpisodeAlerts.Turn.Ask -> {
+            EpisodeAlerts.Turn.Ask -> if (NotificationPermission.askable) {
                 permitted = then
-                askForShow.launch(Manifest.permission.POST_NOTIFICATIONS)
+                askForShow.launch(NotificationPermission.name)
             }
             EpisodeAlerts.Turn.SystemSettings -> openNotificationSettings()
             EpisodeAlerts.Turn.Off -> {}
@@ -126,11 +127,11 @@ class MainActivity : ComponentActivity() {
 
     /** New-episode notifications, on Settings' switch: on only once they can show. */
     private fun setEpisodeNotifications(on: Boolean) {
-        val permitted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val permitted = NotificationPermission.granted(this)
         when (EpisodeAlerts.Turn.of(on, app.episodeNotifier.canPost, permitted)) {
             EpisodeAlerts.Turn.Off -> app.episodeAlerts.set(false)
             EpisodeAlerts.Turn.On -> app.episodeAlerts.set(true)
-            EpisodeAlerts.Turn.Ask -> askForEpisodes.launch(Manifest.permission.POST_NOTIFICATIONS)
+            EpisodeAlerts.Turn.Ask -> if (NotificationPermission.askable) askForEpisodes.launch(NotificationPermission.name)
             EpisodeAlerts.Turn.SystemSettings -> {
                 app.episodeAlerts.refuse()
                 openNotificationSettings()
@@ -163,6 +164,8 @@ class MainActivity : ComponentActivity() {
     private val linkFlow = links.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Out of the launch theme, whose window draws Android 11's splash screen.
+        setTheme(R.style.Theme_Kaeri)
         // Light icons on the dark ground, over bars the app draws itself.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -286,7 +289,7 @@ class MainActivity : ComponentActivity() {
                 app.store.downloads.rows.collect { rows ->
                     val wifiOnly = !app.store.settings.isOn(SettingKey.DOWNLOADS_ON_CELLULAR)
                     if (DownloadsModel.busy(rows)) app.notifier.wantPermission()
-                    DownloadJob.ensure(this@MainActivity, rows, wifiOnly)
+                    Downloads.ensure(this@MainActivity, rows, wifiOnly)
                 }
             }
         }
@@ -336,7 +339,7 @@ class MainActivity : ComponentActivity() {
             uri.scheme.equals("magnet", ignoreCase = true) -> app.store.openLink(uri.toString())
             uri.scheme == "content" || uri.scheme == "file" -> lifecycleScope.launch {
                 val bytes = withContext(Dispatchers.IO) {
-                    runCatching { contentResolver.openInputStream(uri)?.use { it.readNBytes(MAX_TORRENT_BYTES + 1) } }.getOrNull()
+                    runCatching { contentResolver.openInputStream(uri)?.use { it.readAtMost(MAX_TORRENT_BYTES + 1) } }.getOrNull()
                 }
                 if (bytes != null && bytes.size <= MAX_TORRENT_BYTES) {
                     app.store.openTorrentFile(bytes)
@@ -430,10 +433,22 @@ class MainActivity : ComponentActivity() {
         if (lifecycle.currentState == Lifecycle.State.CREATED) player.viewerClosed() else player.poke()
     }
 
-    /** On the way into the window the overlays go at once, before the system moves the video. */
+    /**
+     * On the way into the window the overlays go at once, before the system moves the video:
+     * Android 15 says when that starts. Android 12 to 14 say only once it is in.
+     */
     override fun onPictureInPictureUiStateChanged(pipState: PictureInPictureUiState) {
         super.onPictureInPictureUiStateChanged(pipState)
-        if (pipState.isTransitioningToPip) app.player.inPip = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && pipState.isTransitioningToPip) app.player.inPip = true
+    }
+
+    /**
+     * Android 11 has no auto-enter: going home while a video plays opens the window here, the
+     * overlays gone first as Android 15's transition has them.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        PictureInPictureOnLeave.enter(this) { app.player.inPip = it }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -474,9 +489,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 app.notifier.wantsPermission.collect { wants ->
-                    if (wants && !preferences.getBoolean(NOTIFICATIONS_ASKED, false)) {
+                    if (wants && NotificationPermission.askable && !preferences.getBoolean(NOTIFICATIONS_ASKED, false)) {
                         preferences.edit().putBoolean(NOTIFICATIONS_ASKED, true).apply()
-                        askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        askNotifications.launch(NotificationPermission.name)
                     }
                 }
             }

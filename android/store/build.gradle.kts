@@ -10,8 +10,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.store"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
     // The tests read the words the person would, from the catalogue.
     testOptions { unitTests.isIncludeAndroidResources = true }
 }

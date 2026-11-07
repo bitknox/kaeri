@@ -198,5 +198,6 @@ fun AppStore.setDeviceRemote(device: String, on: Boolean) {
 
 /** Hand the engine the platform's DNS-SD for typed-code pairing, once it runs. */
 fun AppStore.setSyncNetwork(network: app.kaeri.engine.ffi.FfiSyncNetwork) {
+    sync.network = network
     engine?.setSyncNetwork(network)
 }
