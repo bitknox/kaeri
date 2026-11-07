@@ -52,10 +52,11 @@ pub fn line(
             parts.extend(row.read_at.map(|at| ago(at, now, zone)));
         }
         ChapterReadState::InProgress { page, of } if medium == Medium::Novel => {
-            // The same figure as the Continue, which works from the place as kept.
-            let percent = part_percent(Some(kept_page(page)), of);
-            parts.extend(percent.map(|percent| {
-                r(ReadingMsg::ReadingRowPercent { percent: i64::from(percent) })
+            // The same figure as the Continue, which works from the place as kept. Opened but
+            // too little in to say as a percent, it says so rather than a download state.
+            parts.push(r(match part_percent(Some(kept_page(page)), of) {
+                Some(percent) => ReadingMsg::ReadingRowPercent { percent: i64::from(percent) },
+                None => ReadingMsg::ReadingRowOpened,
             }));
         }
         ChapterReadState::InProgress { page, of } => {
@@ -79,6 +80,11 @@ pub fn line(
         ChapterReadState::Unread => {}
     }
     let unread_plain = parts.is_empty();
+    // A bookmark shows in words, beside the reading state: it keeps the chapter when read
+    // downloads are cleared.
+    if row.bookmarked {
+        parts.push(r(ReadingMsg::ReadingRowBookmarked));
+    }
     match (&row.download, kept) {
         (Some(ChapterDownloadState::Done), _) => {
             parts.push(r(ReadingMsg::ReadingRowDownloaded));
@@ -243,16 +249,35 @@ mod tests {
             "never the page, and no page turned into a percent the Continue doesn't say"
         );
 
-        // Just opened: nothing as small as 0%, so the row says what any unread one says.
+        // Just opened: nothing as small as 0%, and no download state as if it were unread.
         let opened = row(ChapterReadState::InProgress { page: 1, of: Some(47) });
         assert_eq!(
             ids(&line(&opened, Kept::Source, Medium::Novel, NOW, &utc)),
-            ["reading-row-not-downloaded"]
+            ["reading-row-opened"]
         );
         let unknown = row(ChapterReadState::InProgress { page: 5, of: None });
         assert_eq!(
             ids(&line(&unknown, Kept::Device, Medium::Novel, NOW, &utc)),
-            ["reading-row-on-device"]
+            ["reading-row-opened"]
+        );
+    }
+
+    #[test]
+    fn a_bookmark_is_in_the_rows_words() {
+        let utc = TimeZone::UTC;
+        let mut read = row(ChapterReadState::Read);
+        read.bookmarked = true;
+        read.download = Some(ChapterDownloadState::Done);
+        assert_eq!(
+            ids(&line(&read, Kept::Source, Medium::Manga, NOW, &utc)),
+            ["reading-row-read", "reading-row-bookmarked", "reading-row-downloaded"]
+        );
+        let mut unread = row(ChapterReadState::Unread);
+        unread.bookmarked = true;
+        assert_eq!(
+            ids(&line(&unread, Kept::Source, Medium::Manga, NOW, &utc)),
+            ["reading-row-bookmarked", "reading-row-not-downloaded"],
+            "the bookmark doesn't hide that nothing is on this device"
         );
     }
 

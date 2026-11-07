@@ -142,10 +142,18 @@ pub enum SeriesAction {
     /// "Continue chapter 41 · page 8". The page counts from 1, as every page the engine sends.
     Continue { chapter: ChapterId, label: String, page: u32 },
     /// A light novel's part, part read: "Continue part 3 · 34%", or "Continue part 3" when how
-    /// far is not known or rounds to nothing.
-    ContinuePart { chapter: ChapterId, label: String, percent: Option<u8> },
-    /// A light novel's part not opened yet: "Read part 3".
-    ReadPart { chapter: ChapterId, label: String },
+    /// far is not known or rounds to nothing. `named` is the source's own words for it, "Part 3"
+    /// or "Chapter 3", which the button says in place of "part 3" when the source has them, so
+    /// it names the part as its row does: "Continue Chapter 3 · 34%".
+    ContinuePart {
+        chapter: ChapterId,
+        label: String,
+        percent: Option<u8>,
+        named: Option<String>,
+    },
+    /// A light novel's part not opened yet: "Read part 3", or "Read Chapter 3" by the source's
+    /// own words when it has them.
+    ReadPart { chapter: ChapterId, label: String, named: Option<String> },
     /// Finished.
     ReadAgain,
     /// None of your sources has it.
@@ -709,6 +717,10 @@ pub struct DownloadEstimate {
     /// left to download.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
+    /// Every chosen chapter, the ones on this device by what they take here and the rest as
+    /// estimated: what a send to an e-reader of the same choice comes to.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub all_bytes: u64,
 }
 
 /// A chapter the background check found, for the chapters notification channel.
@@ -1114,30 +1126,47 @@ pub fn part_percent(page: Option<u32>, of: Option<u32>) -> Option<u8> {
     }
 }
 
-/// "Part 3 · 34%", or "Part 3" with no percent worth saying.
-pub fn part_place(part: &str, percent: Option<u8>) -> Msg {
-    Msg::Reading(match percent {
-        Some(percent) => ReadingMsg::ReadingPartPercent {
+/// What a light novel's part is called where the source names it with more than its number:
+/// its own words, "Part 3" or "Chapter 3", so every place names it as its row does. None when
+/// the source gives only the number, and the words then say "Part 3".
+pub fn part_named(label: &str, number: Option<&str>) -> Option<String> {
+    let label = label.trim();
+    let bare = label.is_empty() || Some(label) == number || label.parse::<f64>().is_ok();
+    (!bare).then(|| label.to_owned())
+}
+
+/// "Part 3 · 34%", or "Part 3" with no percent worth saying; "Chapter 3 · 34%" when the source
+/// calls it that.
+pub fn part_place(part: &str, named: Option<&str>, percent: Option<u8>) -> Msg {
+    Msg::Reading(match (named, percent) {
+        (Some(label), Some(percent)) => ReadingMsg::ReadingLabelPercent {
+            label: label.to_owned(),
+            percent: i64::from(percent),
+        },
+        (Some(label), None) => return Msg::Verbatim { text: label.to_owned() },
+        (None, Some(percent)) => ReadingMsg::ReadingPartPercent {
             part: part.to_owned(),
             percent: i64::from(percent),
         },
-        None => ReadingMsg::ReadingNextPart { part: part.to_owned() },
+        (None, None) => ReadingMsg::ReadingNextPart { part: part.to_owned() },
     })
 }
 
-/// "Chapter 44", or "Part 4" for a light novel, which reads in parts.
-pub fn next_unit(medium: Medium, number: &str) -> Msg {
+/// "Chapter 44", or for a light novel, which reads in parts, "Part 4" or the source's own name
+/// for it.
+pub fn next_unit(medium: Medium, number: &str, named: Option<&str>) -> Msg {
     match medium {
-        Medium::Novel => Msg::Reading(ReadingMsg::ReadingNextPart { part: number.to_owned() }),
+        Medium::Novel => part_place(number, named, None),
         _ => next_chapter(number),
     }
 }
 
-/// "Chapter 88 is new", or "Part 4 is new".
-pub fn unit_new(medium: Medium, number: &str) -> Msg {
+/// "Chapter 88 is new", or "Part 4 is new" by the source's own name for the part.
+pub fn unit_new(medium: Medium, number: &str, named: Option<&str>) -> Msg {
     let number = number.to_owned();
-    Msg::Reading(match medium {
-        Medium::Novel => ReadingMsg::ReadingPartNew { part: number },
+    Msg::Reading(match (medium, named) {
+        (Medium::Novel, Some(label)) => ReadingMsg::ReadingLabelNew { label: label.to_owned() },
+        (Medium::Novel, None) => ReadingMsg::ReadingPartNew { part: number },
         _ => ReadingMsg::ReadingChapterNew { chapter: number },
     })
 }
@@ -1546,10 +1575,27 @@ mod tests {
         assert_eq!(part_percent(Some(0), Some(47)), None, "never 0%");
         assert_eq!(part_percent(None, None), None);
         assert_eq!(part_percent(Some(3), Some(0)), None);
-        assert_eq!(part_place("3", Some(34)).english(), "Part 3 · 34%");
-        assert_eq!(part_place("3", None).english(), "Part 3");
+        assert_eq!(part_place("3", None, Some(34)).english(), "Part 3 · 34%");
+        assert_eq!(part_place("3", None, None).english(), "Part 3");
+        assert_eq!(part_place("3", Some("Chapter 3"), Some(34)).english(), "Chapter 3 · 34%");
+        assert_eq!(part_place("3", Some("Chapter 3"), None).english(), "Chapter 3");
         assert_eq!(shown_page(8), 9);
         assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 10");
+    }
+
+    #[test]
+    fn a_part_goes_by_the_sources_words_only_when_they_say_more_than_its_number() {
+        assert_eq!(part_named("Chapter 3", Some("3")).as_deref(), Some("Chapter 3"));
+        assert_eq!(part_named("Part 6", None).as_deref(), Some("Part 6"));
+        assert_eq!(part_named("3", Some("3")), None);
+        assert_eq!(part_named("12.5", None), None);
+        assert_eq!(part_named("  ", Some("1")), None);
+        assert_eq!(
+            unit_new(Medium::Novel, "4", Some("Chapter 4")).english(),
+            "Chapter 4 is new"
+        );
+        assert_eq!(unit_new(Medium::Novel, "4", None).english(), "Part 4 is new");
+        assert_eq!(next_unit(Medium::Manga, "44", Some("Chapter 44")).english(), "Chapter 44");
     }
 
     #[test]

@@ -57,9 +57,21 @@ fn checked_at(store: &Store) -> Option<i64> {
     store.get_meta_text(CHECKED).ok()??.parse().ok()
 }
 
-/// Updates as kept.
+/// Updates as kept, at once; then again once the books of series nothing is kept of land, so
+/// a row opened first in a fresh process, as from a notification, gets its cover and medium.
 pub fn load(kit: &Kit, ask: Ask, tx: &Outbox) {
     send(tx, ReadingEvent::Updates(view(kit, ask)));
+    let unkept = tiles::unkept(&kit.meta, &followed(&kit.store));
+    if unkept.is_empty() {
+        return;
+    }
+    let (kit, tx) = (kit.clone(), tx.clone());
+    tokio::spawn(async move {
+        match kaeri_meta::on_screen(kit.meta.books_many(&unkept)).await {
+            Ok(_) => send(&tx, ReadingEvent::Updates(view(&kit, ask))),
+            Err(e) => tracing::info!(error = %e, "the books behind Updates were not asked for"),
+        }
+    });
 }
 
 pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {

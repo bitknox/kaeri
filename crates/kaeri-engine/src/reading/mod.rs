@@ -265,7 +265,11 @@ pub(crate) fn reading(
             return;
         }
         ReadingCommand::LoadDownloads => {
-            ReadingEvent::Downloads(services.book_sources.downloads.view(&services.store))
+            let view = services.book_sources.downloads.view(&services.store);
+            let works: Vec<String> = view.series.iter().map(|s| s.work.0.clone()).collect();
+            let _ = tx.send(Event::Reading(ReadingEvent::Downloads(view)));
+            downloads_books(services, &works, tx);
+            return;
         }
         ReadingCommand::Download { .. }
         | ReadingCommand::DownloadCancel { .. }
@@ -281,6 +285,28 @@ pub(crate) fn reading(
         }
     };
     let _ = tx.send(Event::Reading(event));
+}
+
+/// Downloads again once the books of series nothing is kept of land, so their rows get their
+/// covers and titles though Downloads was the first screen asked.
+fn downloads_books(services: &Services, works: &[String], tx: &Outbox) {
+    let meta = services.meta.clone();
+    let unkept = crate::read_catalog::tiles::unkept(&meta, works);
+    if unkept.is_empty() {
+        return;
+    }
+    let (queue, store, tx) =
+        (services.book_sources.downloads.clone(), services.store.clone(), tx.clone());
+    tokio::spawn(async move {
+        match kaeri_meta::on_screen(meta.books_many(&unkept)).await {
+            Ok(_) => {
+                let _ = tx.send(Event::Reading(ReadingEvent::Downloads(queue.view(&store))));
+            }
+            Err(e) => {
+                tracing::info!(error = %e, "the books behind Downloads were not asked for")
+            }
+        }
+    });
 }
 
 /// A download command: the queue is set up from the config and the network first, so what it

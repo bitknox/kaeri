@@ -81,7 +81,14 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             // The main button follows the list that came.
             send(&tx, ReadingEvent::Series(Box::new(view(&kit, ask, &work, false))));
         };
-        tokio::join!(page, listed);
+        // With nothing kept of the book, its medium is not known until the page lands, and
+        // the rows' words depend on it: a novel's part says a percent, a chapter its page.
+        if kept.is_none() && wants_page {
+            page.await;
+            listed.await;
+        } else {
+            tokio::join!(page, listed);
+        }
     });
 }
 

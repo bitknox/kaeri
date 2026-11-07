@@ -22,9 +22,13 @@ enum ReadSeriesWords {
         switch action {
         case .read(_, let label): L.actionReadChapter(n: label)
         case .continue(_, let label, let page): L.actionContinueChapter(n: label, page: Int(page))
-        case .continuePart(_, let label, let percent?): L.actionContinuePart(n: label, percent: Int(percent))
-        case .continuePart(_, let label, nil): L.actionContinuePartPlain(n: label)
-        case .readPart(_, let label): L.actionReadPart(n: label)
+        // A part goes by the source's own name for it where it has one, as its row does.
+        case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: named, percent: Int(percent))
+        case .continuePart(_, let label, let percent?, nil): L.actionContinuePart(n: label, percent: Int(percent))
+        case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: named)
+        case .continuePart(_, let label, nil, nil): L.actionContinuePartPlain(n: label)
+        case .readPart(_, _, let named?): L.actionReadNamed(label: named)
+        case .readPart(_, let label, nil): L.actionReadPart(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
@@ -33,8 +37,8 @@ enum ReadSeriesWords {
     @MainActor
     static func perform(_ action: SeriesAction?, work: String, store: AppStore, navigator: Navigator) {
         switch action {
-        case .read(let chapter, _), .continue(let chapter, _, _), .continuePart(let chapter, _, _),
-             .readPart(let chapter, _):
+        case .read(let chapter, _), .continue(let chapter, _, _), .continuePart(let chapter, _, _, _),
+             .readPart(let chapter, _, _):
             store.reader.open(work: work, chapter: chapter)
         case .readAgain:
             navigator.seriesSheet = .readAgain(work)

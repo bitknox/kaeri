@@ -879,9 +879,24 @@ public enum L {
         Self.format("reading-part-new", fallback: "Part %1$@ is new", part)
     }
 
+    /// Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+    public static func readingLabelPercent(label: String, percent: Int) -> String {
+        Self.format("reading-label-percent", fallback: "%1$@ · %2$lld%%", label, percent)
+    }
+
+    /// Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelNew(label: String) -> String {
+        Self.format("reading-label-new", fallback: "%1$@ is new", label)
+    }
+
     /// Under a This week cell: a light novel's part that came out that day, with its own title.
     public static func readingPartTitled(part: String, title: String) -> String {
         Self.format("reading-part-titled", fallback: "Part %1$@ · %2$@", part, title)
+    }
+
+    /// Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelTitled(label: String, title: String) -> String {
+        Self.format("reading-label-titled", fallback: "%1$@ · %2$@", label, title)
     }
 
     /// Under the big picture on reading's Home: a light novel's part that came out today.
@@ -889,9 +904,19 @@ public enum L {
         Self.format("reading-part-out-today", fallback: "Part %1$@ is out today", part)
     }
 
+    /// Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelOutToday(label: String) -> String {
+        Self.format("reading-label-out-today", fallback: "%1$@ is out today", label)
+    }
+
     /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
     public static func readingPartOutTodayTitled(part: String, title: String) -> String {
         Self.format("reading-part-out-today-titled", fallback: "Part %1$@, %2$@, out today", part, title)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelOutTodayTitled(label: String, title: String) -> String {
+        Self.format("reading-label-out-today-titled", fallback: "%1$@, %2$@, out today", label, title)
     }
 
     /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
@@ -902,6 +927,11 @@ public enum L {
     /// Under a Library cover: the volume and part of a light novel the person is at.
     public static func readingVolumePart(volume: String, part: String) -> String {
         Self.format("reading-volume-part", fallback: "Volume %1$@, part %2$@", volume, part)
+    }
+
+    /// Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+    public static func readingVolumeLabel(volume: String, label: String) -> String {
+        Self.format("reading-volume-label", fallback: "Volume %1$@, %2$@", volume, label)
     }
 
     /// A search filter: books from Japan.
@@ -989,6 +1019,12 @@ public enum L {
     public static func readingRowPercent(percent: Int) -> String {
         Self.format("reading-row-percent", fallback: "%1$lld%%", percent)
     }
+
+    /// A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+    public static var readingRowOpened: String { string("reading-row-opened", fallback: "Opened") }
+
+    /// A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+    public static var readingRowBookmarked: String { string("reading-row-bookmarked", fallback: "Bookmarked") }
 
     /// A chapter row: how long its pages are, for a file on the device.
     public static func readingRowPages(n: Int) -> String {
@@ -8069,6 +8105,21 @@ public enum L {
     /// The main action for a light novel part not opened yet.
     public static func actionReadPart(n: String) -> String {
         Self.format("action-read-part", fallback: "Read part %1$@", n)
+    }
+
+    /// The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+    public static func actionContinueNamed(label: String, percent: Int) -> String {
+        Self.format("action-continue-named", fallback: "Continue %1$@ · %2$lld%%", label, percent)
+    }
+
+    /// The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+    public static func actionContinueNamedPlain(label: String) -> String {
+        Self.format("action-continue-named-plain", fallback: "Continue %1$@", label)
+    }
+
+    /// The main action for a light novel part not opened yet, named in the source's own words.
+    public static func actionReadNamed(label: String) -> String {
+        Self.format("action-read-named", fallback: "Read %1$@", label)
     }
 
     /// The main action when every chapter is read.

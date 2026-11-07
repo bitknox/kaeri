@@ -1307,16 +1307,28 @@ pub enum ReadingMsg {
     ReadingPartPercent { part: String, percent: i64 },
     /// Under a cover: a light novel's part came out that the person has not read.
     ReadingPartNew { part: String },
+    /// Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+    ReadingLabelPercent { label: String, percent: i64 },
+    /// Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+    ReadingLabelNew { label: String },
     /// Under a This week cell: a light novel's part that came out that day, with its own title.
     ReadingPartTitled { part: String, title: String },
+    /// Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+    ReadingLabelTitled { label: String, title: String },
     /// Under the big picture on reading's Home: a light novel's part that came out today.
     ReadingPartOutToday { part: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+    ReadingLabelOutToday { label: String },
     /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
     ReadingPartOutTodayTitled { part: String, title: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+    ReadingLabelOutTodayTitled { label: String, title: String },
     /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
     ReadingChapterOf { chapter: String, of: String },
     /// Under a Library cover: the volume and part of a light novel the person is at.
     ReadingVolumePart { volume: String, part: String },
+    /// Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+    ReadingVolumeLabel { volume: String, label: String },
     /// A search filter: books from Japan.
     ReadingOriginJapan,
     /// A search filter: books from Korea.
@@ -1365,6 +1377,10 @@ pub enum ReadingMsg {
     ReadingRowPage { page: i64 },
     /// A novel's chapter row: how far into it the person is.
     ReadingRowPercent { percent: i64 },
+    /// A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+    ReadingRowOpened,
+    /// A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+    ReadingRowBookmarked,
     /// A chapter row: how long its pages are, for a file on the device.
     ReadingRowPages { n: i64 },
     /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
@@ -1503,11 +1519,17 @@ impl ReadingMsg {
             Self::ReadingNextPart { .. } => "reading-next-part",
             Self::ReadingPartPercent { .. } => "reading-part-percent",
             Self::ReadingPartNew { .. } => "reading-part-new",
+            Self::ReadingLabelPercent { .. } => "reading-label-percent",
+            Self::ReadingLabelNew { .. } => "reading-label-new",
             Self::ReadingPartTitled { .. } => "reading-part-titled",
+            Self::ReadingLabelTitled { .. } => "reading-label-titled",
             Self::ReadingPartOutToday { .. } => "reading-part-out-today",
+            Self::ReadingLabelOutToday { .. } => "reading-label-out-today",
             Self::ReadingPartOutTodayTitled { .. } => "reading-part-out-today-titled",
+            Self::ReadingLabelOutTodayTitled { .. } => "reading-label-out-today-titled",
             Self::ReadingChapterOf { .. } => "reading-chapter-of",
             Self::ReadingVolumePart { .. } => "reading-volume-part",
+            Self::ReadingVolumeLabel { .. } => "reading-volume-label",
             Self::ReadingOriginJapan => "reading-origin-japan",
             Self::ReadingOriginKorea => "reading-origin-korea",
             Self::ReadingOriginChina => "reading-origin-china",
@@ -1532,6 +1554,8 @@ impl ReadingMsg {
             Self::ReadingRowPageOf { .. } => "reading-row-page-of",
             Self::ReadingRowPage { .. } => "reading-row-page",
             Self::ReadingRowPercent { .. } => "reading-row-percent",
+            Self::ReadingRowOpened => "reading-row-opened",
+            Self::ReadingRowBookmarked => "reading-row-bookmarked",
             Self::ReadingRowPages { .. } => "reading-row-pages",
             Self::ReadingRowVersions { .. } => "reading-row-versions",
             Self::ReadingAgoNow => "reading-ago-now",
@@ -1635,11 +1659,17 @@ impl ReadingMsg {
             Self::ReadingNextPart { part } => vec![("part", Value::Text(part.clone()))],
             Self::ReadingPartPercent { part, percent } => vec![("part", Value::Text(part.clone())), ("percent", Value::Int(*percent))],
             Self::ReadingPartNew { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingLabelPercent { label, percent } => vec![("label", Value::Text(label.clone())), ("percent", Value::Int(*percent))],
+            Self::ReadingLabelNew { label } => vec![("label", Value::Text(label.clone()))],
             Self::ReadingPartTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingLabelTitled { label, title } => vec![("label", Value::Text(label.clone())), ("title", Value::Text(title.clone()))],
             Self::ReadingPartOutToday { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingLabelOutToday { label } => vec![("label", Value::Text(label.clone()))],
             Self::ReadingPartOutTodayTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingLabelOutTodayTitled { label, title } => vec![("label", Value::Text(label.clone())), ("title", Value::Text(title.clone()))],
             Self::ReadingChapterOf { chapter, of } => vec![("chapter", Value::Text(chapter.clone())), ("of", Value::Text(of.clone()))],
             Self::ReadingVolumePart { volume, part } => vec![("volume", Value::Text(volume.clone())), ("part", Value::Text(part.clone()))],
+            Self::ReadingVolumeLabel { volume, label } => vec![("volume", Value::Text(volume.clone())), ("label", Value::Text(label.clone()))],
             Self::ReadingOriginJapan => Vec::new(),
             Self::ReadingOriginKorea => Vec::new(),
             Self::ReadingOriginChina => Vec::new(),
@@ -1664,6 +1694,8 @@ impl ReadingMsg {
             Self::ReadingRowPageOf { page, of } => vec![("page", Value::Int(*page)), ("of", Value::Int(*of))],
             Self::ReadingRowPage { page } => vec![("page", Value::Int(*page))],
             Self::ReadingRowPercent { percent } => vec![("percent", Value::Int(*percent))],
+            Self::ReadingRowOpened => Vec::new(),
+            Self::ReadingRowBookmarked => Vec::new(),
             Self::ReadingRowPages { n } => vec![("n", Value::Int(*n))],
             Self::ReadingRowVersions { n } => vec![("n", Value::Int(*n))],
             Self::ReadingAgoNow => Vec::new(),

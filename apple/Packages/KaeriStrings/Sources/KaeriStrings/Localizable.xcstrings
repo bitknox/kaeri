@@ -11129,6 +11129,30 @@
         }
       }
     },
+    "action-continue-named" : {
+      "comment" : "The main action for a light novel part, part read, named in the source's own words (\"Part 3\", \"Chapter 3\") as its row is. Argument 1: label (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "action-continue-named-plain" : {
+      "comment" : "The main action for a light novel part, part read, named in the source's own words, when how far is not known. Argument 1: label (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue %1$@"
+          }
+        }
+      }
+    },
     "action-continue-part" : {
       "comment" : "The main action for a light novel part, part read. Argument 1: n (Text). Argument 2: percent (Int).",
       "extractionState" : "manual",
@@ -13189,6 +13213,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read chapter %1$@"
+          }
+        }
+      }
+    },
+    "action-read-named" : {
+      "comment" : "The main action for a light novel part not opened yet, named in the source's own words. Argument 1: label (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read %1$@"
           }
         }
       }
@@ -171799,6 +171835,66 @@
         }
       }
     },
+    "reading-label-new" : {
+      "comment" : "Under a cover: a light novel's part came out that the person has not read, named in the source's own words (\"Part 4\", \"Chapter 4\"). Argument 1: label (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is new"
+          }
+        }
+      }
+    },
+    "reading-label-out-today" : {
+      "comment" : "Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words (\"Part 4\", \"Chapter 4\"). Argument 1: label (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is out today"
+          }
+        }
+      }
+    },
+    "reading-label-out-today-titled" : {
+      "comment" : "Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words (\"Part 4\", \"Chapter 4\"). Argument 1: label (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, out today"
+          }
+        }
+      }
+    },
+    "reading-label-percent" : {
+      "comment" : "Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words (\"Part 3\", \"Chapter 3\"), as its row on the series page names it. Argument 1: label (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "reading-label-titled" : {
+      "comment" : "Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words (\"Part 4\", \"Chapter 4\"). Argument 1: label (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "reading-miss-down" : {
       "comment" : "The source has failed every ask, since a time on another day or not known.",
       "extractionState" : "manual",
@@ -172063,6 +172159,18 @@
         }
       }
     },
+    "reading-row-bookmarked" : {
+      "comment" : "A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarked"
+          }
+        }
+      }
+    },
     "reading-row-downloaded" : {
       "comment" : "A chapter row's state: it is kept on this device to read offline.",
       "extractionState" : "manual",
@@ -172131,6 +172239,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "On this device"
+          }
+        }
+      }
+    },
+    "reading-row-opened" : {
+      "comment" : "A novel's chapter row: the person opened it, and how far in is too little to say as a percent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opened"
           }
         }
       }
@@ -172475,6 +172595,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usually Wednesdays"
+          }
+        }
+      }
+    },
+    "reading-volume-label" : {
+      "comment" : "Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words (\"Part 5\", \"Chapter 5\"). Argument 1: volume (Text). Argument 2: label (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume %1$@, %2$@"
           }
         }
       }

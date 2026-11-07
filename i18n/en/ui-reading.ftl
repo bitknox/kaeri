@@ -102,6 +102,21 @@ action-continue-part-plain = { -continue-cap } part { $n }
 # @arg n: text
 action-read-part = Read part { $n }
 
+# The main action for a light novel part, part read, named in the source's own words ("Part 3",
+# "Chapter 3") as its row is.
+# @arg label: text
+# @arg percent: int
+action-continue-named = { -continue-cap } { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how
+# far is not known.
+# @arg label: text
+action-continue-named-plain = { -continue-cap } { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+# @arg label: text
+action-read-named = Read { $label }
+
 # The main action when every chapter is read.
 action-read-again = Read again
 
