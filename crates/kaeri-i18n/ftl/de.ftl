@@ -5354,6 +5354,63 @@ episode-download-done = Heruntergeladen
 # Line under that button after a failure.
 episode-download-failed = Folge { $episode } konnte nicht heruntergeladen werden. Versuche es erneut.
 
+# First run, page 2 of 5.
+first-other-title = Nutzt du Kaeri schon auf einem anderen Gerät?
+
+# Under the title.
+first-other-line = Koppel es, dann bekommt dieses Gerät deine Quellen, Tracker und den Verlauf. Die weiteren Schritte entfallen dann.
+
+# Line under the pair row.
+first-other-pair-line = Zeigt einen Code, den du auf dem anderen Gerät eingibst. Beide brauchen dasselbe Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Aus einem Cloud-Ordner wiederherstellen
+
+# Line under it.
+first-other-restore-line = Nutzt den gespeicherten Wiederherstellungsschlüssel
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Nein, hier starten
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Warten auf dein anderes Gerät
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Noch nichts? Beide Geräte müssen im selben Wi-Fi sein.
+
+# Group header for what the other device brings.
+first-join-group = Von { $device }
+
+# Row while the rest arrives.
+first-join-looking = Prüfe, was auf { $device } ist …
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri ist für
+
+# Line under it when the other device reads.
+first-join-medium-line = Lesen, wie auf { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = { $host } hinzufügen
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · meldet sich mit dem Schlüssel von { $device } an, gespeichert in { $store }
+
+# Note under the list.
+first-join-folders = Ordner bleiben auf { $device }. Füge die Ordner für dieses Gerät selbst unter „Deine Quellen“ hinzu.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Listen und Quellen sind eingerichtet, daher endet der erste Start hier. Du kannst sie in den Einstellungen ändern.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } hat dieses Gerät nicht hineingelassen. { $owner } kann dir eine Einladung schicken.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Synchronisiere mit { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Start
 
@@ -7607,6 +7664,86 @@ player-subs-bg-box = Box
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Mehr in den Einstellungen…
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Demo lesen
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Die Demo enthält einen kurzen Comic und eine Kurzgeschichte, die ihre Urheber unter Creative Commons teilen.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Eine kurze Episode und ein kurzer Comic, von ihren Urhebern unter Creative Commons geteilt.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Nur die Demo ist aktiv. Füge einen Ordner, einen Server oder einen Plugin-Store hinzu, um deine eigenen Bücher zu lesen.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Lesen
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Comic · eine Seite
+       *[other] Demo · Comic · { $pages } Seiten
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } von { $author }. Lizenz: { $licence }. Gelesen über Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } von { $author }. Gemeinfrei. Sie ist in der App enthalten.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Jetzt lesbar
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Nur die Demo ist aktiv. Weitere Titel erscheinen, sobald du eine Quelle hinzufügst.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Das ist das Ende der Demo
+
+# Line under it.
+reader-demo-end-line = Um deine eigenen Bücher zu lesen, füge einen Ordner, einen Server oder einen Plugin-Store hinzu.
+
+# The card's primary action.
+reader-demo-add-source = Eine Quelle hinzufügen
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Zurück zu Seite 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Ein Comic und eine Geschichte · CC BY 4.0 und gemeinfrei
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Werke, die ihre Urheber unter Creative Commons teilen, damit du Kaeri ausprobieren kannst, bevor du eine Quelle hinzufügst. Sie ist keine Quelle zum Behalten.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Die Demo meldet sich nirgends an und schreibt nie in einen Tracker.
+
+# Group on the demo's series page.
+demo-chapters = Kapitel
+
+# Group on the demo's series page: the other demo work.
+demo-also = Auch in der Demo
+
+# Group in About the demo.
+demo-credits = Nachweise
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] Eine Seite
+       *[other] { $pages } Seiten
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Geschichte · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Kapitel { $number } lesen
+
 # Button that shows the season before.
 seasonal-previous = Vorherige Saison
 
@@ -8884,6 +9021,233 @@ settings-subs-styled-strip-detail = Jede Zeile erscheint als einfacher Dialog un
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Untertitelstil zurücksetzen
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Adresse
+
+# Note under the empty address field.
+book-server-address-hint = Eine Adresse oder der vollständige OPDS-Link von Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Das ist ein OPDS-Link von Kavita. Sein Schlüssel meldet dich an, ein Passwort ist also nicht nötig.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri speichert den Schlüssel in { $store } und zeigt nur seine letzten vier Zeichen.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Key ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Serien gefunden: { $series }
+       *[other] Serien gefunden: { $series } in { $libraries } Bibliotheken
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } unter { $host }. Wähle die Bibliotheken zum Hinzufügen.
+
+# A library row's line in the result.
+book-server-library-line = Serien: { $series }
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Fortschritt an den Server senden
+
+# Line under the switch.
+book-server-sync-progress-line = Hier gelesene Seiten gehen an { $host } zurück, und dessen Fortschritt kommt hierher.
+
+# Field label.
+book-server-username = Benutzername
+
+# Field label.
+book-server-password = Passwort
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = { $host } nicht erreichbar
+
+# Line under it.
+book-server-err-unreachable-line = Prüfe die Adresse und ob der Server läuft und in diesem Netzwerk ist.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } hat dieses Passwort nicht akzeptiert
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Nimm den Benutzernamen und das Passwort, die du für { $kind } im Browser nutzt.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } hat diesen Schlüssel nicht akzeptiert
+
+# Line under it.
+book-server-err-key-line = Der Schlüssel ändert sich, wenn er in Kavita zurückgesetzt wird. Kopiere den OPDS-Link dort erneut aus deinen Kontoeinstellungen.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } zeigt diesem Konto keine Serien
+
+# Line under it.
+book-server-empty-line = Der Server lässt dich ein, scannt aber vielleicht noch, oder dieses Konto hat keinen Zugriff auf seine Bücher.
+
+# Note under it.
+book-server-empty-recheck = Du kannst es jetzt hinzufügen. Kaeri schaut alle 30 Minuten erneut nach.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri liest Komga-, Kavita- und OPDS-Kataloge.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Serien gefunden: { $series } in einer Datei
+       *[other] Serien gefunden: { $series } in { $files } Dateien
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri hat { $matched } davon anhand ihrer Angaben zugeordnet.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] Eine Datei, die Kaeri nicht öffnen kann
+       *[other] { $count } Dateien, die Kaeri nicht öffnen kann
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Sie bleiben unverändert im Ordner.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB mit DRM gesperrt
+
+# Note under the folder result.
+book-folder-opens = Kaeri öffnet CBZ-, CBR-, EPUB- und PDF-Dateien sowie Ordner mit Bildern.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Dateien anzeigen
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Ordner hinzufügen
+
+# Folder row action that picks another folder.
+book-folder-change = Ändern
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Nichts in { $folder }, das Kaeri öffnen kann
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] Er enthält eine Datei, die weder CBZ, CBR, EPUB, PDF noch ein Bild ist.
+       *[other] Er enthält { $files } Dateien, keine davon CBZ, CBR, EPUB, PDF oder Bilder.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Anderen Ordner wählen
+
+# Title of the Join a plugin store sheet.
+store-join-title = Einem Plugin-Store beitreten
+
+# Label of the invite field.
+store-invite-field = Einladung
+
+# Result title once a plugin store is joined.
+store-joined-title = { $store } beigetreten
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } bietet ein Plugin an. Der Beitritt installiert nichts; installiere es hier oder später.
+       *[other] { $owner } bietet { $count } Plugins an. Der Beitritt installiert nichts; wähle hier oder später die gewünschten aus.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Zum Lesen
+
+# Group header in the joined store's list.
+store-group-watching = Zum Ansehen
+
+# Row action.
+store-install = Installieren
+
+# Row state once installed.
+store-installed-row = Installiert
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Alle zum Lesen installieren
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Ein Plugin installiert. Es findet sich unter „Deine Quellen“.
+       *[other] { $count } Plugins installiert. Sie finden sich unter „Deine Quellen“.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Jedes Plugin in { $store } ist zum Ansehen
+
+# Line under it.
+store-other-medium-line = Ansehen ist auf diesem Gerät aus, daher erscheint keines davon unter „Deine Quellen“.
+
+# Secondary action under it.
+store-turn-on-watching = Ansehen einschalten
+
+# Info title when a store has no plugins.
+store-empty = { $store } hat noch keine Plugins
+
+# Line under it.
+store-empty-line = Du bist Mitglied, neue Plugins erscheinen daher in Plugin-Stores, sobald { $owner } sie hinzufügt.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = { $host } nicht erreichbar
+
+# Line under it.
+store-err-unreachable-line = Die Einladung sieht richtig aus, aber der Store antwortet nicht. Versuche es später erneut oder frag { $owner }, ob er läuft.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Ein weiteres ist zum Ansehen bestimmt, was auf diesem Gerät aus ist.
+       *[other] { $count } weitere sind zum Ansehen bestimmt, was auf diesem Gerät aus ist.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Ein weiteres ist zum Lesen bestimmt, was dieser TV nicht kann.
+       *[other] { $count } weitere sind zum Lesen bestimmt, was dieser TV nicht kann.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Jedes Plugin in { $store } ist zum Lesen bestimmt, was dieser TV nicht kann.
+
+# Plugin row in an invite's result.
+store-plugin-row = Version { $version } · kann { $hosts } kontaktieren
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = { $name } hinzugefügt · Serien: { $series }
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Ein Plugin von { $store } installiert
+       *[other] { $count } Plugins von { $store } installiert
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · Serien: { $series } · gerade hinzugefügt
+       *[other] { $kind } · Serien: { $series } in { $libraries } Bibliotheken · gerade hinzugefügt
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · noch keine Serien · schaut in 30 Minuten erneut nach
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · Serien: { $series } · eine Datei übersprungen
+       *[other] { $path } · Serien: { $series } · { $skipped } Dateien übersprungen
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = Von { $store } · { $medium } · Version { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Quellen

@@ -44,6 +44,7 @@
 pub mod book_sources;
 pub mod browsing;
 pub mod bug_report;
+pub mod came_in;
 pub mod catalog;
 pub mod command;
 pub mod crash;

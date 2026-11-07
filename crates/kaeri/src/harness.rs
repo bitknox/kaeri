@@ -941,6 +941,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::SyncPairFailed { .. } => "SyncPairFailed",
         Event::SyncStoreJoined { .. } => "SyncStoreJoined",
         Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
+        Event::SetupFrom(_) => "SetupFrom",
+        Event::CameIn(_) => "CameIn",
     }
 }
 
@@ -995,6 +997,8 @@ fn copy(update: &Event) -> Event {
         Event::Reader(event) => Event::Reader(event.clone()),
         Event::BookSources(event) => Event::BookSources(event.clone()),
         Event::Medium(event) => Event::Medium(event.clone()),
+        Event::SetupFrom(setup) => Event::SetupFrom(setup.clone()),
+        Event::CameIn(came) => Event::CameIn(came.clone()),
         Event::RecentSearches(recent) => Event::RecentSearches(recent.clone()),
         Event::CalendarWindow {
             anchor,

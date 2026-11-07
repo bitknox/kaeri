@@ -374,6 +374,90 @@ pub struct DemoState {
     /// Part of the demo has been played, so Home's spotlight is back to its usual cases.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub played: bool,
+    /// The demo's one row shows its episode: the demo is on and this device watches.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub watching: bool,
+    /// The demo's one row shows its comic and story: the demo is on and this device reads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub reading: bool,
+    /// The reading demo is the only book source: Home and Search say how to add your own.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub only_books: bool,
+}
+
+/// One work of the reading demo and its credit, as its licence asks for it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoWorkInfo {
+    /// The series id within the demo source.
+    pub id: String,
+    /// The series, as its maker writes it: "Pepper&Carrot".
+    pub series: String,
+    /// The chapter's own title.
+    pub chapter: String,
+    pub author: String,
+    /// "CC BY 4.0"; `None` for a work in the public domain.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence_url: Option<String>,
+    /// The maker's site, or where the text came from. Linked, never read from.
+    pub maker_url: String,
+    /// The Commons file page of its first page; `None` for the story, which comes with the app.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub file_page_url: Option<String>,
+    /// The credit in English: "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." A front end
+    /// words it from the fields above in the person's language.
+    pub credit: String,
+    /// Read as text; else as pages.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub novel: bool,
+    /// Pages of the comic, nought for the story.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pages: u32,
+}
+
+/// The reading demo's works, credits and hosts, for the demo's series page and its credits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadingDemoInfo {
+    /// The comic first, then the story.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub works: Vec<DemoWorkInfo>,
+    /// The only hosts the reading demo reaches.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+}
+
+impl DemoWorkInfo {
+    pub fn of(work: &kaeri_core::reading_demo::DemoWork) -> Self {
+        Self {
+            id: work.id.into(),
+            series: work.series.into(),
+            chapter: work.chapter.into(),
+            author: work.author.into(),
+            licence: work.licence.map(Into::into),
+            licence_url: work.licence_url.map(Into::into),
+            maker_url: work.maker_url.into(),
+            file_page_url: work.file_page_url.map(Into::into),
+            credit: work.credit.into(),
+            novel: work.novel,
+            pages: if work.novel {
+                0
+            } else {
+                kaeri_core::reading_demo::COMIC_PAGES.len() as u32
+            },
+        }
+    }
+}
+
+/// The reading demo's works and credits.
+pub fn reading_demo_info() -> ReadingDemoInfo {
+    use kaeri_core::reading_demo::WORKS;
+    ReadingDemoInfo {
+        works: WORKS.iter().map(DemoWorkInfo::of).collect(),
+        hosts: vec![kaeri_core::demo::DEMO_HOSTS[0].to_owned()],
+    }
 }
 
 /// What the credit block and the demo's About page show. The same constants the host guard

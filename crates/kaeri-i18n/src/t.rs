@@ -9198,6 +9198,101 @@ pub fn episode_download_failed(episode: i64) -> String {
     text("episode-download-failed", &[("episode", Arg::Int(episode))])
 }
 
+/// First run, page 2 of 5.
+pub fn first_other_title() -> String {
+    text("first-other-title", &[])
+}
+
+/// Under the title.
+pub fn first_other_line() -> String {
+    text("first-other-line", &[])
+}
+
+/// Line under the pair row.
+pub fn first_other_pair_line() -> String {
+    text("first-other-pair-line", &[])
+}
+
+/// Row that restores from a sync folder.
+pub fn first_other_restore() -> String {
+    text("first-other-restore", &[])
+}
+
+/// Line under it.
+pub fn first_other_restore_line() -> String {
+    text("first-other-restore-line", &[])
+}
+
+/// Primary action: go on with the first run on this device alone.
+pub fn first_other_no() -> String {
+    text("first-other-no", &[])
+}
+
+/// Beside a spinner, after 600 ms.
+pub fn pair_waiting() -> String {
+    text("pair-waiting", &[])
+}
+
+/// After 30 seconds with nothing.
+pub fn pair_nothing_yet() -> String {
+    text("pair-nothing-yet", &[])
+}
+
+/// Group header for what the other device brings.
+pub fn first_join_group(device: &str) -> String {
+    text("first-join-group", &[("device", Arg::Text(device))])
+}
+
+/// Row while the rest arrives.
+pub fn first_join_looking(device: &str) -> String {
+    text("first-join-looking", &[("device", Arg::Text(device))])
+}
+
+/// Row with a pop-up of Watch, Read and Both.
+pub fn first_join_medium() -> String {
+    text("first-join-medium", &[])
+}
+
+/// Line under it when the other device reads.
+pub fn first_join_medium_line(device: &str) -> String {
+    text("first-join-medium-line", &[("device", Arg::Text(device))])
+}
+
+/// Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+pub fn first_join_signins_line(trackers: &str) -> String {
+    text("first-join-signins-line", &[("trackers", Arg::Text(trackers))])
+}
+
+/// Switch, one per book server.
+pub fn first_join_server(host: &str) -> String {
+    text("first-join-server", &[("host", Arg::Text(host))])
+}
+
+/// Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+pub fn first_join_server_line(kind: &str, device: &str, store: &str) -> String {
+    text("first-join-server-line", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device)), ("store", Arg::Text(store))])
+}
+
+/// Note under the list.
+pub fn first_join_folders(device: &str) -> String {
+    text("first-join-folders", &[("device", Arg::Text(device))])
+}
+
+/// Note when the setup answered the remaining pages.
+pub fn first_join_steps_done() -> String {
+    text("first-join-steps-done", &[])
+}
+
+/// Row error when a plugin store refused this device.
+pub fn first_join_store_refused(store: &str, owner: &str) -> String {
+    text("first-join-store-refused", &[("store", Arg::Text(store)), ("owner", Arg::Text(owner))])
+}
+
+/// Notice on Home, for 4 seconds.
+pub fn first_join_syncing(device: &str) -> String {
+    text("first-join-syncing", &[("device", Arg::Text(device))])
+}
+
 /// Name of the Home section in the sidebar, the tab bar and the window title.
 pub fn home_title() -> String {
     text("home-title", &[])
@@ -13060,6 +13155,126 @@ pub fn reader_look_system() -> String {
     text("reader-look-system", &[])
 }
 
+/// Button in the first run that opens the reading demo.
+pub fn onboarding_read_demo() -> String {
+    text("onboarding-read-demo", &[])
+}
+
+/// Under the first run's demo heading when the device is for reading.
+pub fn onboarding_demo_books_detail() -> String {
+    text("onboarding-demo-books-detail", &[])
+}
+
+/// Under the first run's demo heading when the device is for both.
+pub fn onboarding_demo_both_detail() -> String {
+    text("onboarding-demo-both-detail", &[])
+}
+
+/// Home, under the spotlight, when the demo is the only thing to read.
+pub fn home_demo_only_books() -> String {
+    text("home-demo-only-books", &[])
+}
+
+/// Primary action on Home's spotlight for a book.
+pub fn home_spotlight_read() -> String {
+    text("home-spotlight-read", &[])
+}
+
+/// The demo comic's facts line on its series page.
+pub fn demo_series_facts(pages: i64) -> String {
+    text("demo-series-facts", &[("pages", Arg::Int(pages))])
+}
+
+/// The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+pub fn demo_credit_book(title: &str, author: &str, licence: &str) -> String {
+    text("demo-credit-book", &[("title", Arg::Text(title)), ("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// The story's credit in About the demo.
+pub fn demo_credit_story(title: &str, author: &str) -> String {
+    text("demo-credit-story", &[("title", Arg::Text(title)), ("author", Arg::Text(author))])
+}
+
+/// Credit capsule in the reader's top bar on page 1.
+pub fn reader_demo_credit(title: &str, author: &str, licence: &str) -> String {
+    text("reader-demo-credit", &[("title", Arg::Text(title)), ("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// A demo result's line in Search.
+pub fn search_demo_reads() -> String {
+    text("search-demo-reads", &[])
+}
+
+/// Search, under the demo results, when only the demo is on.
+pub fn search_demo_only_books() -> String {
+    text("search-demo-only-books", &[])
+}
+
+/// Title of the card after the demo's last page.
+pub fn reader_demo_end() -> String {
+    text("reader-demo-end", &[])
+}
+
+/// Line under it.
+pub fn reader_demo_end_line() -> String {
+    text("reader-demo-end-line", &[])
+}
+
+/// The card's primary action.
+pub fn reader_demo_add_source() -> String {
+    text("reader-demo-add-source", &[])
+}
+
+/// The card's secondary action, back to the first page.
+pub fn reader_demo_again() -> String {
+    text("reader-demo-again", &[])
+}
+
+/// The demo row's line in Your sources when reading is on.
+pub fn sources_demo_books_line() -> String {
+    text("sources-demo-books-line", &[])
+}
+
+/// About the demo, first line, when reading is on.
+pub fn sources_demo_books_what() -> String {
+    text("sources-demo-books-what", &[])
+}
+
+/// About the demo, in place of sources-demo-private when reading is on.
+pub fn sources_demo_books_private() -> String {
+    text("sources-demo-books-private", &[])
+}
+
+/// Group on the demo's series page.
+pub fn demo_chapters() -> String {
+    text("demo-chapters", &[])
+}
+
+/// Group on the demo's series page: the other demo work.
+pub fn demo_also() -> String {
+    text("demo-also", &[])
+}
+
+/// Group in About the demo.
+pub fn demo_credits() -> String {
+    text("demo-credits", &[])
+}
+
+/// A chapter row's line on the demo's series page.
+pub fn demo_pages(pages: i64) -> String {
+    text("demo-pages", &[("pages", Arg::Int(pages))])
+}
+
+/// The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+pub fn demo_story_row(author: &str, licence: &str) -> String {
+    text("demo-story-row", &[("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// Primary action on the demo's series page.
+pub fn demo_read_chapter(number: &str) -> String {
+    text("demo-read-chapter", &[("number", Arg::Text(number))])
+}
+
 /// Sidebar and tab label: the shows' Home when both media are on.
 pub fn nav_watch() -> String {
     text("nav-watch", &[])
@@ -16763,6 +16978,311 @@ pub fn settings_opds_password() -> String {
 /// Row: the port the shared catalogue listens on. Empty picks a free one.
 pub fn settings_opds_port() -> String {
     text("settings-opds-port", &[])
+}
+
+/// Label of the address field in the Add a server sheet.
+pub fn book_server_address() -> String {
+    text("book-server-address", &[])
+}
+
+/// Note under the empty address field.
+pub fn book_server_address_hint() -> String {
+    text("book-server-address-hint", &[])
+}
+
+/// Note under the address field once a Kavita OPDS link is pasted.
+pub fn book_server_kavita_key() -> String {
+    text("book-server-kavita-key", &[])
+}
+
+/// Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+pub fn book_server_key_kept(store: &str) -> String {
+    text("book-server-key-kept", &[("store", Arg::Text(store))])
+}
+
+/// Chip inside the address field, showing the key's last four characters after four dots.
+pub fn book_server_key(last: &str) -> String {
+    text("book-server-key", &[("last", Arg::Text(last))])
+}
+
+/// Result title once the server signed in.
+pub fn book_server_found_title(series: i64, libraries: i64) -> String {
+    text("book-server-found-title", &[("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
+/// Line under the result title. The kind is Komga, Kavita or OPDS.
+pub fn book_server_found_line(kind: &str, host: &str) -> String {
+    text("book-server-found-line", &[("kind", Arg::Text(kind)), ("host", Arg::Text(host))])
+}
+
+/// A library row's line in the result.
+pub fn book_server_library_line(series: i64) -> String {
+    text("book-server-library-line", &[("series", Arg::Int(series))])
+}
+
+/// Switch in the result, on to start with.
+pub fn book_server_sync_progress() -> String {
+    text("book-server-sync-progress", &[])
+}
+
+/// Line under the switch.
+pub fn book_server_sync_progress_line(host: &str) -> String {
+    text("book-server-sync-progress-line", &[("host", Arg::Text(host))])
+}
+
+/// Field label.
+pub fn book_server_username() -> String {
+    text("book-server-username", &[])
+}
+
+/// Field label.
+pub fn book_server_password() -> String {
+    text("book-server-password", &[])
+}
+
+/// Error title when the server could not be reached.
+pub fn book_server_err_unreachable(host: &str) -> String {
+    text("book-server-err-unreachable", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_err_unreachable_line() -> String {
+    text("book-server-err-unreachable-line", &[])
+}
+
+/// Error title when the server turned the password down.
+pub fn book_server_err_password(host: &str) -> String {
+    text("book-server-err-password", &[("host", Arg::Text(host))])
+}
+
+/// Line under it. The kind is Komga, Kavita or OPDS.
+pub fn book_server_err_password_line(kind: &str) -> String {
+    text("book-server-err-password-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Error title when Kavita turned the key in an OPDS link down.
+pub fn book_server_err_key(host: &str) -> String {
+    text("book-server-err-key", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_err_key_line() -> String {
+    text("book-server-err-key-line", &[])
+}
+
+/// Title when the server lets the account in and shows it no series.
+pub fn book_server_empty(host: &str) -> String {
+    text("book-server-empty", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_empty_line() -> String {
+    text("book-server-empty-line", &[])
+}
+
+/// Note under it.
+pub fn book_server_empty_recheck() -> String {
+    text("book-server-empty-recheck", &[])
+}
+
+/// Line under an error when the address is not a book server.
+pub fn book_server_not_books_line() -> String {
+    text("book-server-not-books-line", &[])
+}
+
+/// Folder result title.
+pub fn book_folder_found(series: i64, files: i64) -> String {
+    text("book-folder-found", &[("series", Arg::Int(series)), ("files", Arg::Int(files))])
+}
+
+/// Line under it: the folder's path, then how many series were matched by their own details.
+pub fn book_folder_found_line(path: &str, matched: i64) -> String {
+    text("book-folder-found-line", &[("path", Arg::Text(path)), ("matched", Arg::Int(matched))])
+}
+
+/// Row in the folder result: files that are books in formats Kaeri can't open.
+pub fn book_folder_unsupported(count: i64) -> String {
+    text("book-folder-unsupported", &[("count", Arg::Int(count))])
+}
+
+/// Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+pub fn book_folder_unsupported_line(kinds: &str) -> String {
+    text("book-folder-unsupported-line", &[("kinds", Arg::Text(kinds))])
+}
+
+/// One item of that list: EPUB files locked with DRM or a password.
+pub fn book_folder_drm(count: i64) -> String {
+    text("book-folder-drm", &[("count", Arg::Int(count))])
+}
+
+/// Note under the folder result.
+pub fn book_folder_opens() -> String {
+    text("book-folder-opens", &[])
+}
+
+/// Row action that lists the files skipped.
+pub fn book_folder_show_files() -> String {
+    text("book-folder-show-files", &[])
+}
+
+/// Primary action in the Add a folder sheet.
+pub fn book_folder_add() -> String {
+    text("book-folder-add", &[])
+}
+
+/// Folder row action that picks another folder.
+pub fn book_folder_change() -> String {
+    text("book-folder-change", &[])
+}
+
+/// Title when a folder holds nothing Kaeri can open.
+pub fn book_folder_empty(folder: &str) -> String {
+    text("book-folder-empty", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it.
+pub fn book_folder_empty_line(files: i64) -> String {
+    text("book-folder-empty-line", &[("files", Arg::Int(files))])
+}
+
+/// Primary action after an empty folder.
+pub fn book_folder_choose_other() -> String {
+    text("book-folder-choose-other", &[])
+}
+
+/// Title of the Join a plugin store sheet.
+pub fn store_join_title() -> String {
+    text("store-join-title", &[])
+}
+
+/// Label of the invite field.
+pub fn store_invite_field() -> String {
+    text("store-invite-field", &[])
+}
+
+/// Result title once a plugin store is joined.
+pub fn store_joined_title(store: &str) -> String {
+    text("store-joined-title", &[("store", Arg::Text(store))])
+}
+
+/// Line under it. The owner is who runs the store.
+pub fn store_joined_line(owner: &str, count: i64) -> String {
+    text("store-joined-line", &[("owner", Arg::Text(owner)), ("count", Arg::Int(count))])
+}
+
+/// Group header in the joined store's list.
+pub fn store_group_reading() -> String {
+    text("store-group-reading", &[])
+}
+
+/// Group header in the joined store's list.
+pub fn store_group_watching() -> String {
+    text("store-group-watching", &[])
+}
+
+/// Row action.
+pub fn store_install() -> String {
+    text("store-install", &[])
+}
+
+/// Row state once installed.
+pub fn store_installed_row() -> String {
+    text("store-installed-row", &[])
+}
+
+/// Primary action when two or more plugins are for reading.
+pub fn store_install_all_reading() -> String {
+    text("store-install-all-reading", &[])
+}
+
+/// Result after installing.
+pub fn store_installed(count: i64) -> String {
+    text("store-installed", &[("count", Arg::Int(count))])
+}
+
+/// Info title when every plugin in a store is for watching, and watching is off here.
+pub fn store_other_medium(store: &str) -> String {
+    text("store-other-medium", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_other_medium_line() -> String {
+    text("store-other-medium-line", &[])
+}
+
+/// Secondary action under it.
+pub fn store_turn_on_watching() -> String {
+    text("store-turn-on-watching", &[])
+}
+
+/// Info title when a store has no plugins.
+pub fn store_empty(store: &str) -> String {
+    text("store-empty", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_empty_line(owner: &str) -> String {
+    text("store-empty-line", &[("owner", Arg::Text(owner))])
+}
+
+/// Error title when the store doesn't answer.
+pub fn store_err_unreachable(host: &str) -> String {
+    text("store-err-unreachable", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn store_err_unreachable_line(owner: &str) -> String {
+    text("store-err-unreachable-line", &[("owner", Arg::Text(owner))])
+}
+
+/// Under the reading group: plugins for watching while watching is off here.
+pub fn store_other_medium_more(count: i64) -> String {
+    text("store-other-medium-more", &[("count", Arg::Int(count))])
+}
+
+/// On a TV, under the list: plugins for reading, which a TV doesn't do.
+pub fn store_tv_reading_only(count: i64) -> String {
+    text("store-tv-reading-only", &[("count", Arg::Int(count))])
+}
+
+/// On a TV, info title when every plugin in a store is for reading.
+pub fn store_tv_all_reading(store: &str) -> String {
+    text("store-tv-all-reading", &[("store", Arg::Text(store))])
+}
+
+/// Plugin row in an invite's result.
+pub fn store_plugin_row(version: &str, hosts: &str) -> String {
+    text("store-plugin-row", &[("version", Arg::Text(version)), ("hosts", Arg::Text(hosts))])
+}
+
+/// Notice after a server or folder is added, for 4 seconds.
+pub fn source_added(name: &str, series: i64) -> String {
+    text("source-added", &[("name", Arg::Text(name)), ("series", Arg::Int(series))])
+}
+
+/// Notice after Install all, for 4 seconds.
+pub fn source_added_plugins(count: i64, store: &str) -> String {
+    text("source-added-plugins", &[("count", Arg::Int(count)), ("store", Arg::Text(store))])
+}
+
+/// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+pub fn source_row_server(kind: &str, series: i64, libraries: i64) -> String {
+    text("source-row-server", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
+/// A server's row in Your sources while it shows no series.
+pub fn source_row_server_empty(kind: &str) -> String {
+    text("source-row-server-empty", &[("kind", Arg::Text(kind))])
+}
+
+/// A folder's row in Your sources.
+pub fn source_row_folder(path: &str, series: i64, skipped: i64) -> String {
+    text("source-row-folder", &[("path", Arg::Text(path)), ("series", Arg::Int(series)), ("skipped", Arg::Int(skipped))])
+}
+
+/// A plugin's row in Your sources. The medium is "Reading" or "Watching".
+pub fn source_row_plugin(store: &str, medium: &str, version: &str) -> String {
+    text("source-row-plugin", &[("store", Arg::Text(store)), ("medium", Arg::Text(medium)), ("version", Arg::Text(version))])
 }
 
 /// Title of the screen or section that lists sources.

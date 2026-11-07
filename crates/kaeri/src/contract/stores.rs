@@ -123,7 +123,8 @@ async fn an_invite_is_previewed_then_joined() {
         name: None,
     });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Stores", "StoreJoined", "Toast", "JobDone"]);
+    // What came in follows the join: the store's plugins counted by medium.
+    assert_eq!(names(&updates), ["Stores", "StoreJoined", "CameIn", "Toast", "JobDone"]);
     let Event::Stores(rows) = &updates[0] else { unreachable!() };
     assert!(matches!(&updates[1], Event::StoreJoined { store } if *store == rows[0].id));
     assert!(rows[0].owner);
@@ -333,7 +334,8 @@ async fn an_owner_opens_the_store_and_anyone_with_its_link_joins_without_a_name(
     let job =
         guest.send(Command::JoinStore { link: Secret(link.clone()), label: None, name: None });
     let updates = guest.settle().await;
-    assert_eq!(names(&updates), ["Stores", "StoreJoined", "Toast", "JobDone"]);
+    // What came in follows the join: the store's plugins counted by medium.
+    assert_eq!(names(&updates), ["Stores", "StoreJoined", "CameIn", "Toast", "JobDone"]);
     assert_eq!(toasts(&updates), ["info: Joined Ours without a name."]);
     assert!(matches!(&updates[0], Event::Stores(rows) if rows[0].anonymous && rows[0].open));
     ends(&updates, job);

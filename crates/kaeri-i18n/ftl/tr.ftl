@@ -5354,6 +5354,63 @@ episode-download-done = İndirildi
 # Line under that button after a failure.
 episode-download-failed = Bölüm { $episode } indirilemedi. Yeniden deneyin.
 
+# First run, page 2 of 5.
+first-other-title = Başka bir cihazda Kaeri kullanıyor musunuz?
+
+# Under the title.
+first-other-line = Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.
+
+# Line under the pair row.
+first-other-pair-line = Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.
+
+# Row that restores from a sync folder.
+first-other-restore = Bulut klasöründen geri yükle
+
+# Line under it.
+first-other-restore-line = Kaydettiğiniz kurtarma anahtarını kullanır
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Hayır, burada başla
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Diğer cihaz bekleniyor
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Henüz bir şey yok mu? Her iki cihazlar da aynı Wi-Fi ağında olmalı.
+
+# Group header for what the other device brings.
+first-join-group = { $device } üzerinden
+
+# Row while the rest arrives.
+first-join-looking = { $device } üzerinde olanlara bakılıyor…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri şunun için
+
+# Line under it when the other device reads.
+first-join-medium-line = { $device } gibi okuma
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = { $host } ekle
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · { $device } üzerindeki anahtarla giriş yapar, { $store } içinde saklanır
+
+# Note under the list.
+first-join-folders = Klasörler { $device } üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } bu cihaza izin vermedi. { $owner } size davet gönderebilir.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = { $device } ile eşitleniyor
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Ana sayfa
 
@@ -7607,6 +7664,86 @@ player-subs-bg-box = Kutu
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Ayarlar'da daha fazlası…
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Demoyu oku
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Oku
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Çizgi roman · bir sayfa
+       *[other] Demo · Çizgi roman · { $pages } sayfa
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title }, { $author }. Lisans: { $licence }. Wikimedia Commons üzerinden okunur.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title }, { $author }. Kamu malı. Uygulamayla birlikte gelir.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Şimdi okunabilir
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Yalnızca demo açık. Başka başlıklar bir kaynak eklediğinizde görünür.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Demo burada bitti
+
+# Line under it.
+reader-demo-end-line = Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.
+
+# The card's primary action.
+reader-demo-add-source = Bir kaynak ekle
+
+# The card's secondary action, back to the first page.
+reader-demo-again = 1. sayfaya dön
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Bir çizgi roman ve bir hikâye · CC BY 4.0 ve kamu malı
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Yapımcılarının Creative Commons altında paylaştığı eserler; böylece bir kaynak eklemeden önce Kaeri uygulamasını deneyebilirsiniz. Kalıcı bir kaynak değildir.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Demo hiçbir yerde oturum açmaz, hiçbir takip hizmeti kaydı da yazmaz.
+
+# Group on the demo's series page.
+demo-chapters = Bölümler
+
+# Group on the demo's series page: the other demo work.
+demo-also = Demoda ayrıca
+
+# Group in About the demo.
+demo-credits = Künye
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] Bir sayfa
+       *[other] { $pages } sayfa
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Hikâye · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = { $number }. bölümü oku
+
 # Button that shows the season before.
 seasonal-previous = Önceki sezon
 
@@ -8884,6 +9021,233 @@ settings-subs-styled-strip-detail = Her satır altta, sizin stilinizde düz diya
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Altyazı stilini sıfırla
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Adres
+
+# Note under the empty address field.
+book-server-address-hint = Bir adres veya Kavita’daki OPDS bağlantısının tamamı.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri anahtarı { $store } içinde saklar ve yalnızca son dört karakterini gösterir.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Anahtar ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] { $series } seri bulundu
+       *[other] { $libraries } kitaplıkta { $series } seri bulundu
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $host } adresinde { $kind } bulundu. Eklenecek kitaplıkları seçin.
+
+# A library row's line in the result.
+book-server-library-line = { $series } seri
+
+# Switch in the result, on to start with.
+book-server-sync-progress = İlerlemeyi sunucuya gönder
+
+# Line under the switch.
+book-server-sync-progress-line = Burada okuduğunuz sayfalar { $host } adresine gider, oradaki ilerleme de buraya gelir.
+
+# Field label.
+book-server-username = Kullanıcı adı
+
+# Field label.
+book-server-password = Parola
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = { $host } adresine ulaşılamadı
+
+# Line under it.
+book-server-err-unreachable-line = Adresi ve sunucunun açık olup bu ağda bulunduğunu kontrol edin.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } bu parolayı kabul etmedi
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = { $kind } için tarayıcıda kullandığınız kullanıcı adı ve parolayı girin.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } bu anahtarı kabul etmedi
+
+# Line under it.
+book-server-err-key-line = Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } bu hesaba hiç seri göstermiyor
+
+# Line under it.
+book-server-empty-line = Giriş yapılıyor, ama sunucu hâlâ tarıyor olabilir veya bu hesabın kitaplara erişimi olmayabilir.
+
+# Note under it.
+book-server-empty-recheck = Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri Komga, Kavita ve OPDS kataloglarından okur.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Bir dosyada { $series } seri bulundu
+       *[other] { $files } dosyada { $series } seri bulundu
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri bunlardan { $matched } tanesini ayrıntılarına göre eşleştirdi.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] Kaeri uygulamasının açamadığı bir dosya
+       *[other] Kaeri uygulamasının açamadığı { $count } dosya
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Klasörde olduğu gibi kalırlar.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = DRM ile kilitli { $count } EPUB
+
+# Note under the folder result.
+book-folder-opens = Kaeri CBZ, CBR, EPUB ve PDF dosyalarını ve görsel klasörlerini açar.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Dosyaları göster
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Klasör ekle
+
+# Folder row action that picks another folder.
+book-folder-change = Değiştir
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = { $folder } içinde Kaeri uygulamasının açabileceği bir şey yok
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] İçinde bir dosya var, ama CBZ, CBR, EPUB, PDF veya görsel değil.
+       *[other] İçinde { $files } dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Başka bir klasör seçin
+
+# Title of the Join a plugin store sheet.
+store-join-title = Bir eklenti mağazasına katılın
+
+# Label of the invite field.
+store-invite-field = Davet
+
+# Result title once a plugin store is joined.
+store-joined-title = Katıldınız: { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } bir eklenti sunuyor. Katılmak hiçbir şey yüklemez; buradan veya daha sonra yükleyin.
+       *[other] { $owner } tarafından sunulan eklentiler: { $count }. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Okumak için
+
+# Group header in the joined store's list.
+store-group-watching = İzlemek için
+
+# Row action.
+store-install = Yükle
+
+# Row state once installed.
+store-installed-row = Yüklendi
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Okuma için hepsini yükle
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Bir eklenti yüklendi. “kaynaklar” bölümünde.
+       *[other] Yüklenen eklentiler: { $count }. Bunlar “kaynaklar” bölümünde.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = { $store } içindeki her eklenti izlemek için
+
+# Line under it.
+store-other-medium-line = Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.
+
+# Secondary action under it.
+store-turn-on-watching = İzlemeyi aç
+
+# Info title when a store has no plugins.
+store-empty = { $store } içinde henüz eklentiler yok
+
+# Line under it.
+store-empty-line = Üyesiniz. { $owner } yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = { $host } adresine ulaşılamadı
+
+# Line under it.
+store-err-unreachable-line = Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını { $owner } kişisine sorun.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Bir tane daha izlemek için, ama izleme bu cihazda kapalı.
+       *[other] { $count } tane daha izlemek için, ama izleme bu cihazda kapalı.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Bir tane daha okumak için, ama bu TV okuma yapmıyor.
+       *[other] { $count } tane daha okumak için, ama bu TV okuma yapmıyor.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = { $store } içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.
+
+# Plugin row in an invite's result.
+store-plugin-row = Sürüm { $version } · { $hosts } ile iletişim kurabilir
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = { $name } eklendi · { $series } seri
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] { $store } içinden bir eklenti yüklendi
+       *[other] { $store } içinden yüklenen eklentiler: { $count }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $series } seri · az önce eklendi
+       *[other] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · henüz seri yok · 30 dakika sonra yeniden bakar
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } seri · bir dosya atlandı
+       *[other] { $path } · { $series } seri · { $skipped } dosya atlandı
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = { $store } içinden · { $medium } · sürüm { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Kaynaklar

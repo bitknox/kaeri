@@ -180,6 +180,8 @@ pub struct Session {
     prepared: novel::Slot,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
+    /// A work of the reading demo, whose credit the reader shows.
+    demo: Option<kaeri_model::sources::DemoWorkInfo>,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -460,7 +462,15 @@ impl Reader {
             && kind.as_ref().is_some_and(BookWorkKind::webtoon))
         .then(|| cx.config.effective().reading.webtoon.mode);
         let ended = kind.as_ref().is_some_and(BookWorkKind::ended);
+        let demo = cx
+            .services
+            .book_sources
+            .edition_of(&work, None)
+            .filter(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID)
+            .and_then(|(_, series)| kaeri_core::reading_demo::work(&series))
+            .map(kaeri_model::sources::DemoWorkInfo::of);
         let mut session = Session {
+            demo,
             id,
             work,
             medium,
@@ -645,6 +655,7 @@ impl Session {
                 .and_then(|i| self.chapters.get(i))
                 .map(|c| c.row(&marks)),
             settings: Some(cx.settings_view(self.medium, Some(&self.work))),
+            demo_credit: self.demo.clone(),
         }
     }
 
@@ -1216,6 +1227,15 @@ pub(super) fn counts(cx: &Cx<'_>, reached: Reached) -> bool {
 /// Queue the chapter for the trackers signed in, for a work AniList lists: the highest whole
 /// chapter, never lower than a tracker holds.
 fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> Vec<String> {
+    // The demo is read to try the reader, never told to a tracker, even matched to a work.
+    let demo = cx
+        .services
+        .book_sources
+        .edition_of(work, None)
+        .is_some_and(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID);
+    if demo {
+        return Vec::new();
+    }
     let Some(id) = work.as_str().strip_prefix("a:").and_then(|n| n.parse::<u32>().ok()) else {
         return Vec::new();
     };

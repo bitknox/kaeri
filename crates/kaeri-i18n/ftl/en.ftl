@@ -5787,6 +5787,63 @@ episode-download-done = Downloaded
 # Line under that button after a failure.
 episode-download-failed = Couldn't download episode { $episode }. Try again.
 
+# First run, page 2 of 5.
+first-other-title = Already use Kaeri on another device?
+
+# Under the title.
+first-other-line = Pair with it and this device gets your sources, trackers and history. The steps after this are then done.
+
+# Line under the pair row.
+first-other-pair-line = Shows a code to enter on that device. Both need the same Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Restore from a cloud folder
+
+# Line under it.
+first-other-restore-line = Uses the recovery key you saved
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = No, start here
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Waiting for your other device
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Nothing yet? Both devices need to be on the same Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = From { $device }
+
+# Row while the rest arrives.
+first-join-looking = Looking at what { $device } has…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri is for
+
+# Line under it when the other device reads.
+first-join-medium-line = Reading, as on { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Add { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · signs in with the key from { $device }, kept in { $store }
+
+# Note under the list.
+first-join-folders = Folders stay on { $device }. Add this device’s own folders in Your sources.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Lists and sources are set up, so first run ends here. You can change them in Settings.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } didn’t let this device in. { $owner } can send you an invite.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Syncing with { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Home
 
@@ -8167,6 +8224,86 @@ reader-gap-small = Small
 # Look choice that follows the system's light or dark.
 reader-look-system = System
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Read the demo
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = The demo reads a short comic and a short story their makers share under Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = One short episode and one short comic, shared by their makers under Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Only the demo is on. Add a folder, a server or a plugin store to read your own books.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Read
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Comic · one page
+       *[other] Demo · Comic · { $pages } pages
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } by { $author }. Licensed { $licence }. Read from Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } by { $author }. Public domain. It comes with the app.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Reads now
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Only the demo is on. Other titles appear once you add a source.
+
+# Title of the card after the demo's last page.
+reader-demo-end = That’s the end of the demo
+
+# Line under it.
+reader-demo-end-line = To read your own books, add a folder, a server or a plugin store.
+
+# The card's primary action.
+reader-demo-add-source = Add a source
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Back to page 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = A comic and a story · CC BY 4.0 and public domain
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = The demo never signs in anywhere and never writes to a tracker.
+
+# Group on the demo's series page.
+demo-chapters = Chapters
+
+# Group on the demo's series page: the other demo work.
+demo-also = Also in the demo
+
+# Group in About the demo.
+demo-credits = Credits
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] One page
+       *[other] { $pages } pages
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Story · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Read chapter { $number }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Watch
 
@@ -10505,6 +10642,233 @@ settings-opds-password = Feed password
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Feed port
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Address
+
+# Note under the empty address field.
+book-server-address-hint = An address, or the whole OPDS link from Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = This is a Kavita OPDS link. Its key signs you in, so no password is needed.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri keeps the key in { $store } and shows only its last four characters.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Key ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Found { $series } series
+       *[other] Found { $series } series in { $libraries } libraries
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } at { $host }. Pick the libraries to add.
+
+# A library row's line in the result.
+book-server-library-line = { $series } series
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Send progress to the server
+
+# Line under the switch.
+book-server-sync-progress-line = Pages you read here go back to { $host }, and its progress comes here.
+
+# Field label.
+book-server-username = Username
+
+# Field label.
+book-server-password = Password
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Couldn’t reach { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Check the address, and that the server is on and on this network.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } didn’t accept that password
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Use the username and password you use for { $kind } in a browser.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } didn’t accept that key
+
+# Line under it.
+book-server-err-key-line = The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } shows this account no series
+
+# Line under it.
+book-server-empty-line = It lets you in, but the server may still be scanning, or this account may not have access to its books.
+
+# Note under it.
+book-server-empty-recheck = You can add it now. Kaeri looks again every 30 minutes.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri reads from Komga, Kavita and OPDS catalogues.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Found { $series } series in one file
+       *[other] Found { $series } series in { $files } files
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri matched { $matched } of them by their details.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] One file Kaeri can’t open
+       *[other] { $count } files Kaeri can’t open
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. They stay in the folder as they are.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB locked with DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Show files
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Add folder
+
+# Folder row action that picks another folder.
+book-folder-change = Change
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Nothing in { $folder } that Kaeri can open
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.
+       *[other] It holds { $files } files, none of them CBZ, CBR, EPUB, PDF or images.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Choose another folder
+
+# Title of the Join a plugin store sheet.
+store-join-title = Join a plugin store
+
+# Label of the invite field.
+store-invite-field = Invite
+
+# Result title once a plugin store is joined.
+store-joined-title = Joined { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } offers one plugin. Joining installs nothing; install it here or later.
+       *[other] { $owner } offers { $count } plugins. Joining installs nothing; pick the ones you want here or later.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = For reading
+
+# Group header in the joined store's list.
+store-group-watching = For watching
+
+# Row action.
+store-install = Install
+
+# Row state once installed.
+store-installed-row = Installed
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Install all for reading
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] One plugin installed. It’s in Your sources.
+       *[other] { $count } plugins installed. They’re in Your sources.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Every plugin in { $store } is for watching
+
+# Line under it.
+store-other-medium-line = Watching is off on this device, so none of them show in Your sources.
+
+# Secondary action under it.
+store-turn-on-watching = Turn on watching
+
+# Info title when a store has no plugins.
+store-empty = { $store } has no plugins yet
+
+# Line under it.
+store-empty-line = You’re a member, so new plugins show in Plugin stores when { $owner } adds them.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Couldn’t reach { $host }
+
+# Line under it.
+store-err-unreachable-line = The invite looks right, but the store isn’t answering. Try again later, or ask { $owner } if it’s running.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] One more is for watching, which is off on this device.
+       *[other] { $count } more are for watching, which is off on this device.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] One more is for reading, which this TV doesn’t do.
+       *[other] { $count } more are for reading, which this TV doesn’t do.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Every plugin in { $store } is for reading, which this TV doesn’t do.
+
+# Plugin row in an invite's result.
+store-plugin-row = Version { $version } · may contact { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = Added { $name } · { $series } series
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Installed one plugin from { $store }
+       *[other] Installed { $count } plugins from { $store }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $series } series · added just now
+       *[other] { $kind } · { $series } series in { $libraries } libraries · added just now
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · no series yet · looks again in 30 minutes
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } series · one file skipped
+       *[other] { $path } · { $series } series · { $skipped } files skipped
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = From { $store } · { $medium } · version { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Sources
