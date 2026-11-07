@@ -98,7 +98,8 @@ enum ServerStand: Equatable {
     case failed(Int, ProgressWhyNot)
 
     init(_ row: BookServerRow?) {
-        guard let row else { self = .none; return }
+        // An OPDS catalogue takes no progress back, so its row has nothing to say about it.
+        guard let row, row.kind != .opds else { self = .none; return }
         if !row.reportProgress || row.progressProblem == .notSetToReceive { self = .off; return }
         let count = Int(row.progressPending)
         if count == 0 {

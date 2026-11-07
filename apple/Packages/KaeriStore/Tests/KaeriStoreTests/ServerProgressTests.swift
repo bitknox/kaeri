@@ -23,8 +23,8 @@ struct ServerProgressTests {
     }
 
     private func row(pending: UInt32 = 0, sending: Bool = false, saved: Int64? = 1_000, problem: WriteBackProblem? = nil,
-                     problemAt: Int64? = nil, report: Bool = true) -> BookServerRow {
-        BookServerRow(id: "s1", kind: .kavita, name: host, address: "https://\(host)", series: 212, reportProgress: report,
+                     problemAt: Int64? = nil, report: Bool = true, kind: BookServerKind = .kavita) -> BookServerRow {
+        BookServerRow(id: "s1", kind: kind, name: host, address: "https://\(host)", series: 212, reportProgress: report,
                       off: false, signedOut: false, libraries: 2, empty: false, rechecksAt: nil, keyLast4: nil,
                       progressPending: pending, progressSending: sending, progressSavedAt: saved,
                       progressProblem: problem, progressProblemAt: problemAt)
@@ -110,6 +110,8 @@ struct ServerProgressTests {
             (row(pending: 3, problem: .refusedKey, problemAt: 5), .failed(count: 3, why: .key)),
             (row(pending: 3, problem: .noAnswerForADay, problemAt: 5), .failed(count: 3, why: .gaveUp)),
             (row(saved: nil, problem: .notSetToReceive, report: false), .off),
+            // An OPDS catalogue takes no progress: no line at all.
+            (row(saved: nil, problem: .notSetToReceive, report: false, kind: .opds), nil),
         ]
         for (row, line) in cases {
             model.apply(.bookSources(.view(BookSourcesView(servers: [row]))))
