@@ -1,3 +1,5 @@
+using Medium = Kaeri.Engine.Core.Medium;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
@@ -26,6 +28,11 @@ public sealed partial class DownloadsPage : Page
     readonly TextBlock seedingHeading = Ui.Heading(T.DownloadsSeedingAfterWatching);
     readonly TextBlock background = Ui.Haze("");
     StackPanel? empty;
+    /// <summary>With both media on: Reading's downloads first, then the shows' under their own heading.</summary>
+    readonly ReadDownloadsSection reading = new() { Headed = true, Margin = new Thickness(0, 0, 0, 16) };
+    readonly TextBlock showsHeading = new() { Text = T.SettingsGroupShows, Style = Ui.Res<Style>("SectionTitleStyle"), Margin = new Thickness(0, 0, 0, 8) };
+    readonly TextBlock showsNone = Ui.Haze(T.DownloadsEmptyTitle);
+    bool hearingReading;
 
     public DownloadsPage()
     {
@@ -34,12 +41,32 @@ public sealed partial class DownloadsPage : Page
         Loading.Placeholders = () => States.Rows(3, 64, 96, spacing: 32);
         Loading.NeedsConnection = false;
         ctx.Hear(this, Heard);
+        AutomationProperties.SetHeadingLevel(showsHeading, AutomationHeadingLevel.Level2);
+        Loaded += (_, _) =>
+        {
+            if (!hearingReading)
+                ctx.Known.Reading.Changed += HeardReading;
+            hearingReading = true;
+        };
+        Unloaded += (_, _) =>
+        {
+            ctx.Known.Reading.Changed -= HeardReading;
+            hearingReading = false;
+        };
+    }
+
+    void HeardReading(ReadingPart part)
+    {
+        if (part is ReadingPart.Downloads)
+            Show();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         ctx.Send(new Command.LoadDownloads());
+        if (ctx.Known.Medium.Both)
+            ctx.Known.Reading.LoadDownloads();
         Show();
     }
 
@@ -154,6 +181,16 @@ public sealed partial class DownloadsPage : Page
                 };
                 wanted.Add(background);
             }
+        }
+        // Both media on and chapters kept: Reading's section first, then the shows' under a heading.
+        if (ctx.Known.Medium.Both && reading.Any)
+        {
+            if (rows.Length == 0 && ctx.Known.Seeding.Length == 0)
+                wanted.Clear();
+            wanted.Insert(0, reading);
+            wanted.Insert(1, showsHeading);
+            if (wanted.Count == 2)
+                wanted.Add(showsNone);
         }
         Drawn.Arrange(Body.Children, wanted, Ui.HoldingFocus(Body, Body.Children));
     }

@@ -31,7 +31,11 @@
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <SelectorBar x:Name="Lists" SelectionChanged="OnListChanged" Margin="-8,0,0,0" />
+      <!-- Shows or Reading, only while this device does both; the lists follow it. -->
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <local:ScopeSwitch Place="library" Reading="False" />
+        <SelectorBar x:Name="Lists" SelectionChanged="OnListChanged" Margin="-8,0,0,0" />
+      </StackPanel>
       <DropDownButton x:Name="OrderButton" Grid.Column="2" Content="{x:Bind s:T.LibrarySortUpdated}" MinHeight="32">
         <DropDownButton.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedRight">

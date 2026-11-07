@@ -43,6 +43,8 @@ public sealed partial class MainWindow : Window
         ["stores"] = typeof(StoresPage),
         ["search"] = typeof(SearchPage),
         ["settings"] = typeof(SettingsPage),
+        ["read"] = typeof(ReadHomePage),
+        ["updates"] = typeof(ReadUpdatesPage),
     };
 
     readonly Options options;
@@ -67,9 +69,8 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Title = T.AppName;
         // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+9, in the sidebar's order.
-        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavSearch, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
-        foreach (var (item, n) in Nav.MenuItems.OfType<NavigationViewItem>().Select((item, i) => (item, i)))
-            ToolTipService.SetToolTip(item, T.TooltipWithKey(names[n], $"Ctrl+{n + 1}"));
+        // Reading's places come and go with what Kaeri is for; ApplyMedium sets them and the tips.
+        ApplyMedium();
         // The built-in Settings item reads the system language, so it takes the catalogue's word.
         Nav.Loaded += (_, _) =>
         {
@@ -95,6 +96,7 @@ public sealed partial class MainWindow : Window
         (var engine, dirs) = StartEngine(host);
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
         ChatSetting.Load(dirs.Config);
+        FeedFirewall.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif
@@ -115,6 +117,9 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+        session.Known.SendReadingWith(command => ctx.Send(command));
+        session.Known.Reader.BookResource = url => engine.BookResource(url);
+        StartReading();
         // Where sync stands and what is running, at the title bar's end.
         status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
         AppTitleBar.RightHeader = status;
@@ -385,6 +390,17 @@ public sealed partial class MainWindow : Window
                 "crash-saved" => new FfiScene.CrashSaved(),
                 "crash-held" => new FfiScene.CrashHeld(),
                 "profiles" => new FfiScene.Profiles(),
+                "reading-first-run" => new FfiScene.ReadingFirstRun(),
+                "reading-update-sheet" => new FfiScene.ReadingUpdateSheet(),
+                "reading-join-ask" => new FfiScene.ReadingJoinAsk(),
+                "reading-home" => new FfiScene.ReadingHome(),
+                "reading-series" => new FfiScene.ReadingSeries(),
+                "reader-manga-rtl" => new FfiScene.ReaderMangaRtl(),
+                "reader-strip" => new FfiScene.ReaderStrip(),
+                "reader-novel" => new FfiScene.ReaderNovel(),
+                "reading-downloads" => new FfiScene.ReadingDownloads(),
+                "reader-moved" => new FfiScene.ReaderMoved(),
+                "reading-dark" => new FfiScene.ReadingDark(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
@@ -690,6 +706,12 @@ public sealed partial class MainWindow : Window
                     ShowAddServer();
                 else if (welcome.Then == "pair")
                     Sync.SyncDialogs.PairShow(Sync.Origin.FirstLaunch);
+                else if (welcome.Then == "restore")
+                    Sync.SyncDialogs.Picker();
+                else if (welcome.Then == "book-folder")
+                    await CameInDesk.PickFolder(ctx);
+                else if (welcome.Then == "book-server")
+                    await new BookServerDialog(ctx, Root.XamlRoot).ShowAsync();
             });
     }
 
@@ -995,7 +1017,7 @@ public sealed partial class MainWindow : Window
 
     void Navigate(string tag, object? parameter = null)
     {
-        if (!Destinations.TryGetValue(tag, out var page))
+        if (PageFor(tag) is not { } page)
             return;
         if (ContentFrame.CurrentSourcePageType == page && parameter is null && tag != "search")
             return;
@@ -1192,7 +1214,7 @@ public sealed partial class MainWindow : Window
             Nav.SelectedItem = e.Parameter as string == "accounts" ? AccountItem : Nav.SettingsItem;
         else if (e.SourcePageType == typeof(FolderPage) || e.SourcePageType == typeof(ServerPage) || e.SourcePageType == typeof(LicensedPage))
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == "providers");
-        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag)
+        else if (TagOf(e.SourcePageType) is { } tag)
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == tag);
         else
             Nav.SelectedItem = null;
@@ -1271,7 +1293,9 @@ public sealed partial class MainWindow : Window
 
     void GoBack()
     {
-        if (Player.Showing)
+        if (ReaderLayer.Showing)
+            ReaderLayer.Close();
+        else if (Player.Showing)
             Player.Close();
         else if (ContentFrame.CanGoBack)
             ContentFrame.GoBack();
@@ -1310,6 +1334,11 @@ public sealed partial class MainWindow : Window
         {
             sender.Text = "";
             OpenTitle(s.Id);
+        }
+        else if (PageFor("search") == typeof(ReadSearchPage))
+        {
+            // Reading's Search takes the words when Search is on reading.
+            ContentFrame.Navigate(typeof(ReadSearchPage), args.QueryText.Trim(), new SuppressNavigationTransitionInfo());
         }
         else
             ShowSearch(args.QueryText.Trim());
@@ -1829,11 +1858,15 @@ public sealed partial class MainWindow : Window
     void Keys()
     {
         // Ctrl+1 to Ctrl+9 in the sidebar's order, as Command+1 to 9 on the Mac.
-        string[] tags = ["home", "calendar", "seasonal", "search", "library", "downloads", "together", "providers", "stores"];
-        for (var i = 0; i < tags.Length; i++)
+        // The places shown change with what Kaeri is for, so the key looks the place up when pressed.
+        for (var i = 0; i < 9; i++)
         {
-            var tag = tags[i];
-            Key(VirtualKey.Number1 + i, VirtualKeyModifiers.Control, () => Go(tag));
+            var n = i;
+            Key(VirtualKey.Number1 + i, VirtualKeyModifiers.Control, () =>
+            {
+                if (Places().ElementAtOrDefault(n) is { Tag: string tag })
+                    Go(tag);
+            });
         }
         Key(VirtualKey.Left, VirtualKeyModifiers.Menu, GoBack, inPlayer: true);
         Key((VirtualKey)0xBC, VirtualKeyModifiers.Control, () => Navigate("settings"));
@@ -1861,7 +1894,7 @@ public sealed partial class MainWindow : Window
         var accelerator = new KeyboardAccelerator { Key = key, Modifiers = modifiers };
         accelerator.Invoked += (_, args) =>
         {
-            if (Player.Showing && !inPlayer)
+            if ((Player.Showing || ReaderLayer.Showing) && !inPlayer)
                 return;
             if (!typing && FocusManager.GetFocusedElement(Root.XamlRoot) is TextBox or AutoSuggestBox or PasswordBox)
                 return;

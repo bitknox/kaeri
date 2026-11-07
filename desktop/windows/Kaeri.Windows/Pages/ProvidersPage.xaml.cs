@@ -40,6 +40,54 @@ public sealed partial class ProvidersPage : Page
         State.NeedsConnection = false;
         ctx.Hear(this, Heard);
         Sections.KeyDown += OnOrderKey;
+        Scope.Reading = booksChosen;
+        Scope.Switched += reading =>
+        {
+            booksChosen = reading;
+            Scoped();
+        };
+        Loaded += (_, _) =>
+        {
+            if (!hearingMedium)
+                ctx.Known.Medium.Changed += Scoped;
+            hearingMedium = true;
+            Scoped();
+        };
+        Unloaded += (_, _) =>
+        {
+            ctx.Known.Medium.Changed -= Scoped;
+            hearingMedium = false;
+        };
+    }
+
+    /// <summary>With both media on, whether the switch is on Reading; kept from one visit to the next.</summary>
+    static bool booksChosen;
+    bool hearingMedium;
+
+    /// <summary>Book sources show alone on a device that only reads, and by the switch on one that does both.</summary>
+    bool ShowingBooks => ctx.Known.Medium.Reads && (!ctx.Known.Medium.Watches || booksChosen);
+
+    /// <summary>The book sources or the shows' columns, as the medium and the switch say.</summary>
+    void Scoped()
+    {
+        var books = ShowingBooks;
+        var was = BookSources.Visibility == Visibility.Visible;
+        BookSources.Visibility = books ? Visibility.Visible : Visibility.Collapsed;
+        ShowActions.Visibility = OrderDetail.Visibility = books ? Visibility.Collapsed : Visibility.Visible;
+        if (books)
+        {
+            NoSources.Visibility = Columns.Visibility = Visibility.Collapsed;
+            if (!was)
+            {
+                ctx.Known.Books.Load();
+                Motion.FadeIn(BookSources);
+            }
+        }
+        else if (was)
+        {
+            Show();
+            Motion.FadeIn(Columns.Visibility == Visibility.Visible ? Columns : NoSources);
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -141,6 +189,8 @@ public sealed partial class ProvidersPage : Page
         lists.AddRange(sections.Values.Where(s => s.Ordered).Select(s => s.List));
         Drawn.Arrange(Sections.Children, wanted, Ui.HoldingFocus(Sections, Sections.Children));
         ShowDetail(current is null ? null : Info(current));
+        if (ShowingBooks)
+            NoSources.Visibility = Columns.Visibility = Visibility.Collapsed;
         quiet = false;
     }
 

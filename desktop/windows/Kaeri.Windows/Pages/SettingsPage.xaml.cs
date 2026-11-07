@@ -32,6 +32,7 @@ public sealed partial class SettingsPage : Page
         {
             "general" => T.SettingsGroupGeneral,
             "playback" => T.SettingsGroupPlayback,
+            "reading" => T.SettingsGroupReading,
             "downloads" => T.NavDownloads,
             "notifications" => T.SettingsGroupNotifications,
             "sources" => T.SourcesTitle,
@@ -61,12 +62,15 @@ public sealed partial class SettingsPage : Page
             // Laid out by SubtitleSettings: the preview and its ten rows.
             ("subtitles", [K.SubtitleSize]),
         ]),
+        // Laid out by ShowReading (SettingsPage.Reading.cs); listed only while Kaeri reads here.
+        new("reading", "\uE736", []),
         new("downloads", "",
         [
             ("files", [K.DownloadDir, K.DownloadQuality, K.MergeSubtitles, K.DownloadHook]),
             ("ahead", [K.KeepNextEpisodes]),
+            ("reading", [K.NewChapters, K.DeleteAfterReading]),
         ]),
-        new("notifications", "", [("new-episodes", [K.EpisodeNotifications])]),
+        new("notifications", "", [("new-episodes", [K.EpisodeNotifications]), ("new-chapters", [K.ChapterNotifications])]),
         new("sources", "",
         [
             // Laid out by ShowTorrents: the switch, the optional proxy and its check.
@@ -98,6 +102,8 @@ public sealed partial class SettingsPage : Page
         "files" => T.SettingsGroupFiles,
         "ahead" => T.SettingsGroupAhead,
         "new-episodes" => T.SettingsNewEpisodes,
+        "reading" => T.SettingsGroupReading,
+        "new-chapters" => T.SettingsChapterNotifications,
         "torrents" => T.TorrentsTitle,
         "seeding" => T.DownloadsSeedingTitle,
         "discord" => T.SettingsDiscord,
@@ -236,9 +242,11 @@ public sealed partial class SettingsPage : Page
         ctx.Tv.Changed += TvChanged;
         Sync.SyncDialogs.Changed += SyncChanged;
         ctx.Known.ConflictsChanged += ShowConflicts;
+        HearReading();
         ctx.Hear(this, Heard, () =>
         {
             ctx.Known.ConflictsChanged -= ShowConflicts;
+            LeaveReading();
             ctx.Tv.Changed -= TvChanged;
             Sync.SyncDialogs.Changed -= SyncChanged;
             guardClock.Stop();
@@ -281,6 +289,8 @@ public sealed partial class SettingsPage : Page
     {
         if ((Panes.SelectedItem as ListViewItem)?.Tag is Pane p)
         {
+            if (p.Name != "reading")
+                feedOpen = false;
             pane = p;
             lastPane = p.Name;
             Show();
@@ -390,6 +400,7 @@ public sealed partial class SettingsPage : Page
         "accounts" => "accounts",
         "devices" => DevicesKey(),
         "profiles" => Drawn.Fingerprint(ctx.Known.Profiles),
+        "reading" => ReadingShape(),
         // The crash reports redraw alone (ShowCrashes), so About's top and its update panel stay.
         "about" => Drawn.Fingerprint(ctx.Known.Setting(K.UpdateBeta) is null),
         _ => SettingsShape(),
@@ -409,6 +420,7 @@ public sealed partial class SettingsPage : Page
         parts.Add(ctx.Known.Setting(K.TorrentsWhileCasting) is null);
         parts.Add(ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is not null);
         parts.Add(settings.SubtitleStyle is null);
+        parts.Add((ctx.Known.Medium.Choosable, ctx.Known.Medium.Answer));
         return Drawn.Fingerprint(parts);
     }
 
@@ -439,6 +451,9 @@ public sealed partial class SettingsPage : Page
             case "about":
                 ShowAbout();
                 break;
+            case "reading":
+                ShowReading();
+                break;
             default:
                 if (ctx.Known.Settings is null)
                 {
@@ -446,8 +461,14 @@ public sealed partial class SettingsPage : Page
                     break;
                 }
                 tvGroup = null;
+                // What Kaeri is for on this PC, first in General where the edition lets it change.
+                if (pane.Name == "general" && ctx.Known.Medium.Choosable)
+                    Cards.Children.Add(KaeriIsForCard());
                 foreach (var (group, keys) in pane.Groups)
                 {
+                    // Episode groups while watching, chapter groups while reading.
+                    if (!GroupShown(group))
+                        continue;
                     // Play on TV's setting, between Discord and Updates; the paired TVs are on Devices.
                     if (pane.Name == "integrations" && group == "updates" && ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is { } castTvs)
                     {
@@ -1295,7 +1316,7 @@ public sealed partial class SettingsPage : Page
         // Torrents: where traffic goes while they are on.
         if (row.Key == K.Torrents && ctx.Known.Settings is { } settings)
             description = SettingsCatalog.IsOn(row) ? TorrentWords.OnNote(settings.Torrent) : TorrentWords.OffNote;
-        return description ?? Detail(row.Key);
+        return description ?? ReadingDetail(row) ?? Detail(row.Key);
     }
 
     /// <summary>The line under a row, where the Mac has one, unless the row says something of its own.</summary>
