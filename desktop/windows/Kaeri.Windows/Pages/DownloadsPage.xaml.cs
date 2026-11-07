@@ -46,14 +46,28 @@ public sealed partial class DownloadsPage : Page
         Loaded += (_, _) =>
         {
             if (!hearingReading)
+            {
                 ctx.Known.Reading.Changed += HeardReading;
+                ctx.Known.Medium.Changed += HeardMedium;
+            }
             hearingReading = true;
+            // What came while the page was being built, before it heard.
+            Show();
         };
         Unloaded += (_, _) =>
         {
             ctx.Known.Reading.Changed -= HeardReading;
+            ctx.Known.Medium.Changed -= HeardMedium;
             hearingReading = false;
         };
+    }
+
+    /// <summary>Both media turned on after the page opened: Reading's downloads are asked then.</summary>
+    void HeardMedium()
+    {
+        if (ctx.Known.Medium.Both)
+            ctx.Known.Reading.LoadDownloads();
+        Show();
     }
 
     void HeardReading(ReadingPart part)

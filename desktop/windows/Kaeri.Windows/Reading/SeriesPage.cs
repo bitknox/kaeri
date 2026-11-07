@@ -49,6 +49,8 @@ public sealed partial class SeriesPage : Page
     /// <summary>A chapter's Versions submenu while it is open, filled when the engine answers.</summary>
     (string Chapter, MenuFlyoutSubItem Item)? versionsOpen;
     string? drawnHead, drawnSide, drawnChapters;
+    /// <summary>The header's words as last drawn, which hold the send rows.</summary>
+    StackPanel? drawnWords;
 
     public SeriesPage()
     {
@@ -255,7 +257,7 @@ public sealed partial class SeriesPage : Page
 
         var words = new StackPanel { Spacing = 8 };
         Grid.SetColumn(words, 1);
-        var title = Ui.Text(series.Titles.Display, "ShowTitleLargeStyle");
+        var title = Ui.Text(series.Titles.Display, wide ? "ShowTitleDisplayStyle" : "ShowTitleMediumStyle");
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         title.IsTextSelectionEnabled = true;
         words.Children.Add(title);
@@ -275,9 +277,10 @@ public sealed partial class SeriesPage : Page
         }
         words.Children.Add(Actions(series));
         // The send rows are kept across redraws: they leave the old words for the new.
-        if (sends.Parent is Panel was)
-            was.Children.Remove(sends);
+        // Parent can read null while they still sit in the old words, so the old words are kept.
+        drawnWords?.Children.Remove(sends);
         words.Children.Add(sends);
+        drawnWords = words;
         head.Children.Add(words);
         Ui.RestoreFocus(head, focus);
     }

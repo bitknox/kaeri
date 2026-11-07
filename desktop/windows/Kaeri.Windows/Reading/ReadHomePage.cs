@@ -70,6 +70,8 @@ public sealed partial class ReadHomePage : Page
             }
             hearing = true;
             Titled();
+            // What came while the page was being built, before it heard.
+            Show();
         };
         Unloaded += (_, _) =>
         {

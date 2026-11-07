@@ -93,6 +93,8 @@ public sealed partial class ReadUpdatesPage : Page
             if (!hearing)
                 ctx.Known.Reading.Changed += Heard;
             hearing = true;
+            // What came while the page was being built, before it heard.
+            Show();
         };
         Unloaded += (_, _) =>
         {

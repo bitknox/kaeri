@@ -508,6 +508,20 @@ public sealed partial class MainWindow : Window
             Navigate(page, options.Pane);
         if (options.Title is { } id)
             OpenTitle(id);
+#if KAERI_TESTING
+        // After the first page, so the series or reader opens over it rather than under it.
+        if (options.Work is { } work)
+            ui.TryEnqueue(DispatcherQueuePriority.Low, () => OpenSeries(work));
+        if (options.Read is { } read)
+        {
+            var parts = read.Split(',', 2);
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(400);
+                OpenReader(parts[0], parts.Length > 1 ? parts[1] : null);
+            });
+        }
+#endif
         // --show=opened: Open link or file with the fixture's made-up magnet link, for a screenshot.
         if (options.Show == "opened")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>

@@ -131,6 +131,8 @@ public sealed partial class ReadSearchPage : Page
                 ctx.Known.Medium.Changed += Other;
             }
             hearing = true;
+            // What came while the page was being built, before it heard.
+            Show();
         };
         Unloaded += (_, _) =>
         {

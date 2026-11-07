@@ -175,25 +175,12 @@ public sealed partial class MainWindow
         });
     }
 
-    /// <summary>Reading's start: the medium, and what the testing build's options open.</summary>
+    /// <summary>Reading's start: the medium.</summary>
     void StartReading()
     {
         ctx.Known.Medium.Changed += HearMedium;
         // What came in after a book source was added, heard from the start.
         CameInDesk.Ensure(ctx);
         ctx.Known.Medium.Load();
-#if KAERI_TESTING
-        if (options.Work is { } work)
-            ui.TryEnqueue(DispatcherQueuePriority.Low, () => OpenSeries(work));
-        if (options.Read is { } read)
-        {
-            var parts = read.Split(',', 2);
-            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
-            {
-                await Task.Delay(400);
-                OpenReader(parts[0], parts.Length > 1 ? parts[1] : null);
-            });
-        }
-#endif
     }
 }

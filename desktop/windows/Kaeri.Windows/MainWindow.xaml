@@ -9,6 +9,20 @@
   <!-- Window-wide shortcuts: tooltips that name a key say so themselves, so WinUI does not add one
        to everything under the pointer. -->
   <Grid x:Name="Root" KeyboardAcceleratorPlacementMode="Hidden">
+    <Grid.Resources>
+      <!-- Never shown. The reading pages are built in code, and the frame finds a page only
+           through the type information the XAML compiler writes for types it sees here. -->
+      <DataTemplate x:Key="CodePages">
+        <Grid>
+          <pages:ReadHomePage />
+          <pages:ReadUpdatesPage />
+          <pages:ReadLibraryPage />
+          <pages:ReadSearchPage />
+          <pages:ReadDownloadsPage />
+          <pages:SeriesPage />
+        </Grid>
+      </DataTemplate>
+    </Grid.Resources>
     <Grid.KeyboardAccelerators>
       <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnKeyOpenLink" />
     </Grid.KeyboardAccelerators>
