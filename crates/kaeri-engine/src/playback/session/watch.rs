@@ -15,7 +15,7 @@ impl Run<'_> {
     pub(super) async fn apply_track(&self, action: TrackAction, link: &dyn PlayerLink) {
         if let TrackAction::Remember(memory) = action {
             let key = (self.context.anilist_id, self.context.translation);
-            remember_tracks(self.store, self.settings.remember_tracks, key, memory);
+            remember_tracks(self.store, self.settings.remember_tracks, key, memory).await;
             return;
         }
         if let Some((name, value)) = action.property() {
@@ -164,7 +164,7 @@ impl Run<'_> {
 }
 
 /// Store a series' track memory, off the async worker.
-pub(super) fn remember_tracks(
+pub(super) async fn remember_tracks(
     store: &Store,
     enabled: bool,
     (id, translation): (AnilistId, Translation),
@@ -174,9 +174,12 @@ pub(super) fn remember_tracks(
         return;
     }
     let store = store.clone();
-    tokio::task::spawn_blocking(move || {
+    // Waited for, so one write lands before the next is asked for: left to run on their own,
+    // a choice and the delay after it could land the other way round and keep the older.
+    let write = tokio::task::spawn_blocking(move || {
         if let Err(e) = store.remember_tracks(id, translation, &memory) {
             tracing::warn!(error = %e, "could not remember track choices");
         }
     });
+    let _ = write.await;
 }
