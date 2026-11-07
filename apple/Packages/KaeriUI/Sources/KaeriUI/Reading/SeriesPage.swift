@@ -22,7 +22,9 @@ enum ReadSeriesWords {
         switch action {
         case .read(_, let label): L.actionReadChapter(n: label)
         case .continue(_, let label, let page): L.actionContinueChapter(n: label, page: Int(page))
-        case .continuePart(_, let label, let percent): L.actionContinuePart(n: label, percent: Int(percent))
+        case .continuePart(_, let label, let percent?): L.actionContinuePart(n: label, percent: Int(percent))
+        case .continuePart(_, let label, nil): L.actionContinuePartPlain(n: label)
+        case .readPart(_, let label): L.actionReadPart(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
@@ -31,7 +33,8 @@ enum ReadSeriesWords {
     @MainActor
     static func perform(_ action: SeriesAction?, work: String, store: AppStore, navigator: Navigator) {
         switch action {
-        case .read(let chapter, _), .continue(let chapter, _, _), .continuePart(let chapter, _, _):
+        case .read(let chapter, _), .continue(let chapter, _, _), .continuePart(let chapter, _, _),
+             .readPart(let chapter, _):
             store.reader.open(work: work, chapter: chapter)
         case .readAgain:
             navigator.seriesSheet = .readAgain(work)
@@ -139,18 +142,23 @@ struct SeriesPage: View {
             }
             .padding(.horizontal, wide ? 24 : 16)
             .padding(.top, wide ? 8 : 0)
-            .padding(.bottom, choosing == nil ? 32 : 120)
+            .padding(.bottom, 32)
             .frame(maxWidth: 1_120, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .scrollIndicators(.automatic)
         .background(.ground)
-        .overlay(alignment: .bottom) {
+        // The list insets above the bar and fades under it, as a bottom toolbar does.
+        .safeAreaBar(edge: .bottom) {
             if let chosen = choosing, let series {
                 ChooseChaptersBar(series: series, chosen: chosen) { choosing = nil }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        #if os(iOS)
+        // Choosing is a mode of its own: its bar takes the tab bar's place, as in Photos.
+        .toolbar(choosing == nil ? .automatic : .hidden, for: .tabBar)
+        #endif
         .animation(.standard, value: choosing == nil)
         .task(id: work) {
             store.reading.loadSeries(work)
@@ -162,15 +170,12 @@ struct SeriesPage: View {
             Task { await store.bookSources.stageMissShot(work: work) }
         }
         .task {
-            // The next three unread chapters chosen.
+            // Every unread chapter chosen, as Download's Choose chapters starts.
             guard navigator.launchSheet == "choose-chapters" else { return } // i18n-skip: a shot's sheet name
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            let rows = store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []
-            let unread = rows.filter { $0.state != .read }
-                .sorted { ($0.number.flatMap(Double.init) ?? 0) < ($1.number.flatMap(Double.init) ?? 0) }
-            choosing = Set(unread.prefix(3).map(\.id))
+            choosing = SeriesChoosing.start(store.reading.chapters[work])
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -209,17 +214,32 @@ struct SeriesPage: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(L.seriesChooseAllUnread) {
-                        let rows = store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []
-                        choosing = Set(rows.filter { $0.state != .read }.map(\.id))
+                        choosing = SeriesChoosing.unread(store.reading.chapters[work])
                     }
                 }
-            } else {
+            } else if !wide {
+                // A wide page has More in its action row.
                 ToolbarItem(placement: .topBarTrailing) {
                     if let series { SeriesMoreMenu(series: series, choosing: $choosing) }
                 }
             }
         }
         #endif
+    }
+}
+
+/// Choosing chapters to download or mark: it starts with every unread chapter chosen.
+enum SeriesChoosing {
+    /// Where Download's Choose chapters starts: the unread chapters not downloaded yet.
+    static func start(_ chapters: ReadChapters?) -> Set<String> {
+        let rows = chapters?.volumes.flatMap(\.chapters) ?? []
+        return Set(rows.filter { $0.state != .read && $0.download == nil }.map(\.id))
+    }
+
+    /// All unread, in the bar.
+    static func unread(_ chapters: ReadChapters?) -> Set<String> {
+        let rows = chapters?.volumes.flatMap(\.chapters) ?? []
+        return Set(rows.filter { $0.state != .read }.map(\.id))
     }
 }
 
@@ -373,7 +393,6 @@ private struct SeriesActions: View {
                 row
             }
         }
-        .removeFromLists(series: series, asking: $removing)
     }
 
     private var row: some View {
@@ -405,6 +424,8 @@ private struct SeriesActions: View {
     }
 
     /// Read or go on in amber; with no source, Read from another source in its place, secondary.
+    /// While chapters are being chosen, the choosing bar holds the one amber action, so this
+    /// steps back and waits.
     private var main: some View { mainButton(icon: !stretch) }
 
     @ViewBuilder
@@ -421,7 +442,8 @@ private struct SeriesActions: View {
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
-            .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font))
+            .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font, offIsRaised: true))
+            .disabled(choosing != nil)
             .pointerHover()
         } else {
             Button {
@@ -475,6 +497,8 @@ private struct SeriesActions: View {
         .menuIndicator(.hidden)
         .fixedSize(horizontal: !stretch, vertical: false)
         .pointerHover()
+        // Asked from this menu, so the question points at it.
+        .removeFromLists(series: series, asking: $removing)
     }
 
     /// The next 5 or 10 unread, every unread chapter, a volume, Choose chapters, and delete.
@@ -501,7 +525,7 @@ private struct SeriesActions: View {
             }
             Divider()
             Button(L.downloadChoose) {
-                choosing = Set(unread.map(\.id))
+                choosing = SeriesChoosing.start(store.reading.chapters[series.work])
             }
             if !downloaded.isEmpty {
                 Divider()
@@ -528,7 +552,8 @@ private struct SeriesActions: View {
     }
 }
 
-/// More: Read again from the start, the trackers, and Choose chapters.
+/// More: the trackers, Read from, and Read again from the start. Choosing chapters lives in
+/// Download.
 private struct SeriesMoreMenu: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -540,7 +565,6 @@ private struct SeriesMoreMenu: View {
         Menu {
             Button(L.seriesTracking) { navigator.seriesSheet = .tracking(series.work) }
             Button(L.seriesReadFromMenu) { navigator.seriesSheet = .source(series.work) }
-            Button(L.seriesSelectChapters) { choosing = [] }
             Divider()
             Button(L.seriesReadAgainMenu) { navigator.seriesSheet = .readAgain(series.work) }
         } label: {
@@ -969,14 +993,12 @@ private struct ChooseChaptersBar: View {
         let height: CGFloat = Device.isMac ? 30 : 44
         VStack(spacing: 10) {
             if !chosen.isEmpty, !line.isEmpty {
-                // On its own glass, so it reads over the chapters scrolling under it.
+                // Plain words above the capsule: the bar's scroll edge keeps them readable.
                 Text(line)
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                     .monospacedDigit()
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, Device.isMac ? 4 : 6)
-                    .chromeGlass(in: .capsule)
+                    .lineLimit(1)
                     .transition(.opacity)
             }
             HStack(spacing: 8) {
@@ -1007,8 +1029,10 @@ private struct ChooseChaptersBar: View {
             .fixedSize(horizontal: Device.isMac, vertical: false)
         }
         .frame(maxWidth: Device.isMac ? nil : 520)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
-        .padding(.bottom, Device.isMac ? 20 : 12)
+        .padding(.top, 8)
+        .padding(.bottom, Device.isMac ? 20 : 8)
         .animation(.standard, value: line)
         .task(id: chosen) {
             // A pause while the person is still ticking, then one ask.

@@ -273,13 +273,13 @@ struct ReadFromSheet: View {
 
     private func row(_ edition: BookEditionRow) -> some View {
         Button {
-            if !edition.preferred { store.reading.chooseEdition(work, edition) }
+            if !edition.inUse { store.reading.chooseEdition(work, edition) }
             dismiss()
         } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(edition.sourceName)
-                        .font(.plat(mac: 13, touch: 17, weight: edition.preferred ? .semibold : .regular))
+                        .font(.plat(mac: 13, touch: 17, weight: edition.inUse ? .semibold : .regular))
                         .foregroundStyle(.silk)
                         .lineLimit(1)
                     Text(line(edition))
@@ -288,7 +288,7 @@ struct ReadFromSheet: View {
                         .lineLimit(2)
                 }
                 Spacer(minLength: 8)
-                if edition.preferred {
+                if edition.inUse {
                     Image(systemName: "checkmark")
                         .font(.ui(13, weight: .semibold))
                         .foregroundStyle(.silk)
@@ -301,7 +301,7 @@ struct ReadFromSheet: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .accessibilityAddTraits(edition.preferred ? .isSelected : [])
+        .accessibilityAddTraits(edition.inUse ? .isSelected : [])
     }
 
     /// "Kavita · chapters 1 to 88", "Chapters 1 to 60 · on this iPhone".
