@@ -66,7 +66,7 @@
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
+        <!-- Top bar: back, the show and the episode, then Play on TV, the party, subtitles, episodes and the mini player. -->
         <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -110,9 +110,6 @@
             <Button x:Name="MiniButton" Style="{StaticResource PlayerButtonStyle}" Click="OnMini" AutomationProperties.Name="{x:Bind app:T.PlayerMiniPlayer}">
               <FontIcon x:Name="MiniIcon" Glyph="&#xE8A7;" FontSize="16" />
             </Button>
-            <Button x:Name="FullscreenButton" Style="{StaticResource PlayerButtonStyle}" Click="OnFullscreen" AutomationProperties.Name="{x:Bind app:T.PlayerFullscreen}">
-              <FontIcon x:Name="FullscreenIcon" Glyph="&#xE740;" FontSize="16" />
-            </Button>
           </StackPanel>
         </Grid>
 
@@ -127,7 +124,7 @@
           </StackPanel>
         </Border>
 
-        <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
+        <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume, settings and full screen. -->
         <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -135,6 +132,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
@@ -192,6 +190,10 @@
             <Button.Flyout>
               <MenuFlyout x:Name="SettingsMenu" Placement="TopEdgeAlignedRight" Opening="OnSettingsMenuOpening" Opened="OnMenuOpened" Closed="OnMenuClosed" />
             </Button.Flyout>
+          </Button>
+          <!-- Full screen at the bar's right end, where Windows' players keep it. -->
+          <Button x:Name="FullscreenButton" Grid.Column="8" Style="{StaticResource PlayerButtonStyle}" Click="OnFullscreen" AutomationProperties.Name="{x:Bind app:T.PlayerFullscreen}">
+            <FontIcon x:Name="FullscreenIcon" Glyph="&#xE740;" FontSize="16" />
           </Button>
         </Grid>
       </Grid>
