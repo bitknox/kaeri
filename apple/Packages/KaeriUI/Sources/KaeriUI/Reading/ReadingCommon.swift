@@ -197,6 +197,8 @@ struct ReadTileCard: View {
     var width: CGFloat?
     /// The silk track under the cover, for Continue.
     var track = false
+    /// Narrower than this, as a phone's grid cells are, the line may wrap once.
+    static let narrow: CGFloat = 130
 
     var body: some View {
         let width = width ?? layout.poster.width
@@ -221,9 +223,12 @@ struct ReadTileCard: View {
                     .foregroundStyle(.silk)
                     .lineLimit(1)
                     .padding(.top, track ? 6 : 8)
-                HStack(spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
                     if tile.newChapter { WaterDot() }
-                    Text(ReadWords.line(tile)).lineLimit(1)
+                    // A phone's grid cell is narrow: its line takes a second line, not an ellipsis.
+                    Text(ReadWords.line(tile))
+                        .lineLimit(width < Self.narrow ? 2 : 1)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.posterLine.size))
                 .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)

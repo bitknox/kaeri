@@ -302,6 +302,9 @@ public final class ReadingModel {
         case .home(let view):
             home = view
             homeLoading = false
+            #if FIXTURES
+            if stagedSpotlight { home = Self.newChapterSpotlight(view) }
+            #endif
         case .updates(let view):
             updates = view
         case .library(let segment, let tiles):
@@ -346,6 +349,37 @@ public final class ReadingModel {
     #if FIXTURES
     /// For shots: an event as the engine would send it.
     public func showcase(_ event: ReadingEvent) { apply(event) }
+    #endif
+
+    /// For shots: the spotlight's New chapter case, on the series it shows, with its newest
+    /// chapter out today. The fixtures' reader is behind in every series, so the engine never
+    /// picks this case on its own there. Does nothing outside the fixtures.
+    public func stageSpotlightShot() {
+        #if FIXTURES
+        stagedSpotlight = true
+        if let home { self.home = Self.newChapterSpotlight(home) }
+        #endif
+    }
+
+    #if FIXTURES
+    @ObservationIgnored private var stagedSpotlight = false
+
+    private static func newChapterSpotlight(_ view: ReadingHomeView) -> ReadingHomeView {
+        guard let tile = view.spotlight, var spot = view.spot else { return view }
+        var view = view
+        let novel = tile.medium == .novel
+        spot.case = .newChapter
+        spot.label = .reading(.readingSpotlightNewChapter)
+        if novel {
+            spot.line = .reading(.readingPartOutToday(part: "4"))
+            spot.action = .readPart(chapter: "4", label: "4")
+        } else {
+            spot.line = .reading(.readingOutTodayTitled(chapter: "15", title: "The Far Shore")) // i18n-skip
+            spot.action = .read(chapter: "15", label: "15")
+        }
+        view.spot = spot
+        return view
+    }
     #endif
 }
 

@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ReadHomeScreen: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -44,6 +45,8 @@ struct ReadHomeScreen: View {
         }
         #endif
         .task { store.reading.loadHome() }
+        // Shots: the spotlight's New chapter case.
+        .onLaunchSheet("spotlight-new", navigator) { store.reading.stageSpotlightShot() } // i18n-skip: a shot's sheet name
     }
 
     #if os(iOS)
@@ -534,8 +537,9 @@ private struct ReadWeekCell: View {
                         .fixedLineHeight(17, relativeTo: .footnote)
                         .foregroundStyle(.silk)
                         .lineLimit(2)
-                    // The chapter that came out this day; for one only expected, the person's place.
-                    if let line = entry.chapter?.text ?? tile.next?.text {
+                    // The chapter that came out this day; for one only expected, the chapter the
+                    // engine expects, and nothing when it has no confident guess.
+                    if let line = entry.usually ? entry.chapter?.text : (entry.chapter?.text ?? tile.next?.text) {
                         Text(line)
                             .font(.ui(12))
                             .fixedLineHeight(16, relativeTo: .caption)
