@@ -695,6 +695,166 @@ reading-origin-china = [Çĥîñà~~]
 # A search filter: books from Taiwan.
 reading-origin-taiwan = [Ţàîŵàñ~~]
 
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
+
+# A chapter row's state: the person read it.
+reading-row-read = [Ŕéàð~~]
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = [Ñéŵ~]
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = [Ðöŵñļöàðéð~~~]
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = [Ñöţ ðöŵñļöàðéð~~~~~]
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = [Öñ ţĥîš ðéṽîçé~~~~~]
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = [Ǫüéüéð~~]
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
+
+# A chapter row's state while it downloads.
+reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = [Çöüļðñ'ţ ðöŵñļöàð~~~~~~]
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = [Þàĝé { $page } öƒ { $of }~~~~~]
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = [Þàĝé { $page }~~~]
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = [{ $percent }%~~]
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] [1 þàĝé~~]
+       *[other] [{ $n } þàĝéš~~~]
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] [1 ṽéŕšîöñ~~~]
+       *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = [ĵüšţ ñöŵ~~~]
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = [{ $minutes } ɱîñ àĝö~~~~]
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = [ţöðàý~~]
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = [ýéšţéŕðàý~~~]
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] [1 ðàý àĝö~~~]
+       *[other] [{ $days } ðàýš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] [1 ŵééķ àĝö~~~]
+       *[other] [{ $weeks } ŵééķš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] [1 ɱöñţĥ àĝö~~~~]
+       *[other] [{ $months } ɱöñţĥš àĝö~~~~~]
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] [1 ýéàŕ àĝö~~~]
+       *[other] [{ $years } ýéàŕš àĝö~~~~]
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = [Ŕéɱöṽéð ƒŕöɱ { $tracker }~~~~~]
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = [Ŵàšñ'ţ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = [Ñöţ ɱàţçĥéð öñ { $tracker }, šö ñöţĥîñĝ çĥàñĝéð ţĥéŕé~~~~~~~~~~~~~~]
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = [Šţîļļ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = [Šîĝñ îñ ţö { $tracker } àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = [Ñö šéŕîéš ŵîţĥ ţĥîš ñàɱé~~~~~~~~]
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = [Ñöţ àñšŵéŕîñĝ šîñçé { $time }~~~~~~~]
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = [Ñöţ àñšŵéŕîñĝ~~~~]
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] [1 þàŕţ~~]
+       *[other] [{ $count } þàŕţš~~~]
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = [{ $size }~]
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = [{ $count } ŕéàð~~~]
+
+# The chapter downloading now.
+reading-dl-chapter = [Çĥàþţéŕ { $chapter }~~~~]
+
+# How far the chapter downloading now has come.
+reading-dl-pages = [{ $done } öƒ { $total } þàĝéš~~~~~]
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = [{ $count } ɱöŕé ƣüéüéð~~~~~]
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = [{ $count } ƣüéüéð~~~]
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = [Åƀöüţ { $size }~~~]
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = [öṽéŕ Ŵî-Ƒî~~~]
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = [öṽéŕ ɱöƀîļé ðàţà~~~~~]
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 
@@ -8337,6 +8497,13 @@ book-add-server-button = [Åðð šéŕṽéŕ~~~]
 # What the address answered, before the sign-in.
 sources-found-server = [Ƒöüñð à { $kind } šéŕṽéŕ~~~~~~]
 
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ 1 šéŕîéš~~~~~~~~~~]
+       *[other] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ { $n } šéŕîéš~~~~~~~~~~~]
+    }
+
 # While the address is tried.
 book-server-looking = [Ļööķîñĝ àţ ţĥîš àððŕéšš…~~~~~~~~]
 
@@ -8462,6 +8629,13 @@ search-show-them = [Šĥöŵ ţĥéɱ~~~]
 
 # The line over browsing: what is shown, and where the list comes from.
 read-search-browse-line = [{ $what } · ƒŕöɱ ÅñîĻîšţ~~~~~~]
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] [1 šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+       *[other] [{ $n } šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+    }
 
 # Search couldn't ask AniList.
 read-search-failed = [Çöüļðñ'ţ šéàŕçĥ~~~~~]
@@ -8693,7 +8867,7 @@ settings-aside-reading = [Ŕéàðéŕ ðéƒàüļţš àŕé ŵĥéŕé éṽ�
 settings-reader-defaults = [Ŕéàðéŕ ðéƒàüļţš~~~~~]
 
 # Under the reader defaults.
-settings-reader-defaults-footer = [Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð çöļöüŕ.~~~~~~~~~~~~~~~~~~~]
+settings-reader-defaults-footer = [Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð ļööķ.~~~~~~~~~~~~~~~~~~]
 
 # Row: manga's reader default.
 settings-reader-manga = [Ṁàñĝà~~]
@@ -8742,6 +8916,33 @@ settings-follow-mode-note = [Å šéŕîéš ýöü çĥàñĝé ŕéàðš ţĥ
 
 # Under the group: what stays on this device.
 settings-follow-footer = [Ţéẋţ šîžé, ɱàŕĝîñš, ţàþ žöñéš àñð ŕéƒŕéšĥ šţàý öñ ţĥîš { $device }.~~~~~~~~~~~~~~~~~~]
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = [Çöļöüŕ öŕ ĝŕéýš~~~~~]
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = [Šéŕîéš öñ Ŕéàðîñĝ~~~~~~]
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = [Å šéŕîéš ƀéîñĝ ŕéàð àļšö ķééþš îţš ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~~~~~~~~~~]
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = [Þŕöĝŕéšš~~~]
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = [Å çĥàþţéŕ îš ŕéàð~~~~~~]
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = [Çļöšîñĝ ţĥé ŕéàðéŕ~~~~~~]
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = [Ķééþ ţĥé ƒüŕţĥéšţ~~~~~~]
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = [Ţĥé ļàţéšţ çĥàñĝé~~~~~~]
+
+# Line under When trackers disagree.
+settings-disagree-note = [Šţàţüš àñð šçöŕé ƒöļļöŵ ţĥé ļàţéšţ çĥàñĝé~~~~~~~~~~~~~]
 
 # Line under Keep next chapters ready.
 settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~~~~~~~]
@@ -9698,6 +9899,21 @@ settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéà
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = [Ñéŵ çĥàþţéŕš~~~~]
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = [Ṁöðé àñð ðîŕéçţîöñ~~~~~~]
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = [Ļööķ~~]
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = [Šéñð þŕöĝŕéšš àƒţéŕ~~~~~~]
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = [Ŵĥéñ ţŕàçķéŕš ðîšàĝŕéé~~~~~~~]
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = [Ñéŵ çĥàþţéŕš~~~~]

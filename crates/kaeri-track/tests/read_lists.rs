@@ -182,3 +182,27 @@ async fn a_rejected_kitsu_token_is_an_auth_error() {
     let err = kitsu_tracker(&server, "stale").pull_read_library().await.unwrap_err();
     assert!(matches!(err, kaeri_core::Error::Auth(_)), "{err:?}");
 }
+
+#[tokio::test]
+async fn removing_takes_a_title_off_the_mal_and_kitsu_lists_and_says_what_happened() {
+    use kaeri_core::traits::ReadRemoval;
+    let server = FakeReadLists::start().await;
+    server.add_mal(MalEntry::new(70, "reading", 12, 2));
+    server.add_kitsu(KitsuEntry::new(700, "current", 12));
+    let (mal, kitsu) = (mal_tracker(&server, MAL_TOKEN), kitsu_tracker(&server, KITSU_TOKEN));
+    let id = AnilistId::new(7);
+
+    assert_eq!(mal.remove_read(id).await.unwrap(), ReadRemoval::Removed);
+    assert_eq!(kitsu.remove_read(id).await.unwrap(), ReadRemoval::Removed);
+    assert!(server.mal(70).is_none() && server.kitsu(700).is_none());
+    // Asked again, the lists no longer hold it.
+    assert_eq!(mal.remove_read(id).await.unwrap(), ReadRemoval::NotOnList);
+    assert_eq!(kitsu.remove_read(id).await.unwrap(), ReadRemoval::NotOnList);
+    // A title the mappings can't name is never guessed at.
+    let unknown = AnilistId::new(99);
+    assert_eq!(mal.remove_read(unknown).await.unwrap(), ReadRemoval::Unmatched);
+    assert_eq!(kitsu.remove_read(unknown).await.unwrap(), ReadRemoval::Unmatched);
+
+    let err = mal_tracker(&server, "stale").remove_read(AnilistId::new(8)).await.unwrap_err();
+    assert!(matches!(err, kaeri_core::Error::Auth(_)), "{err:?}");
+}

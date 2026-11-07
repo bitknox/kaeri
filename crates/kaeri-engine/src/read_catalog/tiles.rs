@@ -97,15 +97,26 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
             Some(page) => words::chapter_page(&label, *page),
             None => words::next_chapter(&label),
         });
+        // The page count the reader saw, else the one the source lists.
+        let of = of.or_else(|| {
+            list.as_deref()
+                .and_then(|l| l.iter().find(|c| c.id == *chapter))
+                .and_then(|c| c.pages)
+        });
         tile.progress = match (page, of) {
-            (Some(page), Some(of)) if *of > 0 => Some((*page as f32 / *of as f32).min(1.0)),
+            (Some(page), Some(of)) if of > 0 => Some((*page as f32 / of as f32).min(1.0)),
             _ => None,
         };
-    } else if let Some(next) = list.as_deref().and_then(|l| read.next(l)) {
-        tile.next = Some(words::next_chapter(next.number.as_deref().unwrap_or(&next.label)));
-    }
-    if let Some(list) = &list {
-        tile.new_chapter = read.any() && read.unread(list).iter().any(|c| c.seen_at.is_some());
+    } else if let Some(list) = list.as_deref() {
+        // The dot always has its words: "Chapter 88 is new".
+        if let Some(new) = read.new_for_you(list) {
+            let number = new.number.clone().unwrap_or_else(|| new.label.clone());
+            tile.next = Some(Msg::Reading(ReadingMsg::ReadingChapterNew { chapter: number }));
+            tile.new_chapter = true;
+        } else if let Some(next) = read.next(list) {
+            tile.next =
+                Some(words::next_chapter(next.number.as_deref().unwrap_or(&next.label)));
+        }
     }
 }
 

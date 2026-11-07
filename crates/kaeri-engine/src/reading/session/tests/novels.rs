@@ -245,6 +245,45 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn each_document_says_its_words_and_page_turns_teach_the_pace() {
+    let mut h = novel_harness();
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let first = novel.spine.iter().position(|s| s.linear).unwrap();
+    // "One. The lantern keeper climbed the stair."
+    assert_eq!(novel.spine[first].words, 7);
+    assert_eq!(novel.words_per_minute, crate::reading::session::novel::DEFAULT_PACE);
+    let spine = first as u32;
+
+    // A page read in an instant, or after a long pause, teaches nothing.
+    h.at(pos(spine, &[1], 0), 0, 2, TurnHow::Turn);
+    tokio::time::advance(Duration::from_secs(1)).await;
+    h.at(pos(spine, &[2], 0), 1, 2, TurnHow::Turn);
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    let (_, again) = h.open_novel(OpenAt::Resume).await;
+    assert_eq!(again.words_per_minute, 230);
+
+    // Three words in 6 s is a slow page: the pace eases down, not all the way.
+    h.at(pos(spine, &[1], 0), 0, 2, TurnHow::Turn);
+    tokio::time::advance(Duration::from_secs(6)).await;
+    h.at(pos(spine, &[2], 0), 1, 2, TurnHow::Turn);
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    let (_, slower) = h.open_novel(OpenAt::Resume).await;
+    assert_eq!(slower.words_per_minute, 203, "230 eased a little toward a slow page");
+}
+
+#[test]
+fn the_pace_moves_slowly_and_only_for_pages_read_at_a_reading_speed() {
+    use crate::reading::session::novel::learnt;
+    assert_eq!(learnt(230, 0, Duration::from_secs(30)), None, "no words, nothing learnt");
+    assert_eq!(learnt(230, 150, Duration::from_secs(2)), None, "a skim");
+    assert_eq!(learnt(230, 150, Duration::from_secs(900)), None, "a pause");
+    // 150 words in 30 s is 300 a minute: the pace moves 15% of the way.
+    assert_eq!(learnt(230, 150, Duration::from_secs(30)), Some(241));
+}
+
+#[tokio::test(start_paused = true)]
 async fn the_last_page_of_the_last_document_reads_after_it_holds_and_the_end_page_at_once() {
     let mut h = novel_harness();
     let (_, novel) = h.open_novel(OpenAt::Resume).await;

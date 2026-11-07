@@ -21,7 +21,7 @@ async fn signed(typed: &str, kind: Option<Kind>) -> Arc<dyn BookSource> {
     let found = check(&client, typed).await.expect("the address answers");
     let kind = kind.or(found.kind);
     let done = sign_in(&client, &found.address, kind, "test", "test").await.expect("sign in");
-    assert!(done.series > 0, "the server lists series");
+    assert!(done.series.is_some_and(|n| n > 0), "the server lists series");
     let dir = std::env::temp_dir().join("kaeri-bookserver-test");
     source(
         &client,

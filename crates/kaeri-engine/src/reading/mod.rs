@@ -21,8 +21,8 @@ use kaeri_model::{
     medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
     reader::ReaderCommand,
     reading::{
-        FeedView, ReadSearchQuery, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
-        ReadingHomeView, UpdatesView,
+        FeedView, LibrarySegmentRead, ReadSearchQuery, ReadingAbout, ReadingCommand,
+        ReadingEvent, ReadingFailure, ReadingHomeView, UpdatesView,
     },
 };
 
@@ -241,9 +241,17 @@ pub(crate) fn reading(
                 ReadingCommand::Bookmark { work, .. } => (work.clone(), false),
                 _ => return,
             };
+            let again = match &command {
+                ReadingCommand::ReadAgain { .. } => Some(true),
+                ReadingCommand::UndoReadAgain { .. } => Some(false),
+                _ => None,
+            };
             if let Err(e) = marks(&services.store, command, now) {
                 tracing::warn!(error = %e, "a reading mark was not kept");
                 return;
+            }
+            if let Some(again) = again {
+                rereading(services, &work, again, now, tx);
             }
             if read {
                 let lent = crate::downloads::books::Lent::of(services, tx);
@@ -258,6 +266,8 @@ pub(crate) fn reading(
         ReadingCommand::Download { .. }
         | ReadingCommand::DownloadCancel { .. }
         | ReadingCommand::DownloadDelete { .. }
+        | ReadingCommand::DownloadDeleteRead { .. }
+        | ReadingCommand::EstimateDownload { .. }
         | ReadingCommand::DownloadNew => {
             return downloads(engine, services, command, tx);
         }
@@ -298,6 +308,18 @@ fn downloads(
         ReadingCommand::DownloadDelete { work, chapters } => {
             queue.delete(&lent, &work, &chapters);
         }
+        ReadingCommand::DownloadDeleteRead { work } => {
+            queue.delete_read(&lent, &work);
+        }
+        ReadingCommand::EstimateDownload { work, pick } => {
+            let kit = crate::read_catalog::Kit::of(services);
+            let (edition, volumes) = crate::read_catalog::series::kept_volumes(&kit, &work);
+            let rows = crate::downloads::books::flatten(volumes);
+            let source = edition.map(|e| e.source_id);
+            let estimate =
+                queue.estimate(&services.store, &work, pick, &rows, source.as_deref());
+            let _ = tx.send(Event::Reading(ReadingEvent::DownloadEstimate(estimate)));
+        }
         ReadingCommand::DownloadNew => {
             let ask = crate::read_catalog::Ask::of(engine, services);
             let kit = crate::read_catalog::Kit::of(services);
@@ -317,6 +339,7 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
             tiles: Vec::new(),
             has_more: false,
             other_scope: None,
+            total: None,
         }));
         return;
     }
@@ -331,25 +354,42 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
             tiles,
             has_more: false,
             other_scope: None,
+            total: None,
         }));
     });
 }
 
+/// A work's chapters for the reader's sheet and the series page. A series no source holds lists
+/// its files on this device; one with neither answers why.
 fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Outbox) {
-    let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
-    let plugins = services.book_plugins.clone();
+    let kit = crate::read_catalog::Kit::of(services);
+    let (tx, now) = (tx.clone(), services.clock.now());
     tokio::spawn(async move {
-        sources.adopt_plugins(&plugins);
-        let event = match sources.chapters(&work, edition.as_deref(), now).await {
-            Ok((edition, volumes)) => {
-                ReadingEvent::Chapters { work, edition, volumes, failure: None }
+        kit.sources.adopt_plugins(&kit.plugins);
+        let event = if kit.sources.edition_of(&work, edition.as_deref()).is_none() {
+            let list = crate::read_catalog::chapters::of_work(&kit.sources, &kit.store, &work);
+            let volumes = shelf::volumes(
+                &kit.store,
+                work.as_str(),
+                list.as_ref().map(|(_, _, l)| l.as_slice()),
+                now,
+                &kit.clock.zone(),
+            );
+            let failure = volumes.is_empty().then_some(ReadingFailure::NotFound);
+            ReadingEvent::Chapters { work, edition: None, volumes, failure }
+        } else {
+            match kit.sources.chapters(&work, edition.as_deref(), now).await {
+                Ok((edition, mut volumes)) => {
+                    crate::read_catalog::series::finish(&kit, &work, &mut volumes, now);
+                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
+                }
+                Err(failure) => ReadingEvent::Chapters {
+                    work,
+                    edition: None,
+                    volumes: Vec::new(),
+                    failure: Some(failure),
+                },
             }
-            Err(failure) => ReadingEvent::Chapters {
-                work,
-                edition: None,
-                volumes: Vec::new(),
-                failure: Some(failure),
-            },
         };
         let _ = tx.send(Event::Reading(event));
     });
@@ -386,7 +426,39 @@ fn mark_read(
     }
     services.book_sources.report(&work, ids, read, now);
     // What the trackers hold follows the catalogue.
-    let _ = crate::read_tracking::progress_of(services, &work);
+    let progress = crate::read_tracking::progress_of(services, &work);
+    // When the latest change wins, the trackers come down with an unread too.
+    if !read && services.sync.read_rule() == kaeri_core::config::WhenTrackersDisagree::Latest {
+        crate::read_tracking::queue_lower(services, &work, progress, now, tx);
+    }
+}
+
+/// Read again puts the series on Rereading here and on the trackers, which keep their chapter
+/// count; its undo puts back the list the series was on.
+fn rereading(services: &Services, work: &WorkId, again: bool, now: i64, tx: &Outbox) {
+    let store = &services.store;
+    let key = format!("read_again_was:{}", work.as_str());
+    let status = if again {
+        let was = store.read_status(work.as_str()).ok().and_then(|(s, _)| s);
+        if was.as_deref() == Some(LibrarySegmentRead::Rereading.as_str()) {
+            return;
+        }
+        if let Err(e) = store.set_meta_text(&key, was.as_deref().unwrap_or("")) {
+            tracing::warn!(error = %e, "the list before Read again was not kept");
+        }
+        Some(LibrarySegmentRead::Rereading)
+    } else {
+        let Ok(Some(was)) = store.get_meta_text(&key) else { return };
+        let _ = store.delete_meta(&key);
+        LibrarySegmentRead::parse(&was)
+    };
+    let name = status.map(LibrarySegmentRead::as_str);
+    if let Err(e) = store.set_read_status(work.as_str(), name, now) {
+        tracing::warn!(error = %e, "the reading list was not kept");
+    }
+    if let Some(status) = status {
+        crate::read_tracking::queue_status(services, work, status, now, tx);
+    }
 }
 
 /// Marks on many chapters at once, and bookmarks, kept in the store. Like [`mark_read`] they

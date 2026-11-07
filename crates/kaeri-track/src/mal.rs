@@ -25,7 +25,7 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -412,6 +412,31 @@ impl Tracker for MalTracker {
             }
         }
         Ok(ignored)
+    }
+
+    async fn remove_read(
+        &self,
+        anilist_id: AnilistId,
+    ) -> Result<ReadRemoval, kaeri_core::Error> {
+        let Some(mal_id) = self.read_mapping.as_ref().and_then(|m| m.mal_id(anilist_id)) else {
+            return Ok(ReadRemoval::Unmatched);
+        };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let url = format!("{}/manga/{mal_id}/my_list_status", self.api);
+        let response =
+            self.held.send(self, &mut token, |t| self.http.delete(&url).bearer_auth(t)).await?;
+        match response.status() {
+            reqwest::StatusCode::UNAUTHORIZED => {
+                Err(kaeri_core::Error::Auth("myanimelist rejected the token".into()))
+            }
+            // MyAnimeList answers 404 for a title that is not on the list.
+            reqwest::StatusCode::NOT_FOUND => Ok(ReadRemoval::NotOnList),
+            status if status.is_success() => Ok(ReadRemoval::Removed),
+            status => {
+                let body = response.text().await.unwrap_or_default();
+                Err(tracker_error(crate::said(status, &body)))
+            }
+        }
     }
 
     async fn accept_credentials(

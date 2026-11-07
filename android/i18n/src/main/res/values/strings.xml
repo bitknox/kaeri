@@ -469,6 +469,115 @@
     <string name="reading_origin_china">China</string>
     <!-- A search filter: books from Taiwan. -->
     <string name="reading_origin_taiwan">Taiwan</string>
+    <!-- Under a This week cell: the chapter that came out that day, with its own title. -->
+    <string name="reading_chapter_titled">Chapter %1$s · %2$s</string>
+    <!-- A chapter row's state: the person read it. -->
+    <string name="reading_row_read">Read</string>
+    <!-- A chapter row's state: it came out since the person last read and is not read. -->
+    <string name="reading_row_new">New</string>
+    <!-- A chapter row's state: it is kept on this device to read offline. -->
+    <string name="reading_row_downloaded">Downloaded</string>
+    <!-- A chapter row's state: it is read from the source and nothing of it is on this device. -->
+    <string name="reading_row_not_downloaded">Not downloaded</string>
+    <!-- A chapter row's state: a file in one of the person's folders, or one already on the device. -->
+    <string name="reading_row_on_device">On this device</string>
+    <!-- A chapter row's state: it waits its turn to download. -->
+    <string name="reading_row_queued">Queued</string>
+    <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
+    <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter row's state while it downloads. -->
+    <string name="reading_row_downloading">Downloading · %1$d of %2$d pages</string>
+    <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
+    <string name="reading_row_failed">Couldn\'t download</string>
+    <!-- A chapter row's state: the page the person stopped on, of how many. -->
+    <string name="reading_row_page_of">Page %1$d of %2$d</string>
+    <!-- A chapter row's state: the page the person stopped on, when the length isn't known. -->
+    <string name="reading_row_page">Page %1$d</string>
+    <!-- A novel's chapter row: how far into it the person is. -->
+    <string name="reading_row_percent">%1$d%%</string>
+    <!-- A chapter row: how long its pages are, for a file on the device. -->
+    <plurals name="reading_row_pages">
+        <item quantity="one">1 page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- A chapter row: how many versions the person's sources have of it. The row's menu lists them. -->
+    <plurals name="reading_row_versions">
+        <item quantity="one">1 version</item>
+        <item quantity="other">%1$d versions</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, under a minute ago. -->
+    <string name="reading_ago_now">just now</string>
+    <!-- A chapter row: when it was read or came out, in minutes. -->
+    <string name="reading_ago_minutes">%1$d min ago</string>
+    <!-- A chapter row: when it was read or came out, earlier today. -->
+    <string name="reading_ago_today">today</string>
+    <!-- A chapter row: when it was read or came out, the day before today. -->
+    <string name="reading_ago_yesterday">yesterday</string>
+    <!-- A chapter row: when it was read or came out, in days, under a week. -->
+    <plurals name="reading_ago_days">
+        <item quantity="one">1 day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in weeks, under two months. -->
+    <plurals name="reading_ago_weeks">
+        <item quantity="one">1 week ago</item>
+        <item quantity="other">%1$d weeks ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in months, under a year. -->
+    <plurals name="reading_ago_months">
+        <item quantity="one">1 month ago</item>
+        <item quantity="other">%1$d months ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in years. -->
+    <plurals name="reading_ago_years">
+        <item quantity="one">1 year ago</item>
+        <item quantity="other">%1$d years ago</item>
+    </plurals>
+    <!-- The tracker took the series off its list. -->
+    <string name="reading_removed_from">Removed from %1$s</string>
+    <!-- The tracker's list did not hold the series, so there was nothing to remove. -->
+    <string name="reading_removed_not_there">Wasn\'t on your %1$s list</string>
+    <!-- The app never learned which of the tracker's entries this series is, so it asked nothing. -->
+    <string name="reading_removed_unmatched">Not matched on %1$s, so nothing changed there</string>
+    <!-- The tracker could not take the series off. The reason follows. -->
+    <string name="reading_removed_failed">Still on your %1$s list</string>
+    <!-- Why a removal failed: the tracker turned the sign-in away. -->
+    <string name="reading_removed_sign_in">Sign in to %1$s again, then try once more.</string>
+    <!-- The source answered the search and has no series by the series' names. -->
+    <string name="reading_miss_no_series">No series with this name</string>
+    <!-- The source has failed every ask since this time of day, in the person's zone. -->
+    <string name="reading_miss_down_since">Not answering since %1$s</string>
+    <!-- The source has failed every ask, since a time on another day or not known. -->
+    <string name="reading_miss_down">Not answering</string>
+    <!-- How many parts of a light novel are downloaded. -->
+    <plurals name="reading_dl_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$d parts</item>
+    </plurals>
+    <!-- What the downloads take up on this device. -->
+    <string name="reading_dl_size">%1$s</string>
+    <!-- How many of the downloaded chapters are read, which Delete read clears. -->
+    <string name="reading_dl_read">%1$d read</string>
+    <!-- The chapter downloading now. -->
+    <string name="reading_dl_chapter">Chapter %1$s</string>
+    <!-- How far the chapter downloading now has come. -->
+    <string name="reading_dl_pages">%1$d of %2$d pages</string>
+    <!-- Chapters waiting their turn after the one downloading. -->
+    <string name="reading_dl_more_queued">%1$d more queued</string>
+    <!-- Chapters waiting their turn, none downloaded yet. -->
+    <string name="reading_dl_queued">%1$d queued</string>
+    <!-- Chapters that wait for Wi-Fi to download. -->
+    <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
+    <!-- A chapter that failed. The reason follows as the next part. -->
+    <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
+    <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
+    <string name="reading_estimate_size">About %1$s</string>
+    <!-- The chapters download only on Wi-Fi, as the settings say. -->
+    <string name="reading_estimate_wifi">over Wi-Fi</string>
+    <!-- The device is on mobile data, and the settings let chapters download on it. -->
+    <string name="reading_estimate_mobile">over mobile data</string>
+    <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
+    <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -4426,6 +4535,11 @@
     <string name="book_add_server_button">Add server</string>
     <!-- What the address answered, before the sign-in. -->
     <string name="sources_found_server">Found a %1$s server</string>
+    <!-- What the server held once signed in, when it said how many series it lists. -->
+    <plurals name="sources_found_server_series">
+        <item quantity="one">Found a %1$s server with 1 series</item>
+        <item quantity="other">Found a %1$s server with %2$d series</item>
+    </plurals>
     <!-- While the address is tried. -->
     <string name="book_server_looking">Looking at this address…</string>
     <!-- Line under the password. -->
@@ -4511,6 +4625,11 @@
     <string name="search_show_them">Show them</string>
     <!-- The line over browsing: what is shown, and where the list comes from. -->
     <string name="read_search_browse_line">%1$s · from AniList</string>
+    <!-- Over reading's results once every result is listed: how many series AniList found. -->
+    <plurals name="read_search_total">
+        <item quantity="one">1 series from AniList</item>
+        <item quantity="other">%1$d series from AniList</item>
+    </plurals>
     <!-- Search couldn't ask AniList. -->
     <string name="read_search_failed">Couldn\'t search</string>
     <!-- No results for what was typed. -->
@@ -4666,7 +4785,7 @@
     <!-- Group: how the reader opens each kind of book. -->
     <string name="settings_reader_defaults">Reader defaults</string>
     <!-- Under the reader defaults. -->
-    <string name="settings_reader_defaults_footer">A series you change keeps its own mode, direction and colour.</string>
+    <string name="settings_reader_defaults_footer">A series you change keeps its own mode, direction and look.</string>
     <!-- Row: manga's reader default. -->
     <string name="settings_reader_manga">Manga</string>
     <!-- Row: webtoons' reader default. -->
@@ -4699,6 +4818,24 @@
     <string name="settings_follow_mode_note">A series you change reads the same on your other devices</string>
     <!-- Under the group: what stays on this device. -->
     <string name="settings_follow_footer">Text size, margins, tap zones and refresh stay on this %1$s.</string>
+    <!-- Line under Look in Series settings that follow you. -->
+    <string name="settings_look_follows_note">Colour or greys</string>
+    <!-- Value of New chapters in Downloads: the series on the Reading list. -->
+    <string name="settings_new_chapters_reading">Series on Reading</string>
+    <!-- Line under New chapters in Downloads. -->
+    <string name="settings_new_chapters_note">A series being read also keeps its next chapters ready</string>
+    <!-- Group in Accounts: how reading progress goes to the trackers. -->
+    <string name="settings_progress_group">Progress</string>
+    <!-- Value of Send progress after: as each chapter counts as read. -->
+    <string name="settings_progress_chapter">A chapter is read</string>
+    <!-- Value of Send progress after: once, when the reader closes. -->
+    <string name="settings_progress_close">Closing the reader</string>
+    <!-- Value of When trackers disagree: the higher chapter wins. -->
+    <string name="settings_disagree_furthest">Keep the furthest</string>
+    <!-- Value of When trackers disagree: the newest change wins, even a lower chapter. -->
+    <string name="settings_disagree_latest">The latest change</string>
+    <!-- Line under When trackers disagree. -->
+    <string name="settings_disagree_note">Status and score follow the latest change</string>
     <!-- Line under Keep next chapters ready. -->
     <string name="settings_keep_chapters_ready_note">The next chapters of series on your Reading list</string>
     <!-- Line under Delete chapters after reading. -->
@@ -5340,6 +5477,16 @@
     <string name="settings_delete_after_reading">Delete chapters after reading</string>
     <!-- Row: whether a series' reader mode, direction and colour follow you to your other devices. -->
     <string name="settings_series_choices_follow">Series settings follow you</string>
+    <!-- Row in Downloads: which series' new chapters download by themselves. -->
+    <string name="settings_new_chapters_download">New chapters</string>
+    <!-- Row: whether a series' own reader mode and direction follow you to your other devices. -->
+    <string name="settings_mode_follows">Mode and direction</string>
+    <!-- Row: whether a series' own look (colour or greys) follows you to your other devices. -->
+    <string name="settings_look_follows">Look</string>
+    <!-- Row: when chapter progress goes to the reading trackers. -->
+    <string name="settings_send_progress_after">Send progress after</string>
+    <!-- Row: which chapter progress wins when a tracker and this device disagree. -->
+    <string name="settings_when_trackers_disagree">When trackers disagree</string>
     <!-- Row: whether a new chapter of a series on your Reading list sends a notification. -->
     <string name="settings_chapter_notifications">New chapters</string>
     <!-- Row: which Home the app opens at while it is for watching and reading. -->

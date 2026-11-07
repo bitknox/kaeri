@@ -27,6 +27,7 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["reading", "manga"], "direction"),
     (&["reading", "manga"], "colour"),
     (&["reading", "manga"], "look"),
+    (&["reading", "webtoon"], "mode"),
     (&["reading", "novel"], "mode"),
     (&["reading", "novel"], "look"),
     (&["reading", "novel"], "font"),

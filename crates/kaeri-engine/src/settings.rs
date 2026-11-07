@@ -67,11 +67,14 @@ pub fn set_setting(
             kaeri_core::settings::SettingValue::Int(now),
         );
     }
-    write_setting(table, file_key, value, engine, services, tx);
+    write_setting(table, file_key, settings::as_written(key, value), engine, services, tx);
     // The TV picker's Chromecast group comes and goes with its row.
     #[cfg(feature = "cast")]
     if key == SettingKey::CastTvs {
         services.casts.set_show_tvs(engine.config.effective().cast.show_tvs);
+    }
+    if key == SettingKey::WhenTrackersDisagree {
+        services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     }
     // What the file now holds, put in effect: titles are named the new way from here.
     if key == SettingKey::Titles {

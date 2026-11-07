@@ -235,6 +235,21 @@ settings-delete-after-reading = Delete chapters after reading
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
 
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = New chapters
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mode and direction
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Look
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Send progress after
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = When { -tracker-pl } disagree
+
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = New chapters
 

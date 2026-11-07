@@ -22,7 +22,7 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -557,6 +557,38 @@ impl Tracker for KitsuTracker {
             self.write_entry(&mut token, &user_id, "manga", kitsu_id, &attributes).await?;
         }
         Ok(ignored)
+    }
+
+    async fn remove_read(
+        &self,
+        anilist_id: AnilistId,
+    ) -> Result<ReadRemoval, kaeri_core::Error> {
+        let Some(kitsu_id) = self.read_mapping.as_ref().and_then(|m| m.kitsu_id(anilist_id))
+        else {
+            return Ok(ReadRemoval::Unmatched);
+        };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let user_id = self.user_id(&mut token).await?;
+        let Some(entry_id) = self.entry_id_of(&mut token, &user_id, "manga", kitsu_id).await?
+        else {
+            return Ok(ReadRemoval::NotOnList);
+        };
+        let url = format!("{}/library-entries/{entry_id}", self.site.api());
+        let response = self
+            .held
+            .send(self, &mut token, |t| self.request(reqwest::Method::DELETE, &url, t))
+            .await?;
+        match response.status() {
+            reqwest::StatusCode::UNAUTHORIZED => {
+                Err(kaeri_core::Error::Auth("kitsu rejected the token".into()))
+            }
+            reqwest::StatusCode::NOT_FOUND => Ok(ReadRemoval::NotOnList),
+            status if status.is_success() => Ok(ReadRemoval::Removed),
+            status => {
+                let body = response.text().await.unwrap_or_default();
+                Err(tracker_error(format!("kitsu answered {}", crate::said(status, &body))))
+            }
+        }
     }
 
     async fn accept_credentials(

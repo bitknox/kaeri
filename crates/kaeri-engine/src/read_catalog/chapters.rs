@@ -187,6 +187,16 @@ impl Read {
         })
     }
 
+    /// The chapter that came out new for someone caught up: nothing in progress, and the first
+    /// unread chapter is one a later answer listed. Someone still behind gets their place
+    /// instead.
+    pub fn new_for_you<'a>(&self, list: &'a [Kept]) -> Option<&'a Kept> {
+        if !self.any() || self.in_progress.is_some() {
+            return None;
+        }
+        self.unread(list).first().copied().filter(|c| c.seen_at.is_some())
+    }
+
     /// The chapters of `list` past the furthest read and not read.
     pub fn unread<'a>(&self, list: &'a [Kept]) -> Vec<&'a Kept> {
         list.iter()

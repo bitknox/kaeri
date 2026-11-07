@@ -666,6 +666,138 @@ public static partial class T
     /// <summary>A search filter: books from Taiwan.</summary>
     public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
 
+    /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
+    public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>A chapter row's state: the person read it.</summary>
+    public static string ReadingRowRead => Get("ReadingRowRead");
+
+    /// <summary>A chapter row's state: it came out since the person last read and is not read.</summary>
+    public static string ReadingRowNew => Get("ReadingRowNew");
+
+    /// <summary>A chapter row's state: it is kept on this device to read offline.</summary>
+    public static string ReadingRowDownloaded => Get("ReadingRowDownloaded");
+
+    /// <summary>A chapter row's state: it is read from the source and nothing of it is on this device.</summary>
+    public static string ReadingRowNotDownloaded => Get("ReadingRowNotDownloaded");
+
+    /// <summary>A chapter row's state: a file in one of the person's folders, or one already on the device.</summary>
+    public static string ReadingRowOnDevice => Get("ReadingRowOnDevice");
+
+    /// <summary>A chapter row's state: it waits its turn to download.</summary>
+    public static string ReadingRowQueued => Get("ReadingRowQueued");
+
+    /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
+    public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
+
+    /// <summary>A chapter row's state while it downloads.</summary>
+    public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
+    public static string ReadingRowFailed => Get("ReadingRowFailed");
+
+    /// <summary>A chapter row's state: the page the person stopped on, of how many.</summary>
+    public static string ReadingRowPageOf(long page, long of) => Fill(Get("ReadingRowPageOf"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state: the page the person stopped on, when the length isn't known.</summary>
+    public static string ReadingRowPage(long page) => Fill(Get("ReadingRowPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A novel's chapter row: how far into it the person is.</summary>
+    public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: how long its pages are, for a file on the device.</summary>
+    public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</summary>
+    public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, under a minute ago.</summary>
+    public static string ReadingAgoNow => Get("ReadingAgoNow");
+
+    /// <summary>A chapter row: when it was read or came out, in minutes.</summary>
+    public static string ReadingAgoMinutes(long minutes) => Fill(Get("ReadingAgoMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, earlier today.</summary>
+    public static string ReadingAgoToday => Get("ReadingAgoToday");
+
+    /// <summary>A chapter row: when it was read or came out, the day before today.</summary>
+    public static string ReadingAgoYesterday => Get("ReadingAgoYesterday");
+
+    /// <summary>A chapter row: when it was read or came out, in days, under a week.</summary>
+    public static string ReadingAgoDays(long days) => Fill(GetPlural("ReadingAgoDays", days), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in weeks, under two months.</summary>
+    public static string ReadingAgoWeeks(long weeks) => Fill(GetPlural("ReadingAgoWeeks", weeks), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in months, under a year.</summary>
+    public static string ReadingAgoMonths(long months) => Fill(GetPlural("ReadingAgoMonths", months), ("months", months.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in years.</summary>
+    public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The tracker took the series off its list.</summary>
+    public static string ReadingRemovedFrom(string tracker) => Fill(Get("ReadingRemovedFrom"), ("tracker", tracker));
+
+    /// <summary>The tracker's list did not hold the series, so there was nothing to remove.</summary>
+    public static string ReadingRemovedNotThere(string tracker) => Fill(Get("ReadingRemovedNotThere"), ("tracker", tracker));
+
+    /// <summary>The app never learned which of the tracker's entries this series is, so it asked nothing.</summary>
+    public static string ReadingRemovedUnmatched(string tracker) => Fill(Get("ReadingRemovedUnmatched"), ("tracker", tracker));
+
+    /// <summary>The tracker could not take the series off. The reason follows.</summary>
+    public static string ReadingRemovedFailed(string tracker) => Fill(Get("ReadingRemovedFailed"), ("tracker", tracker));
+
+    /// <summary>Why a removal failed: the tracker turned the sign-in away.</summary>
+    public static string ReadingRemovedSignIn(string tracker) => Fill(Get("ReadingRemovedSignIn"), ("tracker", tracker));
+
+    /// <summary>The source answered the search and has no series by the series' names.</summary>
+    public static string ReadingMissNoSeries => Get("ReadingMissNoSeries");
+
+    /// <summary>The source has failed every ask since this time of day, in the person's zone.</summary>
+    public static string ReadingMissDownSince(string time) => Fill(Get("ReadingMissDownSince"), ("time", time));
+
+    /// <summary>The source has failed every ask, since a time on another day or not known.</summary>
+    public static string ReadingMissDown => Get("ReadingMissDown");
+
+    /// <summary>How many parts of a light novel are downloaded.</summary>
+    public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What the downloads take up on this device.</summary>
+    public static string ReadingDlSize(string size) => Fill(Get("ReadingDlSize"), ("size", size));
+
+    /// <summary>How many of the downloaded chapters are read, which Delete read clears.</summary>
+    public static string ReadingDlRead(long count) => Fill(Get("ReadingDlRead"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The chapter downloading now.</summary>
+    public static string ReadingDlChapter(string chapter) => Fill(Get("ReadingDlChapter"), ("chapter", chapter));
+
+    /// <summary>How far the chapter downloading now has come.</summary>
+    public static string ReadingDlPages(long done, long total) => Fill(Get("ReadingDlPages"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn after the one downloading.</summary>
+    public static string ReadingDlMoreQueued(long count) => Fill(Get("ReadingDlMoreQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn, none downloaded yet.</summary>
+    public static string ReadingDlQueued(long count) => Fill(Get("ReadingDlQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters that wait for Wi-Fi to download.</summary>
+    public static string ReadingDlWaitsWifi => Get("ReadingDlWaitsWifi");
+
+    /// <summary>A chapter that failed. The reason follows as the next part.</summary>
+    public static string ReadingDlFailed(string chapter) => Fill(Get("ReadingDlFailed"), ("chapter", chapter));
+
+    /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
+    public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
+
+    /// <summary>The chapters download only on Wi-Fi, as the settings say.</summary>
+    public static string ReadingEstimateWifi => Get("ReadingEstimateWifi");
+
+    /// <summary>The device is on mobile data, and the settings let chapters download on it.</summary>
+    public static string ReadingEstimateMobile => Get("ReadingEstimateMobile");
+
+    /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
+    public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -5455,6 +5587,9 @@ public static partial class T
     /// <summary>What the address answered, before the sign-in.</summary>
     public static string SourcesFoundServer(string kind) => Fill(Get("SourcesFoundServer"), ("kind", kind));
 
+    /// <summary>What the server held once signed in, when it said how many series it lists.</summary>
+    public static string SourcesFoundServerSeries(string kind, long n) => Fill(GetPlural("SourcesFoundServerSeries", n), ("kind", kind), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>While the address is tried.</summary>
     public static string BookServerLooking => Get("BookServerLooking");
 
@@ -5568,6 +5703,9 @@ public static partial class T
 
     /// <summary>The line over browsing: what is shown, and where the list comes from.</summary>
     public static string ReadSearchBrowseLine(string what) => Fill(Get("ReadSearchBrowseLine"), ("what", what));
+
+    /// <summary>Over reading's results once every result is listed: how many series AniList found.</summary>
+    public static string ReadSearchTotal(long n) => Fill(GetPlural("ReadSearchTotal", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search couldn't ask AniList.</summary>
     public static string ReadSearchFailed => Get("ReadSearchFailed");
@@ -5832,6 +5970,33 @@ public static partial class T
 
     /// <summary>Under the group: what stays on this device.</summary>
     public static string SettingsFollowFooter(string device) => Fill(Get("SettingsFollowFooter"), ("device", device));
+
+    /// <summary>Line under Look in Series settings that follow you.</summary>
+    public static string SettingsLookFollowsNote => Get("SettingsLookFollowsNote");
+
+    /// <summary>Value of New chapters in Downloads: the series on the Reading list.</summary>
+    public static string SettingsNewChaptersReading => Get("SettingsNewChaptersReading");
+
+    /// <summary>Line under New chapters in Downloads.</summary>
+    public static string SettingsNewChaptersNote => Get("SettingsNewChaptersNote");
+
+    /// <summary>Group in Accounts: how reading progress goes to the trackers.</summary>
+    public static string SettingsProgressGroup => Get("SettingsProgressGroup");
+
+    /// <summary>Value of Send progress after: as each chapter counts as read.</summary>
+    public static string SettingsProgressChapter => Get("SettingsProgressChapter");
+
+    /// <summary>Value of Send progress after: once, when the reader closes.</summary>
+    public static string SettingsProgressClose => Get("SettingsProgressClose");
+
+    /// <summary>Value of When trackers disagree: the higher chapter wins.</summary>
+    public static string SettingsDisagreeFurthest => Get("SettingsDisagreeFurthest");
+
+    /// <summary>Value of When trackers disagree: the newest change wins, even a lower chapter.</summary>
+    public static string SettingsDisagreeLatest => Get("SettingsDisagreeLatest");
+
+    /// <summary>Line under When trackers disagree.</summary>
+    public static string SettingsDisagreeNote => Get("SettingsDisagreeNote");
 
     /// <summary>Line under Keep next chapters ready.</summary>
     public static string SettingsKeepChaptersReadyNote => Get("SettingsKeepChaptersReadyNote");
@@ -6744,6 +6909,21 @@ public static partial class T
 
     /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
     public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
+
+    /// <summary>Row in Downloads: which series' new chapters download by themselves.</summary>
+    public static string SettingsNewChaptersDownload => Get("SettingsNewChaptersDownload");
+
+    /// <summary>Row: whether a series' own reader mode and direction follow you to your other devices.</summary>
+    public static string SettingsModeFollows => Get("SettingsModeFollows");
+
+    /// <summary>Row: whether a series' own look (colour or greys) follows you to your other devices.</summary>
+    public static string SettingsLookFollows => Get("SettingsLookFollows");
+
+    /// <summary>Row: when chapter progress goes to the reading trackers.</summary>
+    public static string SettingsSendProgressAfter => Get("SettingsSendProgressAfter");
+
+    /// <summary>Row: which chapter progress wins when a tracker and this device disagree.</summary>
+    public static string SettingsWhenTrackersDisagree => Get("SettingsWhenTrackersDisagree");
 
     /// <summary>Row: whether a new chapter of a series on your Reading list sends a notification.</summary>
     public static string SettingsChapterNotifications => Get("SettingsChapterNotifications");
@@ -10051,6 +10231,57 @@ public static partial class T
         ["ReadingOriginKorea"] = "Korea",
         ["ReadingOriginChina"] = "China",
         ["ReadingOriginTaiwan"] = "Taiwan",
+        ["ReadingChapterTitled"] = "Chapter {chapter} · {title}",
+        ["ReadingRowRead"] = "Read",
+        ["ReadingRowNew"] = "New",
+        ["ReadingRowDownloaded"] = "Downloaded",
+        ["ReadingRowNotDownloaded"] = "Not downloaded",
+        ["ReadingRowOnDevice"] = "On this device",
+        ["ReadingRowQueued"] = "Queued",
+        ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
+        ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowFailed"] = "Couldn't download",
+        ["ReadingRowPageOf"] = "Page {page} of {of}",
+        ["ReadingRowPage"] = "Page {page}",
+        ["ReadingRowPercent"] = "{percent}%",
+        ["ReadingRowPages_one"] = "1 page",
+        ["ReadingRowPages_other"] = "{n} pages",
+        ["ReadingRowVersions_one"] = "1 version",
+        ["ReadingRowVersions_other"] = "{n} versions",
+        ["ReadingAgoNow"] = "just now",
+        ["ReadingAgoMinutes"] = "{minutes} min ago",
+        ["ReadingAgoToday"] = "today",
+        ["ReadingAgoYesterday"] = "yesterday",
+        ["ReadingAgoDays_one"] = "1 day ago",
+        ["ReadingAgoDays_other"] = "{days} days ago",
+        ["ReadingAgoWeeks_one"] = "1 week ago",
+        ["ReadingAgoWeeks_other"] = "{weeks} weeks ago",
+        ["ReadingAgoMonths_one"] = "1 month ago",
+        ["ReadingAgoMonths_other"] = "{months} months ago",
+        ["ReadingAgoYears_one"] = "1 year ago",
+        ["ReadingAgoYears_other"] = "{years} years ago",
+        ["ReadingRemovedFrom"] = "Removed from {tracker}",
+        ["ReadingRemovedNotThere"] = "Wasn't on your {tracker} list",
+        ["ReadingRemovedUnmatched"] = "Not matched on {tracker}, so nothing changed there",
+        ["ReadingRemovedFailed"] = "Still on your {tracker} list",
+        ["ReadingRemovedSignIn"] = "Sign in to {tracker} again, then try once more.",
+        ["ReadingMissNoSeries"] = "No series with this name",
+        ["ReadingMissDownSince"] = "Not answering since {time}",
+        ["ReadingMissDown"] = "Not answering",
+        ["ReadingDlParts_one"] = "1 part",
+        ["ReadingDlParts_other"] = "{count} parts",
+        ["ReadingDlSize"] = "{size}",
+        ["ReadingDlRead"] = "{count} read",
+        ["ReadingDlChapter"] = "Chapter {chapter}",
+        ["ReadingDlPages"] = "{done} of {total} pages",
+        ["ReadingDlMoreQueued"] = "{count} more queued",
+        ["ReadingDlQueued"] = "{count} queued",
+        ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
+        ["ReadingEstimateSize"] = "About {size}",
+        ["ReadingEstimateWifi"] = "over Wi-Fi",
+        ["ReadingEstimateMobile"] = "over mobile data",
+        ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -11702,6 +11933,8 @@ public static partial class T
         ["BookAddServerTitle"] = "Add a server",
         ["BookAddServerButton"] = "Add server",
         ["SourcesFoundServer"] = "Found a {kind} server",
+        ["SourcesFoundServerSeries_one"] = "Found a {kind} server with 1 series",
+        ["SourcesFoundServerSeries_other"] = "Found a {kind} server with {n} series",
         ["BookServerLooking"] = "Looking at this address…",
         ["BookServerNote"] = "Kaeri sends your reading progress back to this server. The password stays in the Keychain.",
         ["BookSourcesFolders"] = "Folders",
@@ -11743,6 +11976,8 @@ public static partial class T
         ["SearchOtherScope_other"] = "{n} matches in {scope}",
         ["SearchShowThem"] = "Show them",
         ["ReadSearchBrowseLine"] = "{what} · from AniList",
+        ["ReadSearchTotal_one"] = "1 series from AniList",
+        ["ReadSearchTotal_other"] = "{n} series from AniList",
         ["ReadSearchFailed"] = "Couldn't search",
         ["ReadSearchNothing"] = "Nothing found for {query}",
         ["ReadSearchNothingBrowse"] = "Nothing matches these filters",
@@ -11818,7 +12053,7 @@ public static partial class T
         ["SettingsGroupShows"] = "Shows",
         ["SettingsAsideReading"] = "Reader defaults are where every series starts. A series you change in the reader keeps its own choices.",
         ["SettingsReaderDefaults"] = "Reader defaults",
-        ["SettingsReaderDefaultsFooter"] = "A series you change keeps its own mode, direction and colour.",
+        ["SettingsReaderDefaultsFooter"] = "A series you change keeps its own mode, direction and look.",
         ["SettingsReaderManga"] = "Manga",
         ["SettingsReaderWebtoons"] = "Webtoons",
         ["SettingsReaderWebtoonsNote"] = "Webtoons always open as a long strip",
@@ -11835,6 +12070,15 @@ public static partial class T
         ["SettingsFollowMode"] = "Mode, direction and colour",
         ["SettingsFollowModeNote"] = "A series you change reads the same on your other devices",
         ["SettingsFollowFooter"] = "Text size, margins, tap zones and refresh stay on this {device}.",
+        ["SettingsLookFollowsNote"] = "Colour or greys",
+        ["SettingsNewChaptersReading"] = "Series on Reading",
+        ["SettingsNewChaptersNote"] = "A series being read also keeps its next chapters ready",
+        ["SettingsProgressGroup"] = "Progress",
+        ["SettingsProgressChapter"] = "A chapter is read",
+        ["SettingsProgressClose"] = "Closing the reader",
+        ["SettingsDisagreeFurthest"] = "Keep the furthest",
+        ["SettingsDisagreeLatest"] = "The latest change",
+        ["SettingsDisagreeNote"] = "Status and score follow the latest change",
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
@@ -12150,6 +12394,11 @@ public static partial class T
         ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
         ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
         ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
+        ["SettingsNewChaptersDownload"] = "New chapters",
+        ["SettingsModeFollows"] = "Mode and direction",
+        ["SettingsLookFollows"] = "Look",
+        ["SettingsSendProgressAfter"] = "Send progress after",
+        ["SettingsWhenTrackersDisagree"] = "When trackers disagree",
         ["SettingsChapterNotifications"] = "New chapters",
         ["SettingsOpenAt"] = "Open at",
         ["SettingsSeedAfter"] = "Seed after watching",

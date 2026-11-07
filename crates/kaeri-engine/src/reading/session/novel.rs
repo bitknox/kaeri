@@ -11,7 +11,10 @@
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
+    time::Duration,
 };
+
+use tokio::time::Instant;
 
 use kaeri_books::Limits;
 use kaeri_core::books::{ChapterContent, ChapterId, WorkId};
@@ -64,6 +67,42 @@ pub(super) struct Open {
     pub first_linear: u32,
     pub last_linear: u32,
     pub spine_len: u32,
+    /// Each spine document's words.
+    pub words: Vec<u32>,
+    /// The person's pace in words a minute.
+    pub pace: u32,
+    /// The last page turned to, and when: a turn to the next page teaches the pace.
+    pub turned: Option<(Instant, u32, u32)>,
+}
+
+/// Where the person's reading pace is kept, in words a minute.
+const PACE: &str = "read:pace";
+/// The pace until page turns teach the person's own: an adult reading fiction.
+pub(crate) const DEFAULT_PACE: u32 = 230;
+/// A page read faster or slower than this is a skim or a pause, and teaches nothing.
+const PAGE_TIME: std::ops::RangeInclusive<Duration> =
+    Duration::from_secs(3)..=Duration::from_secs(600);
+
+/// The person's pace, as page turns taught it.
+pub(super) fn pace(store: &kaeri_store::Store) -> u32 {
+    store
+        .get_meta_text(PACE)
+        .ok()
+        .flatten()
+        .and_then(|t| t.trim().parse::<u32>().ok())
+        .filter(|p| (50..=1_500).contains(p))
+        .unwrap_or(DEFAULT_PACE)
+}
+
+/// The pace after a page of `words` read in `took`: a slow-moving average, so one page read
+/// while distracted barely moves it. `None` for a page that teaches nothing.
+pub(super) fn learnt(pace: u32, words: u32, took: Duration) -> Option<u32> {
+    if words == 0 || !PAGE_TIME.contains(&took) {
+        return None;
+    }
+    let sample = (f64::from(words) * 60.0 / took.as_secs_f64()).clamp(50.0, 1_500.0);
+    let next = (f64::from(pace) * 0.85 + sample * 0.15).round() as u32;
+    Some(next.clamp(50, 1_500))
 }
 
 impl Open {
@@ -163,6 +202,7 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
         .map(|row| ShelfChapter {
             id: row.id,
             label: row.title.clone().filter(|t| !t.is_empty()).unwrap_or(row.label),
+            title: None,
             volume: row.volume,
             path: PathBuf::new(),
             format: SOURCE.into(),
@@ -354,9 +394,11 @@ impl Session {
             spine: book
                 .spine
                 .iter()
-                .map(|(path, linear)| NovelSpineItem {
+                .enumerate()
+                .map(|(i, (path, linear))| NovelSpineItem {
                     url: novels.url(self.id, path),
                     linear: *linear,
+                    words: book.words.get(i).copied().unwrap_or(0),
                 })
                 .collect(),
             toc: book
@@ -379,6 +421,7 @@ impl Session {
             count_key: count_key.clone(),
             counted: counted.clone(),
             render_dir: render_dir.as_ref().map(|d| d.display().to_string()),
+            words_per_minute: pace(&cx.services.store),
         };
         self.mode = if self.layers.word(Key::Mode) == "scrolled" && !self.surface.eink {
             ReaderMode::Scrolled
@@ -399,6 +442,9 @@ impl Session {
             cjk,
             render_dir,
             spine_len,
+            pace: view.words_per_minute,
+            words: book.words,
+            turned: None,
         });
         self.pages_total = self.novel.as_ref().map_or(0, Open::total);
         // The resumed notice waits for the first page, which says the page number.
@@ -472,10 +518,30 @@ impl Session {
         pages: u32,
         how: TurnHow,
     ) {
-        let Some(open) = self.novel.as_ref() else { return };
+        let Some(open) = self.novel.as_mut() else { return };
         if pos.spine >= open.spine_len {
             return;
         }
+        // A turn to the next page of the same document teaches the pace.
+        let now = Instant::now();
+        if how != TurnHow::Jump
+            && pages > 0
+            && let Some((at, spine, before)) = open.turned
+            && spine == pos.spine
+            && page == before + 1
+        {
+            let words = open.words.get(pos.spine as usize).copied().unwrap_or(0) / pages;
+            if let Some(pace) = learnt(open.pace, words, now.duration_since(at))
+                && pace != open.pace
+            {
+                open.pace = pace;
+                if let Err(e) = cx.services.store.set_meta_text(PACE, &pace.to_string()) {
+                    tracing::debug!(error = %e, "the reading pace was not kept");
+                }
+            }
+        }
+        open.turned = Some((now, pos.spine, page));
+        let open = &*open;
         let last_doc = pos.spine >= open.last_linear;
         if pages > 0 && page >= pages {
             // The end page: read at once.

@@ -422,6 +422,18 @@ pub trait Tracker: Send + Sync {
         Ok(Vec::new())
     }
 
+    /// Take a manga or novel off this tracker's list. Only the person asks for this: sync never
+    /// removes anything. Trackers without a reading list refuse.
+    async fn remove_read(
+        &self,
+        _anilist_id: crate::ids::AnilistId,
+    ) -> Result<ReadRemoval, crate::Error> {
+        Err(crate::Error::Tracker {
+            tracker: self.id().to_owned(),
+            message: "this tracker keeps no reading list".into(),
+        })
+    }
+
     /// Drop any in-memory credential.
     ///
     /// Signing out clears the stored token, but a tracker that cached one at construction would
@@ -523,6 +535,16 @@ impl TrackOp {
                 | Self::SetReadScore { .. }
         )
     }
+}
+
+/// What taking a title off a tracker's reading list did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadRemoval {
+    Removed,
+    /// The list did not hold it.
+    NotOnList,
+    /// Which of the tracker's entries this is was never learned, so nothing was asked.
+    Unmatched,
 }
 
 /// One manga's or novel's state on a tracker.

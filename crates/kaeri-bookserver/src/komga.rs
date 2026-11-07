@@ -197,7 +197,8 @@ pub async fn sign_in(
     let series = http
         .json::<Page<serde::de::IgnoredAny>>("api/v1/series?size=1")
         .await
-        .map_or(0, |p| p.total);
+        .ok()
+        .map(|p| p.total);
     Ok(SignedIn {
         kind: crate::Kind::Komga,
         name: "Komga".into(),

@@ -695,6 +695,166 @@ reading-origin-china = China
 # A search filter: books from Taiwan.
 reading-origin-taiwan = Taiwan
 
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Chapter { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Read
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = New
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Downloaded
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = Not downloaded
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = On this device
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = Queued
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = Queued · waits for Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = Couldn't download
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Page { $page } of { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Page { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] 1 page
+       *[other] { $n } pages
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] 1 version
+       *[other] { $n } versions
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = just now
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } min ago
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = today
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = yesterday
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] 1 day ago
+       *[other] { $days } days ago
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] 1 week ago
+       *[other] { $weeks } weeks ago
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] 1 month ago
+       *[other] { $months } months ago
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] 1 year ago
+       *[other] { $years } years ago
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Removed from { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = Wasn't on your { $tracker } list
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Not matched on { $tracker }, so nothing changed there
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = Still on your { $tracker } list
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = Sign in to { $tracker } again, then try once more.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = No series with this name
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = Not answering since { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Not answering
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] 1 part
+       *[other] { $count } parts
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = { $count } read
+
+# The chapter downloading now.
+reading-dl-chapter = Chapter { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done } of { $total } pages
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = { $count } more queued
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = { $count } queued
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = waits for Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = Chapter { $chapter } couldn't download
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = About { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = over Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = over mobile data
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = waits for Wi-Fi
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
 
@@ -8337,6 +8497,13 @@ book-add-server-button = Add server
 # What the address answered, before the sign-in.
 sources-found-server = Found a { $kind } server
 
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] Found a { $kind } server with 1 series
+       *[other] Found a { $kind } server with { $n } series
+    }
+
 # While the address is tried.
 book-server-looking = Looking at this address…
 
@@ -8462,6 +8629,13 @@ search-show-them = Show them
 
 # The line over browsing: what is shown, and where the list comes from.
 read-search-browse-line = { $what } · from AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] 1 series from AniList
+       *[other] { $n } series from AniList
+    }
 
 # Search couldn't ask AniList.
 read-search-failed = Couldn't search
@@ -8693,7 +8867,7 @@ settings-aside-reading = Reader defaults are where every series starts. A series
 settings-reader-defaults = Reader defaults
 
 # Under the reader defaults.
-settings-reader-defaults-footer = A series you change keeps its own mode, direction and colour.
+settings-reader-defaults-footer = A series you change keeps its own mode, direction and look.
 
 # Row: manga's reader default.
 settings-reader-manga = Manga
@@ -8742,6 +8916,33 @@ settings-follow-mode-note = A series you change reads the same on your other dev
 
 # Under the group: what stays on this device.
 settings-follow-footer = Text size, margins, tap zones and refresh stay on this { $device }.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Colour or greys
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Series on Reading
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = A series being read also keeps its next chapters ready
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Progress
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = A chapter is read
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Closing the reader
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Keep the furthest
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = The latest change
+
+# Line under When trackers disagree.
+settings-disagree-note = Status and score follow the latest change
 
 # Line under Keep next chapters ready.
 settings-keep-chapters-ready-note = The next chapters of series on your Reading list
@@ -9698,6 +9899,21 @@ settings-delete-after-reading = Delete chapters after reading
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = New chapters
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mode and direction
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Look
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Send progress after
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = When trackers disagree
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = New chapters

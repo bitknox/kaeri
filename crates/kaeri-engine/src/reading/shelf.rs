@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 
 use kaeri_core::books::{ChapterId, ChapterKey, ChapterRange};
-use kaeri_model::reading::{ChapterReadState, ChapterRow};
+use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
 use kaeri_store::{Store, reading::ReadMarks, shelf::ShelfFile};
 
 /// One chapter and the file it reads from.
@@ -13,6 +13,8 @@ use kaeri_store::{Store, reading::ReadMarks, shelf::ShelfFile};
 pub struct ShelfChapter {
     pub id: ChapterId,
     pub label: String,
+    /// Its own title, when the source gave one that is more than the label again.
+    pub title: Option<String>,
     pub volume: Option<String>,
     pub path: PathBuf,
     /// `cbz`, `cbr`, `cb7`, `epub`, `pdf` or `folder`.
@@ -38,7 +40,7 @@ impl ShelfChapter {
                 ChapterReadState::Unread
             },
             number,
-            title: None,
+            title: self.title.clone(),
             volume: self.volume.clone(),
             published: None,
             pages: self.pages,
@@ -48,6 +50,7 @@ impl ShelfChapter {
             bookmarked: false,
             version_label: None,
             read_at: None,
+            line: Vec::new(),
         }
     }
 }
@@ -64,6 +67,71 @@ pub fn chapters(store: &Store, work: &str) -> Vec<ShelfChapter> {
         Vec::new()
     });
     order(files)
+}
+
+/// Name the downloaded chapters as their source does ("Episode 63", with its title), from the
+/// source's list as kept. A download knows only its chapter id until then; a file in a folder
+/// keeps its own label.
+pub fn name_downloads(
+    chapters: &mut [ShelfChapter],
+    list: &[crate::read_catalog::chapters::Kept],
+) {
+    for chapter in chapters.iter_mut().filter(|c| c.label == c.id.as_str()) {
+        let Some(kept) = list.iter().find(|k| k.id == chapter.id.as_str()) else { continue };
+        chapter.title = kept.own_title().map(str::to_owned);
+        chapter.label.clone_from(&kept.label);
+        if chapter.volume.is_none() {
+            chapter.volume.clone_from(&kept.volume);
+        }
+        chapter.pages = chapter.pages.or(kept.pages);
+    }
+}
+
+/// A work's files as the chapter list shows them, grouped by volume, with the person's reading
+/// marked: what a series with no source reads from.
+pub fn volumes(
+    store: &Store,
+    work: &str,
+    list: Option<&[crate::read_catalog::chapters::Kept]>,
+    now: i64,
+    zone: &jiff::tz::TimeZone,
+) -> Vec<VolumeGroup> {
+    let mut chapters = chapters(store, work);
+    if let Some(list) = list {
+        name_downloads(&mut chapters, list);
+    }
+    let marks = store.read_marks(work).unwrap_or_default();
+    let places = store.read_chapters(work).unwrap_or_default();
+    let mut groups: Vec<VolumeGroup> = Vec::new();
+    for chapter in &chapters {
+        let mut row = chapter.row(&marks);
+        if let Some(place) = places.iter().find(|p| p.chapter == chapter.id.as_str()) {
+            row.read_at = place.read_at.filter(|_| marks.is_read(chapter.id.as_str()));
+            if let (ChapterReadState::Unread, Some(page)) = (row.state, place.last_page) {
+                row.state = ChapterReadState::InProgress { page, of: place.of_pages };
+            }
+        }
+        match groups.iter_mut().find(|g| g.volume == chapter.volume) {
+            Some(group) => group.chapters.push(row),
+            None => groups.push(VolumeGroup {
+                volume: chapter.volume.clone(),
+                title: None,
+                chapters: vec![row],
+                all_read: false,
+            }),
+        }
+    }
+    for group in &mut groups {
+        group.all_read =
+            group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
+    }
+    crate::read_catalog::rows::fill(
+        &mut groups,
+        crate::read_catalog::rows::Kept::Device,
+        now,
+        zone,
+    );
+    groups
 }
 
 fn order(files: Vec<ShelfFile>) -> Vec<ShelfChapter> {
@@ -98,6 +166,7 @@ fn order(files: Vec<ShelfFile>) -> Vec<ShelfChapter> {
             ShelfChapter {
                 id,
                 label: file.label,
+                title: None,
                 volume: file.volume,
                 path: PathBuf::from(file.path),
                 format: file.format,
@@ -144,5 +213,28 @@ mod tests {
             ]),
             ["v1/1", "v2/1", "v2/2"]
         );
+    }
+
+    #[test]
+    fn a_download_reads_as_its_source_names_it_and_a_folder_file_keeps_its_label() {
+        let download = ShelfFile {
+            path: "/downloads/63.cbz".into(),
+            chapter: Some("63".into()),
+            label: "63".into(),
+            ..file("63", None)
+        };
+        let mut chapters = order(vec![download, file("Chapter 64", None)]);
+        let list: Vec<crate::read_catalog::chapters::Kept> = serde_json::from_str(
+            r#"[{"id":"63","source_ref":"s-63","label":"Episode 63","number":"63",
+                 "volume":"7","title":"The Lantern Ferry","pages":19},
+                {"id":"64","source_ref":"s-64","label":"Episode 64","number":"64"}]"#,
+        )
+        .unwrap();
+        name_downloads(&mut chapters, &list);
+        let row = chapters[0].row(&ReadMarks::default());
+        assert_eq!(row.label, "Episode 63");
+        assert_eq!(row.title.as_deref(), Some("The Lantern Ferry"));
+        assert_eq!((row.volume.as_deref(), row.pages), (Some("7"), Some(19)));
+        assert_eq!(chapters[1].label, "Chapter 64", "a folder's file is named by its file");
     }
 }

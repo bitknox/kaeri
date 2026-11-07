@@ -1090,6 +1090,226 @@ pub fn reading_origin_taiwan() -> String {
     text("reading-origin-taiwan", &[])
 }
 
+/// Under a This week cell: the chapter that came out that day, with its own title.
+pub fn reading_chapter_titled(chapter: &str, title: &str) -> String {
+    text("reading-chapter-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// A chapter row's state: the person read it.
+pub fn reading_row_read() -> String {
+    text("reading-row-read", &[])
+}
+
+/// A chapter row's state: it came out since the person last read and is not read.
+pub fn reading_row_new() -> String {
+    text("reading-row-new", &[])
+}
+
+/// A chapter row's state: it is kept on this device to read offline.
+pub fn reading_row_downloaded() -> String {
+    text("reading-row-downloaded", &[])
+}
+
+/// A chapter row's state: it is read from the source and nothing of it is on this device.
+pub fn reading_row_not_downloaded() -> String {
+    text("reading-row-not-downloaded", &[])
+}
+
+/// A chapter row's state: a file in one of the person's folders, or one already on the device.
+pub fn reading_row_on_device() -> String {
+    text("reading-row-on-device", &[])
+}
+
+/// A chapter row's state: it waits its turn to download.
+pub fn reading_row_queued() -> String {
+    text("reading-row-queued", &[])
+}
+
+/// A chapter row's state: it waits to download until the device is on Wi-Fi.
+pub fn reading_row_waits_wifi() -> String {
+    text("reading-row-waits-wifi", &[])
+}
+
+/// A chapter row's state while it downloads.
+pub fn reading_row_downloading(done: i64, total: i64) -> String {
+    text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter row's state: the download failed. The reason follows as the next part.
+pub fn reading_row_failed() -> String {
+    text("reading-row-failed", &[])
+}
+
+/// A chapter row's state: the page the person stopped on, of how many.
+pub fn reading_row_page_of(page: i64, of: i64) -> String {
+    text("reading-row-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+}
+
+/// A chapter row's state: the page the person stopped on, when the length isn't known.
+pub fn reading_row_page(page: i64) -> String {
+    text("reading-row-page", &[("page", Arg::Int(page))])
+}
+
+/// A novel's chapter row: how far into it the person is.
+pub fn reading_row_percent(percent: i64) -> String {
+    text("reading-row-percent", &[("percent", Arg::Int(percent))])
+}
+
+/// A chapter row: how long its pages are, for a file on the device.
+pub fn reading_row_pages(n: i64) -> String {
+    text("reading-row-pages", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+pub fn reading_row_versions(n: i64) -> String {
+    text("reading-row-versions", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: when it was read or came out, under a minute ago.
+pub fn reading_ago_now() -> String {
+    text("reading-ago-now", &[])
+}
+
+/// A chapter row: when it was read or came out, in minutes.
+pub fn reading_ago_minutes(minutes: i64) -> String {
+    text("reading-ago-minutes", &[("minutes", Arg::Int(minutes))])
+}
+
+/// A chapter row: when it was read or came out, earlier today.
+pub fn reading_ago_today() -> String {
+    text("reading-ago-today", &[])
+}
+
+/// A chapter row: when it was read or came out, the day before today.
+pub fn reading_ago_yesterday() -> String {
+    text("reading-ago-yesterday", &[])
+}
+
+/// A chapter row: when it was read or came out, in days, under a week.
+pub fn reading_ago_days(days: i64) -> String {
+    text("reading-ago-days", &[("days", Arg::Int(days))])
+}
+
+/// A chapter row: when it was read or came out, in weeks, under two months.
+pub fn reading_ago_weeks(weeks: i64) -> String {
+    text("reading-ago-weeks", &[("weeks", Arg::Int(weeks))])
+}
+
+/// A chapter row: when it was read or came out, in months, under a year.
+pub fn reading_ago_months(months: i64) -> String {
+    text("reading-ago-months", &[("months", Arg::Int(months))])
+}
+
+/// A chapter row: when it was read or came out, in years.
+pub fn reading_ago_years(years: i64) -> String {
+    text("reading-ago-years", &[("years", Arg::Int(years))])
+}
+
+/// The tracker took the series off its list.
+pub fn reading_removed_from(tracker: &str) -> String {
+    text("reading-removed-from", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker's list did not hold the series, so there was nothing to remove.
+pub fn reading_removed_not_there(tracker: &str) -> String {
+    text("reading-removed-not-there", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The app never learned which of the tracker's entries this series is, so it asked nothing.
+pub fn reading_removed_unmatched(tracker: &str) -> String {
+    text("reading-removed-unmatched", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker could not take the series off. The reason follows.
+pub fn reading_removed_failed(tracker: &str) -> String {
+    text("reading-removed-failed", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Why a removal failed: the tracker turned the sign-in away.
+pub fn reading_removed_sign_in(tracker: &str) -> String {
+    text("reading-removed-sign-in", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The source answered the search and has no series by the series' names.
+pub fn reading_miss_no_series() -> String {
+    text("reading-miss-no-series", &[])
+}
+
+/// The source has failed every ask since this time of day, in the person's zone.
+pub fn reading_miss_down_since(time: &str) -> String {
+    text("reading-miss-down-since", &[("time", Arg::Text(time))])
+}
+
+/// The source has failed every ask, since a time on another day or not known.
+pub fn reading_miss_down() -> String {
+    text("reading-miss-down", &[])
+}
+
+/// How many parts of a light novel are downloaded.
+pub fn reading_dl_parts(count: i64) -> String {
+    text("reading-dl-parts", &[("count", Arg::Int(count))])
+}
+
+/// What the downloads take up on this device.
+pub fn reading_dl_size(size: &str) -> String {
+    text("reading-dl-size", &[("size", Arg::Text(size))])
+}
+
+/// How many of the downloaded chapters are read, which Delete read clears.
+pub fn reading_dl_read(count: i64) -> String {
+    text("reading-dl-read", &[("count", Arg::Int(count))])
+}
+
+/// The chapter downloading now.
+pub fn reading_dl_chapter(chapter: &str) -> String {
+    text("reading-dl-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How far the chapter downloading now has come.
+pub fn reading_dl_pages(done: i64, total: i64) -> String {
+    text("reading-dl-pages", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Chapters waiting their turn after the one downloading.
+pub fn reading_dl_more_queued(count: i64) -> String {
+    text("reading-dl-more-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters waiting their turn, none downloaded yet.
+pub fn reading_dl_queued(count: i64) -> String {
+    text("reading-dl-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters that wait for Wi-Fi to download.
+pub fn reading_dl_waits_wifi() -> String {
+    text("reading-dl-waits-wifi", &[])
+}
+
+/// A chapter that failed. The reason follows as the next part.
+pub fn reading_dl_failed(chapter: &str) -> String {
+    text("reading-dl-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+pub fn reading_estimate_size(size: &str) -> String {
+    text("reading-estimate-size", &[("size", Arg::Text(size))])
+}
+
+/// The chapters download only on Wi-Fi, as the settings say.
+pub fn reading_estimate_wifi() -> String {
+    text("reading-estimate-wifi", &[])
+}
+
+/// The device is on mobile data, and the settings let chapters download on it.
+pub fn reading_estimate_mobile() -> String {
+    text("reading-estimate-mobile", &[])
+}
+
+/// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+pub fn reading_estimate_waits_wifi() -> String {
+    text("reading-estimate-waits-wifi", &[])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -13370,6 +13590,11 @@ pub fn sources_found_server(kind: &str) -> String {
     text("sources-found-server", &[("kind", Arg::Text(kind))])
 }
 
+/// What the server held once signed in, when it said how many series it lists.
+pub fn sources_found_server_series(kind: &str, n: i64) -> String {
+    text("sources-found-server-series", &[("kind", Arg::Text(kind)), ("n", Arg::Int(n))])
+}
+
 /// While the address is tried.
 pub fn book_server_looking() -> String {
     text("book-server-looking", &[])
@@ -13558,6 +13783,11 @@ pub fn search_show_them() -> String {
 /// The line over browsing: what is shown, and where the list comes from.
 pub fn read_search_browse_line(what: &str) -> String {
     text("read-search-browse-line", &[("what", Arg::Text(what))])
+}
+
+/// Over reading's results once every result is listed: how many series AniList found.
+pub fn read_search_total(n: i64) -> String {
+    text("read-search-total", &[("n", Arg::Int(n))])
 }
 
 /// Search couldn't ask AniList.
@@ -13998,6 +14228,51 @@ pub fn settings_follow_mode_note() -> String {
 /// Under the group: what stays on this device.
 pub fn settings_follow_footer(device: &str) -> String {
     text("settings-follow-footer", &[("device", Arg::Text(device))])
+}
+
+/// Line under Look in Series settings that follow you.
+pub fn settings_look_follows_note() -> String {
+    text("settings-look-follows-note", &[])
+}
+
+/// Value of New chapters in Downloads: the series on the Reading list.
+pub fn settings_new_chapters_reading() -> String {
+    text("settings-new-chapters-reading", &[])
+}
+
+/// Line under New chapters in Downloads.
+pub fn settings_new_chapters_note() -> String {
+    text("settings-new-chapters-note", &[])
+}
+
+/// Group in Accounts: how reading progress goes to the trackers.
+pub fn settings_progress_group() -> String {
+    text("settings-progress-group", &[])
+}
+
+/// Value of Send progress after: as each chapter counts as read.
+pub fn settings_progress_chapter() -> String {
+    text("settings-progress-chapter", &[])
+}
+
+/// Value of Send progress after: once, when the reader closes.
+pub fn settings_progress_close() -> String {
+    text("settings-progress-close", &[])
+}
+
+/// Value of When trackers disagree: the higher chapter wins.
+pub fn settings_disagree_furthest() -> String {
+    text("settings-disagree-furthest", &[])
+}
+
+/// Value of When trackers disagree: the newest change wins, even a lower chapter.
+pub fn settings_disagree_latest() -> String {
+    text("settings-disagree-latest", &[])
+}
+
+/// Line under When trackers disagree.
+pub fn settings_disagree_note() -> String {
+    text("settings-disagree-note", &[])
 }
 
 /// Line under Keep next chapters ready.
@@ -15518,6 +15793,31 @@ pub fn settings_delete_after_reading() -> String {
 /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
 pub fn settings_series_choices_follow() -> String {
     text("settings-series-choices-follow", &[])
+}
+
+/// Row in Downloads: which series' new chapters download by themselves.
+pub fn settings_new_chapters_download() -> String {
+    text("settings-new-chapters-download", &[])
+}
+
+/// Row: whether a series' own reader mode and direction follow you to your other devices.
+pub fn settings_mode_follows() -> String {
+    text("settings-mode-follows", &[])
+}
+
+/// Row: whether a series' own look (colour or greys) follows you to your other devices.
+pub fn settings_look_follows() -> String {
+    text("settings-look-follows", &[])
+}
+
+/// Row: when chapter progress goes to the reading trackers.
+pub fn settings_send_progress_after() -> String {
+    text("settings-send-progress-after", &[])
+}
+
+/// Row: which chapter progress wins when a tracker and this device disagree.
+pub fn settings_when_trackers_disagree() -> String {
+    text("settings-when-trackers-disagree", &[])
 }
 
 /// Row: whether a new chapter of a series on your Reading list sends a notification.

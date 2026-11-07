@@ -219,6 +219,11 @@ pub struct ChapterRow {
     /// When it was read, Unix seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub read_at: Option<i64>,
+    /// The second line in words, as parts the row joins with " · ": "Read · 4 days ago ·
+    /// Downloaded", "New · yesterday", "Not downloaded". Never empty on a series page,
+    /// in Updates or in Downloads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -282,6 +287,31 @@ pub struct TrackerReadRow {
     /// "Chapter 10.5 goes to trackers as 10".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub split_note: Option<Msg>,
+}
+
+/// What taking a series off one tracker's list came to.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ListRemoval {
+    pub tracker: String,
+    pub outcome: ListRemovalOutcome,
+    /// In words, as parts the app joins with " · ": "Removed from AniList", "Still on your
+    /// Kitsu list · You're offline. ...".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ListRemovalOutcome {
+    Removed,
+    /// The list did not hold it.
+    NotOnList,
+    /// Which entry it is on that tracker was never learned, so nothing was asked.
+    Unmatched,
+    Failed {
+        failure: ReadingFailure,
+    },
 }
 
 /// How a work is matched on a tracker.
@@ -464,6 +494,11 @@ pub struct ReadWeekEntry {
     /// Expected from the series' rhythm, not seen yet.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub usually: bool,
+    /// The chapter that came out this day, in words: "Chapter 15", or "Chapter 15 · The Far
+    /// Shore" with its title. `None` for one only expected. The tile's `next` stays the
+    /// person's place.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chapter: Option<Msg>,
 }
 
 /// A part of reading's Home that loads on its own.
@@ -592,12 +627,48 @@ pub struct BookDownloadRow {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct StorageMeter {
+    /// The bytes of every downloaded chapter, for the storage summary beside the shows'.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub used: u64,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub free: u64,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub chapters: u32,
+    /// Of `used`, what chapters already read take up.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub read_bytes: u64,
+}
+
+/// One series on Downloads: what it has here and how it stands.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct BookDownloadSeries {
+    pub work: WorkId,
+    pub title: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover: Option<String>,
+    /// Chapters downloaded.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chapters: u32,
+    /// What its files take up, partly downloaded ones included.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub bytes: u64,
+    /// Downloaded chapters already read and not bookmarked: what Delete read clears.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub read: u32,
+    /// Chapters queued, waiting or downloading.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub queued: u32,
+    /// Chapters that failed; Retry asks for them again.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub failed: Vec<ChapterId>,
+    /// "6 chapters · 214 MB · 2 read", "Chapter 42 · 12 of 19 pages · 2 more queued", or the
+    /// failure and its cause. Parts joined with " · ".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
+    /// While a chapter downloads, how far: 0 to 1, for the ring.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress: Option<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -606,6 +677,27 @@ pub struct BookDownloadsView {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rows: Vec<BookDownloadRow>,
     pub meter: StorageMeter,
+    /// The rows by series, the one downloading first, then by when each last changed.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub series: Vec<BookDownloadSeries>,
+    /// The Reading section's total: "38 chapters · 1.1 GB". Empty with nothing downloaded.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub total: Vec<Msg>,
+}
+
+/// What downloading a choice of chapters will take: "About 62 MB · over Wi-Fi".
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DownloadEstimate {
+    pub work: WorkId,
+    pub pick: DownloadPick,
+    /// The chosen chapters not downloaded yet.
+    pub chapters: u32,
+    pub bytes: u64,
+    /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
+    /// left to download.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub line: Vec<Msg>,
 }
 
 /// A chapter the background check found, for the chapters notification channel.
@@ -907,11 +999,11 @@ pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) 
     Some(Msg::Reading(msg))
 }
 
-/// "Chapter 13 · page 9".
+/// "Chapter 13 · page 9", from the place as kept: pages count from 0 there, from 1 in words.
 pub fn chapter_page(chapter: &str, page: u32) -> Msg {
     Msg::Reading(ReadingMsg::ReadingChapterPage {
         chapter: chapter.to_owned(),
-        page: i64::from(page),
+        page: i64::from(page) + 1,
     })
 }
 
@@ -1066,6 +1158,11 @@ pub enum ReadingCommand {
         tracker: String,
         keep_local: bool,
     },
+    /// Take the series off every signed-in tracker's list and off the person's lists here.
+    /// Answered with [`ReadingEvent::RemovedFromLists`].
+    RemoveFromLists {
+        work: WorkId,
+    },
     /// The password goes to the sign-in call once and is dropped. Answered with the tracker
     /// sign-in events shows use.
     ConnectMangaUpdates {
@@ -1083,6 +1180,16 @@ pub enum ReadingCommand {
     DownloadDelete {
         work: WorkId,
         chapters: Vec<ChapterId>,
+    },
+    /// Delete read: the downloads of a series' read chapters, bookmarked ones spared.
+    DownloadDeleteRead {
+        work: WorkId,
+    },
+    /// What downloading `pick` will take, from what is kept, without asking the source.
+    /// Answered with [`ReadingEvent::DownloadEstimate`].
+    EstimateDownload {
+        work: WorkId,
+        pick: DownloadPick,
     },
     LoadDownloads,
     LoadExportTargets,
@@ -1145,10 +1252,13 @@ impl ReadingCommand {
             Self::LoadTracking { .. }
             | Self::ChooseMapping { .. }
             | Self::ResolveConflict { .. }
+            | Self::RemoveFromLists { .. }
             | Self::ConnectMangaUpdates { .. } => ReadingAbout::Tracking,
             Self::Download { .. }
             | Self::DownloadCancel { .. }
             | Self::DownloadDelete { .. }
+            | Self::DownloadDeleteRead { .. }
+            | Self::EstimateDownload { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
             Self::LoadExportTargets | Self::Prepare { .. } => ReadingAbout::Export,
             Self::LoadFeed | Self::SetFeed { .. } => ReadingAbout::Feed,
@@ -1190,6 +1300,10 @@ pub enum ReadingEvent {
         tiles: Vec<WorkTile>,
         has_more: bool,
         other_scope: Option<u32>,
+        /// How many series AniList found in all, on the last page only: AniList gives no true
+        /// count before it. `None` from the sources' own search.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        total: Option<u32>,
     },
     Series(Box<SeriesView>),
     Chapters {
@@ -1207,7 +1321,13 @@ pub enum ReadingEvent {
         work: WorkId,
         rows: Vec<TrackerReadRow>,
     },
+    /// One result per signed-in tracker that keeps a reading list.
+    RemovedFromLists {
+        work: WorkId,
+        results: Vec<ListRemoval>,
+    },
     Downloads(BookDownloadsView),
+    DownloadEstimate(DownloadEstimate),
     NewChapters(Vec<NewChapter>),
     ExportTargets(Vec<ExportTarget>),
     ExportProgress {
@@ -1296,7 +1416,7 @@ mod tests {
             count_words(Medium::Manga, Some(1), Some(1)).unwrap().english(),
             "1 chapter"
         );
-        assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 9");
+        assert_eq!(chapter_page("13", 8).english(), "Chapter 13 · page 9", "kept from 0");
         let filters = read_filters();
         assert_eq!(filters.statuses.len(), 5);
         assert!(!filters.genres.iter().any(|g| g == crate::search::ADULT_GENRE));

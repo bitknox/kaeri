@@ -32,7 +32,7 @@ use std::{
 
 use kaeri_core::{
     books::{ChapterContent, ChapterId, WorkId},
-    config::Config,
+    config::{Config, NewChapters},
 };
 use kaeri_model::{
     command::AppState,
@@ -92,8 +92,16 @@ pub struct Setup {
     pub hold: bool,
     /// The hold is for Wi-Fi: rows show it.
     pub wifi: bool,
+    /// The next chapters of what is read are kept downloaded: new chapters download for
+    /// some series.
     pub keep_ready: bool,
+    /// Which series' new chapters the update check queues.
+    pub new_chapters: NewChapters,
     pub delete_after: bool,
+    /// On mobile data, and chapters download on it.
+    pub mobile: bool,
+    /// Chapters download only on Wi-Fi, as the settings say.
+    pub wifi_only: bool,
 }
 
 impl Setup {
@@ -101,14 +109,26 @@ impl Setup {
         let reading = &config.reading;
         let wifi = network.constrained || (network.cellular && !reading.downloads_on_cellular);
         let away = matches!(phase, AppState::Background { .. });
+        let new_chapters = reading.new_chapters(new_chapters_default(edition));
         Self {
             hold: wifi || network.offline || away,
             wifi,
-            keep_ready: reading
-                .keep_chapters_ready
-                .unwrap_or(matches!(edition, AppEdition::ReadOnly)),
+            keep_ready: new_chapters != NewChapters::Off,
+            new_chapters,
             delete_after: reading.delete_after_reading,
+            mobile: network.cellular && !wifi && !network.offline,
+            wifi_only: !reading.downloads_on_cellular,
         }
+    }
+}
+
+/// Which series' new chapters download where the person has not said: the Reading list's in
+/// the e-reader edition, none elsewhere.
+pub fn new_chapters_default(edition: AppEdition) -> NewChapters {
+    if matches!(edition, AppEdition::ReadOnly) {
+        NewChapters::Reading
+    } else {
+        NewChapters::Off
     }
 }
 
@@ -240,16 +260,32 @@ impl BookDownloads {
                 .flatten()
                 .and_then(|kind| kind.title)
                 .unwrap_or_else(|| d.work.clone());
+            let state = state_of(d, wifi);
+            let mut chapter = chapter_row(d, read, bookmarked);
+            // A download row carries no dates, so the clock plays no part in its words.
+            let shown_as = ChapterRow { download: Some(state.clone()), ..chapter.clone() };
+            chapter.line = crate::read_catalog::rows::line(
+                &shown_as,
+                crate::read_catalog::rows::Kept::Source,
+                0,
+                &jiff::tz::TimeZone::UTC,
+            );
             shown.push(BookDownloadRow {
                 work: WorkId::new(d.work.clone()),
                 title,
-                chapter: chapter_row(d, read, bookmarked),
-                state: state_of(d, wifi),
+                chapter,
+                state,
             });
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
         let free = self.free().unwrap_or(0);
-        BookDownloadsView { rows: shown, meter: StorageMeter { used, free, chapters } }
+        let (series, read_bytes) = sizes::series(store, &rows, wifi);
+        BookDownloadsView {
+            rows: shown,
+            meter: StorageMeter { used, free, chapters, read_bytes },
+            series,
+            total: sizes::total(chapters, used),
+        }
     }
 
     /// Tell the screens how downloads stand.
@@ -407,6 +443,30 @@ impl BookDownloads {
         let removed = self.remove(store, work.as_str(), &ids, false, lent.clock.now());
         self.publish(store, &lent.tx);
         self.relist(lent, work.clone());
+        removed
+    }
+
+    /// Delete read: the downloads of a work's read chapters, bookmarked ones spared, whatever
+    /// the settings say.
+    pub fn delete_read(&self, lent: &Lent, work: &WorkId) -> usize {
+        let store = lent.sources.store();
+        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let bookmarks: HashSet<String> =
+            store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
+        let read: Vec<String> = store
+            .book_downloads(Some(work.as_str()))
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|d| d.state == BookDownloadState::Done)
+            .filter(|d| marks.is_read(&d.chapter) && !bookmarks.contains(&d.chapter))
+            .map(|d| d.chapter)
+            .collect();
+        if read.is_empty() {
+            self.publish(store, &lent.tx);
+            return 0;
+        }
+        let removed = self.remove(store, work.as_str(), &read, true, lent.clock.now());
+        self.publish(store, &lent.tx);
         removed
     }
 
@@ -858,6 +918,7 @@ fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> ChapterRow {
         bookmarked,
         version_label: d.version_label.clone(),
         read_at: None,
+        line: Vec::new(),
     }
 }
 
@@ -979,5 +1040,6 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
     resume(engine, services, tx);
 }
 
+mod sizes;
 #[cfg(test)]
 mod tests;

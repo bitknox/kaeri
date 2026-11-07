@@ -79,6 +79,29 @@ impl AniList {
             .await?;
         Ok(())
     }
+
+    /// Take one manga or novel off the viewer's list. `Ok(false)` when it was not on it.
+    pub async fn remove_read_entry(&self, id: AnilistId) -> Result<bool> {
+        if self.token().is_none() {
+            return Err(AniListError::Unauthenticated);
+        }
+        let data: serde_json::Value = match self
+            .execute(query::READ_LIST_ENTRY, serde_json::json!({ "id": id.get() }))
+            .await
+        {
+            Ok(data) => data,
+            // No such title: nothing of it can be on the list.
+            Err(AniListError::NotFound) => return Ok(false),
+            Err(e) => return Err(e),
+        };
+        let Some(entry) = list_entry_id(&data) else { return Ok(false) };
+        self.delete_entry(entry).await
+    }
+}
+
+/// The entry id in a [`query::READ_LIST_ENTRY`] answer.
+fn list_entry_id(data: &serde_json::Value) -> Option<u32> {
+    u32::try_from(data["Media"]["mediaListEntry"]["id"].as_u64()?).ok()
 }
 
 fn decode_entry(entry: &serde_json::Value) -> Option<ReadListEntry> {
@@ -112,8 +135,17 @@ mod tests {
     }
 
     #[test]
+    fn the_entry_to_remove_is_the_list_entry_and_not_the_title() {
+        let on = serde_json::json!({"Media":{"mediaListEntry":{"id":4_200_001}}});
+        assert_eq!(list_entry_id(&on), Some(4_200_001));
+        let off = serde_json::json!({"Media":{"mediaListEntry":null}});
+        assert_eq!(list_entry_id(&off), None);
+    }
+
+    #[test]
     fn the_documents_parse() {
-        for doc in [query::USER_READ_LIBRARY, query::SAVE_READ_PROGRESS] {
+        for doc in [query::USER_READ_LIBRARY, query::SAVE_READ_PROGRESS, query::READ_LIST_ENTRY]
+        {
             graphql_parser::parse_query::<String>(doc).unwrap();
         }
     }

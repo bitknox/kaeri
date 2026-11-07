@@ -877,6 +877,182 @@ object Strings {
     fun readingOriginTaiwan(context: Context): String =
         context.getString(R.string.reading_origin_taiwan)
 
+    /** Under a This week cell: the chapter that came out that day, with its own title. */
+    fun readingChapterTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reading_chapter_titled, chapter, title)
+
+    /** A chapter row's state: the person read it. */
+    fun readingRowRead(context: Context): String =
+        context.getString(R.string.reading_row_read)
+
+    /** A chapter row's state: it came out since the person last read and is not read. */
+    fun readingRowNew(context: Context): String =
+        context.getString(R.string.reading_row_new)
+
+    /** A chapter row's state: it is kept on this device to read offline. */
+    fun readingRowDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_downloaded)
+
+    /** A chapter row's state: it is read from the source and nothing of it is on this device. */
+    fun readingRowNotDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_not_downloaded)
+
+    /** A chapter row's state: a file in one of the person's folders, or one already on the device. */
+    fun readingRowOnDevice(context: Context): String =
+        context.getString(R.string.reading_row_on_device)
+
+    /** A chapter row's state: it waits its turn to download. */
+    fun readingRowQueued(context: Context): String =
+        context.getString(R.string.reading_row_queued)
+
+    /** A chapter row's state: it waits to download until the device is on Wi-Fi. */
+    fun readingRowWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_row_waits_wifi)
+
+    /** A chapter row's state while it downloads. */
+    fun readingRowDownloading(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_row_downloading, done, total)
+
+    /** A chapter row's state: the download failed. The reason follows as the next part. */
+    fun readingRowFailed(context: Context): String =
+        context.getString(R.string.reading_row_failed)
+
+    /** A chapter row's state: the page the person stopped on, of how many. */
+    fun readingRowPageOf(context: Context, page: Int, of: Int): String =
+        context.getString(R.string.reading_row_page_of, page, of)
+
+    /** A chapter row's state: the page the person stopped on, when the length isn't known. */
+    fun readingRowPage(context: Context, page: Int): String =
+        context.getString(R.string.reading_row_page, page)
+
+    /** A novel's chapter row: how far into it the person is. */
+    fun readingRowPercent(context: Context, percent: Int): String =
+        context.getString(R.string.reading_row_percent, percent)
+
+    /** A chapter row: how long its pages are, for a file on the device. */
+    fun readingRowPages(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_pages, n, n)
+
+    /** A chapter row: how many versions the person's sources have of it. The row's menu lists them. */
+    fun readingRowVersions(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_versions, n, n)
+
+    /** A chapter row: when it was read or came out, under a minute ago. */
+    fun readingAgoNow(context: Context): String =
+        context.getString(R.string.reading_ago_now)
+
+    /** A chapter row: when it was read or came out, in minutes. */
+    fun readingAgoMinutes(context: Context, minutes: Int): String =
+        context.getString(R.string.reading_ago_minutes, minutes)
+
+    /** A chapter row: when it was read or came out, earlier today. */
+    fun readingAgoToday(context: Context): String =
+        context.getString(R.string.reading_ago_today)
+
+    /** A chapter row: when it was read or came out, the day before today. */
+    fun readingAgoYesterday(context: Context): String =
+        context.getString(R.string.reading_ago_yesterday)
+
+    /** A chapter row: when it was read or came out, in days, under a week. */
+    fun readingAgoDays(context: Context, days: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_days, days, days)
+
+    /** A chapter row: when it was read or came out, in weeks, under two months. */
+    fun readingAgoWeeks(context: Context, weeks: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_weeks, weeks, weeks)
+
+    /** A chapter row: when it was read or came out, in months, under a year. */
+    fun readingAgoMonths(context: Context, months: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_months, months, months)
+
+    /** A chapter row: when it was read or came out, in years. */
+    fun readingAgoYears(context: Context, years: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_years, years, years)
+
+    /** The tracker took the series off its list. */
+    fun readingRemovedFrom(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_from, tracker)
+
+    /** The tracker's list did not hold the series, so there was nothing to remove. */
+    fun readingRemovedNotThere(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_not_there, tracker)
+
+    /** The app never learned which of the tracker's entries this series is, so it asked nothing. */
+    fun readingRemovedUnmatched(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_unmatched, tracker)
+
+    /** The tracker could not take the series off. The reason follows. */
+    fun readingRemovedFailed(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_failed, tracker)
+
+    /** Why a removal failed: the tracker turned the sign-in away. */
+    fun readingRemovedSignIn(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_sign_in, tracker)
+
+    /** The source answered the search and has no series by the series' names. */
+    fun readingMissNoSeries(context: Context): String =
+        context.getString(R.string.reading_miss_no_series)
+
+    /** The source has failed every ask since this time of day, in the person's zone. */
+    fun readingMissDownSince(context: Context, time: String): String =
+        context.getString(R.string.reading_miss_down_since, time)
+
+    /** The source has failed every ask, since a time on another day or not known. */
+    fun readingMissDown(context: Context): String =
+        context.getString(R.string.reading_miss_down)
+
+    /** How many parts of a light novel are downloaded. */
+    fun readingDlParts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_parts, count, count)
+
+    /** What the downloads take up on this device. */
+    fun readingDlSize(context: Context, size: String): String =
+        context.getString(R.string.reading_dl_size, size)
+
+    /** How many of the downloaded chapters are read, which Delete read clears. */
+    fun readingDlRead(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_read, count)
+
+    /** The chapter downloading now. */
+    fun readingDlChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_chapter, chapter)
+
+    /** How far the chapter downloading now has come. */
+    fun readingDlPages(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_dl_pages, done, total)
+
+    /** Chapters waiting their turn after the one downloading. */
+    fun readingDlMoreQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_more_queued, count)
+
+    /** Chapters waiting their turn, none downloaded yet. */
+    fun readingDlQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_queued, count)
+
+    /** Chapters that wait for Wi-Fi to download. */
+    fun readingDlWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_dl_waits_wifi)
+
+    /** A chapter that failed. The reason follows as the next part. */
+    fun readingDlFailed(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_failed, chapter)
+
+    /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
+    fun readingEstimateSize(context: Context, size: String): String =
+        context.getString(R.string.reading_estimate_size, size)
+
+    /** The chapters download only on Wi-Fi, as the settings say. */
+    fun readingEstimateWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_wifi)
+
+    /** The device is on mobile data, and the settings let chapters download on it. */
+    fun readingEstimateMobile(context: Context): String =
+        context.getString(R.string.reading_estimate_mobile)
+
+    /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
+    fun readingEstimateWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_waits_wifi)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)
@@ -8454,6 +8630,10 @@ object Strings {
     fun sourcesFoundServer(context: Context, kind: String): String =
         context.getString(R.string.sources_found_server, kind)
 
+    /** What the server held once signed in, when it said how many series it lists. */
+    fun sourcesFoundServerSeries(context: Context, kind: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.sources_found_server_series, n, kind, n)
+
     /** While the address is tried. */
     fun bookServerLooking(context: Context): String =
         context.getString(R.string.book_server_looking)
@@ -8605,6 +8785,10 @@ object Strings {
     /** The line over browsing: what is shown, and where the list comes from. */
     fun readSearchBrowseLine(context: Context, what: String): String =
         context.getString(R.string.read_search_browse_line, what)
+
+    /** Over reading's results once every result is listed: how many series AniList found. */
+    fun readSearchTotal(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_total, n, n)
 
     /** Search couldn't ask AniList. */
     fun readSearchFailed(context: Context): String =
@@ -8957,6 +9141,42 @@ object Strings {
     /** Under the group: what stays on this device. */
     fun settingsFollowFooter(context: Context, device: String): String =
         context.getString(R.string.settings_follow_footer, device)
+
+    /** Line under Look in Series settings that follow you. */
+    fun settingsLookFollowsNote(context: Context): String =
+        context.getString(R.string.settings_look_follows_note)
+
+    /** Value of New chapters in Downloads: the series on the Reading list. */
+    fun settingsNewChaptersReading(context: Context): String =
+        context.getString(R.string.settings_new_chapters_reading)
+
+    /** Line under New chapters in Downloads. */
+    fun settingsNewChaptersNote(context: Context): String =
+        context.getString(R.string.settings_new_chapters_note)
+
+    /** Group in Accounts: how reading progress goes to the trackers. */
+    fun settingsProgressGroup(context: Context): String =
+        context.getString(R.string.settings_progress_group)
+
+    /** Value of Send progress after: as each chapter counts as read. */
+    fun settingsProgressChapter(context: Context): String =
+        context.getString(R.string.settings_progress_chapter)
+
+    /** Value of Send progress after: once, when the reader closes. */
+    fun settingsProgressClose(context: Context): String =
+        context.getString(R.string.settings_progress_close)
+
+    /** Value of When trackers disagree: the higher chapter wins. */
+    fun settingsDisagreeFurthest(context: Context): String =
+        context.getString(R.string.settings_disagree_furthest)
+
+    /** Value of When trackers disagree: the newest change wins, even a lower chapter. */
+    fun settingsDisagreeLatest(context: Context): String =
+        context.getString(R.string.settings_disagree_latest)
+
+    /** Line under When trackers disagree. */
+    fun settingsDisagreeNote(context: Context): String =
+        context.getString(R.string.settings_disagree_note)
 
     /** Line under Keep next chapters ready. */
     fun settingsKeepChaptersReadyNote(context: Context): String =
@@ -10173,6 +10393,26 @@ object Strings {
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =
         context.getString(R.string.settings_series_choices_follow)
+
+    /** Row in Downloads: which series' new chapters download by themselves. */
+    fun settingsNewChaptersDownload(context: Context): String =
+        context.getString(R.string.settings_new_chapters_download)
+
+    /** Row: whether a series' own reader mode and direction follow you to your other devices. */
+    fun settingsModeFollows(context: Context): String =
+        context.getString(R.string.settings_mode_follows)
+
+    /** Row: whether a series' own look (colour or greys) follows you to your other devices. */
+    fun settingsLookFollows(context: Context): String =
+        context.getString(R.string.settings_look_follows)
+
+    /** Row: when chapter progress goes to the reading trackers. */
+    fun settingsSendProgressAfter(context: Context): String =
+        context.getString(R.string.settings_send_progress_after)
+
+    /** Row: which chapter progress wins when a tracker and this device disagree. */
+    fun settingsWhenTrackersDisagree(context: Context): String =
+        context.getString(R.string.settings_when_trackers_disagree)
 
     /** Row: whether a new chapter of a series on your Reading list sends a notification. */
     fun settingsChapterNotifications(context: Context): String =

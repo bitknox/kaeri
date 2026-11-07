@@ -57,8 +57,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             }
             let event = match kit.sources.chapters(&work, None, ask.now).await {
                 Ok((edition, mut volumes)) => {
-                    count_versions(&kit, &work, &mut volumes);
-                    mark_new(&kit, &work, &mut volumes);
+                    finish(&kit, &work, &mut volumes, ask.now);
                     ReadingEvent::Chapters {
                         work: work.clone(),
                         edition,
@@ -69,8 +68,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
                 // The source did not answer: the list it gave last, with why.
                 Err(failure) => {
                     let (edition, mut volumes) = kept_volumes(&kit, &work);
-                    count_versions(&kit, &work, &mut volumes);
-                    mark_new(&kit, &work, &mut volumes);
+                    finish(&kit, &work, &mut volumes, ask.now);
                     ReadingEvent::Chapters {
                         work: work.clone(),
                         edition,
@@ -115,7 +113,10 @@ pub fn versions(kit: &Kit, work: WorkId, chapter: ChapterId, tx: &Outbox) {
 }
 
 /// The edition's chapters as last kept, grouped by volume.
-fn kept_volumes(kit: &Kit, work: &WorkId) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
+pub(crate) fn kept_volumes(
+    kit: &Kit,
+    work: &WorkId,
+) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
     let Some((source, _, list)) = chapters::of_work(&kit.sources, &kit.store, work) else {
         return (None, Vec::new());
     };
@@ -140,6 +141,14 @@ fn kept_volumes(kit: &Kit, work: &WorkId) -> (Option<BookEditionRow>, Vec<Volume
     }
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
     (edition, groups)
+}
+
+/// The rows as every screen shows them: how many versions each has, the new ones, and the
+/// words on their second line.
+pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now: i64) {
+    count_versions(kit, work, volumes);
+    mark_new(kit, work, volumes);
+    super::rows::fill(volumes, super::rows::Kept::Source, now, &kit.clock.zone());
 }
 
 /// How many versions each chapter has across the person's editions.
@@ -276,7 +285,7 @@ fn fill(kit: &Kit, ask: Ask, view: &mut SeriesView, kept: &KeptBook) {
 }
 
 /// A work AniList does not list: its folder's name.
-fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
+pub(crate) fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
     kit.store
         .local_book_series()
         .ok()?
@@ -285,7 +294,7 @@ fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
         .map(|s| s.name)
 }
 
-fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
+pub(crate) fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
     kit.store
         .local_book_series()
         .ok()

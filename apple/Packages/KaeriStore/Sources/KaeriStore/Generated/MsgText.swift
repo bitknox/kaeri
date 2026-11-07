@@ -368,6 +368,50 @@ extension ReadingMsg {
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
         case .readingOriginTaiwan: L.readingOriginTaiwan
+        case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
+        case .readingRowRead: L.readingRowRead
+        case .readingRowNew: L.readingRowNew
+        case .readingRowDownloaded: L.readingRowDownloaded
+        case .readingRowNotDownloaded: L.readingRowNotDownloaded
+        case .readingRowOnDevice: L.readingRowOnDevice
+        case .readingRowQueued: L.readingRowQueued
+        case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowFailed: L.readingRowFailed
+        case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
+        case .readingRowPage(let page): L.readingRowPage(page: Int(page))
+        case .readingRowPercent(let percent): L.readingRowPercent(percent: Int(percent))
+        case .readingRowPages(let n): L.readingRowPages(n: Int(n))
+        case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingAgoNow: L.readingAgoNow
+        case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
+        case .readingAgoToday: L.readingAgoToday
+        case .readingAgoYesterday: L.readingAgoYesterday
+        case .readingAgoDays(let days): L.readingAgoDays(days: Int(days))
+        case .readingAgoWeeks(let weeks): L.readingAgoWeeks(weeks: Int(weeks))
+        case .readingAgoMonths(let months): L.readingAgoMonths(months: Int(months))
+        case .readingAgoYears(let years): L.readingAgoYears(years: Int(years))
+        case .readingRemovedFrom(let tracker): L.readingRemovedFrom(tracker: tracker)
+        case .readingRemovedNotThere(let tracker): L.readingRemovedNotThere(tracker: tracker)
+        case .readingRemovedUnmatched(let tracker): L.readingRemovedUnmatched(tracker: tracker)
+        case .readingRemovedFailed(let tracker): L.readingRemovedFailed(tracker: tracker)
+        case .readingRemovedSignIn(let tracker): L.readingRemovedSignIn(tracker: tracker)
+        case .readingMissNoSeries: L.readingMissNoSeries
+        case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
+        case .readingMissDown: L.readingMissDown
+        case .readingDlParts(let count): L.readingDlParts(count: Int(count))
+        case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
+        case .readingDlRead(let count): L.readingDlRead(count: Int(count))
+        case .readingDlChapter(let chapter): L.readingDlChapter(chapter: chapter)
+        case .readingDlPages(let done, let total): L.readingDlPages(done: Int(done), total: Int(total))
+        case .readingDlMoreQueued(let count): L.readingDlMoreQueued(count: Int(count))
+        case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
+        case .readingDlWaitsWifi: L.readingDlWaitsWifi
+        case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
+        case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
+        case .readingEstimateWifi: L.readingEstimateWifi
+        case .readingEstimateMobile: L.readingEstimateMobile
+        case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
         }
     }
 }

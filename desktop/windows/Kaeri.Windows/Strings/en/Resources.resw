@@ -947,6 +947,210 @@
     <value>Taiwan</value>
     <comment>A search filter: books from Taiwan.</comment>
   </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>Chapter {chapter} · {title}</value>
+    <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>A chapter row's state: the person read it.</comment>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>New</value>
+    <comment>A chapter row's state: it came out since the person last read and is not read.</comment>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>Downloaded</value>
+    <comment>A chapter row's state: it is kept on this device to read offline.</comment>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>Not downloaded</value>
+    <comment>A chapter row's state: it is read from the source and nothing of it is on this device.</comment>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>On this device</value>
+    <comment>A chapter row's state: a file in one of the person's folders, or one already on the device.</comment>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>Queued</value>
+    <comment>A chapter row's state: it waits its turn to download.</comment>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>Queued · waits for Wi-Fi</value>
+    <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>Downloading · {done} of {total} pages</value>
+    <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>Couldn't download</value>
+    <comment>A chapter row's state: the download failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>Page {page} of {of}</value>
+    <comment>A chapter row's state: the page the person stopped on, of how many.</comment>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>Page {page}</value>
+    <comment>A chapter row's state: the page the person stopped on, when the length isn't known.</comment>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+    <comment>A novel's chapter row: how far into it the person is.</comment>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>1 page</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n} pages</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>1 version</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n} versions</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>just now</value>
+    <comment>A chapter row: when it was read or came out, under a minute ago.</comment>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes} min ago</value>
+    <comment>A chapter row: when it was read or came out, in minutes.</comment>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>today</value>
+    <comment>A chapter row: when it was read or came out, earlier today.</comment>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>yesterday</value>
+    <comment>A chapter row: when it was read or came out, the day before today.</comment>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>1 day ago</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days} days ago</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>1 week ago</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks} weeks ago</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>1 month ago</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months} months ago</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>1 year ago</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years} years ago</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>Removed from {tracker}</value>
+    <comment>The tracker took the series off its list.</comment>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>Wasn't on your {tracker} list</value>
+    <comment>The tracker's list did not hold the series, so there was nothing to remove.</comment>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>Not matched on {tracker}, so nothing changed there</value>
+    <comment>The app never learned which of the tracker's entries this series is, so it asked nothing.</comment>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>Still on your {tracker} list</value>
+    <comment>The tracker could not take the series off. The reason follows.</comment>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>Sign in to {tracker} again, then try once more.</value>
+    <comment>Why a removal failed: the tracker turned the sign-in away.</comment>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>No series with this name</value>
+    <comment>The source answered the search and has no series by the series' names.</comment>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>Not answering since {time}</value>
+    <comment>The source has failed every ask since this time of day, in the person's zone.</comment>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>Not answering</value>
+    <comment>The source has failed every ask, since a time on another day or not known.</comment>
+  </data>
+  <data name="ReadingDlParts_one" xml:space="preserve">
+    <value>1 part</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>{count} parts</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>{size}</value>
+    <comment>What the downloads take up on this device.</comment>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>{count} read</value>
+    <comment>How many of the downloaded chapters are read, which Delete read clears.</comment>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>Chapter {chapter}</value>
+    <comment>The chapter downloading now.</comment>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>{done} of {total} pages</value>
+    <comment>How far the chapter downloading now has come.</comment>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>{count} more queued</value>
+    <comment>Chapters waiting their turn after the one downloading.</comment>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>{count} queued</value>
+    <comment>Chapters waiting their turn, none downloaded yet.</comment>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>waits for Wi-Fi</value>
+    <comment>Chapters that wait for Wi-Fi to download.</comment>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>Chapter {chapter} couldn't download</value>
+    <comment>A chapter that failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>About {size}</value>
+    <comment>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</comment>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>over Wi-Fi</value>
+    <comment>The chapters download only on Wi-Fi, as the settings say.</comment>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>over mobile data</value>
+    <comment>The device is on mobile data, and the settings let chapters download on it.</comment>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>waits for Wi-Fi</value>
+    <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -7528,6 +7732,14 @@
     <value>Found a {kind} server</value>
     <comment>What the address answered, before the sign-in.</comment>
   </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>Found a {kind} server with 1 series</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>Found a {kind} server with {n} series</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
   <data name="BookServerLooking" xml:space="preserve">
     <value>Looking at this address…</value>
     <comment>While the address is tried.</comment>
@@ -7691,6 +7903,14 @@
   <data name="ReadSearchBrowseLine" xml:space="preserve">
     <value>{what} · from AniList</value>
     <comment>The line over browsing: what is shown, and where the list comes from.</comment>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>1 series from AniList</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>{n} series from AniList</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
   </data>
   <data name="ReadSearchFailed" xml:space="preserve">
     <value>Couldn't search</value>
@@ -7993,7 +8213,7 @@
     <comment>Group: how the reader opens each kind of book.</comment>
   </data>
   <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
-    <value>A series you change keeps its own mode, direction and colour.</value>
+    <value>A series you change keeps its own mode, direction and look.</value>
     <comment>Under the reader defaults.</comment>
   </data>
   <data name="SettingsReaderManga" xml:space="preserve">
@@ -8059,6 +8279,42 @@
   <data name="SettingsFollowFooter" xml:space="preserve">
     <value>Text size, margins, tap zones and refresh stay on this {device}.</value>
     <comment>Under the group: what stays on this device.</comment>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>Colour or greys</value>
+    <comment>Line under Look in Series settings that follow you.</comment>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>Series on Reading</value>
+    <comment>Value of New chapters in Downloads: the series on the Reading list.</comment>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>A series being read also keeps its next chapters ready</value>
+    <comment>Line under New chapters in Downloads.</comment>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>Progress</value>
+    <comment>Group in Accounts: how reading progress goes to the trackers.</comment>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>A chapter is read</value>
+    <comment>Value of Send progress after: as each chapter counts as read.</comment>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>Closing the reader</value>
+    <comment>Value of Send progress after: once, when the reader closes.</comment>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>Keep the furthest</value>
+    <comment>Value of When trackers disagree: the higher chapter wins.</comment>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>The latest change</value>
+    <comment>Value of When trackers disagree: the newest change wins, even a lower chapter.</comment>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>Status and score follow the latest change</value>
+    <comment>Line under When trackers disagree.</comment>
   </data>
   <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
     <value>The next chapters of series on your Reading list</value>
@@ -9319,6 +9575,26 @@
   <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
     <value>Series settings follow you</value>
     <comment>Row: whether a series' reader mode, direction and colour follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>New chapters</value>
+    <comment>Row in Downloads: which series' new chapters download by themselves.</comment>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>Mode and direction</value>
+    <comment>Row: whether a series' own reader mode and direction follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>Look</value>
+    <comment>Row: whether a series' own look (colour or greys) follows you to your other devices.</comment>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>Send progress after</value>
+    <comment>Row: when chapter progress goes to the reading trackers.</comment>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>When trackers disagree</value>
+    <comment>Row: which chapter progress wins when a tracker and this device disagree.</comment>
   </data>
   <data name="SettingsChapterNotifications" xml:space="preserve">
     <value>New chapters</value>
