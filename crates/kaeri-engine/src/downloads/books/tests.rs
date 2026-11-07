@@ -67,7 +67,11 @@ impl BookSource for Shelf {
         }
         if chapter.starts_with("made-") {
             return Ok(ChapterContent::Images(
-                (1..=3).map(|n| PageRef::made("s-1", chapter, format!("p{n}"))).collect(),
+                (1..=3)
+                    .map(|n| {
+                        PageRef::made("s-1", chapter, format!("https://pages.example/{n}"))
+                    })
+                    .collect(),
             ));
         }
         Ok(ChapterContent::Images(
@@ -80,7 +84,7 @@ impl BookSource for Shelf {
     async fn fetch_page(&self, page_ref: &PageRef) -> Result<Vec<u8>, PageError> {
         *self.fetched.lock().unwrap() += 1;
         let asked = match &page_ref.made {
-            Some(made) => format!("made {}/{}", made.chapter, made.id),
+            Some(made) => format!("made {} {}", made.chapter, page_ref.url),
             None => page_ref.url.clone(),
         };
         self.asked.lock().unwrap().push(asked);
@@ -245,10 +249,14 @@ async fn a_chapter_of_pages_the_source_makes_downloads_as_one_it_fetches_does() 
     kit.settle().await;
 
     assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
-    // Each page was asked of the source, one at a time and in order, never as an address.
+    // Each page went to the source with its chapter, one at a time and in order.
     assert_eq!(
         *kit.shelf.asked.lock().unwrap(),
-        ["made made-1/p1", "made made-1/p2", "made made-1/p3"]
+        [
+            "made made-1 https://pages.example/1",
+            "made made-1 https://pages.example/2",
+            "made made-1 https://pages.example/3"
+        ]
     );
     let shelf = kit.store().shelf(WORK).unwrap();
     assert_eq!((shelf[0].format.as_str(), shelf[0].pages), ("cbz", Some(3)));
