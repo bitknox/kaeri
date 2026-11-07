@@ -97,7 +97,7 @@ private const val TYPING_REST = 350L
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
-internal fun ReadSearchScreen() {
+internal fun ReadSearchScreen(startText: String? = null) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val search by store.reading.search.collectAsStateWithLifecycle()
@@ -107,7 +107,10 @@ internal fun ReadSearchScreen() {
     val text = rememberTextFieldState(search.query.text)
     val bar = rememberSearchBarState()
     LaunchedEffect(Unit) {
-        if (search.tiles.isEmpty() && !search.loading) store.reading.runSearch(search.query)
+        // The first search: the words the app was opened with, else browse.
+        if (search.tiles.isEmpty() && !search.loading) {
+            store.reading.runSearch(startText?.let { search.query.copy(text = it) } ?: search.query)
+        }
     }
     // The words search once the typing rests.
     LaunchedEffect(text) {

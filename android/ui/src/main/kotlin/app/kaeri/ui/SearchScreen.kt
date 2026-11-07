@@ -239,7 +239,7 @@ fun SearchScreen(
     // Reading's search with Read alone, or with Both once Reading is chosen in the control.
     val isFor = kaeriIsFor()
     if (isFor == KaeriIsFor.READ || (isFor == KaeriIsFor.BOTH && ReadPlaces.searchReading)) {
-        ReadSearchScreen()
+        ReadSearchScreen(start?.text?.takeIf { it.isNotBlank() })
         return
     }
     ShowsSearch(start, startFilters, open, opened, both = isFor == KaeriIsFor.BOTH)
