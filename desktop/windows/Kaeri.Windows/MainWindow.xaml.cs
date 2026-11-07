@@ -95,6 +95,7 @@ public sealed partial class MainWindow : Window
         (var engine, dirs) = StartEngine(host);
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
         ChatSetting.Load(dirs.Config);
+        SmoothScrolling.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif

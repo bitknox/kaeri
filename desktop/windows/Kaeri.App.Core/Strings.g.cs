@@ -1137,6 +1137,12 @@ public static partial class T
     /// <summary>Setting: whether the app animates.</summary>
     public static string SettingsMotion => Get("SettingsMotion");
 
+    /// <summary>Setting: a mouse wheel glides the page into place rather than moving it in steps.</summary>
+    public static string SettingsSmoothScrolling => Get("SettingsSmoothScrolling");
+
+    /// <summary>Under the Smooth scrolling switch.</summary>
+    public static string SettingsSmoothScrollingDetail => Get("SettingsSmoothScrollingDetail");
+
     /// <summary>Setting: the player opens fullscreen.</summary>
     public static string SettingsStartFullscreen => Get("SettingsStartFullscreen");
 
@@ -9172,6 +9178,8 @@ public static partial class T
         ["SettingsAnotherTv"] = "Another TV",
         ["SettingsTheme"] = "Theme",
         ["SettingsMotion"] = "Motion",
+        ["SettingsSmoothScrolling"] = "Smooth scrolling",
+        ["SettingsSmoothScrollingDetail"] = "Each turn of the mouse wheel glides the page into place. Touchpads and touch scroll as before.",
         ["SettingsStartFullscreen"] = "Start in full screen",
         ["SettingsPlayerInterface"] = "Player interface",
         ["SettingsTokenStorage"] = "Token storage",

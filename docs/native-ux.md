@@ -211,7 +211,7 @@ Home uses the same tokens and no curves of its own:
 | A card leaves Continue | fade-out | Then the shelves below close the gap on standard |
 | Paging arrows | fade-in, fade-out | While the pointer is over a shelf |
 | A shelf pages | standard | By the whole cards that fit, landing on a card edge |
-| Trackpad or wheel scrolling | system | Free, with no snapping |
+| Trackpad or wheel scrolling | system | Free, with no snapping. On Windows a mouse wheel glides each notch into place over about 130 ms, starting on the next frame (Smooth scrolling, on by default) |
 | TV focus | quick | The ring and a 1.05 scale come in, and the old card goes out |
 | TV shelf or page scroll | standard | One card at the safe area edge; a shelf change scrolls the page |
 | Hover card | As the hover card decided | 450 ms dwell, grow on standard, banner at grow start, details from 100 ms, trailer at the first frame after the grow, leave on quick |

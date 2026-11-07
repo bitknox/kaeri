@@ -3,6 +3,7 @@
     x:Class="Kaeri.Windows.Pages.StoresPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:k="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
     xmlns:app="using:Kaeri.App"
     Background="{ThemeResource GroundBrush}">
@@ -34,7 +35,7 @@
         <RowDefinition x:Name="ListRow" Height="*" />
         <RowDefinition x:Name="DetailRow" Height="0" />
       </Grid.RowDefinitions>
-      <ScrollViewer x:Name="ListScroll" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer x:Name="ListScroll" VerticalScrollBarVisibility="Auto" k:SmoothWheel.On="True">
         <StackPanel Spacing="8" Padding="0,0,8,24">
           <local:StateHost x:Name="State">
             <ListView x:Name="StoreList" SelectionMode="Single" SelectionChanged="OnSelected" Margin="-12,0,0,0"
@@ -50,7 +51,7 @@
           </StackPanel>
         </StackPanel>
       </ScrollViewer>
-      <ScrollViewer x:Name="DetailScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer x:Name="DetailScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" k:SmoothWheel.On="True">
         <StackPanel x:Name="Detail" Spacing="8" Padding="0,0,12,24" MaxWidth="620" HorizontalAlignment="Left" />
       </ScrollViewer>
     </Grid>

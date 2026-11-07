@@ -1607,6 +1607,14 @@
     <value>[Ṁöţîöñ~~]</value>
     <comment>Setting: whether the app animates.</comment>
   </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>[Šɱööţĥ šçŕöļļîñĝ~~~~~]</value>
+    <comment>Setting: a mouse wheel glides the page into place rather than moving it in steps.</comment>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>[Éàçĥ ţüŕñ öƒ ţĥé ɱöüšé ŵĥééļ ĝļîðéš ţĥé þàĝé îñţö þļàçé. Ţöüçĥþàðš àñð ţöüçĥ šçŕöļļ àš ƀéƒöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the Smooth scrolling switch.</comment>
+  </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>[Šţàŕţ îñ ƒüļļ šçŕééñ~~~~~~]</value>
     <comment>Setting: the player opens fullscreen.</comment>
