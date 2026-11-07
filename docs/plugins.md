@@ -116,14 +116,6 @@ interface source {                        // what a book source exports
                        -> result<list<chapter>, source-error>;
     chapter-content: func(series: string, chapter: string)
                        -> result<content, source-error>;
-    page-bytes:      func(series: string, chapter: string, page: string)
-                       -> result<list<u8>, source-error>;
-}
-
-record page { image: page-image, width: option<u32>, height: option<u32> }
-variant page-image {
-    url(page-url),                        // an address the host fetches, with its headers
-    plugin(string),                       // the plugin's own id; the host asks page-bytes
 }
 ```
 
@@ -136,24 +128,9 @@ variant page-image {
   it. `version-label` tells two versions of one chapter apart.
 - `chapter-content` returns `images`, the pages in reading order, or `text`, an XHTML body
   fragment that the host sanitises before showing it.
-- A page is usually a `url`: the plugin names the address and the headers it needs, and the host
-  fetches it through the plugin's own `allowed-hosts`, so list the page image hosts there too. A
-  download fetches the pages again later the same way, and an address that answers 403 or 410
-  makes the host ask `chapter-content` once more for fresh ones.
-- A page the host cannot fetch as one plain request is a `plugin` page: the plugin names it with
-  an id of its own, and the host calls `page-bytes` with the series, the chapter and that id when
-  the page is wanted. A server that hands chapters over only as CBZ or ZIP archives is one case,
-  with the plugin reading the page out of the archive; a page that needs a signed request is
-  another. The host asks for one page at a time, when it needs that page, so a chapter's pages
-  are never all in memory at once. Every call starts
-  fresh, so a page read from an archive fetches the archive again; a server that answers range
-  requests lets the plugin fetch only that page's part.
-- `page-bytes` runs under the same limits as every other call, and the host checks what comes
-  back before it keeps it. A page over 16 MiB, one whose first bytes are not a JPEG, PNG, WebP,
-  GIF or AVIF file, and one whose header claims more than 40 million pixels are refused without
-  being decoded. A refused or stopped page is the plugin's `parse` error, with the same failover
-  and health rules. A plugin page has no address to expire, so the 403 and 410 rule does not
-  apply; the plugin answers with its own errors.
+- The plugin never fetches a page image. It names each page's URL and the headers it needs, and
+  the host fetches it through the plugin's own `allowed-hosts`, so list the page image hosts there
+  too. A download fetches the pages again later the same way.
 - The errors are the show sources' errors, with the same failover rules.
 
 The host tells the two kinds apart by what a component imports and exports, so the kind comes
@@ -162,8 +139,7 @@ reading is available, and a version without reading leaves them alone. A book so
 the id `folders` or `servers`, the names of Kaeri's own book sources.
 
 Start from `plugins/example-books/src/lib.rs`. It uses every part of the contract against
-made-up hosts, and answers everything but `search` from data it keeps. Its "Extra" chapter is one
-archive, and its pages are `plugin` pages read out of it.
+made-up hosts, and answers everything but `search` from data it keeps.
 
 ## Rust
 
@@ -262,7 +238,7 @@ The conformance suite runs the same assertions against both references, plus `te
 which spins, allocates without bound, fetches an undeclared host and probes undeclared settings.
 Copy the `assert_reference_behaviour` shape for your own plugin. `book_conformance.rs` does the
 same for book sources against `example-books` and `test-hostile-books`, which also names page
-images on a host it never declared and makes pages that break each of the page limits.
+images on a host it never declared.
 
 To share a plugin, publish it to a plugin store ([plugin-stores.md](plugin-stores.md)), or hand
 over the `.wasm` for someone to put in their plugin directory. Either way, declare the narrowest

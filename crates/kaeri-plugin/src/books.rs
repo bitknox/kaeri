@@ -6,10 +6,12 @@
 //! interface differs, so this module is the bindings for it, the host side of its own copy of
 //! `host`, and a loaded plugin's calls.
 //!
-//! A page image is usually fetched by the host, never by the guest: [`LoadedBookPlugin::fetch_page`]
-//! does that with the plugin's own `allowed-hosts`, outside any guest call. A page the plugin
-//! makes itself comes from [`LoadedBookPlugin::page_bytes`], a guest call like any other, and
-//! the bytes it hands back are checked before the host keeps them: [`check_page`].
+//! A page image is fetched by the host, never by the guest: [`LoadedBookPlugin::fetch_page`]
+//! does that with the plugin's own `allowed-hosts`, outside any guest call. A plugin built for the
+//! optional `book-plugin-with-pages` world may make pages itself as well. The host tells it from
+//! its exports at load ([`LoadedBookPlugin::makes_pages`]), asks it with
+//! [`LoadedBookPlugin::page_bytes`], a guest call like any other, and checks the bytes it hands
+//! back before keeping them: [`check_page`]. A plugin built for `book-plugin` is never asked.
 
 use std::path::Path;
 
@@ -29,10 +31,25 @@ wasmtime::component::bindgen!({
 });
 
 pub use self::exports::kaeri::books::source::{
-    Chapter, Content, Manifest, Page, PageImage, PageUrl, SeriesDetail, SeriesHit, SourceError,
-    TitleHints,
+    Chapter, Content, Manifest, Page, SeriesDetail, SeriesHit, SourceError, TitleHints,
 };
 use self::kaeri::books::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
+
+/// The optional world: `book-plugin` and the `pages` export, for a plugin that makes some pages
+/// itself. Its `host` is the one above, so one linker serves both worlds.
+mod with_pages {
+    wasmtime::component::bindgen!({
+        path: "../../wit/kaeri-books.wit",
+        world: "book-plugin-with-pages",
+        imports: { default: async | trappable },
+        exports: { default: async },
+        with: { "kaeri:books/host": super::kaeri::books::host },
+    });
+}
+
+/// The export a plugin built for `book-plugin-with-pages` has and one built for `book-plugin`
+/// does not.
+const PAGES_EXPORT: &str = "kaeri:books/pages@";
 
 /// The major version of the book source ABI this host speaks: the major of the WIT package in
 /// `wit/kaeri-books.wit`. It moves apart from [`crate::engine::ABI_MAJOR`].
@@ -184,6 +201,8 @@ pub struct LoadedBookPlugin {
     limits: Limits,
     http: Option<crate::HttpClient>,
     settings: std::collections::BTreeMap<String, String>,
+    /// Built for `book-plugin-with-pages`.
+    makes_pages: bool,
 }
 
 impl std::fmt::Debug for LoadedBookPlugin {
@@ -193,6 +212,7 @@ impl std::fmt::Debug for LoadedBookPlugin {
             .field("version", &self.manifest.version)
             .field("allowed_hosts", &self.manifest.allowed_hosts)
             .field("limits", &self.limits)
+            .field("makes_pages", &self.makes_pages)
             .finish_non_exhaustive()
     }
 }
@@ -206,6 +226,10 @@ impl LoadedBookPlugin {
     ) -> Result<Self, PluginError> {
         let display = path.display().to_string();
         let linker = host.linker(&display, PluginKind::Books)?;
+        let makes_pages = component
+            .component_type()
+            .exports(host.engine())
+            .any(|(name, _)| name.starts_with(PAGES_EXPORT));
         let plugin = Self {
             engine: host.engine().clone(),
             linker,
@@ -222,6 +246,7 @@ impl LoadedBookPlugin {
             limits: host.limits(),
             http: host.http(),
             settings: Default::default(),
+            makes_pages,
         };
         // As for show sources: describing itself is the one call made with no capabilities.
         let manifest = plugin
@@ -234,6 +259,7 @@ impl LoadedBookPlugin {
             version = %manifest.version,
             hosts = ?manifest.allowed_hosts,
             media = ?manifest.media,
+            makes_pages,
             "book plugin loaded"
         );
         let settings = host.settings_for(path, &manifest.id);
@@ -250,6 +276,11 @@ impl LoadedBookPlugin {
 
     pub fn limits(&self) -> Limits {
         self.limits
+    }
+
+    /// Whether the plugin was built for `book-plugin-with-pages`, and so may make pages itself.
+    pub fn makes_pages(&self) -> bool {
+        self.makes_pages
     }
 
     fn capabilities(&self) -> Capabilities {
@@ -352,30 +383,46 @@ impl LoadedBookPlugin {
             .map_err(|e| self.deadline_error(&e))
     }
 
-    /// The bytes of a page the plugin makes itself, under the same limits as every other call,
-    /// checked by [`check_page`]. A page that fails the check is the plugin's `parse` error.
+    /// The bytes of the page at `url` of `chapter`, if the plugin makes that page itself; `None`
+    /// when the host is to fetch it. Asked only of a plugin that [makes pages](Self::makes_pages),
+    /// under the same limits as every other call, and checked by [`check_page`]: a page that fails
+    /// the check is the plugin's `parse` error. A plugin built for `book-plugin` answers `None`
+    /// without a call.
     pub async fn page_bytes(
         &self,
         series: &str,
         chapter: &str,
-        page: &str,
-    ) -> Result<Result<Vec<u8>, SourceError>, PluginError> {
+        url: &str,
+    ) -> Result<Result<Option<Vec<u8>>, SourceError>, PluginError> {
+        if !self.makes_pages {
+            return Ok(Ok(None));
+        }
         let mut store = new_store(&self.engine, self.limits, self.capabilities());
-        let instance = self.instantiate(&mut store).await?;
+        let instance = with_pages::BookPluginWithPages::instantiate_async(
+            &mut store,
+            &self.component,
+            &self.linker,
+        )
+        .await
+        .map_err(|e| self.deadline_error(&e))?;
         let made = instance
-            .kaeri_books_source()
-            .call_page_bytes(&mut store, series, chapter, page)
+            .kaeri_books_pages()
+            .call_page_bytes(&mut store, series, chapter, url)
             .await
             .map_err(|e| self.deadline_error(&e))?;
         // The store, and the guest memory the page was made in, go before the check runs.
         drop(store);
-        Ok(made.and_then(|bytes| match check_page(&bytes) {
-            Ok(()) => Ok(bytes),
-            Err(reason) => {
-                tracing::warn!(plugin = %self.manifest.id, %reason, "a plugin's page was refused");
-                Err(SourceError::Parse(reason))
-            }
-        }))
+        Ok(match made {
+            Ok(Some(bytes)) => match check_page(&bytes) {
+                Ok(()) => Ok(Some(bytes)),
+                Err(reason) => {
+                    tracing::warn!(plugin = %self.manifest.id, %reason, "a plugin's page was refused");
+                    Err(SourceError::Parse(reason))
+                }
+            },
+            Ok(None) => Ok(None),
+            Err(error) => Err(same_error(error)),
+        })
     }
 
     /// Fetch one page image a chapter named, as the host does for every page: a GET through the
@@ -400,6 +447,17 @@ impl LoadedBookPlugin {
                 body: None,
             })
             .await
+    }
+}
+
+/// The `pages` world's copy of `source-error`, as the `source` one.
+fn same_error(error: with_pages::exports::kaeri::books::source::SourceError) -> SourceError {
+    use with_pages::exports::kaeri::books::source::SourceError as Pages;
+    match error {
+        Pages::NotFound => SourceError::NotFound,
+        Pages::Blocked(reason) => SourceError::Blocked(reason),
+        Pages::Parse(reason) => SourceError::Parse(reason),
+        Pages::Other(reason) => SourceError::Other(reason),
     }
 }
 

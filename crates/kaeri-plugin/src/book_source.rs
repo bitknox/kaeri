@@ -72,10 +72,15 @@ impl WasmBookSource {
         }
     }
 
-    /// A page the plugin makes itself, from `page-bytes`. Its errors are the plugin's errors, so
-    /// they fail over and count against its health as any other call's do.
-    async fn made_page(&self, made: &MadePage) -> Result<Vec<u8>, PageError> {
-        flatten(self.plugin.page_bytes(&made.series, &made.chapter, &made.id).await)
+    /// A page the plugin makes itself, from `page-bytes`, or `None` for one the host fetches. Its
+    /// errors are the plugin's errors, so they fail over and count against its health as any
+    /// other call's do.
+    async fn made_page(
+        &self,
+        made: &MadePage,
+        url: &str,
+    ) -> Result<Option<Vec<u8>>, PageError> {
+        flatten(self.plugin.page_bytes(&made.series, &made.chapter, url).await)
             .map_err(PageError::Failed)
     }
 }
@@ -113,8 +118,10 @@ impl BookSource for WasmBookSource {
         series: &str,
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
-        flatten(self.plugin.chapter_content(series, chapter).await)
-            .map(|content| content_from(series, chapter, content))
+        let content = flatten(self.plugin.chapter_content(series, chapter).await)?;
+        // Only a plugin built for `book-plugin-with-pages` is asked for its pages.
+        let made = self.plugin.makes_pages().then(|| MadePage::new(series, chapter));
+        Ok(content_from(content, made))
     }
 
     async fn health_check(&self) -> Result<(), ProviderError> {
@@ -123,8 +130,10 @@ impl BookSource for WasmBookSource {
     }
 
     async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
-        if let Some(made) = &page.made {
-            return self.made_page(made).await;
+        if let Some(made) = &page.made
+            && let Some(bytes) = self.made_page(made, &page.url).await?
+        {
+            return Ok(bytes);
         }
         let response =
             self.plugin.fetch_page(&page.url, &page.headers).await.map_err(|e| match e {
@@ -216,19 +225,17 @@ fn chapter_from(chapter: books::Chapter) -> SourceChapter {
     }
 }
 
-fn content_from(series: &str, chapter: &str, content: books::Content) -> ChapterContent {
+fn content_from(content: books::Content, made: Option<MadePage>) -> ChapterContent {
     match content {
         books::Content::Images(pages) => ChapterContent::Images(
             pages
                 .into_iter()
-                .map(|page| {
-                    let at = match page.image {
-                        books::PageImage::Url(at) => {
-                            PageRef { headers: at.headers, ..PageRef::new(at.url) }
-                        }
-                        books::PageImage::Plugin(id) => PageRef::made(series, chapter, id),
-                    };
-                    PageRef { width: page.width, height: page.height, ..at }
+                .map(|page| PageRef {
+                    url: page.url,
+                    headers: page.headers,
+                    width: page.width,
+                    height: page.height,
+                    made: made.clone(),
                 })
                 .collect(),
         ),

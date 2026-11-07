@@ -782,16 +782,16 @@ impl SourceChapter {
     }
 }
 
-/// One page image a source names: the WIT `page`. Usually an address the host fetches, never the
-/// guest, with the headers it carries, so a download can fetch it later. A page the source makes
-/// itself has no address and carries [`MadePage`] instead.
+/// One page image a source names: the WIT `page`. An address the host fetches, never the guest,
+/// with the headers it carries, so a download can fetch it later. A source that may make some
+/// pages itself (a plugin built for `book-plugin-with-pages`) marks its pages with [`MadePage`],
+/// and is asked for each one first.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageRef {
-    /// Empty for a page the source makes itself.
     pub url: String,
     pub headers: Vec<(String, String)>,
-    /// Set for a page the source makes itself (the WIT `plugin` page): what the source needs to
-    /// make it again. Its own [`crate::traits::BookSource::fetch_page`] hands back the bytes.
+    /// Set when the source may make this page itself: the chapter it belongs to, for its own
+    /// [`crate::traits::BookSource::fetch_page`] to hand back with the url.
     pub made: Option<MadePage>,
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -802,26 +802,24 @@ impl PageRef {
         Self { url: url.into(), headers: Vec::new(), made: None, width: None, height: None }
     }
 
-    /// A page the source makes itself, named by its own id within `series` and `chapter`.
-    pub fn made(series: &str, chapter: &str, id: impl Into<String>) -> Self {
-        Self {
-            made: Some(MadePage {
-                series: series.to_owned(),
-                chapter: chapter.to_owned(),
-                id: id.into(),
-            }),
-            ..Self::new("")
-        }
+    /// A page at `url` of `chapter` of `series` that the source may make itself.
+    pub fn made(series: &str, chapter: &str, url: impl Into<String>) -> Self {
+        Self { made: Some(MadePage::new(series, chapter)), ..Self::new(url) }
     }
 }
 
-/// A page a source makes itself rather than names an address for: the chapter it belongs to and
-/// the source's own id for it, handed back when the page is wanted.
+/// The chapter a page belongs to, for a source that may make the page itself rather than have
+/// it fetched.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MadePage {
     pub series: String,
     pub chapter: String,
-    pub id: String,
+}
+
+impl MadePage {
+    pub fn new(series: &str, chapter: &str) -> Self {
+        Self { series: series.to_owned(), chapter: chapter.to_owned() }
+    }
 }
 
 /// A whole book file on this device: an archive, an EPUB or a PDF a folder or a server hands
