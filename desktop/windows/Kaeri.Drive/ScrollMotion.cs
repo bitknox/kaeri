@@ -119,7 +119,8 @@ static class ScrollMotion
                 $"| {s.Label} | {moved.Name}{(moved.Across ? " (across)" : "")} | {notches.Length} | {distance / notches.Length:F0} | {stalls} of {last - first + 1} | {late} | {jump:F0} | {(firstMoves.Count > 0 ? firstMoves[0].ToString("F0", CultureInfo.InvariantCulture) : "-")} | {(firstMoves.Count > 0 ? firstMoves.Max().ToString("F0", CultureInfo.InvariantCulture) : "-")} | {settle:F0} |"));
         }
         md.AppendLine();
-        return md.ToString();
+        // Only steps with notches make rows: a scenario without the wheel gets no table.
+        return steps.Any(s => wheels.Any(w => w >= s.Start && w <= s.End)) ? md.ToString() : "";
     }
 
     static List<Offset> Read(string path) =>
