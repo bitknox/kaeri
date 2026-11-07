@@ -213,11 +213,15 @@ sealed partial class SearchFiltersPanel : Grid
     public void FocusStart() => closeButton.Focus(FocusState.Keyboard);
 
 #if KAERI_TESTING
-    /// <summary>For a screenshot of the lower sections: the first tag group open, then the panel scrolled to its end.</summary>
-    public void ShowEnd()
+    /// <summary>For a screenshot: the lower sections, the panel scrolled to its end, or the tags with the first group open.</summary>
+    public void ShowFurther(bool tags)
     {
-        if (tagGroups.Children.OfType<Expander>().FirstOrDefault() is { } first)
+        if (tags && tagGroups.Children.OfType<Expander>().FirstOrDefault() is { } first)
+        {
             first.IsExpanded = true;
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => findTag.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0, AnimationDesired = false }));
+            return;
+        }
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => scroll.ChangeView(null, scroll.ScrollableHeight, null, true));
     }
 #endif

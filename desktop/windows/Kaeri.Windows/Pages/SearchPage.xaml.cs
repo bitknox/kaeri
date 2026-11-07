@@ -197,9 +197,9 @@ public sealed partial class SearchPage : Page
         else if (ctx.Options.Show == "browse-none")
             filters = Searches.Nothing.WithYear(1971) with { Genres = ["Horror"] };
         // --show=search-filters: a filter of each kind set and the panel open, for a screenshot;
-        // search-filters-end: the panel scrolled to its end with a tag group open; search-chips:
-        // the filters with the panel shut.
-        else if (ctx.Options.Show is "search-filters" or "search-filters-end" or "search-chips")
+        // search-filters-end: the panel scrolled to its end; search-filters-tags: the tags with
+        // the first group open; search-chips: the filters with the panel shut.
+        else if (ctx.Options.Show is "search-filters" or "search-filters-end" or "search-filters-tags" or "search-chips")
         {
             filters = Searches.Nothing with
             {
@@ -212,13 +212,14 @@ public sealed partial class SearchPage : Page
                 MinPopularity = SearchFilters.ObscureBelow,
             };
             FiltersOnArrival = ctx.Options.Show != "search-chips";
-            if (ctx.Options.Show == "search-filters-end")
+            if (ctx.Options.Show is "search-filters-end" or "search-filters-tags")
             {
+                var tags = ctx.Options.Show == "search-filters-tags";
                 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
                 timer.Tick += (_, _) =>
                 {
                     timer.Stop();
-                    panel.ShowEnd();
+                    panel.ShowFurther(tags);
                 };
                 timer.Start();
             }
