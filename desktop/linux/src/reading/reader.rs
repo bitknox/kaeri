@@ -550,10 +550,20 @@ impl Reader {
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
-        // The scrubber runs with the book: right to left fills from the right. A strip runs
-        // top to bottom and fills from the left.
-        let rtl = view.direction == ReadDirection::RightToLeft;
-        self.scrub.set_inverted(rtl && (view.medium == Medium::Novel || !view.mode.flows()));
+        // The scrubber runs with the book: right to left fills from the right, with the count
+        // at the right and the total at the left, as the board draws it. A strip runs top to
+        // bottom and fills from the left. The scale keeps its own direction and is inverted.
+        let rtl = view.direction == ReadDirection::RightToLeft
+            && (view.medium == Medium::Novel || !view.mode.flows());
+        if let Some(row) = self.scrub.parent() {
+            row.set_direction(if rtl {
+                gtk::TextDirection::Rtl
+            } else {
+                gtk::TextDirection::Ltr
+            });
+        }
+        self.scrub.set_direction(gtk::TextDirection::Ltr);
+        self.scrub.set_inverted(rtl);
         self.settings.set_popover(Some(&self.settings_popover()));
         self.apply_look();
         if view.medium == Medium::Novel {

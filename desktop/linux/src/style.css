@@ -376,14 +376,16 @@ scale.reader-scrub slider {
   --haze: #4F546E;
   --headerbar-fg-color: #1E2033;
   --window-fg-color: #1E2033;
-  --view-fg-color: #1E2033;
   --card-bg-color: #E3DFD4;
   --card-fg-color: #1E2033;
   --popover-bg-color: #FCFAF4;
   --popover-fg-color: #1E2033;
+  --view-bg-color: #FCFAF4;
+  --view-fg-color: #1E2033;
   --border-color: #DAD5C9;
   color: #1E2033;
 }
+.reader-light toggle:checked { color: var(--silk); background: #FCFAF4; }
 .strip-leaf { background: transparent; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }
@@ -487,7 +489,7 @@ popover.ep-panel > contents { padding: 0; }
 gridview.reader-pages { background: none; }
 gridview.reader-pages > child { padding: 5px; border-radius: 8px; }
 .reader-thumb { border-radius: 8px; background: var(--raised); }
-.reader-thumb.open { box-shadow: inset 0 0 0 2px currentColor; }
+.reader-thumb.open { outline: 2px solid var(--silk); outline-offset: -2px; }
 list.reader-chapter-list { background: none; }
 list.reader-chapter-list > row { border-radius: 8px; }
 .reader-chapter-list row.reader-here { background: var(--raised-selected); }

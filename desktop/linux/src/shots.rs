@@ -2032,9 +2032,12 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 }
                 "trailer-preview" => crate::trailer::shot_preview(window.upcast_ref()),
                 #[cfg(feature = "fixtures")]
-                "read-library-filters" | "read-search-filters" | "read-paged-settings" => {
-                    open_popover(&window)
-                }
+                "read-library-filters"
+                | "read-search-filters"
+                | "read-paged-settings"
+                | "read-chapters"
+                | "read-chapters-list"
+                | "read-novel-paper" => open_popover(&window),
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
@@ -3295,7 +3298,13 @@ fn open_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f3
     let width = popover.width() as f32;
     let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
         .clamp(0.0, (window.width() as f32 - width).max(0.0));
-    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+    // Under the button, or over it for one that opens upwards, as the reader's do.
+    let y = if button.direction() == gtk::ArrowType::Up {
+        bounds.y() - popover.height() as f32
+    } else {
+        bounds.y() + bounds.height()
+    };
+    Some((popover.upcast(), x, y.max(0.0)))
 }
 
 /// The first text field under `widget`.
