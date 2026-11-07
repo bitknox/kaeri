@@ -87,6 +87,7 @@ pub fn label(key: SettingKey) -> String {
         K::WebtoonMode => t::settings_reader_webtoons(),
         K::SendProgressAfter => t::settings_send_progress_after(),
         K::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
+        K::CountsAsRead => t::settings_counts_read(),
         K::ChapterNotifications => t::settings_chapter_notifications(),
         K::OpenAt => t::settings_open_at(),
         K::AdultTitles => t::settings_label_adult_titles(),
@@ -346,6 +347,11 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
         K::WhenTrackersDisagree => strs(&[
             ("furthest", "furthest", t::settings_disagree_furthest()),
             ("latest", "latest", t::settings_disagree_latest()),
+        ]),
+        K::CountsAsRead => strs(&[
+            ("last-page", "last-page", t::settings_counts_read_value()),
+            ("moving-on", "moving-on", t::settings_counts_read_moving_on()),
+            ("marked", "marked", t::settings_counts_read_marked()),
         ]),
         _ if is_switch(key) => vec![
             Choice::new(V::Bool(false), "off", t::value_off()),

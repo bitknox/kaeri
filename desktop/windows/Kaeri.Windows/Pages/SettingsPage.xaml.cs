@@ -159,6 +159,7 @@ public sealed partial class SettingsPage : Page
         K.WebtoonMode => T.SettingsReaderWebtoons,
         K.SendProgressAfter => T.SettingsSendProgressAfter,
         K.WhenTrackersDisagree => T.SettingsWhenTrackersDisagree,
+        K.CountsAsRead => T.SettingsCountsRead,
         K.ChapterNotifications => T.SettingsChapterNotifications,
         K.OpenAt => T.SettingsOpenAt,
         K.AdultTitles => T.SettingsAdult,

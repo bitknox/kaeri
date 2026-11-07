@@ -97,6 +97,12 @@ public static class SettingsCatalog
             [Str("chapter", "chapter", T.SettingsProgressChapter), Str("close", "close", T.SettingsProgressClose)],
         SettingKey.WhenTrackersDisagree =>
             [Str("furthest", "furthest", T.SettingsDisagreeFurthest), Str("latest", "latest", T.SettingsDisagreeLatest)],
+        SettingKey.CountsAsRead =>
+        [
+            Str("last-page", "last-page", T.SettingsCountsReadValue),
+            Str("moving-on", "moving-on", T.SettingsCountsReadMovingOn),
+            Str("marked", "marked", T.SettingsCountsReadMarked),
+        ],
         _ when IsSwitch(key) => [new(new SettingValue.Bool(false), "off", T.ValueOff), new(new SettingValue.Bool(true), "on", T.ValueOn)],
         _ => [],
     };
