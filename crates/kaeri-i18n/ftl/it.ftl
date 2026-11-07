@@ -890,7 +890,7 @@ cause-proxy-address-unusable = L'indirizzo del proxy non è utilizzabile per un 
 cause-server-unreachable = Impossibile raggiungere il server.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri non ospita alcuna serie. Le fonti le aggiungi tu.
+legal-hosts-no-content = Kaeri non ospita serie né libri. Le fonti le aggiungi tu.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Impostazione salvata: { $label }.

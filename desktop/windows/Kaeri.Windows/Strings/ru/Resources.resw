@@ -981,7 +981,7 @@
     <value>Не удалось связаться с сервером.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri не размещает никаких сериалов. Источники вы добавляете сами.</value>
+    <value>Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Сохранено: {label}.</value>

@@ -897,7 +897,7 @@
     <value>Der Server war nicht erreichbar.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri hostet keine Serien. Du fügst deine eigenen Quellen hinzu.</value>
+    <value>Kaeri hostet keine Serien oder Bücher. Du fügst deine eigenen Quellen hinzu.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>{label} gespeichert.</value>

@@ -303,7 +303,7 @@
     <string name="cause_proxy_needs_address">Proxy memerlukan host dan port.</string>
     <string name="cause_proxy_address_unusable">Alamat proxy tidak dapat diperiksa.</string>
     <string name="cause_server_unreachable">Server tidak dapat dihubungi.</string>
-    <string name="legal_hosts_no_content">Kaeri tidak menghosting tayangan apa pun. Anda menambahkan sumber-sumber Anda sendiri.</string>
+    <string name="legal_hosts_no_content">Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.</string>
     <string name="notice_saved">%1$s disimpan.</string>
     <string name="notice_not_saved">Tidak dapat menyimpan pengaturan itu. %1$s</string>
     <string name="notice_title_load_failed">Tidak dapat memuat judul ini. Periksa koneksi Anda, lalu coba lagi.</string>

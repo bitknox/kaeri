@@ -939,7 +939,7 @@
     <value>Impossibile raggiungere il server.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri non ospita alcuna serie. Le fonti le aggiungi tu.</value>
+    <value>Kaeri non ospita serie né libri. Le fonti le aggiungi tu.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Impostazione salvata: {label}.</value>

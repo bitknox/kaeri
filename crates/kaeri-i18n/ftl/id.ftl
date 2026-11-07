@@ -862,7 +862,7 @@ cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
 cause-server-unreachable = Server tidak dapat dihubungi.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri tidak menghosting tayangan apa pun. Anda menambahkan sumber-sumber Anda sendiri.
+legal-hosts-no-content = Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label } disimpan.

@@ -939,7 +939,7 @@
     <value>No se pudo contactar con el servidor.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri no aloja ninguna serie. Tú agregas tus propias fuentes.</value>
+    <value>Kaeri no aloja series ni libros. Tú agregas tus propias fuentes.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Se guardó {label}.</value>

@@ -876,7 +876,7 @@ cause-proxy-address-unusable = Proxyns adress kan inte användas för en kontrol
 cause-server-unreachable = Det gick inte att nå servern.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri lagrar inga serier. Du lägger till dina egna källor.
+legal-hosts-no-content = Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Sparade { $label }.

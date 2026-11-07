@@ -331,7 +331,7 @@
     <string name="cause_proxy_needs_address">Um proxy precisa de um endereço e de uma porta.</string>
     <string name="cause_proxy_address_unusable">O endereço do proxy não pode ser usado na verificação.</string>
     <string name="cause_server_unreachable">Não foi possível alcançar o servidor.</string>
-    <string name="legal_hosts_no_content">O Kaeri não hospeda nenhuma série. Você adiciona suas próprias fontes.</string>
+    <string name="legal_hosts_no_content">O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes.</string>
     <string name="notice_saved">Configuração salva: %1$s.</string>
     <string name="notice_not_saved">Não foi possível salvar essa configuração. %1$s</string>
     <string name="notice_title_load_failed">Não foi possível carregar este título. Verifique sua conexão e tente de novo.</string>

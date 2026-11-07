@@ -939,7 +939,7 @@
     <value>Le serveur est injoignable.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri n’héberge aucune série. Vous ajoutez vos propres sources.</value>
+    <value>Kaeri n’héberge aucune série ni aucun livre. Vous ajoutez vos propres sources.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>« {label} » enregistré.</value>

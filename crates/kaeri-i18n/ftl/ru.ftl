@@ -904,7 +904,7 @@ cause-proxy-address-unusable = Адрес прокси не подходит д�
 cause-server-unreachable = Не удалось связаться с сервером.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri не размещает никаких сериалов. Источники вы добавляете сами.
+legal-hosts-no-content = Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Сохранено: { $label }.

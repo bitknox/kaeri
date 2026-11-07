@@ -876,7 +876,7 @@ cause-proxy-address-unusable = Vekil sunucunun adresi denetim için kullanılam�
 cause-server-unreachable = Sunucuya ulaşılamadı.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri hiçbir dizi barındırmaz. Kaynaklar sizin eklediklerinizdir.
+legal-hosts-no-content = Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Kaydedildi: { $label }.

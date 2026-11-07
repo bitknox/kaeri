@@ -317,7 +317,7 @@
     <string name="cause_proxy_needs_address">Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</string>
     <string name="cause_proxy_address_unusable">Vekil sunucunun adresi denetim için kullanılamıyor.</string>
     <string name="cause_server_unreachable">Sunucuya ulaşılamadı.</string>
-    <string name="legal_hosts_no_content">Kaeri hiçbir dizi barındırmaz. Kaynaklar sizin eklediklerinizdir.</string>
+    <string name="legal_hosts_no_content">Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.</string>
     <string name="notice_saved">Kaydedildi: %1$s.</string>
     <string name="notice_not_saved">Bu ayar kaydedilemedi. %1$s</string>
     <string name="notice_title_load_failed">Bu başlık yüklenemedi. Bağlantınızı denetleyin ve yeniden deneyin.</string>

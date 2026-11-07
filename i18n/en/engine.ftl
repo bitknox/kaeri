@@ -1,5 +1,5 @@
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = { -app-name } doesn't host any shows. You add your own { -source-pl }.
+legal-hosts-no-content = { -app-name } doesn't host any shows or books. You add your own { -source-pl }.
 
 # Toast after a setting is stored. The label is the setting's name.
 # @arg label: text

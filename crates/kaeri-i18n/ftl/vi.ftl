@@ -862,7 +862,7 @@ cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy nà
 cause-server-unreachable = Không kết nối được tới máy chủ.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình.
+legal-hosts-no-content = Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Đã lưu { $label }.

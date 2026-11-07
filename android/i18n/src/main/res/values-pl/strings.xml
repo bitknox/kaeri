@@ -345,7 +345,7 @@
     <string name="cause_proxy_needs_address">Proxy wymaga hosta i portu.</string>
     <string name="cause_proxy_address_unusable">Adres proxy nie nadaje się do sprawdzenia.</string>
     <string name="cause_server_unreachable">Nie udało się połączyć z serwerem.</string>
-    <string name="legal_hosts_no_content">Kaeri nie udostępnia żadnych seriali. Źródła dodajesz samodzielnie.</string>
+    <string name="legal_hosts_no_content">Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.</string>
     <string name="notice_saved">Zapisano: %1$s.</string>
     <string name="notice_not_saved">Nie udało się zapisać tego ustawienia. %1$s</string>
     <string name="notice_title_load_failed">Nie udało się wczytać tego tytułu. Sprawdź połączenie i spróbuj ponownie.</string>

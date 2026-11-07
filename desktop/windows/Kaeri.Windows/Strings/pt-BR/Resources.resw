@@ -939,7 +939,7 @@
     <value>Não foi possível alcançar o servidor.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>O Kaeri não hospeda nenhuma série. Você adiciona suas próprias fontes.</value>
+    <value>O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Configuração salva: {label}.</value>

@@ -897,7 +897,7 @@
     <value>Det gick inte att nå servern.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri lagrar inga serier. Du lägger till dina egna källor.</value>
+    <value>Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Sparade {label}.</value>

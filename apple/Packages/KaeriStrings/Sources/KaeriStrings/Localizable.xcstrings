@@ -73834,79 +73834,79 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri hostet keine Serien. Du fügst deine eigenen Quellen hinzu."
+            "value" : "Kaeri hostet keine Serien oder Bücher. Du fügst deine eigenen Quellen hinzu."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri doesn't host any shows. You add your own sources."
+            "value" : "Kaeri doesn't host any shows or books. You add your own sources."
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri no aloja ninguna serie. Tú agregas tus propias fuentes."
+            "value" : "Kaeri no aloja series ni libros. Tú agregas tus propias fuentes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri n’héberge aucune série. Vous ajoutez vos propres sources."
+            "value" : "Kaeri n’héberge aucune série ni aucun livre. Vous ajoutez vos propres sources."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri tidak menghosting tayangan apa pun. Anda menambahkan sumber-sumber Anda sendiri."
+            "value" : "Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri non ospita alcuna serie. Le fonti le aggiungi tu."
+            "value" : "Kaeri non ospita serie né libri. Le fonti le aggiungi tu."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeriは作品をホストしていません。ソースはご自身で追加します。"
+            "value" : "Kaeriは作品も本もホストしていません。ソースはご自身で追加します。"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri nie udostępnia żadnych seriali. Źródła dodajesz samodzielnie."
+            "value" : "Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O Kaeri não hospeda nenhuma série. Você adiciona suas próprias fontes."
+            "value" : "O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri не размещает никаких сериалов. Источники вы добавляете сами."
+            "value" : "Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri lagrar inga serier. Du lägger till dina egna källor."
+            "value" : "Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri hiçbir dizi barındırmaz. Kaynaklar sizin eklediklerinizdir."
+            "value" : "Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình."
+            "value" : "Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình."
           }
         }
       }

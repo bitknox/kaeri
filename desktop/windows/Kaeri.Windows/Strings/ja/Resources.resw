@@ -855,7 +855,7 @@
     <value>サーバーに接続できませんでした。</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeriは作品をホストしていません。ソースはご自身で追加します。</value>
+    <value>Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>{label}を保存しました。</value>

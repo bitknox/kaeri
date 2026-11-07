@@ -317,7 +317,7 @@
     <string name="cause_proxy_needs_address">En proxy behöver en värd och en port.</string>
     <string name="cause_proxy_address_unusable">Proxyns adress kan inte användas för en kontroll.</string>
     <string name="cause_server_unreachable">Det gick inte att nå servern.</string>
-    <string name="legal_hosts_no_content">Kaeri lagrar inga serier. Du lägger till dina egna källor.</string>
+    <string name="legal_hosts_no_content">Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</string>
     <string name="notice_saved">Sparade %1$s.</string>
     <string name="notice_not_saved">Det gick inte att spara inställningen. %1$s</string>
     <string name="notice_title_load_failed">Det gick inte att läsa in titeln. Kontrollera anslutningen och försök igen.</string>

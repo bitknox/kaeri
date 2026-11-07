@@ -897,7 +897,7 @@
     <value>Sunucuya ulaşılamadı.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri hiçbir dizi barındırmaz. Kaynaklar sizin eklediklerinizdir.</value>
+    <value>Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Kaydedildi: {label}.</value>

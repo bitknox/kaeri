@@ -303,7 +303,7 @@
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
     <string name="cause_proxy_address_unusable">Không kiểm tra được địa chỉ proxy này.</string>
     <string name="cause_server_unreachable">Không kết nối được tới máy chủ.</string>
-    <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình.</string>
+    <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
     <string name="notice_saved">Đã lưu %1$s.</string>
     <string name="notice_not_saved">Không lưu được cài đặt đó. %1$s</string>
     <string name="notice_title_load_failed">Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.</string>

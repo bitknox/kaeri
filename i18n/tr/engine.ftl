@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } hiçbir dizi barındırmaz. { -source-cap-pl } sizin eklediklerinizdir.
+legal-hosts-no-content = { -app-name } hiçbir dizi veya kitap barındırmaz. { -source-cap-pl } sizin eklediklerinizdir.
 notice-saved = Kaydedildi: { $label }.
 notice-not-saved = Bu ayar kaydedilemedi. { $reason }
 notice-title-load-failed = Bu başlık yüklenemedi. Bağlantınızı denetleyin ve yeniden deneyin.

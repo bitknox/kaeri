@@ -303,7 +303,7 @@
     <string name="cause_proxy_needs_address">プロキシにはホストとポートが必要です。</string>
     <string name="cause_proxy_address_unusable">プロキシのアドレスは、確認に使えないアドレスです。</string>
     <string name="cause_server_unreachable">サーバーに接続できませんでした。</string>
-    <string name="legal_hosts_no_content">Kaeriは作品をホストしていません。ソースはご自身で追加します。</string>
+    <string name="legal_hosts_no_content">Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</string>
     <string name="notice_saved">%1$sを保存しました。</string>
     <string name="notice_not_saved">設定を保存できませんでした。%1$s</string>
     <string name="notice_title_load_failed">この作品の詳細を読み込めませんでした。接続を確認して、もう一度お試しください。</string>

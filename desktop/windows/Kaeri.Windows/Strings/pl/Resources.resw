@@ -981,7 +981,7 @@
     <value>Nie udało się połączyć z serwerem.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri nie udostępnia żadnych seriali. Źródła dodajesz samodzielnie.</value>
+    <value>Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Zapisano: {label}.</value>

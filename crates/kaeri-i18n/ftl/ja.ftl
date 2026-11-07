@@ -862,7 +862,7 @@ cause-proxy-address-unusable = プロキシのアドレスは、確認に使え�
 cause-server-unreachable = サーバーに接続できませんでした。
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeriは作品をホストしていません。ソースはご自身で追加します。
+legal-hosts-no-content = Kaeriは作品も本もホストしていません。ソースはご自身で追加します。
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label }を保存しました。

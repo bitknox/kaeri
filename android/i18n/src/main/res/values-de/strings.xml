@@ -317,7 +317,7 @@
     <string name="cause_proxy_needs_address">Ein Proxy braucht einen Host und einen Port.</string>
     <string name="cause_proxy_address_unusable">Die Adresse des Proxys kann für eine Prüfung nicht verwendet werden.</string>
     <string name="cause_server_unreachable">Der Server war nicht erreichbar.</string>
-    <string name="legal_hosts_no_content">Kaeri hostet keine Serien. Du fügst deine eigenen Quellen hinzu.</string>
+    <string name="legal_hosts_no_content">Kaeri hostet keine Serien oder Bücher. Du fügst deine eigenen Quellen hinzu.</string>
     <string name="notice_saved">%1$s gespeichert.</string>
     <string name="notice_not_saved">Diese Einstellung konnte nicht gespeichert werden. %1$s</string>
     <string name="notice_title_load_failed">Dieser Titel konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.</string>

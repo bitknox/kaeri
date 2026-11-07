@@ -855,7 +855,7 @@
     <value>Không kết nối được tới máy chủ.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình.</value>
+    <value>Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Đã lưu {label}.</value>

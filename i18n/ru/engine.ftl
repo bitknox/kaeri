@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } не размещает никаких сериалов. { -source-cap-pl } вы добавляете сами.
+legal-hosts-no-content = { -app-name } не размещает ни сериалов, ни книг. { -source-cap-pl } вы добавляете сами.
 notice-saved = Сохранено: { $label }.
 notice-not-saved = Не удалось сохранить настройку. { $reason }
 notice-title-load-failed = Не удалось загрузить этот тайтл. Проверьте подключение и попробуйте ещё раз.

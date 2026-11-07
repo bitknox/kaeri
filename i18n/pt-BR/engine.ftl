@@ -1,4 +1,4 @@
-legal-hosts-no-content = O { -app-name } não hospeda nenhuma série. Você adiciona suas próprias { -source-pl }.
+legal-hosts-no-content = O { -app-name } não hospeda séries nem livros. Você adiciona suas próprias { -source-pl }.
 notice-saved = Configuração salva: { $label }.
 notice-not-saved = Não foi possível salvar essa configuração. { $reason }
 notice-title-load-failed = Não foi possível carregar este título. Verifique sua conexão e tente de novo.

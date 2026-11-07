@@ -345,7 +345,7 @@
     <string name="cause_proxy_needs_address">Для прокси нужны хост и порт.</string>
     <string name="cause_proxy_address_unusable">Адрес прокси не подходит для проверки.</string>
     <string name="cause_server_unreachable">Не удалось связаться с сервером.</string>
-    <string name="legal_hosts_no_content">Kaeri не размещает никаких сериалов. Источники вы добавляете сами.</string>
+    <string name="legal_hosts_no_content">Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.</string>
     <string name="notice_saved">Сохранено: %1$s.</string>
     <string name="notice_not_saved">Не удалось сохранить настройку. %1$s</string>
     <string name="notice_title_load_failed">Не удалось загрузить этот тайтл. Проверьте подключение и попробуйте ещё раз.</string>
