@@ -1043,6 +1043,21 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ) WITHOUT ROWID;
     "#,
     ),
+    (
+        "0031_book_series_hint",
+        r#"
+    -- How a source says a series' pages read (`rtl`, `ltr`, `vertical`, `strip`), as it last
+    -- answered; `hint` is NULL when it said nothing. The reader takes it after the person's own
+    -- choice for the series. Stays on the device, as the chapter lists do.
+    CREATE TABLE book_series_hint (
+        source_id  TEXT    NOT NULL,
+        series_ref TEXT    NOT NULL,
+        hint       TEXT,
+        fetched_at INTEGER NOT NULL,
+        PRIMARY KEY (source_id, series_ref)
+    ) WITHOUT ROWID;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
@@ -1190,6 +1205,7 @@ mod tests {
             "book_work",
             "book_rhythm",
             "book_chapter_cache",
+            "book_series_hint",
             "book_source_match",
             "book_edition_pref",
             "book_folder",

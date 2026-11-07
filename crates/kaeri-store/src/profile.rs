@@ -86,6 +86,7 @@ pub const DEVICE_TABLES: &[&str] = &[
     "book_work",
     "book_rhythm",
     "book_chapter_cache",
+    "book_series_hint",
     "book_folder",
     "book_local_series",
     "book_local_file",

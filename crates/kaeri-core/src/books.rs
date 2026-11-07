@@ -649,24 +649,40 @@ impl SeriesStatus {
     }
 }
 
-/// Which way a source says its pages read: one step in guessing the reader's mode, after the
-/// series' own choice and ComicInfo.
+/// How a source says its pages read. The reader takes it after the person's own choice for the
+/// series and before its own guess from the book.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ReadingHint {
     RightToLeft,
     LeftToRight,
-    /// One long strip.
+    /// Pages one under another, each whole on the screen.
+    Vertical,
+    /// One long strip: a webtoon.
     Strip,
 }
 
 impl ReadingHint {
-    /// `rtl`, `ltr`, `strip`; anything else is no hint.
+    /// `rtl`, `ltr`, `vertical`, `strip`, and the names sources give them (`webtoon`,
+    /// `long strip`); anything else is no hint.
     pub fn parse(name: &str) -> Option<Self> {
-        match name.trim().to_ascii_lowercase().as_str() {
-            "rtl" | "right-to-left" | "right to left" => Some(Self::RightToLeft),
-            "ltr" | "left-to-right" | "left to right" => Some(Self::LeftToRight),
-            "strip" | "vertical" | "webtoon" | "long-strip" => Some(Self::Strip),
+        match name.trim().to_ascii_lowercase().replace(['_', ' '], "-").as_str() {
+            "rtl" | "right-to-left" => Some(Self::RightToLeft),
+            "ltr" | "left-to-right" => Some(Self::LeftToRight),
+            "vertical" => Some(Self::Vertical),
+            "strip" | "webtoon" | "long-strip" | "longstrip" | "continuous" => {
+                Some(Self::Strip)
+            }
             _ => None,
+        }
+    }
+
+    /// The name [`Self::parse`] reads back.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::RightToLeft => "rtl",
+            Self::LeftToRight => "ltr",
+            Self::Vertical => "vertical",
+            Self::Strip => "strip",
         }
     }
 }
@@ -935,6 +951,18 @@ mod tests {
         assert_eq!(SeriesStatus::parse("paused"), Some(SeriesStatus::Other("paused".into())));
         assert_eq!(ReadingHint::parse("RTL"), Some(ReadingHint::RightToLeft));
         assert_eq!(ReadingHint::parse("sideways"), None);
+        assert_eq!(ReadingHint::parse("Long Strip"), Some(ReadingHint::Strip));
+        assert_eq!(ReadingHint::parse("WEBTOON"), Some(ReadingHint::Strip));
+        assert_eq!(ReadingHint::parse("left_to_right"), Some(ReadingHint::LeftToRight));
+        assert_eq!(ReadingHint::parse("vertical"), Some(ReadingHint::Vertical));
+        for hint in [
+            ReadingHint::RightToLeft,
+            ReadingHint::LeftToRight,
+            ReadingHint::Vertical,
+            ReadingHint::Strip,
+        ] {
+            assert_eq!(ReadingHint::parse(hint.as_str()), Some(hint));
+        }
         assert_eq!(BookSourceKind::Folder.tier(), 0);
         assert!(BookIds::default().is_empty());
     }

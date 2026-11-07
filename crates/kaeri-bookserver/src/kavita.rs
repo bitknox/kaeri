@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use kaeri_core::{
     books::{
         BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, PageRef,
-        SeriesDetail, SeriesHit, SourceChapter,
+        ReadingHint, SeriesDetail, SeriesHit, SourceChapter,
     },
     error::ProviderError,
     media::Medium,
@@ -149,6 +149,27 @@ struct LibraryRow {
     id: i64,
     #[serde(default)]
     name: String,
+    /// Kavita's library type: 0 manga, 1 comic, 2 book, 3 image, 4 light novel, 5 comic
+    /// (named from Comic Vine).
+    #[serde(default, rename = "type")]
+    kind: Option<i64>,
+}
+
+impl LibraryRow {
+    /// A library of comics, which read left to right. Kavita keeps no direction of a series'
+    /// own, so this is all it says of one.
+    fn comics(&self) -> bool {
+        matches!(self.kind, Some(1 | 5))
+    }
+}
+
+/// The libraries this account sees. Kavita before 0.8 lists them at `api/Library`.
+async fn library_rows(signed: &Http) -> Result<Vec<LibraryRow>> {
+    match signed.json("api/Library/libraries").await {
+        Ok(rows) => Ok(rows),
+        Err(ServerError::NotFound | ServerError::Status(_)) => signed.json("api/Library").await,
+        Err(e) => Err(e),
+    }
 }
 
 /// Kavita's filter field for a series' library, and the comparison "is one of".
@@ -169,16 +190,9 @@ async fn count_in_library(signed: &Http, library: i64) -> Option<u32> {
     pagination_total(response.headers().get("pagination")?.to_str().ok()?)
 }
 
-/// The libraries this account sees, each with its series counted. Kavita before 0.8 lists them
-/// at `api/Library`.
+/// The libraries this account sees, each with its series counted.
 pub async fn libraries(signed: &Http) -> Result<Vec<crate::Library>> {
-    let rows: Vec<LibraryRow> = match signed.json("api/Library/libraries").await {
-        Ok(rows) => rows,
-        Err(ServerError::NotFound | ServerError::Status(_)) => {
-            signed.json("api/Library").await?
-        }
-        Err(e) => return Err(e),
-    };
+    let rows = library_rows(signed).await?;
     let mut out = Vec::with_capacity(rows.len());
     for row in rows {
         let series = count_in_library(signed, row.id).await;
@@ -425,6 +439,14 @@ impl BookSource for KavitaSource {
             .map_err(|e| self.aim(e))?;
         let name = row.get("name").and_then(|v| v.as_str()).unwrap_or(id);
         let mut detail = SeriesDetail::new(id, name);
+        if let Some(library) = row.get("libraryId").and_then(serde_json::Value::as_i64)
+            && let Ok(libraries) = library_rows(&self.http).await
+        {
+            detail.reading_hint = libraries
+                .iter()
+                .any(|l| l.id == library && l.comics())
+                .then_some(ReadingHint::LeftToRight);
+        }
         if let Ok(meta) = self
             .http
             .json::<serde_json::Value>(&format!("api/Series/metadata?seriesId={}", encode(id)))

@@ -1,8 +1,10 @@
 //! The reading catalogue as this device last heard it: each work's facts from AniList, when its
-//! chapters usually come out, each source's chapter list, and the chapters already told about.
+//! chapters usually come out, each source's chapter list and word on how a series reads, and the
+//! chapters already told about.
 //!
-//! `book_work`, `book_rhythm` and `book_chapter_cache` stay on the device; `read_notice` is
-//! personal, as `episode_notice` is, so a profile is never told twice of one chapter.
+//! `book_work`, `book_rhythm`, `book_chapter_cache` and `book_series_hint` stay on the device;
+//! `read_notice` is personal, as `episode_notice` is, so a profile is never told twice of one
+//! chapter.
 
 use rusqlite::{OptionalExtension, params};
 
@@ -192,6 +194,42 @@ impl Store {
         })
     }
 
+    /// Keep how a source says a series' pages read: `None` when it said nothing.
+    pub fn put_book_series_hint(
+        &self,
+        source_id: &str,
+        series_ref: &str,
+        hint: Option<&str>,
+        at: i64,
+    ) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "INSERT OR REPLACE INTO book_series_hint (source_id, series_ref, hint, fetched_at)
+                 VALUES (?1, ?2, ?3, ?4)",
+                params![source_id, series_ref, hint, at],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// How a source last said a series' pages read, and when it was asked: `None` when it was
+    /// never asked.
+    pub fn book_series_hint(
+        &self,
+        source_id: &str,
+        series_ref: &str,
+    ) -> Result<Option<(Option<String>, i64)>> {
+        self.with_conn(|c| {
+            Ok(c.query_row(
+                "SELECT hint, fetched_at FROM book_series_hint
+                  WHERE source_id = ?1 AND series_ref = ?2",
+                [source_id, series_ref],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?)
+        })
+    }
+
     /// Whether this profile was told of a chapter already.
     pub fn chapter_noticed(&self, work: &str, chapter: &str) -> Result<bool> {
         self.with_personal(|c| {
@@ -276,6 +314,16 @@ mod tests {
 
         store.put_book_chapters("shelf", "s-1", "[]", 5).unwrap();
         assert_eq!(store.book_chapters("shelf", "s-1").unwrap(), Some(("[]".into(), 5)));
+
+        // A source's word on how a series reads, and its silence, are both kept.
+        assert_eq!(store.book_series_hint("komga", "s-1").unwrap(), None);
+        store.put_book_series_hint("komga", "s-1", Some("ltr"), 6).unwrap();
+        assert_eq!(
+            store.book_series_hint("komga", "s-1").unwrap(),
+            Some((Some("ltr".into()), 6))
+        );
+        store.put_book_series_hint("komga", "s-1", None, 7).unwrap();
+        assert_eq!(store.book_series_hint("komga", "s-1").unwrap(), Some((None, 7)));
 
         assert!(!store.chapter_noticed("a:900301", "13").unwrap());
         assert!(store.notice_chapter("a:900301", "13", 1).unwrap());
