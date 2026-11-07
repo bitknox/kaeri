@@ -101,8 +101,8 @@ modified file is shipped in source form, as MPL-2.0 requires.
 
 | | |
 |---|---|
-| What | the two works the reading demo opens with: `assets/demo/kwaidan-yuki-onna.txt`, built into the engine, and three comic pages the engine reads from Wikimedia Commons and never bundles |
-| Source | "Yuki-Onna" from *Kwaidan* by Lafcadio Hearn (1904), from Project Gutenberg ebook 1210. *Pepper&Carrot*, episode 1, by David Revoy, English pages 1 to 3 on Wikimedia Commons |
-| Licence | Kwaidan: public domain. Pepper&Carrot: CC BY 4.0, credited in the reader as "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." |
+| What | the two works the reading demo opens with: `assets/demo/kwaidan-yuki-onna.txt` and its cover `assets/demo/kwaidan-yuki-onna-cover.jpg`, built into the engine, and three comic pages the engine reads from Wikimedia Commons and never bundles |
+| Source | "Yuki-Onna" from *Kwaidan* by Lafcadio Hearn (1904), from Project Gutenberg ebook 1210. The book's frontispiece, "Blowing her breath upon him" by Keishū Takénouchi (1904), from Wikimedia Commons. *Pepper&Carrot*, episode 1, by David Revoy, English pages 1 to 3 on Wikimedia Commons |
+| Licence | Kwaidan and its frontispiece: public domain. Pepper&Carrot: CC BY 4.0, credited in the reader as "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." |
 | Notices | `assets/demo/NOTICE.md` |
-| Changes | The story file has the Project Gutenberg header, footer, illustration line and footnote markers removed. The comic pages are shown as Commons holds them, pinned by SHA-1. |
+| Changes | The story file has the Project Gutenberg header, footer, illustration line and footnote markers removed. The frontispiece is scaled to 900 pixels tall as a JPEG, pinned by SHA-1 at build time. The comic pages are shown as Commons holds them, pinned by SHA-1. |

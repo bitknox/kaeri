@@ -182,3 +182,85 @@ async fn a_server_is_checked_signed_in_to_searched_and_told_what_was_read() {
     assert!(sources.registry.get(&id).is_none());
     assert!(store.book_servers().unwrap().is_empty());
 }
+
+#[tokio::test]
+async fn the_demo_works_are_matched_before_any_search_and_stay_matched() {
+    use kaeri_core::{
+        demo::DEMO_SOURCE_ID,
+        reading_demo::{COMIC, STORY},
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let paths = Paths {
+        config_file: dir.path().join("config.toml"),
+        data_dir: dir.path().join("data"),
+        cache_dir: dir.path().join("cache"),
+    };
+    let db = dir.path().join("data").join("kaeri.db");
+    let open = |store: Store| {
+        BookSources::new(
+            store,
+            TokenStore::new(dir.path().join("tokens")),
+            reqwest::Client::new(),
+            &paths,
+        )
+    };
+    {
+        let store = Store::open(&db).unwrap();
+        // A match left from before, under the wrong medium, is put right.
+        let stale = kaeri_core::books::WorkKey::local(Medium::Manga, STORY.series).id();
+        store
+            .set_book_match(DEMO_SOURCE_ID, STORY.id, stale.as_str(), 50, false, false, 1)
+            .unwrap();
+        let sources = open(store.clone());
+        sources.put_demo(1_000);
+        assert_eq!(
+            store.book_match(DEMO_SOURCE_ID, COMIC.id).unwrap(),
+            Some(COMIC.work_id().0)
+        );
+        assert_eq!(
+            store.book_match(DEMO_SOURCE_ID, STORY.id).unwrap(),
+            Some(STORY.work_id().0)
+        );
+        let (edition, volumes) = sources.chapters(&STORY.work_id(), None, 1_000).await.unwrap();
+        assert_eq!(edition.map(|e| e.source_id).as_deref(), Some(DEMO_SOURCE_ID));
+        assert_eq!(volumes.iter().map(|v| v.chapters.len()).sum::<usize>(), 1);
+    }
+    // After a restart the matches are there before the demo is put back.
+    let store = Store::open(&db).unwrap();
+    assert_eq!(store.book_match(DEMO_SOURCE_ID, STORY.id).unwrap(), Some(STORY.work_id().0));
+    let sources = open(store);
+    sources.put_demo(2_000);
+    let (_, volumes) = sources.chapters(&STORY.work_id(), None, 2_000).await.unwrap();
+    assert_eq!(volumes.len(), 1);
+    // Taken out, the demo leaves no edition behind.
+    sources.remove_demo();
+    assert!(sources.chapters(&COMIC.work_id(), None, 2_000).await.is_err());
+}
+
+#[tokio::test]
+async fn a_search_of_the_sources_marks_the_demo_works() {
+    let dir = tempfile::tempdir().unwrap();
+    let (sources, _store) = sources(dir.path());
+    let query = |text: &str| kaeri_model::reading::ReadSearchQuery {
+        text: text.into(),
+        ..Default::default()
+    };
+    assert!(sources.demo_tiles(&query("kwaidan")).is_empty(), "the demo is off");
+    let found = sources.search("kwaidan", None, 1_000).await;
+    assert!(found.is_empty(), "{found:?}");
+
+    sources.put_demo(1_000);
+    let tiles = sources.demo_tiles(&query("kwaidan"));
+    assert_eq!(tiles.len(), 1);
+    assert!(tiles[0].demo && tiles[0].medium == Medium::Novel);
+    assert_eq!(tiles[0].cover.as_deref(), kaeri_core::reading_demo::STORY.cover());
+    let found = sources.search("kwaidan", None, 1_000).await;
+    assert_eq!(found, tiles, "the sources fallback gives the same tile");
+    let comic = sources.demo_tiles(&query("pepper"));
+    assert_eq!(comic[0].cover.as_deref(), kaeri_core::reading_demo::COMIC.cover());
+    let with_genre = kaeri_model::reading::ReadSearchQuery {
+        genres: vec!["Drama".into()],
+        ..query("pepper")
+    };
+    assert!(sources.demo_tiles(&with_genre).is_empty());
+}

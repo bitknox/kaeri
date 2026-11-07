@@ -7568,6 +7568,10 @@
     <value>[{title} ƀý {author}. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~]</value>
     <comment>The story's credit in About the demo.</comment>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>[Çöṽéŕ: “{title}” ƀý {artist}, {year}. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.</comment>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>[{title} · {author} · {licence}~~~~~]</value>
     <comment>Credit capsule in the reader's top bar on page 1.</comment>

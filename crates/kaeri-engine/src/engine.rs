@@ -414,7 +414,7 @@ impl Engine {
         services.syncing.set_medium(state.reading.answer());
         // The reading demo sits beside the watching demo, under the same switch.
         if state.reading.available && state.config.effective().sources.demo {
-            services.book_sources.put_demo();
+            services.book_sources.put_demo(services.clock.now());
         }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());

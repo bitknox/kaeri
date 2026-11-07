@@ -2279,6 +2279,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s oleh %2$s. Berlisensi %3$s. Dibaca dari Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s oleh %2$s. Domain publik. Sudah ada di dalam aplikasi.</string>
+    <string name="demo_credit_cover">Sampul: “%1$s” oleh %2$s, %3$s. Domain publik. Sudah ada di dalam aplikasi.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Dapat dibaca sekarang</string>
     <string name="search_demo_only_books">Hanya demo yang aktif. Judul lain muncul setelah Anda menambahkan sumber.</string>

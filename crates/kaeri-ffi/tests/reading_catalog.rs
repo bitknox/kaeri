@@ -341,6 +341,144 @@ fn the_lists_and_updates_come_from_what_was_kept() {
     engine.shutdown();
 }
 
+fn search_tiles(
+    engine: &Arc<FfiEngine>,
+    query: ReadSearchQuery,
+) -> Vec<kaeri_model::reading::WorkTile> {
+    engine.send(Command::Reading(ReadingCommand::Search { query: query.clone() }));
+    let read = read_until(
+        engine,
+        move |event| matches!(event, Event::Reading(ReadingEvent::Search { query: q, .. }) if *q == query),
+    );
+    read.into_iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Search { tiles, .. }) => Some(tiles),
+            _ => None,
+        })
+        .expect("a search")
+}
+
+/// The series page of `work` once its chapters are in.
+fn demo_page(engine: &Arc<FfiEngine>, work: &kaeri_core::books::WorkId) -> (SeriesView, usize) {
+    engine.send(Command::Reading(ReadingCommand::LoadSeries { work: work.clone() }));
+    let read = read_until(engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let chapters = read
+        .iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters {
+                work: w, volumes, failure: None, ..
+            }) if w == work => Some(volumes.iter().map(|v| v.chapters.len()).sum()),
+            _ => None,
+        })
+        .expect("the demo's chapters, from the demo itself");
+    let page = read
+        .into_iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Series(view)) if view.work == *work => Some(*view),
+            _ => None,
+        })
+        .expect("the series page");
+    (page, chapters)
+}
+
+#[test]
+fn the_reading_demo_opens_before_any_search_and_after_a_restart() {
+    let (root, engine) = start(FfiScene::ReadingDemo);
+    let info = kaeri_model::sources::reading_demo_info();
+    let (comic, story) = (&info.works[0], &info.works[1]);
+
+    // The story: its own page, as a novel, with its credit and the comic beside it.
+    let (page, chapters) = demo_page(&engine, &story.work);
+    assert_eq!(chapters, 1);
+    assert_eq!(page.titles.display, "Kwaidan");
+    assert_eq!(page.medium, kaeri_core::media::Medium::Novel);
+    assert_eq!(page.demo.as_ref(), Some(story));
+    assert_eq!(page.demo_other.as_ref(), Some(&comic.work));
+    assert_eq!(page.cover, story.cover);
+    assert_eq!(page.synopsis.as_deref(), Some(story.synopsis.as_str()));
+
+    // Its cover comes with the app: the bundled frontispiece, whole, and nothing fetched.
+    let url = page.cover.clone().expect("the story's cover");
+    engine.send(Command::FetchArtwork { url: url.clone() });
+    let wanted = url.clone();
+    let read = read_until(
+        &engine,
+        move |event| matches!(event, Event::ArtworkReady { url, .. } | Event::ImageFailed { url, .. } if *url == wanted),
+    );
+    let bytes = read.into_iter().find_map(|event| match event {
+        Event::ArtworkReady { url: u, bytes } if u == url => Some(bytes),
+        _ => None,
+    });
+    assert_eq!(bytes.as_deref(), Some(kaeri_core::reading_demo::STORY_COVER.bytes));
+
+    // The comic, with its cover.
+    let (page, _) = demo_page(&engine, &comic.work);
+    assert_eq!(page.medium, kaeri_core::media::Medium::Manga);
+    assert_eq!(page.cover, comic.cover);
+    assert_eq!(page.demo_other.as_ref(), Some(&story.work));
+    engine.shutdown();
+
+    // Started again on the same folders: the same works open.
+    let dir = |name: &str| root.path().join(name).display().to_string();
+    let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+    let engine =
+        FfiEngine::start_scene_on(dirs, Arc::new(Quiet), FfiScene::ReadingDemo, at_midday())
+            .expect("the engine starts again");
+    let (page, chapters) = demo_page(&engine, &story.work);
+    assert_eq!((page.demo.as_ref(), chapters), (Some(story), 1));
+    engine.shutdown();
+}
+
+#[test]
+fn search_finds_the_demo_after_anilist_only_while_the_demo_is_on() {
+    let (_root, engine) = start(FfiScene::ReadingDemo);
+    let comic = &kaeri_model::sources::reading_demo_info().works[0];
+    let query =
+        |text: &str| ReadSearchQuery { text: text.into(), ..ReadSearchQuery::default() };
+
+    let found = search_tiles(&engine, query("pepper"));
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(found[0].demo);
+    assert_eq!(found[0].work, comic.work);
+    assert_eq!(found[0].cover, comic.cover);
+
+    // AniList's books first, then the demo's.
+    let found = search_tiles(&engine, query("the"));
+    let demo_at = found.iter().position(|t| t.demo).expect("the comic's chapter has a \"the\"");
+    assert!(demo_at > 0, "AniList's books come first: {found:?}");
+    assert!(found[..demo_at].iter().all(|t| !t.demo && t.work.0.starts_with("a:")));
+    assert!(found[demo_at..].iter().all(|t| t.demo));
+
+    // A filter the demo has nothing for, an empty query, or the novels only leave the comic out.
+    let novels = ReadSearchQuery { formats: vec!["novel".into()], ..query("pepper") };
+    assert!(search_tiles(&engine, novels).iter().all(|t| !t.demo));
+    let browse = search_tiles(&engine, query(""));
+    assert!(browse.iter().all(|t| !t.demo));
+
+    // With the demo removed, nothing of it.
+    engine.send(Command::RemoveDemo);
+    read_until(&engine, |event| matches!(event, Event::Demo(state) if !state.on));
+    assert!(search_tiles(&engine, query("pepper")).is_empty());
+    let found = search_tiles(&engine, query("the"));
+    assert!(!found.is_empty() && found.iter().all(|t| !t.demo), "{found:?}");
+    engine.shutdown();
+}
+
+#[test]
+fn search_without_the_demo_is_anilist_alone() {
+    let (_root, engine) = start(FfiScene::ReadingHome);
+    let found = search_tiles(
+        &engine,
+        ReadSearchQuery { text: "pepper".into(), ..ReadSearchQuery::default() },
+    );
+    assert!(found.is_empty(), "{found:?}");
+    engine.shutdown();
+}
+
 /// Reads until a full series page (not the partial header) and its chapters have both come.
 fn whole_series(
     engine: &Arc<FfiEngine>,

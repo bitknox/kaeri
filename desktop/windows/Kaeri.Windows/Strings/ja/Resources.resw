@@ -5477,6 +5477,9 @@
   <data name="DemoCreditStory" xml:space="preserve">
     <value>{author}「{title}」。パブリックドメイン。アプリに付属しています。</value>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>表紙：{artist}「{title}」（{year}年）。パブリックドメイン。アプリに付属しています。</value>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
   </data>

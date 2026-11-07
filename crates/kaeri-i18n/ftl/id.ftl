@@ -8180,6 +8180,9 @@ demo-credit-book = { $title } oleh { $author }. Berlisensi { $licence }. Dibaca 
 # The story's credit in About the demo.
 demo-credit-story = { $title } oleh { $author }. Domain publik. Sudah ada di dalam aplikasi.
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Sampul: “{ $title }” oleh { $artist }, { $year }. Domain publik. Sudah ada di dalam aplikasi.
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 

@@ -2356,6 +2356,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s av %2$s. Licensierad under %3$s. Läses från Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s av %2$s. Allmän egendom. Den följer med appen.</string>
+    <string name="demo_credit_cover">Omslag: ”%1$s” av %2$s, %3$s. Allmän egendom. Det följer med appen.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Läsbar nu</string>
     <string name="search_demo_only_books">Bara demon är på. Andra titlar visas när du lägger till en källa.</string>
