@@ -639,7 +639,7 @@ fn medium_off_rows(app: &App, width: usize) -> (Vec<(String, String)>, [usize; 2
     rows.extend(wrapped(&body, width));
     rows.push((String::new(), String::new()));
     let switch = rows.len();
-    rows.push((String::new(), format!("{mark} {delete}")));
+    rows.push((String::new(), [mark, delete.as_str()].join(" ")));
     // Under the switch, as in the apps: what the downloads take, once it is known.
     let bytes = app.medium_off_bytes();
     if bytes > 0 {
