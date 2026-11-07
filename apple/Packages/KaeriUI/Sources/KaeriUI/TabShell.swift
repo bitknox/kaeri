@@ -12,14 +12,13 @@ struct TabShell: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// The bar's tab visibility takes hold only under a customization, with an id on each tab.
-    @State private var customization = TabViewCustomization()
 
     var body: some View {
         // The sidebar on a wide iPad; on iPhone the system's own tab bar, with Search apart.
         if sizeClass == .regular {
+            // No customization: the bar's set is fixed, and the rest live in the sidebar only, so
+            // the sidebar has no Edit button.
             tabs.tabViewStyle(.sidebarAdaptable)
-                .tabViewCustomization($customization)
         } else {
             tabs
         }
@@ -50,41 +49,33 @@ struct TabShell: View {
                 }
                 // On iPad the bar keeps the iPhone's set, so it never runs past its width; the
                 // sidebar has every place.
-                // Named for the answer too, so a changed answer starts from its own bar set.
-                .customizationID("tab.\(place.answer).\(place.section.rawValue)") // i18n-skip: an id
-                .defaultVisibility(Self.barTabs(store.medium.answer).contains(place.section) ? .automatic : .hidden,
-                                   for: .tabBar)
+                .tabPlacement(Self.barTabs(store.medium.answer).contains(place.section) ? .automatic : .sidebarOnly)
             }
             if sizeClass == .regular {
                 // In the sidebar's main group, as the Mac has it; Sources holds what plays from where.
                 Tab(AppSection.downloads.title, systemImage: AppSection.downloads.symbol, value: AppSection.downloads) {
                     TabStack(section: .downloads) { screen(.downloads) }
                 }
-                .customizationID("tab.downloads") // i18n-skip: an id
-                .defaultVisibility(.hidden, for: .tabBar)
+                .tabPlacement(.sidebarOnly)
                 if store.medium.answer != .read {
                     Tab(AppSection.together.title, systemImage: AppSection.together.symbol, value: AppSection.together) {
                         TabStack(section: .together) { screen(.together) }
                     }
-                    .customizationID("tab.together") // i18n-skip: an id
-                    .defaultVisibility(.hidden, for: .tabBar)
+                    .tabPlacement(.sidebarOnly)
                 }
                 TabSection(L.sourcesTitle) {
                     ForEach([AppSection.providers, .pluginStores]) { section in
                         Tab(section.title, systemImage: section.symbol, value: section) {
                             TabStack(section: section) { screen(section) }
                         }
-                        .customizationID("tab.\(section.rawValue)") // i18n-skip: an id
-                        .defaultVisibility(.hidden, for: .tabBar)
+                        .tabPlacement(.sidebarOnly)
                     }
                 }
-                .customizationID("tab.sources") // i18n-skip: an id
-                .defaultVisibility(.hidden, for: .tabBar)
+                .tabPlacement(.sidebarOnly)
                 Tab(AppSection.settings.title, systemImage: AppSection.settings.symbol, value: AppSection.settings) {
                     TabStack(section: .settings) { SettingsScreen() }
                 }
-                .customizationID("tab.settings") // i18n-skip: an id
-                .defaultVisibility(.hidden, for: .tabBar)
+                .tabPlacement(.sidebarOnly)
             }
             Tab(value: AppSection.search, role: .search) {
                 TabStack(section: .search) { PhoneSearch() }
