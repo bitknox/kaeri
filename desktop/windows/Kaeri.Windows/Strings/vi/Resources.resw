@@ -5726,9 +5726,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Tập mới</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Cho các tựa trong danh sách Đang xem</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.</value>
   </data>

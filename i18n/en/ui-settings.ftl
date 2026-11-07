@@ -232,6 +232,33 @@ settings-keep-chapters-ready = Keep next chapters ready
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
 
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Series settings follow you
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = New chapters
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mode and direction
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Look
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Send progress after
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = When { -tracker-pl } disagree
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = New chapters
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Downloads finished
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Open at
+
 # Row: seeding after watching.
 # @allow proceed
 settings-seed-after = Seed after watching
@@ -296,7 +323,7 @@ settings-artwork-detail = Attribution in the app's notices
 settings-new-episodes = New episodes
 
 # Line under it.
-settings-new-episodes-detail = For shows in your Watching list
+settings-new-episodes-detail = Shows on your Watching list
 
 # Line explaining what a notification says.
 settings-notify-detail = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
@@ -494,6 +521,12 @@ settings-upscaling-sharp = Sharp · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = { -app-name } works without an account. Your watch history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = { -app-name } works without an account. Your reading history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = { -app-name } works without an account. Your watch and reading history stays on this { -device } when you sign out.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = today

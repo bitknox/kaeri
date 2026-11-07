@@ -209,6 +209,16 @@ impl App {
             | S::OpdsFeed
             | S::OpdsPassword
             | S::OpdsPort
+            | S::SeriesChoicesFollow
+            | S::LookFollows
+            | S::NewChapters
+            | S::WebtoonMode
+            | S::SendProgressAfter
+            | S::WhenTrackersDisagree
+            | S::CountsAsRead
+            | S::ChapterNotifications
+            | S::DownloadsFinished
+            | S::OpenAt
             | S::TorrentsOnCellular
             | S::EpisodeNotifications
             | S::MpvOptions
@@ -344,6 +354,16 @@ fn label_text(key: SettingKey) -> String {
         S::OpdsFeed => t::settings_opds_feed(),
         S::OpdsPassword => t::settings_opds_password(),
         S::OpdsPort => t::settings_opds_port(),
+        S::SeriesChoicesFollow => t::settings_mode_follows(),
+        S::LookFollows => t::settings_look_follows(),
+        S::NewChapters => t::settings_new_chapters_download(),
+        S::WebtoonMode => t::settings_reader_webtoons(),
+        S::SendProgressAfter => t::settings_send_progress_after(),
+        S::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
+        S::CountsAsRead => t::settings_counts_read(),
+        S::ChapterNotifications => t::settings_chapter_notifications(),
+        S::DownloadsFinished => t::settings_downloads_finished(),
+        S::OpenAt => t::settings_open_at(),
         S::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
         S::EpisodeNotifications => t::settings_label_episode_notifications(),
         S::MpvOptions => t::settings_label_mpv_options(),

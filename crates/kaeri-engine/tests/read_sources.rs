@@ -154,7 +154,7 @@ async fn a_server_is_checked_signed_in_to_searched_and_told_what_was_read() {
     let id = loop {
         match rx.recv().await.unwrap() {
             Event::BookSources(BookSourceEvent::ServerAdded { id, series, .. }) => {
-                assert!(series > 0);
+                assert!(series.is_some_and(|n| n > 0));
                 break id;
             }
             Event::BookSources(BookSourceEvent::ServerFailed { failure, .. }) => {

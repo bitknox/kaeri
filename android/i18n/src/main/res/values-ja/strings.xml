@@ -2194,7 +2194,6 @@
     <string name="settings_artwork">CC BY-NC のアートワーク</string>
     <string name="settings_artwork_detail">表記はアプリ内のお知らせに記載しています。</string>
     <string name="settings_new_episodes">新しいエピソード</string>
-    <string name="settings_new_episodes_detail">視聴リストに入っている作品が対象です。</string>
     <string name="settings_notify_detail">フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。</string>
     <string name="settings_coming_up">今後7日間の放送</string>
     <string name="settings_system_notifications">通知の設定</string>

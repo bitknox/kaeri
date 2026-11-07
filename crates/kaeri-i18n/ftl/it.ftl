@@ -8637,9 +8637,6 @@ settings-artwork-detail = Attribuzione nelle note dell'app
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Nuovi episodi
 
-# Line under it.
-settings-new-episodes-detail = Per le serie che guardi
-
 # Line explaining what a notification says.
 settings-notify-detail = Una notifica quando esce un episodio di una serie che segui: il titolo della serie e il numero dell'episodio, mai il suo titolo. Una serie può disattivarle nelle proprie impostazioni.
 

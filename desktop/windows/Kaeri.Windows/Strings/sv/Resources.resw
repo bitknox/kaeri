@@ -5894,9 +5894,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nya avsnitt</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>För serier i din Tittlista</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.</value>
   </data>

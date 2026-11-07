@@ -8557,9 +8557,6 @@ settings-artwork-detail = Upphovsangivelser finns i appens notiser
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Nya avsnitt
 
-# Line under it.
-settings-new-episodes-detail = För serier i din Tittlista
-
 # Line explaining what a notification says.
 settings-notify-detail = En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.
 

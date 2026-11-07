@@ -364,6 +364,14 @@ extension ReadingMsg {
         case .readingChapterPage(let chapter, let page): L.readingChapterPage(chapter: chapter, page: Int(page))
         case .readingChapterPercent(let chapter, let percent): L.readingChapterPercent(chapter: chapter, percent: Int(percent))
         case .readingChapterNew(let chapter): L.readingChapterNew(chapter: chapter)
+        case .readingNextPart(let part): L.readingNextPart(part: part)
+        case .readingPartPercent(let part, let percent): L.readingPartPercent(part: part, percent: Int(percent))
+        case .readingPartNew(let part): L.readingPartNew(part: part)
+        case .readingPartTitled(let part, let title): L.readingPartTitled(part: part, title: title)
+        case .readingPartOutToday(let part): L.readingPartOutToday(part: part)
+        case .readingPartOutTodayTitled(let part, let title): L.readingPartOutTodayTitled(part: part, title: title)
+        case .readingChapterOf(let chapter, let of): L.readingChapterOf(chapter: chapter, of: of)
+        case .readingVolumePart(let volume, let part): L.readingVolumePart(volume: volume, part: part)
         case .readingOriginJapan: L.readingOriginJapan
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
@@ -375,6 +383,54 @@ extension ReadingMsg {
         case .exportDeviceTablet: L.exportDeviceTablet
         case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
         case .exportWaitsForWifi(let n): L.exportWaitsForWifi(n: Int(n))
+        case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
+        case .readingRowRead: L.readingRowRead
+        case .readingRowNew: L.readingRowNew
+        case .readingRowDownloaded: L.readingRowDownloaded
+        case .readingRowNotDownloaded: L.readingRowNotDownloaded
+        case .readingRowOnDevice: L.readingRowOnDevice
+        case .readingRowQueued: L.readingRowQueued
+        case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowFailed: L.readingRowFailed
+        case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
+        case .readingRowPage(let page): L.readingRowPage(page: Int(page))
+        case .readingRowPercent(let percent): L.readingRowPercent(percent: Int(percent))
+        case .readingRowPages(let n): L.readingRowPages(n: Int(n))
+        case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingAgoNow: L.readingAgoNow
+        case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
+        case .readingAgoToday: L.readingAgoToday
+        case .readingAgoYesterday: L.readingAgoYesterday
+        case .readingAgoDays(let days): L.readingAgoDays(days: Int(days))
+        case .readingAgoWeeks(let weeks): L.readingAgoWeeks(weeks: Int(weeks))
+        case .readingAgoMonths(let months): L.readingAgoMonths(months: Int(months))
+        case .readingAgoYears(let years): L.readingAgoYears(years: Int(years))
+        case .readingRemovedFrom(let tracker): L.readingRemovedFrom(tracker: tracker)
+        case .readingRemovedNotThere(let tracker): L.readingRemovedNotThere(tracker: tracker)
+        case .readingRemovedUnmatched(let tracker): L.readingRemovedUnmatched(tracker: tracker)
+        case .readingRemovedFailed(let tracker): L.readingRemovedFailed(tracker: tracker)
+        case .readingRemovedSignIn(let tracker): L.readingRemovedSignIn(tracker: tracker)
+        case .readingMissNoSeries: L.readingMissNoSeries
+        case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
+        case .readingMissDown: L.readingMissDown
+        case .readingDlParts(let count): L.readingDlParts(count: Int(count))
+        case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
+        case .readingDlRead(let count): L.readingDlRead(count: Int(count))
+        case .readingDlChapter(let chapter): L.readingDlChapter(chapter: chapter)
+        case .readingDlPages(let done, let total): L.readingDlPages(done: Int(done), total: Int(total))
+        case .readingDlMoreQueued(let count): L.readingDlMoreQueued(count: Int(count))
+        case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
+        case .readingDlWaitsWifi: L.readingDlWaitsWifi
+        case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
+        case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
+        case .readingEstimateWifi: L.readingEstimateWifi
+        case .readingEstimateMobile: L.readingEstimateMobile
+        case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
+        case .readingDownloadsDoneTitle: L.readingDownloadsDoneTitle
+        case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
+        case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))
+        case .readingDownloadsDoneSeries(let count): L.readingDownloadsDoneSeries(count: Int(count))
         }
     }
 }

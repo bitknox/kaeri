@@ -5726,9 +5726,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Episode baru</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Untuk serial di daftar Menonton Anda</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</value>
   </data>

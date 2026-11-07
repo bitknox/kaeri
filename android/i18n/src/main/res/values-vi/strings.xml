@@ -2194,7 +2194,6 @@
     <string name="settings_artwork">Hình minh họa theo CC BY-NC</string>
     <string name="settings_artwork_detail">Ghi công trong phần ghi chú của ứng dụng</string>
     <string name="settings_new_episodes">Tập mới</string>
-    <string name="settings_new_episodes_detail">Cho các tựa trong danh sách Đang xem</string>
     <string name="settings_notify_detail">Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.</string>
     <string name="settings_coming_up">Sắp ra mắt · 7 ngày tới</string>
     <string name="settings_system_notifications">Cài đặt thông báo</string>

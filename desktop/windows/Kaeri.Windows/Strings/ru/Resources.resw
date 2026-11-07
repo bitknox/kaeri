@@ -6230,9 +6230,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Новые серии</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Для сериалов из списка «Смотрю»</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.</value>
   </data>

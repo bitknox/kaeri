@@ -92,6 +92,18 @@ settings-folder-default = Kept with the torrent cache
 # Legend of the storage bar: what downloads take for episodes not yet watched.
 settings-storage-unwatched = Not watched yet
 
+# Legend of the storage bar: what downloads take for chapters not read yet.
+settings-storage-unread = Not read yet
+
+# Legend of the storage bar: what downloads take for chapters already read.
+settings-storage-read = Read
+
+# Legend of the storage bar with both media on: episodes not watched and chapters not read.
+settings-storage-unseen-both = Not watched or read yet
+
+# Legend of the storage bar with both media on: episodes watched and chapters read.
+settings-storage-seen-both = Watched or read
+
 # Line under the storage bar: what downloads take.
 # @arg size: text
 settings-storage-used = { $size } in downloads.
@@ -111,6 +123,10 @@ settings-source-count = { $count ->
 # Footnote of the AniList group in Accounts.
 # @arg tracker: text
 settings-accounts-sync-note = Progress and list changes sync to { $tracker }. { -library-cap } and the Calendar's My list show your { $tracker } lists.
+
+# Footnote of the AniList group in Accounts when the app is for reading.
+# @arg tracker: text
+settings-accounts-sync-note-read = Progress and list changes sync to { $tracker }. { -library-cap } shows your { $tracker } lists.
 
 # Row title in Accounts: titles that differ between this device and the tracker.
 # @arg count: int

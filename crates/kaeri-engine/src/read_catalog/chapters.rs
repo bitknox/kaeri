@@ -45,6 +45,33 @@ impl Kept {
     pub fn range(&self) -> Option<ChapterRange> {
         ChapterId::new(self.id.clone()).key().and_then(|k| k.range())
     }
+
+    /// Its title, unless the title only names the chapter again (see [`own_title`]).
+    pub fn own_title(&self) -> Option<&str> {
+        own_title(self.title.as_deref(), &self.label, self.number.as_deref())
+    }
+}
+
+/// A chapter's title, unless it only names the chapter again: the label itself, the number, or
+/// the number beside one word, as "Chapter 15" or "Ch. 15" in a book's own details.
+pub fn own_title<'a>(
+    title: Option<&'a str>,
+    label: &str,
+    number: Option<&str>,
+) -> Option<&'a str> {
+    let title = title?.trim();
+    let same = |other: &str| title.eq_ignore_ascii_case(other.trim());
+    if title.is_empty() || same(label) || number.is_some_and(same) {
+        return None;
+    }
+    if let Some(number) = number.filter(|n| !n.is_empty()) {
+        let rest = title.replacen(number, "", 1);
+        let rest = rest.trim_matches(|c: char| c.is_whitespace() || c.is_ascii_punctuation());
+        if rest.len() < title.len() && !rest.contains(char::is_whitespace) {
+            return None;
+        }
+    }
+    Some(title)
 }
 
 /// A source's list as kept, oldest chapter first, and when it was asked.
@@ -158,6 +185,16 @@ impl Read {
                     _ => true,
                 }
         })
+    }
+
+    /// The chapter that came out new for someone caught up: nothing in progress, and the first
+    /// unread chapter is one a later answer listed. Someone still behind gets their place
+    /// instead.
+    pub fn new_for_you<'a>(&self, list: &'a [Kept]) -> Option<&'a Kept> {
+        if !self.any() || self.in_progress.is_some() {
+            return None;
+        }
+        self.unread(list).first().copied().filter(|c| c.seen_at.is_some())
     }
 
     /// The chapters of `list` past the furthest read and not read.
@@ -303,6 +340,33 @@ mod tests {
         // Asked again, chapter 4 keeps the date it was first seen.
         keep(&store, "shelf", "s", &more, 300);
         assert_eq!(kept(&store, "shelf", "s").unwrap().0[3].seen_at, Some(200));
+    }
+
+    #[test]
+    fn a_title_that_only_names_the_chapter_again_is_not_its_own() {
+        let titled = |label: &str, title: &str| Kept {
+            id: "15".into(),
+            source_ref: "15".into(),
+            label: label.into(),
+            number: Some("15".into()),
+            volume: None,
+            title: Some(title.into()),
+            version_label: None,
+            language: None,
+            published: None,
+            pages: None,
+            seen_at: None,
+        };
+        assert_eq!(titled("Chapter 15", "Chapter 15").own_title(), None);
+        assert_eq!(titled("15", "Chapter 15").own_title(), None);
+        assert_eq!(titled("15", "Ch. 15").own_title(), None);
+        assert_eq!(titled("15", "15").own_title(), None);
+        assert_eq!(titled("15", "The Far Shore").own_title(), Some("The Far Shore"));
+        assert_eq!(
+            titled("15", "Chapter 15: The Far Shore").own_title(),
+            Some("Chapter 15: The Far Shore")
+        );
+        assert_eq!(titled("15", "The 15th Lantern").own_title(), Some("The 15th Lantern"));
     }
 
     #[test]

@@ -14,6 +14,7 @@ use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
+    config::{CountsAsRead, SendProgressAfter, WebtoonMode},
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -30,7 +31,7 @@ use kaeri_model::{
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
 use kaeri_pages::{ColourChoice, Look, Target, layout::SpreadOnSingle};
-use kaeri_store::reading::ReadEvent;
+use kaeri_store::{reading::ReadEvent, shelf::BookWorkKind};
 use tokio::time::Instant;
 
 use super::{
@@ -151,10 +152,10 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
-    /// The work comes from a country whose comics are read as strips. It stands for the
-    /// series' mode only while the series has no mode of its own: once a mode is chosen, or the
-    /// guess is kept, the layers say the mode.
-    origin_strip: bool,
+    /// The Webtoons default, for a webtoon with no mode of its own.
+    webtoon: Option<WebtoonMode>,
+    /// The catalogue says no more chapters are coming.
+    ended: bool,
     /// The next chapter's first page was asked of the worker.
     peeked: bool,
     /// The place before a jump, for Back to page.
@@ -162,6 +163,9 @@ pub struct Session {
     /// The place before another device moved the reader, for Go back.
     moved_back: Option<ReadPlace>,
     read_fired: bool,
+    /// A chapter read that the trackers hear of when the reader closes, when progress is sent
+    /// then.
+    unsent: Option<(ChapterId, i64)>,
     end_page_said: bool,
     read_timer: u64,
     flush_timer: u64,
@@ -321,6 +325,12 @@ impl Reader {
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
             s.flush(cx);
+            // Progress held for the close goes now: the furthest chapter read this time.
+            if let Some((chapter, at)) = s.unsent.take()
+                && !queue_trackers(cx, &s.work, &chapter, at).is_empty()
+            {
+                let _ = cx.tx.send(Event::ProgressQueued);
+            }
             if let Some(pages) = &self.pages {
                 pages.close(s.id);
             }
@@ -347,7 +357,14 @@ impl Reader {
         }
         self.next += 1;
         let id = self.next;
-        let chapters = shelf::chapters(&cx.services.store, work.as_str());
+        let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
+        if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
+            &cx.services.book_sources,
+            &cx.services.store,
+            &work,
+        ) {
+            shelf::name_downloads(&mut chapters, &list);
+        }
         if chapters.is_empty()
             && let Some(slot) = novel::list(cx, id, &work)
         {
@@ -435,18 +452,20 @@ impl Reader {
             OpenAt::Place { place } if place.chapter == chapters[index].id => place.clone(),
             _ => place(&work, &chapters[index].id, Some(page)),
         };
-        // The source's word comes before the pages' shape: a work from Korea or China is read
-        // as a strip unless the series says otherwise.
-        let origin_strip = medium == Medium::Manga
-            && kind
-                .as_ref()
-                .and_then(|k| k.origin.as_deref())
-                .is_some_and(|o| matches!(o, "KR" | "CN" | "TW"));
+        // The catalogue's word comes before the pages' shape: a webtoon (tagged a long strip,
+        // or from Korea or China) opens as the Webtoons default says, unless the series has a
+        // mode of its own.
+        let webtoon = (!layers.series_has(Key::Mode)
+            && medium == Medium::Manga
+            && kind.as_ref().is_some_and(BookWorkKind::webtoon))
+        .then(|| cx.config.effective().reading.webtoon.mode);
+        let ended = kind.as_ref().is_some_and(BookWorkKind::ended);
         let mut session = Session {
             id,
             work,
             medium,
             title: kind.and_then(|k| k.title).unwrap_or_default(),
+            ended,
             chapters,
             at: index,
             surface,
@@ -463,11 +482,12 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
-            origin_strip,
+            webtoon,
             peeked: false,
             back_to: None,
             moved_back: None,
             read_fired: false,
+            unsent: None,
             end_page_said: false,
             read_timer: 0,
             flush_timer: 0,
@@ -496,7 +516,7 @@ impl Reader {
             ReaderWake::Laid => s.laid_out(cx, &pages),
             ReaderWake::Prepared(n) => s.prepared_now(cx, &pages, n),
             ReaderWake::Listed => {}
-            ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx),
+            ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx, Reached::Stayed),
             ReaderWake::Flush(n) if n == s.flush_timer => {
                 s.flush_pending = false;
                 s.flush(cx);
@@ -632,12 +652,6 @@ impl Session {
         &self.chapters[self.at]
     }
 
-    /// The work's origin says strip and the series has no mode of its own yet. A mode the
-    /// person picks, or the guess once kept, is in the layers and wins over the origin.
-    fn hinted_strip(&self) -> bool {
-        self.origin_strip && !self.layers.series_has(Key::Mode)
-    }
-
     fn eink(&self) -> bool {
         self.surface.eink
     }
@@ -688,7 +702,10 @@ impl Session {
             ..Look::default()
         };
         let layout = l.word(Key::PageLayout);
-        let strip = self.hinted_strip() || l.word(Key::Mode) == "strip";
+        let strip = match self.webtoon {
+            Some(mode) => mode == WebtoonMode::Strip,
+            None => l.word(Key::Mode) == "strip",
+        };
         let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
             target: Target {
@@ -715,7 +732,7 @@ impl Session {
             } else {
                 ReadDirection::RightToLeft
             },
-            guess_mode: !self.hinted_strip() && !l.series_has(Key::Mode),
+            guess_mode: self.webtoon.is_none() && !l.series_has(Key::Mode),
             guess_direction: !l.series_has(Key::Direction),
         }
     }
@@ -764,7 +781,8 @@ impl Session {
         let now = cx.now();
         let store = &cx.services.store;
         let mut said = None;
-        if laid.guessed_mode || self.hinted_strip() {
+        // A webtoon's mode is the Webtoons default, read at each open, so it is no guess.
+        if laid.guessed_mode {
             if store
                 .set_series_guess(self.work.as_str(), Key::Mode.name(), "strip", now)
                 .unwrap_or(false)
@@ -862,7 +880,7 @@ impl Session {
                     return;
                 };
                 if index == self.at + 1 {
-                    self.chapter_read(cx);
+                    self.chapter_read(cx, Reached::MovedOn);
                 }
                 let store = &cx.services.store;
                 let page = store
@@ -901,7 +919,7 @@ impl Session {
         let story = self.leaves.len() as u32;
         if leaf >= story {
             // The end page, in the flow: read at once.
-            self.chapter_read(cx);
+            self.chapter_read(cx, Reached::MovedOn);
             self.say_end_page(cx);
             return;
         }
@@ -968,21 +986,45 @@ impl Session {
         let next_source = following
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
-        let why_none = next.is_none().then_some(NoNext::CaughtUp);
+        let why_none = next.is_none().then(|| self.why_no_next(cx));
         cx.send(ReaderEvent::EndPage { session: self.id, next, why_none, next_source });
     }
 
+    /// Why the end page has no next chapter: the series ended with this one, which offers
+    /// Read again; the device is offline; or the person is caught up.
+    fn why_no_next(&self, cx: &Cx<'_>) -> NoNext {
+        let store = &cx.services.store;
+        let later = crate::read_catalog::chapters::of_work(
+            &cx.services.book_sources,
+            store,
+            &self.work,
+        )
+        .is_some_and(|(_, _, list)| {
+            let at = list.iter().position(|c| c.id == self.chapter().id.as_str());
+            at.is_some_and(|at| at + 1 < list.len())
+        });
+        if self.ended && !later {
+            NoNext::Finished
+        } else if cx.services.offline.load(std::sync::atomic::Ordering::Relaxed) {
+            NoNext::Offline
+        } else {
+            NoNext::CaughtUp
+        }
+    }
+
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
-        if !self.read_fired {
+        if !self.read_fired && counts(cx, Reached::Stayed) {
             after(cx.tx, READ_AFTER, self.id, ReaderWake::ReadRule(self.read_timer));
         }
     }
 
-    /// The read rule fired: a finished read event, the trackers queued, `ChapterRead`.
-    fn chapter_read(&mut self, cx: &Cx<'_>) {
-        if std::mem::replace(&mut self.read_fired, true) {
+    /// The read rule fired: a finished read event, the trackers queued, `ChapterRead`. Nothing,
+    /// when the person's Counts as read takes no account of how the last page was `reached`.
+    pub(super) fn chapter_read(&mut self, cx: &Cx<'_>, reached: Reached) {
+        if self.read_fired || !counts(cx, reached) {
             return;
         }
+        self.read_fired = true;
         let chapter = self.chapter().id.clone();
         let at = cx.now();
         let mut event = ReadEvent::new(self.work.as_str(), chapter.as_str(), at);
@@ -990,7 +1032,13 @@ impl Session {
         event.page = self.pages_total.checked_sub(1);
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
         event.source_id = Some("local".into());
-        let queued_for = queue_trackers(cx, &self.work, &chapter, at);
+        let queued_for = match cx.config.effective().reading.send_progress_after {
+            SendProgressAfter::Chapter => queue_trackers(cx, &self.work, &chapter, at),
+            SendProgressAfter::Close => {
+                self.unsent = Some((chapter.clone(), at));
+                Vec::new()
+            }
+        };
         let trackers = queued_for.iter().map(|id| crate::tracking::tracker_name(id)).collect();
         if let Err(e) = cx.services.store.record_read(&event, queued_for) {
             tracing::warn!(error = %e, "a read chapter was not kept");
@@ -1146,6 +1194,25 @@ fn moved_msg(label: &str, page: i64, device: String) -> ReadingMsg {
     }
 }
 
+/// How the reader came to the end of a chapter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Reached {
+    /// The last page stayed on screen for [`READ_AFTER`].
+    Stayed,
+    /// The person moved past the last page: to the end page, or to the next chapter.
+    MovedOn,
+}
+
+/// Whether the chapter counts as read, by the person's Counts as read, when its last page was
+/// `reached` so. Their own marks count under every rule; the reader's never under `marked`.
+pub(super) fn counts(cx: &Cx<'_>, reached: Reached) -> bool {
+    match cx.config.effective().reading.counts_as_read {
+        CountsAsRead::LastPage => true,
+        CountsAsRead::MovingOn => reached == Reached::MovedOn,
+        CountsAsRead::Marked => false,
+    }
+}
+
 /// Queue the chapter for the trackers signed in, for a work AniList lists: the highest whole
 /// chapter, never lower than a tracker holds.
 fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> Vec<String> {
@@ -1258,7 +1325,12 @@ mod tests {
 
     /// A reader over a work of two three-page chapters in a folder.
     fn harness(store: Store) -> Harness {
-        harness_of(store, "manga", |books| {
+        harness_of(store, "manga", two_chapters)
+    }
+
+    /// Two chapters of three pages in a folder.
+    fn two_chapters(books: &Path) -> Vec<ShelfFile> {
+        {
             (1..=2)
                 .map(|n| {
                     let path = books.join(format!("Chapter {n}.cbz"));
@@ -1276,7 +1348,7 @@ mod tests {
                     }
                 })
                 .collect()
-        })
+        }
     }
 
     /// A reader over a work of `medium` whose folder `files` fills.
@@ -1295,7 +1367,26 @@ mod tests {
         files: impl FnOnce(&Path) -> Vec<ShelfFile>,
         decoder: Option<Arc<dyn crate::host::PageDecoder>>,
     ) -> Harness {
+        harness_signed(store, medium, files, decoder, false)
+    }
+
+    /// As [`harness_on`], signed in to AniList when `signed_in`, so a read chapter queues
+    /// progress for it. Nothing is sent: the client is offline.
+    fn harness_signed(
+        store: Store,
+        medium: &str,
+        files: impl FnOnce(&Path) -> Vec<ShelfFile>,
+        decoder: Option<Arc<dyn crate::host::PageDecoder>>,
+        signed_in: bool,
+    ) -> Harness {
         let dir = tempfile::tempdir().unwrap();
+        if signed_in {
+            let tokens = kaeri_track::TokenStore::with_backend(
+                dir.path().join("tokens"),
+                kaeri_track::secret::Backend::File,
+            );
+            tokens.set("anilist", "token").unwrap();
+        }
         let books = dir.path().join("books");
         std::fs::create_dir_all(&books).unwrap();
         let series = LocalSeries {
@@ -1315,7 +1406,10 @@ mod tests {
             data_dir: dir.path().join("data"),
             cache_dir: dir.path().join("cache"),
         };
-        let config = Config::default();
+        let mut config = Config::default();
+        if signed_in {
+            config.trackers.enabled.push("anilist".into());
+        }
         let http = HttpClient::offline(&config.network).unwrap();
         let mut host = QuietHost::in_dir(&dir.path().join("tokens"));
         if let Some(decoder) = decoder {
@@ -1563,6 +1657,102 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn progress_set_to_go_on_close_waits_for_the_reader_to_close() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness_signed(store, "manga", two_chapters, None, true);
+        h.config.effective_mut().reading.send_progress_after = SendProgressAfter::Close;
+        assert_eq!(
+            crate::tracking::commands::signed_in_reading_tracker_ids(&h.services.sync),
+            ["anilist"]
+        );
+        let queued = |h: &Harness| h.services.store.read_outbox("anilist").unwrap();
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
+        assert!(h.kept("1").unwrap().read);
+        assert!(queued(&h).is_empty(), "read here at once, told to the trackers on close");
+
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let ops = queued(&h);
+        assert!(
+            matches!(ops.as_slice(), [TrackOp::SetReadProgress { chapter: 1, .. }]),
+            "{ops:?}"
+        );
+
+        // The default tells them as each chapter is read.
+        h.config.effective_mut().reading.send_progress_after = SendProgressAfter::Chapter;
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
+        let ops = queued(&h);
+        assert!(
+            ops.iter().any(|op| matches!(op, TrackOp::SetReadProgress { chapter: 2, .. })),
+            "chapter 2 queued before the close: {ops:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_webtoon_opens_as_the_webtoons_default_and_its_last_chapter_offers_read_again() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .seed_book_work(WORK, "manga", Some("webtoon"), Some("JP"), "The Lantern Keeper", 1)
+            .unwrap();
+        let mut h = harness(store);
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip, "Long strip is the default");
+        assert!(notices(&said).is_empty(), "the person's default, nothing detected");
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // Paged for webtoons, and the series opens paged: the default is read at each open.
+        h.config.effective_mut().reading.webtoon.mode = WebtoonMode::Paged;
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Paged);
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // A series' own mode wins over the default.
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip);
+        h.services.store.set_series_setting(WORK, "mode", None, true, 3).unwrap();
+
+        // Still releasing, the last chapter's end page says caught up; finished, it offers
+        // Read again.
+        let end_of_last = async |h: &mut Harness| {
+            let session = h.session();
+            h.send(ReaderCommand::Close { session });
+            let work = WorkId::new(WORK);
+            let chapter = Some(ChapterId::new("2"));
+            let at = OpenAt::Resume;
+            h.send(ReaderCommand::Open { work, chapter, at, surface: surface() });
+            h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+            let session = h.session();
+            let chapter = ChapterId::new("2");
+            h.send(ReaderCommand::Shown { session, chapter, leaf: 2, how: TurnHow::Turn });
+            h.until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await
+        };
+        assert_eq!(end_of_last(&mut h).await, Some(NoNext::CaughtUp));
+        h.services
+            .store
+            .put_book_work(&kaeri_store::book_catalog::BookWork {
+                work: WORK.into(),
+                medium: "manga".into(),
+                format: Some("webtoon".into()),
+                titles: "[\"The Lantern Keeper\"]".into(),
+                status: Some("FINISHED".into()),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(end_of_last(&mut h).await, Some(NoNext::Finished));
+    }
+
     #[tokio::test(start_paused = true)]
     async fn turning_away_from_the_last_page_holds_the_read_rule_and_the_end_page_reads_at_once()
      {
@@ -1580,6 +1770,91 @@ mod tests {
         let said = h.drain();
         assert!(said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. })), "at once");
         assert!(h.kept("1").unwrap().read);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn moving_on_counts_a_chapter_read_only_past_its_last_page() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.config.effective_mut().reading.counts_as_read = CountsAsRead::MovingOn;
+        let read_now = |said: &[ReaderEvent]| {
+            said.iter().find_map(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.as_str().to_owned()),
+                _ => None,
+            })
+        };
+
+        // Opening the next chapter counts the one before it.
+        h.open(OpenAt::Resume).await;
+        h.shown(0, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        let read = h
+            .until(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(read.as_str(), "1");
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+
+        // Holding the last page is not enough; turning past it to the end page is.
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert_eq!(read_now(&h.drain()), None);
+        assert!(h.kept("2").is_none_or(|c| !c.read), "the last page held is not enough");
+        h.shown(3, TurnHow::Turn).await;
+        assert_eq!(read_now(&h.drain()).as_deref(), Some("2"), "at once");
+        assert!(h.kept("2").unwrap().read);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn marked_leaves_reading_to_the_persons_marks_and_continue_and_trackers_follow() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness_signed(store, "manga", two_chapters, None, true);
+        h.config.effective_mut().reading.counts_as_read = CountsAsRead::Marked;
+        let queued = |h: &Harness| h.services.store.read_outbox("anilist").unwrap();
+        let any_read = |said: &[ReaderEvent]| {
+            said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+        };
+
+        // Neither the last page held nor the end page reads the chapter.
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        h.shown(3, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(!any_read(&h.drain()));
+        assert!(h.kept("1").is_none_or(|c| !c.read), "the reader marks nothing");
+        assert!(queued(&h).is_empty(), "nor tells the trackers");
+
+        // Continue follows the marks: opened again, reading goes on in the unmarked chapter.
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.chapter.id.as_str(), "1");
+
+        // Nor does opening the next chapter.
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        assert!(!any_read(&h.drain()));
+        assert!(h.kept("1").is_none_or(|c| !c.read));
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // The person's own mark counts, and what the trackers hold follows it: the next sync
+        // sends the work's tracked progress.
+        let tracked = |h: &Harness| h.services.store.tracked_progress(WORK).unwrap().0;
+        assert_eq!(tracked(&h), 0);
+        super::super::mark_read(
+            &h.services,
+            WorkId::new(WORK),
+            vec![ChapterId::new("1")],
+            true,
+            &h.tx,
+        );
+        assert!(h.kept("1").unwrap().read);
+        assert_eq!(tracked(&h), 1);
     }
 
     #[tokio::test(start_paused = true)]

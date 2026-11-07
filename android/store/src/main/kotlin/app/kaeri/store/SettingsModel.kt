@@ -61,6 +61,7 @@ object SettingsCatalog {
         SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.TORRENTS_ON_CELLULAR, SettingKey.EPISODE_NOTIFICATIONS,
         SettingKey.ADULT_TITLES, SettingKey.EPISODE_DISCUSSIONS, SettingKey.COMMENT_IMAGES,
         SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING, SettingKey.OPDS_FEED,
+        SettingKey.SERIES_CHOICES_FOLLOW, SettingKey.CHAPTER_NOTIFICATIONS, SettingKey.DOWNLOADS_FINISHED,
     )
 
     /** The settings with two states, on and off, that a switch shows. */

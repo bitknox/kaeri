@@ -642,6 +642,9 @@ pub struct NovelOpenView {
     /// sends [`ReaderCommand::FixedRendered`].
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub render_dir: Option<String>,
+    /// The person's reading pace, learnt from their page turns: see [`novel_minutes_left`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub words_per_minute: u32,
 }
 
 /// One document of a novel's spine.
@@ -653,6 +656,28 @@ pub struct NovelSpineItem {
     /// Out of the reading flow (notes, pop-ups): reached by links only.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub linear: bool,
+    /// The words in it, two Chinese, Japanese or Korean characters counting as one: what the
+    /// time left comes from.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub words: u32,
+}
+
+/// The minutes left in a novel's chapter at the person's pace, for the scrubber's "6 min": the
+/// words of the document from page `page` (counted from 0) of `pages` on, read at
+/// `words_per_minute`. `None` when a count is missing; at least 1 while any page is left.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn novel_minutes_left(
+    words: u32,
+    page: u32,
+    pages: u32,
+    words_per_minute: u32,
+) -> Option<u32> {
+    if words == 0 || pages == 0 || words_per_minute == 0 || page >= pages {
+        return None;
+    }
+    let left = u64::from(words) * u64::from(pages - page) / u64::from(pages);
+    let minutes = left.div_ceil(u64::from(words_per_minute)).max(1);
+    Some(u32::try_from(minutes).unwrap_or(u32::MAX))
 }
 
 /// One line of a novel's contents.
@@ -1009,5 +1034,23 @@ mod tests {
         ] {
             assert_eq!(ReaderValue::decode(&value.encode()), value);
         }
+    }
+}
+
+#[cfg(test)]
+mod minutes_left {
+    use super::novel_minutes_left;
+
+    #[test]
+    fn minutes_come_from_the_words_still_to_read() {
+        // 2,300 words at 230 a minute: ten minutes from the first page.
+        assert_eq!(novel_minutes_left(2_300, 0, 10, 230), Some(10));
+        assert_eq!(novel_minutes_left(2_300, 6, 10, 230), Some(4));
+        // The same pages with fewer words take less time.
+        assert_eq!(novel_minutes_left(460, 0, 10, 230), Some(2));
+        assert_eq!(novel_minutes_left(2_300, 9, 10, 230), Some(1), "never 0 on the last page");
+        assert_eq!(novel_minutes_left(2_300, 10, 10, 230), None);
+        assert_eq!(novel_minutes_left(0, 0, 10, 230), None, "no count, no guess");
+        assert_eq!(novel_minutes_left(2_300, 0, 0, 230), None);
     }
 }

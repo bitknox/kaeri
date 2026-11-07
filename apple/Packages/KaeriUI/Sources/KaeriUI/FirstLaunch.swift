@@ -1,7 +1,8 @@
-// First launch (native-ux, First launch): three short pages, then the app. Welcome says what
-// Kaeri is; AniList offers the sign-in; Sources takes an invite link and says whose code a
-// plugin is. Every page can be skipped, and each step is in Settings afterwards. A
-// full-screen cover on iPhone, a sheet on Mac (560 × 480 pt) and iPad.
+// First launch (native-ux, First launch): short pages, then the app. Welcome says what Kaeri
+// is; where reading is on, what Kaeri is for comes next, the one page without Skip; AniList
+// offers the sign-in; Sources takes an invite link and says whose code a plugin is, and after
+// Read it offers a folder and a server for books. Each step is in Settings afterwards. A
+// full-screen cover on iPhone, a sheet on Mac (560 pt wide, at least 480 tall) and iPad.
 
 import KaeriDesign
 import KaeriKit
@@ -18,8 +19,7 @@ enum FirstLaunchFlag {
     /// The Fixtures app and the dev harness show it only when a shot asks with `sheet=welcome`.
     @MainActor
     static func shows(_ navigator: Navigator, store: AppStore) async -> Bool {
-        // i18n-skip: a shot's sheet names; welcome-sources opens on the last page
-        if navigator.launchSheet == "welcome" || navigator.launchSheet == "welcome-sources" || navigator.launchSheet == "welcome-setup" { return true }
+        if let sheet = navigator.launchSheet, FirstLaunch.Page.shot(sheet) != nil { return true }
         guard Bundle.main.bundleIdentifier == "app.kaeri.app" else { return false }
         let seen = UserDefaults.standard.bool(forKey: key)
         let due = await store.firstLaunchDue(seen: seen)
@@ -35,8 +35,6 @@ struct FirstLaunchPresenter: ViewModifier {
     @State private var showing = false
     /// The invite link Join took, opened in the join sheet once first launch has gone.
     @State private var joining: String?
-    /// A shot's request to open on the last page.
-    @State private var startOnSources = false
     /// Restore from a cloud folder, chosen on the code page: the picker opens once this ends.
     @State private var restoring = false
     #if os(iOS)
@@ -47,10 +45,17 @@ struct FirstLaunchPresenter: ViewModifier {
         content
             .task {
                 if await FirstLaunchFlag.shows(navigator, store: store) {
-                    startOnSources = navigator.launchSheet == "welcome-sources"
+                    let page = navigator.launchSheet.flatMap(FirstLaunch.Page.shot) ?? .welcome
                     // The code page takes welcome-setup itself, once it is up.
-                    if navigator.launchSheet == "welcome" || startOnSources { navigator.launchSheet = nil }
+                    if page != .setup {
+                        // Taken by the pages as they appear: a sheet's content can be built
+                        // before this state would reach it.
+                        navigator.firstLaunchStart = (page, navigator.launchSheet.flatMap(FirstLaunch.Page.shotAnswer))
+                        navigator.launchSheet = nil
+                    }
                     showing = true
+                } else {
+                    navigator.firstLaunchSettled = true
                 }
             }
             #if os(iOS)
@@ -58,13 +63,14 @@ struct FirstLaunchPresenter: ViewModifier {
             .sheet(isPresented: compact ? .constant(false) : $showing, onDismiss: done) { flow }
             #else
             .sheet(isPresented: $showing, onDismiss: done) {
-                flow.frame(width: 560, height: 480)
+                // 480 pt tall, and taller for a page that needs it (the sources page after Both).
+                flow.frame(width: 560).frame(minHeight: 480).fixedSize(horizontal: false, vertical: true)
             }
             #endif
     }
 
     private var flow: some View {
-        FirstLaunch(startOnSources: startOnSources, finish: { link in
+        FirstLaunch(finish: { link in
             joining = link
             showing = false
         }, restore: {
@@ -75,6 +81,7 @@ struct FirstLaunchPresenter: ViewModifier {
 
     private func done() {
         UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
+        navigator.firstLaunchSettled = true
         if restoring {
             restoring = false
             store.sync.addCloudFolder()
@@ -90,7 +97,7 @@ struct FirstLaunchPresenter: ViewModifier {
     #endif
 }
 
-/// The three pages.
+/// The pages.
 struct FirstLaunch: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -100,12 +107,39 @@ struct FirstLaunch: View {
     /// Ends first launch and opens the cloud folder picker.
     var restore: () -> Void = {}
 
-    enum Page: Int { case welcome, anilist, sources, setup }
+    enum Page: Int {
+        case welcome, medium, anilist, sources, setup
+
+        /// The page a shot's sheet name opens on.
+        static func shot(_ name: String) -> Page? {
+            switch name {
+            case "welcome": .welcome // i18n-skip
+            case "welcome-medium": .medium // i18n-skip
+            case "welcome-lists", "welcome-lists-read": .anilist // i18n-skip
+            case "welcome-sources", "welcome-books", "welcome-both": .sources // i18n-skip
+            case "welcome-setup": .setup // i18n-skip
+            default: nil
+            }
+        }
+
+        /// What a shot of a later page took as the answer on the medium page.
+        static func shotAnswer(_ name: String) -> KaeriIsFor? {
+            switch name {
+            case "welcome-lists", "welcome-both": .both // i18n-skip
+            case "welcome-lists-read", "welcome-books": .read // i18n-skip
+            default: nil
+            }
+        }
+    }
     @State private var page: Page
-    init(startOnSources: Bool = false, finish: @escaping (String?) -> Void, restore: @escaping () -> Void = {}) {
+    /// The answer the medium page took, which the pages after it follow.
+    @State private var chosen: KaeriIsFor?
+    init(start: Page = .welcome, answered: KaeriIsFor? = nil, finish: @escaping (String?) -> Void,
+         restore: @escaping () -> Void = {}) {
         self.finish = finish
         self.restore = restore
-        _page = State(initialValue: startOnSources ? .sources : .welcome)
+        _page = State(initialValue: start)
+        _chosen = State(initialValue: answered)
     }
     @State private var link = ""
     /// The link came from a kaeri:// link, so Join is the way on.
@@ -113,22 +147,13 @@ struct FirstLaunch: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Spacer()
-                if page != .sources, page != .setup {
-                    Button(L.actionSkip) { finish(nil) }
-                        .buttonStyle(.plain)
-                        .font(.plat(mac: 13, touch: 17))
-                        .foregroundStyle(.haze)
-                        .pointerHover()
-                }
-            }
-            .frame(height: 28)
+            topBar
             Group {
                 switch page {
-                case .welcome: welcome
-                case .anilist: anilist
-                case .sources: sources
+                case .welcome: asks ? AnyView(welcomeFour) : AnyView(welcome)
+                case .medium: medium
+                case .anilist: asks ? AnyView(lists) : AnyView(anilist)
+                case .sources: asks && reads ? AnyView(books) : AnyView(sources)
                 case .setup: setup
                 }
             }
@@ -142,13 +167,26 @@ struct FirstLaunch: View {
         .animation(reduceMotion ? nil : .standard, value: page)
         // An invite link in the field holds the iPad's sheet open; a swipe down is Skip until then.
         .holdsInput(when: !link.isEmpty)
+        .onAppear {
+            // A shot's later page, and the answer the medium page took before it.
+            guard let (start, answered) = navigator.firstLaunchStart else { return }
+            navigator.firstLaunchStart = nil
+            var instant = Transaction()
+            instant.disablesAnimations = true
+            withTransaction(instant) {
+                page = start
+                chosen = answered
+            }
+        }
         .task {
             // i18n-skip: a shot's sheet name
             if navigator.launchSheet == "welcome-setup" { navigator.launchSheet = nil; page = .setup }
         }
+        .sheet(item: $bookSheet) { step in AddBookSourceSheet(start: step) }
         .sheet(isPresented: Bindable(navigator).addServerShown) { AddServerSheet() }
         .onChange(of: store.servers.added) { _, added in
-            if added != nil, page == .sources { finish(nil) }
+            // The combined page stays for the books part.
+            if added != nil, page == .sources, !(asks && reads) { finish(nil) }
         }
         // An invite link opened from Messages or Mail jumps here, filled in.
         .onChange(of: navigator.invite) { _, invite in
@@ -360,6 +398,382 @@ struct FirstLaunch: View {
     private var skipForNow: some View {
         Button { finish(nil) } label: { Text(L.onboardingSkipForNow).touchFill() }
             .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+    }
+
+    // MARK: The four pages, where reading is on
+
+    /// Whether this build asks what Kaeri is for, which makes first run four pages.
+    private var asks: Bool { store.medium.choosable }
+
+    /// Whether the answer the medium page took includes reading.
+    private var reads: Bool { (chosen ?? store.medium.answer) != .watch }
+
+    @State private var bookSheet: AddBookSourceStep?
+
+    /// Back on touch at the top left, Skip at the top right on the pages that have it.
+    private var topBar: some View {
+        HStack {
+            #if os(iOS)
+            if asks, page != .welcome, page != .setup {
+                Button { back() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.ui(17, weight: .semibold))
+                        .foregroundStyle(.silk)
+                        .frame(width: 44, height: 44)
+                        .background(Palette.raised, in: .circle)
+                        .contentShape(.circle)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L.actionBack)
+            }
+            #endif
+            Spacer()
+            if showsSkip {
+                #if os(iOS)
+                // A raised capsule beside the round Back, as the board draws them.
+                Button { finish(nil) } label: {
+                    Text(L.actionSkip)
+                        .font(.ui(17))
+                        .foregroundStyle(.silk)
+                        .padding(.horizontal, 16)
+                        .frame(height: 44)
+                        .background(Palette.raised, in: .capsule)
+                        .contentShape(.capsule)
+                }
+                .buttonStyle(.plain)
+                #else
+                Button(L.actionSkip) { finish(nil) }
+                    .buttonStyle(.plain)
+                    .font(.ui(13))
+                    .foregroundStyle(.haze)
+                    .pointerHover()
+                #endif
+            }
+        }
+        .frame(height: Device.isMac ? 28 : 44)
+    }
+
+    private var showsSkip: Bool {
+        if asks { return page == .anilist || page == .sources }
+        return page != .sources && page != .setup
+    }
+
+    private func back() {
+        switch page {
+        case .medium: page = .welcome
+        case .anilist: page = .medium
+        case .sources: page = .anilist
+        case .welcome, .setup: break
+        }
+    }
+
+    /// "2 of 4" over the title.
+    private func step(_ number: Int) -> some View {
+        Text(L.onboardingStep(step: number, total: 4))
+            .font(.plat(mac: 12, touch: 15))
+            .foregroundStyle(.haze)
+            .monospacedDigit()
+            .padding(.top, Device.isMac ? 0 : 8)
+    }
+
+    /// The title and its line, as every page of the four starts.
+    private func top(_ number: Int, _ title: String, _ line: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            step(number)
+            Text(title)
+                .font(.plat(mac: 22, touch: 28, weight: .bold))
+                .foregroundStyle(.silk)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 6)
+            Text(line)
+                .font(.plat(mac: 13, touch: 17))
+                .foregroundStyle(.haze)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Device.isMac ? 6 : 10)
+        }
+    }
+
+    /// Welcome, 1 of 4: words first, naming both media, so it reads the same before the choice.
+    private var welcomeFour: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            top(1, L.onboardingWelcomeTo, L.onboardingWelcomeLine)
+            Text(L.onboardingWelcomeNote)
+                .font(.plat(mac: 13, touch: 15))
+                .foregroundStyle(.haze)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Device.isMac ? 14 : 24)
+            Spacer(minLength: 24)
+            actions {
+                #if os(macOS)
+                setUpElsewhere
+                #endif
+                Button { page = .medium } label: { Text(L.onboardingContinue).touchFill() }
+                    .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .keyboardShortcut(.defaultAction)
+                #if os(iOS)
+                setUpElsewhere
+                #endif
+            }
+        }
+    }
+
+    /// What Kaeri is for, 2 of 4: no Skip, nothing chosen, Continue off until a row is.
+    private var medium: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            top(2, L.onboardingMediumTitle, L.onboardingMediumLine)
+            MediumChoiceRows(chosen: $chosen)
+                .padding(.top, Device.isMac ? 18 : 24)
+            Spacer(minLength: 16)
+            actions {
+                #if os(macOS)
+                Button { back() } label: { Text(L.actionBack) }
+                    .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                #endif
+                Button {
+                    guard let chosen else { return }
+                    if store.medium.asking == .firstRun {
+                        store.medium.answer(.firstRun, with: chosen)
+                    } else if chosen != store.medium.answer {
+                        store.medium.choose(chosen)
+                    }
+                    page = .anilist
+                } label: { Text(L.onboardingContinue).touchFill() }
+                    .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont, offIsRaised: true))
+                    .disabled(chosen == nil)
+                    .keyboardShortcut(.defaultAction)
+                    .accessibilityHint(chosen == nil ? L.onboardingMediumHint : "")
+            }
+        }
+    }
+
+    /// AniList, 3 of 4: AniList first, the trackers that serve the answer named for later.
+    private var lists: some View {
+        let working = store.accounts.isWorking("anilist")
+        let answer = chosen ?? store.medium.answer
+        return VStack(alignment: .leading, spacing: 0) {
+            top(3, L.onboardingListsTitle, MediumWords.listsLine(answer, tracker: AccountsModel.name("anilist")))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(AccountsModel.name("anilist"))
+                    .font(.plat(mac: 13, touch: 17))
+                    .foregroundStyle(.silk)
+                Text(L.onboardingListsAnilistLine)
+                    .font(.plat(mac: 12, touch: 15))
+                    .foregroundStyle(.haze)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Device.isMac ? 12 : 16)
+            .padding(.vertical, Device.isMac ? 10 : 11)
+            .frame(minHeight: Device.isMac ? 48 : 64)
+            .background(.raised, in: .rect(cornerRadius: Device.isMac ? 10 : 26))
+            .accessibilityElement(children: .combine)
+            .padding(.top, Device.isMac ? 18 : 24)
+            Text(MediumWords.listsLater(answer))
+                .font(.plat(mac: 12, touch: 13))
+                .foregroundStyle(.haze)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Device.isMac ? 12 : 16)
+                .padding(.top, 8)
+            Spacer(minLength: 16)
+            actions {
+                #if os(macOS)
+                Button { back() } label: { Text(L.actionBack) }
+                    .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                notNow
+                connect(working)
+                #else
+                connect(working)
+                Button { page = .sources } label: {
+                    Text(L.actionNotNow)
+                        .font(.ui(17, weight: .semibold))
+                        .foregroundStyle(.silk)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                #endif
+            }
+        }
+    }
+
+    private func connect(_ working: Bool) -> some View {
+        Button {
+            store.connect("anilist")
+        } label: {
+            HStack(spacing: 8) {
+                if working { ProgressView().controlSize(.small) }
+                Text(L.onboardingConnect(tracker: AccountsModel.name("anilist")))
+            }
+            .touchFill()
+        }
+        .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+        .disabled(working)
+        .keyboardShortcut(.defaultAction)
+    }
+
+    /// Where books come from, 4 of 4 after Read: a folder, a server, an invite. After Both, the
+    /// same page with a Shows part and a Books part over the one invite field. No list of
+    /// sources and no suggestion; the plugin line sits beside the invite field.
+    private var books: some View {
+        let trimmed = link.trimmingCharacters(in: .whitespacesAndNewlines)
+        let looksRight = InviteLinks.looksLikeInvite(trimmed)
+        let both = (chosen ?? store.medium.answer) == .both
+        return VStack(alignment: .leading, spacing: 0) {
+            if both {
+                top(4, L.onboardingBothTitle, L.onboardingBothLine)
+                partHeading(L.onboardingBothShows)
+                    .padding(.top, Device.isMac ? 14 : 20)
+                rows {
+                    if devicePicksFolders {
+                        bookRow(L.onboardingBooksFolder, L.onboardingBothShowsFolderLine(device: Device.name)) {
+                            FolderPicker.choose { store.addFolder($0) }
+                        }
+                        rowRule
+                    }
+                    bookRow(L.onboardingBooksServer, L.onboardingBothShowsServerLine) { navigator.addServerShown = true }
+                }
+                .padding(.top, 6)
+                partHeading(L.onboardingBothBooks)
+                    .padding(.top, Device.isMac ? 14 : 20)
+                bookRows
+                    .padding(.top, 6)
+            } else {
+                top(4, L.onboardingBooksTitle, L.onboardingBooksLine)
+                bookRows
+                    .padding(.top, Device.isMac ? 16 : 24)
+            }
+            Text(L.onboardingBooksInviteHeading)
+                .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                .foregroundStyle(.silk)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.horizontal, Device.isMac ? 12 : 16)
+                .padding(.top, Device.isMac ? 16 : 22)
+            TextField(L.onboardingBooksInvitePlaceholder, text: $link)
+                .textFieldStyle(.plain)
+                .font(.plat(mac: 13, touch: 17))
+                .foregroundStyle(.silk)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.URL)
+                #endif
+                .padding(.horizontal, Device.isMac ? 12 : 18)
+                .frame(height: Device.isMac ? 28 : 52)
+                .background(.raised, in: .capsule)
+                .overlay(Capsule().strokeBorder(Palette.faintRule, lineWidth: 1))
+                .padding(.top, 8)
+                .onSubmit { if looksRight { finish(trimmed) } }
+                .onChange(of: link) { _, new in
+                    let value = new.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if InviteLinks.looksLikeInvite(value) {
+                        store.previewStore(value)
+                    } else {
+                        store.stores.clearPreview()
+                    }
+                }
+            invitePreview
+                .padding(.horizontal, Device.isMac ? 12 : 16)
+                .padding(.top, 6)
+            Text(L.onboardingBooksPluginLine)
+                .font(.plat(mac: 12, touch: 13))
+                .foregroundStyle(.haze)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Device.isMac ? 12 : 16)
+                .padding(.top, 8)
+            Spacer(minLength: 16)
+            actions {
+                #if os(macOS)
+                Button { back() } label: { Text(L.actionBack) }
+                    .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                #endif
+                Button { finish(looksRight ? trimmed : nil) } label: { Text(L.actionDone).touchFill() }
+                    .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .onDisappear { store.stores.clearPreview() }
+        #if os(iOS)
+        .fileImporter(isPresented: $pickingFolder, allowedContentTypes: [.folder]) { result in
+            guard case .success(let url) = result else { return }
+            BookFolders.add(url, to: store)
+        }
+        #endif
+        .onChange(of: store.bookSources.added?.id) { _, added in
+            // The sheet says how many series it found first, when it knows, and closes on Done.
+            if added != nil, store.bookSources.added?.series == nil { bookSheet = nil }
+        }
+    }
+
+    @State private var pickingFolder = false
+
+    /// A folder and a server for books, on one raised card.
+    private var bookRows: some View {
+        rows {
+            bookRow(L.onboardingBooksFolder, L.onboardingBooksFolderLine) { addFolder() }
+            rowRule
+            bookRow(L.onboardingBooksServer, L.onboardingBooksServerLine) { bookSheet = .server }
+        }
+    }
+
+    private func rows<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(.raised, in: .rect(cornerRadius: Device.isMac ? 10 : 26))
+    }
+
+    private var rowRule: some View {
+        Rectangle().fill(Palette.faintRule).frame(height: 1).padding(.leading, Device.isMac ? 12 : 16)
+            .accessibilityHidden(true)
+    }
+
+    /// Shows or Books over its rows on the combined page, as a list's group heading.
+    private func partHeading(_ text: String) -> some View {
+        Text(text)
+            .groupHeaderStyle()
+            .padding(.horizontal, Device.isMac ? 12 : 16)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private func addFolder() {
+        #if os(macOS)
+        FolderPicker.choose { path in
+            store.bookSources.addFolder(FolderRef(path: path, treeUri: nil, bookmark: nil, name: nil))
+        }
+        #else
+        pickingFolder = true
+        #endif
+    }
+
+    private func bookRow(_ title: String, _ line: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.plat(mac: 13, touch: 17))
+                        .foregroundStyle(.silk)
+                    Text(line)
+                        .font(.plat(mac: 12, touch: 15))
+                        .foregroundStyle(.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.ui(Device.isMac ? 11 : 14, weight: .semibold))
+                    .foregroundStyle(.haze)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, Device.isMac ? 12 : 16)
+            .padding(.vertical, Device.isMac ? 9 : 11)
+            .frame(minHeight: Device.isMac ? 48 : 64)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: Parts

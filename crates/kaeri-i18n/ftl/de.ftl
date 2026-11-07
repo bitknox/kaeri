@@ -8557,9 +8557,6 @@ settings-artwork-detail = Namensnennung in den Hinweisen der App
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Neue Folgen
 
-# Line under it.
-settings-new-episodes-detail = Für Serien in deiner Liste „Wird geschaut“
-
 # Line explaining what a notification says.
 settings-notify-detail = Eine Benachrichtigung, wenn eine Folge einer Serie erscheint, der du folgst: die Serie und die Folgennummer, nie der Folgentitel. Eine Serie kann ihre eigenen in den Einstellungen ausschalten.
 

@@ -79,7 +79,7 @@ class NotificationsPaneTest {
         var opened = 0
         pane(AppActions(notifications = NotificationActions({ turns += it }, MutableStateFlow(false)) { opened++ }))
         // The switch's row, by its line: "New episodes" also heads the group.
-        val row = compose.onAllNodesWithText("For shows in your Watching list", substring = true)[0]
+        val row = compose.onAllNodesWithText("Shows on your Watching list", substring = true)[0]
         row.assert(off)
         row.performClick()
         // The app turns it on once it may post; the row only asks, and sends nothing itself.
@@ -128,7 +128,7 @@ class NotificationsPaneTest {
     @Test
     fun without_the_app_the_switch_turns_the_setting() {
         pane(AppActions())
-        compose.onAllNodesWithText("For shows in your Watching list", substring = true)[0].performClick()
+        compose.onAllNodesWithText("Shows on your Watching list", substring = true)[0].performClick()
         assertTrue(Command.SetSetting(SettingKey.EPISODE_NOTIFICATIONS, SettingValue.Bool(true)) in store.waiting)
         assertTrue(compose.onAllNodesWithText("Notification settings").fetchSemanticsNodes().isEmpty())
     }

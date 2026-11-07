@@ -3424,6 +3424,130 @@ mod tests {
                 .collect()
         }
 
+        /// Wait for the store to come to `done`: commands without an answer land in it.
+        async fn store_until(
+            store: &kaeri_store::Store,
+            done: impl Fn(&kaeri_store::Store) -> bool,
+        ) {
+            for _ in 0..500 {
+                if done(store) {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+            panic!("the store never came to it");
+        }
+
+        #[tokio::test]
+        async fn a_series_no_source_holds_lists_its_files_and_one_with_nothing_says_why() {
+            use kaeri_store::{
+                reading::ReadEvent,
+                shelf::{LocalSeries, ShelfFile},
+            };
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let books = dir.path().join("books");
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                let series = LocalSeries {
+                    id: "s1".into(),
+                    folder: books.display().to_string(),
+                    name: "The Lantern Keeper".into(),
+                    medium: "manga".into(),
+                    work: Some(WORK.into()),
+                    state: "matched".into(),
+                };
+                o.store.put_local_series(&series).unwrap();
+                for n in 1..=2 {
+                    let file = ShelfFile {
+                        path: books.join(format!("Chapter {n}.cbz")).display().to_string(),
+                        chapter: None,
+                        label: format!("Chapter {n}"),
+                        volume: None,
+                        number_milli: Some(n * 1000),
+                        format: "cbz".into(),
+                        pages: Some(19),
+                        comicinfo: None,
+                        source: None,
+                    };
+                    o.store.put_local_file("s1", &file, 1, 1).unwrap();
+                }
+                let mut read = ReadEvent::new(WORK, "1", kaeri_store::now() - 5);
+                read.completed = true;
+                o.store.record_read(&read, Vec::new()).unwrap();
+            })
+            .await;
+            events.launch().await;
+            let chapters = |events: Vec<Event>| {
+                events.into_iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
+                        Some((volumes, failure))
+                    }
+                    _ => None,
+                })
+            };
+
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: WorkId::new(WORK),
+                edition: None,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let (volumes, failure) = chapters(seen).unwrap();
+            assert_eq!(failure, None, "the files answer");
+            let rows: Vec<_> = volumes.iter().flat_map(|v| &v.chapters).collect();
+            let line = |n: usize| rows[n].line.iter().map(Msg::id).collect::<Vec<_>>();
+            assert_eq!(rows.len(), 2);
+            assert_eq!(line(0), ["reading-row-read", "reading-ago-now"]);
+            assert_eq!(line(1), ["reading-row-pages"], "a file says how long it is");
+
+            // Neither a source nor a file: the sheet hears why, not silence.
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: WorkId::new("a:900699"),
+                edition: None,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let (volumes, failure) = chapters(seen).unwrap();
+            assert!(volumes.is_empty());
+            assert_eq!(failure, Some(ReadingFailure::NotFound));
+        }
+
+        #[tokio::test]
+        async fn read_again_puts_a_series_on_rereading_and_its_undo_puts_the_list_back() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                o.store.adopt_read(WORK, "5", None, 1).unwrap();
+                o.store.set_read_status(WORK, Some("completed"), 1).unwrap();
+                kept = Some(o.store.clone());
+            })
+            .await;
+            events.launch().await;
+            let store = kept.unwrap();
+            let status = |store: &kaeri_store::Store| store.read_status(WORK).unwrap().0;
+            let read =
+                |store: &kaeri_store::Store| store.read_marks(WORK).unwrap().is_read("3");
+            assert!(read(&store));
+
+            engine
+                .send(Command::Reading(ReadingCommand::ReadAgain { work: WorkId::new(WORK) }));
+            store_until(&store, |s| status(s).as_deref() == Some("rereading")).await;
+            assert!(!read(&store), "fresh marks");
+
+            engine.send(Command::Reading(ReadingCommand::UndoReadAgain {
+                work: WorkId::new(WORK),
+            }));
+            store_until(&store, |s| status(s).as_deref() == Some("completed")).await;
+            assert!(read(&store), "the old marks are back");
+        }
+
         #[tokio::test]
         async fn download_cancel_delete_and_download_new_run_through_the_engine() {
             let dir = tempfile::tempdir().unwrap();
@@ -3530,7 +3654,7 @@ mod tests {
             w.finish().unwrap();
         }
 
-        async fn store_until(what: &str, done: impl Fn() -> bool) {
+        async fn store_waits(what: &str, done: impl Fn() -> bool) {
             for _ in 0..500 {
                 if done() {
                     return;
@@ -3664,14 +3788,14 @@ mod tests {
                 chapters: ids(&["1", "2"]),
                 target: "kobo".into(),
             }));
-            store_until("the send being kept", || store.pending_sent(WORK).unwrap().is_some())
+            store_waits("the send being kept", || store.pending_sent(WORK).unwrap().is_some())
                 .await;
             engine.send(Command::Reading(ReadingCommand::StoppedAt {
                 work: work.clone(),
                 chapter: Some(ChapterId::new("2")),
                 page: None,
             }));
-            store_until("the answer being kept", || {
+            store_waits("the answer being kept", || {
                 store.read_marks(WORK).unwrap().is_read("2")
             })
             .await;

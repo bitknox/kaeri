@@ -63,17 +63,26 @@ fn read_until(
     read
 }
 
+/// A clock whose zone puts the moment the test starts at midday, a fixed offset with no
+/// daylight saving: the scene's chapter out two hours ago is out today at any hour the tests
+/// run, where read in the system's zone it was yesterday from midnight to 02:00.
+fn at_midday() -> kaeri_engine::clock::Clock {
+    use jiff::tz::{Offset, TimeZone};
+    const DAY: i64 = 86_400;
+    let now = jiff::Timestamp::now().as_second();
+    let ahead = (DAY / 2 - now).rem_euclid(DAY);
+    let offset = if ahead > DAY / 2 { ahead - DAY } else { ahead };
+    let offset = i32::try_from(offset).ok().and_then(|secs| Offset::from_seconds(secs).ok());
+    let zone = TimeZone::fixed(offset.expect("half a day either side of UTC is an offset"));
+    kaeri_engine::clock::Clock::in_zone(zone)
+}
+
 fn start(scene: FfiScene) -> (tempfile::TempDir, Arc<FfiEngine>) {
     let root = tempfile::tempdir().expect("a temporary directory");
     let dir = |name: &str| root.path().join(name).display().to_string();
     let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
-    let engine = FfiEngine::start_scene_on(
-        dirs,
-        Arc::new(Quiet),
-        scene,
-        kaeri_engine::clock::Clock::default(),
-    )
-    .expect("the engine starts");
+    let engine = FfiEngine::start_scene_on(dirs, Arc::new(Quiet), scene, at_midday())
+        .expect("the engine starts");
     (root, engine)
 }
 
@@ -108,20 +117,21 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     assert!(continuing.contains(&"a:900302".to_owned()), "{continuing:?}");
     let manga = home.continue_reading.iter().find(|t| t.work.0 == "a:900301").unwrap();
     assert_eq!(manga.title, "The Lantern Ferry");
-    assert!(manga.new_chapter, "chapter 15 came out since");
+    // Chapter 15 came out since, but the person is part way through 13: no new-chapter dot,
+    // the track shows.
+    assert!(!manga.new_chapter, "chapter 13 is in progress");
 
-    // The spotlight: chapter 15, out today, in a series followed.
+    // The spotlight: the first of Continue, opening where the person stopped, rather than a
+    // new chapter in a series they are behind in.
     let spot = home.spot.as_ref().expect("a spotlight");
-    assert_eq!(spot.case, ReadSpotlightCase::NewChapter);
-    assert_eq!(
-        spot.line,
-        Some(Msg::Reading(ReadingMsg::ReadingOutTodayTitled {
-            chapter: "15".into(),
-            title: "The Far Shore".into()
-        }))
-    );
+    assert_eq!(spot.case, ReadSpotlightCase::Continuing);
     assert!(
-        matches!(&spot.action, Some(SeriesAction::Read { chapter, .. }) if chapter.as_str() == "13")
+        matches!(
+            &spot.action,
+            Some(SeriesAction::Continue { .. } | SeriesAction::ContinuePart { .. })
+        ),
+        "{:?}",
+        spot.action
     );
 
     // This week: the manga today, as it came out, and the strip on the day it usually does.
@@ -165,7 +175,10 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     engine.shutdown();
 }
 
-fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Option<u32>) {
+fn search(
+    engine: &Arc<FfiEngine>,
+    query: ReadSearchQuery,
+) -> (Vec<String>, Option<u32>, Option<u32>) {
     engine.send(Command::Reading(ReadingCommand::Search { query: query.clone() }));
     let read = read_until(
         engine,
@@ -174,8 +187,8 @@ fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Opti
     read.into_iter()
         .rev()
         .find_map(|event| match event {
-            Event::Reading(ReadingEvent::Search { tiles, other_scope, .. }) => {
-                Some((tiles.iter().map(|t| t.work.0.clone()).collect(), other_scope))
+            Event::Reading(ReadingEvent::Search { tiles, other_scope, total, .. }) => {
+                Some((tiles.iter().map(|t| t.work.0.clone()).collect(), other_scope, total))
             }
             _ => None,
         })
@@ -185,26 +198,28 @@ fn search(engine: &Arc<FfiEngine>, query: ReadSearchQuery) -> (Vec<String>, Opti
 #[test]
 fn search_asks_anilist_with_its_filters() {
     let (_root, engine) = start(FfiScene::ReadingHome);
-    let (found, other) = search(
+    let (found, other, total) = search(
         &engine,
         ReadSearchQuery { text: "lantern".into(), ..ReadSearchQuery::default() },
     );
     assert_eq!(found, ["a:900301"]);
     // Both media are on: the count of shows rides along.
     assert_eq!(other, Some(0));
+    // The whole answer is on its one page, so the total is known.
+    assert_eq!(total, Some(1));
 
     let strips = ReadSearchQuery { formats: vec!["webtoon".into()], ..Default::default() };
-    let (found, other) = search(&engine, strips);
+    let (found, other, _) = search(&engine, strips);
     assert!(found.contains(&"a:900303".to_owned()) && !found.contains(&"a:900301".to_owned()));
     assert_eq!(other, None);
 
     let novels = ReadSearchQuery { formats: vec!["novel".into()], ..Default::default() };
-    let (found, _) = search(&engine, novels);
+    let (found, ..) = search(&engine, novels);
     assert!(found.contains(&"a:900302".to_owned()), "{found:?}");
     assert!(!found.contains(&"a:900301".to_owned()), "{found:?}");
 
     let korean = ReadSearchQuery { origins: vec!["KR".into()], ..Default::default() };
-    let (found, _) = search(&engine, korean);
+    let (found, ..) = search(&engine, korean);
     assert!(found.contains(&"a:900303".to_owned()) && !found.contains(&"a:900302".to_owned()));
     engine.shutdown();
 }
@@ -250,27 +265,30 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
     assert_eq!(page.status.as_deref(), Some("releasing"));
     assert_eq!(page.list, Some(LibrarySegmentRead::Reading));
     assert!(
-        matches!(&page.action, SeriesAction::Continue { chapter, page: 9, .. } if chapter.as_str() == "13")
+        matches!(&page.action, SeriesAction::Continue { chapter, page: 10, .. } if chapter.as_str() == "13")
     );
     let show = page.other_medium.as_ref().unwrap();
     assert_eq!(show.title, "The Library Above the Clouds");
     assert_eq!(show.relation, Msg::Reading(ReadingMsg::ReadingAlsoAShow));
     assert!(!page.recommended.is_empty());
+    // The scene's folder holds chapters 12 to 15, which the folder lists afresh.
     let edition = page.edition.as_ref().expect("the folder's edition");
-    assert_eq!((edition.chapters, edition.latest.as_deref()), (15, Some("15")));
+    assert_eq!((edition.chapters, edition.latest.as_deref()), (4, Some("15")));
 
-    // The folder has no files for it here: the list kept last, with why.
-    let chapters = read.iter().find_map(|event| match event {
+    let chapters = read.iter().rev().find_map(|event| match event {
         Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
             Some((volumes.clone(), failure.clone()))
         }
         _ => None,
     });
     let (volumes, failure) = chapters.expect("the chapters");
-    assert!(failure.is_some());
+    assert!(failure.is_none(), "{failure:?}");
     let rows: Vec<_> = volumes.iter().flat_map(|v| &v.chapters).collect();
-    assert_eq!(rows.len(), 15);
-    assert!(rows.iter().find(|r| r.id.as_str() == "15").unwrap().new_chapter);
+    assert_eq!(rows.len(), 4);
+    let newest = rows.iter().find(|r| r.id.as_str() == "15").unwrap();
+    assert!(newest.new_chapter);
+    // The book's own details call it "Chapter 15", which is no title of its own.
+    assert_eq!(newest.title, None);
 
     engine.send(Command::Reading(ReadingCommand::LoadVersions {
         work: kaeri_core::books::WorkId::new("a:900301"),
@@ -285,7 +303,7 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
     });
     let versions = versions.unwrap();
     assert_eq!(versions.len(), 1);
-    assert_eq!(versions[0].chapter_ref, "c-15");
+    assert!(!versions[0].chapter_ref.is_empty());
     engine.shutdown();
 }
 

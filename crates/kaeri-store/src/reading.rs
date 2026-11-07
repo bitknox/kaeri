@@ -1272,6 +1272,22 @@ impl Store {
         Ok((u32::try_from(milli / 1000).unwrap_or(u32::MAX), volume))
     }
 
+    /// When the person last changed how far they are in a work, in Unix seconds: a chapter
+    /// finished or marked unread, or read up to a chapter.
+    pub fn read_progress_at(&self, work: &str) -> Result<Option<i64>> {
+        self.with_personal(|c| {
+            let newest = |sql: &str| -> Result<Option<i64>> {
+                Ok(c.query_row(sql, [work], |r| r.get::<_, Option<i64>>(0))?)
+            };
+            let read =
+                newest("SELECT MAX(at) FROM read_event WHERE work = ?1 AND completed = 1")?;
+            let adopted = newest("SELECT MAX(at) FROM read_adopt WHERE work = ?1")?;
+            let unread = newest("SELECT MAX(stamp) FROM read_unread WHERE work = ?1")?
+                .map(|stamp| crate::sync::op::secs_of_stamp(stamp as u64));
+            Ok([read, adopted, unread].into_iter().flatten().max())
+        })
+    }
+
     /// What the chapter catalogue says a work's trackers should hold: whole chapters read in
     /// reading order, and the highest volume whose every known chapter is read. Kept by the
     /// engine, which knows the catalogue; [`Self::read_progress`] is the floor.

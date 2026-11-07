@@ -5894,9 +5894,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Yeni bölümler</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>İzleme listenizdeki diziler için</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.</value>
   </data>

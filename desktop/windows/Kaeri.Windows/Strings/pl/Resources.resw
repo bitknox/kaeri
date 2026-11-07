@@ -6230,9 +6230,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nowe odcinki</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Dla tytułów z listy oglądanych</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</value>
   </data>

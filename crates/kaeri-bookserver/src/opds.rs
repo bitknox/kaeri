@@ -195,6 +195,13 @@ fn link_with<'a>(links: &'a [Link], rel: &str) -> Option<&'a Link> {
     links.iter().find(|l| l.rel == rel)
 }
 
+/// A root entry that leads to the catalogue's feed of series.
+fn is_series_index(entry: &Entry) -> bool {
+    let title = entry.title.to_lowercase();
+    (title.contains("series") || title.contains("serie"))
+        && subsection(entry).is_some_and(|l| l.media_type.contains("kind=navigation"))
+}
+
 fn subsection(entry: &Entry) -> Option<&Link> {
     entry.links.iter().find(|l| {
         l.rel == "subsection"
@@ -242,7 +249,7 @@ async fn count_series(
     address: &str,
     auth: &Auth,
     root: &Feed,
-) -> u32 {
+) -> Option<u32> {
     let source = OpdsSource::new(
         "probe",
         "probe",
@@ -250,10 +257,7 @@ async fn count_series(
         PathBuf::new(),
         Arc::new(AtomicBool::new(false)),
     );
-    match source.series_index(root).await {
-        Ok(Some(list)) => u32::try_from(list.len()).unwrap_or(u32::MAX),
-        _ => 0,
-    }
+    source.count_series_index(root).await
 }
 
 /// An OPDS catalogue as a book source.
@@ -339,13 +343,33 @@ impl OpdsSource {
 
     /// The navigation feed of series the catalogue offers from its root, if it offers one.
     async fn series_index(&self, root: &Feed) -> Result<Option<Vec<Entry>>> {
-        let entry = root.entries.iter().find(|e| {
-            let title = e.title.to_lowercase();
-            (title.contains("series") || title.contains("serie"))
-                && subsection(e).is_some_and(|l| l.media_type.contains("kind=navigation"))
-        });
+        let entry = root.entries.iter().find(|e| is_series_index(e));
         let Some(link) = entry.and_then(subsection) else { return Ok(None) };
         Ok(Some(self.feed_all(&link.href).await?))
+    }
+
+    /// How many series the catalogue's series feed lists: the total its first page states,
+    /// else the entries of a walk that reached the last page. `None` when it has no series
+    /// feed, or the walk stopped short.
+    async fn count_series_index(&self, root: &Feed) -> Option<u32> {
+        let entry = root.entries.iter().find(|e| is_series_index(e))?;
+        let mut next = Some(subsection(entry)?.href.clone());
+        let mut count = 0usize;
+        for _ in 0..MAX_PAGES {
+            let Some(at) = next.take() else { break };
+            let feed = self.feed(&at).await.ok()?;
+            if let Some(total) =
+                feed.paging.as_ref().map(|p| p.total_results).filter(|t| *t > 0)
+            {
+                return u32::try_from(total).ok();
+            }
+            next = link_with(&feed.links, "next").map(|l| l.href.clone());
+            count += feed.entries.len();
+        }
+        if next.is_some() {
+            return None;
+        }
+        u32::try_from(count).ok()
     }
 
     fn hit(&self, entry: &Entry, handle: &str) -> SeriesHit {
@@ -638,5 +662,102 @@ mod tests {
         assert!(matches!(Handle::parse("cat|Some Name"), Some(Handle::Category(_))));
         assert!(matches!(Handle::parse("book|http://x/s|urn:b"), Some(Handle::Book { .. })));
         assert!(Handle::parse("nonsense").is_none());
+    }
+
+    /// Serve `pages` by path on a loopback address, each with the given body.
+    async fn serve(pages: Vec<(&'static str, String)>) -> String {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = format!("http://{}", listener.local_addr().unwrap());
+        tokio::spawn(async move {
+            loop {
+                let Ok((mut stream, _)) = listener.accept().await else { return };
+                let pages = pages.clone();
+                tokio::spawn(async move {
+                    let mut buf = vec![0u8; 8192];
+                    let n = stream.read(&mut buf).await.unwrap_or(0);
+                    let text = String::from_utf8_lossy(&buf[..n]).to_string();
+                    let path = text.split(' ').nth(1).unwrap_or("").to_owned();
+                    let body = pages.iter().find(|(p, _)| *p == path).map(|(_, b)| b.clone());
+                    let response = match body {
+                        Some(body) => format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/atom+xml\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                            body.len()
+                        ),
+                        None => "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".into(),
+                    };
+                    let _ = stream.write_all(response.as_bytes()).await;
+                });
+            }
+        });
+        address
+    }
+
+    fn series_page(entries: &[&str], next: Option<&str>, total: Option<u32>) -> String {
+        let next = next.map_or(String::new(), |n| {
+            format!(r#"<link rel="next" href="{n}" type="application/atom+xml"/>"#)
+        });
+        let total = total.map_or(String::new(), |t| {
+            format!("<opensearch:totalResults>{t}</opensearch:totalResults>")
+        });
+        let entries: String = entries
+            .iter()
+            .map(|e| {
+                format!(
+                    r#"<entry><id>urn:x:{e}</id><title>{e}</title><updated>2026-01-01T00:00:00Z</updated>
+  <link rel="subsection" href="/opds/s/{e}" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/></entry>"#
+                )
+            })
+            .collect();
+        format!(
+            r#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">
+ <id>urn:x:series</id><title>All series</title><updated>2026-01-01T00:00:00Z</updated>{total}{next}{entries}</feed>"#
+        )
+    }
+
+    async fn count(pages: Vec<(&'static str, String)>) -> Option<u32> {
+        let address = serve(pages).await;
+        let client = reqwest::Client::new();
+        let root = parse(ROOT, &format!("{address}/opds")).unwrap();
+        count_series(&client, &format!("{address}/opds"), &Auth::None, &root).await
+    }
+
+    #[tokio::test]
+    async fn the_series_count_is_the_feeds_stated_total_or_a_walk_that_reached_the_end() {
+        let walked = count(vec![
+            (
+                "/opds/series",
+                series_page(
+                    &["Lantern Keeper", "Tide Clock"],
+                    Some("/opds/series?page=2"),
+                    None,
+                ),
+            ),
+            ("/opds/series?page=2", series_page(&["Paper Moon Road"], None, None)),
+        ])
+        .await;
+        assert_eq!(walked, Some(3));
+
+        let stated = count(vec![(
+            "/opds/series",
+            series_page(&["Lantern Keeper"], Some("/opds/series?page=2"), Some(212)),
+        )])
+        .await;
+        assert_eq!(stated, Some(212), "the stated total, with no walk");
+
+        // A feed that never ends is not counted: a number from part of it would be wrong.
+        let endless = count(vec![(
+            "/opds/series",
+            series_page(&["Lantern Keeper"], Some("/opds/series"), None),
+        )])
+        .await;
+        assert_eq!(endless, None);
+
+        // A catalogue without a series feed says nothing.
+        let address = serve(Vec::new()).await;
+        let bare = parse(BOOKS, &format!("{address}/opds")).unwrap();
+        let none = count_series(&reqwest::Client::new(), &address, &Auth::None, &bare).await;
+        assert_eq!(none, None);
     }
 }

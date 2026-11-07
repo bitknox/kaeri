@@ -6,15 +6,20 @@
 //! tracker that keeps such a list, and the drain sends it; see `kaeri_track::sync::drain_read`.
 //! A chapter like 10.5 goes to a tracker as 10, and the series says so.
 
+use std::sync::Arc;
+
 use kaeri_core::{
     books::WorkId,
     ids::AnilistId,
-    traits::{TrackOp, WatchStatus},
+    traits::{ReadRemoval, TrackOp, Tracker, WatchStatus},
 };
 use kaeri_model::{
     Msg, ReadingMsg,
     event::Event,
-    reading::{LibrarySegmentRead, ReadingEvent, TrackerMapping, TrackerReadRow},
+    reading::{
+        LibrarySegmentRead, ListRemoval, ListRemovalOutcome, ReadingEvent, ReadingFailure,
+        TrackerMapping, TrackerReadRow,
+    },
 };
 use kaeri_store::Store;
 
@@ -162,6 +167,31 @@ pub(crate) fn queue_score(
     queue(services, &TrackOp::SetReadScore { anilist_id: id, score, at }, at, tx);
 }
 
+/// Queue `progress` for the trackers when it took the work's count down: an unread, when the
+/// person chose that the latest change wins. It replaces any higher count still queued.
+pub(crate) fn queue_lower(
+    services: &Services,
+    work: &WorkId,
+    (chapter, volume): (u32, Option<u32>),
+    at: i64,
+    tx: &Outbox,
+) {
+    let Some(id) = anilist_of(work) else { return };
+    let op = TrackOp::SetReadProgress { anilist_id: id, chapter, volume };
+    let mut queued = false;
+    for tracker in signed_in_reading_tracker_ids(&services.sync) {
+        match services.store.requeue_read_progress(&tracker, &op, at) {
+            Ok(_) => queued = true,
+            Err(e) => tracing::warn!(error = %e, "a reading change was not queued"),
+        }
+    }
+    if queued {
+        for state in services.sync.state_after_read_enqueue() {
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+    }
+}
+
 fn queue(services: &Services, op: &TrackOp, at: i64, tx: &Outbox) {
     let mut queued = false;
     for tracker in signed_in_reading_tracker_ids(&services.sync) {
@@ -175,6 +205,100 @@ fn queue(services: &Services, op: &TrackOp, at: i64, tx: &Outbox) {
             let _ = tx.send(Event::Sync(Box::new(state)));
         }
     }
+}
+
+/// Take a series off the lists: the person's here at once, then each signed-in reading
+/// tracker's, answered with one result per tracker. The chapters read stay read.
+pub(crate) fn remove_from_lists(services: &Services, work: WorkId, tx: &Outbox) {
+    let trackers: Vec<Arc<dyn Tracker>> = services
+        .sync
+        .trackers
+        .iter()
+        .filter(|t| t.serves_reading() && t.is_authenticated())
+        .cloned()
+        .collect();
+    if forget_here(&services.store, &work, &trackers, services.clock.now()) > 0 {
+        for state in services.sync.state_after_read_enqueue() {
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+    }
+    let tx = tx.clone();
+    tokio::spawn(async move {
+        let results = match anilist_of(&work) {
+            Some(id) => remove_there(&trackers, id).await,
+            // A folder's series is on no tracker.
+            None => Vec::new(),
+        };
+        let _ = tx.send(Event::Reading(ReadingEvent::RemovedFromLists { work, results }));
+    });
+}
+
+/// Take a series off the lists here, and drop what still waited to go to a tracker about it, so
+/// a queued status cannot put it back. Says how many queued changes went.
+fn forget_here(store: &Store, work: &WorkId, trackers: &[Arc<dyn Tracker>], now: i64) -> usize {
+    let name = work.as_str();
+    if let Err(e) = store.set_read_status(name, None, now) {
+        tracing::warn!(error = %e, "the series was not taken off the lists here");
+    }
+    for tracker in trackers {
+        let _ = store.delete_meta(&conflict_key(name, tracker.id()));
+    }
+    let Some(id) = anilist_of(work) else { return 0 };
+    store.forget_read_ops(id).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "queued reading changes were not dropped");
+        0
+    })
+}
+
+/// Ask every tracker at once to take the title off its list.
+async fn remove_there(trackers: &[Arc<dyn Tracker>], id: AnilistId) -> Vec<ListRemoval> {
+    let asks = trackers.iter().map(|tracker| async move {
+        let answer = tracker.remove_read(id).await;
+        removal(tracker.id(), answer)
+    });
+    futures::future::join_all(asks).await
+}
+
+/// One tracker's answer to a removal, with its words.
+fn removal(tracker: &str, answer: Result<ReadRemoval, kaeri_core::Error>) -> ListRemoval {
+    let name = crate::tracking::tracker_name(tracker);
+    let r = Msg::Reading;
+    let (outcome, line) = match answer {
+        Ok(ReadRemoval::Removed) => (
+            ListRemovalOutcome::Removed,
+            vec![r(ReadingMsg::ReadingRemovedFrom { tracker: name })],
+        ),
+        Ok(ReadRemoval::NotOnList) => (
+            ListRemovalOutcome::NotOnList,
+            vec![r(ReadingMsg::ReadingRemovedNotThere { tracker: name })],
+        ),
+        Ok(ReadRemoval::Unmatched) => (
+            ListRemovalOutcome::Unmatched,
+            vec![r(ReadingMsg::ReadingRemovedUnmatched { tracker: name })],
+        ),
+        Err(e) => {
+            tracing::info!(tracker, error = %e, "a tracker did not take the series off its list");
+            let (failure, why) = match e {
+                kaeri_core::Error::Auth(_) => (
+                    ReadingFailure::SignInNeeded { what: name.clone() },
+                    r(ReadingMsg::ReadingRemovedSignIn { tracker: name.clone() }),
+                ),
+                kaeri_core::Error::Network(_) => {
+                    (ReadingFailure::Offline, ReadingFailure::Offline.msg())
+                }
+                other => {
+                    let failure = ReadingFailure::Other { reason: other.to_string() };
+                    let why = failure.msg();
+                    (failure, why)
+                }
+            };
+            (
+                ListRemovalOutcome::Failed { failure },
+                vec![r(ReadingMsg::ReadingRemovedFailed { tracker: name }), why],
+            )
+        }
+    };
+    ListRemoval { tracker: tracker.to_owned(), outcome, line }
 }
 
 /// Note the ids a book already carries, so the first sync has a MyAnimeList entry to write to.
@@ -601,5 +725,129 @@ mod tests {
         ];
         let read = marked(&["v1/1", "v1/1.5", "v2/1"]);
         assert_eq!(progress_in(&list, &read, (0, None)).0, 2);
+    }
+
+    mod removal {
+        use std::sync::Arc;
+
+        use kaeri_core::{
+            books::WorkId,
+            ids::AnilistId,
+            traits::{ReadRemoval, TrackOp, Tracker, WatchStatus},
+        };
+        use kaeri_model::reading::{ListRemovalOutcome, ReadingFailure};
+        use kaeri_store::Store;
+
+        use super::super::{conflict_key, forget_here, remove_there};
+
+        /// A tracker that answers a removal as told.
+        struct Answers {
+            id: &'static str,
+            answer: fn() -> Result<ReadRemoval, kaeri_core::Error>,
+        }
+
+        #[async_trait::async_trait]
+        impl Tracker for Answers {
+            fn id(&self) -> &str {
+                self.id
+            }
+            fn is_authenticated(&self) -> bool {
+                true
+            }
+            fn serves_reading(&self) -> bool {
+                true
+            }
+            async fn pull_library(
+                &self,
+            ) -> Result<Vec<kaeri_core::traits::TrackedEntry>, kaeri_core::Error> {
+                Ok(Vec::new())
+            }
+            async fn push(&self, _: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+                Ok(())
+            }
+            async fn remove_read(
+                &self,
+                _: AnilistId,
+            ) -> Result<ReadRemoval, kaeri_core::Error> {
+                (self.answer)()
+            }
+        }
+
+        fn tracker(
+            id: &'static str,
+            answer: fn() -> Result<ReadRemoval, kaeri_core::Error>,
+        ) -> Arc<dyn Tracker> {
+            Arc::new(Answers { id, answer })
+        }
+
+        #[tokio::test]
+        async fn a_removal_clears_the_lists_here_and_says_what_each_tracker_did() {
+            let store = Store::open_in_memory().unwrap();
+            let id = AnilistId::new(900_501);
+            let work = WorkId::new(format!("a:{}", id.get()));
+            store.set_read_status(work.as_str(), Some("reading"), 1).unwrap();
+            store.adopt_read(work.as_str(), "8", None, 1).unwrap();
+            let status = TrackOp::SetReadStatus {
+                anilist_id: id,
+                status: WatchStatus::Current,
+                rereading: false,
+                at: 1,
+            };
+            store.enqueue("anilist", &status, 1).unwrap();
+            store.set_meta_i64(&conflict_key(work.as_str(), "anilist"), 1).unwrap();
+            let trackers = [
+                tracker("anilist", || Ok(ReadRemoval::Removed)),
+                tracker("kitsu", || Ok(ReadRemoval::NotOnList)),
+                tracker("mal", || Ok(ReadRemoval::Unmatched)),
+                tracker("mangaupdates", || Err(kaeri_core::Error::Auth("rejected".into()))),
+                tracker("other", || Err(kaeri_core::Error::Network("timed out".into()))),
+            ];
+
+            assert_eq!(forget_here(&store, &work, &trackers, 2), 1, "the queued status goes");
+            assert_eq!(store.read_status(work.as_str()).unwrap().0, None);
+            assert_eq!(store.read_outbox_depth(None).unwrap(), 0);
+            assert!(
+                store.get_meta_i64(&conflict_key(work.as_str(), "anilist")).unwrap().is_none()
+            );
+            assert!(store.read_marks(work.as_str()).unwrap().is_read("8"), "reading stays");
+
+            let results = remove_there(&trackers, id).await;
+            let outcomes: Vec<_> = results.iter().map(|r| r.outcome.clone()).collect();
+            assert_eq!(
+                outcomes,
+                [
+                    ListRemovalOutcome::Removed,
+                    ListRemovalOutcome::NotOnList,
+                    ListRemovalOutcome::Unmatched,
+                    ListRemovalOutcome::Failed {
+                        failure: ReadingFailure::SignInNeeded { what: "MangaUpdates".into() }
+                    },
+                    ListRemovalOutcome::Failed { failure: ReadingFailure::Offline },
+                ]
+            );
+            let words: Vec<Vec<&str>> = results
+                .iter()
+                .map(|r| r.line.iter().map(kaeri_model::Msg::id).collect())
+                .collect();
+            assert_eq!(
+                words,
+                [
+                    vec!["reading-removed-from"],
+                    vec!["reading-removed-not-there"],
+                    vec!["reading-removed-unmatched"],
+                    vec!["reading-removed-failed", "reading-removed-sign-in"],
+                    vec!["reading-removed-failed", "reading-failed-offline"],
+                ]
+            );
+        }
+
+        #[test]
+        fn a_folders_series_comes_off_the_lists_here_and_asks_no_tracker() {
+            let store = Store::open_in_memory().unwrap();
+            let work = WorkId::new("l:900502");
+            store.set_read_status(work.as_str(), Some("paused"), 1).unwrap();
+            assert_eq!(forget_here(&store, &work, &[], 2), 0);
+            assert_eq!(store.read_status(work.as_str()).unwrap().0, None);
+        }
     }
 }

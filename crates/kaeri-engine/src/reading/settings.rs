@@ -292,7 +292,8 @@ pub enum SetError {
 }
 
 /// Keep a setting at `scope`. A series' choice follows the person when the scope is
-/// [`SettingScope::Series`] and `follow` (`reading.series_choices_follow`) is on.
+/// [`SettingScope::Series`] and its follow switch is on: mode and direction follow with
+/// `reading.mode_follows`, the look (colour) with `reading.look_follows`.
 #[allow(clippy::too_many_arguments)]
 pub fn set(
     config: &mut crate::config::ConfigState,
@@ -313,7 +314,7 @@ pub fn set(
             let work = work.ok_or(SetError::NoWork)?;
             let follow = scope == SettingScope::Series
                 && key.series_scope() == Some(SettingScope::Series)
-                && config.effective().reading.series_choices_follow;
+                && follows(&config.effective().reading, key);
             store.set_series_setting(work, key.name(), Some(&value.encode()), follow, at)?;
         }
         SettingScope::Medium | SettingScope::Device => {
@@ -324,6 +325,14 @@ pub fn set(
         }
     }
     Ok(())
+}
+
+/// Whether a series' own value of `key` follows the person: its follow switch.
+pub fn follows(reading: &ReadingConfig, key: Key) -> bool {
+    match key {
+        Key::Mode | Key::Direction => reading.mode_follows(),
+        _ => reading.look_follows(),
+    }
 }
 
 /// Drop the series' own value, so the medium's applies again.
@@ -385,6 +394,58 @@ mod tests {
         assert!(layers.on(Key::CropBorders));
         // A guess never replaces a choice.
         assert!(!store.set_series_guess(work, "direction", "ltr", 3).unwrap());
+    }
+
+    #[test]
+    fn mode_and_direction_and_the_look_each_follow_by_their_own_switch() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        let mut reading = ReadingConfig { look_follows: Some(false), ..Default::default() };
+        let mut config = crate::config::ConfigState::new(
+            kaeri_core::config::Config { reading: reading.clone(), ..Default::default() },
+            None,
+            &paths,
+        );
+        let store = Store::open_in_memory().unwrap();
+        let work = "a:900402";
+        let put = |config: &mut crate::config::ConfigState, key, name: &str| {
+            set(
+                config,
+                &paths,
+                &store,
+                Medium::Manga,
+                Some(work),
+                key,
+                SettingScope::Series,
+                &choice(name),
+                1,
+            )
+            .unwrap();
+        };
+        put(&mut config, Key::Mode, "strip");
+        put(&mut config, Key::Colour, "greys");
+        let scope = |setting: &str| {
+            store
+                .series_settings(work)
+                .unwrap()
+                .into_iter()
+                .find(|s| s.setting == setting)
+                .map(|s| s.scope)
+        };
+        assert_eq!(scope("mode").as_deref(), Some("series"), "mode follows");
+        assert_eq!(scope("colour").as_deref(), Some("here"), "the look stays on the device");
+
+        // The other way round, from an earlier version's one switch turned off.
+        reading.look_follows = None;
+        reading.series_choices_follow = false;
+        reading.mode_follows = None;
+        assert!(!follows(&reading, Key::Direction) && !follows(&reading, Key::Colour));
+        reading.look_follows = Some(true);
+        assert!(!follows(&reading, Key::Mode) && follows(&reading, Key::Colour));
     }
 
     #[test]

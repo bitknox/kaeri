@@ -8557,9 +8557,6 @@ settings-artwork-detail = Atıf, uygulamanın yasal notlarında
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Yeni bölümler
 
-# Line under it.
-settings-new-episodes-detail = İzleme listenizdeki diziler için
-
 # Line explaining what a notification says.
 settings-notify-detail = İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.
 

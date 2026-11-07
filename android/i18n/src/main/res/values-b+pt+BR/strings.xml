@@ -2326,7 +2326,6 @@
     <string name="settings_artwork">Imagens sob CC BY-NC</string>
     <string name="settings_artwork_detail">Atribuição nos avisos do app</string>
     <string name="settings_new_episodes">Novos episódios</string>
-    <string name="settings_new_episodes_detail">Para séries na sua lista Assistindo</string>
     <string name="settings_notify_detail">Uma notificação quando um episódio de uma série que você acompanha sai: o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.</string>
     <string name="settings_coming_up">Próximos · 7 dias</string>
     <string name="settings_system_notifications">Ajustes de notificação</string>

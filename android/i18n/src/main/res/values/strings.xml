@@ -461,6 +461,22 @@
     <string name="reading_chapter_percent">Chapter %1$s · %2$d%%</string>
     <!-- Under a cover: a chapter came out that the person has not read. The chapter is its number. -->
     <string name="reading_chapter_new">Chapter %1$s is new</string>
+    <!-- Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. -->
+    <string name="reading_next_part">Part %1$s</string>
+    <!-- Under a cover or the big picture: how far into a light novel's part the person is. -->
+    <string name="reading_part_percent">Part %1$s · %2$d%%</string>
+    <!-- Under a cover: a light novel's part came out that the person has not read. -->
+    <string name="reading_part_new">Part %1$s is new</string>
+    <!-- Under a This week cell: a light novel's part that came out that day, with its own title. -->
+    <string name="reading_part_titled">Part %1$s · %2$s</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today. -->
+    <string name="reading_part_out_today">Part %1$s is out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title. -->
+    <string name="reading_part_out_today_titled">Part %1$s, %2$s, out today</string>
+    <!-- Under a Library cover: the chapter the person is at, and the newest chapter there is. -->
+    <string name="reading_chapter_of">Chapter %1$s of %2$s</string>
+    <!-- Under a Library cover: the volume and part of a light novel the person is at. -->
+    <string name="reading_volume_part">Volume %1$s, part %2$s</string>
     <!-- A search filter: books from Japan. -->
     <string name="reading_origin_japan">Japan</string>
     <!-- A search filter: books from Korea. -->
@@ -486,6 +502,129 @@
         <item quantity="one">One chapter isn\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
         <item quantity="other">%1$d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
     </plurals>
+    <!-- Under a This week cell: the chapter that came out that day, with its own title. -->
+    <string name="reading_chapter_titled">Chapter %1$s · %2$s</string>
+    <!-- A chapter row's state: the person read it. -->
+    <string name="reading_row_read">Read</string>
+    <!-- A chapter row's state: it came out since the person last read and is not read. -->
+    <string name="reading_row_new">New</string>
+    <!-- A chapter row's state: it is kept on this device to read offline. -->
+    <string name="reading_row_downloaded">Downloaded</string>
+    <!-- A chapter row's state: it is read from the source and nothing of it is on this device. -->
+    <string name="reading_row_not_downloaded">Not downloaded</string>
+    <!-- A chapter row's state: a file in one of the person's folders, or one already on the device. -->
+    <string name="reading_row_on_device">On this device</string>
+    <!-- A chapter row's state: it waits its turn to download. -->
+    <string name="reading_row_queued">Queued</string>
+    <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
+    <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter row's state while it downloads. -->
+    <string name="reading_row_downloading">Downloading · %1$d of %2$d pages</string>
+    <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
+    <string name="reading_row_failed">Couldn\'t download</string>
+    <!-- A chapter row's state: the page the person stopped on, of how many. -->
+    <string name="reading_row_page_of">Page %1$d of %2$d</string>
+    <!-- A chapter row's state: the page the person stopped on, when the length isn't known. -->
+    <string name="reading_row_page">Page %1$d</string>
+    <!-- A novel's chapter row: how far into it the person is. -->
+    <string name="reading_row_percent">%1$d%%</string>
+    <!-- A chapter row: how long its pages are, for a file on the device. -->
+    <plurals name="reading_row_pages">
+        <item quantity="one">1 page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- A chapter row: how many versions the person's sources have of it. The row's menu lists them. -->
+    <plurals name="reading_row_versions">
+        <item quantity="one">1 version</item>
+        <item quantity="other">%1$d versions</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, under a minute ago. -->
+    <string name="reading_ago_now">just now</string>
+    <!-- A chapter row: when it was read or came out, in minutes. -->
+    <string name="reading_ago_minutes">%1$d min ago</string>
+    <!-- A chapter row: when it was read or came out, earlier today. -->
+    <string name="reading_ago_today">today</string>
+    <!-- A chapter row: when it was read or came out, the day before today. -->
+    <string name="reading_ago_yesterday">yesterday</string>
+    <!-- A chapter row: when it was read or came out, in days, under a week. -->
+    <plurals name="reading_ago_days">
+        <item quantity="one">1 day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in weeks, under two months. -->
+    <plurals name="reading_ago_weeks">
+        <item quantity="one">1 week ago</item>
+        <item quantity="other">%1$d weeks ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in months, under a year. -->
+    <plurals name="reading_ago_months">
+        <item quantity="one">1 month ago</item>
+        <item quantity="other">%1$d months ago</item>
+    </plurals>
+    <!-- A chapter row: when it was read or came out, in years. -->
+    <plurals name="reading_ago_years">
+        <item quantity="one">1 year ago</item>
+        <item quantity="other">%1$d years ago</item>
+    </plurals>
+    <!-- The tracker took the series off its list. -->
+    <string name="reading_removed_from">Removed from %1$s</string>
+    <!-- The tracker's list did not hold the series, so there was nothing to remove. -->
+    <string name="reading_removed_not_there">Wasn\'t on your %1$s list</string>
+    <!-- The app never learned which of the tracker's entries this series is, so it asked nothing. -->
+    <string name="reading_removed_unmatched">Not matched on %1$s, so nothing changed there</string>
+    <!-- The tracker could not take the series off. The reason follows. -->
+    <string name="reading_removed_failed">Still on your %1$s list</string>
+    <!-- Why a removal failed: the tracker turned the sign-in away. -->
+    <string name="reading_removed_sign_in">Sign in to %1$s again, then try once more.</string>
+    <!-- The source answered the search and has no series by the series' names. -->
+    <string name="reading_miss_no_series">No series with this name</string>
+    <!-- The source has failed every ask since this time of day, in the person's zone. -->
+    <string name="reading_miss_down_since">Not answering since %1$s</string>
+    <!-- The source has failed every ask, since a time on another day or not known. -->
+    <string name="reading_miss_down">Not answering</string>
+    <!-- How many parts of a light novel are downloaded. -->
+    <plurals name="reading_dl_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$d parts</item>
+    </plurals>
+    <!-- What the downloads take up on this device. -->
+    <string name="reading_dl_size">%1$s</string>
+    <!-- How many of the downloaded chapters are read, which Delete read clears. -->
+    <string name="reading_dl_read">%1$d read</string>
+    <!-- The chapter downloading now. -->
+    <string name="reading_dl_chapter">Chapter %1$s</string>
+    <!-- How far the chapter downloading now has come. -->
+    <string name="reading_dl_pages">%1$d of %2$d pages</string>
+    <!-- Chapters waiting their turn after the one downloading. -->
+    <string name="reading_dl_more_queued">%1$d more queued</string>
+    <!-- Chapters waiting their turn, none downloaded yet. -->
+    <string name="reading_dl_queued">%1$d queued</string>
+    <!-- Chapters that wait for Wi-Fi to download. -->
+    <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
+    <!-- A chapter that failed. The reason follows as the next part. -->
+    <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
+    <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
+    <string name="reading_estimate_size">About %1$s</string>
+    <!-- The chapters download only on Wi-Fi, as the settings say. -->
+    <string name="reading_estimate_wifi">over Wi-Fi</string>
+    <!-- The device is on mobile data, and the settings let chapters download on it. -->
+    <string name="reading_estimate_mobile">over mobile data</string>
+    <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
+    <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
+    <!-- The notification's title. -->
+    <string name="reading_downloads_done_title">Downloads finished</string>
+    <!-- The notification's text: one series' chapters are downloaded. -->
+    <plurals name="reading_downloads_done_chapters">
+        <item quantity="one">A chapter of %1$s is ready to read offline.</item>
+        <item quantity="other">%2$d chapters of %1$s are ready to read offline.</item>
+    </plurals>
+    <!-- The notification's text: one light novel's parts are downloaded. -->
+    <plurals name="reading_downloads_done_parts">
+        <item quantity="one">A part of %1$s is ready to read offline.</item>
+        <item quantity="other">%2$d parts of %1$s are ready to read offline.</item>
+    </plurals>
+    <!-- The notification's text: chapters of several series are downloaded. -->
+    <string name="reading_downloads_done_series">Chapters of %1$d series are ready to read offline.</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -4250,6 +4389,684 @@
     <string name="reader_gap_small">Small</string>
     <!-- Look choice that follows the system's light or dark. -->
     <string name="reader_look_system">System</string>
+    <!-- Sidebar and tab label: the shows' Home when both media are on. -->
+    <string name="nav_watch">Watch</string>
+    <!-- Sidebar and tab label: reading's Home. -->
+    <string name="nav_read">Read</string>
+    <!-- Sidebar and tab label: new chapters from followed series. -->
+    <string name="nav_updates">Updates</string>
+    <!-- Shelf heading on Read: series releasing now. -->
+    <string name="home_read_releasing">Releasing now</string>
+    <!-- Line under the spotlight of a popular series, when the engine gives no line of its own. -->
+    <string name="home_read_checked_on_open">Checked when you open Kaeri</string>
+    <!-- Line at the end of Read, under the last shelf. -->
+    <string name="home_read_end">That\'s everything for now. Updates and Search have the full lists.</string>
+    <!-- Line at the end of Read with no book sources yet. A button to add one follows it. -->
+    <string name="home_read_no_sources">Add a folder, a server or a plugin store to read from Home.</string>
+    <!-- Under a day in Read's week: what usually comes out that day, when the time isn't known. -->
+    <string name="week_usually">Usually</string>
+    <!-- Under a day in Read's week with nothing due. -->
+    <string name="week_nothing_usually">Nothing usually</string>
+    <!-- Line under Updates' title on iPhone and iPad. -->
+    <string name="updates_checked">Checked %1$s</string>
+    <!-- Line above Updates on the Mac: when it checked, and which series it checks. -->
+    <string name="chapter_updates_checked_caught_up">Checked %1$s · series you are caught up on</string>
+    <!-- Line while Updates asks every followed series now. -->
+    <string name="chapter_updates_checking">Checking for new chapters…</string>
+    <!-- Toolbar button: queue every unread chapter in Updates. -->
+    <string name="updates_download_new">Download new</string>
+    <!-- Updates with nothing in it. -->
+    <string name="updates_empty_title">No new chapters</string>
+    <!-- Line under Updates' empty title. -->
+    <string name="chapter_updates_empty_line">Kaeri checks series on your Reading list that you are caught up on, a few times a day.</string>
+    <!-- Day heading in Updates. -->
+    <string name="chapter_updates_today">Today</string>
+    <!-- Day heading in Updates. -->
+    <string name="chapter_updates_yesterday">Yesterday</string>
+    <!-- After a chapter on an Updates row, when several groups put it out. -->
+    <plurals name="chapter_updates_versions">
+        <item quantity="one">1 version</item>
+        <item quantity="other">%1$d versions</item>
+    </plurals>
+    <!-- Accessibility label on an Updates row's cover, which opens the series. -->
+    <string name="chapter_updates_open_series">Open %1$s</string>
+    <!-- Accessibility hint on an Updates row. -->
+    <string name="chapter_updates_open_chapter_hint">Opens the chapter</string>
+    <!-- Context menu item on an Updates row. -->
+    <string name="chapter_updates_open_series_menu">Open series</string>
+    <!-- The series page's main action, and the spotlight's. -->
+    <string name="action_read_chapter">Read chapter %1$s</string>
+    <!-- The main action when a chapter is part read. -->
+    <string name="action_continue_chapter">Continue chapter %1$s · page %2$d</string>
+    <!-- The main action for a light novel part, part read. -->
+    <string name="action_continue_part">Continue part %1$s · %2$d%%</string>
+    <!-- The main action for a light novel part, part read, when how far is not known. -->
+    <string name="action_continue_part_plain">Continue part %1$s</string>
+    <!-- The main action for a light novel part not opened yet. -->
+    <string name="action_read_part">Read part %1$s</string>
+    <!-- The main action when every chapter is read. -->
+    <string name="action_read_again">Read again</string>
+    <!-- Label of the source row on the series page. -->
+    <string name="series_reading_from">Reading from</string>
+    <!-- Button beside a row on the series page that opens its sheet. -->
+    <string name="series_change">Change</string>
+    <!-- After the source's name: how many other sources have the series. -->
+    <plurals name="series_sources_more">
+        <item quantity="one">1 more</item>
+        <item quantity="other">%1$d more</item>
+    </plurals>
+    <!-- Value of the trackers row while a tracker asks which series this is. -->
+    <string name="series_tracker_ask">Which series is this? Choose</string>
+    <!-- Value of the group row: the chosen group is used for this series. -->
+    <string name="series_preferred_group">Your preferred group here</string>
+    <!-- A tracker's progress in chapters, with the total. -->
+    <plurals name="series_tracker_chapters_of">
+        <item quantity="one">%1$d of %2$d chapter</item>
+        <item quantity="other">%1$d of %2$d chapters</item>
+    </plurals>
+    <!-- A tracker's progress in chapters, total unknown. -->
+    <plurals name="series_tracker_chapters">
+        <item quantity="one">1 chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <!-- A tracker's progress in chapters, then the volume. -->
+    <string name="series_tracker_with_volume">%1$s · volume %2$d</string>
+    <!-- A light novel tracker's progress in volumes. -->
+    <string name="series_tracker_volumes">Volume %1$d of %2$d</string>
+    <!-- Main place when the source can't be read from. -->
+    <string name="series_read_from_another">Read from another source</string>
+    <!-- Status menu item: a score submenu. -->
+    <string name="series_score">Score…</string>
+    <!-- Status menu's label before the series is on a list. -->
+    <string name="series_add_to_list">Add to list</string>
+    <!-- Last item of a series' list menu: take the series off every tracker's list. Asks first. -->
+    <string name="series_remove_from_lists">Remove from lists…</string>
+    <!-- Title of the question before a series is taken off the lists. -->
+    <string name="series_remove_from_lists_title">Remove %1$s from your lists?</string>
+    <!-- Line in that question. -->
+    <string name="series_remove_from_lists_line">It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.</string>
+    <!-- Heading over what the removal came to, one line per tracker. -->
+    <string name="series_removed_title">Your lists</string>
+    <!-- Title while choosing chapters on a phone: how many are chosen. -->
+    <plurals name="series_chosen">
+        <item quantity="one">1 chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <!-- Button while choosing chapters on a phone: choose every unread chapter. -->
+    <string name="series_choose_all_unread">All unread</string>
+    <!-- Heading in Read from over the sources searched without finding the series. -->
+    <string name="read_from_not_found">Not found in</string>
+    <!-- Button beside such a source: look for the series there by other words. -->
+    <string name="read_from_search_there">Search there</string>
+    <!-- Placeholder of the field that looks for the series in one source. -->
+    <string name="read_from_search_placeholder">Search %1$s</string>
+    <!-- Button that runs that search. -->
+    <string name="read_from_search">Search</string>
+    <!-- Under the field when the source found nothing by those words. -->
+    <string name="read_from_search_none">Nothing found by these words</string>
+    <!-- The More menu: the Tracking sheet. -->
+    <string name="series_tracking">Tracking</string>
+    <!-- The More menu: the Read from sheet. -->
+    <string name="series_read_from_menu">Change source…</string>
+    <!-- The More menu: start again from chapter 1. -->
+    <string name="series_read_again_menu">Read again from the start…</string>
+    <!-- Heading of the chapter list when the series has volumes. -->
+    <string name="series_volumes">Volumes</string>
+    <!-- Heading of the chapter list. -->
+    <string name="series_chapters">Chapters</string>
+    <!-- Accessibility label of the chapter order menu. -->
+    <string name="series_order">Order</string>
+    <!-- Chapter order. -->
+    <string name="series_newest_first">Newest first</string>
+    <!-- Chapter order. -->
+    <string name="series_oldest_first">Oldest first</string>
+    <!-- A volume's heading in the chapter list. -->
+    <string name="series_volume">Volume %1$s</string>
+    <!-- The heading for chapters that are in no volume yet. -->
+    <string name="series_no_volume">Not in a volume yet</string>
+    <!-- After a volume's heading: which chapters it holds. -->
+    <string name="series_chapter_range">chapters %1$s to %2$s</string>
+    <!-- After a volume's heading when every chapter in it is read. -->
+    <string name="series_volume_read">read</string>
+    <!-- Accessibility value of a volume heading. -->
+    <string name="series_expanded">Expanded</string>
+    <!-- Accessibility value of a volume heading. -->
+    <string name="series_collapsed">Collapsed</string>
+    <!-- The chapter list when the source has none. -->
+    <string name="series_no_chapters_title">No chapters in this source yet</string>
+    <!-- Line under it. -->
+    <string name="series_no_chapters_line">Another source may have them.</string>
+    <!-- The chapter list when the source failed. Downloaded chapters are listed under it. -->
+    <string name="series_chapters_failed">Couldn\'t load chapters from %1$s.</string>
+    <!-- A chapter row's title. -->
+    <string name="series_chapter_number">Chapter %1$s</string>
+    <!-- Accessibility label of the bookmark mark on a chapter row. -->
+    <string name="series_bookmarked">Bookmarked</string>
+    <!-- Chapter menu and swipe action. -->
+    <string name="series_mark_read">Mark read</string>
+    <!-- Chapter menu and swipe action. -->
+    <string name="series_mark_unread">Mark unread</string>
+    <!-- Chapter menu item: every chapter before this one is read too. -->
+    <string name="series_mark_read_up_to">Mark read up to here</string>
+    <!-- Chapter menu and swipe action. -->
+    <string name="series_download">Download</string>
+    <!-- Chapter menu item: open the chapter in the reader. -->
+    <string name="series_read_chapter_menu">Read</string>
+    <!-- Chapter menu item. -->
+    <string name="series_bookmark">Bookmark</string>
+    <!-- Chapter menu item. -->
+    <string name="series_remove_bookmark">Remove bookmark</string>
+    <!-- Menu of a chapter that several groups put out. -->
+    <plurals name="series_versions">
+        <item quantity="one">1 version</item>
+        <item quantity="other">%1$d versions</item>
+    </plurals>
+    <!-- In that menu while the versions load. -->
+    <string name="series_versions_loading">Looking for versions…</string>
+    <!-- The version in use, in that menu. -->
+    <string name="series_version_in_use">%1$s in use</string>
+    <!-- Make another group the one used for this series. -->
+    <string name="series_prefer_version">Prefer %1$s for this series</string>
+    <!-- A downloaded chapter, after its state. -->
+    <string name="chapter_state_downloaded">Downloaded</string>
+    <!-- A chapter waiting to download. -->
+    <string name="chapter_state_queued">Queued</string>
+    <!-- A chapter waiting for Wi-Fi to download. -->
+    <string name="chapter_state_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter downloading. -->
+    <string name="chapter_state_downloading">Downloading · %1$d of %2$d pages</string>
+    <!-- A chapter that failed to download, with the reason. -->
+    <string name="chapter_state_failed">Couldn\'t download. %1$s</string>
+    <!-- A part-read chapter. -->
+    <string name="chapter_state_page_of">Page %1$d of %2$d</string>
+    <!-- A part-read chapter whose length isn't known. -->
+    <string name="chapter_state_page">Page %1$d</string>
+    <!-- A read chapter. -->
+    <string name="chapter_state_read">Read</string>
+    <!-- A chapter that came out since you last looked. -->
+    <string name="chapter_state_new">New</string>
+    <!-- Button: stop a chapter's download. -->
+    <string name="chapter_download_stop">Stop download</string>
+    <!-- Button: try a failed chapter's download again. -->
+    <string name="chapter_retry">Retry</string>
+    <!-- Chapter menu item. -->
+    <string name="chapter_download_delete">Delete download</string>
+    <!-- Download menu item. -->
+    <string name="download_next">Next %1$d unread</string>
+    <!-- Download menu item. -->
+    <string name="download_unread">Every unread chapter</string>
+    <!-- Download menu item: a volume's chapters not yet downloaded. -->
+    <plurals name="download_volume_count">
+        <item quantity="one">%1$s · 1 chapter</item>
+        <item quantity="other">%1$s · %2$d chapters</item>
+    </plurals>
+    <!-- Download menu item: turns on choosing chapters in the list. -->
+    <string name="download_choose">Choose chapters…</string>
+    <!-- Download menu item. -->
+    <string name="download_delete_series">Delete downloads of this series</string>
+    <!-- The amber button in the Choose chapters bar. -->
+    <plurals name="download_chapters">
+        <item quantity="one">Download 1 chapter</item>
+        <item quantity="other">Download %1$d chapters</item>
+    </plurals>
+    <!-- Line above that button. -->
+    <string name="download_over_wifi">Over Wi-Fi</string>
+    <!-- Title of the question before reading a series again. -->
+    <string name="read_again_title">Read %1$s again from the start?</string>
+    <!-- What happens on each side. -->
+    <string name="read_again_line">Your place goes back to chapter 1 on all your devices. Chapters stay marked read on your trackers, and AniList counts a reread.</string>
+    <!-- The confirming button. -->
+    <string name="read_again_confirm">Read again</string>
+    <!-- Title of the sheet that changes where a series' chapters come from. -->
+    <string name="series_read_from_title">Read from</string>
+    <!-- While the sheet asks every source. -->
+    <string name="series_read_from_asking">Asking your sources…</string>
+    <!-- The sheet with no source that has the series. -->
+    <string name="series_read_from_none_title">No source has this series</string>
+    <!-- Line under it. -->
+    <string name="series_read_from_none_line">Add a folder, a server or a plugin store in Your sources.</string>
+    <!-- A source's chapters, first on its line. -->
+    <string name="series_read_from_chapters">Chapters 1 to %1$s</string>
+    <!-- A source's chapters, after its kind on the line. -->
+    <string name="series_read_from_chapters_later">chapters 1 to %1$s</string>
+    <!-- After a folder's chapters. -->
+    <string name="series_read_from_on_device">on this %1$s</string>
+    <!-- Footnote of the Read from sheet. -->
+    <string name="series_read_from_note">Read marks belong to the series, so they carry over when you change. Downloads from the old source stay until you delete them.</string>
+    <!-- Heading for trackers that don't track this series. -->
+    <string name="series_not_tracked">Not tracked here</string>
+    <!-- A tracker that isn't connected. -->
+    <string name="series_tracker_connect">Connect in Settings to track this series</string>
+    <!-- A tracker that has no such series. -->
+    <string name="series_tracker_not_there">No match on this tracker</string>
+    <!-- A tracker looking for the series. -->
+    <string name="series_tracker_looking">Looking for this series…</string>
+    <!-- A tracker that is behind, and catches up on the next sync. -->
+    <string name="series_tracker_behind">Has chapter %1$d. Gets %2$d on the next sync.</string>
+    <!-- A tracker ahead of Kaeri. -->
+    <string name="series_tracker_ahead">Has chapter %1$d, further than Kaeri.</string>
+    <!-- A tracker's score out of ten. -->
+    <string name="series_tracker_score">%1$s / 10</string>
+    <!-- Menu item on a tracker that differs. -->
+    <string name="series_tracker_keep_kaeri">Keep Kaeri\'s place</string>
+    <!-- Menu item on a tracker that differs. -->
+    <string name="series_tracker_take_theirs">Use %1$s\'s place</string>
+    <!-- Under a tracker's guesses for the series. -->
+    <string name="series_tracker_none_of_these">None of these</string>
+    <!-- AniList's list. -->
+    <string name="read_list_reading">Reading</string>
+    <!-- AniList's list. -->
+    <string name="read_list_planning">Planning</string>
+    <!-- AniList's list. -->
+    <string name="read_list_completed">Completed</string>
+    <!-- AniList's list. -->
+    <string name="read_list_paused">Paused</string>
+    <!-- AniList's list. -->
+    <string name="read_list_dropped">Dropped</string>
+    <!-- AniList's list. -->
+    <string name="read_list_rereading">Rereading</string>
+    <!-- Series in folders and servers that are on no list. -->
+    <string name="read_list_your_files">Your files</string>
+    <!-- A choice. -->
+    <string name="medium_watch">Watch</string>
+    <!-- A choice. -->
+    <string name="medium_read">Read</string>
+    <!-- A choice. -->
+    <string name="medium_both">Both</string>
+    <!-- Line under the Watch choice. -->
+    <string name="medium_watch_line">Shows and films from your sources</string>
+    <!-- Line under the Read choice. -->
+    <string name="medium_read_line">Manga, webtoons and light novels from your sources</string>
+    <!-- Line under the Both choice. -->
+    <string name="medium_both_line">Watching and reading, each in its own place</string>
+    <!-- The answer, as the Settings row says it. -->
+    <string name="medium_answer_watch">Watching</string>
+    <!-- The answer, as the Settings row says it. -->
+    <string name="medium_answer_read">Reading</string>
+    <!-- The answer, as the Settings row says it. -->
+    <string name="medium_answer_both">Watching and reading</string>
+    <!-- Title of the sheet and the toolbar button. -->
+    <string name="sources_add_title">Add a source</string>
+    <!-- Line in the Add a source sheet. -->
+    <string name="book_add_line">Books you already have, or plugins from a store whose owner invited you.</string>
+    <!-- A kind in the Add a source sheet. -->
+    <string name="book_add_folder">A folder</string>
+    <!-- Line under it. -->
+    <string name="book_add_folder_line">CBZ, EPUB, PDF and folders of images on this %1$s or a drive</string>
+    <!-- A kind in the Add a source sheet. -->
+    <string name="book_add_server">A server</string>
+    <!-- Line under it. -->
+    <string name="book_add_server_line">Komga, Kavita or an OPDS catalogue you can sign in to</string>
+    <!-- A kind in the Add a source sheet. -->
+    <string name="book_add_store">A plugin store</string>
+    <!-- Line under it. -->
+    <string name="book_add_store_line">Paste an invite from the store\'s owner</string>
+    <!-- Title of the Add a server sheet. -->
+    <string name="book_add_server_title">Add a server</string>
+    <!-- The sheet's amber button. -->
+    <string name="book_add_server_button">Add server</string>
+    <!-- What the address answered, before the sign-in. -->
+    <string name="sources_found_server">Found a %1$s server</string>
+    <!-- What the server held once signed in, when it said how many series it lists. -->
+    <plurals name="sources_found_server_series">
+        <item quantity="one">Found a %1$s server with 1 series</item>
+        <item quantity="other">Found a %1$s server with %2$d series</item>
+    </plurals>
+    <!-- While the address is tried. -->
+    <string name="book_server_looking">Looking at this address…</string>
+    <!-- Line under the password. -->
+    <string name="book_server_note">Kaeri sends your reading progress back to this server. The password stays in the Keychain.</string>
+    <!-- Heading in Your sources. -->
+    <string name="book_sources_folders">Folders</string>
+    <!-- Heading in Your sources. -->
+    <string name="book_sources_servers">Servers</string>
+    <!-- Heading in Your sources. -->
+    <string name="book_sources_plugins">Plugins</string>
+    <!-- Under the plugins, before a link to the plugin stores. -->
+    <string name="book_sources_plugins_footer">Plugins come from plugin stores you join.</string>
+    <!-- How many series a folder or server holds. -->
+    <plurals name="book_sources_series">
+        <item quantity="one">1 series</item>
+        <item quantity="other">%1$d series</item>
+    </plurals>
+    <!-- A folder being looked through. -->
+    <string name="book_sources_scanning">Looking through · %1$d found</string>
+    <!-- A folder that can't be found, such as a drive that isn't plugged in. -->
+    <string name="book_sources_missing">Not found. Is the drive connected?</string>
+    <!-- A source that is turned off. -->
+    <string name="book_sources_off">Off</string>
+    <!-- On a server's line. -->
+    <string name="book_sources_progress_back">progress goes back to the server</string>
+    <!-- A server's kind. -->
+    <string name="book_sources_opds">OPDS catalogue</string>
+    <!-- A plugin's store. -->
+    <string name="book_sources_from_store">From %1$s</string>
+    <!-- A plugin's version. -->
+    <string name="book_sources_version">version %1$s</string>
+    <!-- Button on a folder: series whose match needs a look. -->
+    <string name="book_sources_check_matches">Check matches · %1$d</string>
+    <!-- Title of the Check matches sheet. -->
+    <string name="book_sources_check_matches_title">Check matches</string>
+    <!-- A folder menu item: look through the folders again. -->
+    <string name="book_sources_scan">Look again</string>
+    <!-- A server menu switch. -->
+    <string name="book_sources_report_progress">Send progress to the server</string>
+    <!-- A server menu switch. -->
+    <string name="book_sources_use">Use this server</string>
+    <!-- An address that answered but serves no books. -->
+    <string name="book_sources_not_a_book_server">This address answers, but not as a book server.</string>
+    <!-- A folder name with no match. -->
+    <string name="book_sources_no_match">No match</string>
+    <!-- Button: keep the series as Your files, unmatched. -->
+    <string name="book_sources_keep">Keep unmatched</string>
+    <!-- Button: search for the match by hand. -->
+    <string name="book_sources_find">Find</string>
+    <!-- Footnote of the Check matches sheet. -->
+    <string name="book_sources_unmatched_note">Unmatched series still read from the folder. They have no tracker progress until matched.</string>
+    <!-- Accessibility label of the control that sets Shows or Reading in the Library and Search. -->
+    <string name="library_scope_label">Shows or Reading</string>
+    <!-- A side of that control. -->
+    <string name="library_scope_shows">Shows</string>
+    <!-- A side of that control. -->
+    <string name="library_scope_reading">Reading</string>
+    <!-- The reading library's order: as the engine sends it, most recently read first. -->
+    <string name="read_sort_last_read">Last read</string>
+    <!-- Accessibility value of the list menu: the list and how many series are on it. -->
+    <plurals name="read_library_list_value">
+        <item quantity="one">%1$s, 1 series</item>
+        <item quantity="other">%1$s, %2$d series</item>
+    </plurals>
+    <!-- A reading list with nothing on it. A Search button follows. -->
+    <string name="read_library_empty">Nothing on %1$s yet</string>
+    <!-- Line under it. -->
+    <string name="read_library_empty_line">Series you add from Search or a series page show here.</string>
+    <!-- Your files with nothing in it. -->
+    <string name="read_library_files_empty_title">Nothing in your files yet</string>
+    <!-- Line under it. -->
+    <string name="read_library_files_empty_line">Series in your folders and servers that are on no list show here.</string>
+    <!-- The button under it. -->
+    <string name="read_library_files_add">Add a folder or server</string>
+    <!-- The search field's prompt while Search looks for reading. -->
+    <string name="read_search_placeholder">Search reading</string>
+    <!-- The last row of reading's results with both media on: matches in the other scope. -->
+    <plurals name="search_other_scope">
+        <item quantity="one">1 match in %2$s</item>
+        <item quantity="other">%1$d matches in %2$s</item>
+    </plurals>
+    <!-- The button on that row, which switches the scope. -->
+    <string name="search_show_them">Show them</string>
+    <!-- The line over browsing: what is shown, and where the list comes from. -->
+    <string name="read_search_browse_line">%1$s · from AniList</string>
+    <!-- Over reading's results once every result is listed: how many series AniList found. -->
+    <plurals name="read_search_total">
+        <item quantity="one">1 series from AniList</item>
+        <item quantity="other">%1$d series from AniList</item>
+    </plurals>
+    <!-- Search couldn't ask AniList. -->
+    <string name="read_search_failed">Couldn\'t search</string>
+    <!-- No results for what was typed. -->
+    <string name="read_search_nothing">Nothing found for %1$s</string>
+    <!-- No results while browsing with filters. -->
+    <string name="read_search_nothing_browse">Nothing matches these filters</string>
+    <!-- Line under no results. -->
+    <string name="read_search_nothing_line">Try other words, or a title in another language.</string>
+    <!-- Line under no results with filters set. A Clear filters button follows. -->
+    <string name="read_search_nothing_filters_line">Fewer filters may find more.</string>
+    <!-- The button under it. -->
+    <string name="read_search_clear_filters">Clear filters</string>
+    <!-- A sort of reading's Search, AniList's. -->
+    <string name="read_sort_popular">Popular</string>
+    <!-- A sort of reading's Search, AniList's. -->
+    <string name="read_sort_trending">Trending</string>
+    <!-- A sort of reading's Search, AniList's. -->
+    <string name="read_sort_score">Score</string>
+    <!-- A sort of reading's Search, AniList's. -->
+    <string name="read_sort_newest">Newest</string>
+    <!-- A filter. -->
+    <string name="read_filter_format">Format</string>
+    <!-- A filter. -->
+    <string name="read_filter_origin">Origin</string>
+    <!-- A filter. -->
+    <string name="read_filter_status">Status</string>
+    <!-- A filter. -->
+    <string name="read_filter_genres">Genres</string>
+    <!-- Title of the iPhone's filters sheet. -->
+    <string name="read_filter_title">Filters</string>
+    <!-- Button in that sheet that clears every filter. -->
+    <string name="read_filter_reset">Reset</string>
+    <!-- Accessibility value of a filter with nothing chosen. -->
+    <string name="read_filter_any">Any</string>
+    <!-- A filter's name before its value, once set: "Origin: Korea". -->
+    <string name="read_filter_set">%1$s:</string>
+    <!-- A filter with several values: the first, then how many more. -->
+    <string name="read_filter_many">%1$s and %2$d more</string>
+    <!-- A genre left out. -->
+    <string name="read_filter_not_genre">Not %1$s</string>
+    <!-- How many genres are set. -->
+    <plurals name="read_filter_genres_count">
+        <item quantity="one">1 genre</item>
+        <item quantity="other">%1$d genres</item>
+    </plurals>
+    <!-- A genre's state: only series with it. -->
+    <string name="read_filter_included">Included</string>
+    <!-- A genre's state: no series with it. -->
+    <string name="read_filter_left_out">Left out</string>
+    <!-- Over a first-run page's title: which page of how many. -->
+    <string name="onboarding_step">%1$d of %2$d</string>
+    <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->
+    <string name="onboarding_welcome_line">Keep track of what you watch and read, from your own sources.</string>
+    <!-- Note under the welcome line. -->
+    <string name="onboarding_welcome_note">Your lists and progress stay on your devices. Trackers and sources are yours to add.</string>
+    <!-- Title of the page that asks what Kaeri is for, and of the sheet after the update. -->
+    <string name="onboarding_medium_title">Watch, read, or both?</string>
+    <!-- Line under the title of the medium page. -->
+    <string name="onboarding_medium_line">Kaeri shows only what you pick. You can change it in Settings.</string>
+    <!-- Accessibility hint on Continue while nothing is chosen on the medium page. -->
+    <string name="onboarding_medium_hint">Choose one of the three first</string>
+    <!-- Title of the first-run page that offers AniList. -->
+    <string name="onboarding_lists_title">Bring in your lists</string>
+    <!-- Line on the AniList page after Watch. -->
+    <string name="onboarding_lists_line_watch">Kaeri keeps your watching in step with %1$s.</string>
+    <!-- Line on the AniList page after Read. -->
+    <string name="onboarding_lists_line_read">Kaeri keeps your reading in step with %1$s.</string>
+    <!-- Line on the AniList page after Both. -->
+    <string name="onboarding_lists_line_both">Kaeri keeps your reading and watching in step with %1$s.</string>
+    <!-- Line under AniList's name on the first-run page. -->
+    <string name="onboarding_lists_anilist_line">Lists, progress and suggestions</string>
+    <!-- Under AniList on the first-run page after Watch: the other trackers, for later. -->
+    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.</string>
+    <!-- Under AniList on the first-run page after Read: the other trackers, for later. -->
+    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.</string>
+    <!-- Under AniList on the first-run page after Both: the other trackers, for later. -->
+    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.</string>
+    <!-- The first-run page's main button: sign in to the tracker. -->
+    <string name="onboarding_connect">Connect %1$s</string>
+    <!-- Title of the last first-run page after Read or Both. -->
+    <string name="onboarding_books_title">Where your books come from</string>
+    <!-- Line under the title of the books page. -->
+    <string name="onboarding_books_line">Kaeri comes with no books. Add what you already have, or join a plugin store with an invite from its owner.</string>
+    <!-- Row on the books page: add a folder of books. -->
+    <string name="onboarding_books_folder">Add a folder</string>
+    <!-- Line under Add a folder on the books page. -->
+    <string name="onboarding_books_folder_line">CBZ, EPUB, PDF and folders of images</string>
+    <!-- Row on the books page: add a book server. -->
+    <string name="onboarding_books_server">Add a server</string>
+    <!-- Line under Add a server on the books page. -->
+    <string name="onboarding_books_server_line">Komga, Kavita or an OPDS catalogue</string>
+    <!-- Heading over the invite field on the books page. -->
+    <string name="onboarding_books_invite_heading">Plugin store invite</string>
+    <!-- Placeholder of the invite field on the books page. -->
+    <string name="onboarding_books_invite_placeholder">Paste an invite</string>
+    <!-- Line under the invite field: whose code a plugin is. -->
+    <string name="onboarding_books_plugin_line">Plugins run code from people you trust. Only join plugin stores whose owner you know.</string>
+    <!-- Title of the last first-run page after Both: where shows and books come from. -->
+    <string name="onboarding_both_title">Where your shows and books come from</string>
+    <!-- Line under the title of that page. -->
+    <string name="onboarding_both_line">Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.</string>
+    <!-- Heading over the shows' rows on that page. -->
+    <string name="onboarding_both_shows">Shows</string>
+    <!-- Heading over the books' rows on that page. -->
+    <string name="onboarding_both_books">Books</string>
+    <!-- Line under Add a folder in the shows' part, on a computer. -->
+    <string name="onboarding_both_shows_folder_line">Video files on this %1$s</string>
+    <!-- Line under Add a server in the shows' part. -->
+    <string name="onboarding_both_shows_server_line">Your Jellyfin server</string>
+    <!-- Accessibility value of a choice row: its place among the three. -->
+    <string name="medium_choice_position">%1$d of %2$d</string>
+    <!-- Under the choices in the sheet. -->
+    <string name="medium_change_later">You can change it in Settings.</string>
+    <!-- Line of the sheet over Home after the update that brought reading. -->
+    <string name="medium_update_line">Kaeri can now read manga, webtoons and light novels from your sources. Pick what Kaeri is for on this %1$s.</string>
+    <!-- Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are. -->
+    <plurals name="medium_join_title_watch">
+        <item quantity="one">%1$s is set to watching</item>
+        <item quantity="other">%1$s are set to watching</item>
+    </plurals>
+    <!-- Title of the sheet when the other devices answer Read. -->
+    <plurals name="medium_join_title_read">
+        <item quantity="one">%1$s is set to reading</item>
+        <item quantity="other">%1$s are set to reading</item>
+    </plurals>
+    <!-- Title of the sheet when the other devices answer Both. -->
+    <plurals name="medium_join_title_both">
+        <item quantity="one">%1$s is set to watching and reading</item>
+        <item quantity="other">%1$s are set to watching and reading</item>
+    </plurals>
+    <!-- Line of the sheet on joining. -->
+    <string name="medium_join_line">Pick what Kaeri is for on this %1$s. Each device keeps its own answer.</string>
+    <!-- Title of the confirmation before watching is turned off. -->
+    <string name="medium_off_title_watch">Turn off watching?</string>
+    <!-- Title of the confirmation before reading is turned off. -->
+    <string name="medium_off_title_read">Turn off reading?</string>
+    <!-- What turning watching off does. -->
+    <string name="medium_off_watch_body">Calendar, Seasonal, Watch together and your shows leave Kaeri on this %1$s. Your list, progress and downloads stay, and come back if you turn watching on again.</string>
+    <!-- What turning reading off does. -->
+    <string name="medium_off_read_body">Updates and your reading leave Kaeri on this %1$s. Your list, progress and downloads stay, and come back if you turn reading on again.</string>
+    <!-- Switch in the confirmation, off by default. -->
+    <string name="medium_off_delete_watch">Delete downloaded episodes</string>
+    <!-- Switch in the confirmation, off by default. -->
+    <string name="medium_off_delete_read">Delete downloaded chapters</string>
+    <!-- Under the switch: how much the downloads take. -->
+    <string name="medium_off_delete_size">%1$s on this %2$s</string>
+    <!-- The confirmation's main button. -->
+    <string name="medium_off_confirm_watch">Turn off watching</string>
+    <!-- The confirmation's main button. -->
+    <string name="medium_off_confirm_read">Turn off reading</string>
+    <!-- Settings row and page: what Kaeri is for on this device. -->
+    <string name="settings_kaeri_is_for">Kaeri is for</string>
+    <!-- Line under Kaeri is for on the Mac and iPad. -->
+    <string name="settings_medium_note">Each device keeps its own answer</string>
+    <!-- Under the choices on the iPhone's page. -->
+    <string name="settings_medium_footer">Each device keeps its own answer. Turning one off keeps its list, progress and downloads.</string>
+    <!-- Line under Open at. -->
+    <string name="settings_open_at_note">Which Home Kaeri starts on</string>
+    <!-- Settings pane and group: reading. -->
+    <string name="settings_group_reading">Reading</string>
+    <!-- Downloads group with both media on: shows. -->
+    <string name="settings_group_shows">Shows</string>
+    <!-- The Reading pane's column beside it. -->
+    <string name="settings_aside_reading">Reader defaults are where every series starts. A series you change in the reader keeps its own choices.</string>
+    <!-- Group: how the reader opens each kind of book. -->
+    <string name="settings_reader_defaults">Reader defaults</string>
+    <!-- Under the reader defaults. -->
+    <string name="settings_reader_defaults_footer">A series you change keeps its own mode, direction and look.</string>
+    <!-- Row: manga's reader default. -->
+    <string name="settings_reader_manga">Manga</string>
+    <!-- Row: webtoons' reader default. -->
+    <string name="settings_reader_webtoons">Webtoons</string>
+    <!-- Line under Webtoons. -->
+    <string name="settings_reader_webtoons_note">Webtoons always open as a long strip</string>
+    <!-- Row: light novels' reader default. -->
+    <string name="settings_reader_novels">Light novels</string>
+    <!-- A reader default: pages turned right to left. -->
+    <string name="settings_reader_rtl">Pages, right to left</string>
+    <!-- A reader default: pages turned left to right. -->
+    <string name="settings_reader_ltr">Pages, left to right</string>
+    <!-- A reader default: one long strip. -->
+    <string name="settings_reader_strip">Long strip</string>
+    <!-- A reader default for novels: pages. -->
+    <string name="settings_reader_pages">Pages</string>
+    <!-- A reader default for novels: one scrolling column. -->
+    <string name="settings_reader_scrolled">Scrolling</string>
+    <!-- Row: when a chapter counts as read. -->
+    <string name="settings_counts_read">Counts as read</string>
+    <!-- Line under Counts as read. -->
+    <string name="settings_counts_read_note">A short stay on the last page, or moving on to the next chapter</string>
+    <!-- Value of Counts as read: a short stay on the last page, or moving on past it. -->
+    <string name="settings_counts_read_value">After the last page</string>
+    <!-- Value of Counts as read: only moving on past the last page, to the end or the next chapter. -->
+    <string name="settings_counts_read_moving_on">Moving on from it</string>
+    <!-- Line under Counts as read when it is Moving on from it. -->
+    <string name="settings_counts_read_moving_on_note">Turning past the last page, or opening the next chapter</string>
+    <!-- Value of Counts as read: only the person's own marks; the reader marks nothing. -->
+    <string name="settings_counts_read_marked">When you mark it</string>
+    <!-- Line under Counts as read when it is When you mark it. -->
+    <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
+    <!-- Group: series settings that follow you to your other devices. -->
+    <string name="settings_follow_group">Series settings that follow you</string>
+    <!-- Row in that group. -->
+    <string name="settings_follow_mode">Mode, direction and colour</string>
+    <!-- Line under that row. -->
+    <string name="settings_follow_mode_note">A series you change reads the same on your other devices</string>
+    <!-- Under the group: what stays on this device. -->
+    <string name="settings_follow_footer">Text size, margins, tap zones and refresh stay on this %1$s.</string>
+    <!-- Line under Look in Series settings that follow you. -->
+    <string name="settings_look_follows_note">Colour or greys</string>
+    <!-- Value of New chapters in Downloads: the series on the Reading list. -->
+    <string name="settings_new_chapters_reading">Series on Reading</string>
+    <!-- Line under New chapters in Downloads. -->
+    <string name="settings_new_chapters_note">A series being read also keeps its next chapters ready</string>
+    <!-- Group in Accounts: how reading progress goes to the trackers. -->
+    <string name="settings_progress_group">Progress</string>
+    <!-- Value of Send progress after: as each chapter counts as read. -->
+    <string name="settings_progress_chapter">A chapter is read</string>
+    <!-- Value of Send progress after: once, when the reader closes. -->
+    <string name="settings_progress_close">Closing the reader</string>
+    <!-- Value of When trackers disagree: the higher chapter wins. -->
+    <string name="settings_disagree_furthest">Keep the furthest</string>
+    <!-- Value of When trackers disagree: the newest change wins, even a lower chapter. -->
+    <string name="settings_disagree_latest">The latest change</string>
+    <!-- Line under When trackers disagree. -->
+    <string name="settings_disagree_note">Status and score follow the latest change</string>
+    <!-- Line under Keep next chapters ready. -->
+    <string name="settings_keep_chapters_ready_note">The next chapters of series on your Reading list</string>
+    <!-- Line under Delete chapters after reading. -->
+    <string name="settings_delete_after_reading_note">Bookmarked chapters are kept</string>
+    <!-- Line under New chapters. -->
+    <string name="settings_chapter_notifications_note">Series on your Reading list</string>
+    <!-- Line under Downloads finished. -->
+    <string name="settings_downloads_finished_note">When the chapters downloading are all done</string>
+    <!-- Under New chapters. -->
+    <string name="settings_chapter_notifications_footer">Chapters have their own system channel, so they can be silenced on their own.</string>
+    <!-- Credit under the trackers with reading on. -->
+    <string name="accounts_mangaupdates_credit">MangaUpdates is reached through its public API.</string>
+    <!-- Placeholder of the user name field when signing in to MangaUpdates. -->
+    <string name="accounts_username">User name</string>
+    <!-- Beside the Reading heading in Downloads: how many chapters are kept and their size. -->
+    <plurals name="read_downloads_total">
+        <item quantity="one">%1$d chapter · %2$s</item>
+        <item quantity="other">%1$d chapters · %2$s</item>
+    </plurals>
+    <!-- A series' line in Downloads while a chapter downloads. -->
+    <string name="read_downloads_active">%1$s · %2$d of %3$d pages</string>
+    <!-- After the chapter downloading: how many more wait. -->
+    <string name="read_downloads_more_queued">%1$d more queued</string>
+    <!-- A series' line in Downloads when its chapters wait to start. -->
+    <plurals name="read_downloads_queued">
+        <item quantity="one">%1$d chapter queued</item>
+        <item quantity="other">%1$d chapters queued</item>
+    </plurals>
+    <!-- A series' line in Downloads when a chapter failed, with the reason. -->
+    <string name="read_downloads_failed">%1$s couldn\'t download. %2$s</string>
+    <!-- A series' line in Downloads: how many chapters are kept. -->
+    <plurals name="read_downloads_kept">
+        <item quantity="one">%1$d chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <!-- After the kept count: how many of them are read. -->
+    <string name="read_downloads_read">%1$d read</string>
+    <!-- Button on a series in Downloads: delete its read chapters, keeping bookmarked ones. -->
+    <string name="read_downloads_delete_read">Delete read</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->
@@ -4852,6 +5669,24 @@
     <string name="settings_keep_chapters_ready">Keep next chapters ready</string>
     <!-- Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. -->
     <string name="settings_delete_after_reading">Delete chapters after reading</string>
+    <!-- Row: whether a series' reader mode, direction and colour follow you to your other devices. -->
+    <string name="settings_series_choices_follow">Series settings follow you</string>
+    <!-- Row in Downloads: which series' new chapters download by themselves. -->
+    <string name="settings_new_chapters_download">New chapters</string>
+    <!-- Row: whether a series' own reader mode and direction follow you to your other devices. -->
+    <string name="settings_mode_follows">Mode and direction</string>
+    <!-- Row: whether a series' own look (colour or greys) follows you to your other devices. -->
+    <string name="settings_look_follows">Look</string>
+    <!-- Row: when chapter progress goes to the reading trackers. -->
+    <string name="settings_send_progress_after">Send progress after</string>
+    <!-- Row: which chapter progress wins when a tracker and this device disagree. -->
+    <string name="settings_when_trackers_disagree">When trackers disagree</string>
+    <!-- Row: whether a new chapter of a series on your Reading list sends a notification. -->
+    <string name="settings_chapter_notifications">New chapters</string>
+    <!-- Row: whether the app sends a notification when the chapters it was downloading are all done. -->
+    <string name="settings_downloads_finished">Downloads finished</string>
+    <!-- Row: which Home the app opens at while it is for watching and reading. -->
+    <string name="settings_open_at">Open at</string>
     <!-- Row: seeding after watching. -->
     <string name="settings_seed_after">Seed after watching</string>
     <!-- Row: longest time to seed. -->
@@ -4893,7 +5728,7 @@
     <!-- Heading and row for notifications of new episodes. -->
     <string name="settings_new_episodes">New episodes</string>
     <!-- Line under it. -->
-    <string name="settings_new_episodes_detail">For shows in your Watching list</string>
+    <string name="settings_new_episodes_detail">Shows on your Watching list</string>
     <!-- Line explaining what a notification says. -->
     <string name="settings_notify_detail">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. A show can turn its own off in its settings.</string>
     <!-- Row: the coming-up digest. -->
@@ -5009,6 +5844,10 @@
     <string name="settings_upscaling_sharp">Sharp · Anime4K</string>
     <!-- Side note in Accounts. -->
     <string name="settings_aside_accounts">Kaeri works without an account. Your watch history stays on this device when you sign out.</string>
+    <!-- Side note in Accounts when the app is for reading. -->
+    <string name="settings_aside_accounts_read">Kaeri works without an account. Your reading history stays on this device when you sign out.</string>
+    <!-- Side note in Accounts when the app is for watching and reading. -->
+    <string name="settings_aside_accounts_both">Kaeri works without an account. Your watch and reading history stays on this device when you sign out.</string>
     <!-- Today, inside a line such as "Thursday 16:30". -->
     <string name="widget_day_today">today</string>
     <!-- Yesterday, inside a line. -->
@@ -6526,6 +7365,20 @@
     <string name="accounts_welcome_detail">Sign in to %1$s to sync your list and where you stopped.</string>
     <!-- Line under a tracker that brings in lists. -->
     <string name="accounts_brings_lists">Brings in your lists and fills Continue with what you are watching.</string>
+    <!-- Line under AniList when Kaeri is for reading: what signing in brings. -->
+    <string name="accounts_brings_lists_read">Brings in your lists and fills Continue with what you are reading.</string>
+    <!-- Line under AniList when Kaeri is for watching and reading. -->
+    <string name="accounts_brings_lists_both">Brings in your lists and fills Continue with what you are watching and reading.</string>
+    <!-- Line under a tracker that is not signed in: what it keeps in step. -->
+    <string name="accounts_tracker_lists">Lists and progress</string>
+    <!-- Line under MangaUpdates when it is not signed in. -->
+    <string name="accounts_tracker_reading_lists">Reading lists and progress</string>
+    <!-- Line under a tracker with both media on: it serves shows and reading. -->
+    <string name="accounts_tracker_serves_both">Shows and reading</string>
+    <!-- Line under a tracker with both media on: it serves reading only. -->
+    <string name="accounts_tracker_serves_reading">Reading</string>
+    <!-- Line under a tracker with both media on: it serves shows only. -->
+    <string name="accounts_tracker_serves_shows">Shows</string>
     <!-- Line under the accounts screen when the library needs a tracker. -->
     <string name="accounts_library_needs">Library and sync need your %1$s account</string>
     <!-- Line on the settings page: where the library gets its lists. -->

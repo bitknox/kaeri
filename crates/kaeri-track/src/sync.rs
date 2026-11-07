@@ -12,7 +12,10 @@
 
 use std::sync::Arc;
 
-use kaeri_core::traits::Tracker;
+use kaeri_core::{
+    config::WhenTrackersDisagree,
+    traits::{TrackOp, Tracker},
+};
 use kaeri_store::{Store, outbox::OutboxEntry};
 
 use crate::merge::{self, LocalState, Merged};
@@ -471,18 +474,20 @@ pub async fn drain_read(
     Ok(report)
 }
 
-/// Pull the manga and novel list and reconcile it: [`pull`] for reading.
+/// Pull the manga and novel list and reconcile it: [`pull`] for reading, with progress settled
+/// by `rule`.
 pub async fn pull_read(
     store: &Store,
     tracker: &dyn Tracker,
     now: i64,
     last_pull_at: i64,
+    rule: WhenTrackersDisagree,
 ) -> Result<PullReport, kaeri_core::Error> {
     if !tracker.is_authenticated() || !tracker.serves_reading() {
         return Ok(PullReport::default());
     }
     let remote = tracker.pull_read_library().await?;
-    reconcile_read(store, tracker.id(), &remote, now, last_pull_at)
+    reconcile_read(store, tracker.id(), &remote, now, last_pull_at, rule)
 }
 
 /// The merge half of [`pull_read`], for a list already fetched.
@@ -492,6 +497,7 @@ pub fn reconcile_read(
     remote: &[kaeri_core::traits::TrackedReadEntry],
     now: i64,
     last_pull_at: i64,
+    rule: WhenTrackersDisagree,
 ) -> Result<PullReport, kaeri_core::Error> {
     let stored = |e: kaeri_store::StoreError| kaeri_core::Error::Store(e.to_string());
     let mut report = PullReport { seen: remote.len() as u32, ..PullReport::default() };
@@ -500,12 +506,19 @@ pub fn reconcile_read(
         let local = local_read_state(store, &work).map_err(stored)?;
         let local = merge::ReadLocal {
             last_pushed: last_pushed_read(store, id, entry.anilist_id).map_err(stored)?,
+            rule,
             ..local
         };
         let pending = store.pending_read_progress(id, entry.anilist_id).map_err(stored)?;
         let merged = merge::reconcile_read_at(&local, entry, pending, last_pull_at);
         for op in &merged.push {
-            if store.enqueue(id, op, now).map_err(stored)?.is_some() {
+            let queued = match op {
+                TrackOp::SetReadProgress { .. } if merged.walk_back => {
+                    store.requeue_read_progress(id, op, now)
+                }
+                _ => store.enqueue(id, op, now),
+            };
+            if queued.map_err(stored)?.is_some() {
                 report.queued += 1;
             }
         }
@@ -547,6 +560,8 @@ pub fn local_read_state(
         score: score.map(|s| s as f32),
         score_at: score.and(at),
         last_pushed: None,
+        progress_at: store.read_progress_at(work)?,
+        rule: WhenTrackersDisagree::default(),
     })
 }
 
@@ -1201,5 +1216,53 @@ mod tests {
         assert_eq!(store.outbox_depth(Some("anilist")).unwrap(), 1);
         assert_eq!(store.outbox_depth(Some("mal")).unwrap(), 1);
         assert_eq!(depth(&store), 2);
+    }
+
+    #[test]
+    fn with_the_latest_change_winning_an_unread_here_takes_the_tracker_down() {
+        let id = AnilistId::new(900_301);
+        let up = TrackOp::SetReadProgress { anilist_id: id, chapter: 13, volume: None };
+        let remote = kaeri_core::traits::TrackedReadEntry {
+            anilist_id: id,
+            medium: kaeri_core::media::Medium::Manga,
+            chapters: 13,
+            volumes: None,
+            status: WatchStatus::Current,
+            rereading: false,
+            score: None,
+        };
+        let pulled_at = kaeri_store::now() - 60;
+        // Chapters 12 and 13 read and 13 queued before the last pull; 13 unread after it.
+        let store = || {
+            let store = Store::open_in_memory().unwrap();
+            let work = read_work(id);
+            for (chapter, at) in [("12", 400), ("13", 450)] {
+                let mut read = kaeri_store::reading::ReadEvent::new(&work, chapter, at);
+                read.completed = true;
+                store.record_read(&read, Vec::new()).unwrap();
+            }
+            store.enqueue("anilist", &up, 450).unwrap();
+            store.unread(&work, &["13".to_owned()]).unwrap();
+            store
+        };
+
+        let furthest = store();
+        let rule = WhenTrackersDisagree::Furthest;
+        reconcile_read(&furthest, "anilist", std::slice::from_ref(&remote), 0, pulled_at, rule)
+            .unwrap();
+        assert_eq!(
+            furthest.read_outbox("anilist").unwrap(),
+            std::slice::from_ref(&up),
+            "the furthest is kept"
+        );
+
+        let latest = store();
+        let rule = WhenTrackersDisagree::Latest;
+        reconcile_read(&latest, "anilist", &[remote], 0, pulled_at, rule).unwrap();
+        assert_eq!(
+            latest.read_outbox("anilist").unwrap(),
+            [TrackOp::SetReadProgress { anilist_id: id, chapter: 12, volume: None }],
+            "the unread is the latest change"
+        );
     }
 }

@@ -247,6 +247,7 @@ public final class AccountsModel {
         case "anilist": "AniList"
         case "mal", "myanimelist": "MyAnimeList"
         case "kitsu": "Kitsu"
+        case "mangaupdates": "MangaUpdates"
         case "simkl": "Simkl"
         case "trakt": "Trakt"
         default: tracker.capitalized

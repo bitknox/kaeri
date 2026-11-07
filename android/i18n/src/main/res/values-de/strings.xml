@@ -2260,7 +2260,6 @@
     <string name="settings_artwork">Bildmaterial unter CC BY-NC</string>
     <string name="settings_artwork_detail">Namensnennung in den Hinweisen der App</string>
     <string name="settings_new_episodes">Neue Folgen</string>
-    <string name="settings_new_episodes_detail">Für Serien in deiner Liste „Wird geschaut“</string>
     <string name="settings_notify_detail">Eine Benachrichtigung, wenn eine Folge einer Serie erscheint, der du folgst: die Serie und die Folgennummer, nie der Folgentitel. Eine Serie kann ihre eigenen in den Einstellungen ausschalten.</string>
     <string name="settings_coming_up">Demnächst · nächste 7 Tage</string>
     <string name="settings_system_notifications">Benachrichtigungseinstellungen</string>

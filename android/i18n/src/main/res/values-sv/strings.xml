@@ -2260,7 +2260,6 @@
     <string name="settings_artwork">Konstverk under CC BY-NC</string>
     <string name="settings_artwork_detail">Upphovsangivelser finns i appens notiser</string>
     <string name="settings_new_episodes">Nya avsnitt</string>
-    <string name="settings_new_episodes_detail">För serier i din Tittlista</string>
     <string name="settings_notify_detail">En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.</string>
     <string name="settings_coming_up">Kommer snart · nästa 7 dagar</string>
     <string name="settings_system_notifications">Aviseringsinställningar</string>

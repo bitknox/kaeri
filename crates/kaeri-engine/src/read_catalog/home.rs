@@ -11,7 +11,7 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use kaeri_core::{books::ChapterId, ids::AnilistId};
+use kaeri_core::{books::ChapterId, ids::AnilistId, media::Medium};
 use kaeri_meta::{
     BrowseFilter, KeptBook, Meta,
     anilist::books::{Book, BookAsk},
@@ -19,8 +19,8 @@ use kaeri_meta::{
 use kaeri_model::{
     Msg, ReadingMsg,
     reading::{
-        ReadHomeEnd, ReadHomePart, ReadSpotlight, ReadSpotlightCase, ReadWeekDay,
-        ReadWeekEntry, ReadingEvent, ReadingHomeView, SeriesAction, WorkTile,
+        self as words, ReadHomeEnd, ReadHomePart, ReadSpotlight, ReadSpotlightCase,
+        ReadWeekDay, ReadWeekEntry, ReadingEvent, ReadingHomeView, SeriesAction, WorkTile,
     },
 };
 use kaeri_store::Store;
@@ -572,8 +572,11 @@ impl Home {
         for kept in followed {
             let work = tiles::work_of(kept.book.id);
             let rhythm = self.store.book_rhythm(work.as_str()).ok().flatten();
-            let newest = chapters::of_work(&self.sources, &self.store, &work)
-                .and_then(|(_, _, list)| list.iter().filter_map(chapters::Kept::out_at).max())
+            let list = chapters::of_work(&self.sources, &self.store, &work).map(|(_, _, l)| l);
+            let newest_chapter =
+                list.as_deref().and_then(|l| l.iter().max_by_key(|c| c.out_at()));
+            let newest = newest_chapter
+                .and_then(chapters::Kept::out_at)
                 .or(rhythm.and_then(|r| r.last_published));
             let mut tile = self.tile(kept);
             let out_today = newest.filter(|at| *at >= today && *at <= now);
@@ -586,7 +589,30 @@ impl Home {
             if usually && let Some(words) = rhythm.as_ref().and_then(chapters::rhythm_words) {
                 tile.facts.insert(0, words);
             }
-            days[index].entries.push(ReadWeekEntry { tile, out_at, usually });
+            let novel = kept.book.medium() == Medium::Novel;
+            let chapter = match out_at {
+                Some(_) => newest_chapter.map(|c| {
+                    let number = c.number.clone().unwrap_or_else(|| c.label.clone());
+                    Msg::Reading(match (c.own_title(), novel) {
+                        (Some(title), false) => ReadingMsg::ReadingChapterTitled {
+                            chapter: number,
+                            title: title.to_owned(),
+                        },
+                        (Some(title), true) => ReadingMsg::ReadingPartTitled {
+                            part: number,
+                            title: title.to_owned(),
+                        },
+                        (None, _) => return words::next_unit(kept.book.medium(), &number),
+                    })
+                }),
+                // Only expected: the chapter after the newest, when that is a confident guess.
+                None => rhythm
+                    .as_ref()
+                    .zip(list.as_deref())
+                    .and_then(|(r, l)| expected_next(r, l, days[index].day))
+                    .map(|n| words::next_unit(kept.book.medium(), &n)),
+            };
+            days[index].entries.push(ReadWeekEntry { tile, out_at, usually, chapter });
         }
         days.retain(|d| d.today || !d.entries.is_empty());
         if days.iter().all(|d| d.entries.is_empty()) {
@@ -632,23 +658,31 @@ impl Home {
             else {
                 continue;
             };
-            let unread = read.unread(&list);
-            let Some(newest) = unread.iter().rev().find(|c| c.seen_at.is_some()) else {
-                continue;
+            // Only for someone caught up to it: someone still behind is Continuing. The line
+            // names the chapter the button opens.
+            let Some(next) = read.new_for_you(&list) else { continue };
+            let number = next.number.clone().unwrap_or_else(|| next.label.clone());
+            let medium = kept.book.medium();
+            let today_out = next.out_at().is_some_and(|at| at >= today);
+            let line = match (next.own_title(), today_out, medium == Medium::Novel) {
+                (Some(title), true, false) => ReadingMsg::ReadingOutTodayTitled {
+                    chapter: number,
+                    title: title.to_owned(),
+                },
+                (Some(title), true, true) => ReadingMsg::ReadingPartOutTodayTitled {
+                    part: number,
+                    title: title.to_owned(),
+                },
+                (None, true, false) => ReadingMsg::ReadingOutToday { chapter: number },
+                (None, true, true) => ReadingMsg::ReadingPartOutToday { part: number },
+                (_, false, false) => ReadingMsg::ReadingChapterNew { chapter: number },
+                (_, false, true) => ReadingMsg::ReadingPartNew { part: number },
             };
-            let Some(next) = unread.first() else { continue };
-            let number = newest.number.clone().unwrap_or_else(|| newest.label.clone());
-            let line = match (&newest.title, newest.out_at().is_some_and(|at| at >= today)) {
-                (Some(title), true) => {
-                    ReadingMsg::ReadingOutTodayTitled { chapter: number, title: title.clone() }
-                }
-                (None, true) => ReadingMsg::ReadingOutToday { chapter: number },
-                (_, false) => ReadingMsg::ReadingChapterNew { chapter: number },
-            };
-            let action = SeriesAction::Read {
-                chapter: ChapterId::new(next.id.clone()),
-                label: next.number.clone().unwrap_or_else(|| next.label.clone()),
-            };
+            let action = tiles::read_action(
+                medium,
+                ChapterId::new(next.id.clone()),
+                next.number.clone().unwrap_or_else(|| next.label.clone()),
+            );
             return Some(self.spot(
                 kept,
                 ReadSpotlightCase::NewChapter,
@@ -711,10 +745,23 @@ impl Home {
         action: Option<SeriesAction>,
     ) -> (WorkTile, ReadSpotlight) {
         let tile = self.tile(kept);
+        // The same facts as the series' page, with how often chapters come out after them.
+        let mut facts = tiles::facts(&kept.book);
+        let work = tiles::work_of(kept.book.id);
+        if let Some(rhythm) = self
+            .store
+            .book_rhythm(work.as_str())
+            .ok()
+            .flatten()
+            .as_ref()
+            .and_then(chapters::rhythm_words)
+        {
+            facts.push(rhythm);
+        }
         let spot = ReadSpotlight {
             case,
             label: Msg::Reading(label),
-            facts: tiles::facts(&kept.book),
+            facts,
             synopsis: kept.book.synopsis(),
             line,
             action,
@@ -729,5 +776,222 @@ impl Home {
         let work = tiles::work_of(book.id);
         Some(tiles::action(&self.store, &self.sources, &work, book.medium()))
             .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
+    }
+}
+
+/// The chapter a series' rhythm says comes out on `due`: the one after its newest, when that
+/// is a confident guess. That needs whole numbers that go up with the dates, and a newest
+/// chapter recent enough that no release was missed between it and `due`.
+fn expected_next(
+    rhythm: &kaeri_store::book_catalog::BookRhythm,
+    list: &[chapters::Kept],
+    due: i64,
+) -> Option<String> {
+    let every = match (rhythm.every_days, rhythm.weekday) {
+        (Some(days), _) => i64::from(days.max(1)),
+        (None, Some(_)) => 7,
+        (None, None) => return None,
+    };
+    let numbered: Vec<(u64, i64)> = list
+        .iter()
+        .filter_map(|c| Some((c.number.as_deref()?.parse::<u64>().ok()?, c.out_at()?)))
+        .collect();
+    let (newest, at) = numbered.iter().max_by_key(|(n, _)| *n).copied()?;
+    // The highest number is also the newest out: a list that runs the other way is no guide.
+    if numbered.iter().any(|(n, out)| *out > at && *n < newest) {
+        return None;
+    }
+    // One step of the rhythm, with a day to spare: more would mean a chapter in between.
+    let gap = due - at;
+    if gap <= 0 || gap > (every + 1) * DAY {
+        return None;
+    }
+    Some((newest + 1).to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, atomic::AtomicBool};
+
+    use kaeri_core::{books::SourceChapter, config::Paths};
+    use kaeri_model::{medium::KaeriIsFor, reading::ReadSpotlightCase};
+    use kaeri_store::{
+        book_catalog::BookWork,
+        reading::{EditionPref, ReadEvent},
+    };
+
+    use super::*;
+
+    #[test]
+    fn an_expected_chapter_is_named_only_when_the_guess_is_sure() {
+        const DUE: i64 = 1_700_000_000;
+        let chapter = |n: &str, at: i64| chapters::Kept {
+            id: n.into(),
+            source_ref: n.into(),
+            label: n.into(),
+            number: Some(n.into()),
+            volume: None,
+            title: None,
+            version_label: None,
+            language: None,
+            published: Some(at),
+            pages: None,
+            seen_at: None,
+        };
+        let weekly = kaeri_store::book_catalog::BookRhythm {
+            weekday: Some(4),
+            every_days: Some(7),
+            last_published: Some(DUE - 7 * DAY),
+            checked_at: DUE,
+        };
+        let list = [chapter("42", DUE - 14 * DAY), chapter("43", DUE - 7 * DAY)];
+        assert_eq!(expected_next(&weekly, &list, DUE).as_deref(), Some("44"));
+        // A release missed in between, or a half chapter last: no guess.
+        let behind = [chapter("42", DUE - 21 * DAY), chapter("43", DUE - 14 * DAY)];
+        assert_eq!(expected_next(&weekly, &behind, DUE), None);
+        let half = [chapter("43", DUE - 14 * DAY), chapter("43.5", DUE - 7 * DAY)];
+        assert_eq!(expected_next(&weekly, &half, DUE), None);
+        // Numbers that go down with the dates are no guide.
+        let odd = [chapter("50", DUE - 14 * DAY), chapter("43", DUE - 7 * DAY)];
+        assert_eq!(expected_next(&weekly, &odd, DUE), None);
+        // No rhythm, no guess.
+        let none =
+            kaeri_store::book_catalog::BookRhythm { weekday: None, every_days: None, ..weekly };
+        assert_eq!(expected_next(&none, &list, DUE), None);
+    }
+
+    const WORK: &str = "a:900301";
+    // Noon UTC on a fixed day, read in UTC, so nothing depends on the machine's clock or zone.
+    const NOW: i64 = 1_700_000_000 - 1_700_000_000 % DAY + 12 * 3_600;
+
+    fn kit(dir: &std::path::Path) -> Kit {
+        let store = Store::open_in_memory().unwrap();
+        let paths = Paths {
+            config_file: dir.join("config.toml"),
+            data_dir: dir.join("data"),
+            cache_dir: dir.join("cache"),
+        };
+        let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
+        let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+        let http = kaeri_net::HttpClient::offline(&Default::default()).unwrap();
+        let meta =
+            kaeri_meta::Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone());
+        Kit {
+            meta,
+            store,
+            sources,
+            plugins: crate::book_plugins::BookPlugins::default(),
+            clock: crate::clock::Clock::in_zone(jiff::tz::TimeZone::UTC),
+            offline: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
+    /// "The Far Shore", an hour ago.
+    fn followed(kit: &Kit) {
+        let store = &kit.store;
+        let meta = r#"{"book":{"id":900301,"title":{"romaji":"The Lantern Ferry"}}}"#;
+        let work = BookWork {
+            work: WORK.into(),
+            anilist_id: Some(900_301),
+            medium: "manga".into(),
+            titles: "{}".into(),
+            status: Some("RELEASING".into()),
+            meta: Some(meta.into()),
+            fetched_at: NOW,
+            ..BookWork::default()
+        };
+        store.put_book_work(&work).unwrap();
+        store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+        let pref =
+            EditionPref { source_id: "shelf".into(), version_label: None, language: None };
+        store.set_edition_pref(WORK, Some(&pref)).unwrap();
+        store.set_read_status(WORK, Some("reading"), 2).unwrap();
+        let list = |n: u32| -> Vec<SourceChapter> {
+            (1..=n).map(|n| SourceChapter::new(format!("c-{n}"), n.to_string())).collect()
+        };
+        chapters::keep(store, "shelf", "s-1", &list(12), NOW - 7 * DAY);
+        let mut later = list(13);
+        later[12].title = Some("The Far Shore".into());
+        later[12].published = Some(NOW - 3_600);
+        chapters::keep(store, "shelf", "s-1", &later, NOW - 3_600);
+    }
+
+    fn home(kit: &Kit) -> ReadingHomeView {
+        let ask =
+            Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: false, now: NOW };
+        Home::of(kit, ask).view()
+    }
+
+    fn reading(msg: ReadingMsg) -> Option<Msg> {
+        Some(Msg::Reading(msg))
+    }
+
+    #[test]
+    fn someone_caught_up_is_offered_the_new_chapter_with_its_words() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        followed(&kit);
+        kit.store.adopt_read(WORK, "12", None, NOW - 2 * DAY).unwrap();
+
+        let view = home(&kit);
+        let spot = view.spot.unwrap();
+        assert_eq!(spot.case, ReadSpotlightCase::NewChapter);
+        assert_eq!(
+            spot.line,
+            reading(ReadingMsg::ReadingOutTodayTitled {
+                chapter: "13".into(),
+                title: "The Far Shore".into()
+            })
+        );
+        assert_eq!(
+            spot.action,
+            Some(SeriesAction::Read { chapter: ChapterId::new("13"), label: "13".into() }),
+            "the button opens the chapter the line names"
+        );
+        let tile = view.spotlight.unwrap();
+        assert!(tile.new_chapter, "the dot");
+        assert_eq!(
+            tile.next,
+            reading(ReadingMsg::ReadingChapterNew { chapter: "13".into() }),
+            "the dot always has its words"
+        );
+
+        // This week: the chapter out today, in words, beside the person's place.
+        let today = &view.week[0];
+        assert!(today.today);
+        assert_eq!(
+            today.entries[0].chapter,
+            reading(ReadingMsg::ReadingChapterTitled {
+                chapter: "13".into(),
+                title: "The Far Shore".into()
+            })
+        );
+        assert_eq!(today.entries[0].out_at, Some(NOW - 3_600));
+    }
+
+    #[test]
+    fn someone_behind_continues_where_they_stopped_with_the_track_and_no_dot() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        followed(&kit);
+        kit.store.adopt_read(WORK, "10", None, NOW - 3 * DAY).unwrap();
+        let mut place = ReadEvent::new(WORK, "11", NOW - 2 * DAY);
+        place.page = Some(8);
+        place.of_pages = Some(20);
+        kit.store.record_read(&place, Vec::new()).unwrap();
+
+        let view = home(&kit);
+        let spot = view.spot.unwrap();
+        assert_eq!(spot.case, ReadSpotlightCase::Continuing, "chapter 13 waits behind 11");
+        assert_eq!(
+            spot.line,
+            reading(ReadingMsg::ReadingChapterPage { chapter: "11".into(), page: 9 }),
+            "page 8 kept from 0 is page 9"
+        );
+        let tile = &view.continue_reading[0];
+        assert!(!tile.new_chapter, "no dot on a place");
+        assert_eq!(tile.progress, Some(0.4));
+        assert_eq!(tile.next, spot.line);
     }
 }

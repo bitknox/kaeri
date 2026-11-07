@@ -746,13 +746,10 @@ pub fn command(
             this.set_off(&id, off);
             publish();
         }
-        BookSourceCommand::LoadForWork { work } => {
-            let _ = tx.send(Event::BookSources(BookSourceEvent::ForWork {
-                editions: this.editions(&work),
-                work,
-                asking: false,
-            }));
-        }
+        // The catalogue answers these: see `read_catalog::editions`.
+        BookSourceCommand::LoadForWork { .. }
+        | BookSourceCommand::SearchSourceForWork { .. }
+        | BookSourceCommand::ChooseSourceSeries { .. } => {}
     }
 }
 
@@ -844,6 +841,7 @@ impl BookSources {
         work: &kaeri_core::books::WorkId,
     ) -> Vec<kaeri_model::reading::BookEditionRow> {
         let preferred = self.store.edition_pref(work.as_str()).ok().flatten();
+        let in_use = self.edition_of(work, None).map(|(source, _)| source);
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         let mut seen = HashSet::new();
         refs.into_iter()
@@ -855,6 +853,7 @@ impl BookSources {
                     crate::read_catalog::chapters::summary(&self.store, &source, &series);
                 Some(kaeri_model::reading::BookEditionRow {
                     preferred: preferred.as_ref().is_some_and(|p| p.source_id == source),
+                    in_use: in_use.as_deref() == Some(source.as_str()),
                     source_id: source,
                     source_name: manifest.name,
                     language: kept.language,
@@ -1011,7 +1010,10 @@ impl BookSources {
             let state = match read.get(id.as_str()) {
                 Some(r) if r.read => ChapterReadState::Read,
                 Some(r) => match r.last_page {
-                    Some(page) => ChapterReadState::InProgress { page, of: r.of_pages },
+                    Some(page) => ChapterReadState::InProgress {
+                        page: kaeri_model::reading::shown_page(page),
+                        of: r.of_pages,
+                    },
                     None => ChapterReadState::Unread,
                 },
                 None => ChapterReadState::Unread,
@@ -1019,12 +1021,19 @@ impl BookSources {
             let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
             let download = downloads.get(id.as_str()).cloned();
             let bookmarked = bookmarks.contains(id.as_str());
+            let number = chapter.number.map(|n| n.to_string());
+            let title = crate::read_catalog::chapters::own_title(
+                chapter.title.as_deref(),
+                &chapter.number_raw,
+                number.as_deref(),
+            )
+            .map(str::to_owned);
             let row = ChapterRow {
                 id,
                 label: chapter.number_raw.clone(),
                 state,
-                number: chapter.number.map(|n| n.to_string()),
-                title: chapter.title.clone(),
+                number,
+                title,
                 volume: chapter.volume.clone(),
                 published: chapter.published,
                 pages: chapter.page_count,
@@ -1034,6 +1043,7 @@ impl BookSources {
                 bookmarked,
                 version_label: chapter.version_label.clone(),
                 read_at,
+                line: Vec::new(),
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),

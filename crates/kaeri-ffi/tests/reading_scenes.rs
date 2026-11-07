@@ -241,3 +241,112 @@ fn the_reader_scenes_have_generated_books_to_open() {
         "{novel:?}"
     );
 }
+
+#[test]
+fn the_series_scene_lists_the_manga_chapters_from_its_folder() {
+    use kaeri_core::books::WorkId;
+    let (_root, engine) = start(FfiScene::ReadingSeries);
+    engine.send(Command::Reading(ReadingCommand::LoadChapters {
+        work: WorkId::new("a:900301"),
+        edition: None,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let (volumes, failure) = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
+                Some((volumes, failure))
+            }
+            _ => None,
+        })
+        .expect("the chapters");
+    assert_eq!(failure, None, "the folder series the catalogue names is the generated one");
+    assert!(volumes.iter().any(|v| !v.chapters.is_empty()), "chapters listed: {volumes:?}");
+}
+
+#[test]
+fn a_reading_scene_started_again_on_its_home_keeps_the_reader_settings_changed_in_it() {
+    use kaeri_core::{books::WorkId, media::Medium};
+    use kaeri_model::reader::{
+        OpenAt, ReaderCommand, ReaderEvent, ReaderMode, ReaderSettingKey, ReaderValue,
+        SettingScope,
+    };
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let launch = || {
+        let dir = |name: &str| root.path().join(name).display().to_string();
+        let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+        FfiEngine::start_scene_on(
+            dirs,
+            Arc::new(Quiet),
+            FfiScene::ReaderStrip,
+            kaeri_engine::clock::Clock::default(),
+        )
+        .expect("the engine starts")
+    };
+    let strip = WorkId::new("a:900303");
+    let settled = |event: &Event| matches!(event, Event::Reader(ReaderEvent::Settings(_)));
+
+    // The scene's strip series reads as a strip; the person has it read in pages and picks
+    // sepia for every manga.
+    let engine = launch();
+    engine.send(Command::Reader(ReaderCommand::SetSetting {
+        session: None,
+        medium: Medium::Manga,
+        work: Some(strip.clone()),
+        key: ReaderSettingKey::Mode,
+        scope: SettingScope::Series,
+        value: ReaderValue::Choice { name: "paged".into() },
+    }));
+    read_until(&engine, settled);
+    engine.send(Command::Reader(ReaderCommand::SetSetting {
+        session: None,
+        medium: Medium::Manga,
+        work: None,
+        key: ReaderSettingKey::Look,
+        scope: SettingScope::Medium,
+        value: ReaderValue::Choice { name: "sepia".into() },
+    }));
+    read_until(&engine, settled);
+    engine.shutdown();
+
+    let engine = launch();
+    engine.send(Command::Reader(ReaderCommand::Open {
+        work: strip,
+        chapter: None,
+        at: OpenAt::Resume,
+        surface: surface(),
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(
+            event,
+            Event::Reader(ReaderEvent::Leaves { .. })
+                | Event::Reading(ReadingEvent::Failed { .. })
+        )
+    });
+    let opened = read
+        .iter()
+        .find_map(|e| match e {
+            Event::Reader(ReaderEvent::Opened(view)) => Some(view.clone()),
+            _ => None,
+        })
+        .expect("opened");
+    assert_eq!(opened.mode, ReaderMode::Paged, "the series' own choice stays");
+    engine.send(Command::Reader(ReaderCommand::LoadSettings {
+        medium: Medium::Manga,
+        work: Some(opened.work.clone()),
+    }));
+    let read = read_until(&engine, settled);
+    engine.shutdown();
+    let look = read
+        .iter()
+        .rev()
+        .find_map(|e| match e {
+            Event::Reader(ReaderEvent::Settings(view)) => Some(view.clone()),
+            _ => None,
+        })
+        .and_then(|view| view.rows.into_iter().find(|row| row.key == ReaderSettingKey::Look))
+        .map(|row| row.value);
+    assert_eq!(look, Some(ReaderValue::Choice { name: "sepia".into() }));
+}

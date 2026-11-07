@@ -469,6 +469,8 @@ public final class ReaderModel {
             guard session == self.session else { return }
             // The notice that comes with it says where, and offers the way back.
         case .settings(let view):
+            // Settings' Reading pane asks for each medium's defaults: an open book keeps its own.
+            if let open = self.view, view.medium != open.medium { return }
             settings = view
         case .goTo(let session, let place):
             guard session == self.session else { return }

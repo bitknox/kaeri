@@ -6,7 +6,9 @@
 //! queue. Every AniList request a screen needs goes as one, with its parts under aliases.
 
 pub(crate) mod chapters;
+pub(crate) mod editions;
 pub(crate) mod home;
+pub(crate) mod rows;
 pub(crate) mod search;
 pub(crate) mod series;
 pub(crate) mod tiles;
@@ -33,6 +35,8 @@ pub struct Memory {
     pub(crate) home: Arc<Mutex<home::Loading>>,
     /// The series the last check could not ask about.
     pub(crate) failures: Arc<Mutex<Vec<kaeri_model::reading::UpdateFailure>>>,
+    /// The sources searched for a series without a match, for "Not found in".
+    pub(crate) misses: Arc<Mutex<editions::Misses>>,
 }
 
 /// The handles the catalogue's tasks are lent, cloned.

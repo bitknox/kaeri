@@ -278,8 +278,19 @@ struct SearchScreen: View {
         ScrollView {
             ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: compact ? 16 : 20) {
+                if store.medium.both, compact {
+                    SearchScopePicker()
+                }
                 if !pinned {
-                    SearchFilterRow(compact: compact)
+                    if store.medium.both, !compact {
+                        // Shows or Reading first, on the filters' line, as the reading board has it.
+                        HStack(alignment: .center, spacing: 12) {
+                            SearchScopePicker()
+                            SearchFilterRow(compact: compact)
+                        }
+                    } else {
+                        SearchFilterRow(compact: compact)
+                    }
                     ActiveFilters(compact: compact)
                 }
                 if store.search.livePaused, !store.search.query.isBrowse() {

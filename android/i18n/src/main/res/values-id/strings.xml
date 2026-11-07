@@ -2194,7 +2194,6 @@
     <string name="settings_artwork">Ilustrasi di bawah CC BY-NC</string>
     <string name="settings_artwork_detail">Atribusi ada di pemberitahuan aplikasi</string>
     <string name="settings_new_episodes">Episode baru</string>
-    <string name="settings_new_episodes_detail">Untuk serial di daftar Menonton Anda</string>
     <string name="settings_notify_detail">Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</string>
     <string name="settings_coming_up">Segera tayang · 7 hari ke depan</string>
     <string name="settings_system_notifications">Pengaturan notifikasi</string>

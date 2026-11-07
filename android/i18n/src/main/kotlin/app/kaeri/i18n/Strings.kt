@@ -861,6 +861,38 @@ object Strings {
     fun readingChapterNew(context: Context, chapter: String): String =
         context.getString(R.string.reading_chapter_new, chapter)
 
+    /** Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. */
+    fun readingNextPart(context: Context, part: String): String =
+        context.getString(R.string.reading_next_part, part)
+
+    /** Under a cover or the big picture: how far into a light novel's part the person is. */
+    fun readingPartPercent(context: Context, part: String, percent: Int): String =
+        context.getString(R.string.reading_part_percent, part, percent)
+
+    /** Under a cover: a light novel's part came out that the person has not read. */
+    fun readingPartNew(context: Context, part: String): String =
+        context.getString(R.string.reading_part_new, part)
+
+    /** Under a This week cell: a light novel's part that came out that day, with its own title. */
+    fun readingPartTitled(context: Context, part: String, title: String): String =
+        context.getString(R.string.reading_part_titled, part, title)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today. */
+    fun readingPartOutToday(context: Context, part: String): String =
+        context.getString(R.string.reading_part_out_today, part)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today, with its title. */
+    fun readingPartOutTodayTitled(context: Context, part: String, title: String): String =
+        context.getString(R.string.reading_part_out_today_titled, part, title)
+
+    /** Under a Library cover: the chapter the person is at, and the newest chapter there is. */
+    fun readingChapterOf(context: Context, chapter: String, of: String): String =
+        context.getString(R.string.reading_chapter_of, chapter, of)
+
+    /** Under a Library cover: the volume and part of a light novel the person is at. */
+    fun readingVolumePart(context: Context, volume: String, part: String): String =
+        context.getString(R.string.reading_volume_part, volume, part)
+
     /** A search filter: books from Japan. */
     fun readingOriginJapan(context: Context): String =
         context.getString(R.string.reading_origin_japan)
@@ -904,6 +936,198 @@ object Strings {
     /** Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch. */
     fun exportWaitsForWifi(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.export_waits_for_wifi, n, n)
+
+    /** Under a This week cell: the chapter that came out that day, with its own title. */
+    fun readingChapterTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reading_chapter_titled, chapter, title)
+
+    /** A chapter row's state: the person read it. */
+    fun readingRowRead(context: Context): String =
+        context.getString(R.string.reading_row_read)
+
+    /** A chapter row's state: it came out since the person last read and is not read. */
+    fun readingRowNew(context: Context): String =
+        context.getString(R.string.reading_row_new)
+
+    /** A chapter row's state: it is kept on this device to read offline. */
+    fun readingRowDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_downloaded)
+
+    /** A chapter row's state: it is read from the source and nothing of it is on this device. */
+    fun readingRowNotDownloaded(context: Context): String =
+        context.getString(R.string.reading_row_not_downloaded)
+
+    /** A chapter row's state: a file in one of the person's folders, or one already on the device. */
+    fun readingRowOnDevice(context: Context): String =
+        context.getString(R.string.reading_row_on_device)
+
+    /** A chapter row's state: it waits its turn to download. */
+    fun readingRowQueued(context: Context): String =
+        context.getString(R.string.reading_row_queued)
+
+    /** A chapter row's state: it waits to download until the device is on Wi-Fi. */
+    fun readingRowWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_row_waits_wifi)
+
+    /** A chapter row's state while it downloads. */
+    fun readingRowDownloading(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_row_downloading, done, total)
+
+    /** A chapter row's state: the download failed. The reason follows as the next part. */
+    fun readingRowFailed(context: Context): String =
+        context.getString(R.string.reading_row_failed)
+
+    /** A chapter row's state: the page the person stopped on, of how many. */
+    fun readingRowPageOf(context: Context, page: Int, of: Int): String =
+        context.getString(R.string.reading_row_page_of, page, of)
+
+    /** A chapter row's state: the page the person stopped on, when the length isn't known. */
+    fun readingRowPage(context: Context, page: Int): String =
+        context.getString(R.string.reading_row_page, page)
+
+    /** A novel's chapter row: how far into it the person is. */
+    fun readingRowPercent(context: Context, percent: Int): String =
+        context.getString(R.string.reading_row_percent, percent)
+
+    /** A chapter row: how long its pages are, for a file on the device. */
+    fun readingRowPages(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_pages, n, n)
+
+    /** A chapter row: how many versions the person's sources have of it. The row's menu lists them. */
+    fun readingRowVersions(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_versions, n, n)
+
+    /** A chapter row: when it was read or came out, under a minute ago. */
+    fun readingAgoNow(context: Context): String =
+        context.getString(R.string.reading_ago_now)
+
+    /** A chapter row: when it was read or came out, in minutes. */
+    fun readingAgoMinutes(context: Context, minutes: Int): String =
+        context.getString(R.string.reading_ago_minutes, minutes)
+
+    /** A chapter row: when it was read or came out, earlier today. */
+    fun readingAgoToday(context: Context): String =
+        context.getString(R.string.reading_ago_today)
+
+    /** A chapter row: when it was read or came out, the day before today. */
+    fun readingAgoYesterday(context: Context): String =
+        context.getString(R.string.reading_ago_yesterday)
+
+    /** A chapter row: when it was read or came out, in days, under a week. */
+    fun readingAgoDays(context: Context, days: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_days, days, days)
+
+    /** A chapter row: when it was read or came out, in weeks, under two months. */
+    fun readingAgoWeeks(context: Context, weeks: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_weeks, weeks, weeks)
+
+    /** A chapter row: when it was read or came out, in months, under a year. */
+    fun readingAgoMonths(context: Context, months: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_months, months, months)
+
+    /** A chapter row: when it was read or came out, in years. */
+    fun readingAgoYears(context: Context, years: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_ago_years, years, years)
+
+    /** The tracker took the series off its list. */
+    fun readingRemovedFrom(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_from, tracker)
+
+    /** The tracker's list did not hold the series, so there was nothing to remove. */
+    fun readingRemovedNotThere(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_not_there, tracker)
+
+    /** The app never learned which of the tracker's entries this series is, so it asked nothing. */
+    fun readingRemovedUnmatched(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_unmatched, tracker)
+
+    /** The tracker could not take the series off. The reason follows. */
+    fun readingRemovedFailed(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_failed, tracker)
+
+    /** Why a removal failed: the tracker turned the sign-in away. */
+    fun readingRemovedSignIn(context: Context, tracker: String): String =
+        context.getString(R.string.reading_removed_sign_in, tracker)
+
+    /** The source answered the search and has no series by the series' names. */
+    fun readingMissNoSeries(context: Context): String =
+        context.getString(R.string.reading_miss_no_series)
+
+    /** The source has failed every ask since this time of day, in the person's zone. */
+    fun readingMissDownSince(context: Context, time: String): String =
+        context.getString(R.string.reading_miss_down_since, time)
+
+    /** The source has failed every ask, since a time on another day or not known. */
+    fun readingMissDown(context: Context): String =
+        context.getString(R.string.reading_miss_down)
+
+    /** How many parts of a light novel are downloaded. */
+    fun readingDlParts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_parts, count, count)
+
+    /** What the downloads take up on this device. */
+    fun readingDlSize(context: Context, size: String): String =
+        context.getString(R.string.reading_dl_size, size)
+
+    /** How many of the downloaded chapters are read, which Delete read clears. */
+    fun readingDlRead(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_read, count)
+
+    /** The chapter downloading now. */
+    fun readingDlChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_chapter, chapter)
+
+    /** How far the chapter downloading now has come. */
+    fun readingDlPages(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.reading_dl_pages, done, total)
+
+    /** Chapters waiting their turn after the one downloading. */
+    fun readingDlMoreQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_more_queued, count)
+
+    /** Chapters waiting their turn, none downloaded yet. */
+    fun readingDlQueued(context: Context, count: Int): String =
+        context.getString(R.string.reading_dl_queued, count)
+
+    /** Chapters that wait for Wi-Fi to download. */
+    fun readingDlWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_dl_waits_wifi)
+
+    /** A chapter that failed. The reason follows as the next part. */
+    fun readingDlFailed(context: Context, chapter: String): String =
+        context.getString(R.string.reading_dl_failed, chapter)
+
+    /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
+    fun readingEstimateSize(context: Context, size: String): String =
+        context.getString(R.string.reading_estimate_size, size)
+
+    /** The chapters download only on Wi-Fi, as the settings say. */
+    fun readingEstimateWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_wifi)
+
+    /** The device is on mobile data, and the settings let chapters download on it. */
+    fun readingEstimateMobile(context: Context): String =
+        context.getString(R.string.reading_estimate_mobile)
+
+    /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
+    fun readingEstimateWaitsWifi(context: Context): String =
+        context.getString(R.string.reading_estimate_waits_wifi)
+
+    /** The notification's title. */
+    fun readingDownloadsDoneTitle(context: Context): String =
+        context.getString(R.string.reading_downloads_done_title)
+
+    /** The notification's text: one series' chapters are downloaded. */
+    fun readingDownloadsDoneChapters(context: Context, title: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_downloads_done_chapters, count, title, count)
+
+    /** The notification's text: one light novel's parts are downloaded. */
+    fun readingDownloadsDoneParts(context: Context, title: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_downloads_done_parts, count, title, count)
+
+    /** The notification's text: chapters of several series are downloaded. */
+    fun readingDownloadsDoneSeries(context: Context, count: Int): String =
+        context.getString(R.string.reading_downloads_done_series, count)
 
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
@@ -8126,6 +8350,1242 @@ object Strings {
     fun readerLookSystem(context: Context): String =
         context.getString(R.string.reader_look_system)
 
+    /** Sidebar and tab label: the shows' Home when both media are on. */
+    fun navWatch(context: Context): String =
+        context.getString(R.string.nav_watch)
+
+    /** Sidebar and tab label: reading's Home. */
+    fun navRead(context: Context): String =
+        context.getString(R.string.nav_read)
+
+    /** Sidebar and tab label: new chapters from followed series. */
+    fun navUpdates(context: Context): String =
+        context.getString(R.string.nav_updates)
+
+    /** Shelf heading on Read: series releasing now. */
+    fun homeReadReleasing(context: Context): String =
+        context.getString(R.string.home_read_releasing)
+
+    /** Line under the spotlight of a popular series, when the engine gives no line of its own. */
+    fun homeReadCheckedOnOpen(context: Context): String =
+        context.getString(R.string.home_read_checked_on_open)
+
+    /** Line at the end of Read, under the last shelf. */
+    fun homeReadEnd(context: Context): String =
+        context.getString(R.string.home_read_end)
+
+    /** Line at the end of Read with no book sources yet. A button to add one follows it. */
+    fun homeReadNoSources(context: Context): String =
+        context.getString(R.string.home_read_no_sources)
+
+    /** Under a day in Read's week: what usually comes out that day, when the time isn't known. */
+    fun weekUsually(context: Context): String =
+        context.getString(R.string.week_usually)
+
+    /** Under a day in Read's week with nothing due. */
+    fun weekNothingUsually(context: Context): String =
+        context.getString(R.string.week_nothing_usually)
+
+    /** Line under Updates' title on iPhone and iPad. */
+    fun updatesChecked(context: Context, ago: String): String =
+        context.getString(R.string.updates_checked, ago)
+
+    /** Line above Updates on the Mac: when it checked, and which series it checks. */
+    fun chapterUpdatesCheckedCaughtUp(context: Context, ago: String): String =
+        context.getString(R.string.chapter_updates_checked_caught_up, ago)
+
+    /** Line while Updates asks every followed series now. */
+    fun chapterUpdatesChecking(context: Context): String =
+        context.getString(R.string.chapter_updates_checking)
+
+    /** Toolbar button: queue every unread chapter in Updates. */
+    fun updatesDownloadNew(context: Context): String =
+        context.getString(R.string.updates_download_new)
+
+    /** Updates with nothing in it. */
+    fun updatesEmptyTitle(context: Context): String =
+        context.getString(R.string.updates_empty_title)
+
+    /** Line under Updates' empty title. */
+    fun chapterUpdatesEmptyLine(context: Context): String =
+        context.getString(R.string.chapter_updates_empty_line)
+
+    /** Day heading in Updates. */
+    fun chapterUpdatesToday(context: Context): String =
+        context.getString(R.string.chapter_updates_today)
+
+    /** Day heading in Updates. */
+    fun chapterUpdatesYesterday(context: Context): String =
+        context.getString(R.string.chapter_updates_yesterday)
+
+    /** After a chapter on an Updates row, when several groups put it out. */
+    fun chapterUpdatesVersions(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.chapter_updates_versions, n, n)
+
+    /** Accessibility label on an Updates row's cover, which opens the series. */
+    fun chapterUpdatesOpenSeries(context: Context, title: String): String =
+        context.getString(R.string.chapter_updates_open_series, title)
+
+    /** Accessibility hint on an Updates row. */
+    fun chapterUpdatesOpenChapterHint(context: Context): String =
+        context.getString(R.string.chapter_updates_open_chapter_hint)
+
+    /** Context menu item on an Updates row. */
+    fun chapterUpdatesOpenSeriesMenu(context: Context): String =
+        context.getString(R.string.chapter_updates_open_series_menu)
+
+    /** The series page's main action, and the spotlight's. */
+    fun actionReadChapter(context: Context, n: String): String =
+        context.getString(R.string.action_read_chapter, n)
+
+    /** The main action when a chapter is part read. */
+    fun actionContinueChapter(context: Context, n: String, page: Int): String =
+        context.getString(R.string.action_continue_chapter, n, page)
+
+    /** The main action for a light novel part, part read. */
+    fun actionContinuePart(context: Context, n: String, percent: Int): String =
+        context.getString(R.string.action_continue_part, n, percent)
+
+    /** The main action for a light novel part, part read, when how far is not known. */
+    fun actionContinuePartPlain(context: Context, n: String): String =
+        context.getString(R.string.action_continue_part_plain, n)
+
+    /** The main action for a light novel part not opened yet. */
+    fun actionReadPart(context: Context, n: String): String =
+        context.getString(R.string.action_read_part, n)
+
+    /** The main action when every chapter is read. */
+    fun actionReadAgain(context: Context): String =
+        context.getString(R.string.action_read_again)
+
+    /** Label of the source row on the series page. */
+    fun seriesReadingFrom(context: Context): String =
+        context.getString(R.string.series_reading_from)
+
+    /** Button beside a row on the series page that opens its sheet. */
+    fun seriesChange(context: Context): String =
+        context.getString(R.string.series_change)
+
+    /** After the source's name: how many other sources have the series. */
+    fun seriesSourcesMore(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.series_sources_more, n, n)
+
+    /** Value of the trackers row while a tracker asks which series this is. */
+    fun seriesTrackerAsk(context: Context): String =
+        context.getString(R.string.series_tracker_ask)
+
+    /** Value of the group row: the chosen group is used for this series. */
+    fun seriesPreferredGroup(context: Context): String =
+        context.getString(R.string.series_preferred_group)
+
+    /** A tracker's progress in chapters, with the total. */
+    fun seriesTrackerChaptersOf(context: Context, n: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.series_tracker_chapters_of, total, n, total)
+
+    /** A tracker's progress in chapters, total unknown. */
+    fun seriesTrackerChapters(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.series_tracker_chapters, n, n)
+
+    /** A tracker's progress in chapters, then the volume. */
+    fun seriesTrackerWithVolume(context: Context, chapters: String, volume: Int): String =
+        context.getString(R.string.series_tracker_with_volume, chapters, volume)
+
+    /** A light novel tracker's progress in volumes. */
+    fun seriesTrackerVolumes(context: Context, volume: Int, total: Int): String =
+        context.getString(R.string.series_tracker_volumes, volume, total)
+
+    /** Main place when the source can't be read from. */
+    fun seriesReadFromAnother(context: Context): String =
+        context.getString(R.string.series_read_from_another)
+
+    /** Status menu item: a score submenu. */
+    fun seriesScore(context: Context): String =
+        context.getString(R.string.series_score)
+
+    /** Status menu's label before the series is on a list. */
+    fun seriesAddToList(context: Context): String =
+        context.getString(R.string.series_add_to_list)
+
+    /** Last item of a series' list menu: take the series off every tracker's list. Asks first. */
+    fun seriesRemoveFromLists(context: Context): String =
+        context.getString(R.string.series_remove_from_lists)
+
+    /** Title of the question before a series is taken off the lists. */
+    fun seriesRemoveFromListsTitle(context: Context, title: String): String =
+        context.getString(R.string.series_remove_from_lists_title, title)
+
+    /** Line in that question. */
+    fun seriesRemoveFromListsLine(context: Context): String =
+        context.getString(R.string.series_remove_from_lists_line)
+
+    /** Heading over what the removal came to, one line per tracker. */
+    fun seriesRemovedTitle(context: Context): String =
+        context.getString(R.string.series_removed_title)
+
+    /** Title while choosing chapters on a phone: how many are chosen. */
+    fun seriesChosen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.series_chosen, n, n)
+
+    /** Button while choosing chapters on a phone: choose every unread chapter. */
+    fun seriesChooseAllUnread(context: Context): String =
+        context.getString(R.string.series_choose_all_unread)
+
+    /** Heading in Read from over the sources searched without finding the series. */
+    fun readFromNotFound(context: Context): String =
+        context.getString(R.string.read_from_not_found)
+
+    /** Button beside such a source: look for the series there by other words. */
+    fun readFromSearchThere(context: Context): String =
+        context.getString(R.string.read_from_search_there)
+
+    /** Placeholder of the field that looks for the series in one source. */
+    fun readFromSearchPlaceholder(context: Context, source: String): String =
+        context.getString(R.string.read_from_search_placeholder, source)
+
+    /** Button that runs that search. */
+    fun readFromSearch(context: Context): String =
+        context.getString(R.string.read_from_search)
+
+    /** Under the field when the source found nothing by those words. */
+    fun readFromSearchNone(context: Context): String =
+        context.getString(R.string.read_from_search_none)
+
+    /** The More menu: the Tracking sheet. */
+    fun seriesTracking(context: Context): String =
+        context.getString(R.string.series_tracking)
+
+    /** The More menu: the Read from sheet. */
+    fun seriesReadFromMenu(context: Context): String =
+        context.getString(R.string.series_read_from_menu)
+
+    /** The More menu: start again from chapter 1. */
+    fun seriesReadAgainMenu(context: Context): String =
+        context.getString(R.string.series_read_again_menu)
+
+    /** Heading of the chapter list when the series has volumes. */
+    fun seriesVolumes(context: Context): String =
+        context.getString(R.string.series_volumes)
+
+    /** Heading of the chapter list. */
+    fun seriesChapters(context: Context): String =
+        context.getString(R.string.series_chapters)
+
+    /** Accessibility label of the chapter order menu. */
+    fun seriesOrder(context: Context): String =
+        context.getString(R.string.series_order)
+
+    /** Chapter order. */
+    fun seriesNewestFirst(context: Context): String =
+        context.getString(R.string.series_newest_first)
+
+    /** Chapter order. */
+    fun seriesOldestFirst(context: Context): String =
+        context.getString(R.string.series_oldest_first)
+
+    /** A volume's heading in the chapter list. */
+    fun seriesVolume(context: Context, n: String): String =
+        context.getString(R.string.series_volume, n)
+
+    /** The heading for chapters that are in no volume yet. */
+    fun seriesNoVolume(context: Context): String =
+        context.getString(R.string.series_no_volume)
+
+    /** After a volume's heading: which chapters it holds. */
+    fun seriesChapterRange(context: Context, from: String, to: String): String =
+        context.getString(R.string.series_chapter_range, from, to)
+
+    /** After a volume's heading when every chapter in it is read. */
+    fun seriesVolumeRead(context: Context): String =
+        context.getString(R.string.series_volume_read)
+
+    /** Accessibility value of a volume heading. */
+    fun seriesExpanded(context: Context): String =
+        context.getString(R.string.series_expanded)
+
+    /** Accessibility value of a volume heading. */
+    fun seriesCollapsed(context: Context): String =
+        context.getString(R.string.series_collapsed)
+
+    /** The chapter list when the source has none. */
+    fun seriesNoChaptersTitle(context: Context): String =
+        context.getString(R.string.series_no_chapters_title)
+
+    /** Line under it. */
+    fun seriesNoChaptersLine(context: Context): String =
+        context.getString(R.string.series_no_chapters_line)
+
+    /** The chapter list when the source failed. Downloaded chapters are listed under it. */
+    fun seriesChaptersFailed(context: Context, source: String): String =
+        context.getString(R.string.series_chapters_failed, source)
+
+    /** A chapter row's title. */
+    fun seriesChapterNumber(context: Context, n: String): String =
+        context.getString(R.string.series_chapter_number, n)
+
+    /** Accessibility label of the bookmark mark on a chapter row. */
+    fun seriesBookmarked(context: Context): String =
+        context.getString(R.string.series_bookmarked)
+
+    /** Chapter menu and swipe action. */
+    fun seriesMarkRead(context: Context): String =
+        context.getString(R.string.series_mark_read)
+
+    /** Chapter menu and swipe action. */
+    fun seriesMarkUnread(context: Context): String =
+        context.getString(R.string.series_mark_unread)
+
+    /** Chapter menu item: every chapter before this one is read too. */
+    fun seriesMarkReadUpTo(context: Context): String =
+        context.getString(R.string.series_mark_read_up_to)
+
+    /** Chapter menu and swipe action. */
+    fun seriesDownload(context: Context): String =
+        context.getString(R.string.series_download)
+
+    /** Chapter menu item: open the chapter in the reader. */
+    fun seriesReadChapterMenu(context: Context): String =
+        context.getString(R.string.series_read_chapter_menu)
+
+    /** Chapter menu item. */
+    fun seriesBookmark(context: Context): String =
+        context.getString(R.string.series_bookmark)
+
+    /** Chapter menu item. */
+    fun seriesRemoveBookmark(context: Context): String =
+        context.getString(R.string.series_remove_bookmark)
+
+    /** Menu of a chapter that several groups put out. */
+    fun seriesVersions(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.series_versions, n, n)
+
+    /** In that menu while the versions load. */
+    fun seriesVersionsLoading(context: Context): String =
+        context.getString(R.string.series_versions_loading)
+
+    /** The version in use, in that menu. */
+    fun seriesVersionInUse(context: Context, name: String): String =
+        context.getString(R.string.series_version_in_use, name)
+
+    /** Make another group the one used for this series. */
+    fun seriesPreferVersion(context: Context, name: String): String =
+        context.getString(R.string.series_prefer_version, name)
+
+    /** A downloaded chapter, after its state. */
+    fun chapterStateDownloaded(context: Context): String =
+        context.getString(R.string.chapter_state_downloaded)
+
+    /** A chapter waiting to download. */
+    fun chapterStateQueued(context: Context): String =
+        context.getString(R.string.chapter_state_queued)
+
+    /** A chapter waiting for Wi-Fi to download. */
+    fun chapterStateWifi(context: Context): String =
+        context.getString(R.string.chapter_state_wifi)
+
+    /** A chapter downloading. */
+    fun chapterStateDownloading(context: Context, done: Int, total: Int): String =
+        context.getString(R.string.chapter_state_downloading, done, total)
+
+    /** A chapter that failed to download, with the reason. */
+    fun chapterStateFailed(context: Context, reason: String): String =
+        context.getString(R.string.chapter_state_failed, reason)
+
+    /** A part-read chapter. */
+    fun chapterStatePageOf(context: Context, page: Int, of: Int): String =
+        context.getString(R.string.chapter_state_page_of, page, of)
+
+    /** A part-read chapter whose length isn't known. */
+    fun chapterStatePage(context: Context, page: Int): String =
+        context.getString(R.string.chapter_state_page, page)
+
+    /** A read chapter. */
+    fun chapterStateRead(context: Context): String =
+        context.getString(R.string.chapter_state_read)
+
+    /** A chapter that came out since you last looked. */
+    fun chapterStateNew(context: Context): String =
+        context.getString(R.string.chapter_state_new)
+
+    /** Button: stop a chapter's download. */
+    fun chapterDownloadStop(context: Context): String =
+        context.getString(R.string.chapter_download_stop)
+
+    /** Button: try a failed chapter's download again. */
+    fun chapterRetry(context: Context): String =
+        context.getString(R.string.chapter_retry)
+
+    /** Chapter menu item. */
+    fun chapterDownloadDelete(context: Context): String =
+        context.getString(R.string.chapter_download_delete)
+
+    /** Download menu item. */
+    fun downloadNext(context: Context, n: Int): String =
+        context.getString(R.string.download_next, n)
+
+    /** Download menu item. */
+    fun downloadUnread(context: Context): String =
+        context.getString(R.string.download_unread)
+
+    /** Download menu item: a volume's chapters not yet downloaded. */
+    fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.download_volume_count, n, volume, n)
+
+    /** Download menu item: turns on choosing chapters in the list. */
+    fun downloadChoose(context: Context): String =
+        context.getString(R.string.download_choose)
+
+    /** Download menu item. */
+    fun downloadDeleteSeries(context: Context): String =
+        context.getString(R.string.download_delete_series)
+
+    /** The amber button in the Choose chapters bar. */
+    fun downloadChapters(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.download_chapters, n, n)
+
+    /** Line above that button. */
+    fun downloadOverWifi(context: Context): String =
+        context.getString(R.string.download_over_wifi)
+
+    /** Title of the question before reading a series again. */
+    fun readAgainTitle(context: Context, title: String): String =
+        context.getString(R.string.read_again_title, title)
+
+    /** What happens on each side. */
+    fun readAgainLine(context: Context): String =
+        context.getString(R.string.read_again_line)
+
+    /** The confirming button. */
+    fun readAgainConfirm(context: Context): String =
+        context.getString(R.string.read_again_confirm)
+
+    /** Title of the sheet that changes where a series' chapters come from. */
+    fun seriesReadFromTitle(context: Context): String =
+        context.getString(R.string.series_read_from_title)
+
+    /** While the sheet asks every source. */
+    fun seriesReadFromAsking(context: Context): String =
+        context.getString(R.string.series_read_from_asking)
+
+    /** The sheet with no source that has the series. */
+    fun seriesReadFromNoneTitle(context: Context): String =
+        context.getString(R.string.series_read_from_none_title)
+
+    /** Line under it. */
+    fun seriesReadFromNoneLine(context: Context): String =
+        context.getString(R.string.series_read_from_none_line)
+
+    /** A source's chapters, first on its line. */
+    fun seriesReadFromChapters(context: Context, latest: String): String =
+        context.getString(R.string.series_read_from_chapters, latest)
+
+    /** A source's chapters, after its kind on the line. */
+    fun seriesReadFromChaptersLater(context: Context, latest: String): String =
+        context.getString(R.string.series_read_from_chapters_later, latest)
+
+    /** After a folder's chapters. */
+    fun seriesReadFromOnDevice(context: Context, device: String): String =
+        context.getString(R.string.series_read_from_on_device, device)
+
+    /** Footnote of the Read from sheet. */
+    fun seriesReadFromNote(context: Context): String =
+        context.getString(R.string.series_read_from_note)
+
+    /** Heading for trackers that don't track this series. */
+    fun seriesNotTracked(context: Context): String =
+        context.getString(R.string.series_not_tracked)
+
+    /** A tracker that isn't connected. */
+    fun seriesTrackerConnect(context: Context): String =
+        context.getString(R.string.series_tracker_connect)
+
+    /** A tracker that has no such series. */
+    fun seriesTrackerNotThere(context: Context): String =
+        context.getString(R.string.series_tracker_not_there)
+
+    /** A tracker looking for the series. */
+    fun seriesTrackerLooking(context: Context): String =
+        context.getString(R.string.series_tracker_looking)
+
+    /** A tracker that is behind, and catches up on the next sync. */
+    fun seriesTrackerBehind(context: Context, has: Int, gets: Int): String =
+        context.getString(R.string.series_tracker_behind, has, gets)
+
+    /** A tracker ahead of Kaeri. */
+    fun seriesTrackerAhead(context: Context, has: Int): String =
+        context.getString(R.string.series_tracker_ahead, has)
+
+    /** A tracker's score out of ten. */
+    fun seriesTrackerScore(context: Context, score: String): String =
+        context.getString(R.string.series_tracker_score, score)
+
+    /** Menu item on a tracker that differs. */
+    fun seriesTrackerKeepKaeri(context: Context): String =
+        context.getString(R.string.series_tracker_keep_kaeri)
+
+    /** Menu item on a tracker that differs. */
+    fun seriesTrackerTakeTheirs(context: Context, tracker: String): String =
+        context.getString(R.string.series_tracker_take_theirs, tracker)
+
+    /** Under a tracker's guesses for the series. */
+    fun seriesTrackerNoneOfThese(context: Context): String =
+        context.getString(R.string.series_tracker_none_of_these)
+
+    /** AniList's list. */
+    fun readListReading(context: Context): String =
+        context.getString(R.string.read_list_reading)
+
+    /** AniList's list. */
+    fun readListPlanning(context: Context): String =
+        context.getString(R.string.read_list_planning)
+
+    /** AniList's list. */
+    fun readListCompleted(context: Context): String =
+        context.getString(R.string.read_list_completed)
+
+    /** AniList's list. */
+    fun readListPaused(context: Context): String =
+        context.getString(R.string.read_list_paused)
+
+    /** AniList's list. */
+    fun readListDropped(context: Context): String =
+        context.getString(R.string.read_list_dropped)
+
+    /** AniList's list. */
+    fun readListRereading(context: Context): String =
+        context.getString(R.string.read_list_rereading)
+
+    /** Series in folders and servers that are on no list. */
+    fun readListYourFiles(context: Context): String =
+        context.getString(R.string.read_list_your_files)
+
+    /** A choice. */
+    fun mediumWatch(context: Context): String =
+        context.getString(R.string.medium_watch)
+
+    /** A choice. */
+    fun mediumRead(context: Context): String =
+        context.getString(R.string.medium_read)
+
+    /** A choice. */
+    fun mediumBoth(context: Context): String =
+        context.getString(R.string.medium_both)
+
+    /** Line under the Watch choice. */
+    fun mediumWatchLine(context: Context): String =
+        context.getString(R.string.medium_watch_line)
+
+    /** Line under the Read choice. */
+    fun mediumReadLine(context: Context): String =
+        context.getString(R.string.medium_read_line)
+
+    /** Line under the Both choice. */
+    fun mediumBothLine(context: Context): String =
+        context.getString(R.string.medium_both_line)
+
+    /** The answer, as the Settings row says it. */
+    fun mediumAnswerWatch(context: Context): String =
+        context.getString(R.string.medium_answer_watch)
+
+    /** The answer, as the Settings row says it. */
+    fun mediumAnswerRead(context: Context): String =
+        context.getString(R.string.medium_answer_read)
+
+    /** The answer, as the Settings row says it. */
+    fun mediumAnswerBoth(context: Context): String =
+        context.getString(R.string.medium_answer_both)
+
+    /** Title of the sheet and the toolbar button. */
+    fun sourcesAddTitle(context: Context): String =
+        context.getString(R.string.sources_add_title)
+
+    /** Line in the Add a source sheet. */
+    fun bookAddLine(context: Context): String =
+        context.getString(R.string.book_add_line)
+
+    /** A kind in the Add a source sheet. */
+    fun bookAddFolder(context: Context): String =
+        context.getString(R.string.book_add_folder)
+
+    /** Line under it. */
+    fun bookAddFolderLine(context: Context, device: String): String =
+        context.getString(R.string.book_add_folder_line, device)
+
+    /** A kind in the Add a source sheet. */
+    fun bookAddServer(context: Context): String =
+        context.getString(R.string.book_add_server)
+
+    /** Line under it. */
+    fun bookAddServerLine(context: Context): String =
+        context.getString(R.string.book_add_server_line)
+
+    /** A kind in the Add a source sheet. */
+    fun bookAddStore(context: Context): String =
+        context.getString(R.string.book_add_store)
+
+    /** Line under it. */
+    fun bookAddStoreLine(context: Context): String =
+        context.getString(R.string.book_add_store_line)
+
+    /** Title of the Add a server sheet. */
+    fun bookAddServerTitle(context: Context): String =
+        context.getString(R.string.book_add_server_title)
+
+    /** The sheet's amber button. */
+    fun bookAddServerButton(context: Context): String =
+        context.getString(R.string.book_add_server_button)
+
+    /** What the address answered, before the sign-in. */
+    fun sourcesFoundServer(context: Context, kind: String): String =
+        context.getString(R.string.sources_found_server, kind)
+
+    /** What the server held once signed in, when it said how many series it lists. */
+    fun sourcesFoundServerSeries(context: Context, kind: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.sources_found_server_series, n, kind, n)
+
+    /** While the address is tried. */
+    fun bookServerLooking(context: Context): String =
+        context.getString(R.string.book_server_looking)
+
+    /** Line under the password. */
+    fun bookServerNote(context: Context): String =
+        context.getString(R.string.book_server_note)
+
+    /** Heading in Your sources. */
+    fun bookSourcesFolders(context: Context): String =
+        context.getString(R.string.book_sources_folders)
+
+    /** Heading in Your sources. */
+    fun bookSourcesServers(context: Context): String =
+        context.getString(R.string.book_sources_servers)
+
+    /** Heading in Your sources. */
+    fun bookSourcesPlugins(context: Context): String =
+        context.getString(R.string.book_sources_plugins)
+
+    /** Under the plugins, before a link to the plugin stores. */
+    fun bookSourcesPluginsFooter(context: Context): String =
+        context.getString(R.string.book_sources_plugins_footer)
+
+    /** How many series a folder or server holds. */
+    fun bookSourcesSeries(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.book_sources_series, n, n)
+
+    /** A folder being looked through. */
+    fun bookSourcesScanning(context: Context, n: Int): String =
+        context.getString(R.string.book_sources_scanning, n)
+
+    /** A folder that can't be found, such as a drive that isn't plugged in. */
+    fun bookSourcesMissing(context: Context): String =
+        context.getString(R.string.book_sources_missing)
+
+    /** A source that is turned off. */
+    fun bookSourcesOff(context: Context): String =
+        context.getString(R.string.book_sources_off)
+
+    /** On a server's line. */
+    fun bookSourcesProgressBack(context: Context): String =
+        context.getString(R.string.book_sources_progress_back)
+
+    /** A server's kind. */
+    fun bookSourcesOpds(context: Context): String =
+        context.getString(R.string.book_sources_opds)
+
+    /** A plugin's store. */
+    fun bookSourcesFromStore(context: Context, store: String): String =
+        context.getString(R.string.book_sources_from_store, store)
+
+    /** A plugin's version. */
+    fun bookSourcesVersion(context: Context, version: String): String =
+        context.getString(R.string.book_sources_version, version)
+
+    /** Button on a folder: series whose match needs a look. */
+    fun bookSourcesCheckMatches(context: Context, n: Int): String =
+        context.getString(R.string.book_sources_check_matches, n)
+
+    /** Title of the Check matches sheet. */
+    fun bookSourcesCheckMatchesTitle(context: Context): String =
+        context.getString(R.string.book_sources_check_matches_title)
+
+    /** A folder menu item: look through the folders again. */
+    fun bookSourcesScan(context: Context): String =
+        context.getString(R.string.book_sources_scan)
+
+    /** A server menu switch. */
+    fun bookSourcesReportProgress(context: Context): String =
+        context.getString(R.string.book_sources_report_progress)
+
+    /** A server menu switch. */
+    fun bookSourcesUse(context: Context): String =
+        context.getString(R.string.book_sources_use)
+
+    /** An address that answered but serves no books. */
+    fun bookSourcesNotABookServer(context: Context): String =
+        context.getString(R.string.book_sources_not_a_book_server)
+
+    /** A folder name with no match. */
+    fun bookSourcesNoMatch(context: Context): String =
+        context.getString(R.string.book_sources_no_match)
+
+    /** Button: keep the series as Your files, unmatched. */
+    fun bookSourcesKeep(context: Context): String =
+        context.getString(R.string.book_sources_keep)
+
+    /** Button: search for the match by hand. */
+    fun bookSourcesFind(context: Context): String =
+        context.getString(R.string.book_sources_find)
+
+    /** Footnote of the Check matches sheet. */
+    fun bookSourcesUnmatchedNote(context: Context): String =
+        context.getString(R.string.book_sources_unmatched_note)
+
+    /** Accessibility label of the control that sets Shows or Reading in the Library and Search. */
+    fun libraryScopeLabel(context: Context): String =
+        context.getString(R.string.library_scope_label)
+
+    /** A side of that control. */
+    fun libraryScopeShows(context: Context): String =
+        context.getString(R.string.library_scope_shows)
+
+    /** A side of that control. */
+    fun libraryScopeReading(context: Context): String =
+        context.getString(R.string.library_scope_reading)
+
+    /** The reading library's order: as the engine sends it, most recently read first. */
+    fun readSortLastRead(context: Context): String =
+        context.getString(R.string.read_sort_last_read)
+
+    /** Accessibility value of the list menu: the list and how many series are on it. */
+    fun readLibraryListValue(context: Context, list: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_library_list_value, n, list, n)
+
+    /** A reading list with nothing on it. A Search button follows. */
+    fun readLibraryEmpty(context: Context, list: String): String =
+        context.getString(R.string.read_library_empty, list)
+
+    /** Line under it. */
+    fun readLibraryEmptyLine(context: Context): String =
+        context.getString(R.string.read_library_empty_line)
+
+    /** Your files with nothing in it. */
+    fun readLibraryFilesEmptyTitle(context: Context): String =
+        context.getString(R.string.read_library_files_empty_title)
+
+    /** Line under it. */
+    fun readLibraryFilesEmptyLine(context: Context): String =
+        context.getString(R.string.read_library_files_empty_line)
+
+    /** The button under it. */
+    fun readLibraryFilesAdd(context: Context): String =
+        context.getString(R.string.read_library_files_add)
+
+    /** The search field's prompt while Search looks for reading. */
+    fun readSearchPlaceholder(context: Context): String =
+        context.getString(R.string.read_search_placeholder)
+
+    /** The last row of reading's results with both media on: matches in the other scope. */
+    fun searchOtherScope(context: Context, n: Int, scope: String): String =
+        context.resources.getQuantityString(R.plurals.search_other_scope, n, n, scope)
+
+    /** The button on that row, which switches the scope. */
+    fun searchShowThem(context: Context): String =
+        context.getString(R.string.search_show_them)
+
+    /** The line over browsing: what is shown, and where the list comes from. */
+    fun readSearchBrowseLine(context: Context, what: String): String =
+        context.getString(R.string.read_search_browse_line, what)
+
+    /** Over reading's results once every result is listed: how many series AniList found. */
+    fun readSearchTotal(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_total, n, n)
+
+    /** Search couldn't ask AniList. */
+    fun readSearchFailed(context: Context): String =
+        context.getString(R.string.read_search_failed)
+
+    /** No results for what was typed. */
+    fun readSearchNothing(context: Context, query: String): String =
+        context.getString(R.string.read_search_nothing, query)
+
+    /** No results while browsing with filters. */
+    fun readSearchNothingBrowse(context: Context): String =
+        context.getString(R.string.read_search_nothing_browse)
+
+    /** Line under no results. */
+    fun readSearchNothingLine(context: Context): String =
+        context.getString(R.string.read_search_nothing_line)
+
+    /** Line under no results with filters set. A Clear filters button follows. */
+    fun readSearchNothingFiltersLine(context: Context): String =
+        context.getString(R.string.read_search_nothing_filters_line)
+
+    /** The button under it. */
+    fun readSearchClearFilters(context: Context): String =
+        context.getString(R.string.read_search_clear_filters)
+
+    /** A sort of reading's Search, AniList's. */
+    fun readSortPopular(context: Context): String =
+        context.getString(R.string.read_sort_popular)
+
+    /** A sort of reading's Search, AniList's. */
+    fun readSortTrending(context: Context): String =
+        context.getString(R.string.read_sort_trending)
+
+    /** A sort of reading's Search, AniList's. */
+    fun readSortScore(context: Context): String =
+        context.getString(R.string.read_sort_score)
+
+    /** A sort of reading's Search, AniList's. */
+    fun readSortNewest(context: Context): String =
+        context.getString(R.string.read_sort_newest)
+
+    /** A filter. */
+    fun readFilterFormat(context: Context): String =
+        context.getString(R.string.read_filter_format)
+
+    /** A filter. */
+    fun readFilterOrigin(context: Context): String =
+        context.getString(R.string.read_filter_origin)
+
+    /** A filter. */
+    fun readFilterStatus(context: Context): String =
+        context.getString(R.string.read_filter_status)
+
+    /** A filter. */
+    fun readFilterGenres(context: Context): String =
+        context.getString(R.string.read_filter_genres)
+
+    /** Title of the iPhone's filters sheet. */
+    fun readFilterTitle(context: Context): String =
+        context.getString(R.string.read_filter_title)
+
+    /** Button in that sheet that clears every filter. */
+    fun readFilterReset(context: Context): String =
+        context.getString(R.string.read_filter_reset)
+
+    /** Accessibility value of a filter with nothing chosen. */
+    fun readFilterAny(context: Context): String =
+        context.getString(R.string.read_filter_any)
+
+    /** A filter's name before its value, once set: "Origin: Korea". */
+    fun readFilterSet(context: Context, name: String): String =
+        context.getString(R.string.read_filter_set, name)
+
+    /** A filter with several values: the first, then how many more. */
+    fun readFilterMany(context: Context, first: String, more: Int): String =
+        context.getString(R.string.read_filter_many, first, more)
+
+    /** A genre left out. */
+    fun readFilterNotGenre(context: Context, genre: String): String =
+        context.getString(R.string.read_filter_not_genre, genre)
+
+    /** How many genres are set. */
+    fun readFilterGenresCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_filter_genres_count, n, n)
+
+    /** A genre's state: only series with it. */
+    fun readFilterIncluded(context: Context): String =
+        context.getString(R.string.read_filter_included)
+
+    /** A genre's state: no series with it. */
+    fun readFilterLeftOut(context: Context): String =
+        context.getString(R.string.read_filter_left_out)
+
+    /** Over a first-run page's title: which page of how many. */
+    fun onboardingStep(context: Context, step: Int, total: Int): String =
+        context.getString(R.string.onboarding_step, step, total)
+
+    /** Line under "Welcome to Kaeri" on the first page, naming both media. */
+    fun onboardingWelcomeLine(context: Context): String =
+        context.getString(R.string.onboarding_welcome_line)
+
+    /** Note under the welcome line. */
+    fun onboardingWelcomeNote(context: Context): String =
+        context.getString(R.string.onboarding_welcome_note)
+
+    /** Title of the page that asks what Kaeri is for, and of the sheet after the update. */
+    fun onboardingMediumTitle(context: Context): String =
+        context.getString(R.string.onboarding_medium_title)
+
+    /** Line under the title of the medium page. */
+    fun onboardingMediumLine(context: Context): String =
+        context.getString(R.string.onboarding_medium_line)
+
+    /** Accessibility hint on Continue while nothing is chosen on the medium page. */
+    fun onboardingMediumHint(context: Context): String =
+        context.getString(R.string.onboarding_medium_hint)
+
+    /** Title of the first-run page that offers AniList. */
+    fun onboardingListsTitle(context: Context): String =
+        context.getString(R.string.onboarding_lists_title)
+
+    /** Line on the AniList page after Watch. */
+    fun onboardingListsLineWatch(context: Context, tracker: String): String =
+        context.getString(R.string.onboarding_lists_line_watch, tracker)
+
+    /** Line on the AniList page after Read. */
+    fun onboardingListsLineRead(context: Context, tracker: String): String =
+        context.getString(R.string.onboarding_lists_line_read, tracker)
+
+    /** Line on the AniList page after Both. */
+    fun onboardingListsLineBoth(context: Context, tracker: String): String =
+        context.getString(R.string.onboarding_lists_line_both, tracker)
+
+    /** Line under AniList's name on the first-run page. */
+    fun onboardingListsAnilistLine(context: Context): String =
+        context.getString(R.string.onboarding_lists_anilist_line)
+
+    /** Under AniList on the first-run page after Watch: the other trackers, for later. */
+    fun onboardingListsLaterWatch(context: Context): String =
+        context.getString(R.string.onboarding_lists_later_watch)
+
+    /** Under AniList on the first-run page after Read: the other trackers, for later. */
+    fun onboardingListsLaterRead(context: Context): String =
+        context.getString(R.string.onboarding_lists_later_read)
+
+    /** Under AniList on the first-run page after Both: the other trackers, for later. */
+    fun onboardingListsLaterBoth(context: Context): String =
+        context.getString(R.string.onboarding_lists_later_both)
+
+    /** The first-run page's main button: sign in to the tracker. */
+    fun onboardingConnect(context: Context, tracker: String): String =
+        context.getString(R.string.onboarding_connect, tracker)
+
+    /** Title of the last first-run page after Read or Both. */
+    fun onboardingBooksTitle(context: Context): String =
+        context.getString(R.string.onboarding_books_title)
+
+    /** Line under the title of the books page. */
+    fun onboardingBooksLine(context: Context): String =
+        context.getString(R.string.onboarding_books_line)
+
+    /** Row on the books page: add a folder of books. */
+    fun onboardingBooksFolder(context: Context): String =
+        context.getString(R.string.onboarding_books_folder)
+
+    /** Line under Add a folder on the books page. */
+    fun onboardingBooksFolderLine(context: Context): String =
+        context.getString(R.string.onboarding_books_folder_line)
+
+    /** Row on the books page: add a book server. */
+    fun onboardingBooksServer(context: Context): String =
+        context.getString(R.string.onboarding_books_server)
+
+    /** Line under Add a server on the books page. */
+    fun onboardingBooksServerLine(context: Context): String =
+        context.getString(R.string.onboarding_books_server_line)
+
+    /** Heading over the invite field on the books page. */
+    fun onboardingBooksInviteHeading(context: Context): String =
+        context.getString(R.string.onboarding_books_invite_heading)
+
+    /** Placeholder of the invite field on the books page. */
+    fun onboardingBooksInvitePlaceholder(context: Context): String =
+        context.getString(R.string.onboarding_books_invite_placeholder)
+
+    /** Line under the invite field: whose code a plugin is. */
+    fun onboardingBooksPluginLine(context: Context): String =
+        context.getString(R.string.onboarding_books_plugin_line)
+
+    /** Title of the last first-run page after Both: where shows and books come from. */
+    fun onboardingBothTitle(context: Context): String =
+        context.getString(R.string.onboarding_both_title)
+
+    /** Line under the title of that page. */
+    fun onboardingBothLine(context: Context): String =
+        context.getString(R.string.onboarding_both_line)
+
+    /** Heading over the shows' rows on that page. */
+    fun onboardingBothShows(context: Context): String =
+        context.getString(R.string.onboarding_both_shows)
+
+    /** Heading over the books' rows on that page. */
+    fun onboardingBothBooks(context: Context): String =
+        context.getString(R.string.onboarding_both_books)
+
+    /** Line under Add a folder in the shows' part, on a computer. */
+    fun onboardingBothShowsFolderLine(context: Context, device: String): String =
+        context.getString(R.string.onboarding_both_shows_folder_line, device)
+
+    /** Line under Add a server in the shows' part. */
+    fun onboardingBothShowsServerLine(context: Context): String =
+        context.getString(R.string.onboarding_both_shows_server_line)
+
+    /** Accessibility value of a choice row: its place among the three. */
+    fun mediumChoicePosition(context: Context, n: Int, total: Int): String =
+        context.getString(R.string.medium_choice_position, n, total)
+
+    /** Under the choices in the sheet. */
+    fun mediumChangeLater(context: Context): String =
+        context.getString(R.string.medium_change_later)
+
+    /** Line of the sheet over Home after the update that brought reading. */
+    fun mediumUpdateLine(context: Context, device: String): String =
+        context.getString(R.string.medium_update_line, device)
+
+    /** Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are. */
+    fun mediumJoinTitleWatch(context: Context, devices: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.medium_join_title_watch, n, devices, n)
+
+    /** Title of the sheet when the other devices answer Read. */
+    fun mediumJoinTitleRead(context: Context, devices: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.medium_join_title_read, n, devices, n)
+
+    /** Title of the sheet when the other devices answer Both. */
+    fun mediumJoinTitleBoth(context: Context, devices: String, n: Int): String =
+        context.resources.getQuantityString(R.plurals.medium_join_title_both, n, devices, n)
+
+    /** Line of the sheet on joining. */
+    fun mediumJoinLine(context: Context, device: String): String =
+        context.getString(R.string.medium_join_line, device)
+
+    /** Title of the confirmation before watching is turned off. */
+    fun mediumOffTitleWatch(context: Context): String =
+        context.getString(R.string.medium_off_title_watch)
+
+    /** Title of the confirmation before reading is turned off. */
+    fun mediumOffTitleRead(context: Context): String =
+        context.getString(R.string.medium_off_title_read)
+
+    /** What turning watching off does. */
+    fun mediumOffWatchBody(context: Context, device: String): String =
+        context.getString(R.string.medium_off_watch_body, device)
+
+    /** What turning reading off does. */
+    fun mediumOffReadBody(context: Context, device: String): String =
+        context.getString(R.string.medium_off_read_body, device)
+
+    /** Switch in the confirmation, off by default. */
+    fun mediumOffDeleteWatch(context: Context): String =
+        context.getString(R.string.medium_off_delete_watch)
+
+    /** Switch in the confirmation, off by default. */
+    fun mediumOffDeleteRead(context: Context): String =
+        context.getString(R.string.medium_off_delete_read)
+
+    /** Under the switch: how much the downloads take. */
+    fun mediumOffDeleteSize(context: Context, size: String, device: String): String =
+        context.getString(R.string.medium_off_delete_size, size, device)
+
+    /** The confirmation's main button. */
+    fun mediumOffConfirmWatch(context: Context): String =
+        context.getString(R.string.medium_off_confirm_watch)
+
+    /** The confirmation's main button. */
+    fun mediumOffConfirmRead(context: Context): String =
+        context.getString(R.string.medium_off_confirm_read)
+
+    /** Settings row and page: what Kaeri is for on this device. */
+    fun settingsKaeriIsFor(context: Context): String =
+        context.getString(R.string.settings_kaeri_is_for)
+
+    /** Line under Kaeri is for on the Mac and iPad. */
+    fun settingsMediumNote(context: Context): String =
+        context.getString(R.string.settings_medium_note)
+
+    /** Under the choices on the iPhone's page. */
+    fun settingsMediumFooter(context: Context): String =
+        context.getString(R.string.settings_medium_footer)
+
+    /** Line under Open at. */
+    fun settingsOpenAtNote(context: Context): String =
+        context.getString(R.string.settings_open_at_note)
+
+    /** Settings pane and group: reading. */
+    fun settingsGroupReading(context: Context): String =
+        context.getString(R.string.settings_group_reading)
+
+    /** Downloads group with both media on: shows. */
+    fun settingsGroupShows(context: Context): String =
+        context.getString(R.string.settings_group_shows)
+
+    /** The Reading pane's column beside it. */
+    fun settingsAsideReading(context: Context): String =
+        context.getString(R.string.settings_aside_reading)
+
+    /** Group: how the reader opens each kind of book. */
+    fun settingsReaderDefaults(context: Context): String =
+        context.getString(R.string.settings_reader_defaults)
+
+    /** Under the reader defaults. */
+    fun settingsReaderDefaultsFooter(context: Context): String =
+        context.getString(R.string.settings_reader_defaults_footer)
+
+    /** Row: manga's reader default. */
+    fun settingsReaderManga(context: Context): String =
+        context.getString(R.string.settings_reader_manga)
+
+    /** Row: webtoons' reader default. */
+    fun settingsReaderWebtoons(context: Context): String =
+        context.getString(R.string.settings_reader_webtoons)
+
+    /** Line under Webtoons. */
+    fun settingsReaderWebtoonsNote(context: Context): String =
+        context.getString(R.string.settings_reader_webtoons_note)
+
+    /** Row: light novels' reader default. */
+    fun settingsReaderNovels(context: Context): String =
+        context.getString(R.string.settings_reader_novels)
+
+    /** A reader default: pages turned right to left. */
+    fun settingsReaderRtl(context: Context): String =
+        context.getString(R.string.settings_reader_rtl)
+
+    /** A reader default: pages turned left to right. */
+    fun settingsReaderLtr(context: Context): String =
+        context.getString(R.string.settings_reader_ltr)
+
+    /** A reader default: one long strip. */
+    fun settingsReaderStrip(context: Context): String =
+        context.getString(R.string.settings_reader_strip)
+
+    /** A reader default for novels: pages. */
+    fun settingsReaderPages(context: Context): String =
+        context.getString(R.string.settings_reader_pages)
+
+    /** A reader default for novels: one scrolling column. */
+    fun settingsReaderScrolled(context: Context): String =
+        context.getString(R.string.settings_reader_scrolled)
+
+    /** Row: when a chapter counts as read. */
+    fun settingsCountsRead(context: Context): String =
+        context.getString(R.string.settings_counts_read)
+
+    /** Line under Counts as read. */
+    fun settingsCountsReadNote(context: Context): String =
+        context.getString(R.string.settings_counts_read_note)
+
+    /** Value of Counts as read: a short stay on the last page, or moving on past it. */
+    fun settingsCountsReadValue(context: Context): String =
+        context.getString(R.string.settings_counts_read_value)
+
+    /** Value of Counts as read: only moving on past the last page, to the end or the next chapter. */
+    fun settingsCountsReadMovingOn(context: Context): String =
+        context.getString(R.string.settings_counts_read_moving_on)
+
+    /** Line under Counts as read when it is Moving on from it. */
+    fun settingsCountsReadMovingOnNote(context: Context): String =
+        context.getString(R.string.settings_counts_read_moving_on_note)
+
+    /** Value of Counts as read: only the person's own marks; the reader marks nothing. */
+    fun settingsCountsReadMarked(context: Context): String =
+        context.getString(R.string.settings_counts_read_marked)
+
+    /** Line under Counts as read when it is When you mark it. */
+    fun settingsCountsReadMarkedNote(context: Context): String =
+        context.getString(R.string.settings_counts_read_marked_note)
+
+    /** Group: series settings that follow you to your other devices. */
+    fun settingsFollowGroup(context: Context): String =
+        context.getString(R.string.settings_follow_group)
+
+    /** Row in that group. */
+    fun settingsFollowMode(context: Context): String =
+        context.getString(R.string.settings_follow_mode)
+
+    /** Line under that row. */
+    fun settingsFollowModeNote(context: Context): String =
+        context.getString(R.string.settings_follow_mode_note)
+
+    /** Under the group: what stays on this device. */
+    fun settingsFollowFooter(context: Context, device: String): String =
+        context.getString(R.string.settings_follow_footer, device)
+
+    /** Line under Look in Series settings that follow you. */
+    fun settingsLookFollowsNote(context: Context): String =
+        context.getString(R.string.settings_look_follows_note)
+
+    /** Value of New chapters in Downloads: the series on the Reading list. */
+    fun settingsNewChaptersReading(context: Context): String =
+        context.getString(R.string.settings_new_chapters_reading)
+
+    /** Line under New chapters in Downloads. */
+    fun settingsNewChaptersNote(context: Context): String =
+        context.getString(R.string.settings_new_chapters_note)
+
+    /** Group in Accounts: how reading progress goes to the trackers. */
+    fun settingsProgressGroup(context: Context): String =
+        context.getString(R.string.settings_progress_group)
+
+    /** Value of Send progress after: as each chapter counts as read. */
+    fun settingsProgressChapter(context: Context): String =
+        context.getString(R.string.settings_progress_chapter)
+
+    /** Value of Send progress after: once, when the reader closes. */
+    fun settingsProgressClose(context: Context): String =
+        context.getString(R.string.settings_progress_close)
+
+    /** Value of When trackers disagree: the higher chapter wins. */
+    fun settingsDisagreeFurthest(context: Context): String =
+        context.getString(R.string.settings_disagree_furthest)
+
+    /** Value of When trackers disagree: the newest change wins, even a lower chapter. */
+    fun settingsDisagreeLatest(context: Context): String =
+        context.getString(R.string.settings_disagree_latest)
+
+    /** Line under When trackers disagree. */
+    fun settingsDisagreeNote(context: Context): String =
+        context.getString(R.string.settings_disagree_note)
+
+    /** Line under Keep next chapters ready. */
+    fun settingsKeepChaptersReadyNote(context: Context): String =
+        context.getString(R.string.settings_keep_chapters_ready_note)
+
+    /** Line under Delete chapters after reading. */
+    fun settingsDeleteAfterReadingNote(context: Context): String =
+        context.getString(R.string.settings_delete_after_reading_note)
+
+    /** Line under New chapters. */
+    fun settingsChapterNotificationsNote(context: Context): String =
+        context.getString(R.string.settings_chapter_notifications_note)
+
+    /** Line under Downloads finished. */
+    fun settingsDownloadsFinishedNote(context: Context): String =
+        context.getString(R.string.settings_downloads_finished_note)
+
+    /** Under New chapters. */
+    fun settingsChapterNotificationsFooter(context: Context): String =
+        context.getString(R.string.settings_chapter_notifications_footer)
+
+    /** Credit under the trackers with reading on. */
+    fun accountsMangaupdatesCredit(context: Context): String =
+        context.getString(R.string.accounts_mangaupdates_credit)
+
+    /** Placeholder of the user name field when signing in to MangaUpdates. */
+    fun accountsUsername(context: Context): String =
+        context.getString(R.string.accounts_username)
+
+    /** Beside the Reading heading in Downloads: how many chapters are kept and their size. */
+    fun readDownloadsTotal(context: Context, n: Int, size: String): String =
+        context.resources.getQuantityString(R.plurals.read_downloads_total, n, n, size)
+
+    /** A series' line in Downloads while a chapter downloads. */
+    fun readDownloadsActive(context: Context, chapter: String, done: Int, total: Int): String =
+        context.getString(R.string.read_downloads_active, chapter, done, total)
+
+    /** After the chapter downloading: how many more wait. */
+    fun readDownloadsMoreQueued(context: Context, n: Int): String =
+        context.getString(R.string.read_downloads_more_queued, n)
+
+    /** A series' line in Downloads when its chapters wait to start. */
+    fun readDownloadsQueued(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_downloads_queued, n, n)
+
+    /** A series' line in Downloads when a chapter failed, with the reason. */
+    fun readDownloadsFailed(context: Context, chapter: String, reason: String): String =
+        context.getString(R.string.read_downloads_failed, chapter, reason)
+
+    /** A series' line in Downloads: how many chapters are kept. */
+    fun readDownloadsKept(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_downloads_kept, n, n)
+
+    /** After the kept count: how many of them are read. */
+    fun readDownloadsRead(context: Context, n: Int): String =
+        context.getString(R.string.read_downloads_read, n)
+
+    /** Button on a series in Downloads: delete its read chapters, keeping bookmarked ones. */
+    fun readDownloadsDeleteRead(context: Context): String =
+        context.getString(R.string.read_downloads_delete_read)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)
@@ -9282,6 +10742,42 @@ object Strings {
     fun settingsDeleteAfterReading(context: Context): String =
         context.getString(R.string.settings_delete_after_reading)
 
+    /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
+    fun settingsSeriesChoicesFollow(context: Context): String =
+        context.getString(R.string.settings_series_choices_follow)
+
+    /** Row in Downloads: which series' new chapters download by themselves. */
+    fun settingsNewChaptersDownload(context: Context): String =
+        context.getString(R.string.settings_new_chapters_download)
+
+    /** Row: whether a series' own reader mode and direction follow you to your other devices. */
+    fun settingsModeFollows(context: Context): String =
+        context.getString(R.string.settings_mode_follows)
+
+    /** Row: whether a series' own look (colour or greys) follows you to your other devices. */
+    fun settingsLookFollows(context: Context): String =
+        context.getString(R.string.settings_look_follows)
+
+    /** Row: when chapter progress goes to the reading trackers. */
+    fun settingsSendProgressAfter(context: Context): String =
+        context.getString(R.string.settings_send_progress_after)
+
+    /** Row: which chapter progress wins when a tracker and this device disagree. */
+    fun settingsWhenTrackersDisagree(context: Context): String =
+        context.getString(R.string.settings_when_trackers_disagree)
+
+    /** Row: whether a new chapter of a series on your Reading list sends a notification. */
+    fun settingsChapterNotifications(context: Context): String =
+        context.getString(R.string.settings_chapter_notifications)
+
+    /** Row: whether the app sends a notification when the chapters it was downloading are all done. */
+    fun settingsDownloadsFinished(context: Context): String =
+        context.getString(R.string.settings_downloads_finished)
+
+    /** Row: which Home the app opens at while it is for watching and reading. */
+    fun settingsOpenAt(context: Context): String =
+        context.getString(R.string.settings_open_at)
+
     /** Row: seeding after watching. */
     fun settingsSeedAfter(context: Context): String =
         context.getString(R.string.settings_seed_after)
@@ -9589,6 +11085,14 @@ object Strings {
     /** Side note in Accounts. */
     fun settingsAsideAccounts(context: Context): String =
         context.getString(R.string.settings_aside_accounts)
+
+    /** Side note in Accounts when the app is for reading. */
+    fun settingsAsideAccountsRead(context: Context): String =
+        context.getString(R.string.settings_aside_accounts_read)
+
+    /** Side note in Accounts when the app is for watching and reading. */
+    fun settingsAsideAccountsBoth(context: Context): String =
+        context.getString(R.string.settings_aside_accounts_both)
 
     /** Today, inside a line such as "Thursday 16:30". */
     fun widgetDayToday(context: Context): String =
@@ -12553,6 +14057,34 @@ object Strings {
     /** Line under a tracker that brings in lists. */
     fun accountsBringsLists(context: Context): String =
         context.getString(R.string.accounts_brings_lists)
+
+    /** Line under AniList when Kaeri is for reading: what signing in brings. */
+    fun accountsBringsListsRead(context: Context): String =
+        context.getString(R.string.accounts_brings_lists_read)
+
+    /** Line under AniList when Kaeri is for watching and reading. */
+    fun accountsBringsListsBoth(context: Context): String =
+        context.getString(R.string.accounts_brings_lists_both)
+
+    /** Line under a tracker that is not signed in: what it keeps in step. */
+    fun accountsTrackerLists(context: Context): String =
+        context.getString(R.string.accounts_tracker_lists)
+
+    /** Line under MangaUpdates when it is not signed in. */
+    fun accountsTrackerReadingLists(context: Context): String =
+        context.getString(R.string.accounts_tracker_reading_lists)
+
+    /** Line under a tracker with both media on: it serves shows and reading. */
+    fun accountsTrackerServesBoth(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_both)
+
+    /** Line under a tracker with both media on: it serves reading only. */
+    fun accountsTrackerServesReading(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_reading)
+
+    /** Line under a tracker with both media on: it serves shows only. */
+    fun accountsTrackerServesShows(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_shows)
 
     /** Line under the accounts screen when the library needs a tracker. */
     fun accountsLibraryNeeds(context: Context, tracker: String): String =

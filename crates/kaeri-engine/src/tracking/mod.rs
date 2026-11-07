@@ -89,6 +89,9 @@ pub struct Sync {
     /// How titles are named, which under `anilist` follows what each pull's viewer says: see
     /// [`Self::with_titles`].
     pub titles: Option<kaeri_meta::titles::Titles>,
+    /// When trackers disagree on reading progress, the latest change wins rather than the
+    /// furthest: the setting as it stands, changed from Settings while the loops run.
+    pub latest_wins: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Sync {
@@ -253,7 +256,26 @@ impl Sync {
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
             titles: None,
+            latest_wins: Arc::new(std::sync::atomic::AtomicBool::new(
+                config.reading.when_trackers_disagree
+                    == kaeri_core::config::WhenTrackersDisagree::Latest,
+            )),
         }
+    }
+
+    /// How reading progress settles when a tracker disagrees, as the person set it.
+    pub fn read_rule(&self) -> kaeri_core::config::WhenTrackersDisagree {
+        if self.latest_wins.load(std::sync::atomic::Ordering::Relaxed) {
+            kaeri_core::config::WhenTrackersDisagree::Latest
+        } else {
+            kaeri_core::config::WhenTrackersDisagree::Furthest
+        }
+    }
+
+    /// The setting changed: pulls from now on settle progress by `rule`.
+    pub fn set_read_rule(&self, rule: kaeri_core::config::WhenTrackersDisagree) {
+        let latest = rule == kaeri_core::config::WhenTrackersDisagree::Latest;
+        self.latest_wins.store(latest, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// Titles named as AniList's viewer reads them follow each pull's answer: every pull asks
@@ -942,7 +964,7 @@ async fn pull_reading(sync: &Sync, tracker: &dyn Tracker, now: i64, tx: &Outbox)
         .get_meta_i64(&format!("{}:read", pull_key(tracker.id())))
         .unwrap_or(None)
         .unwrap_or(0);
-    match sync::pull_read(&sync.store, tracker, now, last_pull).await {
+    match sync::pull_read(&sync.store, tracker, now, last_pull, sync.read_rule()).await {
         Ok(report) => {
             let _ = sync.store.set_meta_i64(&format!("{}:read", pull_key(tracker.id())), now);
             sync.note_pull(tracker.id(), None);

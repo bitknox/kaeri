@@ -8477,9 +8477,6 @@ settings-artwork-detail = Ghi công trong phần ghi chú của ứng dụng
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Tập mới
 
-# Line under it.
-settings-new-episodes-detail = Cho các tựa trong danh sách Đang xem
-
 # Line explaining what a notification says.
 settings-notify-detail = Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.
 

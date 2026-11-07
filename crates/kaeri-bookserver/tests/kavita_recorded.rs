@@ -40,10 +40,16 @@ async fn serve(routes: HashMap<&'static str, &'static str>) -> (String, Seen) {
                     .max_by_key(|(prefix, _)| prefix.len())
                     .map(|(_, json)| *json);
                 let response = match answer {
-                    Some(json) => format!(
-                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{json}",
-                        json.len()
-                    ),
+                    Some(answer) => {
+                        // An answer may start with header lines, ended by a blank line.
+                        let (headers, json) = answer.split_once("\n\n").unwrap_or(("", answer));
+                        let headers: String =
+                            headers.lines().map(|h| format!("{h}\r\n")).collect();
+                        format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n{headers}Content-Length: {}\r\nConnection: close\r\n\r\n{json}",
+                            json.len()
+                        )
+                    }
                     None => "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".into(),
                 };
                 let _ = stream.write_all(response.as_bytes()).await;
@@ -60,6 +66,10 @@ fn routes() -> HashMap<&'static str, &'static str> {
             r#"{"username":"test","token":"jwt.one","refreshToken":"refresh.one","apiKey":"key-one","email":"","roles":["Login"]}"#,
         ),
         ("/api/Server/server-info-slim", r#"{"kavitaVersion":"0.8.1.0","installId":"x"}"#),
+        (
+            "/api/Series/all-v2",
+            "Pagination: {\"currentPage\":1,\"itemsPerPage\":1,\"totalItems\":212,\"totalPages\":212}\n\n[{\"id\":7,\"name\":\"Lantern Keeper\"}]",
+        ),
         (
             "/api/Search/search",
             r#"{"series":[{"seriesId":7,"name":"Lantern Keeper","localizedName":"Lantern Keeper","libraryId":1,"format":1}],"collections":[],"readingLists":[],"persons":[],"genres":[],"tags":[],"files":[],"chapters":[]}"#,
@@ -84,7 +94,8 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
     let (address, seen) = serve(routes()).await;
     let client = reqwest::Client::new();
     let done = sign_in(&client, &address, Some(Kind::Kavita), "test", "test").await.unwrap();
-    assert_eq!((done.kind, done.series), (Kind::Kavita, 1));
+    // The count is the series list's total, not what a search returns.
+    assert_eq!((done.kind, done.series), (Kind::Kavita, Some(212)));
     assert_eq!(done.version, "0.8.1.0");
     assert!(done.credential.starts_with("kavita:"));
 

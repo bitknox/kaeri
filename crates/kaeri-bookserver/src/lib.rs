@@ -66,8 +66,8 @@ pub struct SignedIn {
     pub kind: Kind,
     pub name: String,
     pub version: String,
-    /// How many series it lists, 0 when that was not cheap to learn.
-    pub series: u32,
+    /// How many series it lists, `None` when it did not say for sure.
+    pub series: Option<u32>,
     /// What to keep in the secure store.
     pub credential: String,
 }

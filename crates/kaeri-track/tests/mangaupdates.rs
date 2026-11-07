@@ -210,3 +210,18 @@ async fn the_series_a_pull_read_is_not_asked_for_again() {
         .count();
     assert_eq!(singles, 0);
 }
+
+#[tokio::test]
+async fn removing_takes_a_series_off_its_list() {
+    use kaeri_core::traits::ReadRemoval;
+    let server = FakeMangaUpdates::start().await;
+    server.add(item(A, fake::READING, 10, 0));
+    let t = tracker(&server, fake::TOKEN);
+    // A pull first, so the kept answer is the one a removal must not trust.
+    t.pull_read_library().await.unwrap();
+    assert_eq!(t.remove_read(AnilistId::new(7)).await.unwrap(), ReadRemoval::Removed);
+    assert!(server.item(A).is_none());
+    assert_eq!(t.remove_read(AnilistId::new(7)).await.unwrap(), ReadRemoval::NotOnList);
+    assert_eq!(t.remove_read(AnilistId::new(8)).await.unwrap(), ReadRemoval::NotOnList);
+    assert_eq!(t.remove_read(AnilistId::new(99)).await.unwrap(), ReadRemoval::Unmatched);
+}

@@ -683,6 +683,30 @@ reading-chapter-percent = [Çĥàþţéŕ { $chapter } · { $percent }%~~~~~~]
 # Under a cover: a chapter came out that the person has not read. The chapter is its number.
 reading-chapter-new = [Çĥàþţéŕ { $chapter } îš ñéŵ~~~~~~]
 
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = [Þàŕţ { $part }~~~]
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = [Þàŕţ { $part } · { $percent }%~~~~~]
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = [Þàŕţ { $part } îš ñéŵ~~~~~]
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = [Þàŕţ { $part } · { $title }~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = [Þàŕţ { $part } îš öüţ ţöðàý~~~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = [Þàŕţ { $part }, { $title }, öüţ ţöðàý~~~~~~~~]
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = [Çĥàþţéŕ { $chapter } öƒ { $of }~~~~~~]
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = [Ṽöļüɱé { $volume }, þàŕţ { $part }~~~~~~]
+
 # A search filter: books from Japan.
 reading-origin-japan = [Ĵàþàñ~~]
 
@@ -719,6 +743,186 @@ export-waits-for-wifi =
         [one] [Öñé çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
        *[other] [{ $n } çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
     }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
+
+# A chapter row's state: the person read it.
+reading-row-read = [Ŕéàð~~]
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = [Ñéŵ~]
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = [Ðöŵñļöàðéð~~~]
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = [Ñöţ ðöŵñļöàðéð~~~~~]
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = [Öñ ţĥîš ðéṽîçé~~~~~]
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = [Ǫüéüéð~~]
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
+
+# A chapter row's state while it downloads.
+reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = [Çöüļðñ'ţ ðöŵñļöàð~~~~~~]
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = [Þàĝé { $page } öƒ { $of }~~~~~]
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = [Þàĝé { $page }~~~]
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = [{ $percent }%~~]
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] [1 þàĝé~~]
+       *[other] [{ $n } þàĝéš~~~]
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] [1 ṽéŕšîöñ~~~]
+       *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = [ĵüšţ ñöŵ~~~]
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = [{ $minutes } ɱîñ àĝö~~~~]
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = [ţöðàý~~]
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = [ýéšţéŕðàý~~~]
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] [1 ðàý àĝö~~~]
+       *[other] [{ $days } ðàýš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] [1 ŵééķ àĝö~~~]
+       *[other] [{ $weeks } ŵééķš àĝö~~~~]
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] [1 ɱöñţĥ àĝö~~~~]
+       *[other] [{ $months } ɱöñţĥš àĝö~~~~~]
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] [1 ýéàŕ àĝö~~~]
+       *[other] [{ $years } ýéàŕš àĝö~~~~]
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = [Ŕéɱöṽéð ƒŕöɱ { $tracker }~~~~~]
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = [Ŵàšñ'ţ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = [Ñöţ ɱàţçĥéð öñ { $tracker }, šö ñöţĥîñĝ çĥàñĝéð ţĥéŕé~~~~~~~~~~~~~~]
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = [Šţîļļ öñ ýöüŕ { $tracker } ļîšţ~~~~~~~]
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = [Šîĝñ îñ ţö { $tracker } àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = [Ñö šéŕîéš ŵîţĥ ţĥîš ñàɱé~~~~~~~~]
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = [Ñöţ àñšŵéŕîñĝ šîñçé { $time }~~~~~~~]
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = [Ñöţ àñšŵéŕîñĝ~~~~]
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] [1 þàŕţ~~]
+       *[other] [{ $count } þàŕţš~~~]
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = [{ $size }~]
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = [{ $count } ŕéàð~~~]
+
+# The chapter downloading now.
+reading-dl-chapter = [Çĥàþţéŕ { $chapter }~~~~]
+
+# How far the chapter downloading now has come.
+reading-dl-pages = [{ $done } öƒ { $total } þàĝéš~~~~~]
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = [{ $count } ɱöŕé ƣüéüéð~~~~~]
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = [{ $count } ƣüéüéð~~~]
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = [Åƀöüţ { $size }~~~]
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = [öṽéŕ Ŵî-Ƒî~~~]
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = [öṽéŕ ɱöƀîļé ðàţà~~~~~]
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
+# The notification's title.
+reading-downloads-done-title = [Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] [Å çĥàþţéŕ öƒ { $title } îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]
+       *[other] [{ $count } çĥàþţéŕš öƒ { $title } àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~]
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] [Å þàŕţ öƒ { $title } îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~]
+       *[other] [{ $count } þàŕţš öƒ { $title } àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = [Çĥàþţéŕš öƒ { $count } šéŕîéš àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~~]
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
@@ -7963,6 +8167,1013 @@ reader-gap-small = [Šɱàļļ~~]
 # Look choice that follows the system's light or dark.
 reader-look-system = [Šýšţéɱ~~]
 
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = [Ŵàţçĥ~~]
+
+# Sidebar and tab label: reading's Home.
+nav-read = [Ŕéàð~~]
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = [Ûþðàţéš~~~]
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = [Ŕéļéàšîñĝ ñöŵ~~~~]
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = [Çĥéçķéð ŵĥéñ ýöü öþéñ Ķàéŕî~~~~~~~~~]
+
+# Line at the end of Read, under the last shelf.
+home-read-end = [Ţĥàţ'š éṽéŕýţĥîñĝ ƒöŕ ñöŵ. Ûþðàţéš àñð Šéàŕçĥ ĥàṽé ţĥé ƒüļļ ļîšţš.~~~~~~~~~~~~~~~~~~~~]
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = [Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ƒŕöɱ Ĥöɱé.~~~~~~~~~~~~~~~~~~]
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = [Ûšüàļļý~~~]
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = [Ñöţĥîñĝ üšüàļļý~~~~~]
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = [Çĥéçķéð { $ago }~~~~]
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = [Çĥéçķéð { $ago } · šéŕîéš ýöü àŕé çàüĝĥţ üþ öñ~~~~~~~~~~~~~]
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = [Çĥéçķîñĝ ƒöŕ ñéŵ çĥàþţéŕš…~~~~~~~~]
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = [Ðöŵñļöàð ñéŵ~~~~]
+
+# Updates with nothing in it.
+updates-empty-title = [Ñö ñéŵ çĥàþţéŕš~~~~~]
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = [Ķàéŕî çĥéçķš šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ ţĥàţ ýöü àŕé çàüĝĥţ üþ öñ, à ƒéŵ ţîɱéš à ðàý.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Day heading in Updates.
+chapter-updates-today = [Ţöðàý~~]
+
+# Day heading in Updates.
+chapter-updates-yesterday = [Ýéšţéŕðàý~~~]
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+        [one] [1 ṽéŕšîöñ~~~]
+       *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = [Öþéñ { $title }~~~]
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = [Öþéñš ţĥé çĥàþţéŕ~~~~~~]
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = [Öþéñ šéŕîéš~~~~]
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = [Ŕéàð çĥàþţéŕ { $n }~~~~~]
+
+# The main action when a chapter is part read.
+action-continue-chapter = [Çöñţîñüé çĥàþţéŕ { $n } · þàĝé { $page }~~~~~~~~~~]
+
+# The main action for a light novel part, part read.
+action-continue-part = [Çöñţîñüé þàŕţ { $n } · { $percent }%~~~~~~~~]
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = [Çöñţîñüé þàŕţ { $n }~~~~~~]
+
+# The main action for a light novel part not opened yet.
+action-read-part = [Ŕéàð þàŕţ { $n }~~~~]
+
+# The main action when every chapter is read.
+action-read-again = [Ŕéàð àĝàîñ~~~]
+
+# Label of the source row on the series page.
+series-reading-from = [Ŕéàðîñĝ ƒŕöɱ~~~~]
+
+# Button beside a row on the series page that opens its sheet.
+series-change = [Çĥàñĝé~~]
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+        [one] [1 ɱöŕé~~]
+       *[other] [{ $n } ɱöŕé~~~]
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = [Ŵĥîçĥ šéŕîéš îš ţĥîš? Çĥööšé~~~~~~~~~]
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = [Ýöüŕ þŕéƒéŕŕéð ĝŕöüþ ĥéŕé~~~~~~~~]
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+        [one] [{ $n } öƒ { $total } çĥàþţéŕ~~~~~~]
+       *[other] [{ $n } öƒ { $total } çĥàþţéŕš~~~~~~]
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+        [one] [1 çĥàþţéŕ~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = [{ $chapters } · ṽöļüɱé { $volume }~~~~~]
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = [Ṽöļüɱé { $volume } öƒ { $total }~~~~~~]
+
+# Main place when the source can't be read from.
+series-read-from-another = [Ŕéàð ƒŕöɱ àñöţĥéŕ šöüŕçé~~~~~~~~]
+
+# Status menu item: a score submenu.
+series-score = [Šçöŕé…~~]
+
+# Status menu's label before the series is on a list.
+series-add-to-list = [Åðð ţö ļîšţ~~~~]
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = [Ŕéɱöṽé ƒŕöɱ ļîšţš…~~~~~~]
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = [Ŕéɱöṽé { $title } ƒŕöɱ ýöüŕ ļîšţš?~~~~~~~~~]
+
+# Line in that question.
+series-remove-from-lists-line = [Îţ çöɱéš öƒƒ ýöüŕ ļîšţ öñ éàçĥ ţŕàçķéŕ ýöü ĥàṽé çöññéçţéð. Ýöüŕ þļàçé àñð ŕéàð çĥàþţéŕš šţàý îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = [Ýöüŕ ļîšţš~~~]
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] [1 çĥàþţéŕ~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = [Åļļ üñŕéàð~~~]
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = [Ñöţ ƒöüñð îñ~~~~]
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = [Šéàŕçĥ ţĥéŕé~~~~]
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = [Šéàŕçĥ { $source }~~~]
+
+# Button that runs that search.
+read-from-search = [Šéàŕçĥ~~]
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = [Ñöţĥîñĝ ƒöüñð ƀý ţĥéšé ŵöŕðš~~~~~~~~~]
+
+# The More menu: the Tracking sheet.
+series-tracking = [Ţŕàçķîñĝ~~~]
+
+# The More menu: the Read from sheet.
+series-read-from-menu = [Çĥàñĝé šöüŕçé…~~~~~]
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = [Ŕéàð àĝàîñ ƒŕöɱ ţĥé šţàŕţ…~~~~~~~~]
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = [Ṽöļüɱéš~~~]
+
+# Heading of the chapter list.
+series-chapters = [Çĥàþţéŕš~~~]
+
+# Accessibility label of the chapter order menu.
+series-order = [Öŕðéŕ~~]
+
+# Chapter order.
+series-newest-first = [Ñéŵéšţ ƒîŕšţ~~~~]
+
+# Chapter order.
+series-oldest-first = [Öļðéšţ ƒîŕšţ~~~~]
+
+# A volume's heading in the chapter list.
+series-volume = [Ṽöļüɱé { $n }~~~]
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = [Ñöţ îñ à ṽöļüɱé ýéţ~~~~~~]
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = [çĥàþţéŕš { $from } ţö { $to }~~~~~~]
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = [ŕéàð~~]
+
+# Accessibility value of a volume heading.
+series-expanded = [Éẋþàñðéð~~~]
+
+# Accessibility value of a volume heading.
+series-collapsed = [Çöļļàþšéð~~~]
+
+# The chapter list when the source has none.
+series-no-chapters-title = [Ñö çĥàþţéŕš îñ ţĥîš šöüŕçé ýéţ~~~~~~~~~]
+
+# Line under it.
+series-no-chapters-line = [Åñöţĥéŕ šöüŕçé ɱàý ĥàṽé ţĥéɱ.~~~~~~~~~]
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = [Çöüļðñ'ţ ļöàð çĥàþţéŕš ƒŕöɱ { $source }.~~~~~~~~~~]
+
+# A chapter row's title.
+series-chapter-number = [Çĥàþţéŕ { $n }~~~~]
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = [Ɓööķɱàŕķéð~~~]
+
+# Chapter menu and swipe action.
+series-mark-read = [Ṁàŕķ ŕéàð~~~]
+
+# Chapter menu and swipe action.
+series-mark-unread = [Ṁàŕķ üñŕéàð~~~~]
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = [Ṁàŕķ ŕéàð üþ ţö ĥéŕé~~~~~~]
+
+# Chapter menu and swipe action.
+series-download = [Ðöŵñļöàð~~~]
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = [Ŕéàð~~]
+
+# Chapter menu item.
+series-bookmark = [Ɓööķɱàŕķ~~~]
+
+# Chapter menu item.
+series-remove-bookmark = [Ŕéɱöṽé ƀööķɱàŕķ~~~~~]
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+        [one] [1 ṽéŕšîöñ~~~]
+       *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# In that menu while the versions load.
+series-versions-loading = [Ļööķîñĝ ƒöŕ ṽéŕšîöñš…~~~~~~~]
+
+# The version in use, in that menu.
+series-version-in-use = [{ $name } îñ üšé~~~]
+
+# Make another group the one used for this series.
+series-prefer-version = [Þŕéƒéŕ { $name } ƒöŕ ţĥîš šéŕîéš~~~~~~~~]
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = [Ðöŵñļöàðéð~~~]
+
+# A chapter waiting to download.
+chapter-state-queued = [Ǫüéüéð~~]
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
+
+# A chapter downloading.
+chapter-state-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = [Çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~]
+
+# A part-read chapter.
+chapter-state-page-of = [Þàĝé { $page } öƒ { $of }~~~~~]
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = [Þàĝé { $page }~~~]
+
+# A read chapter.
+chapter-state-read = [Ŕéàð~~]
+
+# A chapter that came out since you last looked.
+chapter-state-new = [Ñéŵ~]
+
+# Button: stop a chapter's download.
+chapter-download-stop = [Šţöþ ðöŵñļöàð~~~~]
+
+# Button: try a failed chapter's download again.
+chapter-retry = [Ŕéţŕý~~]
+
+# Chapter menu item.
+chapter-download-delete = [Ðéļéţé ðöŵñļöàð~~~~~]
+
+# Download menu item.
+download-next = [Ñéẋţ { $n } üñŕéàð~~~~~]
+
+# Download menu item.
+download-unread = [Éṽéŕý üñŕéàð çĥàþţéŕ~~~~~~]
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+        [one] [{ $volume } · 1 çĥàþţéŕ~~~~~]
+       *[other] [{ $volume } · { $n } çĥàþţéŕš~~~~~~]
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = [Çĥööšé çĥàþţéŕš…~~~~~]
+
+# Download menu item.
+download-delete-series = [Ðéļéţé ðöŵñļöàðš öƒ ţĥîš šéŕîéš~~~~~~~~~~]
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+        [one] [Ðöŵñļöàð 1 çĥàþţéŕ~~~~~~]
+       *[other] [Ðöŵñļöàð { $n } çĥàþţéŕš~~~~~~~]
+    }
+
+# Line above that button.
+download-over-wifi = [Öṽéŕ Ŵî-Ƒî~~~]
+
+# Title of the question before reading a series again.
+read-again-title = [Ŕéàð { $title } àĝàîñ ƒŕöɱ ţĥé šţàŕţ?~~~~~~~~~]
+
+# What happens on each side.
+read-again-line = [Ýöüŕ þļàçé ĝöéš ƀàçķ ţö çĥàþţéŕ 1 öñ àļļ ýöüŕ ðéṽîçéš. Çĥàþţéŕš šţàý ɱàŕķéð ŕéàð öñ ýöüŕ ţŕàçķéŕš, àñð ÅñîĻîšţ çöüñţš à ŕéŕéàð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The confirming button.
+read-again-confirm = [Ŕéàð àĝàîñ~~~]
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = [Ŕéàð ƒŕöɱ~~~]
+
+# While the sheet asks every source.
+series-read-from-asking = [Åšķîñĝ ýöüŕ šöüŕçéš…~~~~~~]
+
+# The sheet with no source that has the series.
+series-read-from-none-title = [Ñö šöüŕçé ĥàš ţĥîš šéŕîéš~~~~~~~~]
+
+# Line under it.
+series-read-from-none-line = [Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~]
+
+# A source's chapters, first on its line.
+series-read-from-chapters = [Çĥàþţéŕš 1 ţö { $latest }~~~~~~]
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = [çĥàþţéŕš 1 ţö { $latest }~~~~~~]
+
+# After a folder's chapters.
+series-read-from-on-device = [öñ ţĥîš { $device }~~~~]
+
+# Footnote of the Read from sheet.
+series-read-from-note = [Ŕéàð ɱàŕķš ƀéļöñĝ ţö ţĥé šéŕîéš, šö ţĥéý çàŕŕý öṽéŕ ŵĥéñ ýöü çĥàñĝé. Ðöŵñļöàðš ƒŕöɱ ţĥé öļð šöüŕçé šţàý üñţîļ ýöü ðéļéţé ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading for trackers that don't track this series.
+series-not-tracked = [Ñöţ ţŕàçķéð ĥéŕé~~~~~]
+
+# A tracker that isn't connected.
+series-tracker-connect = [Çöññéçţ îñ Šéţţîñĝš ţö ţŕàçķ ţĥîš šéŕîéš~~~~~~~~~~~~]
+
+# A tracker that has no such series.
+series-tracker-not-there = [Ñö ɱàţçĥ öñ ţĥîš ţŕàçķéŕ~~~~~~~~]
+
+# A tracker looking for the series.
+series-tracker-looking = [Ļööķîñĝ ƒöŕ ţĥîš šéŕîéš…~~~~~~~~]
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = [Ĥàš çĥàþţéŕ { $has }. Ĝéţš { $gets } öñ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~]
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = [Ĥàš çĥàþţéŕ { $has }, ƒüŕţĥéŕ ţĥàñ Ķàéŕî.~~~~~~~~~~~]
+
+# A tracker's score out of ten.
+series-tracker-score = [{ $score } / 10~~~]
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = [Ķééþ Ķàéŕî'š þļàçé~~~~~~]
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = [Ûšé { $tracker }'š þļàçé~~~~~]
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = [Ñöñé öƒ ţĥéšé~~~~]
+
+# AniList's list.
+read-list-reading = [Ŕéàðîñĝ~~~]
+
+# AniList's list.
+read-list-planning = [Þļàññîñĝ~~~]
+
+# AniList's list.
+read-list-completed = [Çöɱþļéţéð~~~]
+
+# AniList's list.
+read-list-paused = [Þàüšéð~~]
+
+# AniList's list.
+read-list-dropped = [Ðŕöþþéð~~~]
+
+# AniList's list.
+read-list-rereading = [Ŕéŕéàðîñĝ~~~]
+
+# Series in folders and servers that are on no list.
+read-list-your-files = [Ýöüŕ ƒîļéš~~~]
+
+# A choice.
+medium-watch = [Ŵàţçĥ~~]
+
+# A choice.
+medium-read = [Ŕéàð~~]
+
+# A choice.
+medium-both = [Ɓöţĥ~~]
+
+# Line under the Watch choice.
+medium-watch-line = [Šĥöŵš àñð ƒîļɱš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~~~~]
+
+# Line under the Read choice.
+medium-read-line = [Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~~~~~~~~~]
+
+# Line under the Both choice.
+medium-both-line = [Ŵàţçĥîñĝ àñð ŕéàðîñĝ, éàçĥ îñ îţš öŵñ þļàçé~~~~~~~~~~~~~]
+
+# The answer, as the Settings row says it.
+medium-answer-watch = [Ŵàţçĥîñĝ~~~]
+
+# The answer, as the Settings row says it.
+medium-answer-read = [Ŕéàðîñĝ~~~]
+
+# The answer, as the Settings row says it.
+medium-answer-both = [Ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~]
+
+# Title of the sheet and the toolbar button.
+sources-add-title = [Åðð à šöüŕçé~~~~]
+
+# Line in the Add a source sheet.
+book-add-line = [Ɓööķš ýöü àļŕéàðý ĥàṽé, öŕ þļüĝîñš ƒŕöɱ à šţöŕé ŵĥöšé öŵñéŕ îñṽîţéð ýöü.~~~~~~~~~~~~~~~~~~~~~~]
+
+# A kind in the Add a source sheet.
+book-add-folder = [Å ƒöļðéŕ~~~]
+
+# Line under it.
+book-add-folder-line = [ÇƁŽ, ÉÞÛƁ, ÞÐƑ àñð ƒöļðéŕš öƒ îɱàĝéš öñ ţĥîš { $device } öŕ à ðŕîṽé~~~~~~~~~~~~~~~~~~]
+
+# A kind in the Add a source sheet.
+book-add-server = [Å šéŕṽéŕ~~~]
+
+# Line under it.
+book-add-server-line = [Ķöɱĝà, Ķàṽîţà öŕ àñ ÖÞÐŠ çàţàļöĝüé ýöü çàñ šîĝñ îñ ţö~~~~~~~~~~~~~~~~]
+
+# A kind in the Add a source sheet.
+book-add-store = [Å þļüĝîñ šţöŕé~~~~~]
+
+# Line under it.
+book-add-store-line = [Þàšţé àñ îñṽîţé ƒŕöɱ ţĥé šţöŕé'š öŵñéŕ~~~~~~~~~~~~]
+
+# Title of the Add a server sheet.
+book-add-server-title = [Åðð à šéŕṽéŕ~~~~]
+
+# The sheet's amber button.
+book-add-server-button = [Åðð šéŕṽéŕ~~~]
+
+# What the address answered, before the sign-in.
+sources-found-server = [Ƒöüñð à { $kind } šéŕṽéŕ~~~~~~]
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ 1 šéŕîéš~~~~~~~~~~]
+       *[other] [Ƒöüñð à { $kind } šéŕṽéŕ ŵîţĥ { $n } šéŕîéš~~~~~~~~~~~]
+    }
+
+# While the address is tried.
+book-server-looking = [Ļööķîñĝ àţ ţĥîš àððŕéšš…~~~~~~~~]
+
+# Line under the password.
+book-server-note = [Ķàéŕî šéñðš ýöüŕ ŕéàðîñĝ þŕöĝŕéšš ƀàçķ ţö ţĥîš šéŕṽéŕ. Ţĥé þàššŵöŕð šţàýš îñ ţĥé Ķéýçĥàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading in Your sources.
+book-sources-folders = [Ƒöļðéŕš~~~]
+
+# Heading in Your sources.
+book-sources-servers = [Šéŕṽéŕš~~~]
+
+# Heading in Your sources.
+book-sources-plugins = [Þļüĝîñš~~~]
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~]
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+        [one] [1 šéŕîéš~~~]
+       *[other] [{ $n } šéŕîéš~~~]
+    }
+
+# A folder being looked through.
+book-sources-scanning = [Ļööķîñĝ ţĥŕöüĝĥ · { $n } ƒöüñð~~~~~~~~~]
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = [Ñöţ ƒöüñð. Îš ţĥé ðŕîṽé çöññéçţéð?~~~~~~~~~~~]
+
+# A source that is turned off.
+book-sources-off = [Öƒƒ~]
+
+# On a server's line.
+book-sources-progress-back = [þŕöĝŕéšš ĝöéš ƀàçķ ţö ţĥé šéŕṽéŕ~~~~~~~~~~]
+
+# A server's kind.
+book-sources-opds = [ÖÞÐŠ çàţàļöĝüé~~~~~]
+
+# A plugin's store.
+book-sources-from-store = [Ƒŕöɱ { $store }~~~]
+
+# A plugin's version.
+book-sources-version = [ṽéŕšîöñ { $version }~~~~]
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = [Çĥéçķ ɱàţçĥéš · { $n }~~~~~~]
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = [Çĥéçķ ɱàţçĥéš~~~~]
+
+# A folder menu item: look through the folders again.
+book-sources-scan = [Ļööķ àĝàîñ~~~]
+
+# A server menu switch.
+book-sources-report-progress = [Šéñð þŕöĝŕéšš ţö ţĥé šéŕṽéŕ~~~~~~~~~]
+
+# A server menu switch.
+book-sources-use = [Ûšé ţĥîš šéŕṽéŕ~~~~~]
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = [Ţĥîš àððŕéšš àñšŵéŕš, ƀüţ ñöţ àš à ƀööķ šéŕṽéŕ.~~~~~~~~~~~~~~~]
+
+# A folder name with no match.
+book-sources-no-match = [Ñö ɱàţçĥ~~~]
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = [Ķééþ üñɱàţçĥéð~~~~~]
+
+# Button: search for the match by hand.
+book-sources-find = [Ƒîñð~~]
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = [Ûñɱàţçĥéð šéŕîéš šţîļļ ŕéàð ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĥàṽé ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = [Šĥöŵš öŕ Ŕéàðîñĝ~~~~~]
+
+# A side of that control.
+library-scope-shows = [Šĥöŵš~~]
+
+# A side of that control.
+library-scope-reading = [Ŕéàðîñĝ~~~]
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = [Ļàšţ ŕéàð~~~]
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+        [one] [{ $list }, 1 šéŕîéš~~~~]
+       *[other] [{ $list }, { $n } šéŕîéš~~~~~]
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = [Ñöţĥîñĝ öñ { $list } ýéţ~~~~~~]
+
+# Line under it.
+read-library-empty-line = [Šéŕîéš ýöü àðð ƒŕöɱ Šéàŕçĥ öŕ à šéŕîéš þàĝé šĥöŵ ĥéŕé.~~~~~~~~~~~~~~~~~]
+
+# Your files with nothing in it.
+read-library-files-empty-title = [Ñöţĥîñĝ îñ ýöüŕ ƒîļéš ýéţ~~~~~~~~]
+
+# Line under it.
+read-library-files-empty-line = [Šéŕîéš îñ ýöüŕ ƒöļðéŕš àñð šéŕṽéŕš ţĥàţ àŕé öñ ñö ļîšţ šĥöŵ ĥéŕé.~~~~~~~~~~~~~~~~~~~~]
+
+# The button under it.
+read-library-files-add = [Åðð à ƒöļðéŕ öŕ šéŕṽéŕ~~~~~~~]
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = [Šéàŕçĥ ŕéàðîñĝ~~~~~]
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+        [one] [1 ɱàţçĥ îñ { $scope }~~~~~]
+       *[other] [{ $n } ɱàţçĥéš îñ { $scope }~~~~~~]
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = [Šĥöŵ ţĥéɱ~~~]
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = [{ $what } · ƒŕöɱ ÅñîĻîšţ~~~~~~]
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] [1 šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+       *[other] [{ $n } šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = [Çöüļðñ'ţ šéàŕçĥ~~~~~]
+
+# No results for what was typed.
+read-search-nothing = [Ñöţĥîñĝ ƒöüñð ƒöŕ { $query }~~~~~~~]
+
+# No results while browsing with filters.
+read-search-nothing-browse = [Ñöţĥîñĝ ɱàţçĥéš ţĥéšé ƒîļţéŕš~~~~~~~~~]
+
+# Line under no results.
+read-search-nothing-line = [Ţŕý öţĥéŕ ŵöŕðš, öŕ à ţîţļé îñ àñöţĥéŕ ļàñĝüàĝé.~~~~~~~~~~~~~~~]
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = [Ƒéŵéŕ ƒîļţéŕš ɱàý ƒîñð ɱöŕé.~~~~~~~~~]
+
+# The button under it.
+read-search-clear-filters = [Çļéàŕ ƒîļţéŕš~~~~]
+
+# A sort of reading's Search, AniList's.
+read-sort-popular = [Þöþüļàŕ~~~]
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = [Ţŕéñðîñĝ~~~]
+
+# A sort of reading's Search, AniList's.
+read-sort-score = [Šçöŕé~~]
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = [Ñéŵéšţ~~]
+
+# A filter.
+read-filter-format = [Ƒöŕɱàţ~~]
+
+# A filter.
+read-filter-origin = [Öŕîĝîñ~~]
+
+# A filter.
+read-filter-status = [Šţàţüš~~]
+
+# A filter.
+read-filter-genres = [Ĝéñŕéš~~]
+
+# Title of the iPhone's filters sheet.
+read-filter-title = [Ƒîļţéŕš~~~]
+
+# Button in that sheet that clears every filter.
+read-filter-reset = [Ŕéšéţ~~]
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = [Åñý~]
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = [{ $name }:~~]
+
+# A filter with several values: the first, then how many more.
+read-filter-many = [{ $first } àñð { $more } ɱöŕé~~~~~]
+
+# A genre left out.
+read-filter-not-genre = [Ñöţ { $genre }~~~]
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+        [one] [1 ĝéñŕé~~~]
+       *[other] [{ $n } ĝéñŕéš~~~]
+    }
+
+# A genre's state: only series with it.
+read-filter-included = [Îñçļüðéð~~~]
+
+# A genre's state: no series with it.
+read-filter-left-out = [Ļéƒţ öüţ~~~]
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = [{ $step } öƒ { $total }~~~]
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = [Ķééþ ţŕàçķ öƒ ŵĥàţ ýöü ŵàţçĥ àñð ŕéàð, ƒŕöɱ ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~~~]
+
+# Note under the welcome line.
+onboarding-welcome-note = [Ýöüŕ ļîšţš àñð þŕöĝŕéšš šţàý öñ ýöüŕ ðéṽîçéš. Ţŕàçķéŕš àñð šöüŕçéš àŕé ýöüŕš ţö àðð.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = [Ŵàţçĥ, ŕéàð, öŕ ƀöţĥ?~~~~~~~]
+
+# Line under the title of the medium page.
+onboarding-medium-line = [Ķàéŕî šĥöŵš öñļý ŵĥàţ ýöü þîçķ. Ýöü çàñ çĥàñĝé îţ îñ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = [Çĥööšé öñé öƒ ţĥé ţĥŕéé ƒîŕšţ~~~~~~~~~]
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = [Ɓŕîñĝ îñ ýöüŕ ļîšţš~~~~~~]
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = [Ķàéŕî ķééþš ýöüŕ ŵàţçĥîñĝ îñ šţéþ ŵîţĥ { $tracker }.~~~~~~~~~~~~~]
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = [Ķàéŕî ķééþš ýöüŕ ŕéàðîñĝ îñ šţéþ ŵîţĥ { $tracker }.~~~~~~~~~~~~~]
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = [Ķàéŕî ķééþš ýöüŕ ŕéàðîñĝ àñð ŵàţçĥîñĝ îñ šţéþ ŵîţĥ { $tracker }.~~~~~~~~~~~~~~~~~]
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = [Ļîšţš, þŕöĝŕéšš àñð šüĝĝéšţîöñš~~~~~~~~~~]
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = [ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = [ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = [ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = [Çöññéçţ { $tracker }~~~~]
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = [Ŵĥéŕé ýöüŕ ƀööķš çöɱé ƒŕöɱ~~~~~~~~]
+
+# Line under the title of the books page.
+onboarding-books-line = [Ķàéŕî çöɱéš ŵîţĥ ñö ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = [Åðð à ƒöļðéŕ~~~~]
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = [ÇƁŽ, ÉÞÛƁ, ÞÐƑ àñð ƒöļðéŕš öƒ îɱàĝéš~~~~~~~~~~~]
+
+# Row on the books page: add a book server.
+onboarding-books-server = [Åðð à šéŕṽéŕ~~~~]
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = [Ķöɱĝà, Ķàṽîţà öŕ àñ ÖÞÐŠ çàţàļöĝüé~~~~~~~~~~~]
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = [Þļüĝîñ šţöŕé îñṽîţé~~~~~~]
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = [Þàšţé àñ îñṽîţé~~~~~]
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = [Þļüĝîñš ŕüñ çöðé ƒŕöɱ þéöþļé ýöü ţŕüšţ. Öñļý ĵöîñ þļüĝîñ šţöŕéš ŵĥöšé öŵñéŕ ýöü ķñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = [Ŵĥéŕé ýöüŕ šĥöŵš àñð ƀööķš çöɱé ƒŕöɱ~~~~~~~~~~~]
+
+# Line under the title of that page.
+onboarding-both-line = [Ķàéŕî çöɱéš ŵîţĥ ñö šĥöŵš öŕ ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = [Šĥöŵš~~]
+
+# Heading over the books' rows on that page.
+onboarding-both-books = [Ɓööķš~~]
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = [Ṽîðéö ƒîļéš öñ ţĥîš { $device }~~~~~~~]
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = [Ýöüŕ Ĵéļļýƒîñ šéŕṽéŕ~~~~~~]
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = [{ $n } öƒ { $total }~~~]
+
+# Under the choices in the sheet.
+medium-change-later = [Ýöü çàñ çĥàñĝé îţ îñ Šéţţîñĝš.~~~~~~~~~]
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = [Ķàéŕî çàñ ñöŵ ŕéàð ɱàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš ƒŕöɱ ýöüŕ šöüŕçéš. Þîçķ ŵĥàţ Ķàéŕî îš ƒöŕ öñ ţĥîš { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+        [one] [{ $devices } îš šéţ ţö ŵàţçĥîñĝ~~~~~~~]
+       *[other] [{ $devices } àŕé šéţ ţö ŵàţçĥîñĝ~~~~~~~]
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+        [one] [{ $devices } îš šéţ ţö ŕéàðîñĝ~~~~~~~]
+       *[other] [{ $devices } àŕé šéţ ţö ŕéàðîñĝ~~~~~~~]
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+        [one] [{ $devices } îš šéţ ţö ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~~~~~~]
+       *[other] [{ $devices } àŕé šéţ ţö ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~~~~~~]
+    }
+
+# Line of the sheet on joining.
+medium-join-line = [Þîçķ ŵĥàţ Ķàéŕî îš ƒöŕ öñ ţĥîš { $device }. Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = [Ţüŕñ öƒƒ ŵàţçĥîñĝ?~~~~~~]
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = [Ţüŕñ öƒƒ ŕéàðîñĝ?~~~~~~]
+
+# What turning watching off does.
+medium-off-watch-body = [Çàļéñðàŕ, Šéàšöñàļ, Ŵàţçĥ ţöĝéţĥéŕ àñð ýöüŕ šĥöŵš ļéàṽé Ķàéŕî öñ ţĥîš { $device }. Ýöüŕ ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš šţàý, àñð çöɱé ƀàçķ îƒ ýöü ţüŕñ ŵàţçĥîñĝ öñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# What turning reading off does.
+medium-off-read-body = [Ûþðàţéš àñð ýöüŕ ŕéàðîñĝ ļéàṽé Ķàéŕî öñ ţĥîš { $device }. Ýöüŕ ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš šţàý, àñð çöɱé ƀàçķ îƒ ýöü ţüŕñ ŕéàðîñĝ öñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = [Ðéļéţé ðöŵñļöàðéð éþîšöðéš~~~~~~~~]
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = [Ðéļéţé ðöŵñļöàðéð çĥàþţéŕš~~~~~~~~]
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = [{ $size } öñ ţĥîš { $device }~~~~~]
+
+# The confirmation's main button.
+medium-off-confirm-watch = [Ţüŕñ öƒƒ ŵàţçĥîñĝ~~~~~~]
+
+# The confirmation's main button.
+medium-off-confirm-read = [Ţüŕñ öƒƒ ŕéàðîñĝ~~~~~]
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = [Ķàéŕî îš ƒöŕ~~~~]
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = [Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ~~~~~~~~~~]
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = [Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ. Ţüŕñîñĝ öñé öƒƒ ķééþš îţš ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under Open at.
+settings-open-at-note = [Ŵĥîçĥ Ĥöɱé Ķàéŕî šţàŕţš öñ~~~~~~~~]
+
+# Settings pane and group: reading.
+settings-group-reading = [Ŕéàðîñĝ~~~]
+
+# Downloads group with both media on: shows.
+settings-group-shows = [Šĥöŵš~~]
+
+# The Reading pane's column beside it.
+settings-aside-reading = [Ŕéàðéŕ ðéƒàüļţš àŕé ŵĥéŕé éṽéŕý šéŕîéš šţàŕţš. Å šéŕîéš ýöü çĥàñĝé îñ ţĥé ŕéàðéŕ ķééþš îţš öŵñ çĥöîçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = [Ŕéàðéŕ ðéƒàüļţš~~~~~]
+
+# Under the reader defaults.
+settings-reader-defaults-footer = [Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð ļööķ.~~~~~~~~~~~~~~~~~~]
+
+# Row: manga's reader default.
+settings-reader-manga = [Ṁàñĝà~~]
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = [Ŵéƀţööñš~~~]
+
+# Line under Webtoons.
+settings-reader-webtoons-note = [Ŵéƀţööñš àļŵàýš öþéñ àš à ļöñĝ šţŕîþ~~~~~~~~~~~]
+
+# Row: light novels' reader default.
+settings-reader-novels = [Ļîĝĥţ ñöṽéļš~~~~]
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = [Þàĝéš, ŕîĝĥţ ţö ļéƒţ~~~~~~]
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = [Þàĝéš, ļéƒţ ţö ŕîĝĥţ~~~~~~]
+
+# A reader default: one long strip.
+settings-reader-strip = [Ļöñĝ šţŕîþ~~~]
+
+# A reader default for novels: pages.
+settings-reader-pages = [Þàĝéš~~]
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = [Šçŕöļļîñĝ~~~]
+
+# Row: when a chapter counts as read.
+settings-counts-read = [Çöüñţš àš ŕéàð~~~~~]
+
+# Line under Counts as read.
+settings-counts-read-note = [Å šĥöŕţ šţàý öñ ţĥé ļàšţ þàĝé, öŕ ɱöṽîñĝ öñ ţö ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~~~]
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = [Åƒţéŕ ţĥé ļàšţ þàĝé~~~~~~]
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = [Ṁöṽîñĝ öñ ƒŕöɱ îţ~~~~~~]
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = [Ţüŕñîñĝ þàšţ ţĥé ļàšţ þàĝé, öŕ öþéñîñĝ ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~]
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = [Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = [Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = [Šéŕîéš šéţţîñĝš ţĥàţ ƒöļļöŵ ýöü~~~~~~~~~~]
+
+# Row in that group.
+settings-follow-mode = [Ṁöðé, ðîŕéçţîöñ àñð çöļöüŕ~~~~~~~~]
+
+# Line under that row.
+settings-follow-mode-note = [Å šéŕîéš ýöü çĥàñĝé ŕéàðš ţĥé šàɱé öñ ýöüŕ öţĥéŕ ðéṽîçéš~~~~~~~~~~~~~~~~~]
+
+# Under the group: what stays on this device.
+settings-follow-footer = [Ţéẋţ šîžé, ɱàŕĝîñš, ţàþ žöñéš àñð ŕéƒŕéšĥ šţàý öñ ţĥîš { $device }.~~~~~~~~~~~~~~~~~~]
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = [Çöļöüŕ öŕ ĝŕéýš~~~~~]
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = [Šéŕîéš öñ Ŕéàðîñĝ~~~~~~]
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = [Å šéŕîéš ƀéîñĝ ŕéàð àļšö ķééþš îţš ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~~~~~~~~~~]
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = [Þŕöĝŕéšš~~~]
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = [Å çĥàþţéŕ îš ŕéàð~~~~~~]
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = [Çļöšîñĝ ţĥé ŕéàðéŕ~~~~~~]
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = [Ķééþ ţĥé ƒüŕţĥéšţ~~~~~~]
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = [Ţĥé ļàţéšţ çĥàñĝé~~~~~~]
+
+# Line under When trackers disagree.
+settings-disagree-note = [Šţàţüš àñð šçöŕé ƒöļļöŵ ţĥé ļàţéšţ çĥàñĝé~~~~~~~~~~~~~]
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~~~~~~~]
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = [Ɓööķɱàŕķéð çĥàþţéŕš àŕé ķéþţ~~~~~~~~~]
+
+# Line under New chapters.
+settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]
+
+# Line under Downloads finished.
+settings-downloads-finished-note = [Ŵĥéñ ţĥé çĥàþţéŕš ðöŵñļöàðîñĝ àŕé àļļ ðöñé~~~~~~~~~~~~~]
+
+# Under New chapters.
+settings-chapter-notifications-footer = [Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ţĥéý çàñ ƀé šîļéñçéð öñ ţĥéîŕ öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = [ṀàñĝàÛþðàţéš îš ŕéàçĥéð ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~]
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = [Ûšéŕ ñàɱé~~~]
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+        [one] [{ $n } çĥàþţéŕ · { $size }~~~~~~]
+       *[other] [{ $n } çĥàþţéŕš · { $size }~~~~~~]
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = [{ $chapter } · { $done } öƒ { $total } þàĝéš~~~~~~~]
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = [{ $n } ɱöŕé ƣüéüéð~~~~~]
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+        [one] [{ $n } çĥàþţéŕ ƣüéüéð~~~~~~]
+       *[other] [{ $n } çĥàþţéŕš ƣüéüéð~~~~~~]
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = [{ $chapter } çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~~]
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+        [one] [{ $n } çĥàþţéŕ~~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = [{ $n } ŕéàð~~~]
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = [Ðéļéţé ŕéàð~~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 
@@ -8862,6 +10073,33 @@ settings-keep-chapters-ready = [Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]
 
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = [Ñéŵ çĥàþţéŕš~~~~]
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = [Ṁöðé àñð ðîŕéçţîöñ~~~~~~]
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = [Ļööķ~~]
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = [Šéñð þŕöĝŕéšš àƒţéŕ~~~~~~]
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = [Ŵĥéñ ţŕàçķéŕš ðîšàĝŕéé~~~~~~~]
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = [Ñéŵ çĥàþţéŕš~~~~]
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = [Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = [Öþéñ àţ~~~]
+
 # Row: seeding after watching.
 settings-seed-after = [Šééð àƒţéŕ ŵàţçĥîñĝ~~~~~~]
 
@@ -8923,7 +10161,7 @@ settings-artwork-detail = [Åţţŕîƀüţîöñ îñ ţĥé àþþ'š ñöţî
 settings-new-episodes = [Ñéŵ éþîšöðéš~~~~]
 
 # Line under it.
-settings-new-episodes-detail = [Ƒöŕ šĥöŵš îñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~~]
+settings-new-episodes-detail = [Šĥöŵš öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~]
 
 # Line explaining what a notification says.
 settings-notify-detail = [Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ: ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ îţš ñàɱé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -9096,6 +10334,12 @@ settings-upscaling-sharp = [Šĥàŕþ · Åñîɱé4Ķ~~~~~]
 
 # Side note in Accounts.
 settings-aside-accounts = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ àñð ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = [ţöðàý~~]
@@ -11366,6 +12610,27 @@ accounts-welcome-detail = [Šîĝñ îñ ţö { $tracker } ţö šýñç ýöü�
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~]
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ àñð ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = [Ļîšţš àñð þŕöĝŕéšš~~~~~~]
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = [Ŕéàðîñĝ ļîšţš àñð þŕöĝŕéšš~~~~~~~~]
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = [Šĥöŵš àñð ŕéàðîñĝ~~~~~~]
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = [Ŕéàðîñĝ~~~]
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = [Šĥöŵš~~]
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = [Ļîƀŕàŕý àñð šýñç ñééð ýöüŕ { $tracker } àççöüñţ~~~~~~~~~~~~]

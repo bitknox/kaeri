@@ -27,7 +27,7 @@ use std::{
 use kaeri_core::{
     ids::AnilistId,
     media::Medium,
-    traits::{TrackOp, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{ReadRemoval, TrackOp, TrackedReadEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -501,6 +501,24 @@ impl Tracker for MangaUpdatesTracker {
         }
         tracing::info!(count = out.len(), "mangaupdates lists pulled");
         Ok(out)
+    }
+
+    async fn remove_read(
+        &self,
+        anilist_id: AnilistId,
+    ) -> Result<ReadRemoval, kaeri_core::Error> {
+        let Some(series) = self.mapping.mangaupdates_id(anilist_id) else {
+            return Ok(ReadRemoval::Unmatched);
+        };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        // Asked afresh: a kept answer may be from before the series went on a list.
+        self.entries.lock().await.remove(&series);
+        if self.entry_of(&mut token, series).await?.is_none() {
+            return Ok(ReadRemoval::NotOnList);
+        }
+        self.write(&mut token, "/lists/series/delete", &serde_json::json!([series])).await?;
+        self.remember(series, None).await;
+        Ok(ReadRemoval::Removed)
     }
 
     async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
