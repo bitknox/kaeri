@@ -54,6 +54,25 @@ internal object Icons {
     val Calendar = stroked("Calendar", CALENDAR_BODY, "M4 10 H20 M8.5 3 V6.5 M15.5 3 V6.5")
     val CalendarSelected = filled("CalendarSelected", CALENDAR_BODY, listOf("M4 10 H20"), markStroke = 2f)
 
+    private const val BOOK_LEFT = "M3 5 H8.5 A3.5 3.5 0 0 1 12 8.5 V20 A2.5 2.5 0 0 0 9.5 17.5 H3 Z"
+    private const val BOOK_RIGHT = "M21 5 H15.5 A3.5 3.5 0 0 0 12 8.5 V20 A2.5 2.5 0 0 1 14.5 17.5 H21 Z"
+
+    /** Read: an open book. */
+    val Read = stroked("Read", BOOK_LEFT, BOOK_RIGHT)
+    val ReadSelected = filled("ReadSelected", "$BOOK_LEFT $BOOK_RIGHT", listOf("M12 8.5 V20"), markStroke = 1.5f)
+
+    private const val BELL = "M6 16.5 V11 A6 6 0 0 1 18 11 V16.5 L19.5 18.5 H4.5 Z"
+
+    /** Updates: a bell. */
+    val Updates = stroked("Updates", BELL, "M10 21.5 H14")
+    val UpdatesSelected = filled("UpdatesSelected", "$BELL M9.5 20.5 H14.5 A2.5 2.5 0 0 1 9.5 20.5 Z", emptyList())
+
+    private const val SCREEN = "M5 4.5 H19 A2 2 0 0 1 21 6.5 V14.5 A2 2 0 0 1 19 16.5 H5 A2 2 0 0 1 3 14.5 V6.5 A2 2 0 0 1 5 4.5 Z"
+
+    /** Watch, beside Read: a screen on its stand. */
+    val Watch = stroked("Watch", SCREEN, "M8 20.5 H16 M12 16.5 V20.5")
+    val WatchSelected = filled("WatchSelected", SCREEN, listOf("M8 20.5 H16 M12 16.5 V20.5"), markStroke = 2f)
+
     private const val LEAF = "M5 19 C5 11 11 5 19 5 C19 13 13 19 5 19 Z"
     val Seasonal = stroked("Seasonal", LEAF, "M5 19 L12.5 11.5")
     val SeasonalSelected = filled("SeasonalSelected", LEAF, listOf("M5 19 L12.5 11.5"), markStroke = 2f)

@@ -29,12 +29,19 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import app.kaeri.design.Motion
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.core.WorkId
 
 /** A title page's route inside [destination]'s back stack. */
 internal fun titleRoute(destination: Destination, id: AnilistId) = "${destination.route}/title/$id"
 
 /** The route pattern of the title page in [destination]'s back stack. */
 internal fun titlePattern(destination: Destination) = "${destination.route}/title/{id}"
+
+/** A reading series page's route inside [destination]'s back stack. */
+internal fun seriesRoute(destination: Destination, work: WorkId) = "${destination.route}/series/${android.net.Uri.encode(work)}"
+
+/** The route pattern of the series page in [destination]'s back stack. */
+internal fun seriesPattern(destination: Destination) = "${destination.route}/series/{work}"
 
 /** The graph that holds [destination]'s back stack. */
 internal fun graphRoute(destination: Destination) = "${destination.route}-tab"
@@ -76,6 +83,12 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"
         nav.navigate(titleRoute(current(), id))
+    }
+
+    /** Open a reading series' page in the current destination's back stack, its cover flying from [from]. */
+    fun openSeries(work: WorkId, from: String) {
+        source = "$from:$work"
+        nav.navigate(seriesRoute(current(), work))
     }
 
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
@@ -180,9 +193,18 @@ enum class Shared(internal val prefix: String) {
  * the element is (`hero`, `season` …): it joins only when it is the one the page was opened from.
  * On the title page pass none.
  */
+@Composable
+fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground: Color = Color.Unspecified): Modifier =
+    sharedKeyed(shared, id.toString(), from, ground)
+
+/** [shared] for a reading series, by its work id: its cover flies into the series page and back. */
+@Composable
+fun Modifier.sharedWork(shared: Shared, work: WorkId, from: String? = null, ground: Color = Color.Unspecified): Modifier =
+    sharedKeyed(shared, work, from, ground)
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground: Color = Color.Unspecified): Modifier {
+private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, ground: Color): Modifier {
     val layout = LocalSharedTransitions.current
     val page = LocalPageAnimation.current
     val outside = LocalView.current !== LocalSharedTransitionsView.current

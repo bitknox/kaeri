@@ -27,6 +27,7 @@ import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SubtitleStyle
 import app.kaeri.engine.model.SyncSignInStep
 import app.kaeri.engine.model.SurprisePool
@@ -144,6 +145,21 @@ class AppStore(
     val opened = OpenedModel()
     val downloads = DownloadsModel()
     val settings = SettingsModel()
+
+    /** Watch, read or both: what Kaeri is for on this device. */
+    val medium = MediumModel { send(it) }
+
+    /** Reading's places: Home, Updates, the lists, Search, series, chapters and downloads. */
+    val reading = ReadingModel { send(it) }
+
+    /** The book sources and Read from's editions. */
+    val bookSources = BookSourcesModel { send(it) }
+
+    /** Send to e-reader. */
+    val export = ExportModel { send(it) }
+
+    /** The last export failure, for the job that ends after it. */
+    private var exportFailure: ReadingFailure? = null
 
     /** Sync between devices, the cloud folder's sign-in, and the profiles. */
     val sync = SyncModel()
@@ -400,6 +416,9 @@ class AppStore(
         _phase.value = Phase.Running
         for (command in early) client.send(command)
         early.clear()
+        // What Kaeri is for decides the places, so it is asked first; reading's Updates count and
+        // its sources follow once it reads.
+        medium.load()
     }
 
     /**
@@ -1344,6 +1363,8 @@ class AppStore(
                 accounts.done(event.v1)
                 stores.done(event.v1)
                 detailDone(event.v1)
+                export.ended(event.v1, exportFailure)
+                exportFailure = null
             }
 
             is Event.Content -> content(event.content, event.view)
@@ -1456,12 +1477,31 @@ class AppStore(
 
             // The reader's own, and a reading load that failed where the reader or the e-ink
             // profile shows it.
-            is Event.Reader -> readers.forEach { it(event) }
-            is Event.Reading -> when (val reading = event.v1) {
-                is ReadingEvent.Eink -> readers.forEach { it(event) }
-                is ReadingEvent.Failed -> if (reading.about == ReadingAbout.READER || reading.about == ReadingAbout.EINK) readers.forEach { it(event) }
-                else -> {}
+            is Event.Reader -> {
+                readers.forEach { it(event) }
+                reading.observe(event)
             }
+            is Event.Reading -> when (val said = event.v1) {
+                is ReadingEvent.Eink -> readers.forEach { it(event) }
+                is ReadingEvent.Failed -> when (said.about) {
+                    ReadingAbout.READER, ReadingAbout.EINK -> readers.forEach { it(event) }
+                    ReadingAbout.EXPORT -> exportFailure = said.failure
+                    else -> reading.apply(said)
+                }
+                is ReadingEvent.ExportTargets, is ReadingEvent.ExportProgress, is ReadingEvent.ExportReady,
+                is ReadingEvent.ExportWaiting -> export.apply(said)
+                else -> reading.apply(said)
+            }
+            is Event.Medium -> {
+                val before = medium.view.value
+                medium.apply(event.v1)
+                val reads = event.v1.readingAvailable && event.v1.answer.reads
+                if (reads && (before == null || !before.answer.reads || !before.readingAvailable)) {
+                    bookSources.load()
+                    reading.loadUpdates()
+                }
+            }
+            is Event.BookSources -> bookSources.apply(event.v1)
 
             is Event.ArtworkReady -> artwork.ready(event.url, event.bytes)
             is Event.ImageFailed -> artwork.failed(event.url)

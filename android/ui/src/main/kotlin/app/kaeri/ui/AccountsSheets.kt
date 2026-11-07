@@ -367,6 +367,9 @@ internal fun ConflictsSheet(onDismiss: () -> Unit) {
 @Stable
 class AppSheets {
     var kitsu by mutableStateOf(false)
+
+    /** Whether the phone's navigation bar is hidden: while chapters are being chosen, their bar takes its place. */
+    var barHidden by mutableStateOf(false)
 }
 
 val LocalAppSheets = staticCompositionLocalOf { AppSheets() }
