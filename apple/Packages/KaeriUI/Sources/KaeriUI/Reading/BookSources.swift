@@ -18,7 +18,8 @@ struct BookSourcesList: View {
     var body: some View {
         let view = store.bookSources.view
         VStack(alignment: .leading, spacing: 22) {
-            if store.bookSources.isEmpty {
+            // Empty once the engine said so, not while the list is on its way.
+            if store.bookSources.view != nil, store.bookSources.isEmpty {
                 PlainEmpty(title: L.sourcesAddTitle, line: L.bookAddLine) {
                     Button(L.sourcesAddTitle) { navigator.addBookSource = .choose }
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
@@ -117,7 +118,6 @@ struct BookSourcesList: View {
         }
         .task { store.bookSources.load() }
         .sheet(isPresented: $matchesShown) { CheckMatchesSheet() }
-        #if FIXTURES
         // Shots: the add-server sheet with a server found, and with it added and its series counted.
         .onLaunchSheet("add-book-server", navigator) { // i18n-skip: a shot's sheet name
             AddBookServerStep.shot = .found
@@ -127,7 +127,6 @@ struct BookSourcesList: View {
             AddBookServerStep.shot = .added
             navigator.addBookSource = .server
         }
-        #endif
     }
 
     /// "~/Books/Manga · 64 series", or what a scan or a missing drive says.
@@ -426,23 +425,17 @@ private struct AddBookServerStep: View {
 
     private enum Field { case address, user, password }
 
-    #if FIXTURES
     enum Shot { case found, added }
     /// For shots: the sheet opens in this state, with nothing asked of a real server.
     @MainActor static var shot: Shot?
 
     private func stage(_ shot: Shot) {
-        let sources = store.bookSources
         staged = true
         address = "books.home.example" // i18n-skip: a made-up host
         user = "reader" // i18n-skip: a made-up name
         password = "example-password" // i18n-skip: a made-up password
-        sources.showcase(.serverChecked(address: address, kind: .kavita, name: "Books", version: "0.8")) // i18n-skip
-        if shot == .added {
-            sources.showcase(.serverAdded(id: "fixture-server", kind: .kavita, series: 212)) // i18n-skip
-        }
+        store.bookSources.stageServerShot(address: address, added: shot == .added)
     }
-    #endif
 
     var body: some View {
         let sources = store.bookSources
@@ -526,13 +519,11 @@ private struct AddBookServerStep: View {
             // A server added before is not this one.
             sources.resetServerSheet()
             focus = .address
-            #if FIXTURES
             if let shot = Self.shot {
                 Self.shot = nil
                 focus = nil
                 stage(shot)
             }
-            #endif
         }
         .task(id: address) {
             // Tried as it is typed, once the typing pauses.

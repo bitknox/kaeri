@@ -474,4 +474,27 @@ public final class BookSourcesModel {
     /// For shots: an event as the engine would send it.
     public func showcase(_ event: BookSourceEvent) { observe(.bookSources(event)) }
     #endif
+
+    /// For shots: the add-server sheet with a made-up server found at `address`, and with
+    /// `added` signed in with its series counted. Does nothing outside the fixtures.
+    public func stageServerShot(address: String, added: Bool) {
+        #if FIXTURES
+        showcase(.serverChecked(address: address, kind: .kavita, name: "Books", version: "0.8")) // i18n-skip
+        if added { showcase(.serverAdded(id: "fixture-server", kind: .kavita, series: 212)) } // i18n-skip
+        #endif
+    }
+
+    /// For shots: Read from with a made-up source that had no series of the work's name, once
+    /// the work's editions are in. Does nothing outside the fixtures.
+    public func stageMissShot(work: String) async {
+        #if FIXTURES
+        for _ in 0..<30 where forWork[work] == nil {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        guard let found = forWork[work] else { return }
+        let miss = EditionMiss(sourceId: "fixture-comics", sourceName: "Comics server", // i18n-skip: made up
+                               reason: .reading(.readingMissNoSeries))
+        showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: [miss]))
+        #endif
+    }
 }

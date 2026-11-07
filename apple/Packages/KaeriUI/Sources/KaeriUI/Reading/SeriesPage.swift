@@ -156,20 +156,25 @@ struct SeriesPage: View {
             store.reading.loadSeries(work)
             store.reading.loadTracking(work)
         }
-        #if FIXTURES
-        .onLaunchSheet("read-from", navigator) { navigator.seriesSheet = .source(work) } // i18n-skip: a shot's sheet name
+        // Shots: Read from with a source that had no series of this name, and choosing chapters.
+        .onLaunchSheet("read-from", navigator) { // i18n-skip: a shot's sheet name
+            navigator.seriesSheet = .source(work)
+            Task { await store.bookSources.stageMissShot(work: work) }
+        }
         .task {
-            // Shots: choosing chapters, with the next three unread ones chosen.
+            // The next three unread chapters chosen.
             guard navigator.launchSheet == "choose-chapters" else { return } // i18n-skip: a shot's sheet name
-            navigator.launchSheet = nil
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
             let rows = store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []
-            let unread = rows.filter { $0.state != .read }.sorted { ($0.number.flatMap(Double.init) ?? 0) < ($1.number.flatMap(Double.init) ?? 0) }
+            let unread = rows.filter { $0.state != .read }
+                .sorted { ($0.number.flatMap(Double.init) ?? 0) < ($1.number.flatMap(Double.init) ?? 0) }
             choosing = Set(unread.prefix(3).map(\.id))
+            // Taken once the bar is up, so the snapshot waits for it.
+            try? await Task.sleep(for: .milliseconds(500))
+            navigator.launchSheet = nil
         }
-        #endif
         .sheet(item: Binding(
             get: { navigator.seriesSheet.flatMap { $0.work == work ? $0 : nil } },
             set: { navigator.seriesSheet = $0 }
@@ -964,10 +969,14 @@ private struct ChooseChaptersBar: View {
         let height: CGFloat = Device.isMac ? 30 : 44
         VStack(spacing: 10) {
             if !chosen.isEmpty, !line.isEmpty {
+                // On its own glass, so it reads over the chapters scrolling under it.
                 Text(line)
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                     .monospacedDigit()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, Device.isMac ? 4 : 6)
+                    .chromeGlass(in: .capsule)
                     .transition(.opacity)
             }
             HStack(spacing: 8) {
