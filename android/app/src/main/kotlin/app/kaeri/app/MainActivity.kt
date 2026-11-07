@@ -374,18 +374,30 @@ class MainActivity : ComponentActivity() {
      * The volume keys move the TV's volume while its card is open, or while it is driven and
      * plays; the TV's media session takes them once the app is behind another.
      */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val step = when (event.keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
-            KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
-            else -> return super.dispatchKeyEvent(event)
-        }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val step = volumeStep(keyCode) ?: return super.onKeyDown(keyCode, event)
+        if (!drivingTv()) return super.onKeyDown(keyCode, event)
+        app.store.tv.send(FfiTvCommand.Volume(step))
+        return true
+    }
+
+    /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (volumeStep(keyCode) == null || !drivingTv()) return super.onKeyUp(keyCode, event)
+        return true
+    }
+
+    private fun volumeStep(keyCode: Int): Double? = when (keyCode) {
+        KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
+        KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
+        else -> null
+    }
+
+    private fun drivingTv(): Boolean {
         val tv = app.store.tv
         val driving = tv.connected.value != null &&
             (tv.sheet.value == TvRemoteModel.Sheet.Remote || tv.card.value?.card?.now != null)
-        if (!driving || app.player.isPresented) return super.dispatchKeyEvent(event)
-        if (event.action == KeyEvent.ACTION_DOWN) tv.send(FfiTvCommand.Volume(step))
-        return true
+        return driving && !app.player.isPresented
     }
 
     override fun onDestroy() {
