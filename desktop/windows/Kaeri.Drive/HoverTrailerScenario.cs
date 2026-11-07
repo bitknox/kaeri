@@ -25,43 +25,132 @@ static partial class HoverTrailerScenario
             return;
         }
         var from = DateTime.UtcNow;
-        await FeelScenario.Go(run, "Seasonal");
-        await Task.Delay(Settle);
-        var covers = run.Covers()
-            .Where(c => Run.Safe(() => c.BoundingRectangle) is { } r && r.Height > r.Width * 1.2)
-            .Take(Covers)
-            .Select(c => c.BoundingRectangle)
-            .ToArray();
-        if (covers.Length == 0)
+        // The profile's Home takes a while to settle at launch, and a click then can be lost.
+        await Task.Delay(6000);
+        Rectangle[] covers = [];
+        for (var attempt = 0; attempt < 3 && covers.Length < Covers; attempt++)
         {
-            run.Note("hover-trailer: no covers on Seasonal");
-            return;
+            await FeelScenario.Go(run, "Seasonal");
+            await Task.Delay(Settle);
+            covers = [.. run.Covers()
+                .Where(c => Run.Safe(() => c.BoundingRectangle) is { } r && r.Height > r.Width * 1.2)
+                .Take(Covers)
+                .Select(c => c.BoundingRectangle)];
         }
-        var w = run.Window.BoundingRectangle;
+        run.Note($"hover-trailer: {covers.Length} covers to rest on");
+        if (covers.Length == 0)
+            return;
         foreach (var (r, i) in covers.Select((r, i) => (r, i)))
         {
+            await Onto(run, r);
+            await Task.Delay(3000);
+            Band(run, r, i + 1);
+            await Task.Delay(3600);
+            await Away(run);
+            run.Note($"hover-trailer: rested on cover {i + 1}");
+        }
+        // Then from an open card straight onto the next cover in its row, as a person reading a
+        // row does: that cover's trailer is cued while the card it left is still closing.
+        var pairs = covers.Zip(covers.Skip(1)).Where(p => Math.Abs(p.First.Top - p.Second.Top) < 4 && p.Second.Left > p.First.Left).Take(3).ToList();
+        foreach (var (a, b) in pairs)
+        {
+            await Onto(run, a);
+            await Task.Delay(3000);
             run.Guard();
-            var y = r.Top + r.Height / 3;
-            // From just left of the cover, onto it in steps as a real pointer comes, then still.
-            Mouse.MoveTo(new Point(r.Left - 24, y));
-            await Task.Delay(50);
-            for (var step = 0; step < 8; step++)
+            for (var step = 0; step < 60 && Mouse.Position.X < b.Left + 40; step++)
             {
-                if (!run.InFront)
-                    throw new InvalidOperationException("another window came in front; stopped before sending input");
-                Native.Nudge(8, 0);
+                Check(run);
+                Native.Nudge(Math.Min(12, b.Left + 40 - Mouse.Position.X), 0);
                 await Task.Delay(16);
             }
-            await Task.Delay(7000);
-            run.Guard();
-            // Away over the sidebar, where nothing opens a card, long enough for the next cover's
-            // full dwell rather than the scanning one.
-            Mouse.MoveTo(new Point(w.Left + 40, w.Top + w.Height - 60));
-            await Task.Delay(1800);
-            run.Note($"hover-trailer: rested on cover {i + 1}");
+            await Task.Delay(3000);
+            await Away(run);
+            run.Note("hover-trailer: from a card onto the next cover");
         }
         await Task.Delay(1000);
         Gather(run, from);
+    }
+
+    /// <summary>
+    /// From just left of the cover, onto it in steps as a real pointer comes, then still. The
+    /// pointer jumps there: a glide would cross other covers, and a card one of them opened would
+    /// make this cover's wait the shorter one for scanning a row.
+    /// </summary>
+    static async Task Onto(Run run, Rectangle r)
+    {
+        run.Guard();
+        Mouse.Position = new Point(r.Left - 24, r.Top + r.Height / 3);
+        await Task.Delay(50);
+        for (var step = 0; step < 8; step++)
+        {
+            Check(run);
+            Native.Nudge(8, 0);
+            await Task.Delay(16);
+        }
+    }
+
+    /// <summary>
+    /// Away over the sidebar, where nothing opens a card, in steps so the card hears the pointer
+    /// leave it (a jump is not always heard, and the card would stay), and long enough for the next
+    /// cover's full dwell rather than the scanning one.
+    /// </summary>
+    static async Task Away(Run run)
+    {
+        run.Guard();
+        var w = run.Window.BoundingRectangle;
+        for (var step = 0; step < 40 && Mouse.Position.X > w.Left + 120; step++)
+        {
+            Check(run);
+            Native.Nudge(-60, 0);
+            await Task.Delay(16);
+        }
+        Mouse.Position = new Point(w.Left + 40, w.Top + w.Height - 60);
+        await Task.Delay(1800);
+    }
+
+    static void Check(Run run)
+    {
+        if (!run.InFront)
+            throw new InvalidOperationException("another window came in front; stopped before sending input");
+    }
+
+    /// <summary>
+    /// The open card's video band, from the screen, twice 400 ms apart: a playing video changes
+    /// between them, the art does not. The first is kept as band-N.png. Only while the app is in front.
+    /// </summary>
+    static void Band(Run run, Rectangle cover, int n)
+    {
+        if (!run.InFront)
+            return;
+        var w = run.Window.BoundingRectangle;
+        var left = Math.Clamp(cover.Left + cover.Width / 2 - 192, w.Left, w.Right - 384);
+        var top = Math.Clamp(cover.Top - 24 + 1, w.Top, w.Bottom - 216);
+        var area = new Rectangle(left + 8, top + 8, 384 - 16, 216 - 16);
+        using var first = Grab(area);
+        Thread.Sleep(400);
+        if (!run.InFront)
+            return;
+        using var second = Grab(area);
+        long sum = 0;
+        for (var y = 0; y < area.Height; y += 4)
+            for (var x = 0; x < area.Width; x += 4)
+            {
+                var a = first.GetPixel(x, y);
+                var b = second.GetPixel(x, y);
+                sum += Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
+            }
+        var change = sum / (double)(area.Width / 4 * (area.Height / 4) * 3);
+        first.Save(Path.Combine(run.Options.Out, run.Name, $"band-{n}.png"));
+        Console.WriteLine($"   hover-trailer: cover {n} band changed {change:0.0} a channel in 400 ms");
+        File.AppendAllText(Path.Combine(run.Options.Out, run.Name, "bands.txt"), $"{n} {change:0.0}\n");
+    }
+
+    static Bitmap Grab(Rectangle area)
+    {
+        var bitmap = new Bitmap(area.Width, area.Height);
+        using var g = Graphics.FromImage(bitmap);
+        g.CopyFromScreen(area.Left, area.Top, 0, 0, area.Size, CopyPixelOperation.SourceCopy);
+        return bitmap;
     }
 
     /// <summary>The log's hover lines since <paramref name="from"/>, in order, as notes.</summary>

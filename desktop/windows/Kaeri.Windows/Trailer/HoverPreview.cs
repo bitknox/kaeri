@@ -24,7 +24,11 @@ namespace Kaeri.Windows;
 /// place. A click on it opens the title. Where the title has a trailer and trailers may play, it
 /// plays muted over the banner once the card has grown.
 /// The pointer must rest: less than 4 px of movement for 450 ms, or for 150 ms when a preview
-/// closed less than a second ago (scanning a row). The preview closes 150 ms after
+/// closed less than a second ago (scanning a row). After 150 ms of rest the trailer is cued, as on
+/// the Mac: it loads unseen and silent (<see cref="HoverTrailer"/>), so the card opens on a video
+/// that is already coming; the pointer leaving the cover first lets it go. The preview's player
+/// is loaded once a run at a still moment, two seconds after the first covers show, and primed
+/// with the first cover's trailer (<see cref="TrailerPool"/>). The preview closes 150 ms after
 /// the pointer leaves both the cover and the preview, and at once on a scroll, a key press, a
 /// click elsewhere or the window losing focus. Keyboard focus never opens one.
 /// </summary>
@@ -57,6 +61,8 @@ static class HoverPreview
     {
         public Point Anchor;
         public DispatcherQueueTimer? Timer;
+        /// <summary>Cues the trailer 300 ms before <see cref="Timer"/> opens the card.</summary>
+        public DispatcherQueueTimer? Cue;
         public Func<uint> Id = () => 0;
         /// <summary>When the pointer last came to rest here (<see cref="Environment.TickCount64"/>), for the log.</summary>
         public long RestedAt;
@@ -79,7 +85,16 @@ static class HoverPreview
             if (targets.TryGetValue(at, out var resting))
                 Show(at, resting.Id(), resting.RestedAt);
         });
-        target.Loaded += (_, _) => HearWheel(target);
+        state.Cue = Timers.Weak(target, HoverCue.Wait, false, static at =>
+        {
+            if (targets.TryGetValue(at, out var resting))
+                CueAt(at, resting.Id());
+        });
+        target.Loaded += (_, _) =>
+        {
+            HearWheel(target);
+            WarmSoon(target);
+        };
         // Heard even when the target has handled them: a grid's item container and a button
         // take their own pointer events for their hover and press states, and a plain handler
         // never heard them, so most covers never opened a card.
@@ -93,6 +108,8 @@ static class HoverPreview
         target.AddHandler(UIElement.PointerExitedEvent, new PointerEventHandler((_, _) =>
         {
             state.Timer.Stop();
+            state.Cue.Stop();
+            HoverTrailer.Uncue(state.Id());
             if (open is { } o && o.Target == target)
                 o.Leaving();
         }), true);
@@ -100,9 +117,106 @@ static class HoverPreview
         target.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) =>
         {
             state.Timer.Stop();
+            state.Cue.Stop();
+            HoverTrailer.Uncue(state.Id());
             Close();
         }), true);
-        target.Unloaded += (_, _) => state.Timer.Stop();
+        target.Unloaded += (_, _) =>
+        {
+            state.Timer.Stop();
+            state.Cue.Stop();
+            HoverTrailer.Uncue(state.Id());
+        };
+    }
+
+    /// <summary>
+    /// The pointer has rested on <paramref name="target"/> 150 ms: the title's trailer starts loading,
+    /// held, when its card could play one.
+    /// </summary>
+    static void CueAt(FrameworkElement target, uint id)
+    {
+        var ctx = Ctx.Current;
+        if (target.XamlRoot is null || !ctx.Window.InFront || open is { } o && o.Target == target)
+            return;
+        if (ctx.Known.Setting(SettingKey.HoverCards) is { } cards && !SettingsCatalog.IsOn(cards))
+            return;
+        if (!TrailerHub.Available || ctx.Known.Entry(id) is not { } entry || !Trailers.MayAutoplay(ctx.Known, entry))
+            return;
+        HoverTrailer.Cue(entry, Trailers.SubtitleLanguage(ctx.Known));
+    }
+
+    static DispatcherQueueTimer? warming;
+    static long warmingFrom;
+
+    /// <summary>
+    /// Covers are on screen: two seconds on, at a still moment (no card, nothing scrolled for half
+    /// a second), the preview's player loads and is primed with the first cover's trailer, as on the
+    /// Mac. Once a run, and only while cards are on and trailers may play; never in a fixture scene,
+    /// where nothing may be fetched.
+    /// </summary>
+    static void WarmSoon(FrameworkElement target)
+    {
+        if (warming is not null || TrailerPool.Warmed || !TrailerHub.Available || Ctx.Current.Options.Fixture)
+            return;
+        warmingFrom = Environment.TickCount64;
+        warming = target.DispatcherQueue.CreateTimer();
+        warming.Interval = TimeSpan.FromMilliseconds(250);
+        warming.IsRepeating = true;
+        warming.Tick += (timer, _) =>
+        {
+            if (Environment.TickCount64 - warmingFrom < 2000)
+                return;
+            var still = TimeSpan.FromMilliseconds(500);
+            if (open is not null || DateTime.UtcNow - wheeledAt < still || DateTime.UtcNow - closedAt < still)
+                return;
+            // The engine has not said yet whether trailers may play: ask again at the next tick.
+            if (Ctx.Current.Known.Autoplay is null)
+                return;
+            timer.Stop();
+            warming = null;
+            WarmUp();
+        };
+        warming.Start();
+    }
+
+    /// <summary>Load and prime the preview's player, when cards are on and trailers may play now; a later page's covers try again otherwise.</summary>
+    static void WarmUp()
+    {
+        var ctx = Ctx.Current;
+        if (ctx.Known.Setting(SettingKey.HoverCards) is { } cards && !SettingsCatalog.IsOn(cards))
+            return;
+        if (ctx.Known.Autoplay is not { Trailers: true })
+            return;
+        var subtitles = Trailers.SubtitleLanguage(ctx.Known);
+        TrailerPool.Prewarm(subtitles);
+        if (FirstOnScreen(ctx) is { } first)
+            TrailerPool.Prime(first, subtitles);
+    }
+
+    /// <summary>The first cover on screen, top row first, whose trailer may play.</summary>
+    static Entry? FirstOnScreen(Ctx ctx)
+    {
+        var shown = new List<(Rect At, uint Id)>();
+        foreach (var (target, resting) in targets)
+        {
+            if (!target.IsLoaded || target.ActualWidth <= 0 || target.XamlRoot?.Content is not FrameworkElement root)
+                continue;
+            try
+            {
+                var at = target.TransformToVisual(root).TransformBounds(new Rect(0, 0, target.ActualWidth, target.ActualHeight));
+                if (at.Right > 0 && at.Bottom > 0 && at.Left < root.ActualWidth && at.Top < root.ActualHeight)
+                    shown.Add((at, resting.Id()));
+            }
+            catch (ArgumentException)
+            {
+                // Not in the window's tree any more.
+            }
+        }
+        return shown
+            .OrderBy(s => Math.Round(s.At.Top))
+            .ThenBy(s => s.At.Left)
+            .Select(s => ctx.Known.Entry(s.Id))
+            .FirstOrDefault(e => e is not null && Trailers.MayAutoplay(ctx.Known, e));
     }
 
     /// <summary>Every wheel in the window, handled or not, marks the page as scrolling.</summary>
@@ -115,13 +229,18 @@ static class HoverPreview
         root.AddHandler(UIElement.PointerWheelChangedEvent, (PointerEventHandler)OnWheel, true);
     }
 
-    static void OnWheel(object sender, PointerRoutedEventArgs e) => wheeledAt = DateTime.UtcNow;
+    static void OnWheel(object sender, PointerRoutedEventArgs e)
+    {
+        wheeledAt = DateTime.UtcNow;
+        HoverTrailer.Scrolled();
+    }
 
     /// <summary>The pointer is at a new resting place: wait out the dwell again.</summary>
     static void Resume(FrameworkElement target, Resting state, PointerRoutedEventArgs e)
     {
         state.Anchor = e.GetCurrentPoint(target).Position;
         state.Timer!.Stop();
+        state.Cue!.Stop();
         // The page is scrolling under the pointer: a cover arriving there is not one pointed at.
         // The pointer moving once the page is still starts the dwell, as PointerMoved calls here.
         if (DateTime.UtcNow - wheeledAt < Scrolled)
@@ -137,6 +256,11 @@ static class HoverPreview
         }
         state.RestedAt = Environment.TickCount64;
         state.Timer.Start();
+        if (HoverCue.After(state.Timer.Interval) is { } cue)
+        {
+            state.Cue.Interval = cue;
+            state.Cue.Start();
+        }
     }
 
     /// <summary>Close the preview on screen, if there is one.</summary>
@@ -181,22 +305,25 @@ static class HoverPreview
         bool closing, playing;
         /// <summary>The card's scale where it covers the cover: it grows from this and goes back to it.</summary>
         float coverScale = 1;
-        readonly TrailerStage? stage;
+        TrailerStage? stage;
         readonly DispatcherQueueTimer leave;
         readonly Button sound = new();
         bool soundOn;
+        readonly Grid video, art;
+        readonly long rested;
 
         public FrameworkElement Target { get; }
 
         public Open(Ctx ctx, FrameworkElement target, Entry entry, long rested)
         {
             this.ctx = ctx;
+            this.rested = rested;
             Target = target;
             // The video is flush at the top of the flyout, clipped only by the flyout's own corners. The
             // art lies over it and holds its place until a frame plays.
-            var video = new Grid { Width = Width, Height = Width * 9 / 16 };
+            video = new Grid { Width = Width, Height = Width * 9 / 16 };
             var banner = new Image { Stretch = Stretch.UniformToFill };
-            var art = new Grid { Background = (Brush)Application.Current.Resources["RaisedBrush"] };
+            art = new Grid { Background = (Brush)Application.Current.Resources["RaisedBrush"] };
             art.Children.Add(banner);
             video.Children.Add(art);
             ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, s => banner.Source = s);
@@ -281,7 +408,7 @@ static class HoverPreview
             popup.Child = card;
             popup.Closed += (_, _) =>
             {
-                stage?.Stop();
+                HoverTrailer.Closed(stage);
                 if (open == this)
                 {
                     open = null;
@@ -304,37 +431,49 @@ static class HoverPreview
             leave.IsRepeating = false;
             leave.Tick += (_, _) => Close();
 
-            if (TrailerHub.Available && Trailers.Embeddable(entry))
+            sound.Click += (_, _) =>
             {
-                stage = new TrailerStage(video, EmbedStyle.Banner, art, Trailers.SubtitleLanguage(ctx.Known));
-                stage.Size(video.Width, video.Height);
-                stage.Showing += shown =>
-                {
-                    playing = shown;
-                    soundOn = false;
-                    sound.IsHitTestVisible = shown;
-                    if (shown)
-                    {
-                        // The time from the pointer resting on the cover to the first frame, for the log.
-                        if (rested > 0)
-                            KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "trailer", $"hover card {entry.Id}: video shown {Environment.TickCount64 - rested} ms after the pointer rested");
-                        (sound.Content as FontIcon)!.Glyph = "\uE74F";
-                        Motion.Fade(sound, 1);
-                    }
-                    else
-                        Motion.Fade(sound, 0);
-                };
-                sound.Click += (_, _) =>
-                {
-                    soundOn = !soundOn;
-                    stage.SetSound(soundOn);
-                    (sound.Content as FontIcon)!.Glyph = soundOn ? "\uE767" : "\uE74F";
-                };
-            }
+                if (stage is null)
+                    return;
+                soundOn = !soundOn;
+                stage.SetSound(soundOn);
+                (sound.Content as FontIcon)!.Glyph = soundOn ? "\uE767" : "\uE74F";
+            };
             entryToPlay = entry;
         }
 
         readonly Entry entryToPlay;
+
+        /// <summary>
+        /// The trailer cued for this card, or one begun now, goes under the art, held until the
+        /// card has grown. None where the title has no trailer or trailers may not play now.
+        /// </summary>
+        void TakeTrailer()
+        {
+            var plays = TrailerHub.Available && Trailers.MayAutoplay(ctx.Known, entryToPlay);
+            stage = HoverTrailer.Open(entryToPlay, plays, Trailers.SubtitleLanguage(ctx.Known), video, art, video.Width, video.Height);
+            if (stage is null)
+                return;
+            var id = entryToPlay.Id;
+            stage.Showing += shown =>
+            {
+                if (closing)
+                    return;
+                playing = shown;
+                soundOn = false;
+                sound.IsHitTestVisible = shown;
+                if (shown)
+                {
+                    // The time from the pointer resting on the cover to the first frame, for the log.
+                    if (rested > 0)
+                        KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "trailer", $"hover card {id}: video shown {Environment.TickCount64 - rested} ms after the pointer rested");
+                    (sound.Content as FontIcon)!.Glyph = "\uE74F";
+                    Motion.Fade(sound, 1);
+                }
+                else
+                    Motion.Fade(sound, 0);
+            };
+        }
 
         UIElement? root;
         readonly KeyEventHandler onKey = (_, _) => Close();
@@ -374,15 +513,18 @@ static class HoverPreview
             popup.HorizontalOffset = x;
             popup.VerticalOffset = y;
             popup.IsOpen = true;
-            Grow(cover, x, y, height);
+            TakeTrailer();
+            if (!Grow(cover, x, y, height))
+                stage?.Unhold();
         }
 
         /// <summary>
         /// From the cover to the card on the standard spring, as on the Mac: the card grows from where
         /// the cover is, the banner shows from the start and the words come in from 100 ms. The
-        /// trailer starts once the card has grown. With animation effects off, a crossfade.
+        /// trailer shows once the card has grown, from the first frame then. With animation effects
+        /// off, a crossfade, and false.
         /// </summary>
-        void Grow(Rect cover, double x, double y, double height)
+        bool Grow(Rect cover, double x, double y, double height)
         {
             var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(card);
             var compositor = visual.Compositor;
@@ -393,7 +535,7 @@ static class HoverPreview
             {
                 fade.Duration = Motion.Standard;
                 visual.StartAnimation("Opacity", fade);
-                return;
+                return false;
             }
             // The point of the card over the cover's centre stays put while it grows.
             visual.CenterPoint = new System.Numerics.Vector3((float)(cover.X + cover.Width / 2 - x), (float)(cover.Y + cover.Height / 2 - y), 0);
@@ -409,18 +551,19 @@ static class HoverPreview
             later.DelayBehavior = Microsoft.UI.Composition.AnimationDelayBehavior.SetInitialValueBeforeDelay;
             later.Duration = Motion.Standard - TimeSpan.FromMilliseconds(100);
             text.StartAnimation("Opacity", later);
-            // Banner first; the trailer loads under it once the card has grown, and fades in
-            // only when a frame plays.
+            // Banner first; the trailer, already loading under it, shows once the card has grown,
+            // and only when a frame plays.
             var grown = Target.DispatcherQueue.CreateTimer();
             grown.Interval = Motion.Standard;
             grown.IsRepeating = false;
             grown.Tick += (_, _) =>
             {
                 grown.Stop();
-                if (!closing && popup.IsOpen && stage is not null && Trailers.MayAutoplay(ctx.Known, entryToPlay))
-                    stage.Start(entryToPlay);
+                if (!closing && popup.IsOpen)
+                    stage?.Unhold();
             };
             grown.Start();
+            return true;
         }
 
         /// <summary>The pointer is on the cover or the preview: stay open.</summary>
@@ -445,7 +588,8 @@ static class HoverPreview
             leave.Stop();
             root?.RemoveHandler(UIElement.KeyDownEvent, onKey);
             root?.RemoveHandler(UIElement.PointerWheelChangedEvent, onWheel);
-            stage?.Stop();
+            // The trailer's page goes back to the pool at once: the card closes over it.
+            HoverTrailer.Closed(stage);
             if (!popup.IsOpen)
                 return;
             // A trailer's video does not fade with the card and would stand alone as it went:
