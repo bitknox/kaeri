@@ -41,7 +41,7 @@ cast = ["remote", "dep:kaeri-cast"]
 # The OPDS feed: downloads and folders served to e-readers on the home network, off by default,
 # behind a password and only while Kaeri runs: see `export::feed`. The desktop apps turn it on (the
 # Mac beside `--no-default-features`, as it does `presence`); a phone's build leaves it off.
-opds-feed = ["dep:base64"]
+opds-feed = ["dep:base64", "dep:network-interface"]
 
 [dependencies]
 kaeri-core.workspace = true
@@ -70,6 +70,7 @@ kaeri-sync.workspace = true
 hex = "0.4"
 # HTTP Basic for the OPDS feed.
 base64 = { version = "0.23", optional = true }
+network-interface = { version = "2", optional = true }
 kaeri-track.workspace = true
 # The reader: book files opened and pages processed on the page worker.
 kaeri-pages.workspace = true

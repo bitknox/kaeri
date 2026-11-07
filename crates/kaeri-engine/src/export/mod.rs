@@ -27,7 +27,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU32, Ordering},
     },
     time::{Duration, Instant},
 };
@@ -301,13 +301,20 @@ fn prepare_files(
         let tx = send.lent.tx.clone();
         let result = send.run().await;
         send.exports.end(send.id);
+        let chapter = send.told.failing_chapter();
         match result {
             Ok(files) => {
                 let _ =
                     tx.send(Event::Reading(ReadingEvent::ExportReady { job: send.id, files }));
             }
             Err(prepare::Stop::Cancelled) => {}
-            Err(prepare::Stop::Failed(failure)) => fail(about, failure, &tx),
+            Err(prepare::Stop::Failed(failure)) => {
+                let _ = tx.send(Event::Reading(ReadingEvent::ExportFailed {
+                    job: send.id,
+                    chapter,
+                    failure,
+                }));
+            }
         }
     });
 }
@@ -317,11 +324,31 @@ struct Told {
     tx: Outbox,
     job: JobId,
     last: Mutex<Instant>,
+    /// Chapters gathered so far, and how many there are to gather.
+    gathered: AtomicU32,
+    of: AtomicU32,
+    /// The chapter being fetched, for a failure to name.
+    current: Mutex<Option<String>>,
 }
 
 impl Told {
     fn new(tx: Outbox, job: JobId) -> Arc<Self> {
-        Arc::new(Self { tx, job, last: Mutex::new(Instant::now() - Duration::from_secs(1)) })
+        Arc::new(Self {
+            tx,
+            job,
+            last: Mutex::new(Instant::now() - Duration::from_secs(1)),
+            gathered: AtomicU32::new(0),
+            of: AtomicU32::new(0),
+            current: Mutex::new(None),
+        })
+    }
+
+    fn chapter(&self, label: Option<String>) {
+        *self.current.lock().unwrap_or_else(|e| e.into_inner()) = label;
+    }
+
+    fn failing_chapter(&self) -> Option<String> {
+        self.current.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     fn tell(&self, done: u32, total: u32) {
@@ -334,6 +361,8 @@ impl Told {
             job: self.job,
             done,
             total,
+            chapters_done: self.gathered.load(Ordering::Relaxed),
+            chapters: self.of.load(Ordering::Relaxed),
         }));
     }
 }
@@ -447,6 +476,7 @@ impl OneSend {
         let total = fetch_count.saturating_mul(2 * FETCH_WEIGHT);
         let mut chapters = Vec::with_capacity(wanted.len());
         let mut fetched = 0u32;
+        self.told.of.store(u32::try_from(wanted.len()).unwrap_or(u32::MAX), Ordering::Relaxed);
         for want in &wanted {
             if self.cancel.load(Ordering::Relaxed) {
                 return Err(prepare::Stop::Cancelled);
@@ -455,8 +485,10 @@ impl OneSend {
             let label = row.number.clone().unwrap_or_else(|| row.label.clone());
             if let Some(path) = downloaded.get(want.chapter.as_str()) {
                 chapters.push(prepare::Chapter { label, path: path.clone() });
+                self.told.gathered.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
+            self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing).await?;
             std::fs::create_dir_all(temp).map_err(|_| {
@@ -492,6 +524,8 @@ impl OneSend {
                 }
             };
             chapters.push(prepare::Chapter { label, path: file.path });
+            self.told.gathered.fetch_add(1, Ordering::Relaxed);
+            self.told.chapter(None);
             fetched += 1;
         }
         Ok((chapters, fetch_count))

@@ -841,6 +841,19 @@ pub struct FeedView {
     /// The e-readers that fetched from the feed since it started, the latest first.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub clients: Vec<FeedClient>,
+    /// Why the feed is not listening although it is on, when it is not.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pause: Option<FeedPause>,
+}
+
+/// Why a feed that is on does not listen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FeedPause {
+    /// The Mac is on no local network.
+    NoNetwork,
+    /// The only route is a VPN, so the feed would be reachable from outside the home.
+    VpnOnly,
 }
 
 /// A shelf the feed may share.
@@ -1467,6 +1480,16 @@ pub enum ReadingEvent {
         job: JobId,
         done: u32,
         total: u32,
+        /// Chapters gathered so far, of `chapters`: what the screen says as "3 of 12". Zero
+        /// `chapters` means the send does not know yet.
+        chapters_done: u32,
+        chapters: u32,
+    },
+    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    ExportFailed {
+        job: JobId,
+        chapter: Option<String>,
+        failure: ReadingFailure,
     },
     ExportReady {
         job: JobId,
