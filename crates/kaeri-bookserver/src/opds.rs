@@ -489,6 +489,7 @@ impl OpdsSource {
                             .replace("{pageNumber}", &n.to_string())
                             .replace("{maxWidth}", "2000"),
                         headers: header.clone(),
+                        made: None,
                         width: None,
                         height: None,
                     })

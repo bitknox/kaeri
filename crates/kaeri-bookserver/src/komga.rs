@@ -366,6 +366,7 @@ impl KomgaSource {
                         p.number
                     )),
                     headers: header.clone(),
+                    made: None,
                     width: p.width,
                     height: p.height,
                 })

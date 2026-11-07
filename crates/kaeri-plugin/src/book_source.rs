@@ -11,8 +11,8 @@
 
 use kaeri_core::{
     books::{
-        BookHints, BookSourceKind, BookSourceManifest, ChapterContent, PageRef, ReadingHint,
-        SeriesDetail, SeriesHit, SeriesStatus, SourceChapter,
+        BookHints, BookSourceKind, BookSourceManifest, ChapterContent, MadePage, PageRef,
+        ReadingHint, SeriesDetail, SeriesHit, SeriesStatus, SourceChapter,
     },
     error::ProviderError,
     media::{Medium, Origin, ReadingFormat},
@@ -58,19 +58,30 @@ impl WasmBookSource {
         &self.plugin
     }
 
-    /// Fetch one page image the plugin named, through its own `allowed-hosts`, with the page's
-    /// headers. The bytes come back to the host only.
+    /// One page image the plugin named: fetched through its own `allowed-hosts` with the page's
+    /// headers, or made by the plugin itself and checked. The bytes come back to the host only.
     pub async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, ProviderError> {
-        let response =
-            self.plugin.fetch_page(&page.url, &page.headers).await.map_err(|e| match e {
-                host::HostError::Denied(reason) => ProviderError::Blocked(reason),
-                other => ProviderError::Other(other.to_string()),
-            })?;
-        match response.status {
-            200..=299 => Ok(response.body),
-            404 => Err(ProviderError::NotFound),
-            status => Err(ProviderError::Blocked(format!("page answered {status}"))),
+        match <Self as BookSource>::fetch_page(self, page).await {
+            Ok(bytes) => Ok(bytes),
+            Err(PageError::Status(404)) => Err(ProviderError::NotFound),
+            Err(PageError::Status(status)) => {
+                Err(ProviderError::Blocked(format!("page answered {status}")))
+            }
+            Err(PageError::Failed(error)) => Err(error),
+            Err(PageError::Unsupported) => Err(ProviderError::Other("no such page".into())),
         }
+    }
+
+    /// A page the plugin makes itself, from `page-bytes`, or `None` for one the host fetches. Its
+    /// errors are the plugin's errors, so they fail over and count against its health as any
+    /// other call's do.
+    async fn made_page(
+        &self,
+        made: &MadePage,
+        url: &str,
+    ) -> Result<Option<Vec<u8>>, PageError> {
+        flatten(self.plugin.page_bytes(&made.series, &made.chapter, url).await)
+            .map_err(PageError::Failed)
     }
 }
 
@@ -107,7 +118,10 @@ impl BookSource for WasmBookSource {
         series: &str,
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
-        flatten(self.plugin.chapter_content(series, chapter).await).map(content_from)
+        let content = flatten(self.plugin.chapter_content(series, chapter).await)?;
+        // Only a plugin built for `book-plugin-with-pages` is asked for its pages.
+        let made = self.plugin.makes_pages().then(|| MadePage::new(series, chapter));
+        Ok(content_from(content, made))
     }
 
     async fn health_check(&self) -> Result<(), ProviderError> {
@@ -116,6 +130,11 @@ impl BookSource for WasmBookSource {
     }
 
     async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+        if let Some(made) = &page.made
+            && let Some(bytes) = self.made_page(made, &page.url).await?
+        {
+            return Ok(bytes);
+        }
         let response =
             self.plugin.fetch_page(&page.url, &page.headers).await.map_err(|e| match e {
                 host::HostError::Denied(reason) => {
@@ -206,7 +225,7 @@ fn chapter_from(chapter: books::Chapter) -> SourceChapter {
     }
 }
 
-fn content_from(content: books::Content) -> ChapterContent {
+fn content_from(content: books::Content, made: Option<MadePage>) -> ChapterContent {
     match content {
         books::Content::Images(pages) => ChapterContent::Images(
             pages
@@ -216,6 +235,7 @@ fn content_from(content: books::Content) -> ChapterContent {
                     headers: page.headers,
                     width: page.width,
                     height: page.height,
+                    made: made.clone(),
                 })
                 .collect(),
         ),

@@ -3505,6 +3505,7 @@ dependencies = [
  "jiff",
  "kaeri-core",
  "kaeri-net",
+ "kaeri-pages",
  "regex",
  "reqwest 0.13.1",
  "tempfile",
