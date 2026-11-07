@@ -115,14 +115,18 @@ struct PageFailed: View {
 struct ReaderPillStyle: ButtonStyle {
     let theme: ReaderTheme
     var height: CGFloat = 40
+    /// Across its row, as the amber button above it.
+    var wide = false
+    /// On a card that is already the raised tone, the page's tone.
+    var fill: Color?
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(15, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : 15, weight: .semibold))
             .foregroundStyle(theme.silk)
             .padding(.horizontal, 18)
-            .frame(minHeight: height)
-            .background(theme.high.opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
+            .frame(maxWidth: wide ? .infinity : nil, minHeight: height)
+            .background((fill ?? theme.high).opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
             .contentShape(.capsule)
     }
 }
@@ -134,7 +138,7 @@ struct ReaderAmberStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(17, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : height < 44 ? 15 : 17, weight: .semibold))
             .foregroundStyle(theme.onAmber)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)

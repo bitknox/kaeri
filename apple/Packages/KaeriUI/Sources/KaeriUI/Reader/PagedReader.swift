@@ -197,28 +197,47 @@ struct ReaderEndPage: View {
         }
     }
 
-    /// The end of the demo: what it was, the way to add a source, and back to page 1.
+    /// The end of the demo: a card with the work's cover, what it was, the way to add a source,
+    /// and back to page 1. The reader's close button leads back to the series.
     private var demoEnd: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: 0)
-            Text(L.readerDemoEnd).font(.ui(24, weight: .semibold)).foregroundStyle(theme.silk)
-            Text(L.readerDemoEndLine).font(.ui(15)).foregroundStyle(theme.haze).padding(.top, 6)
-            Spacer(minLength: 0)
+        VStack(spacing: 0) {
+            if let cover = model.view?.demoCredit?.cover {
+                BookCover(url: cover, width: Device.isMac ? 40 : 48)
+                    .padding(.bottom, 14)
+            }
+            Text(L.readerDemoEnd)
+                .font(.ui(Device.isMac ? 15 : 17, weight: .semibold))
+                .foregroundStyle(theme.silk)
+            Text(L.readerDemoEndLine)
+                .font(.ui(Device.isMac ? 12 : 14))
+                .foregroundStyle(theme.haze)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
             Button(L.readerDemoAddSource) {
                 closeReader()
                 navigator.addBookSource = .choose
             }
-            .buttonStyle(ReaderAmberStyle(theme: theme))
-            Button(L.readerDemoAgain) { model.requestJump(0) }
-                .buttonStyle(ReaderPillStyle(theme: theme))
-                .padding(.top, 12)
-            Button(L.readerBackToSeries) { closeReader() }
-                .buttonStyle(ReaderPillStyle(theme: theme))
-                .padding(.top, 12)
+            .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 26 : 40))
+            .padding(.top, Device.isMac ? 16 : 18)
+            if Device.isMac {
+                Button(L.readerDemoAgain) { model.requestJump(0) }
+                    .buttonStyle(ReaderPillStyle(theme: theme, height: 26, wide: true, fill: theme.page.opacity(0.7)))
+                    .padding(.top, 8)
+            } else {
+                Button(L.readerDemoAgain) { model.requestJump(0) }
+                    .font(.ui(15, weight: .semibold))
+                    .foregroundStyle(theme.silk)
+                    .frame(minHeight: 44)
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+            }
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 72)
-        .frame(width: size.width, height: size.height, alignment: .leading)
+        .padding(EdgeInsets(top: 20, leading: 18, bottom: Device.isMac ? 18 : 10, trailing: 18))
+        .frame(maxWidth: Device.isMac ? 300 : 340)
+        .background(theme.high, in: .rect(cornerRadius: 14))
+        .padding(.horizontal, 16)
+        .frame(width: size.width, height: size.height)
         .background(theme.page)
     }
 
