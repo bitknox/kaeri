@@ -6,9 +6,11 @@
 //
 // The rules are the show sources' rules. The sandbox has no sockets and the host lends `fetch`:
 // the host makes each request, enforces `allowed-hosts`, rate-limits and keeps the cookie jar,
-// so a plugin is a parser that says what to ask for and reads the bytes that come back. Page
-// images are fetched by the host too, never by the plugin, with the headers each page carries,
-// so a download can fetch them again later through the same allowlist.
+// so a plugin is a parser that says what to ask for and reads the bytes that come back. A page
+// image is fetched by the host too, with the headers the page carries, so a download can fetch it
+// again later through the same allowlist. A page the host cannot fetch as one plain request (one
+// that sits inside a chapter archive, or needs a signed request) is the plugin's to make: the
+// host asks `page-bytes` for it when the page is wanted, one page at a time.
 //
 // Versioning. Major 1. The host tells this world from `kaeri:provider` by the names a component
 // imports and exports, so the kind of a plugin comes from the plugin itself. Kaeri loads any
@@ -164,10 +166,24 @@ interface source {
         page-count: option<u32>,
     }
 
-    /// One page image. The host fetches it, never the plugin, sending `headers` with it.
-    record page {
+    /// A page image at an address. The host fetches it, sending `headers` with it.
+    record page-url {
         url: string,
         headers: list<tuple<string, string>>,
+    }
+
+    /// Where a page image comes from.
+    variant page-image {
+        /// An address the host fetches through `allowed-hosts`. The usual case.
+        url(page-url),
+        /// The plugin's own id for a page it makes itself. The host hands it back to
+        /// `page-bytes`, with the series and the chapter, when it wants the page.
+        plugin(string),
+    }
+
+    /// One page image.
+    record page {
+        image: page-image,
         width: option<u32>,
         height: option<u32>,
     }
@@ -206,6 +222,15 @@ interface source {
     /// What chapter `chapter` of series `series` is made of. A page URL that answers 403 or 410
     /// later makes the host ask again, once, for fresh URLs.
     chapter-content: func(series: string, chapter: string) -> result<content, source-error>;
+
+    /// The bytes of one page this plugin makes itself: a `plugin` page from `chapter-content`.
+    /// A JPEG, PNG, WebP, GIF or AVIF file, whole. The host asks for one page at a time, when it
+    /// needs that page, under the same limits as every other call. It checks what comes back:
+    /// a page over 16 MiB, one that is no image it knows by its first bytes, or one whose
+    /// header claims more than 40 million pixels is refused before decoding, as this plugin's
+    /// `parse` error. A plugin that names only `url` pages answers `not-found`.
+    page-bytes: func(series: string, chapter: string, page: string)
+        -> result<list<u8>, source-error>;
 }
 
 world book-plugin {

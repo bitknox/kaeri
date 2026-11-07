@@ -6,8 +6,10 @@
 //! interface differs, so this module is the bindings for it, the host side of its own copy of
 //! `host`, and a loaded plugin's calls.
 //!
-//! Page images are fetched by the host, never by the guest. [`LoadedBookPlugin::fetch_page`]
-//! does that with the plugin's own `allowed-hosts`, outside any guest call.
+//! A page image is usually fetched by the host, never by the guest: [`LoadedBookPlugin::fetch_page`]
+//! does that with the plugin's own `allowed-hosts`, outside any guest call. A page the plugin
+//! makes itself comes from [`LoadedBookPlugin::page_bytes`], a guest call like any other, and
+//! the bytes it hands back are checked before the host keeps them: [`check_page`].
 
 use std::path::Path;
 
@@ -27,13 +29,63 @@ wasmtime::component::bindgen!({
 });
 
 pub use self::exports::kaeri::books::source::{
-    Chapter, Content, Manifest, Page, SeriesDetail, SeriesHit, SourceError, TitleHints,
+    Chapter, Content, Manifest, Page, PageImage, PageUrl, SeriesDetail, SeriesHit, SourceError,
+    TitleHints,
 };
 use self::kaeri::books::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
 
 /// The major version of the book source ABI this host speaks: the major of the WIT package in
 /// `wit/kaeri-books.wit`. It moves apart from [`crate::engine::ABI_MAJOR`].
 pub const BOOKS_ABI_MAJOR: u64 = 1;
+
+/// The largest page image a plugin may hand over from `page-bytes`. Twice the ceiling on one
+/// fetched response, for a page a plugin assembled and encoded itself; a quarter of the guest's
+/// default memory, which has to hold the page while it is made.
+pub const MAX_PAGE_BYTES: usize = 16 * 1024 * 1024;
+
+/// The most pixels a plugin's page may claim in its header: the reader's own decode cap, so a
+/// page is refused here rather than after it is kept.
+pub const MAX_PAGE_PIXELS: u64 = 40_000_000;
+
+/// Whether bytes a plugin made are a page the host will keep: under [`MAX_PAGE_BYTES`], an image
+/// format the reader knows by its first bytes (JPEG, PNG, WebP, GIF or AVIF), and a header that
+/// claims at most [`MAX_PAGE_PIXELS`]. Only the header is read, so a page that would decompress
+/// to gigabytes is refused before anything is decoded. The reason is for the log and the
+/// source's health, as a `parse` error.
+pub fn check_page(bytes: &[u8]) -> Result<(), String> {
+    if bytes.len() > MAX_PAGE_BYTES {
+        return Err(format!(
+            "the page is {} bytes, over the {MAX_PAGE_BYTES} byte limit",
+            bytes.len()
+        ));
+    }
+    measure(bytes)
+}
+
+#[cfg(feature = "fetch")]
+fn measure(bytes: &[u8]) -> Result<(), String> {
+    if kaeri_pages::SourceFormat::sniff(bytes).is_none() {
+        return Err("the page is not an image Kaeri shows".into());
+    }
+    let info = kaeri_pages::inspect(bytes).map_err(|e| format!("the page has no size: {e}"))?;
+    let pixels = u64::from(info.width) * u64::from(info.height);
+    if info.width == 0 || info.height == 0 {
+        return Err("the page has no size".into());
+    }
+    if pixels > MAX_PAGE_PIXELS {
+        return Err(format!(
+            "the page is {}x{}, over the {MAX_PAGE_PIXELS} pixel limit",
+            info.width, info.height
+        ));
+    }
+    Ok(())
+}
+
+/// A host built without `fetch` reads no pages: it has nothing to show them with.
+#[cfg(not(feature = "fetch"))]
+fn measure(_: &[u8]) -> Result<(), String> {
+    Err("this build of Kaeri reads no pages".into())
+}
 
 /// Ids a book plugin may not take: Kaeri's own book sources, and the demo.
 const RESERVED: &[&str] = &["folders", "servers"];
@@ -298,6 +350,32 @@ impl LoadedBookPlugin {
             .call_chapter_content(&mut store, series, chapter)
             .await
             .map_err(|e| self.deadline_error(&e))
+    }
+
+    /// The bytes of a page the plugin makes itself, under the same limits as every other call,
+    /// checked by [`check_page`]. A page that fails the check is the plugin's `parse` error.
+    pub async fn page_bytes(
+        &self,
+        series: &str,
+        chapter: &str,
+        page: &str,
+    ) -> Result<Result<Vec<u8>, SourceError>, PluginError> {
+        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        let made = instance
+            .kaeri_books_source()
+            .call_page_bytes(&mut store, series, chapter, page)
+            .await
+            .map_err(|e| self.deadline_error(&e))?;
+        // The store, and the guest memory the page was made in, go before the check runs.
+        drop(store);
+        Ok(made.and_then(|bytes| match check_page(&bytes) {
+            Ok(()) => Ok(bytes),
+            Err(reason) => {
+                tracing::warn!(plugin = %self.manifest.id, %reason, "a plugin's page was refused");
+                Err(SourceError::Parse(reason))
+            }
+        }))
     }
 
     /// Fetch one page image a chapter named, as the host does for every page: a GET through the

@@ -782,20 +782,46 @@ impl SourceChapter {
     }
 }
 
-/// One page image a source names: the WIT `page`. The host fetches it, never the guest, with the
-/// headers it carries, so a download can fetch it later.
+/// One page image a source names: the WIT `page`. Usually an address the host fetches, never the
+/// guest, with the headers it carries, so a download can fetch it later. A page the source makes
+/// itself has no address and carries [`MadePage`] instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageRef {
+    /// Empty for a page the source makes itself.
     pub url: String,
     pub headers: Vec<(String, String)>,
+    /// Set for a page the source makes itself (the WIT `plugin` page): what the source needs to
+    /// make it again. Its own [`crate::traits::BookSource::fetch_page`] hands back the bytes.
+    pub made: Option<MadePage>,
     pub width: Option<u32>,
     pub height: Option<u32>,
 }
 
 impl PageRef {
     pub fn new(url: impl Into<String>) -> Self {
-        Self { url: url.into(), headers: Vec::new(), width: None, height: None }
+        Self { url: url.into(), headers: Vec::new(), made: None, width: None, height: None }
     }
+
+    /// A page the source makes itself, named by its own id within `series` and `chapter`.
+    pub fn made(series: &str, chapter: &str, id: impl Into<String>) -> Self {
+        Self {
+            made: Some(MadePage {
+                series: series.to_owned(),
+                chapter: chapter.to_owned(),
+                id: id.into(),
+            }),
+            ..Self::new("")
+        }
+    }
+}
+
+/// A page a source makes itself rather than names an address for: the chapter it belongs to and
+/// the source's own id for it, handed back when the page is wanted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MadePage {
+    pub series: String,
+    pub chapter: String,
+    pub id: String,
 }
 
 /// A whole book file on this device: an archive, an EPUB or a PDF a folder or a server hands

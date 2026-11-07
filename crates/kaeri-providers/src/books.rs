@@ -361,10 +361,12 @@ impl BookRegistry {
     /// Fetch page `index` of `pages`, which `source` named for `chapter` of `series`.
     ///
     /// A page that fails on the way (a dropped connection, a timeout, a busy server) is fetched
-    /// again after each of [`PAGE_RETRIES`]. A page address that answers 403 or 410 has expired: the source is asked once more for the
-    /// chapter, `pages` is replaced with the fresh addresses, and the page is fetched again. A
-    /// second refusal is the answer. `plain` fetches an address with the engine's own client,
-    /// for a source that does not fetch its own pages.
+    /// again after each of [`PAGE_RETRIES`]. A page address that answers 403 or 410 has expired:
+    /// the source is asked once more for the chapter, `pages` is replaced with the fresh
+    /// addresses, and the page is fetched again. A second refusal is the answer. `plain` fetches
+    /// an address with the engine's own client, for a source that does not fetch its own pages.
+    /// A page the source makes itself goes to the source every time, and has no address to
+    /// expire: its failures are the source's own errors.
     pub async fn fetch_page<F, Fut>(
         &self,
         at: &ChapterAt<'_>,
@@ -384,7 +386,8 @@ impl BookRegistry {
             let plain = &plain;
             async move {
                 match owner.fetch_page(&page).await {
-                    Err(PageError::Unsupported) => plain(page).await,
+                    // A page the source makes itself has no address to fetch instead.
+                    Err(PageError::Unsupported) if page.made.is_none() => plain(page).await,
                     other => other,
                 }
             }
@@ -746,6 +749,63 @@ mod tests {
             .unwrap_err();
         assert_eq!(error, ProviderError::Blocked("page answered 403".into()));
         assert_eq!(inner.contents.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn a_page_the_source_makes_is_never_fetched_as_an_address() {
+        /// Fetches no pages of its own, so the engine's client would take an address.
+        struct Plain(Arc<Fake>);
+        #[async_trait]
+        impl BookSource for Plain {
+            fn manifest(&self) -> &BookSourceManifest {
+                self.0.manifest()
+            }
+            async fn search(
+                &self,
+                q: &str,
+                h: &BookHints,
+            ) -> Result<Vec<SeriesHit>, ProviderError> {
+                self.0.search(q, h).await
+            }
+            async fn series(
+                &self,
+                i: &str,
+                h: &BookHints,
+            ) -> Result<SeriesDetail, ProviderError> {
+                self.0.series(i, h).await
+            }
+            async fn chapters(
+                &self,
+                i: &str,
+                h: &BookHints,
+            ) -> Result<Vec<SourceChapter>, ProviderError> {
+                self.0.chapters(i, h).await
+            }
+            async fn content(&self, s: &str, c: &str) -> Result<ChapterContent, ProviderError> {
+                self.0.content(s, c).await
+            }
+        }
+        let registry = BookRegistry::new();
+        registry.put(Arc::new(Plain(Fake::new("a", BookSourceKind::Plugin, &[]))));
+        let plain = AtomicU32::new(0);
+        let at = ChapterAt { source: "a", series: "s", chapter: "c" };
+        let fetch = |page: PageRef| {
+            let (registry, plain, at) = (&registry, &plain, &at);
+            async move {
+                registry
+                    .fetch_page(at, &mut vec![page], 0, 1, |_| async move {
+                        plain.fetch_add(1, Ordering::SeqCst);
+                        Ok(b"fetched".to_vec())
+                    })
+                    .await
+            }
+        };
+        let error = fetch(PageRef::made("s", "c", "p1")).await.unwrap_err();
+        assert_eq!(error, ProviderError::Other("the source has no way to fetch pages".into()));
+        assert_eq!(plain.load(Ordering::SeqCst), 0, "an empty address is never fetched");
+        // An address still goes to the engine's client.
+        let bytes = fetch(PageRef::new("https://pages.example/p1")).await.unwrap();
+        assert_eq!(bytes, b"fetched");
     }
 
     /// A source whose pages fail with `errors` in turn, then load.

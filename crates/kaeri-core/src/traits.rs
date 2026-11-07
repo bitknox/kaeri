@@ -290,8 +290,9 @@ pub trait BookSource: Send + Sync {
 
     /// Fetch one page image this source named, with the headers it carries. A source that
     /// names pages the host can fetch plainly (a server's, with its sign-in header) keeps the
-    /// default, which the engine's own client answers; a plugin's goes through its allowlist.
-    /// The status is told as it came, so the registry can ask for fresh addresses on a 403 or 410.
+    /// default, which the engine's own client answers; a plugin's goes through its allowlist,
+    /// and a page a plugin makes itself ([`PageRef::made`]) comes from the plugin. The status is
+    /// told as it came, so the registry can ask for fresh addresses on a 403 or 410.
     async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
         Err(PageError::Unsupported)
     }
