@@ -564,6 +564,12 @@ internal fun StatusMenu(series: SeriesView, expanded: Boolean, onDismiss: () -> 
     var pane by remember { mutableStateOf(StatusPane.Lists) }
     val result = removals[series.work]
     LaunchedEffect(result) { if (result != null && pane == StatusPane.Remove) pane = StatusPane.Removed }
+    LaunchedEffect(expanded) {
+        if (expanded && SeriesShots.removing) {
+            pane = StatusPane.Remove
+            SeriesShots.removing = false
+        }
+    }
     fun close() {
         if (pane == StatusPane.Removed) store.reading.removalSeen(series.work)
         pane = StatusPane.Lists

@@ -96,11 +96,14 @@ import app.kaeri.ui.wideWindow
 
 /**
  * What the screenshots open on the series page once it has loaded: a sheet or menu by name
- * (chapter, read-from, tracking, read-again, send, where-stop, choose, status, download), set by
- * the JVM shots and the Fixtures app's `series` extra.
+ * (chapter, read-from, tracking, read-again, send, where-stop, choose, status, remove, download),
+ * set by the JVM shots and the Fixtures app's `series` extra.
  */
 object SeriesShots {
     var open by mutableStateOf<String?>(null)
+
+    /** The status menu opens on Remove from lists' question rather than the lists. */
+    var removing by mutableStateOf(false)
 }
 
 /** The sheets the page holds open, one at a time. */
@@ -153,6 +156,10 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
             "where-stop" -> sheet = SeriesSheet.WhereStop
             "choose" -> chosen = volumes.chooseStart()
             "status" -> statusOpen = true
+            "remove" -> {
+                SeriesShots.removing = true
+                statusOpen = true
+            }
             "download" -> downloadOpen = true
         }
         SeriesShots.open = null

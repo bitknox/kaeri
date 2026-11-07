@@ -85,6 +85,9 @@ abstract class ReadingShotHarness {
         medium: KaeriIsFor? = null,
         screen: Boolean = false,
         then: (AppStore) -> Unit = {},
+        /** A step on the screen once it is ready, such as a tap, and what says it has landed. */
+        act: (() -> Unit)? = null,
+        acted: (AppStore) -> Boolean = { true },
         ready: (AppStore) -> Boolean,
     ) {
         val store = AppStore(scope)
@@ -104,6 +107,11 @@ abstract class ReadingShotHarness {
         pump(name, ready)
         compose.runOnUiThread { then(store) }
         pump(name, ready)
+        if (act != null) {
+            settle(store)
+            act()
+            pump(name, acted)
+        }
         settle(store)
         val file = "${roborazziSystemPropertyOutputDirectory()}/$name.png"
         if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)

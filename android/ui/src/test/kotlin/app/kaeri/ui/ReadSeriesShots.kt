@@ -1,7 +1,11 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.i18n.Strings
 import app.kaeri.store.AppStore
+import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
 import app.kaeri.ui.reading.SeriesShots
 import org.junit.Test
@@ -50,6 +54,28 @@ class ReadSeriesShots : ReadingShotHarness() {
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_status() = series("phone-read-series-status", open = "status")
+
+    /** On a phone network with chapters kept to Wi-Fi, the send holds until Wi-Fi. */
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_send_waits() = shoot(
+        "phone-read-series-send-waits",
+        FixtureScene.READING_SERIES,
+        Destination.Read,
+        page = page(MANGA),
+        screen = true,
+        then = {
+            it.networkPath(cellular = true, constrained = false)
+            SeriesShots.open = "send"
+        },
+        act = { compose.onNodeWithText(Strings.sendEreaderPrepare(compose.activity)).performClick() },
+        acted = { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } },
+        ready = loaded(MANGA),
+    )
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_remove() = series("phone-read-series-remove", open = "remove")
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
