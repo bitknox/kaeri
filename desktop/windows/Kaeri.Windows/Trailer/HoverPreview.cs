@@ -58,6 +58,8 @@ static class HoverPreview
         public Point Anchor;
         public DispatcherQueueTimer? Timer;
         public Func<uint> Id = () => 0;
+        /// <summary>When the pointer last came to rest here (<see cref="Environment.TickCount64"/>), for the log.</summary>
+        public long RestedAt;
     }
 
     /// <summary>Lets <paramref name="target"/> open a preview of title <paramref name="id"/> when the pointer rests on it.</summary>
@@ -75,7 +77,7 @@ static class HoverPreview
         state.Timer = Timers.Weak(target, Dwell, false, static at =>
         {
             if (targets.TryGetValue(at, out var resting))
-                Show(at, resting.Id());
+                Show(at, resting.Id(), resting.RestedAt);
         });
         target.Loaded += (_, _) => HearWheel(target);
         // Heard even when the target has handled them: a grid's item container and a button
@@ -133,6 +135,7 @@ static class HoverPreview
             o.Stay();
             return;
         }
+        state.RestedAt = Environment.TickCount64;
         state.Timer.Start();
     }
 
@@ -147,7 +150,9 @@ static class HoverPreview
     }
 
     /// <summary>Open a preview of the title now, for a screenshot or a key.</summary>
-    public static void Show(FrameworkElement target, uint id)
+    public static void Show(FrameworkElement target, uint id) => Show(target, id, 0);
+
+    static void Show(FrameworkElement target, uint id, long rested)
     {
         var ctx = Ctx.Current;
         if (target.XamlRoot is null || !ctx.Window.InFront)
@@ -161,7 +166,7 @@ static class HoverPreview
         // hover card. The engine asks once a minute at most, and Home marks a miss.
         ctx.Send(new Command.ProbeTitle(id));
         Close();
-        var preview = new Open(ctx, target, entry);
+        var preview = new Open(ctx, target, entry, rested);
         open = preview;
         preview.Show();
     }
@@ -183,7 +188,7 @@ static class HoverPreview
 
         public FrameworkElement Target { get; }
 
-        public Open(Ctx ctx, FrameworkElement target, Entry entry)
+        public Open(Ctx ctx, FrameworkElement target, Entry entry, long rested)
         {
             this.ctx = ctx;
             Target = target;
@@ -310,6 +315,9 @@ static class HoverPreview
                     sound.IsHitTestVisible = shown;
                     if (shown)
                     {
+                        // The time from the pointer resting on the cover to the first frame, for the log.
+                        if (rested > 0)
+                            KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "trailer", $"hover card {entry.Id}: video shown {Environment.TickCount64 - rested} ms after the pointer rested");
                         (sound.Content as FontIcon)!.Glyph = "\uE74F";
                         Motion.Fade(sound, 1);
                     }
