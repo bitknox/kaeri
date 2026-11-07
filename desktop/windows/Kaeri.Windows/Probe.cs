@@ -16,12 +16,44 @@ namespace Kaeri.Windows;
 /// stalls.csv  start and length in ms of every wait of 40 ms or more for the UI thread, from a
 ///             watchdog thread that asks it to run something every 10 ms
 /// memory.csv  once a second: private bytes, working set, handles, threads
+/// offsets.csv each page scroller's offsets on every frame they differ from the frame before,
+///             stamped with that frame's line in frames.csv
+/// marks.csv   moments to line up with, such as a page loading or a wheel notch arriving
 /// </summary>
 static class Probe
 {
     static readonly object Gate = new();
-    static readonly StringBuilder Frames = new(), Stalls = new(), Memory = new(), Marks = new();
+    static readonly StringBuilder Frames = new(), Stalls = new(), Memory = new(), Marks = new(), Offsets = new();
     static string? dir;
+
+    /// <summary>Whether this run records, known before Start: pages made with the window register their scrollers first.</summary>
+    static readonly bool On = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KAERI_PROBE_DIR"));
+
+    /// <summary>The page scrollers watched, by the name offsets.csv gives them, with the offsets last written.</summary>
+    static readonly List<(WeakReference<Microsoft.UI.Xaml.Controls.ScrollViewer> Scroller, string Name, double[] Last)> scrollers = [];
+
+    /// <summary>
+    /// Writes <paramref name="scroller"/>'s offsets to offsets.csv on every frame they changed, as
+    /// <paramref name="name"/>. The driver turns them into stalls, jumps and delays.
+    /// </summary>
+    public static void Watch(Microsoft.UI.Xaml.Controls.ScrollViewer scroller, string name)
+    {
+        if (!On || scrollers.Any(s => s.Scroller.TryGetTarget(out var known) && known == scroller))
+            return;
+        scrollers.Add((new(scroller), name, [double.NaN, double.NaN]));
+    }
+
+    /// <summary>Each wheel notch the window hears, handled or not, as a mark: "wheel" and its delta.</summary>
+    public static void HearWheel(Microsoft.UI.Xaml.UIElement root)
+    {
+        if (dir is null)
+            return;
+        root.AddHandler(Microsoft.UI.Xaml.UIElement.PointerWheelChangedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler((_, e) =>
+        {
+            var point = e.GetCurrentPoint(null).Properties;
+            Mark($"wheel {(point.IsHorizontalMouseWheel ? "sideways " : "")}{point.MouseWheelDelta}");
+        }), true);
+    }
 
     /// <summary>A moment the driver lines up with its steps, such as a navigation finishing: marks.csv.</summary>
     public static void Mark(string what)
@@ -43,10 +75,33 @@ static class Probe
         File.WriteAllText(Path.Combine(dir, "memory.csv"), "at,private_mb,working_mb,handles,threads\n");
         File.WriteAllText(Path.Combine(dir, "marks.csv"), "at,what\n");
 
+        File.WriteAllText(Path.Combine(dir, "offsets.csv"), "at,scroller,vertical,horizontal\n");
+
         CompositionTarget.Rendering += (_, _) =>
         {
+            var now = Stopwatch.GetTimestamp();
             lock (Gate)
-                Frames.Append(Stopwatch.GetTimestamp()).Append('\n');
+                Frames.Append(now).Append('\n');
+            for (var i = scrollers.Count - 1; i >= 0; i--)
+            {
+                var (scroller, name, last) = scrollers[i];
+                if (!scroller.TryGetTarget(out var s))
+                {
+                    scrollers.RemoveAt(i);
+                    continue;
+                }
+                if (s.XamlRoot is null)
+                    continue;
+                double v = s.VerticalOffset, h = s.HorizontalOffset;
+                if (v == last[0] && h == last[1])
+                    continue;
+                last[0] = v;
+                last[1] = h;
+                lock (Gate)
+                    Offsets.Append(now).Append(',').Append(name).Append(',')
+                        .Append(v.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)).Append(',')
+                        .Append(h.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)).Append('\n');
+            }
         };
 
         var watchdog = new Thread(() => Watch(ui)) { IsBackground = true, Name = "probe watchdog", Priority = ThreadPriority.AboveNormal };
@@ -94,6 +149,7 @@ static class Probe
             Flush("stalls.csv", Stalls);
             Flush("memory.csv", Memory);
             Flush("marks.csv", Marks);
+            Flush("offsets.csv", Offsets);
         }
     }
 

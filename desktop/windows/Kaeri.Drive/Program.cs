@@ -86,7 +86,8 @@ foreach (var (name, body, scene, playerScene) in all.Where(s => options.Only is 
     results.Add(await run.Finish());
 }
 Feel.Write(options.Out);
-var report = Report.Write(results, Native.RefreshHz());
+ScreenMotion.Write(options.Out);
+var report = Report.Write(results, Native.RefreshHz()) + ScreenMotion.Table(1000.0 / Native.RefreshHz());
 File.WriteAllText(Path.Combine(options.Out, "report.md"), report);
 Console.WriteLine(report);
 Console.WriteLine($"Kaeri.Drive: done. {Path.Combine(options.Out, "report.md")}");
@@ -847,6 +848,7 @@ static class Report
                 md.AppendLine($"| {s.Label} | {(shown >= 0 ? shown.ToString("F0", CultureInfo.InvariantCulture) : "-")} | {times.Count} | {Pct(times, 50)} | {Pct(times, 95)} | {Pct(times, 99)} | {(times.Count > 0 ? times[^1].ToString("F0", CultureInfo.InvariantCulture) : "-")} | {(times.Count > 0 ? $"{missed} ({100.0 * missed / times.Count:F0}%)" : "-")} | {(stall > 0 ? stall.ToString("F0", CultureInfo.InvariantCulture) : "-")} |");
             }
             md.AppendLine();
+            md.Append(ScrollMotion.Table(r.Dir, r.Steps, period));
             var big = stalls.Where(p => p.Ms >= 250).ToArray();
             if (big.Length > 0)
                 md.AppendLine($"UI thread stalls of 250 ms or more: {big.Length}, the longest {big.Max(p => p.Ms):F0} ms.");
