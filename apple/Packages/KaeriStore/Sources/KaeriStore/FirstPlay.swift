@@ -19,6 +19,16 @@ public final class DemoModel {
     /// Who made the demo, its licence and the hosts it reaches. The engine's constants, so the
     /// screens can name nothing the demo does not reach.
     public var info: DemoInfo { demoInfo() }
+
+    /// The reading demo's works with their credits and licences, and the hosts it reaches.
+    public var reading: ReadingDemoInfo { readingDemoInfo() }
+
+    /// The comic and the story, by what they are.
+    public var comic: DemoWorkInfo? { reading.works.first { !$0.novel } }
+    public var story: DemoWorkInfo? { reading.works.first(where: \.novel) }
+
+    /// Whether a work id is one of the demo's.
+    public func isDemoWork(_ id: String) -> Bool { reading.works.contains { id.hasSuffix($0.id) } }
 }
 
 /// The crash reports: the saved ones, the ones the system still holds, and the one to mention.

@@ -56,6 +56,8 @@ public final class AppStore {
     public let reading = ReadingModel()
     /// Folders, servers and plugins that books come from.
     public let bookSources = BookSourcesModel()
+    /// What came in after a server, folder or store was added.
+    public let cameIn = CameInModel()
     public let showSettings = ShowSettingsModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
@@ -166,6 +168,7 @@ public final class AppStore {
         medium.send = { [weak self] command in self?.send(command) }
         reading.send = { [weak self] command in self?.send(command) }
         bookSources.send = { [weak self] command in self?.send(command) }
+        cameIn.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
@@ -915,6 +918,7 @@ public final class AppStore {
         reader.observe(event)
         reading.observe(event)
         bookSources.observe(event)
+        cameIn.apply(event)
         if case .medium(let view) = event { medium.apply(view) }
         sync.apply(event)
         if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
