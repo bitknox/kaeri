@@ -248,7 +248,7 @@ settings-look-follows = Look
 settings-send-progress-after = Send progress after
 
 # Row: which chapter progress wins when a tracker and this device disagree.
-settings-when-trackers-disagree = When trackers disagree
+settings-when-trackers-disagree = When { -tracker-pl } disagree
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = New chapters

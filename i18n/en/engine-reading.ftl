@@ -325,7 +325,7 @@ reading-row-not-downloaded = Not downloaded
 
 # A chapter row's state: a file in one of the person's folders, or one already on the device.
 # @max 20
-reading-row-on-device = On this device
+reading-row-on-device = On this { -device }
 
 # A chapter row's state: it waits its turn to download.
 # @max 20
@@ -338,7 +338,7 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 # A chapter row's state while it downloads.
 # @arg done: int
 # @arg total: int
-# @max 40
+# @max 44
 reading-row-downloading = Downloading · { $done } of { $total } pages
 
 # A chapter row's state: the download failed. The reason follows as the next part.
@@ -371,7 +371,7 @@ reading-row-pages = { $n ->
 
 # A chapter row: how many versions the person's sources have of it. The row's menu lists them.
 # @arg n: int
-# @max 16
+# @max 20
 reading-row-versions = { $n ->
     [one] 1 version
    *[other] { $n } versions
@@ -396,7 +396,7 @@ reading-ago-yesterday = yesterday
 
 # A chapter row: when it was read or came out, in days, under a week.
 # @arg days: int
-# @max 16
+# @max 20
 reading-ago-days = { $days ->
     [one] 1 day ago
    *[other] { $days } days ago
@@ -404,7 +404,7 @@ reading-ago-days = { $days ->
 
 # A chapter row: when it was read or came out, in weeks, under two months.
 # @arg weeks: int
-# @max 16
+# @max 20
 reading-ago-weeks = { $weeks ->
     [one] 1 week ago
    *[other] { $weeks } weeks ago
@@ -412,7 +412,7 @@ reading-ago-weeks = { $weeks ->
 
 # A chapter row: when it was read or came out, in months, under a year.
 # @arg months: int
-# @max 16
+# @max 20
 reading-ago-months = { $months ->
     [one] 1 month ago
    *[other] { $months } months ago
@@ -420,7 +420,7 @@ reading-ago-months = { $months ->
 
 # A chapter row: when it was read or came out, in years.
 # @arg years: int
-# @max 16
+# @max 20
 reading-ago-years = { $years ->
     [one] 1 year ago
    *[other] { $years } years ago
