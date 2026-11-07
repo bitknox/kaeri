@@ -29,6 +29,10 @@ struct Shelf {
     manifest: BookSourceManifest,
     listed: Mutex<Vec<SourceChapter>>,
     fetched: Mutex<u32>,
+    /// The addresses fetched, in order.
+    asked: Mutex<Vec<String>>,
+    /// Pages at these addresses answer 404.
+    broken: Mutex<Vec<String>>,
 }
 
 #[async_trait]
@@ -67,8 +71,12 @@ impl BookSource for Shelf {
         ))
     }
 
-    async fn fetch_page(&self, _: &PageRef) -> Result<Vec<u8>, PageError> {
+    async fn fetch_page(&self, page_ref: &PageRef) -> Result<Vec<u8>, PageError> {
         *self.fetched.lock().unwrap() += 1;
+        self.asked.lock().unwrap().push(page_ref.url.clone());
+        if self.broken.lock().unwrap().contains(&page_ref.url) {
+            return Err(PageError::Status(404));
+        }
         Ok(page())
     }
 }
@@ -144,8 +152,13 @@ fn kit(chapters: &[&str]) -> Kit {
         capabilities: Vec::new(),
     };
     let listed = chapters.iter().map(|id| SourceChapter::new(*id, *id)).collect();
-    let shelf =
-        Arc::new(Shelf { manifest, listed: Mutex::new(listed), fetched: Mutex::new(0) });
+    let shelf = Arc::new(Shelf {
+        manifest,
+        listed: Mutex::new(listed),
+        fetched: Mutex::new(0),
+        asked: Mutex::default(),
+        broken: Mutex::default(),
+    });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
     store.seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1).unwrap();
@@ -718,4 +731,92 @@ async fn a_downloaded_chapter_the_source_dropped_stays_listed_and_opens() {
     // The file is still on the shelf the reader opens from.
     let shelf = kit.store().shelf(WORK).unwrap();
     assert!(shelf.iter().any(|f| f.chapter.as_deref() == Some("2")), "{shelf:?}");
+}
+
+/// The kept pages of chapter `chapter`, by index, from their names.
+fn kept_pages(kit: &Kit, chapter: &str) -> Vec<std::path::PathBuf> {
+    let dir = kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe(chapter)));
+    let mut pages: Vec<_> = std::fs::read_dir(dir)
+        .map(|d| {
+            d.flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|e| e == "page"))
+                .collect()
+        })
+        .unwrap_or_default();
+    pages.sort();
+    pages
+}
+
+/// Chapter 1 fetched up to its third page, which the source fails.
+async fn cut_short() -> Kit {
+    let kit = kit(&["1"]);
+    kit.shelf.broken.lock().unwrap().push("https://pages.example/1/3".into());
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    assert!(matches!(kit.states()[0].1, ChapterDownloadState::Failed { .. }));
+    assert_eq!(kit_pages(&kit), 2, "the two pages that came are kept");
+    kit.shelf.broken.lock().unwrap().clear();
+    kit.shelf.asked.lock().unwrap().clear();
+    kit
+}
+
+fn kit_pages(kit: &Kit) -> usize {
+    kept_pages(kit, "1").len()
+}
+
+#[tokio::test]
+async fn a_chapter_cut_short_fetches_only_the_pages_it_lacks() {
+    let kit = cut_short().await;
+    // A restart keeps the pages of a chapter still to be fetched.
+    kit.queue.recover(kit.store(), 10);
+    assert_eq!(kit_pages(&kit), 2);
+
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(*kit.shelf.asked.lock().unwrap(), ["https://pages.example/1/3"]);
+    let shelf = kit.store().shelf(WORK).unwrap();
+    match kaeri_books::open(
+        std::path::Path::new(&shelf[0].path),
+        &kaeri_books::Limits::default(),
+    )
+    .unwrap()
+    {
+        kaeri_books::Book::Comic(comic) => assert_eq!(comic.pages().len(), 3),
+        _ => panic!("a downloaded chapter of pages opens as a comic"),
+    }
+    // The pages go once the chapter's file is whole.
+    assert!(!kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe("1"))).exists());
+}
+
+#[tokio::test]
+async fn a_kept_page_that_does_not_check_out_is_fetched_again() {
+    let kit = cut_short().await;
+    let pages = kept_pages(&kit, "1");
+    // The first page was torn when the app stopped.
+    let bytes = std::fs::read(&pages[0]).unwrap();
+    std::fs::write(&pages[0], &bytes[..bytes.len() / 2]).unwrap();
+
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(
+        *kit.shelf.asked.lock().unwrap(),
+        ["https://pages.example/1/1", "https://pages.example/1/3"]
+    );
+}
+
+#[tokio::test]
+async fn kept_pages_go_with_a_chapter_taken_out_of_the_queue() {
+    let kit = cut_short().await;
+    kit.queue.delete(&kit.lent, &WorkId::new(WORK), &ids(&["1"]));
+    kit.queue.recover(kit.store(), 10);
+    assert!(!kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe("1"))).exists());
 }
