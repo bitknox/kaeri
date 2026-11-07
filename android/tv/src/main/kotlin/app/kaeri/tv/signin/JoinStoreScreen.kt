@@ -439,6 +439,9 @@ private fun JoinedResult(
     }
     val row = joined?.let { r -> stores.firstOrNull { it.id == r.store } }
     val doneFocus = remember { FocusRequester() }
+    // Joined with something to install: focus starts on the first Install, as the board has it.
+    val installFocus = remember { FocusRequester() }
+    var installFirst by remember { mutableStateOf(false) }
     val failed = step is CameInSteps.StoreStep.Unreachable
     BackHandler { if (failed) onCancel() else onDone() }
     Row(
@@ -484,6 +487,10 @@ private fun JoinedResult(
                     val shownPlugins = list.forWatching.mapNotNull { plugins[it] }
                     if (shownPlugins.isNotEmpty()) {
                         Text(stringResource(R.string.store_group_watching), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze, modifier = Modifier.padding(start = 4.dp))
+                        val firstToInstall = shownPlugins.firstOrNull { plugin ->
+                            plugin.id !in installedHere && plugin.status != app.kaeri.engine.model.StorePluginStatus.Installed
+                        }?.id?.takeIf { shown is CameInSteps.StoreStep.Joined }
+                        LaunchedEffect(firstToInstall != null) { installFirst = firstToInstall != null }
                         Column(Modifier.background(ObiSilk.Raised, RoundedCornerShape(12.dp))) {
                             shownPlugins.forEach { plugin ->
                                 val installed = plugin.id in installedHere || plugin.status == app.kaeri.engine.model.StorePluginStatus.Installed ||
@@ -492,7 +499,7 @@ private fun JoinedResult(
                                 TvPluginRow(plugin, installed = installed, busy = busy, onInstall = {
                                     store.installPlugin(list.store, plugin.id)
                                     store.cameIn.installedOne(plugin.id)
-                                }, then = doneFocus)
+                                }, then = doneFocus, first = installFocus.takeIf { plugin.id == firstToInstall })
                             }
                         }
                     }
@@ -500,7 +507,7 @@ private fun JoinedResult(
                         Text(Strings.storeTvReadingOnly(context, list.otherMedium.toInt()), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(start = 4.dp))
                     }
                 }
-                Row(Modifier.padding(top = 8.dp).entryFocus(doneFocus), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.padding(top = 8.dp).entryFocus(if (installFirst && !failed) installFocus else doneFocus), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (failed) {
                         TonalButton(onClick = onAgain, modifier = Modifier.focusRequester(doneFocus)) { ButtonLabel(stringResource(R.string.action_try_again)) }
                         TonalButton(onClick = onCancel) { ButtonLabel(cancelLabel) }
@@ -549,7 +556,7 @@ private fun TvNote(kind: TvNoteKind, title: String, line: String? = null) {
  * [then] over 150 ms.
  */
 @Composable
-private fun TvPluginRow(plugin: app.kaeri.engine.model.StorePluginRow, installed: Boolean, busy: Boolean, onInstall: () -> Unit, then: FocusRequester) {
+private fun TvPluginRow(plugin: app.kaeri.engine.model.StorePluginRow, installed: Boolean, busy: Boolean, onInstall: () -> Unit, then: FocusRequester, first: FocusRequester? = null) {
     val context = LocalContext.current
     var focused by remember { mutableStateOf(false) }
     val fill by androidx.compose.animation.animateColorAsState(if (focused) ObiSilk.Silk else ObiSilk.Raised, androidx.compose.animation.core.tween(150), label = "row") // i18n-skip
@@ -590,7 +597,7 @@ private fun TvPluginRow(plugin: app.kaeri.engine.model.StorePluginRow, installed
             androidx.tv.material3.Button(
                 onClick = onInstall,
                 enabled = !busy,
-                modifier = Modifier.onFocusChanged { focused = it.isFocused },
+                modifier = (if (first != null) Modifier.focusRequester(first) else Modifier).onFocusChanged { focused = it.isFocused },
                 shape = androidx.tv.material3.ButtonDefaults.shape(CircleShape),
                 colors = androidx.tv.material3.ButtonDefaults.colors(
                     containerColor = ObiSilk.RaisedSelected,

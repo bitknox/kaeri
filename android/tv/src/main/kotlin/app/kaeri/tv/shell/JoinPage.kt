@@ -193,7 +193,7 @@ private fun Code(state: JoinState, now: Long, back: () -> Unit, again: () -> Uni
                 CodeBoxes(code)
                 val seconds = state.secondsLeft(now)
                 Text(Strings.pairGoodFor(context, "%d:%02d".format(seconds / 60, seconds % 60)), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze) // i18n-skip
-                QrCode("kaeri://pair?port=${state.port}&code=$code", size = 132.dp, label = stringResource(R.string.pair_show_scan))
+                QrCode("kaeri://pair?port=${state.port}&code=$code", size = 132.dp, label = stringResource(R.string.pair_show_scan), plate = true)
             }
         }
         Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(12.dp)) {

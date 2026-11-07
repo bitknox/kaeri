@@ -9,6 +9,8 @@
 package app.kaeri.store
 
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.ProviderOrigin
+import app.kaeri.engine.model.ProviderRow
 import app.kaeri.engine.model.BookPluginRow
 import app.kaeri.engine.model.BookServerKind
 import app.kaeri.engine.model.BookServerRow
@@ -185,7 +187,16 @@ object PrelaunchCameIn {
         } else {
             emptyList()
         }
+        // TV Sources after the install: Kawa's row, from Kim's shelf.
+        val kawaRow = ProviderRow(
+            id = "kawa", kind = "plugin", state = "ready", latencyMs = 240uL, lastError = null, usable = true, heldBack = false, // i18n-skip
+            name = "Kawa", version = "2.1", hosts = listOf("kawa.example", "media.kawa.example", "img.kawa.example"), // i18n-skip
+            origin = ProviderOrigin.Store(STORE_ID, STORE_NAME), disabled = false, update = null,
+        ).takeIf { tv && step == 16 }
         keeping = MainScope().launch {
+            if (kawaRow != null) {
+                launch { store.providers.rows.collect { now -> if (now.none { it.id == kawaRow.id }) store.providers.apply(listOf(kawaRow) + now) } }
+            }
             if (stores.isNotEmpty()) {
                 launch { store.stores.stores.collect { now -> if (now != stores) store.stores.apply(stores) } }
             }
