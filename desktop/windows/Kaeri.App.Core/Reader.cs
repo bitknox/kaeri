@@ -31,6 +31,22 @@ public sealed class ReaderSession
     /// <summary>The engine's synchronous answer for the web view's resources.</summary>
     public Func<string, BookResource?>? BookResource { get; set; }
 
+    /// <summary>
+    /// The headers a web view's response carries for <paramref name="answer"/>, one per line.
+    /// One Content-Type only, the engine's own with its charset when it sends one. With two,
+    /// Chromium may not know the type, and with nosniff it may save the page instead of showing it.
+    /// </summary>
+    public static string ResponseHeaders(BookResource answer)
+    {
+        var type = answer.Headers.FirstOrDefault(h => h.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))?.Value;
+        var lines = new System.Text.StringBuilder();
+        lines.Append("Content-Type: ").Append(type ?? answer.Mime).Append("\r\n");
+        foreach (var header in answer.Headers)
+            if (!header.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+                lines.Append(header.Name).Append(": ").Append(header.Value).Append("\r\n");
+        return lines.ToString();
+    }
+
     public sealed record Request(string Work, string? Chapter, OpenAt At, int Tick);
 
     public ReaderPhase Phase { get; private set; } = ReaderPhase.Closed;

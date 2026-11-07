@@ -230,5 +230,26 @@ public class ReadingTests
         Assert.NotNull(novel);
         var assets = KaeriFfiMethods.NovelAssets();
         Assert.NotEmpty(assets.Script);
+        // The page the web view loads first is served.
+        var first = novel.Restore is { } at && at.Spine < novel.Spine.Length ? novel.Spine[(int)at.Spine].Url : novel.Entry;
+        var page = reader.BookResource!(first.Split('#')[0]);
+        Assert.NotNull(page);
+        Assert.Equal(200, page.Status);
+        // One Content-Type, the engine's with its charset.
+        var lines = ReaderSession.ResponseHeaders(page).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        var types = lines.Where(l => l.StartsWith("Content-Type:", StringComparison.OrdinalIgnoreCase)).ToList();
+        Assert.Single(types);
+        Assert.Contains("charset=utf-8", types[0]);
+        Assert.Contains(lines, l => l.StartsWith("Content-Security-Policy:"));
+    }
+
+    [Fact]
+    public async Task DownloadsNameEachSeriesByItsTitle()
+    {
+        using var scene = new Scene(new FfiScene.ReadingDownloads(), "cs-reading-downloads");
+        scene.Do(() => scene.Known.Reading.LoadDownloads());
+        var downloads = await scene.Until(k => k.Reading.Downloads is { Series.Length: > 0 } d ? d : null);
+        Assert.All(downloads.Series, s => Assert.NotEqual(s.Work.ToString(), s.Title));
+        Assert.Contains(downloads.Series, s => s.Title == "The Lantern Ferry");
     }
 }

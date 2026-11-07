@@ -110,7 +110,13 @@ sealed class NovelView : Grid
             settings.IsGeneralAutofillEnabled = false;
             settings.IsWebMessageEnabled = true;
             core.NewWindowRequested += (_, e) => e.Handled = true;
-            core.DownloadStarting += (_, e) => e.Cancel = true;
+            core.DownloadStarting += (_, e) =>
+            {
+                e.Cancel = true;
+                // A book document the web view would rather save than show never paints: say so.
+                if (e.DownloadOperation.Uri.StartsWith(Scheme + "://", StringComparison.OrdinalIgnoreCase))
+                    Failed("a book document came as a download");
+            };
             core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
             core.NavigationStarting += (_, e) =>
             {
@@ -118,7 +124,13 @@ sealed class NovelView : Grid
                 if (!e.Uri.StartsWith(Scheme + "://", StringComparison.OrdinalIgnoreCase) && e.Uri != "about:blank")
                     e.Cancel = true;
             };
-            core.NavigationCompleted += (_, _) => currentUrl = core.Source;
+            core.NavigationCompleted += (_, e) =>
+            {
+                currentUrl = core.Source;
+                // A document that didn't load never says ready, and the reader would wait on it.
+                if (!e.IsSuccess && e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
+                    Failed($"a book document didn't load: {e.WebErrorStatus}");
+            };
             // Every request comes here: the book's from the engine, anything else refused.
             core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             core.WebResourceRequested += OnResource;
@@ -149,9 +161,15 @@ sealed class NovelView : Grid
         catch (Exception e)
         {
             failed = true;
-            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"the novel's web view failed: {e.GetType().Name}");
-            owner.NovelFailed();
+            Failed($"the novel's web view failed: {e.GetType().Name}");
         }
+    }
+
+    /// <summary>The chapter can't show: the failed screen, with its way to try again.</summary>
+    void Failed(string why)
+    {
+        KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", why);
+        owner.NovelFailed();
     }
 
     /// <summary>
@@ -213,12 +231,8 @@ sealed class NovelView : Grid
                 e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                 return;
             }
-            var headers = new StringBuilder();
-            headers.Append("Content-Type: ").Append(answer.Mime).Append("\r\n");
-            foreach (var header in answer.Headers)
-                headers.Append(header.Name).Append(": ").Append(header.Value).Append("\r\n");
             var stream = bytes is null ? null : new MemoryStream(bytes).AsRandomAccessStream();
-            e.Response = env.CreateWebResourceResponse(stream, answer.Status, Reason(answer.Status), headers.ToString());
+            e.Response = env.CreateWebResourceResponse(stream, answer.Status, Reason(answer.Status), ReaderSession.ResponseHeaders(answer));
         }
         catch (Exception ex)
         {

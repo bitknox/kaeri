@@ -227,11 +227,22 @@ impl Store {
     }
 }
 
-/// The first title of a `titles` column: a JSON list of strings, or of objects with a `title`.
+/// The first title of a `titles` column: a JSON list of strings or of objects with a `title`,
+/// or the catalogue's object of AniList's titles, read English, romaji, then native as a title
+/// shows when no language is chosen.
 fn first_title(titles: &str) -> Option<String> {
     let value: serde_json::Value = serde_json::from_str(titles).ok()?;
-    let first = value.as_array()?.first()?;
-    first.as_str().or_else(|| first.get("title").and_then(|t| t.as_str())).map(str::to_owned)
+    if let Some(list) = value.as_array() {
+        let first = list.first()?;
+        return first
+            .as_str()
+            .or_else(|| first.get("title").and_then(|t| t.as_str()))
+            .map(str::to_owned);
+    }
+    ["english", "romaji", "native", "display"]
+        .iter()
+        .find_map(|key| value.get(key).and_then(|t| t.as_str()).filter(|t| !t.is_empty()))
+        .map(str::to_owned)
 }
 
 #[cfg(test)]
@@ -281,5 +292,13 @@ mod tests {
         assert!(store.shelf("l:0ther").unwrap().is_empty());
         assert_eq!(first_title(r#"["Lantern Street"]"#).as_deref(), Some("Lantern Street"));
         assert_eq!(first_title(r#"[{"title":"Moth Garden"}]"#).as_deref(), Some("Moth Garden"));
+        let catalogue =
+            r#"{"romaji":null,"english":"Glass Orchard","native":null,"synonyms":[]}"#;
+        assert_eq!(first_title(catalogue).as_deref(), Some("Glass Orchard"));
+        assert_eq!(
+            first_title(r#"{"romaji":"Touro","english":"Ferry"}"#).as_deref(),
+            Some("Ferry")
+        );
+        assert_eq!(first_title(r#"{"romaji":null,"english":null}"#), None);
     }
 }
