@@ -128,10 +128,53 @@ interface source {                        // what a book source exports
   it. `version-label` tells two versions of one chapter apart.
 - `chapter-content` returns `images`, the pages in reading order, or `text`, an XHTML body
   fragment that the host sanitises before showing it.
-- The plugin never fetches a page image. It names each page's URL and the headers it needs, and
-  the host fetches it through the plugin's own `allowed-hosts`, so list the page image hosts there
-  too. A download fetches the pages again later the same way.
+- The plugin names each page's URL and the headers it needs, and the host fetches it through the
+  plugin's own `allowed-hosts`, so list the page image hosts there too. A download fetches the
+  pages again later the same way, and an address that answers 403 or 410 makes the host ask
+  `chapter-content` once more for fresh ones.
 - The errors are the show sources' errors, with the same failover rules.
+
+### Pages a plugin makes itself
+
+Some pages can't be fetched as one plain request: a server that hands chapters over only as CBZ
+or ZIP archives, or one that wants each request signed. A plugin can make such pages itself by
+building for a second world in the same file, `book-plugin-with-pages`. It is opt-in: a plugin
+built for `book-plugin` needs no change and no rebuild, and the host fetches all of its pages as
+above.
+
+```wit
+interface pages {                         // exported only by book-plugin-with-pages
+    page-bytes: func(series: string, chapter: string, url: string)
+                  -> result<option<list<u8>>, source-error>;
+}
+
+world book-plugin-with-pages {
+    include book-plugin;
+    export pages;
+}
+```
+
+- The host tells the two worlds apart by the plugin's exports when it loads it.
+- `chapter-content` stays the same. Each page's `url` is the plugin's own name for the page and
+  can carry whatever the plugin needs to find it again, such as the archive's address and an
+  entry in it (`https://books.example/lantern/extra.cbz#003.png`).
+- For a plugin with `pages`, the host calls `page-bytes` first with the page's series, chapter and
+  url, one page at a time, whenever it needs that page, as it would fetch it. `some(bytes)` is the
+  page. `none` hands it back, and the host fetches the url
+  itself with the page's headers, so a plugin can mix both kinds in one chapter.
+- Every call starts fresh, so a page read from an archive fetches the archive again. A server that
+  answers range requests lets the plugin fetch only that page's part.
+- `page-bytes` runs under the same time and memory limits as every other call, and the host
+  checks what comes back before it keeps it. A page over 16 MiB, one whose first bytes are not a
+  JPEG, PNG, WebP, GIF or AVIF file, and one whose header claims more than 40 million pixels are
+  refused without being decoded. A refused or stopped page is the plugin's `parse` error, with the
+  same failover and health rules. A page the plugin made has no address to expire, so the 403 and
+  410 rule does not apply to it.
+- Making a page costs time. On a Mac, decoding, rearranging and encoding a 900x1300 page takes
+  about 40 ms; on devices that interpret plugins (iPhone, iPad and 32-bit machines) it takes
+  about 0.8 s. A 900x12800 strip takes about 0.3 s and 8 s, and needs its work done in one
+  buffer to stay inside the 64 MiB memory limit. Hand pages back with `none` whenever the host
+  can fetch them.
 
 The host tells the two kinds apart by what a component imports and exports, so the kind comes
 from the plugin itself. Book sources go in the same plugin directory. Kaeri loads them only while
@@ -237,8 +280,9 @@ cargo test -p kaeri-plugin       # skips itself if components are not built
 The conformance suite runs the same assertions against both references, plus `test-hostile`,
 which spins, allocates without bound, fetches an undeclared host and probes undeclared settings.
 Copy the `assert_reference_behaviour` shape for your own plugin. `book_conformance.rs` does the
-same for book sources against `example-books` and `test-hostile-books`, which also names page
-images on a host it never declared.
+same for book sources against `example-books`, built for `book-plugin`, and `test-hostile-books`,
+built for `book-plugin-with-pages`, which also names page images on a host it never declared and
+makes pages that break each page limit.
 
 To share a plugin, publish it to a plugin store ([plugin-stores.md](plugin-stores.md)), or hand
 over the `.wasm` for someone to put in their plugin directory. Either way, declare the narrowest
