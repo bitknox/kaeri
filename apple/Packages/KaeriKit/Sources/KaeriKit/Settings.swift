@@ -89,6 +89,8 @@ extension SettingKey {
             ["chapter", "close"].map { SettingOption(value: .str($0), label: $0) }
         case .whenTrackersDisagree:
             ["furthest", "latest"].map { SettingOption(value: .str($0), label: $0) }
+        case .countsAsRead:
+            ["last-page", "moving-on", "marked"].map { SettingOption(value: .str($0), label: $0) }
         case .keepNextEpisodes:
             [0, 1, 2, 3, 5, 10].map {
                 SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : Wording.plural($0, "episode"))

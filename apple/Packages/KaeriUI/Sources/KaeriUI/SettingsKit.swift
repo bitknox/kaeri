@@ -264,6 +264,7 @@ extension SettingKey {
         case .webtoonMode: L.settingsReaderWebtoons
         case .sendProgressAfter: L.settingsSendProgressAfter
         case .whenTrackersDisagree: L.settingsWhenTrackersDisagree
+        case .countsAsRead: L.settingsCountsRead
         case .chapterNotifications: L.settingsChapterNotifications
         case .openAt: L.settingsOpenAt
         case .syncplay: L.settingsSyncplay
@@ -349,6 +350,9 @@ extension SettingKey {
         case (.sendProgressAfter, "close"): return L.settingsProgressClose // i18n-skip: the engine's words
         case (.whenTrackersDisagree, "furthest"): return L.settingsDisagreeFurthest // i18n-skip: the engine's words
         case (.whenTrackersDisagree, "latest"): return L.settingsDisagreeLatest // i18n-skip: the engine's words
+        case (.countsAsRead, "last-page"): return L.settingsCountsReadValue // i18n-skip: the engine's words
+        case (.countsAsRead, "moving-on"): return L.settingsCountsReadMovingOn // i18n-skip: the engine's words
+        case (.countsAsRead, "marked"): return L.settingsCountsReadMarked // i18n-skip: the engine's words
         case (.openAt, "watch"): return L.navWatch
         case (.openAt, "read"): return L.navRead
         case (.downloadQuality, "standard"): return L.settingsOptionStandard

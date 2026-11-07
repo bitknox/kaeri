@@ -104,8 +104,8 @@ struct ReadingPane: View {
                     }
                 }
             }
-            SettingsRow(title: L.settingsCountsRead, note: L.settingsCountsReadNote) {
-                value(L.settingsCountsReadValue)
+            SettingsRow(title: SettingKey.countsAsRead.title, note: CountsAsReadNote.text(store)) {
+                SettingMenu(key: .countsAsRead)
             }
         }
         SettingsGroup(title: L.settingsFollowGroup, footnote: L.settingsFollowFooter(device: Device.name)) {
@@ -131,13 +131,6 @@ struct ReadingPane: View {
         .fixedSize()
         .disabled(current == nil)
         .accessibilityLabel(label)
-    }
-
-    private func value(_ text: String) -> some View {
-        Text(text)
-            .font(.mac(13))
-            .foregroundStyle(.haze)
-            .padding(.trailing, 6)
     }
 }
 
@@ -201,13 +194,8 @@ struct PhoneReadingPage: View {
                 }
                 .pickerStyle(.navigationLink)
                 .listRowBackground(Palette.raised)
-                HStack {
-                    PhoneRowTitle(title: L.settingsCountsRead, note: L.settingsCountsReadNote)
-                    Spacer()
-                    Text(L.settingsCountsReadValue).font(.ui(17)).foregroundStyle(.haze)
-                }
-                .listRowBackground(Palette.raised)
-                .accessibilityElement(children: .combine)
+                PhoneSettingPicker(key: .countsAsRead, note: CountsAsReadNote.text(store))
+                    .listRowBackground(Palette.raised)
             } header: {
                 PhoneSectionHeader(L.settingsReaderDefaults)
             } footer: {
@@ -253,3 +241,15 @@ struct PhoneReadingDownloadsSection: View {
     }
 }
 #endif
+
+/// Counts as read's note says what the chosen rule does.
+enum CountsAsReadNote {
+    @MainActor
+    static func text(_ store: AppStore) -> String {
+        switch store.settings.row(.countsAsRead)?.value {
+        case "moving-on": L.settingsCountsReadMovingOnNote // i18n-skip: the engine's words
+        case "marked": L.settingsCountsReadMarkedNote // i18n-skip: the engine's words
+        default: L.settingsCountsReadNote
+        }
+    }
+}
