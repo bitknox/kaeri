@@ -800,30 +800,43 @@ struct FirstLaunch: View {
     @ViewBuilder
     private func demoTry(both: Bool) -> some View {
         if store.demo.state.reading {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L.onboardingDemoHeading)
-                    .font(.plat(mac: 15, touch: 17, weight: .semibold))
-                    .foregroundStyle(.silk)
-                    .accessibilityAddTraits(.isHeader)
-                Text(both ? L.onboardingDemoBothDetail : L.onboardingDemoBooksDetail)
-                    .font(.plat(mac: 13, touch: 15))
-                    .foregroundStyle(.haze)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 8) {
-                    if both {
-                        Button { store.playDemo(); finish(nil) } label: { Text(L.onboardingPlayDemo) }
-                            .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+            HStack(alignment: .top, spacing: Device.isMac ? 12 : 14) {
+                HStack(spacing: 6) {
+                    ForEach([store.demo.comic, store.demo.story].compactMap { $0 }, id: \.work) { work in
+                        BookCover(url: work.cover, width: Device.isMac ? 34 : 44)
                     }
-                    Button { readDemo() } label: { Text(L.onboardingReadDemo) }
-                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
                 }
-                .padding(.top, 6)
+                .accessibilityHidden(true)
+                demoTryWords(both: both)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Device.isMac ? 14 : 16)
             .background(.raised, in: .rect(cornerRadius: Device.isMac ? 10 : 26))
             .padding(.top, Device.isMac ? 14 : 20)
         }
+    }
+
+    private func demoTryWords(both: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L.onboardingDemoHeading)
+                .font(.plat(mac: 15, touch: 17, weight: .semibold))
+                .foregroundStyle(.silk)
+                .accessibilityAddTraits(.isHeader)
+            Text(both ? L.onboardingDemoBothDetail : L.onboardingDemoBooksDetail)
+                .font(.plat(mac: 13, touch: 15))
+                .foregroundStyle(.haze)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                if both {
+                    Button { store.playDemo(); finish(nil) } label: { Text(L.onboardingPlayDemo) }
+                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+                }
+                Button { readDemo() } label: { Text(L.onboardingReadDemo) }
+                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+            }
+            .padding(.top, 6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// A folder and a server for books, on one raised card.

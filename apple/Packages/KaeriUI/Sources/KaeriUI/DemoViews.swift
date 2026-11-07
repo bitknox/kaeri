@@ -175,7 +175,6 @@ struct DemoBooksAbout: View {
                         if let url = work.filePageUrl, let link = URL(string: url) {
                             Link(L.sourcesDemoLinkCommons, destination: link)
                         }
-                        if let link = URL(string: work.makerUrl) { Link(L.sourcesDemoLinkMaker, destination: link) }
                     }
                     .font(.plat(mac: size, touch: size + 2))
                     .foregroundStyle(.water)
