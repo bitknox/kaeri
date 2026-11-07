@@ -28,6 +28,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Os arquivos são excluídos deste { -device }. Episódios ainda não assistidos continuam.
 settings-folder-default = Guardada com o cache de torrents
 settings-storage-unwatched = Ainda não assistidos
+settings-storage-unread = Ainda não lidos
+settings-storage-read = Lidos
+settings-storage-unseen-both = Ainda não vistos ou lidos
+settings-storage-seen-both = Vistos ou lidos
 settings-storage-used = { $size } em downloads.
 settings-storage-used-free = { $size } em downloads. { $free } livres neste { -device }.
 settings-source-count = { $count ->
@@ -36,6 +40,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = O progresso e as mudanças de lista são sincronizados com { $tracker }. A { -library-cap } e a Minha lista do Calendário mostram suas listas de { $tracker }.
+settings-accounts-sync-note-read = O progresso e as mudanças nas listas são sincronizados com { $tracker }. A { -library-cap } mostra suas listas de { $tracker }.
 settings-conflicts = { $count ->
     [one] Um título difere de { $tracker }
     [many] { $count } títulos diferem de { $tracker }

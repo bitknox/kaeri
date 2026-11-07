@@ -61,10 +61,28 @@ pub(crate) fn open_with(key: &[u8; 32], aad: &[u8], sealed: &[u8]) -> Option<Vec
 }
 
 /// Every group key this device holds, by epoch. A rotation adds one; older files stay readable.
+///
+/// A rotation also makes a recovery key and says which devices its key was kept from. Both ride
+/// in the keyring, so every device it is wrapped for learns them, and a version that knows only
+/// `keys` reads the same JSON and leaves the rest out.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Keyring {
     keys: Vec<(u32, String)>,
+    /// The recovery keys rotations made, by the epoch each came with, the newest few: the one
+    /// that opens `group.bin` is the group's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    recovery: Vec<(u32, String)>,
+    /// For each epoch a rotation made, the devices removed by then, which it was kept from.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    cut: Vec<(u32, Vec<String>)>,
 }
+
+/// How many recovery keys a keyring carries: enough for rotations that ran at once to find the
+/// one that won.
+const RECOVERY_KEPT: usize = 4;
+/// A rotation's epoch is this far at most past the last, at random, so two rotations that run at
+/// once almost never make the same epoch with different keys.
+const EPOCH_SPREAD: u32 = 1 << 16;
 
 impl std::fmt::Debug for Keyring {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -74,12 +92,16 @@ impl std::fmt::Debug for Keyring {
 
 impl Keyring {
     pub fn generate() -> Self {
-        Self { keys: vec![(1, hex::encode(random::<32>()))] }
+        Self::of(vec![(1, hex::encode(random::<32>()))])
+    }
+
+    fn of(keys: Vec<(u32, String)>) -> Self {
+        Self { keys, recovery: Vec::new(), cut: Vec::new() }
     }
 
     /// A ring of one key, for sealing a backup under the recovery key.
     pub(crate) fn single(key: [u8; 32]) -> Self {
-        Self { keys: vec![(1, hex::encode(key))] }
+        Self::of(vec![(1, hex::encode(key))])
     }
 
     pub fn epochs(&self) -> Vec<u32> {
@@ -101,21 +123,87 @@ impl Keyring {
 
     /// A new current key; the old ones stay for reading what was written under them.
     pub fn rotated(&self) -> Self {
-        let mut keys = self.keys.clone();
-        keys.push((self.current_epoch() + 1, hex::encode(random::<32>())));
-        Self { keys }
+        let mut ring = self.clone();
+        ring.keys.push((self.current_epoch() + 1, hex::encode(random::<32>())));
+        ring
+    }
+
+    /// A new current key kept from the devices in `removed`, with `recovery` as the recovery key
+    /// that comes with it. Its epoch is a random step past the last.
+    pub fn rotated_from(&self, removed: &[String], recovery: &RecoveryKey) -> Self {
+        let step = 1 + u32::from_be_bytes(random()) % EPOCH_SPREAD;
+        let epoch = self.current_epoch().saturating_add(step);
+        let mut ring = self.clone();
+        ring.keys.push((epoch, hex::encode(random::<32>())));
+        ring.recovery.push((epoch, recovery.to_text()));
+        ring.trim_recovery();
+        let mut removed = removed.to_vec();
+        removed.sort();
+        removed.dedup();
+        ring.cut.push((epoch, removed));
+        ring
+    }
+
+    fn trim_recovery(&mut self) {
+        self.recovery.sort();
+        self.recovery.dedup();
+        let extra = self.recovery.len().saturating_sub(RECOVERY_KEPT);
+        self.recovery.drain(..extra);
+    }
+
+    /// The recovery keys rotations made, newest first.
+    pub fn recovery_keys(&self) -> Vec<RecoveryKey> {
+        self.recovery
+            .iter()
+            .rev()
+            .filter_map(|(_, text)| RecoveryKey::parse(text).ok())
+            .collect()
+    }
+
+    /// Whether a device the log lists as removed may hold the current key: one the rotation that
+    /// made it did not know was removed, or, once rotations say whom they kept their key from, a
+    /// current key made by a version that does not say.
+    pub fn reaches_removed(&self, removed: &[String]) -> bool {
+        if removed.is_empty() {
+            return false;
+        }
+        let current = self.current_epoch();
+        match self.cut.iter().find(|(e, _)| *e == current) {
+            Some((_, cut)) => removed.iter().any(|d| !cut.contains(d)),
+            None => !self.cut.is_empty(),
+        }
     }
 
     /// This ring and `other`'s keys together.
     pub fn merged(&self, other: &Self) -> Self {
-        let mut keys = self.keys.clone();
+        let mut ring = self.clone();
         for (e, k) in &other.keys {
-            if !keys.iter().any(|(have, _)| have == e) {
-                keys.push((*e, k.clone()));
+            if !ring.keys.iter().any(|(have, _)| have == e) {
+                ring.keys.push((*e, k.clone()));
             }
         }
-        keys.sort();
-        Self { keys }
+        ring.keys.sort();
+        ring.recovery.extend(other.recovery.iter().cloned());
+        ring.trim_recovery();
+        for (e, cut) in &other.cut {
+            if !ring.cut.iter().any(|(have, _)| have == e) {
+                ring.cut.push((*e, cut.clone()));
+            }
+        }
+        ring.cut.sort();
+        ring
+    }
+
+    /// Whether this ring holds every key `other` does.
+    pub fn holds(&self, other: &Self) -> bool {
+        other.keys.iter().all(|(e, _)| self.keys.iter().any(|(have, _)| have == e))
+    }
+
+    /// A short name for this ring's contents, which changes whenever they do.
+    pub fn fingerprint(&self) -> String {
+        hex::encode(
+            &ring::digest::digest(&ring::digest::SHA256, &self.to_bytes()).as_ref()[..8],
+        )
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -337,6 +425,46 @@ mod tests {
         assert!(matches!(b.unwrap("aaaa0000aaaa0000", &wrapped), Err(SyncError::KeyMismatch)));
         assert!(matches!(a.unwrap("bbbb0000bbbb0000", &wrapped), Err(SyncError::KeyMismatch)));
         assert_eq!(ring.epochs(), vec![1, 2]);
+    }
+
+    /// What a version that knows only the keys reads and writes.
+    #[derive(Serialize, Deserialize)]
+    struct OldRing {
+        keys: Vec<(u32, String)>,
+    }
+
+    #[test]
+    fn a_rotated_keyring_reads_in_a_version_that_knows_only_the_keys() {
+        let recovery = RecoveryKey::generate();
+        let ring = Keyring::generate().rotated_from(&["00000000000000c3".into()], &recovery);
+        let old: OldRing =
+            serde_json::from_slice(&ring.to_bytes()).expect("the old shape reads it");
+        assert_eq!(old.keys, ring.keys);
+        // What it writes back carries the keys, and merges back without losing the rest.
+        let back = Keyring::from_bytes(&serde_json::to_vec(&old).unwrap()).unwrap();
+        assert_eq!(back.current_epoch(), ring.current_epoch());
+        assert_eq!(ring.merged(&back), ring);
+        assert_eq!(back.merged(&ring).recovery_keys(), vec![recovery]);
+    }
+
+    #[test]
+    fn a_rotation_says_whom_its_key_was_kept_from() {
+        let (c, d) = ("00000000000000c3".to_owned(), "00000000000000d4".to_owned());
+        let start = Keyring::generate();
+        assert!(!start.reaches_removed(std::slice::from_ref(&c)), "no rotation has said");
+        let one = start.rotated_from(std::slice::from_ref(&c), &RecoveryKey::generate());
+        assert!(one.current_epoch() > 1);
+        assert!(!one.reaches_removed(std::slice::from_ref(&c)));
+        assert!(one.reaches_removed(&[c.clone(), d.clone()]));
+        // Another made at once from the same start, kept from D only: together, the current key
+        // was not kept from both, until a rotation after them is.
+        let other = start.rotated_from(std::slice::from_ref(&d), &RecoveryKey::generate());
+        let both = one.merged(&other);
+        assert_eq!(both.epochs().len(), 3);
+        assert!(both.reaches_removed(&[c.clone(), d.clone()]));
+        let after = both.rotated_from(&[c.clone(), d.clone()], &RecoveryKey::generate());
+        assert!(!after.reaches_removed(&[c, d]));
+        assert_eq!(after.recovery_keys().len(), 3);
     }
 
     #[test]

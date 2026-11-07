@@ -667,6 +667,99 @@ mod tests {
             };
             MockProvider::new(id).with_hits(vec![hit]).with_episodes(bare(listed))
         }
+
+        /// A source whose search finds only the show's near-titles, each ruled out, so it cannot
+        /// choose. Under a match the viewer chose, it lists the whole season.
+        pub fn unsure(id: &str) -> MockProvider {
+            use kaeri_core::media::MediaFormat;
+            let near = |key: &str, title: &str, format| SearchHit {
+                episode_count: Some(1),
+                format: Some(format),
+                ..SearchHit::new(ProviderKey::new(format!("{id}-{key}")), title)
+            };
+            MockProvider::new(id)
+                .with_hits(vec![
+                    near("film", "The Hidden Star: Beyond the Orbit", MediaFormat::Movie),
+                    near("special", "The Hidden Star: Starlight Recap", MediaFormat::Special),
+                ])
+                .with_episodes(bare(1..=13))
+        }
+    }
+
+    /// What a load of [`coverage::SHOW`] against `registry` says to a title page.
+    async fn said_to_page(store: &Store, registry: &ProviderRegistry) -> Vec<Event> {
+        let meta = coverage::meta(store);
+        let (load, current) =
+            load_episodes_matched(&meta, store, registry, coverage::SHOW).await.unwrap();
+        said_matched(coverage::SHOW, Ok(load), current, Asked::Looking)
+    }
+
+    #[tokio::test]
+    async fn a_source_that_cannot_choose_is_passed_over_for_a_later_one_that_matches() {
+        let store = store();
+        let registry = ProviderRegistry::new(vec![
+            kaeri_providers::MockProvider::new("empty").arc(),
+            coverage::unsure("drift").arc(),
+            coverage::source("shelf", 1..=13).arc(),
+        ]);
+        let said = said_to_page(&store, &registry).await;
+        assert!(
+            !said.iter().any(|e| matches!(e, Event::MatchChoices { .. })),
+            "nothing is asked: {said:?}"
+        );
+        let [Event::Episodes { rows, failed: None, .. }, Event::TitleMatch { current, .. }] =
+            &said[..]
+        else {
+            panic!("the table, then the match: {said:?}")
+        };
+        assert_eq!(rows.len(), 13);
+        assert!(rows.iter().all(|row| !row.metadata_only && !row.unsourced), "{rows:?}");
+        assert_eq!(current.as_ref().map(|c| c.provider_id.as_str()), Some("shelf"));
+        assert!(store.lookup_mapping(coverage::SHOW, "drift").unwrap().is_none(), "unmatched");
+    }
+
+    #[tokio::test]
+    async fn the_match_is_asked_when_no_source_can_choose() {
+        let store = store();
+        let registry = ProviderRegistry::new(vec![
+            kaeri_providers::MockProvider::new("empty").arc(),
+            coverage::unsure("drift").arc(),
+            coverage::unsure("haze").arc(),
+        ]);
+        let said = said_to_page(&store, &registry).await;
+        let [
+            Event::MatchChoices { provider_id, candidates, answers, .. },
+            Event::Episodes { .. },
+            Event::Toast(_),
+            Event::TitleMatch { current: None, .. },
+        ] = &said[..]
+        else {
+            panic!("the question, AniList's table, why, and no match: {said:?}")
+        };
+        assert_eq!(provider_id, "drift", "the first source in the order that cannot choose");
+        assert_eq!(*answers, MatchQuestion::Ladder);
+        assert_eq!(candidates.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn a_match_the_viewer_chose_still_wins() {
+        let store = store();
+        let registry = ProviderRegistry::new(vec![
+            coverage::unsure("drift").arc(),
+            coverage::source("shelf", 1..=13).arc(),
+        ]);
+        let chosen = kaeri_core::ids::ProviderKey::new("drift-chosen");
+        store.set_override(coverage::SHOW, "drift", &chosen, 0).unwrap();
+        let said = said_to_page(&store, &registry).await;
+        let [Event::Episodes { rows, .. }, Event::TitleMatch { current: Some(current), .. }] =
+            &said[..]
+        else {
+            panic!("the table, then the match: {said:?}")
+        };
+        assert_eq!(rows.len(), 13);
+        assert!(rows.iter().all(|row| row.source.is_none()), "every episode from drift");
+        assert_eq!(current.provider_id, "drift");
+        assert!(current.chosen_by_you);
     }
 
     /// A finished season of twelve and its sequel, named as sequels are: the first season's

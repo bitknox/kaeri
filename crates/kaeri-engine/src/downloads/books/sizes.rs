@@ -264,26 +264,33 @@ impl BookDownloads {
             })
             .map(|d| d.chapter.as_str())
             .collect();
-        let wanted: Vec<&ChapterRow> = {
-            let picked = Self::picked(&pick, rows);
-            rows.iter()
-                .filter(|row| picked.iter().any(|w| w.chapter == row.id))
-                .filter(|row| !have.contains(row.id.as_str()))
-                .collect()
-        };
+        let picked = Self::picked(&pick, rows);
+        let chosen: Vec<&ChapterRow> =
+            rows.iter().filter(|row| picked.iter().any(|w| w.chapter == row.id)).collect();
+        let wanted: Vec<&ChapterRow> =
+            chosen.iter().copied().filter(|row| !have.contains(row.id.as_str())).collect();
+        // The chosen chapters already on this device, by what they take there.
+        let done: HashMap<&str, u64> = all
+            .iter()
+            .filter(|d| d.work == work.as_str() && d.state == BookDownloadState::Done)
+            .map(|d| (d.chapter.as_str(), d.bytes))
+            .collect();
         let learnt = learn(store, &all, source);
-        let bytes: u64 = if is_novel(store, work.as_str()) {
-            wanted.len() as u64 * learnt.text_chapter.unwrap_or(TEXT_CHAPTER_BYTES)
-        } else {
-            let page = learnt.page_bytes.unwrap_or(PAGE_BYTES);
-            wanted
-                .iter()
-                .map(|row| {
-                    let pages = row.pages.filter(|p| *p > 0).or(learnt.pages).unwrap_or(PAGES);
-                    u64::from(pages) * page
-                })
-                .sum()
+        let novel = is_novel(store, work.as_str());
+        let page = learnt.page_bytes.unwrap_or(PAGE_BYTES);
+        let guess = |row: &&ChapterRow| -> u64 {
+            if novel {
+                learnt.text_chapter.unwrap_or(TEXT_CHAPTER_BYTES)
+            } else {
+                let pages = row.pages.filter(|p| *p > 0).or(learnt.pages).unwrap_or(PAGES);
+                u64::from(pages) * page
+            }
         };
+        let bytes: u64 = wanted.iter().map(guess).sum();
+        let all_bytes: u64 = chosen
+            .iter()
+            .map(|row| done.get(row.id.as_str()).copied().unwrap_or_else(|| guess(row)))
+            .sum();
         let mut line = Vec::new();
         if !wanted.is_empty() {
             line.push(r(ReadingMsg::ReadingEstimateSize { size: Size::of(bytes) }));
@@ -295,6 +302,7 @@ impl BookDownloads {
             chapters: u32::try_from(wanted.len()).unwrap_or(u32::MAX),
             bytes,
             line,
+            all_bytes,
         }
     }
 }

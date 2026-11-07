@@ -100,9 +100,14 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
                 .and_then(|l| l.iter().find(|c| c.id == *chapter))
                 .and_then(|c| c.pages)
         });
-        // A light novel reads in parts, so its place is a part and how far into it.
+        // A light novel reads in parts, so its place is a part and how far into it, by the
+        // name its row on the series page has.
         tile.next = Some(match page {
-            _ if novel => words::part_place(&label, words::part_percent(*page, of)),
+            _ if novel => words::part_place(
+                &label,
+                named_in(list.as_deref(), chapter).as_deref(),
+                words::part_percent(*page, of),
+            ),
             Some(page) => words::chapter_page(&label, *page),
             None => words::next_chapter(&label),
         });
@@ -114,12 +119,14 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
         // The dot always has its words: "Chapter 88 is new".
         if let Some(new) = read.new_for_you(list) {
             let number = new.number.clone().unwrap_or_else(|| new.label.clone());
-            tile.next = Some(words::unit_new(tile.medium, &number));
+            let named = words::part_named(&new.label, new.number.as_deref());
+            tile.next = Some(words::unit_new(tile.medium, &number, named.as_deref()));
             tile.new_chapter = true;
         } else if let Some(next) = read.next(list) {
             tile.next = Some(words::next_unit(
                 tile.medium,
                 next.number.as_deref().unwrap_or(&next.label),
+                words::part_named(&next.label, next.number.as_deref()).as_deref(),
             ));
         }
     }
@@ -144,11 +151,18 @@ pub fn library_line(
     let Some(at) = at else { return };
     let number = at.number.clone().unwrap_or_else(|| at.label.clone());
     let line = if tile.medium == Medium::Novel {
-        match &at.volume {
-            Some(volume) => {
+        let named = words::part_named(&at.label, at.number.as_deref());
+        match (&at.volume, named) {
+            (Some(volume), Some(label)) => {
+                ReadingMsg::ReadingVolumeLabel { volume: volume.clone(), label }
+            }
+            (Some(volume), None) => {
                 ReadingMsg::ReadingVolumePart { volume: volume.clone(), part: number }
             }
-            None => ReadingMsg::ReadingNextPart { part: number },
+            (None, named) => {
+                tile.next = Some(words::part_place(&number, named.as_deref(), None));
+                return;
+            }
         }
     } else {
         match newest_number(&list) {
@@ -168,6 +182,13 @@ fn newest_number(list: &[chapters::Kept]) -> Option<String> {
         })
         .max_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, n)| n.to_owned())
+}
+
+/// The source's own name for a light novel's part, when it says more than the number: what its
+/// row is called, so the cover and the button name it the same way.
+pub fn named_in(list: Option<&[chapters::Kept]>, chapter: &str) -> Option<String> {
+    let kept = list?.iter().find(|c| c.id == chapter)?;
+    words::part_named(&kept.label, kept.number.as_deref())
 }
 
 /// A chapter's number as a person reads it, from the list when it is there.
@@ -192,6 +213,7 @@ pub fn action(
     let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
         let label = number_of(list.as_deref(), &chapter);
+        let named = named_in(list.as_deref(), &chapter);
         // The page count the reader saw, else the one the source lists, as the cover does.
         let of = of.or_else(|| {
             list.as_deref()
@@ -204,6 +226,7 @@ pub fn action(
                 chapter,
                 label,
                 percent: words::part_percent(page, of),
+                named,
             },
             (_, Some(page)) => {
                 SeriesAction::Continue { chapter, label, page: words::shown_page(page) }
@@ -213,23 +236,30 @@ pub fn action(
     }
     let Some(list) = list else {
         // Not asked yet: the first chapter, until the source answers.
-        return read_action(medium, ChapterId::new("1"), "1".into());
+        return read_action(medium, ChapterId::new("1"), "1".into(), None);
     };
     match read.next(&list) {
         Some(next) => read_action(
             medium,
             ChapterId::new(next.id.clone()),
             next.number.clone().unwrap_or_else(|| next.label.clone()),
+            words::part_named(&next.label, next.number.as_deref()),
         ),
         None if list.is_empty() => SeriesAction::NoSource,
         None => SeriesAction::ReadAgain,
     }
 }
 
-/// Read a chapter not opened yet: "Read chapter 88", or "Read part 3" for a light novel.
-pub fn read_action(medium: Medium, chapter: ChapterId, label: String) -> SeriesAction {
+/// Read a chapter not opened yet: "Read chapter 88", or "Read part 3" for a light novel, or the
+/// source's own name for the part when it has one (`named`).
+pub fn read_action(
+    medium: Medium,
+    chapter: ChapterId,
+    label: String,
+    named: Option<String>,
+) -> SeriesAction {
     match medium {
-        Medium::Novel => SeriesAction::ReadPart { chapter, label },
+        Medium::Novel => SeriesAction::ReadPart { chapter, label, named },
         _ => SeriesAction::Read { chapter, label },
     }
 }
@@ -246,6 +276,17 @@ pub fn kept_of(meta: &Meta, works: &[String]) -> Vec<KeptBook> {
         .filter_map(|w| kaeri_model::reading::anilist_of(&WorkId::new(w.clone())))
         .collect();
     meta.kept_books(&ids)
+}
+
+/// The AniList ids of `works` that nothing at all is kept of: their covers, titles and medium
+/// are not known here yet, however old a kept one may be.
+pub fn unkept(meta: &Meta, works: &[String]) -> Vec<AnilistId> {
+    let ids: Vec<AnilistId> = works
+        .iter()
+        .filter_map(|w| kaeri_model::reading::anilist_of(&WorkId::new(w.clone())))
+        .collect();
+    let kept = meta.kept_books(&ids);
+    ids.into_iter().filter(|id| !kept.iter().any(|k| k.book.id == *id)).collect()
 }
 
 /// The AniList ids of `works` that nothing is kept of, or only something older than a day.

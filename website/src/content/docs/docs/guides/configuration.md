@@ -73,8 +73,9 @@ session. Moving a plugin names the plugins on the screen in the order, with `"pl
 them for any you install later.
 
 Each source is matched to the title on its own, and asked in order. A source that cannot find
-the title or the episode, or fails, hands over to the next. A source that finds several possible
-matches and cannot choose asks you which is right, once, before the next is tried.
+the title or the episode, or fails, hands over to the next. So does a source that finds several
+possible matches and cannot choose. Kaeri asks you which is right only when no source matches the
+title for sure, and remembers your answer.
 
 The order is a default. `P` on a title pins one source for that title, and `s` on an episode picks
 an exact release; pinned sources do not fail over.

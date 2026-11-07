@@ -15,12 +15,18 @@ public enum SeriesSheet: Hashable, Identifiable, Sendable {
     case tracking(String)
     /// Read again from the start, asked first.
     case readAgain(String)
+    /// Send to e-reader: the chapters to prepare for an e-reader.
+    case send(String, chapters: [String])
+    /// Where did you stop, after chapters were sent to an e-reader.
+    case stopped(String)
 
     public var id: String {
         switch self {
         case .source(let work): "source:\(work)" // i18n-skip
         case .tracking(let work): "tracking:\(work)" // i18n-skip
         case .readAgain(let work): "again:\(work)" // i18n-skip
+        case .send(let work, let chapters): "send:\(work):\(chapters.joined(separator: ","))" // i18n-skip
+        case .stopped(let work): "stopped:\(work)" // i18n-skip
         }
     }
 }

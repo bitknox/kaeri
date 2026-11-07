@@ -45,3 +45,17 @@ torrents-dialog-edit-proxy = Modifica proxy
 settings-note-trailers-windows = I trailer si riproducono senza audio da YouTube, che vede il tuo indirizzo IP. Non si riproducono con connessione a consumo, con le animazioni disattivate, in modalità risparmio energia o con Narratore attivo.
 settings-note-cast-tvs-pc = Compaiono sotto Chromecast in Riproduci sulla TV. Questo PC invia loro l'episodio.
 settings-note-torrents-while-casting-pc = Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo PC invia l'episodio finché è in riproduzione.
+settings-language-restart = Riavvia
+settings-differences = { $count ->
+    [one] Un titolo è diverso da { $tracker }
+    [many] { $count } titoli sono diversi da { $tracker }
+   *[other] { $count } titoli sono diversi da { $tracker }
+ }
+settings-differences-review = Controlla
+settings-search = Cerca nelle impostazioni
+settings-quality-detail-windows = Una qualità più alta sceglie il meglio che offre una { -source } e occupa più spazio.
+settings-merge-subtitles-detail-windows = I sottotitoli restano con l'episodio ovunque vada il file.
+settings-keep-seeding-detail-windows = Un download che continua il seeding resta nella cache di { -app-name }, non nella cartella dei download.
+settings-discussions-note-windows = Legge i commenti del thread del forum di AniList per gli episodi che hai guardato.
+settings-comment-images-note-windows = Ogni immagine si carica dal sito che la ospita, che vede il tuo indirizzo IP.
+settings-folder-browse = Sfoglia…

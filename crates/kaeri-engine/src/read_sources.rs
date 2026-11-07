@@ -52,6 +52,9 @@ use kaeri_track::TokenStore;
 
 use crate::{book_plugins::BookPlugins, outbox::Outbox};
 
+pub(crate) mod added;
+pub use added::RECHECK;
+
 /// The id the folders answer to in the registry.
 pub const FOLDERS: &str = "folders";
 const META_ORDER: &str = "reading.book_order";
@@ -208,6 +211,10 @@ pub struct BookSources {
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
+    /// Servers signed in to and not added yet, with their sign-ins: in memory only.
+    pending: Arc<Mutex<HashMap<String, added::Pending>>>,
+    /// The reading demo, in the registry while the demo is on.
+    pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
@@ -217,6 +224,8 @@ pub struct BookSources {
     /// The OPDS feed, on the desktop builds.
     #[cfg(feature = "opds-feed")]
     pub feed: crate::export::feed::Feed,
+    /// Reading progress waiting for book servers: see [`crate::write_back`].
+    pub write_back: crate::write_back::WriteBack,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -242,6 +251,10 @@ impl BookSources {
             scanning: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
+            pending: Arc::default(),
+            demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
+                paths.cache_dir.join("reading-demo"),
+            )),
             catalog: crate::read_catalog::Memory::default(),
             downloads: crate::downloads::books::BookDownloads::new(
                 paths.data_dir.join("book-downloads"),
@@ -249,6 +262,7 @@ impl BookSources {
             exports: crate::export::Exports::new(paths.data_dir.join("exports")),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
+            write_back: crate::write_back::WriteBack::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -324,6 +338,24 @@ impl BookSources {
             .clone()
     }
 
+    /// How `server` refuses a sign-in it no longer takes: a password for a Basic sign-in, a key
+    /// or token otherwise.
+    pub(crate) fn refusal_of(
+        &self,
+        server: &str,
+    ) -> kaeri_model::book_sources::WriteBackProblem {
+        use kaeri_model::book_sources::WriteBackProblem as P;
+        match self.tokens.get(&secret_key(server)) {
+            Ok(credential) if credential.starts_with("basic:") => P::RefusedPassword,
+            _ => P::RefusedKey,
+        }
+    }
+
+    /// Ask `server` once more after it refused the sign-in.
+    pub(crate) fn forget_refusal(&self, server: &str) {
+        self.flag(server).store(false, Ordering::Relaxed);
+    }
+
     fn put_server(&self, server: &BookServer) {
         let Some(kind) = Kind::parse(&server.kind) else { return };
         let Ok(credential) = self.tokens.get(&secret_key(&server.id)) else {
@@ -333,7 +365,8 @@ impl BookSources {
         };
         let flag = self.flag(&server.id);
         flag.store(server.signed_out, Ordering::Relaxed);
-        let built = kaeri_bookserver::source(
+        let libraries = self.server_meta(&server.id).libraries;
+        let built = kaeri_bookserver::source_with(
             &self.client,
             &Server {
                 id: &server.id,
@@ -342,6 +375,7 @@ impl BookSources {
                 address: &server.address,
                 credential: &credential,
             },
+            &libraries,
             self.keep.clone(),
             flag,
         );
@@ -423,7 +457,10 @@ impl BookSources {
                     None if !f.available => BookFolderScan::Missing,
                     None => BookFolderScan::Done,
                 };
+                let report = self.folder_meta(&f.id);
                 BookFolderRow {
+                    files: report.files,
+                    skipped: report.skipped,
                     name: f.name.clone().or_else(|| f.path.clone()).unwrap_or_default(),
                     path: f.path.clone(),
                     removed: removed.contains(&f.id),
@@ -453,15 +490,27 @@ impl BookSources {
             .unwrap_or_default()
             .into_iter()
             .filter_map(|s| {
+                let meta = self.server_meta(&s.id);
+                let (pending, sending, saved_at, problem, problem_at) =
+                    self.write_back_row(&s.id, s.report_progress);
                 Some(BookServerRow {
                     kind: kind_of(Kind::parse(&s.kind)?),
                     off: self.registry.is_off(&s.id),
                     id: s.id,
                     name: s.name,
                     address: s.address,
-                    series: 0,
+                    series: meta.series.unwrap_or(0),
                     report_progress: s.report_progress,
                     signed_out: s.signed_out,
+                    libraries: meta.library_count,
+                    empty: meta.empty,
+                    rechecks_at: meta.rechecks_at(),
+                    key_last4: meta.key_last4,
+                    progress_pending: pending,
+                    progress_sending: sending,
+                    progress_saved_at: saved_at,
+                    progress_problem: problem,
+                    progress_problem_at: problem_at,
                 })
             })
             .collect();
@@ -511,10 +560,10 @@ impl BookSources {
         folder: Folder,
         now: i64,
         progress: impl Fn() + Send + 'static,
-    ) {
+    ) -> Option<kaeri_model::came_in::FolderReport> {
         let Some(path) = folder.path.clone().map(PathBuf::from) else {
             let _ = self.store.set_book_folder_available(&folder.id, false);
-            return;
+            return None;
         };
         let found = Arc::new(AtomicU32::new(0));
         self.scanning
@@ -532,6 +581,8 @@ impl BookSources {
         self.scanning.lock().unwrap_or_else(|e| e.into_inner()).remove(&folder.id);
         match scanned {
             Ok(Ok(scan)) => {
+                let report = added::folder_report(&folder, &scan);
+                self.keep_folder_meta(&report);
                 let rows: Vec<_> = scan.series.iter().map(|s| to_rows(&folder.id, s)).collect();
                 if let Err(e) = self.store.replace_book_scan(&folder.id, &rows, now) {
                     tracing::warn!(error = %e, "the scan was not kept");
@@ -556,13 +607,40 @@ impl BookSources {
                         }
                     }
                 }
+                Some(report)
             }
             Ok(Err(e)) => {
                 tracing::info!(error = %e, "a book folder could not be read");
                 let _ = self.store.set_book_folder_available(&folder.id, false);
+                None
             }
-            Err(e) => tracing::warn!(error = %e, "the folder scan stopped"),
+            Err(e) => {
+                tracing::warn!(error = %e, "the folder scan stopped");
+                None
+            }
         }
+    }
+
+    /// Put the reading demo in the registry, as the demo is switched on.
+    pub fn put_demo(&self) {
+        self.registry.put(Arc::new(self.demo.clone()));
+    }
+
+    /// Take the reading demo out, and the pages it kept.
+    pub fn remove_demo(&self) {
+        self.registry.remove(kaeri_core::demo::DEMO_SOURCE_ID);
+        self.demo.clear();
+    }
+
+    /// Whether a book source other than the demo is here: a folder, a server or a plugin.
+    pub fn has_own(&self) -> bool {
+        let folders = self.store.book_folders().map(|f| !f.is_empty()).unwrap_or(false);
+        folders
+            || self
+                .registry
+                .ids()
+                .iter()
+                .any(|id| id != FOLDERS && id != kaeri_core::demo::DEMO_SOURCE_ID)
     }
 }
 
@@ -635,14 +713,45 @@ pub fn command(
             let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
         }
     };
+    this.write_back.set_publisher(Arc::new(publish.clone()));
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
             let Some(id) = this.add_folder(&folder, now) else { return publish() };
             publish();
-            rescan(this, Some(id), now, publish);
+            rescan(this, Some(id), now, publish, Some(tx));
         }
-        BookSourceCommand::Scan => rescan(this, None, now, publish),
+        BookSourceCommand::Scan => {
+            rescan(this.clone(), None, now, publish.clone(), None);
+            recheck(this, now, true, publish, tx);
+        }
+        BookSourceCommand::Recheck => recheck(this, now, true, publish, tx),
+        BookSourceCommand::Probe { address, user, password } => {
+            tokio::spawn(async move {
+                let came = this
+                    .probe(&address, user.as_deref(), password.as_ref().map(|p| p.0.as_str()))
+                    .await;
+                let _ = tx.send(Event::CameIn(came));
+            });
+        }
+        BookSourceCommand::AddServer { pending, libraries, report_progress } => {
+            match this.add_found(&pending, libraries, report_progress, now) {
+                Some(came) => {
+                    let _ = tx.send(Event::CameIn(came));
+                }
+                None => tracing::debug!("a server was added that is no longer held"),
+            }
+            publish();
+        }
+        BookSourceCommand::PrefetchDemo => {
+            if this.registry.get(kaeri_core::demo::DEMO_SOURCE_ID).is_some() {
+                let demo = this.demo.clone();
+                tokio::spawn(async move {
+                    let ready = demo.prefetch().await;
+                    tracing::debug!(ready, "demo pages fetched ahead");
+                });
+            }
+        }
         BookSourceCommand::RemoveFolder { id } => {
             this.removed.write().unwrap_or_else(|e| e.into_inner()).insert(id.clone());
             publish();
@@ -700,8 +809,18 @@ pub fn command(
             publish();
         }
         BookSourceCommand::CheckServer { address } => {
+            // A Kavita OPDS link is checked at its root: its key stays here until `Probe`.
+            let link = kaeri_bookserver::kavita_link(&address);
+            let address = link.as_ref().map_or(address, |l| l.root.clone());
             tokio::spawn(async move {
-                let event = match kaeri_bookserver::check(&this.client, &address).await {
+                let checked =
+                    kaeri_bookserver::check(&this.client, &address).await.map(|mut c| {
+                        if link.is_some() {
+                            c.kind = Some(Kind::Kavita);
+                        }
+                        c
+                    });
+                let event = match checked {
                     Ok(found) => BookSourceEvent::ServerChecked {
                         // A server that wants a sign-in before it says is taken as a catalogue:
                         // signing in finds out which it is.
@@ -729,6 +848,7 @@ pub fn command(
             this.registry.remove(&id);
             let _ = this.tokens.clear(&secret_key(&id));
             let _ = this.store.remove_book_server(&id);
+            this.forget_server_meta(&id);
             publish();
         }
         BookSourceCommand::SetReportProgress { id, on } => {
@@ -736,6 +856,13 @@ pub fn command(
                 let _ =
                     this.store.put_book_server(&BookServer { report_progress: on, ..server });
             }
+            if !on {
+                this.drop_progress(&id);
+            }
+            publish();
+        }
+        BookSourceCommand::RetryProgress { id } => {
+            this.retry_progress(&id, now);
             publish();
         }
         BookSourceCommand::SetOrder { ids } => {
@@ -753,11 +880,13 @@ pub fn command(
     }
 }
 
+/// Scan the folders, or only `only`. With `report`, what came in from each folder is said.
 fn rescan(
     this: BookSources,
     only: Option<String>,
     now: i64,
     publish: impl Fn() + Clone + Send + 'static,
+    report: Option<Outbox>,
 ) {
     tokio::spawn(async move {
         let folders: Vec<_> = this
@@ -769,8 +898,64 @@ fn rescan(
             .collect();
         for folder in folders {
             let tick = publish.clone();
-            this.scan_folder(folder, now, tick).await;
+            let found = this.scan_folder(folder, now, tick).await;
+            if let (Some(tx), Some(found)) = (&report, found) {
+                let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
+            }
             publish();
+        }
+    });
+}
+
+/// Look again at the servers that showed no series: those due, or every one with `all`. A
+/// server that now holds some is said, as it would have been when added.
+fn recheck(
+    this: BookSources,
+    now: i64,
+    all: bool,
+    publish: impl Fn() + Send + 'static,
+    tx: Outbox,
+) {
+    tokio::spawn(async move {
+        let filled = this.recheck(now, all).await;
+        for server in &filled {
+            if let Some(stored) = this.store.book_server(&server.id).ok().flatten() {
+                // Asked again with what it now holds.
+                this.put_server(&stored);
+            }
+        }
+        for server in filled {
+            let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::ServerAdded(server)));
+        }
+        publish();
+    });
+}
+
+/// Every [`RECHECK`] once launch is over, look again at the servers that showed no series.
+/// Runs in AniList's paced background queue, after Home's first screen.
+pub fn spawn_rechecks(
+    this: BookSources,
+    anilist: kaeri_meta::AniList,
+    tx: Outbox,
+    clock: impl Fn() -> i64 + Send + 'static,
+) {
+    tokio::spawn(async move {
+        anilist.launch_over().await;
+        let mut every = tokio::time::interval(RECHECK);
+        every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+        loop {
+            every.tick().await;
+            let now = clock();
+            let filled = kaeri_meta::in_background(this.recheck(now, false)).await;
+            for server in &filled {
+                if let Some(stored) = this.store.book_server(&server.id).ok().flatten() {
+                    this.put_server(&stored);
+                }
+            }
+            for server in filled {
+                let _ =
+                    tx.send(Event::CameIn(kaeri_model::came_in::CameIn::ServerAdded(server)));
+            }
         }
     });
 }
@@ -1044,6 +1229,7 @@ impl BookSources {
                 version_label: chapter.version_label.clone(),
                 read_at,
                 line: Vec::new(),
+                gone_from_source: false,
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),
@@ -1055,6 +1241,7 @@ impl BookSources {
                 }),
             }
         }
+        keep_dropped(&self.store, work, &read, &bookmarks, &mut groups);
         for group in &mut groups {
             group.all_read =
                 group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
@@ -1120,40 +1307,77 @@ impl BookSources {
             .await
             .map_err(|e| failure(&opened.source_id, &e))
     }
+}
 
-    /// Tell the source a chapter was read or taken back, when the person allows it for that
-    /// server. A failure is for the log: the mark itself is kept.
-    pub fn report(&self, work: &WorkId, chapters: Vec<ChapterId>, read: bool, now: i64) {
-        let this = self.clone();
-        let work = work.clone();
-        tokio::spawn(async move {
-            let Some((source, series)) = this.edition_of(&work, None) else { return };
-            let allowed = this
-                .store
-                .book_server(&source)
-                .ok()
-                .flatten()
-                .is_some_and(|s| s.report_progress);
-            if !allowed {
-                return;
+/// Chapters downloaded here that the source no longer lists stay on the series page, marked as
+/// gone from the source, in their place among the others: the file is still on the device and
+/// still opens.
+fn keep_dropped(
+    store: &Store,
+    work: &WorkId,
+    read: &HashMap<String, kaeri_store::reading::ReadChapter>,
+    bookmarks: &HashSet<String>,
+    groups: &mut Vec<VolumeGroup>,
+) {
+    let listed: HashSet<String> = groups
+        .iter()
+        .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
+        .collect();
+    let downloads = store.book_downloads(Some(work.as_str())).unwrap_or_default();
+    for d in downloads.iter().filter(|d| {
+        d.state == kaeri_store::book_downloads::BookDownloadState::Done
+            && d.path.as_deref().is_some_and(|p| std::path::Path::new(p).exists())
+            && !listed.contains(&d.chapter)
+    }) {
+        let was = read.get(&d.chapter);
+        let mut row = crate::downloads::books::chapter_row(
+            d,
+            was.is_some_and(|r| r.read),
+            bookmarks.contains(&d.chapter),
+        );
+        if let Some(r) = was {
+            row.read_at = r.read_at;
+            if !r.read
+                && let Some(page) = r.last_page
+            {
+                row.state = ChapterReadState::InProgress {
+                    page: kaeri_model::reading::shown_page(page),
+                    of: r.of_pages,
+                };
             }
-            let Ok(listed) =
-                this.registry.chapters(&source, &series, &BookHints::default(), now).await
-            else {
-                return;
-            };
-            let restarts = restarts_per_volume(&listed);
-            for chapter in listed.iter().filter(|c| chapters.contains(&c.key(restarts).id())) {
-                if let Err(e) = this
-                    .registry
-                    .report_progress(&source, &series, &chapter.id, read, now)
-                    .await
-                {
-                    tracing::info!(error = %e, "a server was not told what was read");
-                }
+        }
+        row.gone_from_source = true;
+        let group = match groups.iter().position(|g| g.volume == row.volume) {
+            Some(at) => &mut groups[at],
+            None => {
+                groups.push(VolumeGroup {
+                    volume: row.volume.clone(),
+                    title: None,
+                    chapters: Vec::new(),
+                    all_read: false,
+                });
+                groups.last_mut().expect("just pushed")
             }
-        });
+        };
+        let at = place_of(&group.chapters, &row);
+        group.chapters.insert(at, row);
     }
+}
+
+/// Where a row goes among others listed in number order, rising or falling; the end when its
+/// number is not known.
+fn place_of(rows: &[ChapterRow], row: &ChapterRow) -> usize {
+    let range = |r: &ChapterRow| r.id.key().and_then(|k| k.range());
+    let Some(mine) = range(row) else { return rows.len() };
+    let falling = match (rows.first().and_then(range), rows.last().and_then(range)) {
+        (Some(first), Some(last)) => first > last,
+        _ => false,
+    };
+    rows.iter()
+        .position(|r| {
+            range(r).is_some_and(|theirs| if falling { theirs < mine } else { theirs > mine })
+        })
+        .unwrap_or(rows.len())
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.

@@ -4,7 +4,7 @@ description: Torrent playback is off by default and finds no torrents of its own
 ---
 
 :::caution[Nothing to search included]
-Kaeri doesn't host any shows. It finds no torrents, ranks none and ships no plugin that does. Torrent
+Kaeri doesn't host any shows or books. It finds no torrents, ranks none and ships no plugin that does. Torrent
 playback plays a torrent a [source plugin](/docs/plugins/authoring/) names, or a magnet link or
 torrent file you open yourself. You are responsible for what you play and for having the right to
 play it, under the laws that apply to you. Torrent playback is off by default.

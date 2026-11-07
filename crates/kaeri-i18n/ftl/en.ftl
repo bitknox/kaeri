@@ -603,6 +603,18 @@ reading-failed-off = Reading isn't available in this version of Kaeri.
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Something went wrong. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } is { $size }, and { $target } takes files up to { $limit }. Send fewer chapters at a time and try again.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } is missing { $part }, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } in { $file } has the wrong text encoding, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } in { $file } isn't valid, so it wasn't sent. Try again.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Manga
 
@@ -692,20 +704,38 @@ reading-part-percent = Part { $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = Part { $part } is new
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label } is new
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = Part { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = Part { $part } is out today
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label } is out today
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = Part { $part }, { $title }, out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }, { $title }, out today
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = Chapter { $chapter } of { $of }
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = Volume { $volume }, part { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Volume { $volume }, { $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = Japan
@@ -756,6 +786,9 @@ reading-row-new = New
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Downloaded
 
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Gone from the source
+
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Not downloaded
 
@@ -782,6 +815,12 @@ reading-row-page = Page { $page }
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Opened
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Bookmarked
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1174,6 +1213,9 @@ stores-ready-demo-stays = { $store } is ready. The demo stays last in Your sourc
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = You can close this tab and go back to Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = This device was removed from sync on another device. Join again to sync it.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Signed in to { $tracker }.
 
@@ -1309,7 +1351,7 @@ cause-proxy-address-unusable = The proxy's address is not one a check can use.
 cause-server-unreachable = The server couldn't be reached.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri doesn't host any shows. You add your own sources.
+legal-hosts-no-content = Kaeri doesn't host any shows or books. You add your own sources.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Saved { $label }.
@@ -4776,6 +4818,18 @@ tui-together-not-a-link = That is not a party link or code.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = Reading is in the apps
+
+# Line under the title of that page.
+tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels are read in the Kaeri apps, and your reading stays in step through sync.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Press { $key } to change what Kaeri is for.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key } to change
+
 # Title of the about page.
 about-title = About
 
@@ -5900,6 +5954,63 @@ episode-download-done = Downloaded
 
 # Line under that button after a failure.
 episode-download-failed = Couldn't download episode { $episode }. Try again.
+
+# First run, page 2 of 5.
+first-other-title = Already use Kaeri on another device?
+
+# Under the title.
+first-other-line = Pair with it and this device gets your sources, trackers and history. The steps after this are then done.
+
+# Line under the pair row.
+first-other-pair-line = Shows a code to enter on that device. Both need the same Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Restore from a cloud folder
+
+# Line under it.
+first-other-restore-line = Uses the recovery key you saved
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = No, start here
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Waiting for your other device
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Nothing yet? Both devices need to be on the same Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = From { $device }
+
+# Row while the rest arrives.
+first-join-looking = Looking at what { $device } has…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri is for
+
+# Line under it when the other device reads.
+first-join-medium-line = Reading, as on { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Add { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · signs in with the key from { $device }, kept in { $store }
+
+# Note under the list.
+first-join-folders = Folders stay on { $device }. Add this device’s own folders in Your sources.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Lists and sources are set up, so first run ends here. You can change them in Settings.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } didn’t let this device in. { $owner } can send you an invite.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Syncing with { $device }
 
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Home
@@ -8281,6 +8392,86 @@ reader-gap-small = Small
 # Look choice that follows the system's light or dark.
 reader-look-system = System
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Read the demo
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = The demo reads a short comic and a short story their makers share under Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = One short episode and one short comic, shared by their makers under Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Only the demo is on. Add a folder, a server or a plugin store to read your own books.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Read
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Comic · one page
+       *[other] Demo · Comic · { $pages } pages
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } by { $author }. Licensed { $licence }. Read from Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } by { $author }. Public domain. It comes with the app.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Reads now
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Only the demo is on. Other titles appear once you add a source.
+
+# Title of the card after the demo's last page.
+reader-demo-end = That’s the end of the demo
+
+# Line under it.
+reader-demo-end-line = To read your own books, add a folder, a server or a plugin store.
+
+# The card's primary action.
+reader-demo-add-source = Add a source
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Back to page 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = A comic and a story · CC BY 4.0 and public domain
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = The demo never signs in anywhere and never writes to a tracker.
+
+# Group on the demo's series page.
+demo-chapters = Chapters
+
+# Group on the demo's series page: the other demo work.
+demo-also = Also in the demo
+
+# Group in About the demo.
+demo-credits = Credits
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] One page
+       *[other] { $pages } pages
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Story · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Read chapter { $number }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Watch
 
@@ -8362,6 +8553,15 @@ action-continue-part-plain = Continue part { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Read part { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Continue { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Continue { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = Read { $label }
 
 # The main action when every chapter is read.
 action-read-again = Read again
@@ -9287,6 +9487,230 @@ read-downloads-read = { $n } read
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Delete read
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Send to e-reader
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = For
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = What
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Chapters
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first } to { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Size
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = About { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Prepare and share
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Preparing the chapter
+       *[other] Preparing { $done } of { $total } chapters
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Pages are sized for { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = Over { $size }, so the files go in parts.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Couldn't prepare chapter { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Couldn't prepare the files. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Working it out
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Open
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Closed
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent } percent
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Send to e-reader
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = in parts over { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Cancel send
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] One file is ready.
+       *[other] { $n } files are ready.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Share again
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Sending to { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = Fixed-layout EPUB
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Where did you stop?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = You sent chapters to { $device }. Where did you stop?
+
+# Button in that note.
+stop-note-action = Set my place
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Chapter { $chapter } went to { $device } on { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Chapters { $first } to { $last } went to { $device } on { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = I finished chapter { $chapter }
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Set my place
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Keep chapter { $chapter } · page { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Keep my place
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-readers
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Send to e-reader
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDS feed
+
+# Line under the Share on this network switch.
+opds-share-note = An OPDS catalogue e-readers at home can browse
+
+# Footnote under the feed settings.
+opds-footer = Only while Kaeri is open on this { $device }. Progress on those e-readers stays there.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Address
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Turn the feed on to get its address.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Password
+
+# Line under the password row.
+opds-password-note = E-readers ask for it once
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = New password
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Leave it empty to pick a free port, or use 1024 to 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Port { $wanted } was busy, so the feed uses { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = What it shares
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Downloads
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] One chapter
+       *[other] { $n } chapters
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Manga folder
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Novel folder
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] One series
+       *[other] { $n } series
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Fetched by
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = No e-reader has fetched anything yet.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Starting…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Paused. This Mac isn't on a local network.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Paused. This Mac is only connected through a VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Make a new password?
+
+# Text of that question.
+opds-new-password-warning = E-readers that already use the feed stop working until you type the new password into each one.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Last asked { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] One file
+       *[other] { $n } files
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = E-reader at { $address }
 
 # Button that shows the season before.
 seasonal-previous = Previous season
@@ -10619,6 +11043,233 @@ settings-opds-password = Feed password
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Feed port
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Address
+
+# Note under the empty address field.
+book-server-address-hint = An address, or the whole OPDS link from Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = This is a Kavita OPDS link. Its key signs you in, so no password is needed.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri keeps the key in { $store } and shows only its last four characters.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Key ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Found { $series } series
+       *[other] Found { $series } series in { $libraries } libraries
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } at { $host }. Pick the libraries to add.
+
+# A library row's line in the result.
+book-server-library-line = { $series } series
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Send progress to the server
+
+# Line under the switch.
+book-server-sync-progress-line = Pages you read here go back to { $host }, and its progress comes here.
+
+# Field label.
+book-server-username = Username
+
+# Field label.
+book-server-password = Password
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Couldn’t reach { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Check the address, and that the server is on and on this network.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } didn’t accept that password
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Use the username and password you use for { $kind } in a browser.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } didn’t accept that key
+
+# Line under it.
+book-server-err-key-line = The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } shows this account no series
+
+# Line under it.
+book-server-empty-line = It lets you in, but the server may still be scanning, or this account may not have access to its books.
+
+# Note under it.
+book-server-empty-recheck = You can add it now. Kaeri looks again every 30 minutes.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri reads from Komga, Kavita and OPDS catalogues.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Found { $series } series in one file
+       *[other] Found { $series } series in { $files } files
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri matched { $matched } of them by their details.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] One file Kaeri can’t open
+       *[other] { $count } files Kaeri can’t open
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. They stay in the folder as they are.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB locked with DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Show files
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Add folder
+
+# Folder row action that picks another folder.
+book-folder-change = Change
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Nothing in { $folder } that Kaeri can open
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.
+       *[other] It holds { $files } files, none of them CBZ, CBR, EPUB, PDF or images.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Choose another folder
+
+# Title of the Join a plugin store sheet.
+store-join-title = Join a plugin store
+
+# Label of the invite field.
+store-invite-field = Invite
+
+# Result title once a plugin store is joined.
+store-joined-title = Joined { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } offers one plugin. Joining installs nothing; install it here or later.
+       *[other] { $owner } offers { $count } plugins. Joining installs nothing; pick the ones you want here or later.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = For reading
+
+# Group header in the joined store's list.
+store-group-watching = For watching
+
+# Row action.
+store-install = Install
+
+# Row state once installed.
+store-installed-row = Installed
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Install all for reading
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] One plugin installed. It’s in Your sources.
+       *[other] { $count } plugins installed. They’re in Your sources.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Every plugin in { $store } is for watching
+
+# Line under it.
+store-other-medium-line = Watching is off on this device, so none of them show in Your sources.
+
+# Secondary action under it.
+store-turn-on-watching = Turn on watching
+
+# Info title when a store has no plugins.
+store-empty = { $store } has no plugins yet
+
+# Line under it.
+store-empty-line = You’re a member, so new plugins show in Plugin stores when { $owner } adds them.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Couldn’t reach { $host }
+
+# Line under it.
+store-err-unreachable-line = The invite looks right, but the store isn’t answering. Try again later, or ask { $owner } if it’s running.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] One more is for watching, which is off on this device.
+       *[other] { $count } more are for watching, which is off on this device.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] One more is for reading, which this TV doesn’t do.
+       *[other] { $count } more are for reading, which this TV doesn’t do.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Every plugin in { $store } is for reading, which this TV doesn’t do.
+
+# Plugin row in an invite's result.
+store-plugin-row = Version { $version } · may contact { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = Added { $name } · { $series } series
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Installed one plugin from { $store }
+       *[other] Installed { $count } plugins from { $store }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $series } series · added just now
+       *[other] { $kind } · { $series } series in { $libraries } libraries · added just now
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · no series yet · looks again in 30 minutes
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } series · one file skipped
+       *[other] { $path } · { $series } series · { $skipped } files skipped
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = From { $store } · { $medium } · version { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Sources

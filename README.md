@@ -198,7 +198,7 @@ source. The terminal app updates with `kaeri --update`.
 
 ## Where episodes come from
 
-Kaeri doesn't host any shows. Apart from a demo of Creative Commons works, it comes with no
+Kaeri doesn't host any shows or books. Apart from a demo of Creative Commons works, it comes with no
 sources, and it doesn't list, recommend or link to any. You add the sources you're entitled to use:
 your own files, your own media server, a stream you have the right to
 play, a licensed service, or a sandboxed WebAssembly plugin from a plugin store you joined. A plugin can only reach

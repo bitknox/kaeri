@@ -44,3 +44,4 @@ search-result-in-library = Trong { -library } của bạn
 search-result-on-server = Trên { $server }
 search-result-on-service = Trên { $service }
 match-choice-line = { $parts } · khớp { $percent }%
+search-rate-limit-enter = Tìm kiếm khi gõ tạm dừng một lúc để không vượt giới hạn của AniList. Nhấn Enter để tìm ngay.

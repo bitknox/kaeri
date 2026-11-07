@@ -69,11 +69,19 @@ import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
 import app.kaeri.store.loadSync
 import android.content.Context
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.store.reads
+import app.kaeri.store.watches
+import app.kaeri.ui.reading.bookSourcePages
 
 /** The panes of Settings, in the list's order. */
 enum class SettingsPane(val route: String, val titleRes: Int) {
+    /** What Kaeri is for on this device, where the build can read and the answer can change. */
+    Medium("medium", R.string.settings_kaeri_is_for),
     General("general", R.string.settings_group_general),
     Playback("playback", R.string.settings_group_playback),
+    /** Reading's own pane, with reading on. */
+    Reading("reading", R.string.settings_group_reading),
     Notifications("notifications", R.string.settings_group_notifications),
     Downloads("downloads", R.string.downloads_title),
     Sources("sources", R.string.sources_title),
@@ -105,6 +113,7 @@ internal fun NavGraphBuilder.settingsPages(actions: AppActions) {
         val pane = SettingsPane.named(entry.arguments?.getString("pane"))
         CompositionLocalProvider(LocalPageAnimation provides this) { SettingsScreen(pane, actions) }
     }
+    bookSourcePages()
 }
 
 /** Settings at [pane], or at its list: one page at a time on a phone, list and pane on a tablet. */
@@ -116,8 +125,16 @@ fun SettingsScreen(pane: SettingsPane?, actions: AppActions) {
         store.loadDownloads()
         store.loadTitleLanguage()
     }
+    val answer = kaeriIsFor()
+    LaunchedEffect(answer.reads) {
+        // Reading's lines: the chapters' share of the storage, and the reader defaults.
+        if (answer.reads) {
+            store.reading.loadDownloads()
+            store.bookSources.load()
+        }
+    }
     if (wideWindow()) {
-        TabletSettings(pane ?: SettingsPane.Playback, actions)
+        TabletSettings(pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General, actions)
     } else if (pane == null) {
         PhoneSettingsList(actions)
     } else {
@@ -179,18 +196,46 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     val update by store.updates.state.collectAsStateWithLifecycle()
     val syncStatus by store.sync.status.collectAsStateWithLifecycle()
     val profileList by store.sync.profiles.collectAsStateWithLifecycle()
+    val medium by store.medium.view.collectAsStateWithLifecycle()
+    val chapters by store.reading.downloads.collectAsStateWithLifecycle()
+    val books by store.bookSources.view.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(Unit) { store.loadSync() }
+    val context = LocalContext.current
+    val answer = medium?.answer ?: KaeriIsFor.WATCH
+    val watches = answer.watches
+    val reads = answer.reads
+    // Kaeri is for, alone at the top, where the build can read and the answer is not fixed.
+    if (store.medium.choosable) {
+        SettingsGroup(
+            rows = listOf({ place ->
+                LinkRow(
+                    place,
+                    stringResource(SettingsPane.Medium.titleRes),
+                    app.kaeri.ui.reading.mediumAnswerWords(context, answer),
+                    if (reads && !watches) Icons.Read else Icons.Watch,
+                    selected = selected == SettingsPane.Medium,
+                ) { open(SettingsPane.Medium) }
+            }),
+        )
+    }
     AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
-    val panes = listOf(
-        SettingsPane.General to generalSummary(LocalContext.current, view),
-        SettingsPane.Playback to playbackSummary(LocalContext.current, view),
-        SettingsPane.Notifications to notificationsSummary(LocalContext.current, view),
-        SettingsPane.Downloads to storageLine(LocalContext.current, store.downloads.bytes(downloads)),
-        SettingsPane.Sources to sourcesSummary(LocalContext.current, view, providers.size.takeIf { providersLoaded }),
-        SettingsPane.Accounts to AccountWords.connected(LocalContext.current, trackers),
-        SettingsPane.Devices to devicesSummary(LocalContext.current, syncStatus),
-        SettingsPane.Profiles to profilesSummary(LocalContext.current, profileList.profiles),
-        SettingsPane.Hidden to null,
+    val chapterBytes = if (reads) chapters?.meter?.used?.toLong() ?: 0L else 0L
+    val episodeBytes = if (watches) store.downloads.bytes(downloads) else 0L
+    val panes = listOfNotNull(
+        SettingsPane.General to generalSummary(context, view),
+        if (watches) SettingsPane.Playback to playbackSummary(context, view) else null,
+        if (reads) SettingsPane.Reading to app.kaeri.ui.reading.readingSummary() else null,
+        SettingsPane.Downloads to storageLine(context, episodeBytes + chapterBytes),
+        SettingsPane.Notifications to listOfNotNull(
+            if (watches) notificationsSummary(context, view) else null,
+            if (reads) app.kaeri.ui.reading.chapterNoticesSummary(context, store, view) else null,
+        ).joinToString(" · ").ifEmpty { null }, // i18n-skip
+        SettingsPane.Sources to if (watches) sourcesSummary(context, view, providers.size.takeIf { providersLoaded }) else app.kaeri.ui.reading.bookSourcesSummary(context, books),
+        SettingsPane.Accounts to AccountWords.connected(context, trackers, answer),
+        SettingsPane.Devices to devicesSummary(context, syncStatus),
+        // Profiles and hidden titles are about shows: with reading alone they are gone.
+        if (watches) SettingsPane.Profiles to profilesSummary(context, profileList.profiles) else null,
+        if (watches) SettingsPane.Hidden to null else null,
     )
     SettingsGroup(
         rows = panes.map { (pane, line) ->
@@ -209,8 +254,10 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
 
 private val SettingsPane.icon
     get() = when (this) {
+        SettingsPane.Medium -> Icons.Watch
         SettingsPane.General -> Icons.Settings
         SettingsPane.Playback -> Icons.PlaybackPage
+        SettingsPane.Reading -> Icons.Read
         SettingsPane.Notifications -> Icons.NotificationsPage
         SettingsPane.Downloads -> Icons.DownloadsPage
         SettingsPane.Sources -> Icons.SourcesPage
@@ -398,8 +445,10 @@ private val SettingsPane.defaultFocus: String?
 @Composable
 internal fun PaneContent(pane: SettingsPane, actions: AppActions) {
     when (pane) {
+        SettingsPane.Medium -> app.kaeri.ui.reading.MediumPane()
         SettingsPane.General -> GeneralPane()
         SettingsPane.Playback -> PlaybackPane()
+        SettingsPane.Reading -> app.kaeri.ui.reading.ReadingPane()
         SettingsPane.Notifications -> NotificationsPane(actions)
         SettingsPane.Downloads -> DownloadsPane(actions)
         SettingsPane.Sources -> SourcesPane(actions)
@@ -435,7 +484,11 @@ internal object AccountWords {
         return AccountStatus(Strings.accountsSyncDone(context), colors.secondary)
     }
 
-    /** The signed-in trackers by name, "AniList, Kitsu", or "None". */
-    fun connected(context: Context, trackers: Map<String, SyncState>): String =
-        Wording.list(AccountsModel.order.filter { trackers[it]?.connected == true }.map { AccountsModel.name(it) }).ifEmpty { Strings.valueNone(context) }
+    /** The signed-in trackers that serve what Kaeri is for, by name, "AniList, Kitsu", or "None". */
+    fun connected(context: Context, trackers: Map<String, SyncState>, answer: KaeriIsFor = KaeriIsFor.WATCH): String =
+        Wording.list(
+            (listOf("anilist") + app.kaeri.ui.reading.otherTrackers(answer))
+                .filter { trackers[it]?.connected == true }
+                .map { app.kaeri.ui.reading.trackerName(it) },
+        ).ifEmpty { Strings.valueNone(context) }
 }

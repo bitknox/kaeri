@@ -44,3 +44,4 @@ search-result-in-library = あなたの{ -library }内
 search-result-on-server = { $server }にあります
 search-result-on-service = { $service }にあります
 match-choice-line = { $parts } · { $percent }%一致
+search-rate-limit-enter = AniList の制限内に収めるため、入力中の検索を少し止めています。今すぐ検索するには Enter を押してください。

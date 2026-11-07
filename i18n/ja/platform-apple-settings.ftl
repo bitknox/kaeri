@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = この{ -device }からファイルが削除されます。まだ視聴していないエピソードは残ります。
 settings-folder-default = トレントのキャッシュに保存
 settings-storage-unwatched = 未視聴
+settings-storage-unread = 未読
+settings-storage-read = 既読
+settings-storage-unseen-both = 未視聴・未読
+settings-storage-seen-both = 視聴済み・既読
 settings-storage-used = ダウンロードで{ $size }を使用しています。
 settings-storage-used-free = ダウンロードで{ $size }を使用しています。この{ -device }の空きは{ $free }です。
 settings-source-count = { $count ->
    *[other] { $count }件の{ -source-pl }
  }
 settings-accounts-sync-note = 進捗とリストの変更は{ $tracker }に同期されます。{ -library-cap }とカレンダーの「マイリスト」には、{ $tracker }のリストが表示されます。
+settings-accounts-sync-note-read = 進捗とリストの変更は{ $tracker }に同期されます。{ -library-cap }には{ $tracker }のリストが表示されます。
 settings-conflicts = { $count ->
    *[other] { $count }件のタイトルが{ $tracker }と異なります
  }

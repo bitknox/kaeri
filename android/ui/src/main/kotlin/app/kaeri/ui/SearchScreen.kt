@@ -4,6 +4,10 @@
 
 package app.kaeri.ui
 
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.ui.reading.ReadPlaces
+import app.kaeri.ui.reading.ReadSearchScreen
+import app.kaeri.ui.reading.ScopeControl
 import app.kaeri.store.plainReason
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -232,6 +236,18 @@ fun SearchScreen(
     open: Boolean = false,
     opened: () -> Unit = {},
 ) {
+    // Reading's search with Read alone, or with Both once Reading is chosen in the control.
+    val isFor = kaeriIsFor()
+    if (isFor == KaeriIsFor.READ || (isFor == KaeriIsFor.BOTH && ReadPlaces.searchReading)) {
+        ReadSearchScreen(start?.text?.takeIf { it.isNotBlank() })
+        return
+    }
+    ShowsSearch(start, startFilters, open, opened, both = isFor == KaeriIsFor.BOTH)
+}
+
+/** The shows' search; with Both, the Shows or Reading control comes first. */
+@Composable
+private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolean, opened: () -> Unit, both: Boolean) {
     val store = LocalAppStore.current
     val status by store.search.status.collectAsStateWithLifecycle()
     val text = rememberTextFieldState(status.query.text)
@@ -333,6 +349,9 @@ fun SearchScreen(
     )
     Column(Modifier.semantics { paneTitle = searchTitle }) {
         Column(Modifier.then(if (phone) Modifier.background(barSurface) else Modifier).windowInsetsPadding(WindowInsets.statusBars)) {
+            if (both) {
+                ScopeControl(reading = false, modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) { ReadPlaces.searchReading = it }
+            }
             SearchBar(
                 state = bar,
                 inputField = input,
@@ -608,7 +627,7 @@ internal fun FiltersPill(count: Int, spoken: String, onClick: () -> Unit) {
 
 /** A chip that opens a menu of [choices]; a choice that settles the filter calls the close it is handed. */
 @Composable
-private fun MenuChip(
+internal fun MenuChip(
     title: String,
     selected: Boolean,
     enabled: Boolean = true,
@@ -628,7 +647,7 @@ private fun MenuChip(
 
 /** One choice in a filter's menu, with a check when it is set. */
 @Composable
-private fun Choice(text: String, chosen: Boolean, onClick: () -> Unit) {
+internal fun Choice(text: String, chosen: Boolean, onClick: () -> Unit) {
     DropdownMenuItem(
         text = { Text(text) },
         leadingIcon = {
@@ -649,7 +668,7 @@ private fun Choice(text: String, chosen: Boolean, onClick: () -> Unit) {
  * opens a menu; a [leading] glyph takes the check's place on a chip that is never set.
  */
 @Composable
-private fun SearchChip(
+internal fun SearchChip(
     text: String,
     selected: Boolean,
     enabled: Boolean = true,

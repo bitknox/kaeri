@@ -183,7 +183,7 @@ impl<W: Write + Seek> EpubWriter<W> {
         let lang = language(&self.meta.language);
         let source = crate::epub::html_entities(&format!(
             "<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\" \
-             xml:lang=\"{l}\" lang=\"{l}\"><head><title>{t}</title></head><body>{body}</body></html>",
+             xml:lang=\"{l}\" lang=\"{l}\"><head><meta charset=\"utf-8\"/><title>{t}</title></head><body>{body}</body></html>",
             l = escape_attr(&lang),
             t = escape_text(title),
         ));
@@ -225,7 +225,7 @@ impl<W: Write + Seek> EpubWriter<W> {
         let (w, h) = (fixed.width, fixed.height);
         let doc = format!(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!DOCTYPE html>\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n\
-             <head><title>{n}</title><meta name=\"viewport\" content=\"width={w}, height={h}\"/>\
+             <head><meta charset=\"utf-8\"/><title>{n}</title><meta name=\"viewport\" content=\"width={w}, height={h}\"/>\
              <style type=\"text/css\">html,body{{margin:0;padding:0;width:{w}px;height:{h}px;overflow:hidden}}\
              img{{display:block;width:{w}px;height:{h}px}}</style></head>\n\
              <body><img src=\"../{image}\" alt=\"\"/></body>\n</html>\n"
@@ -305,7 +305,7 @@ impl<W: Write + Seek> EpubWriter<W> {
         }
         format!(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!DOCTYPE html>\n<html xmlns=\"http://www.w3.org/1999/xhtml\" \
-             xmlns:epub=\"http://www.idpf.org/2007/ops\" xml:lang=\"{lang}\" lang=\"{lang}\">\n<head><title>{title}</title></head>\n\
+             xmlns:epub=\"http://www.idpf.org/2007/ops\" xml:lang=\"{lang}\" lang=\"{lang}\">\n<head><meta charset=\"utf-8\"/><title>{title}</title></head>\n\
              <body>\n  <nav epub:type=\"toc\" id=\"toc\">\n    <h1>{title}</h1>\n    <ol>\n{items}    </ol>\n  </nav>\n</body>\n</html>\n"
         )
     }

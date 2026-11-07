@@ -43,3 +43,15 @@ torrents-dialog-edit-proxy = Ubah proksi
 settings-note-trailers-windows = Trailer diputar tanpa suara dari YouTube, yang dapat melihat alamat IP Anda. Trailer tidak diputar di koneksi berbatas, dengan efek animasi dimatikan, dalam mode hemat energi, atau saat Narrator berjalan.
 settings-note-cast-tvs-pc = Muncul di bawah Chromecast di Putar di TV. PC ini yang mengirim episodenya.
 settings-note-torrents-while-casting-pc = Memungkinkan TV dengan Chromecast bawaan memutar torrent. PC ini mengirim episode selama episode itu diputar.
+settings-language-restart = Mulai ulang
+settings-differences = { $count ->
+   *[other] { $count } judul berbeda dari { $tracker }
+ }
+settings-differences-review = Tinjau
+settings-search = Cari pengaturan
+settings-quality-detail-windows = Lebih tinggi memakai versi terbaik yang ditawarkan { -source }, dan butuh lebih banyak ruang.
+settings-merge-subtitles-detail-windows = Subtitle tetap menyertai episode ke mana pun berkasnya pergi.
+settings-keep-seeding-detail-windows = Unduhan yang terus di-seed tetap di cache { -app-name }, bukan di folder unduhan.
+settings-discussions-note-windows = Membaca komentar di utas forum AniList untuk episode yang sudah Anda tonton.
+settings-comment-images-note-windows = Tiap gambar dimuat dari situs yang menyimpannya, dan situs itu melihat alamat IP Anda.
+settings-folder-browse = Telusuri…

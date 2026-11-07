@@ -718,6 +718,7 @@ pub(crate) fn dispatch(
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
+            services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
@@ -948,6 +949,31 @@ pub(crate) fn dispatch(
                 crate::store_join::join_from(&ctx, &tx, device, stores, address).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AskSetupFrom {
+            device,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::setup_from::ask(&ctx, &tx, device, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AddBookServersFrom {
+            device,
+            servers,
+        }) => {
+            let ctx = Ctx::of(services);
+            crate::setup_from::add_from(&ctx, tx, &device, &servers, services.clock.now());
+            if engine.reading.available {
+                crate::reading::book_sources(
+                    &engine.reading,
+                    services,
+                    kaeri_model::book_sources::BookSourceCommand::Load,
+                    tx,
+                );
+            }
+        }
         Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
             let (ctx, tx) = (Ctx::of(services), tx.clone());
             tokio::spawn(async move {
@@ -1105,6 +1131,11 @@ pub(crate) fn dispatch(
                 context.install_plugin(store, plugin)
             })
         }
+        Command::InstallAllForReading { store } => {
+            store_task(job, engine, services, tx, move |context| {
+                context.install_all_for_reading(store)
+            })
+        }
         Command::RemovePlugin { plugin } => {
             store_task(job, engine, services, tx, move |context| context.remove_plugin(plugin))
         }
@@ -1234,6 +1265,9 @@ pub(crate) async fn handle_internal(
         Internal::LetGo => {
             ahead::let_go(engine, services, tx);
             crate::downloads::books::launched(engine, services, tx);
+            if engine.reading.available {
+                services.book_sources.start_write_back(services.clock.clone());
+            }
             crate::export::apply_feed(engine, services, tx);
         }
         Internal::Reader { session, wake } => {
@@ -1241,6 +1275,8 @@ pub(crate) async fn handle_internal(
             let mut cx = reader.cx(config, services, tx);
             reader.wake(&mut cx, session, wake);
         }
+        // A TV keeps reading entries in its log for the other devices and acts on none of them.
+        Internal::ReadingSynced if !engine.reading.takes_synced_reading() => {}
         Internal::ReadingSynced => {
             let EngineState { config, reader, .. } = engine;
             let mut cx = reader.cx(config, services, tx);

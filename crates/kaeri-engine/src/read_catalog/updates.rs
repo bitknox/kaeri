@@ -57,9 +57,21 @@ fn checked_at(store: &Store) -> Option<i64> {
     store.get_meta_text(CHECKED).ok()??.parse().ok()
 }
 
-/// Updates as kept.
+/// Updates as kept, at once; then again once the books of series nothing is kept of land, so
+/// a row opened first in a fresh process, as from a notification, gets its cover and medium.
 pub fn load(kit: &Kit, ask: Ask, tx: &Outbox) {
     send(tx, ReadingEvent::Updates(view(kit, ask)));
+    let unkept = tiles::unkept(&kit.meta, &followed(&kit.store));
+    if unkept.is_empty() {
+        return;
+    }
+    let (kit, tx) = (kit.clone(), tx.clone());
+    tokio::spawn(async move {
+        match kaeri_meta::on_screen(kit.meta.books_many(&unkept)).await {
+            Ok(_) => send(&tx, ReadingEvent::Updates(view(&kit, ask))),
+            Err(e) => tracing::info!(error = %e, "the books behind Updates were not asked for"),
+        }
+    });
 }
 
 pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
@@ -85,8 +97,13 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         for chapter in new {
             let is_read = read.is_read(&chapter.id);
             let mut chapter_row = row_of(chapter, &read);
-            chapter_row.line =
-                super::rows::line(&chapter_row, super::rows::Kept::Source, ask.now, &zone);
+            chapter_row.line = super::rows::line(
+                &chapter_row,
+                super::rows::Kept::Source,
+                tile.medium,
+                ask.now,
+                &zone,
+            );
             let row = UpdateRow {
                 tile: tile.clone(),
                 chapter: chapter_row,
@@ -172,6 +189,7 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         version_label: chapter.version_label.clone(),
         read_at: None,
         line: Vec::new(),
+        gone_from_source: false,
     }
 }
 

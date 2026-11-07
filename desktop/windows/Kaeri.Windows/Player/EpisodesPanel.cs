@@ -112,15 +112,16 @@ sealed class EpisodesPanel
                 Grid.SetColumn(check, 2);
                 line.Children.Add(check);
             }
+            // A row answers the pointer with Fluent's subtle fill at the control radius, as the
+            // menus beside the panel do, not with the solid control fill.
             var row = new Button
             {
+                Style = (Style)Application.Current.Resources["SubtleButtonStyle"],
                 Content = line,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 6, 8, 6),
-                CornerRadius = new CornerRadius(6),
             };
             AutomationProperties.SetName(row, Lines.Episode(episode.Label, episode.Title, null));
             var picked = episode;

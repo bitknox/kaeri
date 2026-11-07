@@ -96,3 +96,13 @@ modified file is shipped in source form, as MPL-2.0 requires.
 | Licence | English: Knuth and Liang's US English patterns with Kuiken's additions, free to use and copy. German, French and Dutch: MIT. Spanish: MIT/X11. Portuguese: BSD 3-clause. Italian: LPPL 1.3 or MIT, used under MIT. Russian: LPPL 1.2 or later, distributed unmodified. |
 | Notices | The licence header of each pattern file, in `assets/hyphenation/LICENSE-hyphenation-patterns.txt`. Release packages carry it beside the other licence texts. The crate's own MIT and Apache-2.0 texts are in the Rust crate notices (`packaging/rust-licences`). |
 | Changes | None. Only these eight languages are compiled in (`hypher` features in the workspace `Cargo.toml`); the Apple and Android builds carry none of them. |
+
+## Reading demo
+
+| | |
+|---|---|
+| What | the two works the reading demo opens with: `assets/demo/kwaidan-yuki-onna.txt`, built into the engine, and three comic pages the engine reads from Wikimedia Commons and never bundles |
+| Source | "Yuki-Onna" from *Kwaidan* by Lafcadio Hearn (1904), from Project Gutenberg ebook 1210. *Pepper&Carrot*, episode 1, by David Revoy, English pages 1 to 3 on Wikimedia Commons |
+| Licence | Kwaidan: public domain. Pepper&Carrot: CC BY 4.0, credited in the reader as "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." |
+| Notices | `assets/demo/NOTICE.md` |
+| Changes | The story file has the Project Gutenberg header, footer, illustration line and footnote markers removed. The comic pages are shown as Commons holds them, pinned by SHA-1. |

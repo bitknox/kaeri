@@ -53,6 +53,7 @@ impl ShelfChapter {
             version_label: None,
             read_at: None,
             line: Vec::new(),
+            gone_from_source: false,
         }
     }
 }
@@ -95,6 +96,7 @@ pub fn volumes(
     store: &Store,
     work: &str,
     list: Option<&[crate::read_catalog::chapters::Kept]>,
+    medium: kaeri_core::media::Medium,
     now: i64,
     zone: &jiff::tz::TimeZone,
 ) -> Vec<VolumeGroup> {
@@ -133,6 +135,7 @@ pub fn volumes(
     crate::read_catalog::rows::fill(
         &mut groups,
         crate::read_catalog::rows::Kept::Device,
+        medium,
         now,
         zone,
     );

@@ -98,7 +98,7 @@ public sealed partial class FolderPage : Page
         var matched = own.Where(g => g.State is GroupState.Matched or GroupState.Kept).ToArray();
         if (matched.Length > 0)
         {
-            var open = new HyperlinkButton { Content = T.LibraryMatched(matched.Length), Padding = new Thickness(0, 8, 0, 8), Margin = new Thickness(0, 12, 0, 0) };
+            var open = new HyperlinkButton { Content = T.LibraryMatched(matched.Length), Style = Ui.Res<Style>("SilkLinkLeadingStyle"), Margin = new Thickness(-4, 12, 0, 0) };
             open.Click += (_, _) => { matchedOpen = !matchedOpen; Draw(); };
             Stack.Children.Add(open);
             if (matchedOpen)

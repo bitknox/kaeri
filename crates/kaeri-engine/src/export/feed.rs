@@ -9,10 +9,11 @@
 //! per connection.
 
 use std::{
-    net::{IpAddr, SocketAddr},
+    collections::HashMap,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
     path::PathBuf,
     sync::{Arc, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
@@ -26,12 +27,17 @@ use kaeri_books::{
 use kaeri_core::config::FeedConfig;
 use kaeri_model::{
     event::Event,
-    reading::{FeedView, ReadingEvent},
+    reading::{FeedClient, FeedPause, FeedShare, FeedShelf, FeedView, ReadingEvent},
+    stores::Secret,
 };
 use kaeri_store::{Store, book_downloads::BookDownloadState};
+#[cfg(not(test))]
+use network_interface::{Addr, NetworkInterface, NetworkInterfaceConfig};
+use serde::{Deserialize, Serialize};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
+    sync::Semaphore,
     task::JoinHandle,
 };
 
@@ -44,10 +50,202 @@ const READ_TIME: Duration = Duration::from_secs(10);
 
 #[derive(Default)]
 struct Running {
-    task: Option<JoinHandle<()>>,
+    /// One listener per local network address.
+    listeners: Vec<JoinHandle<()>>,
+    /// Looks at the network now and then, and moves or pauses the listeners.
+    supervisor: Option<JoinHandle<()>>,
     port: u16,
     password: String,
     wanted: Option<u16>,
+    /// The feed is on and has a password, whether or not the network lets it listen.
+    want: bool,
+    /// The addresses last tried, to see the network change.
+    seen: Vec<IpAddr>,
+    /// The addresses it listens on.
+    bound: Vec<IpAddr>,
+    pause: Option<FeedPause>,
+    shares: Shares,
+    clients: Vec<Client>,
+    clients_loaded: bool,
+    strikes: HashMap<IpAddr, Strike>,
+    store: Option<Store>,
+    tx: Option<Outbox>,
+    config: FeedConfig,
+    /// Where the local addresses come from; the tests give their own.
+    lan: Option<fn() -> Lan>,
+}
+
+/// Which shelves the feed shares, as the config says.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Shares {
+    downloads: bool,
+    manga: bool,
+    novels: bool,
+}
+
+impl Default for Shares {
+    fn default() -> Self {
+        Self { downloads: true, manga: true, novels: true }
+    }
+}
+
+impl From<&FeedConfig> for Shares {
+    fn from(config: &FeedConfig) -> Self {
+        Self {
+            downloads: config.share_downloads.unwrap_or(true),
+            manga: config.share_manga.unwrap_or(true),
+            novels: config.share_novels.unwrap_or(true),
+        }
+    }
+}
+
+/// An e-reader that asked.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Client {
+    name: String,
+    address: String,
+    last: i64,
+    files: u32,
+}
+
+/// How many readers are remembered.
+const CLIENTS_KEPT: usize = 12;
+/// The store meta key the readers are kept under, as a JSON list.
+const CLIENTS_KEY: &str = "feed:clients";
+
+/// Wrong passwords from one address before it is locked out, how long it stays locked, and
+/// how long a count of them is kept.
+const STRIKES_ALLOWED: u32 = 5;
+const LOCKOUT: Duration = Duration::from_secs(300);
+const STRIKE_MEMORY: Duration = Duration::from_secs(600);
+/// Connections served at once; more are dropped.
+const CONNECTIONS: usize = 32;
+/// How often the network is looked at.
+const LOOK_AT_NETWORK: Duration = Duration::from_secs(3);
+
+#[derive(Debug, Clone, Copy)]
+struct Strike {
+    count: u32,
+    since: Instant,
+    locked_until: Option<Instant>,
+}
+
+fn now_secs() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|d| i64::try_from(d.as_secs()).ok())
+        .unwrap_or(0)
+}
+
+/// The name a reader gives itself, from its user agent: the product at its head, or for a
+/// browser-style agent the device named in the last bracket ("Kobo Touch 0391/N905" is "Kobo
+/// Touch"). Empty when it names nothing a person would know.
+fn client_name(agent: Option<&str>) -> String {
+    let agent = agent.unwrap_or("").trim();
+    let product = agent.split(['/', ' ', ';', '(']).next().unwrap_or("").trim();
+    let named = if product.eq_ignore_ascii_case("mozilla") {
+        // The device sits in the last bracket, after the engine's own words.
+        agent
+            .rsplit('(')
+            .next()
+            .and_then(|g| g.split(')').next())
+            .filter(|g| !g.contains(';') && !g.to_ascii_lowercase().contains("khtml"))
+            .map(|g| g.split('/').next().unwrap_or("").to_owned())
+            .unwrap_or_default()
+    } else {
+        product.to_owned()
+    };
+    // Cut at the first word that is a number, and drop anything that is only digits or marks.
+    let words: Vec<&str> = named
+        .split_whitespace()
+        .take_while(|w| !w.chars().all(|c| c.is_ascii_digit() || c == '.'))
+        .collect();
+    let name: String = words.join(" ").chars().take(40).collect();
+    if name.chars().any(char::is_alphabetic) { name } else { String::new() }
+}
+
+/// The local network as the feed sees it.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct Lan {
+    /// Private addresses on interfaces that are not tunnels.
+    addrs: Vec<IpAddr>,
+    /// A tunnel (a VPN) has an address while no local network does.
+    tunnel: bool,
+}
+
+/// Interfaces that carry a VPN or a link to another device, not a local network.
+fn is_tunnel(name: &str) -> bool {
+    ["utun", "ipsec", "ppp", "tun", "tap", "wg", "gif", "stf", "tailscale"]
+        .iter()
+        .any(|p| name.starts_with(p))
+}
+
+/// Interfaces that are neither a tunnel nor a network of homes: loopback, the Mac's links to
+/// phones and watches, and bridges to virtual machines.
+fn is_local_link(name: &str) -> bool {
+    ["lo", "awdl", "llw", "anpi", "ap", "vmnet", "bridge", "vboxnet", "docker", "veth"]
+        .iter()
+        .any(|p| name.starts_with(p))
+}
+
+fn is_private_v4(ip: Ipv4Addr) -> bool {
+    ip.is_private()
+}
+
+/// Which of these (interface name, address) pairs make up the local network.
+fn classify(found: &[(String, IpAddr)]) -> Lan {
+    let mut lan = Lan::default();
+    for (name, ip) in found {
+        let IpAddr::V4(v4) = ip else { continue };
+        if is_local_link(name) {
+            continue;
+        }
+        if is_tunnel(name) {
+            if is_private_v4(*v4) || v4.octets()[0] == 100 {
+                lan.tunnel = true;
+            }
+        } else if is_private_v4(*v4) {
+            lan.addrs.push(*ip);
+        }
+    }
+    lan.addrs.sort();
+    lan.addrs.dedup();
+    lan
+}
+
+/// The engine's tests listen on this computer only, whatever network the machine is on.
+#[cfg(test)]
+fn lan_now() -> Lan {
+    Lan { addrs: vec![IpAddr::from([127, 0, 0, 1])], tunnel: false }
+}
+
+#[cfg(not(test))]
+fn lan_now() -> Lan {
+    let found: Vec<(String, IpAddr)> = NetworkInterface::show()
+        .unwrap_or_default()
+        .into_iter()
+        .flat_map(|i| {
+            let name = i.name;
+            i.addr.into_iter().filter_map(move |a| match a {
+                Addr::V4(v4) => Some((name.clone(), IpAddr::V4(v4.ip))),
+                Addr::V6(_) => None,
+            })
+        })
+        .collect();
+    classify(&found)
+}
+
+/// Whether a peer may talk to the feed at all: this computer, or an address of a home network.
+fn peer_allowed(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(v4) => v4.is_loopback() || v4.is_private() || v4.is_link_local(),
+        IpAddr::V6(v6) => {
+            v6.is_loopback()
+                || (v6.segments()[0] & 0xffc0) == 0xfe80
+                || (v6.segments()[0] & 0xfe00) == 0xfc00
+        }
+    }
 }
 
 /// The feed the engine holds. Cheap to clone.
@@ -60,43 +258,171 @@ impl std::fmt::Debug for Feed {
     }
 }
 
-/// The address of this computer on the local network, found without sending anything.
-fn local_address() -> Option<IpAddr> {
-    let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
-    socket.connect("192.0.2.1:9").ok()?;
-    let ip = socket.local_addr().ok()?.ip();
-    (!ip.is_unspecified()).then_some(ip)
-}
-
 impl Feed {
     fn state(&self) -> std::sync::MutexGuard<'_, Running> {
         self.0.lock().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// A feed that takes its local addresses from `lan`, for the tests.
+    #[cfg(test)]
+    fn with_lan(lan: fn() -> Lan) -> Self {
+        let feed = Self::default();
+        feed.state().lan = Some(lan);
+        feed
+    }
+
     /// The port it listens on, when it does.
     pub fn port(&self) -> Option<u16> {
         let state = self.state();
-        state.task.as_ref().map(|_| state.port)
+        (!state.listeners.is_empty()).then_some(state.port)
     }
 
-    /// What the settings pane shows.
-    pub fn view(&self, password: bool, store: &Store) -> FeedView {
-        let port = self.port();
-        let addresses = match (port, local_address()) {
-            (Some(port), Some(ip)) => vec![format!("http://{ip}:{port}/opds")],
-            (Some(port), None) => vec![format!("http://localhost:{port}/opds")],
-            _ => Vec::new(),
-        };
-        FeedView {
-            on: port.is_some(),
-            addresses,
-            port: port.unwrap_or(0),
-            password_set: password,
-            serving: served(store),
+    fn shares(&self) -> Shares {
+        self.state().shares
+    }
+
+    fn password(&self) -> String {
+        self.state().password.clone()
+    }
+
+    /// Whether this address is locked out for wrong passwords.
+    fn locked(&self, ip: IpAddr) -> bool {
+        let mut state = self.state();
+        let now = Instant::now();
+        match state.strikes.get(&ip) {
+            Some(s) if s.locked_until.is_some_and(|until| until > now) => true,
+            Some(s) if now.duration_since(s.since) > STRIKE_MEMORY => {
+                state.strikes.remove(&ip);
+                false
+            }
+            _ => false,
         }
     }
 
-    /// Starts, moves or stops the listener to match the config, and says how it stands.
+    /// Notes a wrong password from this address; true when that locks it out.
+    fn strike(&self, ip: IpAddr) -> bool {
+        let mut state = self.state();
+        let now = Instant::now();
+        let entry = state.strikes.entry(ip).or_insert(Strike {
+            count: 0,
+            since: now,
+            locked_until: None,
+        });
+        if now.duration_since(entry.since) > STRIKE_MEMORY {
+            *entry = Strike { count: 0, since: now, locked_until: None };
+        }
+        entry.count += 1;
+        if entry.count >= STRIKES_ALLOWED {
+            entry.locked_until = Some(now + LOCKOUT);
+            entry.count = 0;
+            entry.since = now;
+            return true;
+        }
+        false
+    }
+
+    fn forgive(&self, ip: IpAddr) {
+        self.state().strikes.remove(&ip);
+    }
+
+    /// Notes a request from an e-reader that has the password; `file` when it took a book.
+    /// The settings pane is told when a reader is new or took a file.
+    fn heard(&self, address: &str, agent: Option<&str>, file: bool) {
+        let name = client_name(agent);
+        let changed = {
+            let mut state = self.state();
+            let now = now_secs();
+            let index =
+                state.clients.iter().position(|c| c.address == address && c.name == name);
+            let fresh = index.is_none();
+            let mut client = match index {
+                Some(i) => state.clients.remove(i),
+                None => Client { name, address: address.to_owned(), last: now, files: 0 },
+            };
+            client.last = now;
+            client.files += u32::from(file);
+            state.clients.insert(0, client);
+            state.clients.truncate(CLIENTS_KEPT);
+            if let Some(store) = &state.store
+                && let Ok(json) = serde_json::to_string(&state.clients)
+            {
+                let _ = store.set_meta_text(CLIENTS_KEY, &json);
+            }
+            fresh || file
+        };
+        if changed {
+            self.push();
+        }
+    }
+
+    /// Tells the screen how the feed stands.
+    fn push(&self) {
+        let (store, tx, config, password) = {
+            let state = self.state();
+            (
+                state.store.clone(),
+                state.tx.clone(),
+                state.config.clone(),
+                Some(state.password.clone()).filter(|p| !p.is_empty()),
+            )
+        };
+        if let (Some(store), Some(tx)) = (store, tx) {
+            let _ = tx
+                .send(Event::Reading(ReadingEvent::Feed(self.view(password, &store, &config))));
+        }
+    }
+
+    /// What the settings pane shows.
+    pub fn view(
+        &self,
+        password: Option<String>,
+        store: &Store,
+        config: &FeedConfig,
+    ) -> FeedView {
+        let shares = Shares::from(config);
+        let (down, manga, novels) = shelf_counts(store);
+        let (port, want, pause, bound, clients) = {
+            let state = self.state();
+            let clients: Vec<FeedClient> = state
+                .clients
+                .iter()
+                .map(|c| FeedClient {
+                    name: c.name.clone(),
+                    address: c.address.clone(),
+                    last: c.last,
+                    files: c.files,
+                })
+                .collect();
+            (
+                (!state.listeners.is_empty()).then_some(state.port),
+                state.want,
+                state.pause,
+                state.bound.clone(),
+                clients,
+            )
+        };
+        let addresses = match port {
+            Some(port) => bound.iter().map(|ip| format!("http://{ip}:{port}/opds")).collect(),
+            None => Vec::new(),
+        };
+        FeedView {
+            on: want,
+            addresses,
+            port: port.unwrap_or(0),
+            password_set: password.is_some(),
+            serving: served(store, shares),
+            password: password.map(Secret),
+            shares: vec![
+                FeedShare { shelf: FeedShelf::Downloads, on: shares.downloads, count: down },
+                FeedShare { shelf: FeedShelf::MangaFolders, on: shares.manga, count: manga },
+                FeedShare { shelf: FeedShelf::NovelFolders, on: shares.novels, count: novels },
+            ],
+            clients,
+            pause,
+        }
+    }
+
+    /// Starts, moves or stops the listeners to match the config, and says how it stands.
     pub fn apply(
         &self,
         config: &FeedConfig,
@@ -109,44 +435,122 @@ impl Feed {
         let wanted = config.port.filter(|p| *p != 0);
         {
             let mut state = self.state();
-            let same = state.task.is_some()
-                && want
-                && Some(&state.password) == password.as_ref()
-                && state.wanted == wanted;
-            if same {
-                return;
+            state.shares = Shares::from(config);
+            state.config = config.clone();
+            state.store = Some(store.clone());
+            state.tx = Some(tx.clone());
+            if !state.clients_loaded {
+                state.clients_loaded = true;
+                state.clients = store
+                    .get_meta_text(CLIENTS_KEY)
+                    .ok()
+                    .flatten()
+                    .and_then(|json| serde_json::from_str::<Vec<Client>>(&json).ok())
+                    .unwrap_or_default();
+                state.clients.truncate(CLIENTS_KEPT);
             }
-            if let Some(task) = state.task.take() {
-                task.abort();
+            if state.wanted != wanted {
+                // Another port is asked for: listen again.
+                state.seen.clear();
+                Self::stop(&mut state);
             }
-            if want {
-                match bind(wanted) {
-                    Some(listener) => {
-                        state.port = listener.local_addr().map_or(0, |a| a.port());
-                        let password = password.clone().unwrap_or_default();
-                        state.password.clone_from(&password);
-                        state.wanted = wanted;
-                        let store = store.clone();
-                        state.task = Some(tokio::spawn(serve(listener, password, store)));
-                    }
-                    None => tracing::warn!("the feed found no port to listen on"),
+            state.wanted = wanted;
+            state.want = want;
+            state.password = password.clone().unwrap_or_default();
+            if !want {
+                Self::stop(&mut state);
+                state.pause = None;
+                if let Some(supervisor) = state.supervisor.take() {
+                    supervisor.abort();
                 }
             }
         }
+        if want {
+            self.reconcile();
+            let mut state = self.state();
+            if state.supervisor.is_none() {
+                let feed = self.clone();
+                state.supervisor = Some(tokio::spawn(async move {
+                    loop {
+                        tokio::time::sleep(LOOK_AT_NETWORK).await;
+                        if feed.reconcile() {
+                            feed.push();
+                        }
+                    }
+                }));
+            }
+        }
         let _ =
-            tx.send(Event::Reading(ReadingEvent::Feed(self.view(password.is_some(), &store))));
+            tx.send(Event::Reading(ReadingEvent::Feed(self.view(password, &store, config))));
+    }
+
+    fn stop(state: &mut Running) {
+        for listener in state.listeners.drain(..) {
+            listener.abort();
+        }
+        state.bound.clear();
+    }
+
+    /// Looks at the network and listens on its private addresses only, or pauses when there
+    /// is no such address. True when how the feed stands changed.
+    fn reconcile(&self) -> bool {
+        let mut state = self.state();
+        if !state.want {
+            return false;
+        }
+        let lan = state.lan.map_or_else(lan_now, |f| f());
+        let pause = lan.addrs.is_empty().then_some(if lan.tunnel {
+            FeedPause::VpnOnly
+        } else {
+            FeedPause::NoNetwork
+        });
+        if lan.addrs == state.seen
+            && pause == state.pause
+            && (!state.listeners.is_empty() || pause.is_some())
+        {
+            return false;
+        }
+        Self::stop(&mut state);
+        state.seen.clone_from(&lan.addrs);
+        if pause.is_some() {
+            state.pause = pause;
+            return true;
+        }
+        state.pause = None;
+        let store = state.store.clone();
+        let mut port = state.wanted;
+        for ip in &lan.addrs {
+            let Some(listener) = bind(*ip, port) else { continue };
+            let Ok(local) = listener.local_addr() else { continue };
+            // The first address picks the port; the others listen on the same one.
+            port = Some(local.port());
+            state.port = local.port();
+            state.bound.push(*ip);
+            if let Some(store) = store.clone() {
+                state.listeners.push(tokio::spawn(serve(
+                    listener,
+                    store,
+                    self.clone(),
+                    Arc::new(Semaphore::new(CONNECTIONS)),
+                )));
+            }
+        }
+        if state.listeners.is_empty() {
+            tracing::warn!("the feed found no port to listen on");
+        }
+        true
     }
 }
 
-/// Binds the wanted port or the next free one; any free port when none is wanted.
-fn bind(wanted: Option<u16>) -> Option<TcpListener> {
+/// Binds the wanted port or the next free one on one address; any free port when none is
+/// wanted. Only the one address, never every interface.
+fn bind(ip: IpAddr, wanted: Option<u16>) -> Option<TcpListener> {
     let ports: Vec<u16> = match wanted {
         Some(p) => (p..=p.saturating_add(PORT_TRIES)).collect(),
         None => vec![0],
     };
     for port in ports {
-        let Ok(listener) = std::net::TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], port)))
-        else {
+        let Ok(listener) = std::net::TcpListener::bind(SocketAddr::new(ip, port)) else {
             continue;
         };
         if listener.set_nonblocking(true).is_ok()
@@ -158,33 +562,60 @@ fn bind(wanted: Option<u16>) -> Option<TcpListener> {
     None
 }
 
-async fn serve(listener: TcpListener, password: String, store: Store) {
+async fn serve(listener: TcpListener, store: Store, feed: Feed, room: Arc<Semaphore>) {
     loop {
-        let Ok((stream, _)) = listener.accept().await else { continue };
-        let (password, store) = (password.clone(), store.clone());
+        let Ok((stream, peer)) = listener.accept().await else { continue };
+        if !peer_allowed(peer.ip()) {
+            continue;
+        }
+        let Ok(permit) = room.clone().try_acquire_owned() else { continue };
+        let (store, feed) = (store.clone(), feed.clone());
         tokio::spawn(async move {
+            let _permit = permit;
+            let password = feed.password();
             let _ = tokio::time::timeout(
                 Duration::from_secs(300),
-                handle(stream, &password, store),
+                handle(stream, peer.ip(), &password, store, &feed),
             )
             .await;
         });
     }
 }
 
-/// The books the feed lists.
-fn served(store: &Store) -> u32 {
-    let downloads = store
-        .book_downloads(None)
-        .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
-        .unwrap_or(0);
+fn is_novel(medium: &str) -> bool {
+    medium == "novel"
+}
+
+/// The books the feed lists, on the shelves it shares.
+fn served(store: &Store, shares: Shares) -> u32 {
+    let downloads = if shares.downloads {
+        store
+            .book_downloads(None)
+            .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
+            .unwrap_or(0)
+    } else {
+        0
+    };
     let folders: usize = store
         .local_book_series()
         .unwrap_or_default()
         .iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
         .map(|s| store.local_book_files(&s.id).map(|f| f.len()).unwrap_or(0))
         .sum();
     u32::try_from(downloads + folders).unwrap_or(u32::MAX)
+}
+
+/// What each shelf holds: downloaded chapters, manga series, novel series.
+fn shelf_counts(store: &Store) -> (u32, u32, u32) {
+    let chapters = store
+        .book_downloads(None)
+        .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
+        .unwrap_or(0);
+    let series = store.local_book_series().unwrap_or_default();
+    let novels = series.iter().filter(|s| is_novel(&s.medium)).count();
+    let n = |x: usize| u32::try_from(x).unwrap_or(u32::MAX);
+    (n(chapters), n(series.len() - novels), n(novels))
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -194,6 +625,7 @@ struct Request {
     head: bool,
     path: String,
     authorization: Option<String>,
+    agent: Option<String>,
 }
 
 async fn read_request(stream: &mut TcpStream) -> Option<Request> {
@@ -224,8 +656,13 @@ async fn read_request(stream: &mut TcpStream) -> Option<Request> {
         .filter_map(|l| l.split_once(':'))
         .find(|(k, _)| k.trim().eq_ignore_ascii_case("authorization"))
         .map(|(_, v)| v.trim().to_owned());
+    let agent = text
+        .split("\r\n")
+        .filter_map(|l| l.split_once(':'))
+        .find(|(k, _)| k.trim().eq_ignore_ascii_case("user-agent"))
+        .map(|(_, v)| v.trim().to_owned());
     let path = target.split(['?', '#']).next().unwrap_or("").to_owned();
-    Some(Request { head: method == "HEAD", path, authorization })
+    Some(Request { head: method == "HEAD", path, authorization, agent })
 }
 
 /// Whether the request carries the password, in Basic authorization with any user name.
@@ -279,15 +716,33 @@ impl Response {
     }
 }
 
-async fn handle(mut stream: TcpStream, password: &str, store: Store) {
+async fn handle(
+    mut stream: TcpStream,
+    peer: IpAddr,
+    password: &str,
+    store: Store,
+    feed: &Feed,
+) {
     let Some(request) = read_request(&mut stream).await else {
         let _ =
             send(&mut stream, Response::text("400 Bad Request", "Bad request"), false).await;
         return;
     };
-    let response = if authorised(&request, password) {
-        route(&request.path, store).await
+    let response = if feed.locked(peer) {
+        Response::text("429 Too Many Requests", "Too many wrong passwords. Try again later.")
+    } else if authorised(&request, password) {
+        feed.forgive(peer);
+        let response = route(&request.path, store, feed.shares()).await;
+        let file = !request.head
+            && response.status.starts_with("200")
+            && matches!(response.body, Body::File(_));
+        feed.heard(&peer.to_string(), request.agent.as_deref(), file);
+        response
     } else {
+        // A request with no password at all is how a reader learns it needs one.
+        if request.authorization.is_some() {
+            feed.strike(peer);
+        }
         Response {
             challenge: true,
             ..Response::text("401 Unauthorized", "Sign in with the feed password.")
@@ -542,12 +997,20 @@ fn book_entry(book: &Shelved) -> Entry {
     }
 }
 
-async fn route(path: &str, store: Store) -> Response {
+async fn route(path: &str, store: Store, shares: Shares) -> Response {
     let segments: Vec<String> =
         path.trim_matches('/').split('/').filter(|s| !s.is_empty()).map(decode).collect();
     let parts: Vec<&str> = segments.iter().map(String::as_str).collect();
+    let hidden = match parts.as_slice() {
+        ["opds", "downloads", ..] => !shares.downloads,
+        ["opds", "book", "d", ..] => !shares.downloads,
+        _ => false,
+    };
+    if hidden {
+        return Response::text("404 Not Found", "Not found");
+    }
     match parts.as_slice() {
-        ["opds"] => Response::document(&root(&store)),
+        ["opds"] => Response::document(&root(&store, shares)),
         ["opds", "downloads"] => Response::document(&downloads(&store)),
         ["opds", "downloads", work] => Response::document(&acquisition(
             &format!("urn:kaeri:downloads:{work}"),
@@ -555,14 +1018,19 @@ async fn route(path: &str, store: Store) -> Response {
             &format!("/opds/downloads/{}", encode(work)),
             &download_books(&store, work),
         )),
-        ["opds", "folders"] => Response::document(&folders(&store)),
-        ["opds", "folders", series] => Response::document(&acquisition(
-            &format!("urn:kaeri:folders:{series}"),
-            series,
-            &format!("/opds/folders/{}", encode(series)),
-            &folder_books(&store, series),
-        )),
+        ["opds", "folders"] => Response::document(&folders(&store, shares)),
+        ["opds", "folders", series] if folder_shared(&store, series, shares) => {
+            Response::document(&acquisition(
+                &format!("urn:kaeri:folders:{series}"),
+                series,
+                &format!("/opds/folders/{}", encode(series)),
+                &folder_books(&store, series),
+            ))
+        }
         ["opds", "book", kind, first, rest @ ..] => {
+            if *kind == "f" && !folder_shared(&store, first, shares) {
+                return Response::text("404 Not Found", "Not found");
+            }
             let (second, tail) = if *kind == "f" {
                 (rest.first().copied(), rest.get(1..).unwrap_or(&[]))
             } else {
@@ -589,24 +1057,40 @@ async fn route(path: &str, store: Store) -> Response {
     }
 }
 
-fn root(store: &Store) -> Document {
+/// Whether a folder series is on a shelf the feed shares.
+fn folder_shared(store: &Store, series: &str, shares: Shares) -> bool {
+    store.local_book_series().unwrap_or_default().iter().any(|s| {
+        s.id == series && if is_novel(&s.medium) { shares.novels } else { shares.manga }
+    })
+}
+
+fn root(store: &Store, shares: Shares) -> Document {
     let mut feed = base_feed("urn:kaeri:opds", "Kaeri", FeedKind::Navigation, "/opds");
     let down = store.book_download_works().unwrap_or_default().len();
-    let folders = store.local_book_series().unwrap_or_default().len();
-    feed.entries.push(section(
-        "urn:kaeri:downloads",
-        "Downloads",
-        "/opds/downloads",
-        FeedKind::Navigation,
-        Some(down.to_string()),
-    ));
-    feed.entries.push(section(
-        "urn:kaeri:folders",
-        "Folders",
-        "/opds/folders",
-        FeedKind::Navigation,
-        Some(folders.to_string()),
-    ));
+    let folders = store
+        .local_book_series()
+        .unwrap_or_default()
+        .iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
+        .count();
+    if shares.downloads {
+        feed.entries.push(section(
+            "urn:kaeri:downloads",
+            "Downloads",
+            "/opds/downloads",
+            FeedKind::Navigation,
+            Some(down.to_string()),
+        ));
+    }
+    if shares.manga || shares.novels {
+        feed.entries.push(section(
+            "urn:kaeri:folders",
+            "Folders",
+            "/opds/folders",
+            FeedKind::Navigation,
+            Some(folders.to_string()),
+        ));
+    }
     feed
 }
 
@@ -630,10 +1114,15 @@ fn downloads(store: &Store) -> Document {
     feed
 }
 
-fn folders(store: &Store) -> Document {
+fn folders(store: &Store, shares: Shares) -> Document {
     let mut feed =
         base_feed("urn:kaeri:folders", "Folders", FeedKind::Navigation, "/opds/folders");
-    for series in store.local_book_series().unwrap_or_default() {
+    for series in store
+        .local_book_series()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
+    {
         feed.entries.push(section(
             &format!("urn:kaeri:folders:{}", series.id),
             &series.name,
@@ -723,7 +1212,10 @@ mod tests {
         _dir: tempfile::TempDir,
         feed: Feed,
         port: u16,
-        _events: tokio::sync::mpsc::UnboundedReceiver<Event>,
+        store: Store,
+        outbox: Outbox,
+        config: FeedConfig,
+        events: tokio::sync::mpsc::UnboundedReceiver<Event>,
     }
 
     fn shelf() -> Shelf {
@@ -746,11 +1238,123 @@ mod tests {
         let id = store.book_downloads(Some("w-1")).unwrap()[0].id;
         store.book_download_done(id, &path.display().to_string(), Some(3), 100, 20).unwrap();
         let (tx, events) = tokio::sync::mpsc::unbounded_channel();
-        let feed = Feed::default();
-        let config = FeedConfig { on: true, port: None, password_set: true };
-        feed.apply(&config, Some(PASSWORD.into()), store, &Outbox::from(tx));
+        let feed = Feed::with_lan(loopback);
+        let config =
+            FeedConfig { on: true, port: None, password_set: true, ..FeedConfig::default() };
+        let outbox = Outbox::from(tx);
+        feed.apply(&config, Some(PASSWORD.into()), store.clone(), &outbox);
         let port = feed.port().expect("the feed listens");
-        Shelf { _dir: dir, feed, port, _events: events }
+        Shelf { _dir: dir, feed, port, store, outbox, config, events }
+    }
+
+    fn loopback() -> Lan {
+        Lan { addrs: vec![IpAddr::from([127, 0, 0, 1])], tunnel: false }
+    }
+
+    fn named(pairs: &[(&str, [u8; 4])]) -> Vec<(String, IpAddr)> {
+        pairs.iter().map(|(n, ip)| ((*n).to_owned(), IpAddr::from(*ip))).collect()
+    }
+
+    #[test]
+    fn only_home_network_interfaces_are_listened_on() {
+        let home = classify(&named(&[
+            ("lo0", [127, 0, 0, 1]),
+            ("en0", [192, 168, 1, 20]),
+            ("utun4", [10, 8, 0, 2]),
+            ("en5", [8, 8, 4, 4]),
+            ("awdl0", [169, 254, 3, 3]),
+            ("bridge100", [192, 168, 64, 1]),
+        ]));
+        assert_eq!(home.addrs, [IpAddr::from([192, 168, 1, 20])]);
+        assert!(home.tunnel);
+        let vpn_only = classify(&named(&[("lo0", [127, 0, 0, 1]), ("utun3", [10, 8, 0, 2])]));
+        assert!(vpn_only.addrs.is_empty() && vpn_only.tunnel);
+        let none = classify(&named(&[("lo0", [127, 0, 0, 1])]));
+        assert!(none.addrs.is_empty() && !none.tunnel);
+    }
+
+    #[test]
+    fn peers_outside_the_home_network_are_refused() {
+        assert!(peer_allowed("127.0.0.1".parse().unwrap()));
+        assert!(peer_allowed("192.168.1.9".parse().unwrap()));
+        assert!(peer_allowed("10.0.0.4".parse().unwrap()));
+        assert!(peer_allowed("169.254.1.1".parse().unwrap()));
+        assert!(peer_allowed("fe80::1".parse().unwrap()));
+        assert!(!peer_allowed("8.8.4.4".parse().unwrap()));
+        assert!(!peer_allowed("2001:db8::1".parse().unwrap()));
+    }
+
+    #[test]
+    fn reader_names_are_cleaned() {
+        assert_eq!(client_name(Some("Reader/1.2 (Linux)")), "Reader");
+        assert_eq!(
+            client_name(Some(
+                "Mozilla/5.0 (Linux; U; Android 2.0; en-us;) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1 (Kobo Touch 0391/N905C)"
+            )),
+            "Kobo Touch"
+        );
+        assert_eq!(client_name(Some("Mozilla/5.0 (X11; Linux x86_64)")), "");
+        assert_eq!(client_name(Some("1234")), "");
+        assert_eq!(client_name(None), "");
+    }
+
+    #[tokio::test]
+    async fn the_feed_pauses_when_no_home_network_is_left() {
+        fn vpn() -> Lan {
+            Lan { addrs: Vec::new(), tunnel: true }
+        }
+        fn offline() -> Lan {
+            Lan::default()
+        }
+        let store = Store::open_in_memory().unwrap();
+        let (tx, _events) = tokio::sync::mpsc::unbounded_channel();
+        let outbox = Outbox::from(tx);
+        let on =
+            FeedConfig { on: true, port: None, password_set: true, ..FeedConfig::default() };
+        let feed = Feed::with_lan(vpn);
+        feed.apply(&on, Some(PASSWORD.into()), store.clone(), &outbox);
+        assert_eq!(feed.port(), None);
+        let view = feed.view(Some(PASSWORD.into()), &store, &on);
+        assert!(view.on);
+        assert_eq!(view.pause, Some(FeedPause::VpnOnly));
+        assert!(view.addresses.is_empty());
+        feed.state().lan = Some(offline);
+        assert!(feed.reconcile());
+        assert_eq!(
+            feed.view(Some(PASSWORD.into()), &store, &on).pause,
+            Some(FeedPause::NoNetwork)
+        );
+        feed.state().lan = Some(loopback);
+        assert!(feed.reconcile());
+        assert!(feed.port().is_some());
+        assert_eq!(feed.view(Some(PASSWORD.into()), &store, &on).pause, None);
+    }
+
+    #[tokio::test]
+    async fn wrong_passwords_lock_the_address_out() {
+        let s = shelf();
+        for _ in 0..STRIKES_ALLOWED {
+            assert_eq!(get(s.port, "/opds", Some("not-it"), "GET").await.status, 401);
+        }
+        // Locked: even the right password is refused now.
+        assert_eq!(get(s.port, "/opds", Some(PASSWORD), "GET").await.status, 429);
+        // Asking with no password at all does not count as a wrong one.
+        let fresh = shelf();
+        for _ in 0..STRIKES_ALLOWED + 2 {
+            assert_eq!(get(fresh.port, "/opds", None, "GET").await.status, 401);
+        }
+        assert_eq!(get(fresh.port, "/opds", Some(PASSWORD), "GET").await.status, 200);
+    }
+
+    #[tokio::test]
+    async fn readers_are_kept_after_a_restart() {
+        let s = shelf();
+        assert_eq!(get_as(s.port, "/opds", "Reader/1.2 (Linux)").await, 200);
+        let again = Feed::with_lan(loopback);
+        again.apply(&s.config, Some(PASSWORD.into()), s.store.clone(), &s.outbox);
+        let view = again.view(Some(PASSWORD.into()), &s.store, &s.config);
+        assert_eq!(view.clients.len(), 1);
+        assert_eq!(view.clients[0].name, "Reader");
     }
 
     #[tokio::test]
@@ -769,9 +1373,10 @@ mod tests {
     async fn without_a_password_or_when_off_nothing_listens() {
         let store = Store::open_in_memory().unwrap();
         let (tx, _events) = tokio::sync::mpsc::unbounded_channel();
-        let feed = Feed::default();
+        let feed = Feed::with_lan(loopback);
         let outbox = Outbox::from(tx);
-        let on = FeedConfig { on: true, port: None, password_set: true };
+        let on =
+            FeedConfig { on: true, port: None, password_set: true, ..FeedConfig::default() };
         feed.apply(&on, None, store.clone(), &outbox);
         assert_eq!(feed.port(), None);
         feed.apply(&on, Some(PASSWORD.into()), store.clone(), &outbox);
@@ -826,6 +1431,71 @@ mod tests {
         assert_eq!(&reply.body[..2], b"PK");
         let head = get(s.port, path, Some(PASSWORD), "HEAD").await;
         assert!(head.body.is_empty());
+    }
+
+    async fn get_as(port: u16, path: &str, agent: &str) -> u16 {
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        let auth = STANDARD.encode(format!("reader:{PASSWORD}"));
+        let request = format!(
+            "GET {path} HTTP/1.1\r\nHost: feed.example\r\nUser-Agent: {agent}\r\nAuthorization: Basic {auth}\r\nConnection: close\r\n\r\n"
+        );
+        stream.write_all(request.as_bytes()).await.unwrap();
+        let mut raw = Vec::new();
+        stream.read_to_end(&mut raw).await.unwrap();
+        String::from_utf8_lossy(&raw).split(' ').nth(1).unwrap().parse().unwrap()
+    }
+
+    #[tokio::test]
+    async fn the_view_holds_the_password_the_shelves_and_who_fetched() {
+        let s = shelf();
+        assert_eq!(get_as(s.port, "/opds", "Reader/1.2 (Linux)").await, 200);
+        assert_eq!(get_as(s.port, "/opds/book/d/1/file", "Reader/1.2 (Linux)").await, 200);
+        let view = s.feed.view(Some(PASSWORD.into()), &s.store, &s.config);
+        assert_eq!(view.password, Some(Secret(PASSWORD.into())));
+        let shelves: Vec<_> = view.shares.iter().map(|x| (x.shelf, x.on, x.count)).collect();
+        assert_eq!(
+            shelves,
+            [
+                (FeedShelf::Downloads, true, 1),
+                (FeedShelf::MangaFolders, true, 0),
+                (FeedShelf::NovelFolders, true, 0)
+            ]
+        );
+        assert_eq!(view.clients.len(), 1, "one reader, however often it asks");
+        assert_eq!(view.clients[0].name, "Reader");
+        assert_eq!(view.clients[0].files, 1);
+        assert_eq!(view.clients[0].address, "127.0.0.1");
+        assert!(view.clients[0].last > 0);
+        assert!(
+            !format!("{view:?}").contains(PASSWORD),
+            "the password stays out of debug output"
+        );
+        // A refused request is not remembered.
+        let none = get(s.port, "/opds", None, "GET").await;
+        assert_eq!(none.status, 401);
+        assert_eq!(s.feed.view(Some(PASSWORD.into()), &s.store, &s.config).clients.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_shelf_turned_off_is_not_listed_or_served() {
+        let mut s = shelf();
+        let config = FeedConfig { share_downloads: Some(false), ..s.config.clone() };
+        s.feed.apply(&config, Some(PASSWORD.into()), s.store.clone(), &s.outbox);
+        s.config = config;
+        let mut told = None;
+        while let Ok(event) = s.events.try_recv() {
+            if let Event::Reading(ReadingEvent::Feed(view)) = event {
+                told = Some(view);
+            }
+        }
+        let told = told.expect("the pane is told");
+        assert!(!told.shares[0].on);
+        assert_eq!(told.serving, 0);
+        let root = get(s.port, "/opds", Some(PASSWORD), "GET").await;
+        assert!(!String::from_utf8(root.body).unwrap().contains("/opds/downloads"));
+        for path in ["/opds/downloads", "/opds/downloads/w-1", "/opds/book/d/1/file"] {
+            assert_eq!(get(s.port, path, Some(PASSWORD), "GET").await.status, 404, "{path}");
+        }
     }
 
     #[tokio::test]

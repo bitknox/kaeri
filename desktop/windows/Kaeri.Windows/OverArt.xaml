@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Buttons over art or video: under the pointer they lighten a little and see-through, as Fluent's
+     subtle buttons do, rather than taking the palette's solid control fill, which reads as a block
+     over a picture. Merged into the resources of a surface that sits over art: the player's bars,
+     the starting screen and the title page's Another. -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#24FFFFFF" />
+  <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
+  <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+  <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+  <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+  <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
+  <!-- The same for a toggle that is off; a checked toggle keeps its own fill. -->
+  <SolidColorBrush x:Key="ToggleButtonBackgroundPointerOver" Color="#24FFFFFF" />
+  <SolidColorBrush x:Key="ToggleButtonBackgroundPressed" Color="#14FFFFFF" />
+  <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+  <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+  <SolidColorBrush x:Key="ToggleButtonForegroundPointerOver" Color="White" />
+  <SolidColorBrush x:Key="ToggleButtonForegroundPressed" Color="#CCFFFFFF" />
+</ResourceDictionary>

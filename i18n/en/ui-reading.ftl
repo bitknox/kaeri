@@ -102,6 +102,21 @@ action-continue-part-plain = { -continue-cap } part { $n }
 # @arg n: text
 action-read-part = Read part { $n }
 
+# The main action for a light novel part, part read, named in the source's own words ("Part 3",
+# "Chapter 3") as its row is.
+# @arg label: text
+# @arg percent: int
+action-continue-named = { -continue-cap } { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how
+# far is not known.
+# @arg label: text
+action-continue-named-plain = { -continue-cap } { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+# @arg label: text
+action-read-named = Read { $label }
+
 # The main action when every chapter is read.
 action-read-again = Read again
 
@@ -1131,3 +1146,265 @@ read-downloads-read = { $n } read
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Delete read
+
+## Send to e-reader
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Send to e-reader
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = For
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = What
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Chapters
+
+# The chapters being sent when there is one: its number or label.
+# @arg chapter: text
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+# @arg first: text
+# @arg last: text
+send-chapters-range = { $first } to { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Size
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+# @arg size: text
+send-size-about = About { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = { -app-name } can't see your place on this e-reader. When you come back, the series page asks where you stopped.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Prepare and share
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+# @arg done: int
+# @arg total: int
+send-preparing = { $total ->
+    [one] Preparing the chapter
+   *[other] Preparing { $done } of { $total } chapters
+}
+
+# Under the progress of a send to a device: what the pages are made for.
+# @arg device: text
+send-sized-for = Pages are sized for { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+# @arg size: text
+send-in-parts = Over { $size }, so the files go in parts.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+# @arg chapter: text
+# @arg cause: text
+send-failed-chapter = Couldn't prepare chapter { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+# @arg cause: text
+send-failed = Couldn't prepare the files. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Working it out
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Open
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Closed
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+# @arg percent: int
+send-progress-spoken = { $percent } percent
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Send to e-reader
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+# @arg size: text
+send-parts-over = in parts over { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Cancel send
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+# @arg n: int
+send-ready = { $n ->
+    [one] One file is ready.
+   *[other] { $n } files are ready.
+}
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Share again
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+# @arg device: text
+send-banner = Sending to { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = Fixed-layout EPUB
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+# @arg format: text
+# @arg width: text
+# @arg height: text
+send-target-line = { $format } · { $width } × { $height }
+
+## Where did you stop
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Where did you stop?
+
+# Note on a series page after chapters were sent: opens the question.
+# @arg device: text
+stop-note = You sent chapters to { $device }. Where did you stop?
+
+# Button in that note.
+stop-note-action = Set my place
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+# @arg chapter: text
+# @arg device: text
+# @arg date: text
+stop-sent-one = Chapter { $chapter } went to { $device } on { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+# @arg first: text
+# @arg last: text
+# @arg device: text
+# @arg date: text
+stop-sent-range = Chapters { $first } to { $last } went to { $device } on { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+# @arg chapter: text
+stop-finished = I finished chapter { $chapter }
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Set my place
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+# @arg chapter: text
+# @arg page: int
+stop-keep = Keep chapter { $chapter } · page { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Keep my place
+
+## The e-readers settings and the feed
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-readers
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Send to e-reader
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDS feed
+
+# Line under the Share on this network switch.
+opds-share-note = An OPDS catalogue e-readers at home can browse
+
+# Footnote under the feed settings.
+# @arg device: text
+opds-footer = Only while { -app-name } is open on this { $device }. Progress on those e-readers stays there.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Address
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Turn the feed on to get its address.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Password
+
+# Line under the password row.
+opds-password-note = E-readers ask for it once
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = New password
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Leave it empty to pick a free port, or use 1024 to 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+# @arg wanted: int
+# @arg port: int
+opds-port-moved = Port { $wanted } was busy, so the feed uses { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = What it shares
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Downloads
+
+# Line under that row.
+# @arg n: int
+opds-share-downloads-count = { $n ->
+    [one] One chapter
+   *[other] { $n } chapters
+}
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Manga folder
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Novel folder
+
+# Line under a folder row.
+# @arg n: int
+opds-share-series-count = { $n ->
+    [one] One series
+   *[other] { $n } series
+}
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Fetched by
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = No e-reader has fetched anything yet.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Starting…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Paused. This Mac isn't on a local network.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Paused. This Mac is only connected through a VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Make a new password?
+
+# Text of that question.
+opds-new-password-warning = E-readers that already use the feed stop working until you type the new password into each one.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+# @arg time: text
+opds-fetched-time = Last asked { $time }
+
+# Line under an e-reader in that list: how many files it took.
+# @arg n: int
+opds-fetched-files = { $n ->
+    [one] One file
+   *[other] { $n } files
+}
+
+# Name for an e-reader that did not give one.
+# @arg address: text
+opds-reader-unnamed = E-reader at { $address }

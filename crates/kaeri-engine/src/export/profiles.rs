@@ -17,7 +17,14 @@ pub struct Profile {
     pub formats: Vec<ExportFormat>,
     /// Files are split under the Kindle limit.
     pub split: bool,
+    /// The largest file the target takes, checked before a send. `None` when it takes any size.
+    pub max_file_bytes: Option<u64>,
 }
+
+/// The largest file Send to Kindle takes.
+pub const KINDLE_SEND_BYTES: u64 = 200_000_000;
+/// The largest file a FAT32 card or drive holds, which is what most e-readers use.
+pub const FAT32_FILE_BYTES: u64 = 4_294_967_295;
 
 impl Profile {
     pub fn colour(&self) -> bool {
@@ -35,6 +42,8 @@ impl Profile {
             formats: self.formats.clone(),
             manga_formats: self.accepts(false),
             novel_formats: self.accepts(true),
+            split: self.split,
+            chosen: false,
         }
     }
 
@@ -57,7 +66,21 @@ fn builtin(
     formats: &[ExportFormat],
     split: bool,
 ) -> Profile {
-    Profile { id: id.into(), name, width, height, panel, formats: formats.to_vec(), split }
+    let max_file_bytes = match id {
+        "kindle" => Some(KINDLE_SEND_BYTES),
+        "tablet" => None,
+        _ => Some(FAT32_FILE_BYTES),
+    };
+    Profile {
+        id: id.into(),
+        name,
+        width,
+        height,
+        panel,
+        formats: formats.to_vec(),
+        split,
+        max_file_bytes,
+    }
 }
 
 /// The device classes every install has.
@@ -133,6 +156,7 @@ pub fn all(reading: &ReadingConfig) -> Vec<Profile> {
             panel: if own.colour { Panel::UnknownColour } else { Panel::Grey },
             formats,
             split: false,
+            max_file_bytes: Some(FAT32_FILE_BYTES),
         };
         match out.iter_mut().find(|p| p.id == *id) {
             Some(existing) => *existing = profile,

@@ -950,6 +950,26 @@ pub fn reading_failed_other(reason: &str) -> String {
     text("reading-failed-other", &[("reason", Arg::Text(reason))])
 }
 
+/// Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+pub fn reading_failed_send_too_large(file: &str, target: &str, size: &str, limit: &str) -> String {
+    text("reading-failed-send-too-large", &[("file", Arg::Text(file)), ("target", Arg::Text(target)), ("size", Arg::Text(size)), ("limit", Arg::Text(limit))])
+}
+
+/// Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+pub fn reading_failed_send_missing(file: &str, part: &str) -> String {
+    text("reading-failed-send-missing", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
+/// Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+pub fn reading_failed_send_encoding(file: &str, part: &str) -> String {
+    text("reading-failed-send-encoding", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
+/// Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+pub fn reading_failed_send_malformed(file: &str, part: &str) -> String {
+    text("reading-failed-send-malformed", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
 /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 pub fn reading_kind_manga() -> String {
     text("reading-kind-manga", &[])
@@ -1085,9 +1105,24 @@ pub fn reading_part_new(part: &str) -> String {
     text("reading-part-new", &[("part", Arg::Text(part))])
 }
 
+/// Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+pub fn reading_label_percent(label: &str, percent: i64) -> String {
+    text("reading-label-percent", &[("label", Arg::Text(label)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_new(label: &str) -> String {
+    text("reading-label-new", &[("label", Arg::Text(label))])
+}
+
 /// Under a This week cell: a light novel's part that came out that day, with its own title.
 pub fn reading_part_titled(part: &str, title: &str) -> String {
     text("reading-part-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_titled(label: &str, title: &str) -> String {
+    text("reading-label-titled", &[("label", Arg::Text(label)), ("title", Arg::Text(title))])
 }
 
 /// Under the big picture on reading's Home: a light novel's part that came out today.
@@ -1095,9 +1130,19 @@ pub fn reading_part_out_today(part: &str) -> String {
     text("reading-part-out-today", &[("part", Arg::Text(part))])
 }
 
+/// Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_out_today(label: &str) -> String {
+    text("reading-label-out-today", &[("label", Arg::Text(label))])
+}
+
 /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 pub fn reading_part_out_today_titled(part: &str, title: &str) -> String {
     text("reading-part-out-today-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_out_today_titled(label: &str, title: &str) -> String {
+    text("reading-label-out-today-titled", &[("label", Arg::Text(label)), ("title", Arg::Text(title))])
 }
 
 /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
@@ -1108,6 +1153,11 @@ pub fn reading_chapter_of(chapter: &str, of: &str) -> String {
 /// Under a Library cover: the volume and part of a light novel the person is at.
 pub fn reading_volume_part(volume: &str, part: &str) -> String {
     text("reading-volume-part", &[("volume", Arg::Text(volume)), ("part", Arg::Text(part))])
+}
+
+/// Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+pub fn reading_volume_label(volume: &str, label: &str) -> String {
+    text("reading-volume-label", &[("volume", Arg::Text(volume)), ("label", Arg::Text(label))])
 }
 
 /// A search filter: books from Japan.
@@ -1185,6 +1235,11 @@ pub fn reading_row_downloaded() -> String {
     text("reading-row-downloaded", &[])
 }
 
+/// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+pub fn reading_row_gone_from_source() -> String {
+    text("reading-row-gone-from-source", &[])
+}
+
 /// A chapter row's state: it is read from the source and nothing of it is on this device.
 pub fn reading_row_not_downloaded() -> String {
     text("reading-row-not-downloaded", &[])
@@ -1228,6 +1283,16 @@ pub fn reading_row_page(page: i64) -> String {
 /// A novel's chapter row: how far into it the person is.
 pub fn reading_row_percent(percent: i64) -> String {
     text("reading-row-percent", &[("percent", Arg::Int(percent))])
+}
+
+/// A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+pub fn reading_row_opened() -> String {
+    text("reading-row-opened", &[])
+}
+
+/// A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+pub fn reading_row_bookmarked() -> String {
+    text("reading-row-bookmarked", &[])
 }
 
 /// A chapter row: how long its pages are, for a file on the device.
@@ -1793,6 +1858,11 @@ pub fn stores_ready_demo_stays(store: &str) -> String {
 /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 pub fn cloud_loopback_done() -> String {
     text("cloud-loopback-done", &[])
+}
+
+/// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+pub fn sync_device_removed() -> String {
+    text("sync-device-removed", &[])
 }
 
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
@@ -7563,6 +7633,26 @@ pub fn tui_together_recent_alone(episode: &str, when: &str) -> String {
     text("tui-together-recent-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
 }
 
+/// Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+pub fn tui_medium_read_title() -> String {
+    text("tui-medium-read-title", &[])
+}
+
+/// Line under the title of that page.
+pub fn tui_medium_read_line() -> String {
+    text("tui-medium-read-line", &[])
+}
+
+/// Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+pub fn tui_medium_read_change(key: &str) -> String {
+    text("tui-medium-read-change", &[("key", Arg::Text(key))])
+}
+
+/// Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+pub fn tui_medium_settings_hint(key: &str) -> String {
+    text("tui-medium-settings-hint", &[("key", Arg::Text(key))])
+}
+
 /// Title of the about page.
 pub fn about_title() -> String {
     text("about-title", &[])
@@ -9396,6 +9486,101 @@ pub fn episode_download_done() -> String {
 /// Line under that button after a failure.
 pub fn episode_download_failed(episode: i64) -> String {
     text("episode-download-failed", &[("episode", Arg::Int(episode))])
+}
+
+/// First run, page 2 of 5.
+pub fn first_other_title() -> String {
+    text("first-other-title", &[])
+}
+
+/// Under the title.
+pub fn first_other_line() -> String {
+    text("first-other-line", &[])
+}
+
+/// Line under the pair row.
+pub fn first_other_pair_line() -> String {
+    text("first-other-pair-line", &[])
+}
+
+/// Row that restores from a sync folder.
+pub fn first_other_restore() -> String {
+    text("first-other-restore", &[])
+}
+
+/// Line under it.
+pub fn first_other_restore_line() -> String {
+    text("first-other-restore-line", &[])
+}
+
+/// Primary action: go on with the first run on this device alone.
+pub fn first_other_no() -> String {
+    text("first-other-no", &[])
+}
+
+/// Beside a spinner, after 600 ms.
+pub fn pair_waiting() -> String {
+    text("pair-waiting", &[])
+}
+
+/// After 30 seconds with nothing.
+pub fn pair_nothing_yet() -> String {
+    text("pair-nothing-yet", &[])
+}
+
+/// Group header for what the other device brings.
+pub fn first_join_group(device: &str) -> String {
+    text("first-join-group", &[("device", Arg::Text(device))])
+}
+
+/// Row while the rest arrives.
+pub fn first_join_looking(device: &str) -> String {
+    text("first-join-looking", &[("device", Arg::Text(device))])
+}
+
+/// Row with a pop-up of Watch, Read and Both.
+pub fn first_join_medium() -> String {
+    text("first-join-medium", &[])
+}
+
+/// Line under it when the other device reads.
+pub fn first_join_medium_line(device: &str) -> String {
+    text("first-join-medium-line", &[("device", Arg::Text(device))])
+}
+
+/// Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+pub fn first_join_signins_line(trackers: &str) -> String {
+    text("first-join-signins-line", &[("trackers", Arg::Text(trackers))])
+}
+
+/// Switch, one per book server.
+pub fn first_join_server(host: &str) -> String {
+    text("first-join-server", &[("host", Arg::Text(host))])
+}
+
+/// Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+pub fn first_join_server_line(kind: &str, device: &str, store: &str) -> String {
+    text("first-join-server-line", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device)), ("store", Arg::Text(store))])
+}
+
+/// Note under the list.
+pub fn first_join_folders(device: &str) -> String {
+    text("first-join-folders", &[("device", Arg::Text(device))])
+}
+
+/// Note when the setup answered the remaining pages.
+pub fn first_join_steps_done() -> String {
+    text("first-join-steps-done", &[])
+}
+
+/// Row error when a plugin store refused this device.
+pub fn first_join_store_refused(store: &str, owner: &str) -> String {
+    text("first-join-store-refused", &[("store", Arg::Text(store)), ("owner", Arg::Text(owner))])
+}
+
+/// Notice on Home, for 4 seconds.
+pub fn first_join_syncing(device: &str) -> String {
+    text("first-join-syncing", &[("device", Arg::Text(device))])
 }
 
 /// Name of the Home section in the sidebar, the tab bar and the window title.
@@ -13260,6 +13445,126 @@ pub fn reader_look_system() -> String {
     text("reader-look-system", &[])
 }
 
+/// Button in the first run that opens the reading demo.
+pub fn onboarding_read_demo() -> String {
+    text("onboarding-read-demo", &[])
+}
+
+/// Under the first run's demo heading when the device is for reading.
+pub fn onboarding_demo_books_detail() -> String {
+    text("onboarding-demo-books-detail", &[])
+}
+
+/// Under the first run's demo heading when the device is for both.
+pub fn onboarding_demo_both_detail() -> String {
+    text("onboarding-demo-both-detail", &[])
+}
+
+/// Home, under the spotlight, when the demo is the only thing to read.
+pub fn home_demo_only_books() -> String {
+    text("home-demo-only-books", &[])
+}
+
+/// Primary action on Home's spotlight for a book.
+pub fn home_spotlight_read() -> String {
+    text("home-spotlight-read", &[])
+}
+
+/// The demo comic's facts line on its series page.
+pub fn demo_series_facts(pages: i64) -> String {
+    text("demo-series-facts", &[("pages", Arg::Int(pages))])
+}
+
+/// The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+pub fn demo_credit_book(title: &str, author: &str, licence: &str) -> String {
+    text("demo-credit-book", &[("title", Arg::Text(title)), ("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// The story's credit in About the demo.
+pub fn demo_credit_story(title: &str, author: &str) -> String {
+    text("demo-credit-story", &[("title", Arg::Text(title)), ("author", Arg::Text(author))])
+}
+
+/// Credit capsule in the reader's top bar on page 1.
+pub fn reader_demo_credit(title: &str, author: &str, licence: &str) -> String {
+    text("reader-demo-credit", &[("title", Arg::Text(title)), ("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// A demo result's line in Search.
+pub fn search_demo_reads() -> String {
+    text("search-demo-reads", &[])
+}
+
+/// Search, under the demo results, when only the demo is on.
+pub fn search_demo_only_books() -> String {
+    text("search-demo-only-books", &[])
+}
+
+/// Title of the card after the demo's last page.
+pub fn reader_demo_end() -> String {
+    text("reader-demo-end", &[])
+}
+
+/// Line under it.
+pub fn reader_demo_end_line() -> String {
+    text("reader-demo-end-line", &[])
+}
+
+/// The card's primary action.
+pub fn reader_demo_add_source() -> String {
+    text("reader-demo-add-source", &[])
+}
+
+/// The card's secondary action, back to the first page.
+pub fn reader_demo_again() -> String {
+    text("reader-demo-again", &[])
+}
+
+/// The demo row's line in Your sources when reading is on.
+pub fn sources_demo_books_line() -> String {
+    text("sources-demo-books-line", &[])
+}
+
+/// About the demo, first line, when reading is on.
+pub fn sources_demo_books_what() -> String {
+    text("sources-demo-books-what", &[])
+}
+
+/// About the demo, in place of sources-demo-private when reading is on.
+pub fn sources_demo_books_private() -> String {
+    text("sources-demo-books-private", &[])
+}
+
+/// Group on the demo's series page.
+pub fn demo_chapters() -> String {
+    text("demo-chapters", &[])
+}
+
+/// Group on the demo's series page: the other demo work.
+pub fn demo_also() -> String {
+    text("demo-also", &[])
+}
+
+/// Group in About the demo.
+pub fn demo_credits() -> String {
+    text("demo-credits", &[])
+}
+
+/// A chapter row's line on the demo's series page.
+pub fn demo_pages(pages: i64) -> String {
+    text("demo-pages", &[("pages", Arg::Int(pages))])
+}
+
+/// The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+pub fn demo_story_row(author: &str, licence: &str) -> String {
+    text("demo-story-row", &[("author", Arg::Text(author)), ("licence", Arg::Text(licence))])
+}
+
+/// Primary action on the demo's series page.
+pub fn demo_read_chapter(number: &str) -> String {
+    text("demo-read-chapter", &[("number", Arg::Text(number))])
+}
+
 /// Sidebar and tab label: the shows' Home when both media are on.
 pub fn nav_watch() -> String {
     text("nav-watch", &[])
@@ -13388,6 +13693,21 @@ pub fn action_continue_part_plain(n: &str) -> String {
 /// The main action for a light novel part not opened yet.
 pub fn action_read_part(n: &str) -> String {
     text("action-read-part", &[("n", Arg::Text(n))])
+}
+
+/// The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+pub fn action_continue_named(label: &str, percent: i64) -> String {
+    text("action-continue-named", &[("label", Arg::Text(label)), ("percent", Arg::Int(percent))])
+}
+
+/// The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+pub fn action_continue_named_plain(label: &str) -> String {
+    text("action-continue-named-plain", &[("label", Arg::Text(label))])
+}
+
+/// The main action for a light novel part not opened yet, named in the source's own words.
+pub fn action_read_named(label: &str) -> String {
+    text("action-read-named", &[("label", Arg::Text(label))])
 }
 
 /// The main action when every chapter is read.
@@ -14803,6 +15123,346 @@ pub fn read_downloads_read(n: i64) -> String {
 /// Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 pub fn read_downloads_delete_read() -> String {
     text("read-downloads-delete-read", &[])
+}
+
+/// Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+pub fn send_title() -> String {
+    text("send-title", &[])
+}
+
+/// Heading over the e-readers to choose from in the Send to e-reader sheet.
+pub fn send_for() -> String {
+    text("send-for", &[])
+}
+
+/// Heading over what is being sent in the Send to e-reader sheet.
+pub fn send_what() -> String {
+    text("send-what", &[])
+}
+
+/// Row in the Send to e-reader sheet: the chapters being sent.
+pub fn send_chapters() -> String {
+    text("send-chapters", &[])
+}
+
+/// The chapters being sent when there is one: its number or label.
+pub fn send_chapters_one(chapter: &str) -> String {
+    text("send-chapters-one", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The chapters being sent when there are several, from the first to the last.
+pub fn send_chapters_range(first: &str, last: &str) -> String {
+    text("send-chapters-range", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// Row in the Send to e-reader sheet: how big the files will be.
+pub fn send_size() -> String {
+    text("send-size", &[])
+}
+
+/// The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+pub fn send_size_about(size: &str) -> String {
+    text("send-size-about", &[("size", Arg::Text(size))])
+}
+
+/// Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+pub fn send_no_place() -> String {
+    text("send-no-place", &[])
+}
+
+/// The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+pub fn send_prepare() -> String {
+    text("send-prepare", &[])
+}
+
+/// While the files are made: which chapter of how many. The ring beside it shows how far along.
+pub fn send_preparing(done: i64, total: i64) -> String {
+    text("send-preparing", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Under the progress of a send to a device: what the pages are made for.
+pub fn send_sized_for(device: &str) -> String {
+    text("send-sized-for", &[("device", Arg::Text(device))])
+}
+
+/// Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+pub fn send_in_parts(size: &str) -> String {
+    text("send-in-parts", &[("size", Arg::Text(size))])
+}
+
+/// A send that failed on one chapter. The cause is the sentence that says why.
+pub fn send_failed_chapter(chapter: &str, cause: &str) -> String {
+    text("send-failed-chapter", &[("chapter", Arg::Text(chapter)), ("cause", Arg::Text(cause))])
+}
+
+/// A send that failed before or after its chapters. The cause is the sentence that says why.
+pub fn send_failed(cause: &str) -> String {
+    text("send-failed", &[("cause", Arg::Text(cause))])
+}
+
+/// Text of the Send sheet's Size row while the size is still being worked out.
+pub fn send_size_working() -> String {
+    text("send-size-working", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is open.
+pub fn send_chapters_open() -> String {
+    text("send-chapters-open", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is closed.
+pub fn send_chapters_closed() -> String {
+    text("send-chapters-closed", &[])
+}
+
+/// Spoken value of the ring in a send under way. Already a number from 0 to 100.
+pub fn send_progress_spoken(percent: i64) -> String {
+    text("send-progress-spoken", &[("percent", Arg::Int(percent))])
+}
+
+/// Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+pub fn send_chapter_action() -> String {
+    text("send-chapter-action", &[])
+}
+
+/// Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+pub fn send_parts_over(size: &str) -> String {
+    text("send-parts-over", &[("size", Arg::Text(size))])
+}
+
+/// While a send waits for the network and the person can stop it. The engine's own line comes first.
+pub fn send_waiting_cancel() -> String {
+    text("send-waiting-cancel", &[])
+}
+
+/// When the files are ready, over the button that opens the share sheet. The count is how many files.
+pub fn send_ready(n: i64) -> String {
+    text("send-ready", &[("n", Arg::Int(n))])
+}
+
+/// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+pub fn send_share_again() -> String {
+    text("send-share-again", &[])
+}
+
+/// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+pub fn send_banner(device: &str) -> String {
+    text("send-banner", &[("device", Arg::Text(device))])
+}
+
+/// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+pub fn send_format_fixed_epub() -> String {
+    text("send-format-fixed-epub", &[])
+}
+
+/// The format of the files an e-reader is sent: the Kobo form of EPUB.
+pub fn send_format_kepub() -> String {
+    text("send-format-kepub", &[])
+}
+
+/// The format of the files an e-reader is sent: a plain EPUB.
+pub fn send_format_epub() -> String {
+    text("send-format-epub", &[])
+}
+
+/// The format of the files an e-reader is sent: a comic book archive.
+pub fn send_format_cbz() -> String {
+    text("send-format-cbz", &[])
+}
+
+/// Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+pub fn send_target_line(format: &str, width: &str, height: &str) -> String {
+    text("send-target-line", &[("format", Arg::Text(format)), ("width", Arg::Text(width)), ("height", Arg::Text(height))])
+}
+
+/// Title of the sheet that asks where you stopped reading on the e-reader.
+pub fn stop_title() -> String {
+    text("stop-title", &[])
+}
+
+/// Note on a series page after chapters were sent: opens the question.
+pub fn stop_note(device: &str) -> String {
+    text("stop-note", &[("device", Arg::Text(device))])
+}
+
+/// Button in that note.
+pub fn stop_note_action() -> String {
+    text("stop-note-action", &[])
+}
+
+/// First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+pub fn stop_sent_one(chapter: &str, device: &str, date: &str) -> String {
+    text("stop-sent-one", &[("chapter", Arg::Text(chapter)), ("device", Arg::Text(device)), ("date", Arg::Text(date))])
+}
+
+/// First line of the sheet when several chapters were sent, from the first to the last.
+pub fn stop_sent_range(first: &str, last: &str, device: &str, date: &str) -> String {
+    text("stop-sent-range", &[("first", Arg::Text(first)), ("last", Arg::Text(last)), ("device", Arg::Text(device)), ("date", Arg::Text(date))])
+}
+
+/// Switch in the sheet: the last chapter sent was read to its end.
+pub fn stop_finished(chapter: &str) -> String {
+    text("stop-finished", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The main button of the sheet: keeps the chapter chosen as the place.
+pub fn stop_set() -> String {
+    text("stop-set", &[])
+}
+
+/// The other button of the sheet: leaves the place as it is, with the place named.
+pub fn stop_keep(chapter: &str, page: i64) -> String {
+    text("stop-keep", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+}
+
+/// The other button of the sheet when the place is not a page.
+pub fn stop_keep_plain() -> String {
+    text("stop-keep-plain", &[])
+}
+
+/// Heading of the E-readers group in the Reading settings.
+pub fn ereaders_group() -> String {
+    text("ereaders-group", &[])
+}
+
+/// Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+pub fn ereaders_send_row() -> String {
+    text("ereaders-send-row", &[])
+}
+
+/// Row in the E-readers group that opens the feed settings. The value is On or Off.
+pub fn ereaders_feed_row() -> String {
+    text("ereaders-feed-row", &[])
+}
+
+/// Line under the Share on this network switch.
+pub fn opds_share_note() -> String {
+    text("opds-share-note", &[])
+}
+
+/// Footnote under the feed settings.
+pub fn opds_footer(device: &str) -> String {
+    text("opds-footer", &[("device", Arg::Text(device))])
+}
+
+/// Row in the feed settings: the web address e-readers are given, with a button that copies it.
+pub fn opds_address() -> String {
+    text("opds-address", &[])
+}
+
+/// Shown in place of the address while the feed is off or has no password.
+pub fn opds_address_off() -> String {
+    text("opds-address-off", &[])
+}
+
+/// Row in the feed settings: the password e-readers ask for.
+pub fn opds_password() -> String {
+    text("opds-password", &[])
+}
+
+/// Line under the password row.
+pub fn opds_password_note() -> String {
+    text("opds-password-note", &[])
+}
+
+/// Button in the feed settings that makes a new password. The e-readers ask for the new one.
+pub fn opds_new_password() -> String {
+    text("opds-new-password", &[])
+}
+
+/// Row in the feed settings: the port the feed listens on.
+pub fn opds_port() -> String {
+    text("opds-port", &[])
+}
+
+/// Line under the port row when it is empty.
+pub fn opds_port_note() -> String {
+    text("opds-port-note", &[])
+}
+
+/// Line under the port row when the port asked for was taken and another is used.
+pub fn opds_port_moved(wanted: i64, port: i64) -> String {
+    text("opds-port-moved", &[("wanted", Arg::Int(wanted)), ("port", Arg::Int(port))])
+}
+
+/// Heading of the group that picks what the feed shares.
+pub fn opds_shares() -> String {
+    text("opds-shares", &[])
+}
+
+/// Row in What it shares: the chapters downloaded on this device.
+pub fn opds_share_downloads() -> String {
+    text("opds-share-downloads", &[])
+}
+
+/// Line under that row.
+pub fn opds_share_downloads_count(n: i64) -> String {
+    text("opds-share-downloads-count", &[("n", Arg::Int(n))])
+}
+
+/// Row in What it shares: the series in the manga and comic folders.
+pub fn opds_share_manga() -> String {
+    text("opds-share-manga", &[])
+}
+
+/// Row in What it shares: the series in the novel folders.
+pub fn opds_share_novels() -> String {
+    text("opds-share-novels", &[])
+}
+
+/// Line under a folder row.
+pub fn opds_share_series_count(n: i64) -> String {
+    text("opds-share-series-count", &[("n", Arg::Int(n))])
+}
+
+/// Heading of the list of e-readers that fetched files from the feed.
+pub fn opds_fetched_by() -> String {
+    text("opds-fetched-by", &[])
+}
+
+/// Line when no e-reader has fetched anything since the feed started.
+pub fn opds_fetched_none() -> String {
+    text("opds-fetched-none", &[])
+}
+
+/// Shown in place of the address while the feed is switched on and starting to listen.
+pub fn opds_starting() -> String {
+    text("opds-starting", &[])
+}
+
+/// Shown in place of the address while the feed is on but the Mac is on no local network.
+pub fn opds_paused_none() -> String {
+    text("opds-paused-none", &[])
+}
+
+/// Shown in place of the address while the feed is on but the only connection goes through a VPN.
+pub fn opds_paused_vpn() -> String {
+    text("opds-paused-vpn", &[])
+}
+
+/// Title of the question before a new feed password is made.
+pub fn opds_new_password_title() -> String {
+    text("opds-new-password-title", &[])
+}
+
+/// Text of that question.
+pub fn opds_new_password_warning() -> String {
+    text("opds-new-password-warning", &[])
+}
+
+/// Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+pub fn opds_fetched_time(time: &str) -> String {
+    text("opds-fetched-time", &[("time", Arg::Text(time))])
+}
+
+/// Line under an e-reader in that list: how many files it took.
+pub fn opds_fetched_files(n: i64) -> String {
+    text("opds-fetched-files", &[("n", Arg::Int(n))])
+}
+
+/// Name for an e-reader that did not give one.
+pub fn opds_reader_unnamed(address: &str) -> String {
+    text("opds-reader-unnamed", &[("address", Arg::Text(address))])
 }
 
 /// Button that shows the season before.
@@ -16963,6 +17623,311 @@ pub fn settings_opds_password() -> String {
 /// Row: the port the shared catalogue listens on. Empty picks a free one.
 pub fn settings_opds_port() -> String {
     text("settings-opds-port", &[])
+}
+
+/// Label of the address field in the Add a server sheet.
+pub fn book_server_address() -> String {
+    text("book-server-address", &[])
+}
+
+/// Note under the empty address field.
+pub fn book_server_address_hint() -> String {
+    text("book-server-address-hint", &[])
+}
+
+/// Note under the address field once a Kavita OPDS link is pasted.
+pub fn book_server_kavita_key() -> String {
+    text("book-server-kavita-key", &[])
+}
+
+/// Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+pub fn book_server_key_kept(store: &str) -> String {
+    text("book-server-key-kept", &[("store", Arg::Text(store))])
+}
+
+/// Chip inside the address field, showing the key's last four characters after four dots.
+pub fn book_server_key(last: &str) -> String {
+    text("book-server-key", &[("last", Arg::Text(last))])
+}
+
+/// Result title once the server signed in.
+pub fn book_server_found_title(series: i64, libraries: i64) -> String {
+    text("book-server-found-title", &[("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
+/// Line under the result title. The kind is Komga, Kavita or OPDS.
+pub fn book_server_found_line(kind: &str, host: &str) -> String {
+    text("book-server-found-line", &[("kind", Arg::Text(kind)), ("host", Arg::Text(host))])
+}
+
+/// A library row's line in the result.
+pub fn book_server_library_line(series: i64) -> String {
+    text("book-server-library-line", &[("series", Arg::Int(series))])
+}
+
+/// Switch in the result, on to start with.
+pub fn book_server_sync_progress() -> String {
+    text("book-server-sync-progress", &[])
+}
+
+/// Line under the switch.
+pub fn book_server_sync_progress_line(host: &str) -> String {
+    text("book-server-sync-progress-line", &[("host", Arg::Text(host))])
+}
+
+/// Field label.
+pub fn book_server_username() -> String {
+    text("book-server-username", &[])
+}
+
+/// Field label.
+pub fn book_server_password() -> String {
+    text("book-server-password", &[])
+}
+
+/// Error title when the server could not be reached.
+pub fn book_server_err_unreachable(host: &str) -> String {
+    text("book-server-err-unreachable", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_err_unreachable_line() -> String {
+    text("book-server-err-unreachable-line", &[])
+}
+
+/// Error title when the server turned the password down.
+pub fn book_server_err_password(host: &str) -> String {
+    text("book-server-err-password", &[("host", Arg::Text(host))])
+}
+
+/// Line under it. The kind is Komga, Kavita or OPDS.
+pub fn book_server_err_password_line(kind: &str) -> String {
+    text("book-server-err-password-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Error title when Kavita turned the key in an OPDS link down.
+pub fn book_server_err_key(host: &str) -> String {
+    text("book-server-err-key", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_err_key_line() -> String {
+    text("book-server-err-key-line", &[])
+}
+
+/// Title when the server lets the account in and shows it no series.
+pub fn book_server_empty(host: &str) -> String {
+    text("book-server-empty", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn book_server_empty_line() -> String {
+    text("book-server-empty-line", &[])
+}
+
+/// Note under it.
+pub fn book_server_empty_recheck() -> String {
+    text("book-server-empty-recheck", &[])
+}
+
+/// Line under an error when the address is not a book server.
+pub fn book_server_not_books_line() -> String {
+    text("book-server-not-books-line", &[])
+}
+
+/// Folder result title.
+pub fn book_folder_found(series: i64, files: i64) -> String {
+    text("book-folder-found", &[("series", Arg::Int(series)), ("files", Arg::Int(files))])
+}
+
+/// Line under it: the folder's path, then how many series were matched by their own details.
+pub fn book_folder_found_line(path: &str, matched: i64) -> String {
+    text("book-folder-found-line", &[("path", Arg::Text(path)), ("matched", Arg::Int(matched))])
+}
+
+/// Row in the folder result: files that are books in formats Kaeri can't open.
+pub fn book_folder_unsupported(count: i64) -> String {
+    text("book-folder-unsupported", &[("count", Arg::Int(count))])
+}
+
+/// Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+pub fn book_folder_unsupported_line(kinds: &str) -> String {
+    text("book-folder-unsupported-line", &[("kinds", Arg::Text(kinds))])
+}
+
+/// One item of that list: EPUB files locked with DRM or a password.
+pub fn book_folder_drm(count: i64) -> String {
+    text("book-folder-drm", &[("count", Arg::Int(count))])
+}
+
+/// Note under the folder result.
+pub fn book_folder_opens() -> String {
+    text("book-folder-opens", &[])
+}
+
+/// Row action that lists the files skipped.
+pub fn book_folder_show_files() -> String {
+    text("book-folder-show-files", &[])
+}
+
+/// Primary action in the Add a folder sheet.
+pub fn book_folder_add() -> String {
+    text("book-folder-add", &[])
+}
+
+/// Folder row action that picks another folder.
+pub fn book_folder_change() -> String {
+    text("book-folder-change", &[])
+}
+
+/// Title when a folder holds nothing Kaeri can open.
+pub fn book_folder_empty(folder: &str) -> String {
+    text("book-folder-empty", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it.
+pub fn book_folder_empty_line(files: i64) -> String {
+    text("book-folder-empty-line", &[("files", Arg::Int(files))])
+}
+
+/// Primary action after an empty folder.
+pub fn book_folder_choose_other() -> String {
+    text("book-folder-choose-other", &[])
+}
+
+/// Title of the Join a plugin store sheet.
+pub fn store_join_title() -> String {
+    text("store-join-title", &[])
+}
+
+/// Label of the invite field.
+pub fn store_invite_field() -> String {
+    text("store-invite-field", &[])
+}
+
+/// Result title once a plugin store is joined.
+pub fn store_joined_title(store: &str) -> String {
+    text("store-joined-title", &[("store", Arg::Text(store))])
+}
+
+/// Line under it. The owner is who runs the store.
+pub fn store_joined_line(owner: &str, count: i64) -> String {
+    text("store-joined-line", &[("owner", Arg::Text(owner)), ("count", Arg::Int(count))])
+}
+
+/// Group header in the joined store's list.
+pub fn store_group_reading() -> String {
+    text("store-group-reading", &[])
+}
+
+/// Group header in the joined store's list.
+pub fn store_group_watching() -> String {
+    text("store-group-watching", &[])
+}
+
+/// Row action.
+pub fn store_install() -> String {
+    text("store-install", &[])
+}
+
+/// Row state once installed.
+pub fn store_installed_row() -> String {
+    text("store-installed-row", &[])
+}
+
+/// Primary action when two or more plugins are for reading.
+pub fn store_install_all_reading() -> String {
+    text("store-install-all-reading", &[])
+}
+
+/// Result after installing.
+pub fn store_installed(count: i64) -> String {
+    text("store-installed", &[("count", Arg::Int(count))])
+}
+
+/// Info title when every plugin in a store is for watching, and watching is off here.
+pub fn store_other_medium(store: &str) -> String {
+    text("store-other-medium", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_other_medium_line() -> String {
+    text("store-other-medium-line", &[])
+}
+
+/// Secondary action under it.
+pub fn store_turn_on_watching() -> String {
+    text("store-turn-on-watching", &[])
+}
+
+/// Info title when a store has no plugins.
+pub fn store_empty(store: &str) -> String {
+    text("store-empty", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_empty_line(owner: &str) -> String {
+    text("store-empty-line", &[("owner", Arg::Text(owner))])
+}
+
+/// Error title when the store doesn't answer.
+pub fn store_err_unreachable(host: &str) -> String {
+    text("store-err-unreachable", &[("host", Arg::Text(host))])
+}
+
+/// Line under it.
+pub fn store_err_unreachable_line(owner: &str) -> String {
+    text("store-err-unreachable-line", &[("owner", Arg::Text(owner))])
+}
+
+/// Under the reading group: plugins for watching while watching is off here.
+pub fn store_other_medium_more(count: i64) -> String {
+    text("store-other-medium-more", &[("count", Arg::Int(count))])
+}
+
+/// On a TV, under the list: plugins for reading, which a TV doesn't do.
+pub fn store_tv_reading_only(count: i64) -> String {
+    text("store-tv-reading-only", &[("count", Arg::Int(count))])
+}
+
+/// On a TV, info title when every plugin in a store is for reading.
+pub fn store_tv_all_reading(store: &str) -> String {
+    text("store-tv-all-reading", &[("store", Arg::Text(store))])
+}
+
+/// Plugin row in an invite's result.
+pub fn store_plugin_row(version: &str, hosts: &str) -> String {
+    text("store-plugin-row", &[("version", Arg::Text(version)), ("hosts", Arg::Text(hosts))])
+}
+
+/// Notice after a server or folder is added, for 4 seconds.
+pub fn source_added(name: &str, series: i64) -> String {
+    text("source-added", &[("name", Arg::Text(name)), ("series", Arg::Int(series))])
+}
+
+/// Notice after Install all, for 4 seconds.
+pub fn source_added_plugins(count: i64, store: &str) -> String {
+    text("source-added-plugins", &[("count", Arg::Int(count)), ("store", Arg::Text(store))])
+}
+
+/// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+pub fn source_row_server(kind: &str, series: i64, libraries: i64) -> String {
+    text("source-row-server", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
+/// A server's row in Your sources while it shows no series.
+pub fn source_row_server_empty(kind: &str) -> String {
+    text("source-row-server-empty", &[("kind", Arg::Text(kind))])
+}
+
+/// A folder's row in Your sources.
+pub fn source_row_folder(path: &str, series: i64, skipped: i64) -> String {
+    text("source-row-folder", &[("path", Arg::Text(path)), ("series", Arg::Int(series)), ("skipped", Arg::Int(skipped))])
+}
+
+/// A plugin's row in Your sources. The medium is "Reading" or "Watching".
+pub fn source_row_plugin(store: &str, medium: &str, version: &str) -> String {
+    text("source-row-plugin", &[("store", Arg::Text(store)), ("medium", Arg::Text(medium)), ("version", Arg::Text(version))])
 }
 
 /// Title of the screen or section that lists sources.

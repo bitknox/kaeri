@@ -502,6 +502,464 @@ party-left = Saliste de la watch party.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = No se pudo conectar con { $server }. Revisa el servidor o inténtalo de nuevo.
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Capítulo { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Normalmente los lunes
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Normalmente los martes
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Suele ser los miércoles
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Normalmente los jueves
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Normalmente los viernes
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Normalmente los sábados
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Normalmente los domingos
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+        [one] Cada semana, aprox.
+        [many] Cada { $weeks } semanas, aprox.
+       *[other] Cada { $weeks } semanas, aprox.
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = También es una serie
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = También es un libro
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = El capítulo { $chapter } se envía a servicios de seguimiento como { $whole }.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = Retomado en la página { $page }
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = Volver a la página { $page }
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = Pasaste a { $chapter }, página { $page }, donde se quedó { $device }
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = Pasaste al capítulo { $chapter }, página { $page }, donde se quedó { $device }
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Derecha a izquierda, detectado
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Izquierda a derecha, detectado
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Tira larga, detectada
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = No tienes conexión. Los capítulos descargados se siguen abriendo.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } no responde. Inténtalo más tarde.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = Esta fuente ya no lo tiene. Prueba con otra fuente.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } rechazó la solicitud. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri no pudo leer lo que envió { $source }. Puede que su complemento necesite una actualización.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = Esta página no cargó (error { $status }). Inténtalo de nuevo.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Vuelve a iniciar sesión en { $what } para seguir leyendo.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } ya no está. Si está en una unidad, conéctala e inténtalo de nuevo.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = No se pudo leer { $path } como { $format }. Puede que el archivo esté dañado.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri no puede leer archivos { $kind }.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = Este libro tiene protección contra copia, así que Kaeri no puede abrirlo.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = No queda espacio en este dispositivo. Libera espacio e inténtalo de nuevo.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Las novelas necesitan una versión de WebView del sistema más reciente que la { $version }. Actualiza Android System WebView e inténtalo de nuevo.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = Este complemento necesita una versión más reciente de Kaeri ({ $world }). Actualiza Kaeri para usarlo.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = La lectura no está disponible en esta versión de Kaeri.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Algo salió mal. { $reason }
+
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } pesa { $size } y { $target } acepta archivos de hasta { $limit }. Envía menos capítulos a la vez y vuelve a intentarlo.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = A { $file } le falta { $part }, así que no se envió. Vuelve a intentarlo.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } en { $file } tiene una codificación de texto incorrecta, así que no se envió. Vuelve a intentarlo.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } en { $file } no es válido, así que no se envió. Vuelve a intentarlo.
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Manga
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Manhwa
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Manhua
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Webtoon
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = One-shot
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Novela ligera
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Novela
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = En publicación
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Finalizado
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = En pausa
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = Cancelado
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Aún no sale
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] 1 capítulo
+        [many] { $count } capítulos
+       *[other] { $count } capítulos
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] 1 volumen
+        [many] { $count } volúmenes
+       *[other] { $count } volúmenes
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = En tu lista Pendiente
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = Capítulo nuevo de una serie que sigues
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Seguir leyendo
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Siguiente para ti
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Popular, en publicación
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = El capítulo { $chapter } sale hoy
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Capítulo { $chapter }, { $title }, sale hoy
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Capítulo { $chapter } · pág. { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Capítulo { $chapter } · { $percent }%
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = El capítulo { $chapter } es nuevo
+
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Parte { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Parte { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = La parte { $part } es nueva
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Parte { $part } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = La parte { $part } sale hoy
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Parte { $part }, { $title }, sale hoy
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Capítulo { $chapter } de { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Volumen { $volume }, parte { $part }
+
+# A search filter: books from Japan.
+reading-origin-japan = Japón
+
+# A search filter: books from Korea.
+reading-origin-korea = Corea
+
+# A search filter: books from China.
+reading-origin-china = China
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Taiwán
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = Otro lector electrónico
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 pulgadas
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 pulgadas
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = E-ink a color, 7 pulgadas
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Tableta
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Capítulo { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+        [one] Un capítulo aún no está descargado, así que este envío espera al Wi-Fi y sigue por sí solo.
+        [many] { $n } capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.
+       *[other] { $n } capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.
+    }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Capítulo { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Leído
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = Nuevo
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Descargado
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Ya no está en la fuente
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = No descargado
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = En este dispositivo
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = En cola
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = En cola · espera Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Descargando · { $done } de { $total } págs.
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = No se pudo descargar
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Página { $page } de { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Página { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] 1 página
+        [many] { $n } páginas
+       *[other] { $n } páginas
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] 1 versión
+        [many] { $n } versiones
+       *[other] { $n } versiones
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = justo ahora
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = hace { $minutes } min
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = hoy
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = ayer
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] hace 1 día
+        [many] hace { $days } días
+       *[other] hace { $days } días
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] hace 1 semana
+        [many] hace { $weeks } semanas
+       *[other] hace { $weeks } semanas
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] hace 1 mes
+        [many] hace { $months } meses
+       *[other] hace { $months } meses
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] hace 1 año
+        [many] hace { $years } años
+       *[other] hace { $years } años
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Quitado de { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = No estaba en tu lista de { $tracker }
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Sin coincidencia en { $tracker }, así que no cambió nada allí
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = Sigue en tu lista de { $tracker }
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = Vuelve a iniciar sesión en { $tracker } y prueba otra vez.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = No hay series con este nombre
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = No responde desde las { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = No responde
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] 1 parte
+        [many] { $count } partes
+       *[other] { $count } partes
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = { $count } leídos
+
+# The chapter downloading now.
+reading-dl-chapter = Capítulo { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done } de { $total } páginas
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = { $count } más en cola
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = { $count } en cola
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = espera Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = No se pudo descargar el capítulo { $chapter }
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = Aprox. { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = por Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = con datos móviles
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = espera Wi-Fi
+
+# The notification's title.
+reading-downloads-done-title = Descargas terminadas
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] Un capítulo de { $title } está listo para leer sin conexión.
+        [many] { $count } capítulos de { $title } están listos para leer sin conexión.
+       *[other] { $count } capítulos de { $title } están listos para leer sin conexión.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] Una parte de { $title } está lista para leer sin conexión.
+        [many] { $count } partes de { $title } están listas para leer sin conexión.
+       *[other] { $count } partes de { $title } están listas para leer sin conexión.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = Hay capítulos de { $count } series listos para leer sin conexión.
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Te uniste a { $store } como { $member }.
 
@@ -662,6 +1120,9 @@ plugin-publish-failed = No se pudo publicar { $plugin }. { $reason }
 
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } ya no está en la carpeta de complementos.
+
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } aún no incluye fuentes de libros. Su propietario puede actualizar la tienda de complementos para añadirlas.
 
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = Este dispositivo se unió a { $store } con su enlace. Pega el mismo enlace en el otro dispositivo.
@@ -890,7 +1351,7 @@ cause-proxy-address-unusable = La dirección del proxy no es una que la revisió
 cause-server-unreachable = No se pudo contactar con el servidor.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri no aloja ninguna serie. Tú agregas tus propias fuentes.
+legal-hosts-no-content = Kaeri no aloja series ni libros. Tú agregas tus propias fuentes.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Se guardó { $label }.
@@ -5409,6 +5870,63 @@ episode-download-done = Descargado
 # Line under that button after a failure.
 episode-download-failed = No se pudo descargar el episodio { $episode }. Inténtalo de nuevo.
 
+# First run, page 2 of 5.
+first-other-title = ¿Ya usas Kaeri en otro dispositivo?
+
+# Under the title.
+first-other-line = Si te vinculas con él, este dispositivo recibe tus fuentes, servicios de seguimiento y tu historial. Los pasos siguientes ya quedan hechos.
+
+# Line under the pair row.
+first-other-pair-line = Muestra un código para ingresar en ese dispositivo. Ambos necesitan la misma red Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Restaurar desde una carpeta en la nube
+
+# Line under it.
+first-other-restore-line = Usa la clave de recuperación que guardaste
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = No, empezar aquí
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Esperando tu otro dispositivo
+
+# After 30 seconds with nothing.
+pair-nothing-yet = ¿Aún nada? Ambos dispositivos deben estar en la misma red Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = De { $device }
+
+# Row while the rest arrives.
+first-join-looking = Revisando qué tiene { $device }…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri es para
+
+# Line under it when the other device reads.
+first-join-medium-line = Leer, como en { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Agregar { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · inicia sesión con la clave de { $device }, guardada en { $store }
+
+# Note under the list.
+first-join-folders = Las carpetas se quedan en { $device }. Agrega las carpetas propias de este dispositivo en Tus fuentes.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Las listas y las fuentes ya están configuradas, así que el primer inicio termina aquí. Puedes cambiarlas en Ajustes.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } no dejó entrar a este dispositivo. { $owner } puede enviarte una invitación.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Sincronizando con { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Inicio
 
@@ -6509,6 +7027,9 @@ party-joining = Uniéndote a { $room } en { $server }…
 # Line on the form when no episode is playing yet.
 party-form-nothing = Lo que se reproduce ahora se sincroniza con la sala.
 
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = Cuando estés dentro, presiona Reproducir en cualquier episodio para verlo con la sala.
+
 # Line naming the episode of the form.
 party-form-episode-of = Episodio { $episode } de { $title }
 
@@ -6660,6 +7181,9 @@ together-people-button = Ver juntos
 
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Iniciar una watch party
+
+# Line under Start a party.
+together-start-line = Abre una sala e invita a tus amigos con un enlace o un código, y luego presiona Reproducir en lo que quieran ver.
 
 # Heading of the field that joins a watch party.
 together-join = Unirse a una watch party
@@ -6871,6 +7395,9 @@ party-bar-line = { $count } en la sala · { $ready } listos
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = En la sala · nada se reproduce para ti
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = Presiona Reproducir en cualquier episodio para verlo con la sala
 
 # Notice in the player when someone pauses.
 party-paused-by = Pausado por { $name }
@@ -7678,6 +8205,1234 @@ player-subs-bg-box = Caja
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Más en Ajustes…
+
+# Under a page that is still loading after four seconds.
+reader-page-loading = Cargando la página { $page }
+
+# Heading where a page could not be loaded.
+reader-page-failed = No se pudo cargar la página { $page }
+
+# Button that loads a failed page again.
+reader-try-again = Reintentar
+
+# Closes the reader and goes back to the series.
+reader-close = Cerrar
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Leído
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = A continuación
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Derecha a izquierda
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Izquierda a derecha
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Tira
+
+# A choice for how a page is fitted.
+reader-fit-screen = Pantalla
+
+# A choice for how a page is fitted.
+reader-fit-width = Ancho
+
+# A choice of typeface.
+reader-font-serif = Serif
+
+# A choice of typeface.
+reader-font-sans = Sans
+
+# A look for reading: warm paper.
+reader-look-paper = Papel
+
+# A look for reading: a light page.
+reader-look-light = Claro
+
+# A look for reading: a brown page.
+reader-look-sepia = Sepia
+
+# A look for reading: a dark page.
+reader-look-dark = Oscuro
+
+# A choice of margins.
+reader-margins-narrow = Estrechos
+
+# A choice of margins.
+reader-margins-wide = Amplios
+
+# A choice for page layout.
+reader-layout-auto = Auto
+
+# A choice for page layout.
+reader-layout-single = Una
+
+# A choice for page layout.
+reader-layout-double = Dos
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Dividir
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Girar
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Completa
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+reader-tap-edges = Bordes
+
+# A choice for the reader's tap zones: the left and right halves turn the page.
+reader-tap-sides = Mitades
+
+# A choice for the reader's tap zones: taps do not turn the page.
+reader-tap-off = Apagado
+
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = Capítulos
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+        [one] Queda una página en este capítulo
+        [many] Quedan { $count } páginas en este capítulo
+       *[other] Quedan { $count } páginas en este capítulo
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = Cargando capítulos
+
+# Background choice.
+reader-background-theme = Tema
+
+# Background choice.
+reader-background-black = Negro
+
+# Background choice.
+reader-background-white = Blanco
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = Estás al día
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = Ninguno
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = Pequeño
+
+# Look choice that follows the system's light or dark.
+reader-look-system = Sistema
+
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Leer la demo
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = La demo lee un cómic corto y un cuento corto que sus autores comparten bajo Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Un episodio corto y un cómic corto, compartidos por sus autores bajo Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Solo la demo está activa. Agrega una carpeta, un servidor o una tienda de complementos para leer tus propios libros.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Leer
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Cómic · una página
+        [many] Demo · Cómic · { $pages } de páginas
+       *[other] Demo · Cómic · { $pages } páginas
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } de { $author }. Con licencia { $licence }. Se lee desde Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } de { $author }. Dominio público. Viene con la app.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Se lee ahora
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Solo la demo está activa. Otros títulos aparecen cuando agregas una fuente.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Este es el final de la demo
+
+# Line under it.
+reader-demo-end-line = Para leer tus propios libros, agrega una carpeta, un servidor o una tienda de complementos.
+
+# The card's primary action.
+reader-demo-add-source = Agregar una fuente
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Volver a la página 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Un cómic y un cuento · CC BY 4.0 y dominio público
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Obras que sus autores comparten bajo Creative Commons, para que pruebes Kaeri antes de agregar una fuente. No es una fuente para conservar.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = La demo nunca inicia sesión en ningún lado y nunca escribe en un servicio de seguimiento.
+
+# Group on the demo's series page.
+demo-chapters = Capítulos
+
+# Group on the demo's series page: the other demo work.
+demo-also = También en la demo
+
+# Group in About the demo.
+demo-credits = Créditos
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] Una página
+        [many] { $pages } de páginas
+       *[other] { $pages } páginas
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Cuento · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Leer el capítulo { $number }
+
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = Ver
+
+# Sidebar and tab label: reading's Home.
+nav-read = Leer
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = Novedades
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = En publicación ahora
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = Se revisa al abrir Kaeri
+
+# Line at the end of Read, under the last shelf.
+home-read-end = Eso es todo por ahora. Novedades y Buscar tienen las listas completas.
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = Agrega una carpeta, un servidor o una tienda de complementos para leer desde Inicio.
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = Suele salir
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = Suele no salir nada
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = Revisado { $ago }
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = Revisado { $ago } · series que tienes al día
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = Buscando capítulos nuevos…
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = Descargar nuevos
+
+# Updates with nothing in it.
+updates-empty-title = No hay capítulos nuevos
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = Kaeri revisa varias veces al día las series de tu lista Leyendo que tienes al día.
+
+# Day heading in Updates.
+chapter-updates-today = Hoy
+
+# Day heading in Updates.
+chapter-updates-yesterday = Ayer
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+        [one] 1 versión
+        [many] { $n } versiones
+       *[other] { $n } versiones
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = Abrir { $title }
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = Abre el capítulo
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = Abrir serie
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = Leer el capítulo { $n }
+
+# The main action when a chapter is part read.
+action-continue-chapter = Seguir con el capítulo { $n } · pág. { $page }
+
+# The main action for a light novel part, part read.
+action-continue-part = Seguir con la parte { $n } · { $percent }%
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Seguir con la parte { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Leer la parte { $n }
+
+# The main action when every chapter is read.
+action-read-again = Leer de nuevo
+
+# Label of the source row on the series page.
+series-reading-from = Leyendo desde
+
+# Button beside a row on the series page that opens its sheet.
+series-change = Cambiar
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+        [one] 1 más
+        [many] { $n } más
+       *[other] { $n } más
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = ¿Qué serie es esta? Elegir
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = Tu grupo preferido aquí
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+        [one] { $n } de { $total } capítulo
+        [many] { $n } de { $total } capítulos
+       *[other] { $n } de { $total } capítulos
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+        [one] 1 capítulo
+        [many] { $n } capítulos
+       *[other] { $n } capítulos
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = { $chapters } · volumen { $volume }
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = Volumen { $volume } de { $total }
+
+# Main place when the source can't be read from.
+series-read-from-another = Leer desde otra fuente
+
+# Status menu item: a score submenu.
+series-score = Puntuar…
+
+# Status menu's label before the series is on a list.
+series-add-to-list = Agregar a una lista
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Quitar de las listas…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = ¿Quitar { $title } de tus listas?
+
+# Line in that question.
+series-remove-from-lists-line = Se quita de tu lista en cada servicio de seguimiento que tengas conectado. Tu avance y los capítulos leídos se quedan en Kaeri.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Tus listas
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] 1 capítulo
+        [many] { $n } capítulos
+       *[other] { $n } capítulos
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = Todos los no leídos
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = No se encontró en
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Buscar allí
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = Buscar en { $source }
+
+# Button that runs that search.
+read-from-search = Buscar
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = No se encontró nada con estas palabras
+
+# The More menu: the Tracking sheet.
+series-tracking = Seguimiento
+
+# The More menu: the Read from sheet.
+series-read-from-menu = Cambiar fuente…
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = Leer de nuevo desde el inicio…
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = Volúmenes
+
+# Heading of the chapter list.
+series-chapters = Capítulos
+
+# Accessibility label of the chapter order menu.
+series-order = Orden
+
+# Chapter order.
+series-newest-first = Más recientes primero
+
+# Chapter order.
+series-oldest-first = Más antiguos primero
+
+# A volume's heading in the chapter list.
+series-volume = Volumen { $n }
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = Aún sin volumen
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = capítulos { $from } a { $to }
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = leído
+
+# Accessibility value of a volume heading.
+series-expanded = Expandido
+
+# Accessibility value of a volume heading.
+series-collapsed = Contraído
+
+# The chapter list when the source has none.
+series-no-chapters-title = Aún no hay capítulos en esta fuente
+
+# Line under it.
+series-no-chapters-line = Puede que otra fuente los tenga.
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = No se pudieron cargar los capítulos de { $source }.
+
+# A chapter row's title.
+series-chapter-number = Capítulo { $n }
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = Con marcador
+
+# Chapter menu and swipe action.
+series-mark-read = Marcar como leído
+
+# Chapter menu and swipe action.
+series-mark-unread = Marcar como no leído
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = Marcar como leído hasta aquí
+
+# Chapter menu and swipe action.
+series-download = Descargar
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = Leer
+
+# Chapter menu item.
+series-bookmark = Poner marcador
+
+# Chapter menu item.
+series-remove-bookmark = Quitar marcador
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+        [one] 1 versión
+        [many] { $n } versiones
+       *[other] { $n } versiones
+    }
+
+# In that menu while the versions load.
+series-versions-loading = Buscando versiones…
+
+# The version in use, in that menu.
+series-version-in-use = { $name } en uso
+
+# Make another group the one used for this series.
+series-prefer-version = Preferir { $name } para esta serie
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = Descargado
+
+# A chapter waiting to download.
+chapter-state-queued = En cola
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = En cola · espera Wi-Fi
+
+# A chapter downloading.
+chapter-state-downloading = Descargando · { $done } de { $total } páginas
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = No se pudo descargar. { $reason }
+
+# A part-read chapter.
+chapter-state-page-of = Página { $page } de { $of }
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = Página { $page }
+
+# A read chapter.
+chapter-state-read = Leído
+
+# A chapter that came out since you last looked.
+chapter-state-new = Nuevo
+
+# Button: stop a chapter's download.
+chapter-download-stop = Detener descarga
+
+# Button: try a failed chapter's download again.
+chapter-retry = Reintentar
+
+# Chapter menu item.
+chapter-download-delete = Eliminar descarga
+
+# Download menu item.
+download-next = Los próximos { $n } sin leer
+
+# Download menu item.
+download-unread = Todos los capítulos sin leer
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+        [one] { $volume } · 1 capítulo
+        [many] { $volume } · { $n } capítulos
+       *[other] { $volume } · { $n } capítulos
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = Elegir capítulos…
+
+# Download menu item.
+download-delete-series = Eliminar las descargas de esta serie
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+        [one] Descargar 1 capítulo
+        [many] Descargar { $n } capítulos
+       *[other] Descargar { $n } capítulos
+    }
+
+# Line above that button.
+download-over-wifi = Por Wi-Fi
+
+# Title of the question before reading a series again.
+read-again-title = ¿Leer { $title } de nuevo desde el inicio?
+
+# What happens on each side.
+read-again-line = Tu avance vuelve al capítulo 1 en todos tus dispositivos. Los capítulos siguen marcados como leídos en tus servicios de seguimiento, y AniList cuenta una relectura.
+
+# The confirming button.
+read-again-confirm = Leer de nuevo
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = Leer desde
+
+# While the sheet asks every source.
+series-read-from-asking = Consultando tus fuentes…
+
+# The sheet with no source that has the series.
+series-read-from-none-title = Ninguna fuente tiene esta serie
+
+# Line under it.
+series-read-from-none-line = Agrega una carpeta, un servidor o una tienda de complementos en Tus fuentes.
+
+# A source's chapters, first on its line.
+series-read-from-chapters = Capítulos 1 a { $latest }
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = capítulos 1 a { $latest }
+
+# After a folder's chapters.
+series-read-from-on-device = en este { $device }
+
+# Footnote of the Read from sheet.
+series-read-from-note = Las marcas de lectura pertenecen a la serie, así que se conservan al cambiar. Las descargas de la fuente anterior se quedan hasta que las elimines.
+
+# Heading for trackers that don't track this series.
+series-not-tracked = Sin seguimiento aquí
+
+# A tracker that isn't connected.
+series-tracker-connect = Conéctate en Ajustes para seguir esta serie
+
+# A tracker that has no such series.
+series-tracker-not-there = Sin coincidencia en este servicio de seguimiento
+
+# A tracker looking for the series.
+series-tracker-looking = Buscando esta serie…
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = Tiene el capítulo { $has }. Pasa al { $gets } en la próxima sincronización.
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = Tiene el capítulo { $has }, más adelante que Kaeri.
+
+# A tracker's score out of ten.
+series-tracker-score = { $score } / 10
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = Mantener el avance de Kaeri
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = Usar el avance de { $tracker }
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = Ninguna de estas
+
+# AniList's list.
+read-list-reading = Leyendo
+
+# AniList's list.
+read-list-planning = Pendiente
+
+# AniList's list.
+read-list-completed = Completado
+
+# AniList's list.
+read-list-paused = En pausa
+
+# AniList's list.
+read-list-dropped = Abandonado
+
+# AniList's list.
+read-list-rereading = Releyendo
+
+# Series in folders and servers that are on no list.
+read-list-your-files = Tus archivos
+
+# A choice.
+medium-watch = Ver
+
+# A choice.
+medium-read = Leer
+
+# A choice.
+medium-both = Ambos
+
+# Line under the Watch choice.
+medium-watch-line = Series y películas de tus fuentes
+
+# Line under the Read choice.
+medium-read-line = Manga, webtoons y novelas ligeras de tus fuentes
+
+# Line under the Both choice.
+medium-both-line = Ver y leer, cada uno en su propio lugar
+
+# The answer, as the Settings row says it.
+medium-answer-watch = Viendo
+
+# The answer, as the Settings row says it.
+medium-answer-read = Leyendo
+
+# The answer, as the Settings row says it.
+medium-answer-both = Viendo y leyendo
+
+# Title of the sheet and the toolbar button.
+sources-add-title = Agregar una fuente
+
+# Line in the Add a source sheet.
+book-add-line = Libros que ya tienes, o complementos de una tienda cuyo propietario te invitó.
+
+# A kind in the Add a source sheet.
+book-add-folder = Una carpeta
+
+# Line under it.
+book-add-folder-line = CBZ, EPUB, PDF y carpetas de imágenes en este { $device } o en una unidad
+
+# A kind in the Add a source sheet.
+book-add-server = Un servidor
+
+# Line under it.
+book-add-server-line = Komga, Kavita o un catálogo OPDS en el que puedas iniciar sesión
+
+# A kind in the Add a source sheet.
+book-add-store = Una tienda de complementos
+
+# Line under it.
+book-add-store-line = Pega una invitación del propietario de la tienda
+
+# Title of the Add a server sheet.
+book-add-server-title = Agregar un servidor
+
+# The sheet's amber button.
+book-add-server-button = Agregar servidor
+
+# What the address answered, before the sign-in.
+sources-found-server = Se encontró un servidor { $kind }
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] Se encontró un servidor { $kind } con 1 serie
+        [many] Se encontró un servidor { $kind } con { $n } series
+       *[other] Se encontró un servidor { $kind } con { $n } series
+    }
+
+# While the address is tried.
+book-server-looking = Revisando esta dirección…
+
+# Line under the password.
+book-server-note = Kaeri envía tu progreso de lectura a este servidor. La contraseña se queda en el Llavero.
+
+# Heading in Your sources.
+book-sources-folders = Carpetas
+
+# Heading in Your sources.
+book-sources-servers = Servidores
+
+# Heading in Your sources.
+book-sources-plugins = Complementos
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = Los Complementos vienen de las tiendas de complementos a las que te unes.
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+        [one] 1 serie
+        [many] { $n } series
+       *[other] { $n } series
+    }
+
+# A folder being looked through.
+book-sources-scanning = Revisando · { $n } encontradas
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = No se encontró. ¿La unidad está conectada?
+
+# A source that is turned off.
+book-sources-off = Desactivado
+
+# On a server's line.
+book-sources-progress-back = el progreso vuelve al servidor
+
+# A server's kind.
+book-sources-opds = Catálogo OPDS
+
+# A plugin's store.
+book-sources-from-store = De { $store }
+
+# A plugin's version.
+book-sources-version = versión { $version }
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = Revisar coincidencias · { $n }
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = Revisar coincidencias
+
+# A folder menu item: look through the folders again.
+book-sources-scan = Revisar de nuevo
+
+# A server menu switch.
+book-sources-report-progress = Enviar el progreso al servidor
+
+# A server menu switch.
+book-sources-use = Usar este servidor
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = Esta dirección responde, pero no como servidor de libros.
+
+# A folder name with no match.
+book-sources-no-match = Sin coincidencia
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = Dejar sin coincidencia
+
+# Button: search for the match by hand.
+book-sources-find = Buscar
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = Las series sin coincidencia se siguen leyendo desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que haya coincidencia.
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = Series o Lectura
+
+# A side of that control.
+library-scope-shows = Series
+
+# A side of that control.
+library-scope-reading = Lectura
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = Leído hace poco
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+        [one] { $list }, 1 serie
+        [many] { $list }, { $n } series
+       *[other] { $list }, { $n } series
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = Aún no hay nada en { $list }
+
+# Line under it.
+read-library-empty-line = Las series que agregues desde Buscar o desde la página de una serie aparecen aquí.
+
+# Your files with nothing in it.
+read-library-files-empty-title = Aún no hay nada en tus archivos
+
+# Line under it.
+read-library-files-empty-line = Las series de tus carpetas y servidores que no están en ninguna lista aparecen aquí.
+
+# The button under it.
+read-library-files-add = Agregar una carpeta o un servidor
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = Buscar lectura
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+        [one] 1 coincidencia en { $scope }
+        [many] { $n } coincidencias en { $scope }
+       *[other] { $n } coincidencias en { $scope }
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = Mostrarlas
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = { $what } · de AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] 1 serie de AniList
+        [many] { $n } series de AniList
+       *[other] { $n } series de AniList
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = No se pudo buscar
+
+# No results for what was typed.
+read-search-nothing = No se encontró nada para { $query }
+
+# No results while browsing with filters.
+read-search-nothing-browse = Nada coincide con estos filtros
+
+# Line under no results.
+read-search-nothing-line = Prueba con otras palabras o con un título en otro idioma.
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = Con menos filtros quizá encuentres más.
+
+# The button under it.
+read-search-clear-filters = Quitar filtros
+
+# A sort of reading's Search, AniList's.
+read-sort-popular = Popular
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = Tendencias
+
+# A sort of reading's Search, AniList's.
+read-sort-score = Puntuación
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = Más recientes
+
+# A filter.
+read-filter-format = Formato
+
+# A filter.
+read-filter-origin = Origen
+
+# A filter.
+read-filter-status = Estado
+
+# A filter.
+read-filter-genres = Géneros
+
+# Title of the iPhone's filters sheet.
+read-filter-title = Filtros
+
+# Button in that sheet that clears every filter.
+read-filter-reset = Restablecer
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = Cualquiera
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = { $name }:
+
+# A filter with several values: the first, then how many more.
+read-filter-many = { $first } y { $more } más
+
+# A genre left out.
+read-filter-not-genre = Sin { $genre }
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+        [one] 1 género
+        [many] { $n } géneros
+       *[other] { $n } géneros
+    }
+
+# A genre's state: only series with it.
+read-filter-included = Incluido
+
+# A genre's state: no series with it.
+read-filter-left-out = Excluido
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = { $step } de { $total }
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = Lleva el registro de lo que ves y lees, desde tus propias fuentes.
+
+# Note under the welcome line.
+onboarding-welcome-note = Tus listas y tu progreso se quedan en tus dispositivos. Agregar servicios de seguimiento y fuentes depende de ti.
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = ¿Ver, leer o ambos?
+
+# Line under the title of the medium page.
+onboarding-medium-line = Kaeri solo muestra lo que elijas. Puedes cambiarlo en Ajustes.
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = Primero elige una de las tres opciones
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = Trae tus listas
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = Kaeri mantiene lo que ves al día con { $tracker }.
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = Kaeri mantiene lo que lees al día con { $tracker }.
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = Kaeri mantiene lo que lees y ves al día con { $tracker }.
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = Listas, progreso y sugerencias
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = Puedes agregar MyAnimeList, Kitsu, Simkl y Trakt más tarde en Ajustes, en Cuentas.
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = Puedes agregar MyAnimeList, Kitsu y MangaUpdates más tarde en Ajustes, en Cuentas.
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = Puedes agregar MyAnimeList, Kitsu, MangaUpdates, Simkl y Trakt más tarde en Ajustes, en Cuentas.
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = Conectar { $tracker }
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = De dónde vienen tus libros
+
+# Line under the title of the books page.
+onboarding-books-line = Kaeri no incluye libros. Agrega los que ya tienes o únete a una tienda de complementos con una invitación de su propietario.
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = Agregar una carpeta
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = CBZ, EPUB, PDF y carpetas de imágenes
+
+# Row on the books page: add a book server.
+onboarding-books-server = Agregar un servidor
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = Komga, Kavita o un catálogo OPDS
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = Invitación de la tienda de complementos
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = Pega una invitación
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = Los Complementos ejecutan código de personas en las que confías. Únete solo a tiendas de complementos cuyo propietario conozcas.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = De dónde vienen tus series y libros
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri no incluye series ni libros. Agrega los que ya tienes o únete a una tienda de complementos con una invitación de su propietario.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Series
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Libros
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Archivos de video en este { $device }
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Tu servidor Jellyfin
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = { $n } de { $total }
+
+# Under the choices in the sheet.
+medium-change-later = Puedes cambiarlo en Ajustes.
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = Kaeri ahora puede leer manga, webtoons y novelas ligeras de tus fuentes. Elige para qué sirve Kaeri en este { $device }.
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+        [one] { $devices } está configurado para ver
+        [many] { $devices } están configurados para ver
+       *[other] { $devices } están configurados para ver
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+        [one] { $devices } está configurado para leer
+        [many] { $devices } están configurados para leer
+       *[other] { $devices } están configurados para leer
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+        [one] { $devices } está configurado para ver y leer
+        [many] { $devices } están configurados para ver y leer
+       *[other] { $devices } están configurados para ver y leer
+    }
+
+# Line of the sheet on joining.
+medium-join-line = Elige para qué sirve Kaeri en este { $device }. Cada dispositivo guarda su propia respuesta.
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = ¿Desactivar el ver?
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = ¿Desactivar la lectura?
+
+# What turning watching off does.
+medium-off-watch-body = Calendario, De temporada, Ver juntos y tus series salen de Kaeri en este { $device }. Tu lista, tu progreso y tus descargas se quedan, y vuelven si activas de nuevo el ver.
+
+# What turning reading off does.
+medium-off-read-body = Novedades y tu lectura salen de Kaeri en este { $device }. Tu lista, tu progreso y tus descargas se quedan, y vuelven si activas de nuevo la lectura.
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = Eliminar los episodios descargados
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = Eliminar los capítulos descargados
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = { $size } en este { $device }
+
+# The confirmation's main button.
+medium-off-confirm-watch = Desactivar el ver
+
+# The confirmation's main button.
+medium-off-confirm-read = Desactivar la lectura
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = Kaeri sirve para
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = Cada dispositivo guarda su propia respuesta
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = Cada dispositivo guarda su propia respuesta. Al desactivar una, se conservan su lista, su progreso y sus descargas.
+
+# Line under Open at.
+settings-open-at-note = En qué Inicio arranca Kaeri
+
+# Settings pane and group: reading.
+settings-group-reading = Lectura
+
+# Downloads group with both media on: shows.
+settings-group-shows = Series
+
+# The Reading pane's column beside it.
+settings-aside-reading = Los valores del lector son el punto de partida de cada serie. Una serie que cambies en el lector conserva sus propias opciones.
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = Valores del lector
+
+# Under the reader defaults.
+settings-reader-defaults-footer = Una serie que cambies conserva su propio modo, dirección y aspecto.
+
+# Row: manga's reader default.
+settings-reader-manga = Manga
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = Webtoons
+
+# Line under Webtoons.
+settings-reader-webtoons-note = Los webtoons siempre se abren como una tira larga
+
+# Row: light novels' reader default.
+settings-reader-novels = Novelas ligeras
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = Páginas, de derecha a izquierda
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = Páginas, de izquierda a derecha
+
+# A reader default: one long strip.
+settings-reader-strip = Tira larga
+
+# A reader default for novels: pages.
+settings-reader-pages = Páginas
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = Desplazamiento
+
+# Row: when a chapter counts as read.
+settings-counts-read = Cuenta como leído
+
+# Line under Counts as read.
+settings-counts-read-note = Una breve pausa en la última página, o pasar al capítulo que sigue
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = Tras la última página
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = Al avanzar
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = Pasar la última página o abrir el capítulo que sigue
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = Cuando lo marcas
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = Continuar viendo y tus servicios de seguimiento siguen tus marcas
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = Ajustes de serie que te siguen
+
+# Row in that group.
+settings-follow-mode = Modo, dirección y color
+
+# Line under that row.
+settings-follow-mode-note = Una serie que cambies se lee igual en tus otros dispositivos
+
+# Under the group: what stays on this device.
+settings-follow-footer = El tamaño del texto, los márgenes, las zonas de toque y la actualización se quedan en este { $device }.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Color o grises
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Series de Leyendo
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = Una serie que lees también mantiene listos sus próximos capítulos
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Progreso
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = Se lee un capítulo
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Al cerrar el lector
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Conservar el más avanzado
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = El cambio más reciente
+
+# Line under When trackers disagree.
+settings-disagree-note = El estado y la puntuación siguen el cambio más reciente
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = Los próximos capítulos de las series de tu lista Leyendo
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = Los capítulos con marcador se conservan
+
+# Line under New chapters.
+settings-chapter-notifications-note = Series de tu lista Leyendo
+
+# Line under Downloads finished.
+settings-downloads-finished-note = Cuando terminan todos los capítulos en descarga
+
+# Under New chapters.
+settings-chapter-notifications-footer = Los capítulos tienen su propio canal del sistema, así que se pueden silenciar por separado.
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = MangaUpdates se usa a través de su API pública.
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = Nombre de usuario
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+        [one] { $n } capítulo · { $size }
+        [many] { $n } capítulos · { $size }
+       *[other] { $n } capítulos · { $size }
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = { $chapter } · { $done } de { $total } páginas
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = { $n } más en cola
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+        [one] { $n } capítulo en cola
+        [many] { $n } capítulos en cola
+       *[other] { $n } capítulos en cola
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = No se pudo descargar { $chapter }. { $reason }
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+        [one] { $n } capítulo
+        [many] { $n } capítulos
+       *[other] { $n } capítulos
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = { $n } leídos
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = Eliminar leídos
 
 # Button that shows the season before.
 seasonal-previous = Temporada anterior
@@ -8577,6 +10332,42 @@ settings-wifi-only-detail = Las descargas esperan a Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Torrents con datos móviles
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Descargar capítulos con datos móviles
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Mantener listos los próximos capítulos
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Borrar capítulos al leerlos
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Los ajustes de cada serie te siguen
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = Capítulos nuevos
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Modo y dirección
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Aspecto
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Enviar el progreso después de
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = Cuando servicios de seguimiento no coinciden
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = Capítulos nuevos
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Descargas terminadas
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Abrir en
+
 # Row: seeding after watching.
 settings-seed-after = Compartir después de ver
 
@@ -8636,6 +10427,9 @@ settings-artwork-detail = Atribución en los avisos de la app
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Nuevos episodios
+
+# Line under it.
+settings-new-episodes-detail = Aparece en tu lista Viendo
 
 # Line explaining what a notification says.
 settings-notify-detail = Un aviso cuando sale un episodio de una serie que sigues: el nombre de la serie y el número del episodio, nunca el título del episodio. Una serie puede desactivarlo en sus ajustes.
@@ -8810,6 +10604,12 @@ settings-upscaling-sharp = Nítido · Anime4K
 # Side note in Accounts.
 settings-aside-accounts = Kaeri funciona sin cuenta. Tu historial se queda en este dispositivo al cerrar sesión.
 
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri funciona sin cuenta. Tu historial de lectura se queda en este dispositivo cuando cierras sesión.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri funciona sin cuenta. Tu historial de reproducción y lectura se queda en este dispositivo cuando cierras sesión.
+
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = hoy
 
@@ -8965,6 +10765,253 @@ settings-subs-styled-strip-detail = Cada línea se muestra como diálogo simple 
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Restablecer estilo de subtítulos
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Compartir en esta red
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Contraseña del catálogo
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Puerto del catálogo
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Dirección
+
+# Note under the empty address field.
+book-server-address-hint = Una dirección, o el enlace OPDS completo de Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Este es un enlace OPDS de Kavita. Su clave inicia tu sesión, así que no hace falta contraseña.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri guarda la clave en { $store } y solo muestra sus últimos cuatro caracteres.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Clave ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Se encontraron { $series } series
+        [many] Se encontraron { $series } series en { $libraries } de bibliotecas
+       *[other] Se encontraron { $series } series en { $libraries } bibliotecas
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } en { $host }. Elige las bibliotecas que quieres agregar.
+
+# A library row's line in the result.
+book-server-library-line = { $series } series
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Enviar el progreso al servidor
+
+# Line under the switch.
+book-server-sync-progress-line = Las páginas que leas aquí vuelven a { $host }, y su progreso llega aquí.
+
+# Field label.
+book-server-username = Usuario
+
+# Field label.
+book-server-password = Contraseña
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = No se pudo conectar con { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Revisa la dirección y que el servidor esté encendido y en esta red.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } no aceptó esa contraseña
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Usa el usuario y la contraseña que usas para { $kind } en un navegador.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } no aceptó esa clave
+
+# Line under it.
+book-server-err-key-line = La clave cambia cuando se restablece en Kavita. Copia de nuevo el enlace OPDS desde los ajustes de tu cuenta allí.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } no muestra series para esta cuenta
+
+# Line under it.
+book-server-empty-line = Te deja entrar, pero puede que el servidor siga escaneando, o que esta cuenta no tenga acceso a sus libros.
+
+# Note under it.
+book-server-empty-recheck = Puedes agregarlo ahora. Kaeri vuelve a revisar cada 30 minutos.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri lee catálogos de Komga, Kavita y OPDS.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Se encontraron { $series } series en un archivo
+        [many] Se encontraron { $series } series en { $files } de archivos
+       *[other] Se encontraron { $series } series en { $files } archivos
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri identificó { $matched } de ellas por sus datos.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] Un archivo que Kaeri no puede abrir
+        [many] { $count } de archivos que Kaeri no puede abrir
+       *[other] { $count } archivos que Kaeri no puede abrir
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Se quedan en la carpeta tal como están.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB bloqueados con DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri abre archivos CBZ, CBR, EPUB y PDF, y carpetas de imágenes.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Mostrar archivos
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Agregar carpeta
+
+# Folder row action that picks another folder.
+book-folder-change = Cambiar
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = No hay nada en { $folder } que Kaeri pueda abrir
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] Tiene un archivo, que no es CBZ, CBR, EPUB, PDF ni una imagen.
+        [many] Tiene { $files } de archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.
+       *[other] Tiene { $files } archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Elegir otra carpeta
+
+# Title of the Join a plugin store sheet.
+store-join-title = Unirse a una tienda de complementos
+
+# Label of the invite field.
+store-invite-field = Invitación
+
+# Result title once a plugin store is joined.
+store-joined-title = Te uniste a { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } ofrece un complemento. Unirte no instala nada; instálalo aquí o más tarde.
+        [many] { $owner } ofrece { $count } de complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.
+       *[other] { $owner } ofrece { $count } complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Para leer
+
+# Group header in the joined store's list.
+store-group-watching = Para ver
+
+# Row action.
+store-install = Instalar
+
+# Row state once installed.
+store-installed-row = Instalado
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Instalar todos para leer
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Se instaló un complemento. Está en Tus fuentes.
+        [many] Se instalaron { $count } de complementos. Están en Tus fuentes.
+       *[other] Se instalaron { $count } complementos. Están en Tus fuentes.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Cada complemento de { $store } es para ver
+
+# Line under it.
+store-other-medium-line = La opción de ver está desactivada en este dispositivo, así que ninguno aparece en Tus fuentes.
+
+# Secondary action under it.
+store-turn-on-watching = Activar la opción de ver
+
+# Info title when a store has no plugins.
+store-empty = { $store } aún no tiene complementos
+
+# Line under it.
+store-empty-line = Eres miembro, así que los nuevos complementos aparecen en Tiendas de complementos cuando { $owner } los agrega.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = No se pudo conectar con { $host }
+
+# Line under it.
+store-err-unreachable-line = La invitación parece correcta, pero la tienda no responde. Inténtalo más tarde o pregunta a { $owner } si está en marcha.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Otro es para ver, y eso está desactivado en este dispositivo.
+        [many] Otros { $count } de son para ver, y eso está desactivado en este dispositivo.
+       *[other] Otros { $count } son para ver, y eso está desactivado en este dispositivo.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Otro es para leer, algo que esta TV no hace.
+        [many] Otros { $count } de son para leer, algo que esta TV no hace.
+       *[other] Otros { $count } son para leer, algo que esta TV no hace.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Cada complemento de { $store } es para leer, algo que esta TV no hace.
+
+# Plugin row in an invite's result.
+store-plugin-row = Versión { $version } · puede contactar a { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = Se agregó { $name } · { $series } series
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Se instaló un complemento de { $store }
+        [many] Se instalaron { $count } de complementos de { $store }
+       *[other] Se instalaron { $count } complementos de { $store }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $series } series · agregado ahora mismo
+        [many] { $kind } · { $series } series en { $libraries } de bibliotecas · agregado ahora mismo
+       *[other] { $kind } · { $series } series en { $libraries } bibliotecas · agregado ahora mismo
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · aún sin series · vuelve a revisar en 30 minutos
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } series · un archivo omitido
+        [many] { $path } · { $series } series · { $skipped } de archivos omitidos
+       *[other] { $path } · { $series } series · { $skipped } archivos omitidos
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = De { $store } · { $medium } · versión { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Fuentes
@@ -9911,6 +11958,9 @@ cloud-browser-line = Tu navegador abrió la página de { $service }. Permite el 
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Inicia sesión en { $service } en tu navegador
+
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = Puedes cerrar esto. Kaeri continúa por su cuenta y abre el paso que sigue cuando esté listo.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = computadora
@@ -11027,6 +13077,9 @@ opened-paste-placeholder = Enlace magnet o info hash
 # Button: choose a torrent file from the device.
 opened-choose-file = Elegir un archivo torrent
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri no pudo leer ese enlace o archivo.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = ¿Es { $title }, episodio { $episode }?
 
@@ -11077,6 +13130,27 @@ accounts-welcome-detail = Inicia sesión en { $tracker } para sincronizar tu lis
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Trae tus listas y llena Continuar viendo con lo que estás viendo.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Trae tus listas y llena Continuar viendo con lo que estás leyendo.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Trae tus listas y llena Continuar viendo con lo que estás viendo y leyendo.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Listas y progreso
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Listas de lectura y progreso
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Series y lectura
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Lectura
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Series
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Biblioteca y la sincronización necesitan tu cuenta de { $tracker }

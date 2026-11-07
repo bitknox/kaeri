@@ -593,6 +593,10 @@ pub struct ReaderView {
     pub previous: Option<ChapterRow>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub settings: Option<ReaderSettingsView>,
+    /// A work of the reading demo: the reader shows its credit in a capsule, "Pepper&Carrot by
+    /// David Revoy. Licensed CC BY 4.0.", and its end says how to add your own books.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub demo_credit: Option<crate::sources::DemoWorkInfo>,
 }
 
 /// How a text's lines run.
@@ -935,6 +939,18 @@ pub enum ReaderEvent {
         /// The trackers the read was queued for, by name.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         trackers: Vec<String>,
+    },
+    /// What became of a read chapter's progress sent to the book server it came from, for the
+    /// line on the page between chapters. Sent once per chapter read, as soon as it is known;
+    /// none comes for a chapter from no book server.
+    ProgressSent {
+        work: WorkId,
+        chapter: ChapterId,
+        /// The server's id, as Your sources lists it.
+        server: String,
+        /// The server's host, as the line names it: "Saved to books.home.example".
+        host: String,
+        result: crate::book_sources::WriteBackResult,
     },
     /// The last leaf is showing: what the end page names next.
     EndPage {

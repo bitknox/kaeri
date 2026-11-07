@@ -45,3 +45,4 @@ search-result-in-library = { -library-cap } içinde
 search-result-on-server = { $server } üzerinde
 search-result-on-service = { $service } üzerinde
 match-choice-line = { $parts } · %{ $percent } eşleşme
+search-rate-limit-enter = AniList'in sınırları içinde kalmak için yazarken arama kısa süre duraklatıldı. Hemen aramak için Enter'a basın.

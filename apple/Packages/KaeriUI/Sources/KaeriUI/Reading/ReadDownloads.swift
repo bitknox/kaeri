@@ -66,6 +66,7 @@ struct BookDownloadSeriesRow: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let series: BookDownloadSeries
+    @State private var sending: SendRequest?
 
     var body: some View {
         HStack(spacing: 14) {
@@ -121,8 +122,25 @@ struct BookDownloadSeriesRow: View {
         .onTapGesture { navigator.openSeries(series.work) }
         // Download rows carry no cover; the series' details bring it.
         .task(id: series.work) { if series.cover == nil, cover == nil { store.reading.loadSeriesInfo(series.work) } }
+        .contextMenu {
+            if !kept.isEmpty {
+                Button(L.sendTitle) { sending = SendRequest(work: series.work, chapters: kept) }
+            }
+        }
+        .sheet(item: $sending) { SendSheet(request: $0) }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L.homeDetails) { navigator.openSeries(series.work) }
+        .accessibilityAction(named: L.sendTitle) {
+            if !kept.isEmpty { sending = SendRequest(work: series.work, chapters: kept) }
+        }
+    }
+
+    /// The series' chapters that are downloaded: what Send to e-reader works from here.
+    private var kept: [String] {
+        (store.reading.downloads?.rows ?? []).compactMap { row in
+            guard row.work == series.work, case .done = row.state else { return nil }
+            return row.chapter.id
+        }
     }
 
     /// The cover from the series' details, else from a list holding it.

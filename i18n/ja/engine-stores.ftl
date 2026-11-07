@@ -53,6 +53,7 @@ plugin-duplicate-file = { $path }にはすでに{ $plugin }が宣言されてい
 plugin-install-failed = { $plugin }をインストールできませんでした。{ $reason }
 plugin-publish-failed = { $plugin }を公開できませんでした。{ $reason }
 plugin-missing-locally = { $plugin }は{ -plugin }フォルダーにもうありません。
+store-takes-no-books = { $store }はまだ本の{ -source-pl }を掲載できません。管理者が{ -plugin-store }を更新すると追加できます。
 store-invite-needs-link = この{ -device }は、リンクで{ $store }に参加しています。もう一方の{ -device }には、同じリンクを貼り付けてください。
 store-link-malformed = { -plugin-store }から送られたリンクが正しく動作しません。所有者に{ -plugin-store }を確認してもらってください。{ $reason }
 store-link-wrong-key = { -plugin-store }が別の鍵でリンクを作成しました。リンクを開いたときのアドレスを確認してください。

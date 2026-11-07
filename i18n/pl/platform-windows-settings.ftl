@@ -46,3 +46,18 @@ torrents-dialog-edit-proxy = Edytuj proxy
 settings-note-trailers-windows = Zwiastuny są odtwarzane bez dźwięku z YouTube, który widzi adres IP. Nie odtwarzają się przy połączeniu z limitem danych, przy wyłączonych animacjach, w trybie oszczędzania energii ani przy włączonym Narratorze.
 settings-note-cast-tvs-pc = Pojawiają się w Chromecast w sekcji Odtwórz w telewizorze. Ten komputer wysyła im odcinek.
 settings-note-torrents-while-casting-pc = Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten komputer wysyła odcinek, dopóki trwa odtwarzanie.
+settings-language-restart = Uruchom ponownie
+settings-differences = { $count ->
+    [one] Jeden tytuł różni się od: { $tracker }
+    [few] { $count } tytuły różnią się od: { $tracker }
+    [many] { $count } tytułów różni się od: { $tracker }
+   *[other] { $count } tytułu różni się od: { $tracker }
+ }
+settings-differences-review = Przejrzyj
+settings-search = Szukaj w ustawieniach
+settings-quality-detail-windows = Wyższa jakość oznacza najlepszą wersję, jaką oferuje { -source }, i więcej miejsca.
+settings-merge-subtitles-detail-windows = Napisy zostają przy odcinku, gdziekolwiek trafi plik.
+settings-keep-seeding-detail-windows = Pobieranie, które nadal seeduje, zostaje w pamięci podręcznej aplikacji { -app-name }, a nie w folderze pobierania.
+settings-discussions-note-windows = Wczytuje komentarze z wątku na forum AniList dla obejrzanych odcinków.
+settings-comment-images-note-windows = Każdy obraz wczytuje się z witryny, która go hostuje, i ta widzi twój adres IP.
+settings-folder-browse = Przeglądaj…

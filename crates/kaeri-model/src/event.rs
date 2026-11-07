@@ -693,6 +693,11 @@ pub enum Event {
         name: String,
         problem: crate::group::SyncStoreProblem,
     },
+    /// What a paired device's setup brought, for the first run: see
+    /// `SyncCommand::AskSetupFrom`.
+    SetupFrom(crate::group::JoinedSetup),
+    /// What came in after adding a store, a book server or a folder, or why nothing did.
+    CameIn(crate::came_in::CameIn),
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

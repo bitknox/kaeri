@@ -411,6 +411,11 @@ impl Engine {
             account.as_ref().map(|(answer, writer)| (answer.as_str(), writer.clone())),
             new_install,
         );
+        services.syncing.set_medium(state.reading.answer());
+        // The reading demo sits beside the watching demo, under the same switch.
+        if state.reading.available && state.config.effective().sources.demo {
+            services.book_sources.put_demo();
+        }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]
@@ -520,6 +525,16 @@ impl Engine {
                 services.meta.anilist().clone(),
                 inbox.sender(),
             );
+            if state.reading.available {
+                // Servers that showed no series are looked at again every half hour.
+                let clock = services.clock.clone();
+                crate::read_sources::spawn_rechecks(
+                    services.book_sources.clone(),
+                    services.meta.anilist().clone(),
+                    inbox.sender(),
+                    move || clock.now(),
+                );
+            }
             // What waits for AniSkip from the last run, as the tracker queues are sent.
             if state.config.effective().playback.share_skip_times == Some(true) {
                 crate::aniskip::Sharing::shared()
@@ -3737,7 +3752,7 @@ mod tests {
             assert!(seen.iter().any(|e| matches!(e, Event::JobStarted { .. })));
             assert!(seen.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportProgress { total: 4, .. })
+                Event::Reading(ReadingEvent::ExportProgress { total: 4, chapters: 2, .. })
             )));
             let files = seen
                 .iter()
@@ -3778,7 +3793,11 @@ mod tests {
             );
             assert!(!all.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )));
             assert!(!dir.path().join("data/exports").join(job.get().to_string()).exists());
 
@@ -3967,7 +3986,9 @@ mod tests {
                 matches!(
                     e,
                     Event::Reading(
-                        ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. }
+                        ReadingEvent::ExportReady { .. }
+                            | ReadingEvent::ExportFailed { .. }
+                            | ReadingEvent::Failed { .. }
                     )
                 )
             })
@@ -3992,7 +4013,7 @@ mod tests {
             // Progress covered the fetching and the preparing on one scale.
             assert!(seen.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportProgress { total: 200, .. })
+                Event::Reading(ReadingEvent::ExportProgress { total: 200, chapters: 2, .. })
             )));
             // The fetched chapter is not a download, and no file of it is left.
             let rows = store.book_downloads(Some(WORK)).unwrap();
@@ -4026,7 +4047,11 @@ mod tests {
             );
             assert!(!all.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )));
             let rows = store.book_downloads(Some(WORK)).unwrap();
             assert_eq!(rows.len(), 1, "a send adds no downloads");
@@ -4110,7 +4135,11 @@ mod tests {
         fn send_ended(e: &Event) -> bool {
             matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )
         }
 
@@ -4306,10 +4335,11 @@ mod tests {
                 seen.iter().any(|e| {
                     matches!(
                         e,
-                        Event::Reading(ReadingEvent::Failed {
+                        Event::Reading(ReadingEvent::ExportFailed {
+                            job,
+                            chapter: Some(_),
                             failure: ReadingFailure::Offline,
-                            ..
-                        })
+                        }) if job.get() != 0
                     )
                 })
             };

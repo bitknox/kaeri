@@ -244,6 +244,16 @@ pub async fn sign_in(
     })
 }
 
+/// How many series the catalogue lists now, read again from its root.
+pub async fn count(
+    client: &reqwest::Client,
+    address: &str,
+    auth: &Auth,
+) -> Result<Option<u32>> {
+    let (feed, _) = probe(client, address, auth.clone()).await?;
+    Ok(count_series(client, address, auth, &feed).await)
+}
+
 async fn count_series(
     client: &reqwest::Client,
     address: &str,

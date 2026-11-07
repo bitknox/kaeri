@@ -195,7 +195,7 @@ pub fn forget_all(ctx: &Ctx) {
 }
 
 /// The addresses of the stores this device is a member of.
-fn joined(ctx: &Ctx) -> Vec<String> {
+pub(crate) fn joined(ctx: &Ctx) -> Vec<String> {
     ctx.stores.rows().unwrap_or_default().into_iter().map(|row| row.url).collect()
 }
 

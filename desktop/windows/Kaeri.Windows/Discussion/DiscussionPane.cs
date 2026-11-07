@@ -161,7 +161,7 @@ sealed class DiscussionPane : Grid
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var words = new StackPanel();
-        var title = new TextBlock { Text = T.DiscussionTitleEpisode(episode), FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
+        var title = new TextBlock { Text = T.DiscussionTitleEpisode(episode), Style = Ui.Res<Style>("SectionTitleStyle"), TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         words.Children.Add(title);
         words.Children.Add(count);

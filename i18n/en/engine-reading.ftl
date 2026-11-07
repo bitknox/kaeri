@@ -164,6 +164,33 @@ reading-failed-off = Reading isn't available in this version of { -app-name }.
 # @arg reason: text
 reading-failed-other = Something went wrong. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or
+# its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown
+# with Try again.
+# @arg file: text
+# @arg target: text
+# @arg size: bytes
+# @arg limit: bytes
+reading-failed-send-too-large = { $file } is { $size }, and { $target } takes files up to { $limit }. Send fewer chapters at a time and try again.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri
+# made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-missing = { $file } is missing { $part }, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or
+# use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-encoding = { $part } in { $file } has the wrong text encoding, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as
+# the book format requires. Part is a path inside the file. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-malformed = { $part } in { $file } isn't valid, so it wasn't sent. Try again.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 # @max 16
 reading-kind-manga = Manga
@@ -297,22 +324,54 @@ reading-part-percent = Part { $part } · { $percent }%
 # @max 32
 reading-part-new = Part { $part } is new
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part
+# named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+# @arg label: text
+# @arg percent: int
+# @max 40
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the
+# source's own words ("Part 4", "Chapter 4").
+# @arg label: text
+# @max 40
+reading-label-new = { $label } is new
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 # @arg part: text
 # @arg title: text
 # @max 40
 reading-part-titled = Part { $part } · { $title }
 
+# Under a This week cell: a light novel's part that came out that day, with its own title, the
+# part named in the source's own words ("Part 4", "Chapter 4").
+# @arg label: text
+# @arg title: text
+# @max 40
+reading-label-titled = { $label } · { $title }
+
 # Under the big picture on reading's Home: a light novel's part that came out today.
 # @arg part: text
 # @max 40
 reading-part-out-today = Part { $part } is out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the
+# source's own words ("Part 4", "Chapter 4").
+# @arg label: text
+# @max 40
+reading-label-out-today = { $label } is out today
 
 # Under the big picture on reading's Home: a light novel's part that came out today, with its
 # title.
 # @arg part: text
 # @arg title: text
 reading-part-out-today-titled = Part { $part }, { $title }, out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its
+# title, the part named in the source's own words ("Part 4", "Chapter 4").
+# @arg label: text
+# @arg title: text
+reading-label-out-today-titled = { $label }, { $title }, out today
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 # @arg chapter: text
@@ -325,6 +384,13 @@ reading-chapter-of = Chapter { $chapter } of { $of }
 # @arg part: text
 # @max 32
 reading-volume-part = Volume { $volume }, part { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the
+# source's own words ("Part 5", "Chapter 5").
+# @arg volume: text
+# @arg label: text
+# @max 40
+reading-volume-label = Volume { $volume }, { $label }
 
 # A search filter: books from Japan.
 # @max 16
@@ -397,6 +463,11 @@ reading-row-new = New
 # @max 20
 reading-row-downloaded = Downloaded
 
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It
+# still opens from the download.
+# @max 28
+reading-row-gone-from-source = Gone from the { -source }
+
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 # @max 20
 reading-row-not-downloaded = Not downloaded
@@ -438,6 +509,15 @@ reading-row-page = Page { $page }
 # @arg percent: int
 # @max 8
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+# @max 16
+reading-row-opened = Opened
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read
+# downloads are cleared.
+# @max 16
+reading-row-bookmarked = Bookmarked
 
 # A chapter row: how long its pages are, for a file on the device.
 # @arg n: int

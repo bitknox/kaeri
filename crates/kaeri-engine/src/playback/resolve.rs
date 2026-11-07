@@ -685,6 +685,17 @@ mod tests {
         episode: &str,
         sources: Vec<MockProvider>,
     ) -> Unplayable {
+        play(media, episode, sources).await.expect_err("the play fails")
+    }
+
+    /// What a play of `episode` of the cached title `media` comes to, against `sources`,
+    /// offline.
+    #[allow(clippy::result_large_err)]
+    async fn play(
+        media: serde_json::Value,
+        episode: &str,
+        sources: Vec<MockProvider>,
+    ) -> std::result::Result<Resolved, Unplayable> {
         let store = Store::open_in_memory().unwrap();
         store.cache_media(AnilistId::new(900_201), &media.to_string(), now_epoch()).unwrap();
         let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
@@ -692,7 +703,7 @@ mod tests {
         let registry =
             ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
         let playback = kaeri_core::config::PlaybackConfig::default();
-        let found = resolve_for_playback(
+        resolve_for_playback(
             &meta,
             &store,
             &registry,
@@ -703,8 +714,39 @@ mod tests {
             None,
             None,
         )
-        .await;
-        found.expect_err("the play fails")
+        .await
+    }
+
+    /// A source whose search finds `show`'s film, and `show` itself when `sure`, playing
+    /// `https://{id}.example/3.m3u8`.
+    fn searched(id: &str, sure: bool) -> MockProvider {
+        use kaeri_core::media::{MediaFormat, SearchHit};
+        let hit = |key: &str, title: &str, episodes, format| SearchHit {
+            episode_count: Some(episodes),
+            format: Some(format),
+            ..SearchHit::new(kaeri_core::ids::ProviderKey::new(format!("{id}-{key}")), title)
+        };
+        let mut hits =
+            vec![hit("film", "The Hidden Star: Beyond the Orbit", 1, MediaFormat::Movie)];
+        if sure {
+            hits.push(hit("show", "The Hidden Star", 12, MediaFormat::Tv));
+        }
+        let url = format!("https://{id}.example/3.m3u8");
+        MockProvider::new(id).with_hits(hits).with_streams(vec![
+            kaeri_core::stream::Stream::new(url, kaeri_core::stream::StreamKind::Hls),
+        ])
+    }
+
+    #[tokio::test]
+    async fn a_play_passes_over_a_source_that_cannot_choose_for_one_that_matches() {
+        let sources = vec![searched("drift", false), searched("shelf", true)];
+        let (streams, _) = play(show(false), "3", sources).await.expect("shelf plays it");
+        let urls: Vec<_> = streams.iter().map(|s| s.url.as_str()).collect();
+        assert_eq!(urls, ["https://shelf.example/3.m3u8"]);
+        // With no source sure of the title, nothing plays: the title has no match.
+        let sources = vec![searched("drift", false), searched("haze", false)];
+        let unmatched = failure(show(false), "3", sources).await;
+        assert_eq!(unmatched.why, NoSourceWhy::NotFound);
     }
 
     fn show(airing: bool) -> serde_json::Value {

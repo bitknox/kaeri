@@ -45,3 +45,4 @@ search-result-in-library = In deiner { -library }
 search-result-on-server = Auf { $server }
 search-result-on-service = Auf { $service }
 match-choice-line = { $parts } · { $percent } % Übereinstimmung
+search-rate-limit-enter = Die Suche beim Tippen pausiert kurz, um die Limits von AniList einzuhalten. Mit Enter suchst du sofort.

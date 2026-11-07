@@ -87,6 +87,7 @@ impl Command {
             Self::JoinStore { .. } => "joining the store".into(),
             Self::LeaveStore { .. } => "leaving the store".into(),
             Self::InstallPlugin { plugin, .. } => format!("installing {plugin}"),
+            Self::InstallAllForReading { .. } => "installing plugins".into(),
             Self::CreateInvite { .. } => "making an invite".into(),
             Self::LoadMembers { .. } => "loading members".into(),
             Self::RemoveMember { .. } => "removing access".into(),
@@ -871,6 +872,11 @@ pub enum Command {
     InstallPlugin {
         store: String,
         plugin: String,
+    },
+    /// Install every plugin for reading a store offers that is not installed yet: the joined
+    /// sheet's "Install all for reading". Answered with `Event::CameIn(Installed)`.
+    InstallAllForReading {
+        store: String,
     },
     /// Delete an installed plugin from this machine.
     RemovePlugin {

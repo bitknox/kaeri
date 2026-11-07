@@ -142,10 +142,18 @@ pub enum SeriesAction {
     /// "Continue chapter 41 · page 8". The page counts from 1, as every page the engine sends.
     Continue { chapter: ChapterId, label: String, page: u32 },
     /// A light novel's part, part read: "Continue part 3 · 34%", or "Continue part 3" when how
-    /// far is not known or rounds to nothing.
-    ContinuePart { chapter: ChapterId, label: String, percent: Option<u8> },
-    /// A light novel's part not opened yet: "Read part 3".
-    ReadPart { chapter: ChapterId, label: String },
+    /// far is not known or rounds to nothing. `named` is the source's own words for it, "Part 3"
+    /// or "Chapter 3", which the button says in place of "part 3" when the source has them, so
+    /// it names the part as its row does: "Continue Chapter 3 · 34%".
+    ContinuePart {
+        chapter: ChapterId,
+        label: String,
+        percent: Option<u8>,
+        named: Option<String>,
+    },
+    /// A light novel's part not opened yet: "Read part 3", or "Read Chapter 3" by the source's
+    /// own words when it has them.
+    ReadPart { chapter: ChapterId, label: String, named: Option<String> },
     /// Finished.
     ReadAgain,
     /// None of your sources has it.
@@ -230,6 +238,9 @@ pub struct ChapterRow {
     /// in Updates or in Downloads.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
+    /// Downloaded here, and the source no longer lists it. It still opens from the file.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub gone_from_source: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -709,6 +720,10 @@ pub struct DownloadEstimate {
     /// left to download.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
+    /// Every chosen chapter, the ones on this device by what they take here and the rest as
+    /// estimated: what a send to an e-reader of the same choice comes to.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub all_bytes: u64,
 }
 
 /// A chapter the background check found, for the chapters notification channel.
@@ -800,6 +815,12 @@ pub struct ExportTarget {
     /// The same for a novel.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub novel_formats: Vec<ExportFormat>,
+    /// Files over the device's limit are written in parts, near 195 MB each.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub split: bool,
+    /// The target last sent to on this device.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chosen: bool,
 }
 
 /// A prepared file, ready for the share sheet. Large exports come in parts near 195 MB.
@@ -828,6 +849,65 @@ pub struct FeedView {
     /// Books the feed serves.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub serving: u32,
+    /// The password e-readers ask for, for the pane to show and copy. It is a secret: its
+    /// debug form is redacted, and no front end writes it to a log.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub password: Option<crate::stores::Secret>,
+    /// What the feed can share, each with whether it does and how much is on that shelf.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub shares: Vec<FeedShare>,
+    /// The e-readers that fetched from the feed since it started, the latest first.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub clients: Vec<FeedClient>,
+    /// Why the feed is not listening although it is on, when it is not.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pause: Option<FeedPause>,
+}
+
+/// Why a feed that is on does not listen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FeedPause {
+    /// The Mac is on no local network.
+    NoNetwork,
+    /// The only route is a VPN, so the feed would be reachable from outside the home.
+    VpnOnly,
+}
+
+/// A shelf the feed may share.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FeedShelf {
+    /// The chapters downloaded on this computer.
+    Downloads,
+    /// The series in the manga and comic folders.
+    MangaFolders,
+    /// The series in the novel folders.
+    NovelFolders,
+}
+
+/// One shelf of the feed: shared or not, and what it holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FeedShare {
+    pub shelf: FeedShelf,
+    pub on: bool,
+    /// Chapters on the downloads shelf, series on the folder shelves.
+    pub count: u32,
+}
+
+/// An e-reader that fetched from the feed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FeedClient {
+    /// What the e-reader called itself, from its user agent; empty when it did not.
+    pub name: String,
+    /// Where it asked from on the network.
+    pub address: String,
+    /// Unix seconds of its last request.
+    pub last: i64,
+    /// Files it has fetched.
+    pub files: u32,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -885,11 +965,43 @@ pub enum ReadingFailure {
     Other {
         reason: String,
     },
+    /// A file Send to e-reader wrote is bigger than the target takes. `file` is the file's
+    /// name, `target` the e-reader's, and the sizes are in bytes.
+    SendTooLarge {
+        file: String,
+        target: String,
+        bytes: u64,
+        limit: u64,
+    },
+    /// A file Send to e-reader wrote failed its check before sending. `part` is the path inside
+    /// the file that failed, such as `OEBPS/content.opf`.
+    SendCheck {
+        file: String,
+        part: String,
+        problem: SendProblem,
+    },
+}
+
+/// What the check before a send found wrong with a part of the file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SendProblem {
+    /// The part is not in the file.
+    Missing,
+    /// The part does not declare UTF-8, or is not UTF-8.
+    NotUtf8,
+    /// The part is there but is not what the format requires.
+    Malformed,
 }
 
 impl ReadingFailure {
     pub fn msg(&self) -> Msg {
-        Msg::Reading(match self {
+        Msg::Reading(self.reading_msg())
+    }
+
+    /// The failure's message, as the reading messages it is one of.
+    pub fn reading_msg(&self) -> ReadingMsg {
+        match self {
             Self::Offline => ReadingMsg::ReadingFailedOffline,
             Self::SourceDown { source } => {
                 ReadingMsg::ReadingFailedSourceDown { source: source.clone() }
@@ -926,8 +1038,37 @@ impl ReadingFailure {
             }
             Self::ReadingOff => ReadingMsg::ReadingFailedOff,
             Self::Other { reason } => ReadingMsg::ReadingFailedOther { reason: reason.clone() },
-        })
+            Self::SendTooLarge { file, target, bytes, limit } => {
+                ReadingMsg::ReadingFailedSendTooLarge {
+                    file: file.clone(),
+                    target: target.clone(),
+                    size: crate::msg_text::Size::of(*bytes),
+                    limit: crate::msg_text::Size::of(*limit),
+                }
+            }
+            Self::SendCheck { file, part, problem } => match problem {
+                SendProblem::Missing => ReadingMsg::ReadingFailedSendMissing {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+                SendProblem::NotUtf8 => ReadingMsg::ReadingFailedSendEncoding {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+                SendProblem::Malformed => ReadingMsg::ReadingFailedSendMalformed {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+            },
+        }
     }
+}
+
+/// [`ReadingFailure::reading_msg`] for a front end, so an app says a failure in the engine's
+/// words, with sizes at human scale.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn reading_failure_msg(failure: ReadingFailure) -> ReadingMsg {
+    failure.reading_msg()
 }
 
 /// Which part of which screen a failure belongs to, so it shows in place.
@@ -1018,9 +1159,15 @@ pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) 
 }
 
 /// A page as people count it, from a place as kept: pages count from 0 in the store and from 1
-/// everywhere the engine sends them. The one place the engine turns one into the other.
+/// everywhere the engine sends them. With [`kept_page`], the one place the engine turns one into
+/// the other.
 pub fn shown_page(kept: u32) -> u32 {
     kept.saturating_add(1)
+}
+
+/// The place as kept, from a page as people count it: the other way from [`shown_page`].
+pub fn kept_page(shown: u32) -> u32 {
+    shown.saturating_sub(1)
 }
 
 /// "Chapter 13 · page 9", from the place as kept.
@@ -1043,30 +1190,47 @@ pub fn part_percent(page: Option<u32>, of: Option<u32>) -> Option<u8> {
     }
 }
 
-/// "Part 3 · 34%", or "Part 3" with no percent worth saying.
-pub fn part_place(part: &str, percent: Option<u8>) -> Msg {
-    Msg::Reading(match percent {
-        Some(percent) => ReadingMsg::ReadingPartPercent {
+/// What a light novel's part is called where the source names it with more than its number:
+/// its own words, "Part 3" or "Chapter 3", so every place names it as its row does. None when
+/// the source gives only the number, and the words then say "Part 3".
+pub fn part_named(label: &str, number: Option<&str>) -> Option<String> {
+    let label = label.trim();
+    let bare = label.is_empty() || Some(label) == number || label.parse::<f64>().is_ok();
+    (!bare).then(|| label.to_owned())
+}
+
+/// "Part 3 · 34%", or "Part 3" with no percent worth saying; "Chapter 3 · 34%" when the source
+/// calls it that.
+pub fn part_place(part: &str, named: Option<&str>, percent: Option<u8>) -> Msg {
+    Msg::Reading(match (named, percent) {
+        (Some(label), Some(percent)) => ReadingMsg::ReadingLabelPercent {
+            label: label.to_owned(),
+            percent: i64::from(percent),
+        },
+        (Some(label), None) => return Msg::Verbatim { text: label.to_owned() },
+        (None, Some(percent)) => ReadingMsg::ReadingPartPercent {
             part: part.to_owned(),
             percent: i64::from(percent),
         },
-        None => ReadingMsg::ReadingNextPart { part: part.to_owned() },
+        (None, None) => ReadingMsg::ReadingNextPart { part: part.to_owned() },
     })
 }
 
-/// "Chapter 44", or "Part 4" for a light novel, which reads in parts.
-pub fn next_unit(medium: Medium, number: &str) -> Msg {
+/// "Chapter 44", or for a light novel, which reads in parts, "Part 4" or the source's own name
+/// for it.
+pub fn next_unit(medium: Medium, number: &str, named: Option<&str>) -> Msg {
     match medium {
-        Medium::Novel => Msg::Reading(ReadingMsg::ReadingNextPart { part: number.to_owned() }),
+        Medium::Novel => part_place(number, named, None),
         _ => next_chapter(number),
     }
 }
 
-/// "Chapter 88 is new", or "Part 4 is new".
-pub fn unit_new(medium: Medium, number: &str) -> Msg {
+/// "Chapter 88 is new", or "Part 4 is new" by the source's own name for the part.
+pub fn unit_new(medium: Medium, number: &str, named: Option<&str>) -> Msg {
     let number = number.to_owned();
-    Msg::Reading(match medium {
-        Medium::Novel => ReadingMsg::ReadingPartNew { part: number },
+    Msg::Reading(match (medium, named) {
+        (Medium::Novel, Some(label)) => ReadingMsg::ReadingLabelNew { label: label.to_owned() },
+        (Medium::Novel, None) => ReadingMsg::ReadingPartNew { part: number },
         _ => ReadingMsg::ReadingChapterNew { chapter: number },
     })
 }
@@ -1280,10 +1444,19 @@ pub enum ReadingCommand {
         chapter: Option<ChapterId>,
         page: Option<u32>,
     },
+    /// Keeps the e-reader the Send sheet starts on, on this device only.
+    SetSendTarget {
+        target: String,
+    },
     LoadFeed,
     SetFeed {
         on: bool,
         password: Option<Secret>,
+    },
+    /// Shares a shelf of the feed or stops sharing it; answered with [`ReadingEvent::Feed`].
+    SetFeedShare {
+        shelf: FeedShelf,
+        on: bool,
     },
     /// Android sends this before its first screen: [`ReadingEvent::Eink`].
     DeviceFacts {
@@ -1328,10 +1501,13 @@ impl ReadingCommand {
             | Self::DownloadDeleteRead { .. }
             | Self::EstimateDownload { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
-            Self::LoadExportTargets | Self::Prepare { .. } | Self::CancelPrepare { .. } => {
-                ReadingAbout::Export
+            Self::LoadExportTargets
+            | Self::Prepare { .. }
+            | Self::CancelPrepare { .. }
+            | Self::SetSendTarget { .. } => ReadingAbout::Export,
+            Self::LoadFeed | Self::SetFeed { .. } | Self::SetFeedShare { .. } => {
+                ReadingAbout::Feed
             }
-            Self::LoadFeed | Self::SetFeed { .. } => ReadingAbout::Feed,
             Self::DeviceFacts { .. } | Self::AnswerEink { .. } => ReadingAbout::Eink,
         }
     }
@@ -1411,6 +1587,16 @@ pub enum ReadingEvent {
         job: JobId,
         done: u32,
         total: u32,
+        /// Chapters gathered so far, of `chapters`: what the screen says as "3 of 12". Zero
+        /// `chapters` means the send does not know yet.
+        chapters_done: u32,
+        chapters: u32,
+    },
+    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    ExportFailed {
+        job: JobId,
+        chapter: Option<String>,
+        failure: ReadingFailure,
     },
     ExportReady {
         job: JobId,
@@ -1453,10 +1639,27 @@ mod tests {
         assert_eq!(part_percent(Some(0), Some(47)), None, "never 0%");
         assert_eq!(part_percent(None, None), None);
         assert_eq!(part_percent(Some(3), Some(0)), None);
-        assert_eq!(part_place("3", Some(34)).english(), "Part 3 · 34%");
-        assert_eq!(part_place("3", None).english(), "Part 3");
+        assert_eq!(part_place("3", None, Some(34)).english(), "Part 3 · 34%");
+        assert_eq!(part_place("3", None, None).english(), "Part 3");
+        assert_eq!(part_place("3", Some("Chapter 3"), Some(34)).english(), "Chapter 3 · 34%");
+        assert_eq!(part_place("3", Some("Chapter 3"), None).english(), "Chapter 3");
         assert_eq!(shown_page(8), 9);
         assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 10");
+    }
+
+    #[test]
+    fn a_part_goes_by_the_sources_words_only_when_they_say_more_than_its_number() {
+        assert_eq!(part_named("Chapter 3", Some("3")).as_deref(), Some("Chapter 3"));
+        assert_eq!(part_named("Part 6", None).as_deref(), Some("Part 6"));
+        assert_eq!(part_named("3", Some("3")), None);
+        assert_eq!(part_named("12.5", None), None);
+        assert_eq!(part_named("  ", Some("1")), None);
+        assert_eq!(
+            unit_new(Medium::Novel, "4", Some("Chapter 4")).english(),
+            "Chapter 4 is new"
+        );
+        assert_eq!(unit_new(Medium::Novel, "4", None).english(), "Part 4 is new");
+        assert_eq!(next_unit(Medium::Manga, "44", Some("Chapter 44")).english(), "Chapter 44");
     }
 
     #[test]

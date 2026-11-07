@@ -91,6 +91,8 @@ pub const DEVICE_TABLES: &[&str] = &[
     "book_local_file",
     "book_server",
     "book_download",
+    "book_progress_outbox",
+    "book_progress_state",
 ];
 
 const FILE: &str = "profiles.json";

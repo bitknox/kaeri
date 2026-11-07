@@ -144,6 +144,7 @@ pub mod remote;
 pub mod servers;
 pub mod services;
 pub mod settings;
+pub mod setup_from;
 pub mod show_settings;
 pub mod skip_find;
 pub mod skip_marks;
@@ -160,6 +161,7 @@ pub mod tracking;
 pub mod upcoming;
 pub mod updates;
 pub mod widgets;
+pub mod write_back;
 
 /// Now, in seconds since the Unix epoch, by the system clock: what the work dates and ages
 /// things by.

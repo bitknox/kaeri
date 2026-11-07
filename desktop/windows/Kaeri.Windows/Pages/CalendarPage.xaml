@@ -3,6 +3,7 @@
     x:Class="Kaeri.Windows.Pages.CalendarPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:k="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
     xmlns:s="using:Kaeri.App"
     Background="{ThemeResource GroundBrush}" KeyboardAcceleratorPlacementMode="Hidden">
@@ -44,14 +45,17 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <SelectorBar x:Name="Whose" SelectionChanged="OnWhoseChanged" Margin="-8,0,0,0">
+      <SelectorBar x:Name="Whose" SelectionChanged="OnWhoseChanged" Margin="-12,0,0,0">
         <SelectorBarItem x:Name="AllItem" Text="{x:Bind s:T.CalendarFilterAll}" Tag="all" />
         <SelectorBarItem x:Name="MineItem" Text="{x:Bind s:T.CalendarFilterMine}" Tag="mine" />
       </SelectorBar>
       <TextBlock x:Name="WeekTitle" Grid.Column="1" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
     </Grid>
-    <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" SizeChanged="OnSizeChanged">
-      <Grid x:Name="Days" Padding="0,4,0,24" />
+    <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" SizeChanged="OnSizeChanged" k:SmoothWheel.On="True">
+      <!-- The wheel's glide moves this holder and a week change slides Days, so each has its own element. -->
+      <Grid>
+        <Grid x:Name="Days" Padding="0,4,0,24" />
+      </Grid>
     </ScrollViewer>
   </Grid>
 </Page>

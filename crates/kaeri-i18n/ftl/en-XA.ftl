@@ -603,6 +603,18 @@ reading-failed-off = [Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = [Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. { $reason }~~~~~~~~]
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = [{ $file } îš { $size }, àñð { $target } ţàķéš ƒîļéš üþ ţö { $limit }. Šéñð ƒéŵéŕ çĥàþţéŕš àţ à ţîɱé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = [{ $file } îš ɱîššîñĝ { $part }, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = [{ $part } îñ { $file } ĥàš ţĥé ŵŕöñĝ ţéẋţ éñçöðîñĝ, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = [{ $part } îñ { $file } îšñ'ţ ṽàļîð, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = [Ṁàñĝà~~]
 
@@ -692,20 +704,38 @@ reading-part-percent = [Þàŕţ { $part } · { $percent }%~~~~~]
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = [Þàŕţ { $part } îš ñéŵ~~~~~]
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = [{ $label } · { $percent }%~~~]
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = [{ $label } îš ñéŵ~~~]
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = [Þàŕţ { $part } · { $title }~~~~~]
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = [{ $label } · { $title }~~~]
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = [Þàŕţ { $part } îš öüţ ţöðàý~~~~~~~]
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = [{ $label } îš öüţ ţöðàý~~~~~]
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = [Þàŕţ { $part }, { $title }, öüţ ţöðàý~~~~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = [{ $label }, { $title }, öüţ ţöðàý~~~~~~]
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = [Çĥàþţéŕ { $chapter } öƒ { $of }~~~~~~]
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = [Ṽöļüɱé { $volume }, þàŕţ { $part }~~~~~~]
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = [Ṽöļüɱé { $volume }, { $label }~~~~~]
 
 # A search filter: books from Japan.
 reading-origin-japan = [Ĵàþàñ~~]
@@ -756,6 +786,9 @@ reading-row-new = [Ñéŵ~]
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = [Ðöŵñļöàðéð~~~]
 
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = [Ĝöñé ƒŕöɱ ţĥé šöüŕçé~~~~~~]
+
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = [Ñöţ ðöŵñļöàðéð~~~~~]
 
@@ -782,6 +815,12 @@ reading-row-page = [Þàĝé { $page }~~~]
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = [{ $percent }%~~]
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = [Öþéñéð~~]
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = [Ɓööķɱàŕķéð~~~]
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1174,6 +1213,9 @@ stores-ready-demo-stays = [{ $store } îš ŕéàðý. Ţĥé ðéɱö šţàý�
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = [Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
 
@@ -1309,7 +1351,7 @@ cause-proxy-address-unusable = [Ţĥé þŕöẋý'š àððŕéšš îš ñöţ
 cause-server-unreachable = [Ţĥé šéŕṽéŕ çöüļðñ'ţ ƀé ŕéàçĥéð.~~~~~~~~~~]
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~]
+legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš öŕ ƀööķš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~]
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = [Šàṽéð { $label }.~~~]
@@ -4776,6 +4818,18 @@ tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çö
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
+
+# Line under the title of that page.
+tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš àŕé ŕéàð îñ ţĥé Ķàéŕî àþþš, àñð ýöüŕ ŕéàðîñĝ šţàýš îñ šţéþ ţĥŕöüĝĥ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàéŕî îš ƒöŕ.~~~~~~~~~~~~]
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = [{ $key } ţö çĥàñĝé~~~~]
+
 # Title of the about page.
 about-title = [Åƀöüţ~~]
 
@@ -5900,6 +5954,63 @@ episode-download-done = [Ðöŵñļöàðéð~~~]
 
 # Line under that button after a failure.
 episode-download-failed = [Çöüļðñ'ţ ðöŵñļöàð éþîšöðé { $episode }. Ţŕý àĝàîñ.~~~~~~~~~~~~~]
+
+# First run, page 2 of 5.
+first-other-title = [Åļŕéàðý üšé Ķàéŕî öñ àñöţĥéŕ ðéṽîçé?~~~~~~~~~~~]
+
+# Under the title.
+first-other-line = [Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý. Ţĥé šţéþš àƒţéŕ ţĥîš àŕé ţĥéñ ðöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under the pair row.
+first-other-pair-line = [Šĥöŵš à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~]
+
+# Row that restores from a sync folder.
+first-other-restore = [Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ~~~~~~~~~]
+
+# Line under it.
+first-other-restore-line = [Ûšéš ţĥé ŕéçöṽéŕý ķéý ýöü šàṽéð~~~~~~~~~~]
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = [Ñö, šţàŕţ ĥéŕé~~~~~]
+
+# Beside a spinner, after 600 ms.
+pair-waiting = [Ŵàîţîñĝ ƒöŕ ýöüŕ öţĥéŕ ðéṽîçé~~~~~~~~~]
+
+# After 30 seconds with nothing.
+pair-nothing-yet = [Ñöţĥîñĝ ýéţ? Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~]
+
+# Group header for what the other device brings.
+first-join-group = [Ƒŕöɱ { $device }~~~]
+
+# Row while the rest arrives.
+first-join-looking = [Ļööķîñĝ àţ ŵĥàţ { $device } ĥàš…~~~~~~~~]
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = [Ķàéŕî îš ƒöŕ~~~~]
+
+# Line under it when the other device reads.
+first-join-medium-line = [Ŕéàðîñĝ, àš öñ { $device }~~~~~~]
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = [{ $trackers }~]
+
+# Switch, one per book server.
+first-join-server = [Åðð { $host }~~~]
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = [{ $kind } · šîĝñš îñ ŵîţĥ ţĥé ķéý ƒŕöɱ { $device }, ķéþţ îñ { $store }~~~~~~~~~~~~~~~]
+
+# Note under the list.
+first-join-folders = [Ƒöļðéŕš šţàý öñ { $device }. Åðð ţĥîš ðéṽîçé’š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = [Ļîšţš àñð šöüŕçéš àŕé šéţ üþ, šö ƒîŕšţ ŕüñ éñðš ĥéŕé. Ýöü çàñ çĥàñĝé ţĥéɱ îñ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = [{ $store } ðîðñ’ţ ļéţ ţĥîš ðéṽîçé îñ. { $owner } çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = [Šýñçîñĝ ŵîţĥ { $device }~~~~~]
 
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = [Ĥöɱé~~]
@@ -8281,6 +8392,86 @@ reader-gap-small = [Šɱàļļ~~]
 # Look choice that follows the system's light or dark.
 reader-look-system = [Šýšţéɱ~~]
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = [Ţĥé ðéɱö ŕéàðš à šĥöŕţ çöɱîç àñð à šĥöŕţ šţöŕý ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = [Öñé šĥöŕţ éþîšöðé àñð öñé šĥöŕţ çöɱîç, šĥàŕéð ƀý ţĥéîŕ ɱàķéŕš üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = [Öñļý ţĥé ðéɱö îš öñ. Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ýöüŕ öŵñ ƀööķš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = [Ŕéàð~~]
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] [Ðéɱö · Çöɱîç · öñé þàĝé~~~~~~~]
+       *[other] [Ðéɱö · Çöɱîç · { $pages } þàĝéš~~~~~~~~]
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = [{ $title } ƀý { $author }. Ļîçéñšéð { $licence }. Ŕéàð ƒŕöɱ Ŵîķîɱéðîà Çöɱɱöñš.~~~~~~~~~~~~~~~~~]
+
+# The story's credit in About the demo.
+demo-credit-story = [{ $title } ƀý { $author }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~]
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = [{ $title } · { $author } · { $licence }~~~~~]
+
+# A demo result's line in Search.
+search-demo-reads = [Ðéɱö · Ŕéàðš ñöŵ~~~~~]
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = [Öñļý ţĥé ðéɱö îš öñ. Öţĥéŕ ţîţļéš àþþéàŕ öñçé ýöü àðð à šöüŕçé.~~~~~~~~~~~~~~~~~~~]
+
+# Title of the card after the demo's last page.
+reader-demo-end = [Ţĥàţ’š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]
+
+# Line under it.
+reader-demo-end-line = [Ţö ŕéàð ýöüŕ öŵñ ƀööķš, àðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~]
+
+# The card's primary action.
+reader-demo-add-source = [Åðð à šöüŕçé~~~~]
+
+# The card's secondary action, back to the first page.
+reader-demo-again = [Ɓàçķ ţö þàĝé 1~~~~~]
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = [Å çöɱîç àñð à šţöŕý · ÇÇ ƁÝ 4.0 àñð þüƀļîç ðöɱàîñ~~~~~~~~~~~~~~~]
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = [Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ’ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = [Ţĥé ðéɱö ñéṽéŕ šîĝñš îñ àñýŵĥéŕé àñð ñéṽéŕ ŵŕîţéš ţö à ţŕàçķéŕ.~~~~~~~~~~~~~~~~~~~]
+
+# Group on the demo's series page.
+demo-chapters = [Çĥàþţéŕš~~~]
+
+# Group on the demo's series page: the other demo work.
+demo-also = [Åļšö îñ ţĥé ðéɱö~~~~~]
+
+# Group in About the demo.
+demo-credits = [Çŕéðîţš~~~]
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] [Öñé þàĝé~~~]
+       *[other] [{ $pages } þàĝéš~~~]
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = [Šţöŕý · { $author } · { $licence }~~~~~~]
+
+# Primary action on the demo's series page.
+demo-read-chapter = [Ŕéàð çĥàþţéŕ { $number }~~~~~]
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = [Ŵàţçĥ~~]
 
@@ -8362,6 +8553,15 @@ action-continue-part-plain = [Çöñţîñüé þàŕţ { $n }~~~~~~]
 
 # The main action for a light novel part not opened yet.
 action-read-part = [Ŕéàð þàŕţ { $n }~~~~]
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = [Çöñţîñüé { $label } · { $percent }%~~~~~~]
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = [Çöñţîñüé { $label }~~~~]
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = [Ŕéàð { $label }~~~]
 
 # The main action when every chapter is read.
 action-read-again = [Ŕéàð àĝàîñ~~~]
@@ -9287,6 +9487,230 @@ read-downloads-read = [{ $n } ŕéàð~~~]
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = [Ðéļéţé ŕéàð~~~~]
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = [Ƒöŕ~]
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = [Ŵĥàţ~~]
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = [Çĥàþţéŕš~~~]
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = [{ $chapter }~]
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = [{ $first } ţö { $last }~~~]
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = [Šîžé~~]
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = [Åƀöüţ { $size }~~~]
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = [Ķàéŕî çàñ'ţ šéé ýöüŕ þļàçé öñ ţĥîš é-ŕéàðéŕ. Ŵĥéñ ýöü çöɱé ƀàçķ, ţĥé šéŕîéš þàĝé àšķš ŵĥéŕé ýöü šţöþþéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = [Þŕéþàŕé àñð šĥàŕé~~~~~~]
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] [Þŕéþàŕîñĝ ţĥé çĥàþţéŕ~~~~~~~]
+       *[other] [Þŕéþàŕîñĝ { $done } öƒ { $total } çĥàþţéŕš~~~~~~~~~]
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = [Þàĝéš àŕé šîžéð ƒöŕ { $device }~~~~~~~]
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = [Öṽéŕ { $size }, šö ţĥé ƒîļéš ĝö îñ þàŕţš.~~~~~~~~~~~]
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = [Çöüļðñ'ţ þŕéþàŕé çĥàþţéŕ { $chapter }. { $cause }~~~~~~~~~~]
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = [Çöüļðñ'ţ þŕéþàŕé ţĥé ƒîļéš. { $cause }~~~~~~~~~~]
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = [Ŵöŕķîñĝ îţ öüţ~~~~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = [Öþéñ~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = [Çļöšéð~~]
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = [{ $percent } þéŕçéñţ~~~~]
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = [îñ þàŕţš öṽéŕ { $size }~~~~~~]
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = [Çàñçéļ šéñð~~~~]
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] [Öñé ƒîļé îš ŕéàðý.~~~~~~]
+       *[other] [{ $n } ƒîļéš àŕé ŕéàðý.~~~~~~]
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = [Šĥàŕé àĝàîñ~~~~]
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = [Ƒîẋéð-ļàýöüţ ÉÞÛƁ~~~~~~]
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = [ĶÉÞÛƁ~~]
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = [ÉÞÛƁ~~]
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = [ÇƁŽ~]
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = [{ $format } · { $width } × { $height }~~~~~]
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = [Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~]
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = [Ýöü šéñţ çĥàþţéŕš ţö { $device }. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~]
+
+# Button in that note.
+stop-note-action = [Šéţ ɱý þļàçé~~~~]
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~]
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = [Çĥàþţéŕš { $first } ţö { $last } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~~~]
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = [Î ƒîñîšĥéð çĥàþţéŕ { $chapter }~~~~~~~]
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = [Šéţ ɱý þļàçé~~~~]
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = [Ķééþ çĥàþţéŕ { $chapter } · þàĝé { $page }~~~~~~~~~]
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = [Ķééþ ɱý þļàçé~~~~]
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = [É-ŕéàðéŕš~~~]
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = [ÖÞÐŠ ƒééð~~~]
+
+# Line under the Share on this network switch.
+opds-share-note = [Åñ ÖÞÐŠ çàţàļöĝüé é-ŕéàðéŕš àţ ĥöɱé çàñ ƀŕöŵšé~~~~~~~~~~~~~~]
+
+# Footnote under the feed settings.
+opds-footer = [Öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš { $device }. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = [Åððŕéšš~~~]
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = [Ţüŕñ ţĥé ƒééð öñ ţö ĝéţ îţš àððŕéšš.~~~~~~~~~~~]
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = [Þàššŵöŕð~~~]
+
+# Line under the password row.
+opds-password-note = [É-ŕéàðéŕš àšķ ƒöŕ îţ öñçé~~~~~~~~]
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = [Ñéŵ þàššŵöŕð~~~~]
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = [Þöŕţ~~]
+
+# Line under the port row when it is empty.
+opds-port-note = [Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = [Þöŕţ { $wanted } ŵàš ƀüšý, šö ţĥé ƒééð üšéš { $port }.~~~~~~~~~~~~]
+
+# Heading of the group that picks what the feed shares.
+opds-shares = [Ŵĥàţ îţ šĥàŕéš~~~~~]
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = [Ðöŵñļöàðš~~~]
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] [Öñé çĥàþţéŕ~~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = [Ṁàñĝà ƒöļðéŕ~~~~]
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = [Ñöṽéļ ƒöļðéŕ~~~~]
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] [Öñé šéŕîéš~~~]
+       *[other] [{ $n } šéŕîéš~~~]
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = [Ƒéţçĥéð ƀý~~~]
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = [Ñö é-ŕéàðéŕ ĥàš ƒéţçĥéð àñýţĥîñĝ ýéţ.~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = [Šţàŕţîñĝ…~~~]
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = [Þàüšéð. Ţĥîš Ṁàç îšñ'ţ öñ à ļöçàļ ñéţŵöŕķ.~~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = [Þàüšéð. Ţĥîš Ṁàç îš öñļý çöññéçţéð ţĥŕöüĝĥ à ṼÞÑ.~~~~~~~~~~~~~~~]
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = [Ṁàķé à ñéŵ þàššŵöŕð?~~~~~~]
+
+# Text of that question.
+opds-new-password-warning = [É-ŕéàðéŕš ţĥàţ àļŕéàðý üšé ţĥé ƒééð šţöþ ŵöŕķîñĝ üñţîļ ýöü ţýþé ţĥé ñéŵ þàššŵöŕð îñţö éàçĥ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = [Ļàšţ àšķéð { $time }~~~~~]
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] [Öñé ƒîļé~~~]
+       *[other] [{ $n } ƒîļéš~~~]
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = [É-ŕéàðéŕ àţ { $address }~~~~~]
 
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
@@ -10619,6 +11043,233 @@ settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = [Ƒééð þöŕţ~~~]
+
+# Label of the address field in the Add a server sheet.
+book-server-address = [Åððŕéšš~~~]
+
+# Note under the empty address field.
+book-server-address-hint = [Åñ àððŕéšš, öŕ ţĥé ŵĥöļé ÖÞÐŠ ļîñķ ƒŕöɱ Ķàṽîţà.~~~~~~~~~~~~~~~]
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = [Ţĥîš îš à Ķàṽîţà ÖÞÐŠ ļîñķ. Îţš ķéý šîĝñš ýöü îñ, šö ñö þàššŵöŕð îš ñééðéð.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = [Ķàéŕî ķééþš ţĥé ķéý îñ { $store } àñð šĥöŵš öñļý îţš ļàšţ ƒöüŕ çĥàŕàçţéŕš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = [Ķéý ••••{ $last }~~~~]
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] [Ƒöüñð { $series } šéŕîéš~~~~~]
+       *[other] [Ƒöüñð { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš~~~~~~~~~~]
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = [{ $kind } àţ { $host }. Þîçķ ţĥé ļîƀŕàŕîéš ţö àðð.~~~~~~~~~~~~]
+
+# A library row's line in the result.
+book-server-library-line = [{ $series } šéŕîéš~~~]
+
+# Switch in the result, on to start with.
+book-server-sync-progress = [Šéñð þŕöĝŕéšš ţö ţĥé šéŕṽéŕ~~~~~~~~~]
+
+# Line under the switch.
+book-server-sync-progress-line = [Þàĝéš ýöü ŕéàð ĥéŕé ĝö ƀàçķ ţö { $host }, àñð îţš þŕöĝŕéšš çöɱéš ĥéŕé.~~~~~~~~~~~~~~~~~~~~]
+
+# Field label.
+book-server-username = [Ûšéŕñàɱé~~~]
+
+# Field label.
+book-server-password = [Þàššŵöŕð~~~]
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+
+# Line under it.
+book-server-err-unreachable-line = [Çĥéçķ ţĥé àððŕéšš, àñð ţĥàţ ţĥé šéŕṽéŕ îš öñ àñð öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~]
+
+# Error title when the server turned the password down.
+book-server-err-password = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = [Ûšé ţĥé üšéŕñàɱé àñð þàššŵöŕð ýöü üšé ƒöŕ { $kind } îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~~~~]
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ ķéý~~~~~~~~]
+
+# Line under it.
+book-server-err-key-line = [Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ’š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = [{ $host } šĥöŵš ţĥîš àççöüñţ ñö šéŕîéš~~~~~~~~~~]
+
+# Line under it.
+book-server-empty-line = [Îţ ļéţš ýöü îñ, ƀüţ ţĥé šéŕṽéŕ ɱàý šţîļļ ƀé šçàññîñĝ, öŕ ţĥîš àççöüñţ ɱàý ñöţ ĥàṽé àççéšš ţö îţš ƀööķš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Note under it.
+book-server-empty-recheck = [Ýöü çàñ àðð îţ ñöŵ. Ķàéŕî ļööķš àĝàîñ éṽéŕý 30 ɱîñüţéš.~~~~~~~~~~~~~~~~~]
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = [Ķàéŕî ŕéàðš ƒŕöɱ Ķöɱĝà, Ķàṽîţà àñð ÖÞÐŠ çàţàļöĝüéš.~~~~~~~~~~~~~~~~]
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] [Ƒöüñð { $series } šéŕîéš îñ öñé ƒîļé~~~~~~~~~]
+       *[other] [Ƒöüñð { $series } šéŕîéš îñ { $files } ƒîļéš~~~~~~~~~]
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = [{ $path }. Ķàéŕî ɱàţçĥéð { $matched } öƒ ţĥéɱ ƀý ţĥéîŕ ðéţàîļš.~~~~~~~~~~~~~~~]
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] [Öñé ƒîļé Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
+       *[other] [{ $count } ƒîļéš Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = [{ $kinds }. Ţĥéý šţàý îñ ţĥé ƒöļðéŕ àš ţĥéý àŕé.~~~~~~~~~~~~~]
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = [{ $count } ÉÞÛƁ ļöçķéð ŵîţĥ ÐŔṀ~~~~~~~~]
+
+# Note under the folder result.
+book-folder-opens = [Ķàéŕî öþéñš ÇƁŽ, ÇƁŔ, ÉÞÛƁ àñð ÞÐƑ ƒîļéš, àñð ƒöļðéŕš öƒ îɱàĝéš.~~~~~~~~~~~~~~~~~~~~]
+
+# Row action that lists the files skipped.
+book-folder-show-files = [Šĥöŵ ƒîļéš~~~]
+
+# Primary action in the Add a folder sheet.
+book-folder-add = [Åðð ƒöļðéŕ~~~]
+
+# Folder row action that picks another folder.
+book-folder-change = [Çĥàñĝé~~]
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = [Ñöţĥîñĝ îñ { $folder } ţĥàţ Ķàéŕî çàñ öþéñ~~~~~~~~~~~]
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] [Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ’ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]
+       *[other] [Îţ ĥöļðš { $files } ƒîļéš, ñöñé öƒ ţĥéɱ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ îɱàĝéš.~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Title of the Join a plugin store sheet.
+store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]
+
+# Label of the invite field.
+store-invite-field = [Îñṽîţé~~]
+
+# Result title once a plugin store is joined.
+store-joined-title = [Ĵöîñéð { $store }~~~]
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] [{ $owner } öƒƒéŕš öñé þļüĝîñ. Ĵöîñîñĝ îñšţàļļš ñöţĥîñĝ; îñšţàļļ îţ ĥéŕé öŕ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $owner } öƒƒéŕš { $count } þļüĝîñš. Ĵöîñîñĝ îñšţàļļš ñöţĥîñĝ; þîçķ ţĥé öñéš ýöü ŵàñţ ĥéŕé öŕ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Group header in the joined store's list.
+store-group-reading = [Ƒöŕ ŕéàðîñĝ~~~~]
+
+# Group header in the joined store's list.
+store-group-watching = [Ƒöŕ ŵàţçĥîñĝ~~~~]
+
+# Row action.
+store-install = [Îñšţàļļ~~~]
+
+# Row state once installed.
+store-installed-row = [Îñšţàļļéð~~~]
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = [Îñšţàļļ àļļ ƒöŕ ŕéàðîñĝ~~~~~~~]
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] [Öñé þļüĝîñ îñšţàļļéð. Îţ’š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]
+       *[other] [{ $count } þļüĝîñš îñšţàļļéð. Ţĥéý’ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŵàţçĥîñĝ~~~~~~~~~~~]
+
+# Line under it.
+store-other-medium-line = [Ŵàţçĥîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Secondary action under it.
+store-turn-on-watching = [Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]
+
+# Info title when a store has no plugins.
+store-empty = [{ $store } ĥàš ñö þļüĝîñš ýéţ~~~~~~~]
+
+# Line under it.
+store-empty-line = [Ýöü’ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ { $owner } àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Error title when the store doesn't answer.
+store-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+
+# Line under it.
+store-err-unreachable-line = [Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ’ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ { $owner } îƒ îţ’š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] [Öñé ɱöŕé îš ƒöŕ ŵàţçĥîñĝ, ŵĥîçĥ îš öƒƒ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŵàţçĥîñĝ, ŵĥîçĥ îš öƒƒ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~]
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] [Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~]
+       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~]
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~~~~]
+
+# Plugin row in an invite's result.
+store-plugin-row = [Ṽéŕšîöñ { $version } · ɱàý çöñţàçţ { $hosts }~~~~~~~~~]
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = [Åððéð { $name } · { $series } šéŕîéš~~~~~~~]
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] [Îñšţàļļéð öñé þļüĝîñ ƒŕöɱ { $store }~~~~~~~~~]
+       *[other] [Îñšţàļļéð { $count } þļüĝîñš ƒŕöɱ { $store }~~~~~~~~~]
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] [{ $kind } · { $series } šéŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~]
+       *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = [{ $kind } · ñö šéŕîéš ýéţ · ļööķš àĝàîñ îñ 30 ɱîñüţéš~~~~~~~~~~~~~~~]
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] [{ $path } · { $series } šéŕîéš · öñé ƒîļé šķîþþéð~~~~~~~~~~~]
+       *[other] [{ $path } · { $series } šéŕîéš · { $skipped } ƒîļéš šķîþþéð~~~~~~~~~~~]
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = [Ƒŕöɱ { $store } · { $medium } · ṽéŕšîöñ { $version }~~~~~~~~~]
 
 # Title of the screen or section that lists sources.
 sources-title = [Šöüŕçéš~~~]
