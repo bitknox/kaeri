@@ -372,6 +372,7 @@ public static class MsgText
         ReadingMsg.ExportDeviceColourEink => T.ExportDeviceColourEink,
         ReadingMsg.ExportDeviceTablet => T.ExportDeviceTablet,
         ReadingMsg.ExportChapter x => T.ExportChapter(x.Chapter),
+        ReadingMsg.ExportWaitsForWifi x => T.ExportWaitsForWifi(x.N),
         _ => message.ToString() ?? "",
     };
 

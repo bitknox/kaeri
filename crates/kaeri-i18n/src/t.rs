@@ -1120,6 +1120,11 @@ pub fn export_chapter(chapter: &str) -> String {
     text("export-chapter", &[("chapter", Arg::Text(chapter))])
 }
 
+/// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+pub fn export_waits_for_wifi(n: i64) -> String {
+    text("export-waits-for-wifi", &[("n", Arg::Int(n))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])

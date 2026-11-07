@@ -13,7 +13,8 @@
 //!
 //! **Wi-Fi only until told otherwise.** On cellular, in Low Data Mode, offline, or with the app
 //! off screen (but for a downloads window) the queue holds; rows show as waiting for Wi-Fi
-//! where that is why, and go on by themselves when the network or the setting changes.
+//! where that is why, and go on by themselves when the network or the setting changes. Until
+//! the front end first says the network, the queue holds too: at launch it may be cellular.
 //!
 //! **Keeping chapters ready.** With the setting on (it is on in the e-reader build), starting
 //! or finishing a chapter queues the next [`KEEP_AHEAD`] unread ones after it. They are marked
@@ -92,18 +93,40 @@ pub struct Setup {
     pub hold: bool,
     /// The hold is for Wi-Fi: rows show it.
     pub wifi: bool,
+    /// There is no network at all.
+    pub offline: bool,
     pub keep_ready: bool,
     pub delete_after: bool,
 }
 
 impl Setup {
-    pub fn of(phase: AppState, network: Network, config: &Config, edition: AppEdition) -> Self {
+    /// Where the queue starts, before the engine has set it up: held, as the network is not
+    /// said yet.
+    pub const UNSAID: Self = Self {
+        hold: true,
+        wifi: false,
+        offline: false,
+        keep_ready: false,
+        delete_after: false,
+    };
+
+    /// The setup for the `network` the front end last said, `None` before it has said one.
+    pub fn of(
+        phase: AppState,
+        network: Option<Network>,
+        config: &Config,
+        edition: AppEdition,
+    ) -> Self {
         let reading = &config.reading;
-        let wifi = network.constrained || (network.cellular && !reading.downloads_on_cellular);
+        let waits = crate::phases::waits_for_wifi(network, reading.downloads_on_cellular);
+        // Before the network is said the rows only wait: nothing says it is for Wi-Fi yet.
+        let wifi = waits && network.is_some();
+        let offline = network.is_some_and(|n| n.offline);
         let away = matches!(phase, AppState::Background { .. });
         Self {
-            hold: wifi || network.offline || away,
+            hold: waits || offline || away,
             wifi,
+            offline,
             keep_ready: reading
                 .keep_chapters_ready
                 .unwrap_or(matches!(edition, AppEdition::ReadOnly)),
@@ -121,6 +144,8 @@ struct Inner {
     pace: Duration,
     running: Mutex<bool>,
     setup: Mutex<Setup>,
+    /// Told each time the setup changes, for a send that waits on it.
+    changed: tokio::sync::watch::Sender<Setup>,
     /// What a test takes to be free on the device, in place of asking the disk.
     free: Mutex<Option<u64>>,
     told: Mutex<Option<Instant>>,
@@ -165,7 +190,8 @@ impl BookDownloads {
             dir,
             pace,
             running: Mutex::new(false),
-            setup: Mutex::new(Setup::default()),
+            setup: Mutex::new(Setup::UNSAID),
+            changed: tokio::sync::watch::channel(Setup::UNSAID).0,
             free: Mutex::new(None),
             told: Mutex::new(None),
         }))
@@ -182,7 +208,13 @@ impl BookDownloads {
     /// Take in the config, the network and the phase. Says whether the queue may run now.
     pub fn configure(&self, setup: Setup) -> bool {
         *self.0.setup.lock().unwrap_or_else(|e| e.into_inner()) = setup;
+        self.0.changed.send_if_modified(|was| std::mem::replace(was, setup) != setup);
         !setup.hold
+    }
+
+    /// Changes to the setup, as [`Self::configure`] takes them in.
+    pub(crate) fn changes(&self) -> tokio::sync::watch::Receiver<Setup> {
+        self.0.changed.subscribe()
     }
 
     /// Fetches the last run left half done go back in the queue, and half-written files go.
@@ -978,7 +1010,7 @@ pub fn resume(engine: &crate::state::EngineState, services: &Services, tx: &Outb
     }
     let setup = Setup::of(
         engine.phase,
-        engine.network,
+        engine.said_network(),
         engine.config.effective(),
         engine.reading.edition,
     );

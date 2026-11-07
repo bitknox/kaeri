@@ -901,6 +901,10 @@ object Strings {
     fun exportChapter(context: Context, chapter: String): String =
         context.getString(R.string.export_chapter, chapter)
 
+    /** Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch. */
+    fun exportWaitsForWifi(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.export_waits_for_wifi, n, n)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)

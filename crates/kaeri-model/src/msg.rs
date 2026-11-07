@@ -1321,6 +1321,8 @@ pub enum ReadingMsg {
     ExportDeviceTablet,
     /// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
     ExportChapter { chapter: String },
+    /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+    ExportWaitsForWifi { n: i64 },
 }
 
 impl ReadingMsg {
@@ -1396,6 +1398,7 @@ impl ReadingMsg {
             Self::ExportDeviceColourEink => "export-device-colour-eink",
             Self::ExportDeviceTablet => "export-device-tablet",
             Self::ExportChapter { .. } => "export-chapter",
+            Self::ExportWaitsForWifi { .. } => "export-waits-for-wifi",
         }
     }
 
@@ -1471,6 +1474,7 @@ impl ReadingMsg {
             Self::ExportDeviceColourEink => Vec::new(),
             Self::ExportDeviceTablet => Vec::new(),
             Self::ExportChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ExportWaitsForWifi { n } => vec![("n", Value::Int(*n))],
         }
     }
 }

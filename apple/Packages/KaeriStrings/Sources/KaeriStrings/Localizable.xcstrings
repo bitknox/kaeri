@@ -59325,6 +59325,40 @@
         }
       }
     },
+    "export-waits-for-wifi" : {
+      "comment" : "Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "film-length-hours" : {
       "comment" : "Length of a film or a single episode that is a whole number of hours, such as \"2 h\". Argument 1: hours (Int).",
       "extractionState" : "manual",

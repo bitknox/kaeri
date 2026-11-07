@@ -1232,6 +1232,17 @@ pub enum ReadingEvent {
         job: JobId,
         files: Vec<ExportFile>,
     },
+    /// A send waits for Wi-Fi: it has chapters to fetch and downloads are kept to Wi-Fi. It
+    /// goes on by itself once the network allows, and the next [`Self::ExportProgress`] says
+    /// so; `CancelPrepare` drops it. A send left waiting when the engine stopped is started
+    /// again at the next launch as a job of its own, so `job` may be one the screen never sent.
+    /// `line` says why, in words.
+    ExportWaiting {
+        job: JobId,
+        work: WorkId,
+        target: String,
+        line: Msg,
+    },
     Feed(FeedView),
     Eink(EinkProfile),
     Failed {

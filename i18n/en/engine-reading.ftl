@@ -321,3 +321,12 @@ export-device-tablet = Tablet
 # @arg chapter: text
 # @max 24
 export-chapter = Chapter { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to
+# Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many
+# chapters it still has to fetch.
+# @arg n: int
+export-waits-for-wifi = { $n ->
+    [one] One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.
+   *[other] { $n } chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.
+}

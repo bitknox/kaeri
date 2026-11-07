@@ -6,11 +6,16 @@
 //! target is. A chapter that is not downloaded is fetched through the download pipeline for the
 //! send and removed once its files are written; downloaded ones are used as they are. The job
 //! is announced like any other, told as `ExportProgress` and ended with `ExportReady`; it stops
-//! on `CancelPrepare` and leaves no files behind. Once the files are shared, the series page asks
+//! on `CancelPrepare` and leaves no files behind. A send with chapters to fetch waits while the
+//! downloads do, and goes on by itself: for Wi-Fi it says so with `ExportWaiting`, and one left
+//! waiting when the engine stops starts again at the next launch ([`held`]). Until the front end
+//! first says the network it waits too, without a word, as the network may be cellular. With no
+//! network at all it fails as offline. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
 //!
 //! **The OPDS feed** is in [`feed`], behind the `opds-feed` feature the desktop builds turn on.
 
+pub(crate) mod held;
 pub mod prepare;
 pub mod profiles;
 
@@ -29,6 +34,7 @@ use std::{
 
 use kaeri_core::books::WorkId;
 use kaeri_model::{
+    Msg, ReadingMsg,
     event::Event,
     jobs::JobId,
     reading::{
@@ -270,6 +276,8 @@ fn prepare_files(
     let cancel = exports.begin(id);
     let out = exports.folder(id);
     let send = OneSend {
+        key: id.get().to_string(),
+        target: target.to_owned(),
         lent: Lent::of(services, tx),
         downloads: services.book_sources.downloads.clone(),
         exports,
@@ -332,6 +340,9 @@ const FETCH_WEIGHT: u32 = 100;
 
 /// One send, from picking the chapters to the files.
 struct OneSend {
+    /// Which send this is in the list of those waiting: its job, unique in a launch.
+    key: String,
+    target: String,
     lent: Lent,
     downloads: BookDownloads,
     exports: Exports,
@@ -442,10 +453,8 @@ impl OneSend {
                 chapters.push(prepare::Chapter { label, path: path.clone() });
                 continue;
             }
-            if self.downloads.setup().hold {
-                // Offline, or on a connection the downloads are kept off.
-                return Err(ReadingFailure::Offline.into());
-            }
+            let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
+            self.may_fetch(missing).await?;
             std::fs::create_dir_all(temp).map_err(|_| {
                 prepare::Stop::Failed(ReadingFailure::FileMissing {
                     path: temp.display().to_string(),
@@ -467,16 +476,88 @@ impl OneSend {
                 wanted: &wanted_now,
                 progress: &progress,
             };
-            match self.downloads.fetch_with(&self.lent, &job).await {
-                Ok(file) => chapters.push(prepare::Chapter { label, path: file.path }),
-                Err(FetchStop::Cancelled) => return Err(prepare::Stop::Cancelled),
-                Err(FetchStop::Held) => return Err(ReadingFailure::Offline.into()),
-                Err(FetchStop::Failed(failure)) => return Err(prepare::Stop::Failed(failure)),
-            }
+            let file = loop {
+                match self.downloads.fetch_with(&self.lent, &job).await {
+                    Ok(file) => break file,
+                    Err(FetchStop::Cancelled) => return Err(prepare::Stop::Cancelled),
+                    // The network changed under the fetch: wait, then fetch the chapter again.
+                    Err(FetchStop::Held) => self.may_fetch(missing).await?,
+                    Err(FetchStop::Failed(failure)) => {
+                        return Err(prepare::Stop::Failed(failure));
+                    }
+                }
+            };
+            chapters.push(prepare::Chapter { label, path: file.path });
             fetched += 1;
         }
         Ok((chapters, fetch_count))
     }
+
+    /// Wait until chapters may be fetched, `missing` of them still to come. A send waits while
+    /// the downloads do: for Wi-Fi it says so, and it is kept in the store meanwhile. With no
+    /// network at all it fails as offline; cancelled, it stops.
+    async fn may_fetch(&self, missing: u32) -> Result<(), prepare::Stop> {
+        let store = self.lent.sources.store();
+        let mut changes = self.downloads.changes();
+        let mut kept = false;
+        let mut said = false;
+        let result = loop {
+            if self.cancel.load(Ordering::Relaxed) {
+                break Err(prepare::Stop::Cancelled);
+            }
+            let setup = self.downloads.setup();
+            if !setup.hold {
+                break Ok(());
+            }
+            if setup.offline {
+                break Err(ReadingFailure::Offline.into());
+            }
+            if !kept {
+                kept = true;
+                held::keep(store, self.held());
+            }
+            if setup.wifi && !said {
+                said = true;
+                let line =
+                    Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: i64::from(missing) });
+                let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
+                    job: self.id,
+                    work: self.work.clone(),
+                    target: self.target.clone(),
+                    line,
+                }));
+            }
+            // A change to the network or the setting, or a look at whether it was cancelled.
+            let _ = tokio::time::timeout(LOOK_AGAIN, changes.changed()).await;
+        };
+        if kept {
+            held::forget(store, &self.key);
+        }
+        result
+    }
+
+    /// This send as the list of those waiting keeps it.
+    fn held(&self) -> held::HeldSend {
+        held::HeldSend {
+            key: self.key.clone(),
+            work: self.work.as_str().to_owned(),
+            pick: held::Pick::from(&self.pick),
+            target: self.target.clone(),
+            format: held::Format::from(self.format),
+        }
+    }
+}
+
+/// How often a waiting send looks whether it was cancelled.
+const LOOK_AGAIN: Duration = Duration::from_millis(200);
+
+/// The sends left waiting when the engine last stopped, asked for again: each starts as a job
+/// of its own and waits again while it must.
+pub(crate) fn held_sends(engine: &EngineState, services: &Services) -> Vec<ReadingCommand> {
+    if !engine.reading.available {
+        return Vec::new();
+    }
+    held::take(services.book_sources.store()).iter().map(held::HeldSend::command).collect()
 }
 
 // ---------------------------------------------------------------------------------------------
