@@ -14,14 +14,30 @@ public sealed partial class CoverGrid : UserControl
         InitializeComponent();
     }
 
-    /// <summary>A single row that scrolls sideways, for a rail; the grid wraps.</summary>
+    /// <summary>
+    /// A single row that scrolls sideways, for a rail; the grid wraps. The rail shows no
+    /// scrollbar, as Home's shelves and the Mac's rails show none: a touchpad, touch and
+    /// Shift with the wheel still move it.
+    /// </summary>
     internal bool Rail
     {
         set
         {
-            if (value)
-                Items.Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 };
+            if (!value)
+                return;
+            Items.Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 };
+            HideBars();
+            Items.Loaded += (_, _) => HideBars();
         }
+    }
+
+    /// <summary>The ItemsView's own ScrollView, once its template has made one, without its bars.</summary>
+    void HideBars()
+    {
+        if (Items.ScrollView is not { } scroll)
+            return;
+        scroll.HorizontalScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollingScrollBarVisibility.Hidden;
+        scroll.VerticalScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollingScrollBarVisibility.Hidden;
     }
 
     /// <summary>The covers on screen, changed in place by <see cref="Show"/>.</summary>

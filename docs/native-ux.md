@@ -364,6 +364,18 @@ The behaviour the calendar board sets for every app. The engine owns the range: 
 - A week that is not loaded follows the States rules: nothing for 600 ms, placeholders, then the activity line after 4 s. A failed page keeps what arrived and puts one line with Try again in the week's place, with the vermilion on the glyph only.
 - My list with nothing airing is a line in place with Show all airing, not a full-page state.
 
+## Search
+
+What is typed and every filter are one `SearchQuery`. The engine owns the rules: what a click on a genre does (`picking_genre`), what a chip says (`active`), what it takes off (`without`), what Clear filters leaves (`cleared`) and the count on the Filters button (`advanced_count`). No app keeps its own copy of these rules. The genres, tags and streaming sites come from the engine's facets (`LoadSearchFacets`, `Event::Facets`).
+
+- The results follow the field as it is typed in. Return or Enter searches at once, in place, without a page for Back. While AniList's limit holds typing back, one line says so and Return or Enter still searches.
+- A row of the common filters sits above the results: genre, year, season, format, status and Available, then the sort and Filters. Each says its name until set, then what it has. Where the row does not fit it scrolls sideways, and Filters stays at its end.
+- Under the row, each filter set is a chip that takes it off, in the engine's order and words. A genre or tag left out reads “Not Romance”.
+- Filters opens every filter: genres, tags by category or found by name with the tag rank, years, episodes and episode length with presets, the least score, Hide obscure titles, source material, country, streaming sites, Licensed only, and Titles on my list while AniList is signed in. A click on a genre or tag includes it, a second leaves it out, a third lets it go, and a context menu offers each. Each change searches; there is nothing to apply. Reset clears the filters and keeps the sort.
+- On a Mac the filters are a 340 pt panel at the trailing edge (⌥⌘F); on an iPad an inspector and on an iPhone a sheet. Windows has a 340 epx panel at the right edge, opened by Filters or Ctrl+Shift+F, since Ctrl+F and Ctrl+E go to the search box. Esc closes it.
+- A genre or tag typed in the field is offered as a filter. Choosing it adds the filter and clears the words it was found by.
+- The Trending rail scrolls sideways with no scrollbar, as Home's shelves do.
+
 ## States
 
 Every screen has loading, content, empty, offline and failed states. All of them follow the TUI's rule: nothing for the first 600 ms, then the state shows where it applies.

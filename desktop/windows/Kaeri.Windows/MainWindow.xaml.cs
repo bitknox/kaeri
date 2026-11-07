@@ -1287,27 +1287,39 @@ public sealed partial class MainWindow : Window
 
     void OnPaneToggleRequested(TitleBar sender, object args) => Nav.IsPaneOpen = !Nav.IsPaneOpen;
 
-    // Search in the title bar: suggestions from the titles the app already knows, Enter searches.
+    // Search in the title bar: suggestions from the titles the app already knows, then the genres
+    // and tags whose names start a word with what is typed, which add a filter; Enter searches.
 
     void OnSearchTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             return;
         var text = sender.Text.Trim();
-        sender.ItemsSource = text.Length < 2
-            ? null
-            : ctx.Known.Entries.Values
-                .Where(e => e.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)
-                    || e.Secondary?.Contains(text, StringComparison.CurrentCultureIgnoreCase) == true)
-                .OrderBy(e => e.Title)
-                .Take(6)
-                .Select(e => new Suggestion(e.Id, e.Title))
-                .ToList();
+        if (text.Length < 2)
+        {
+            sender.ItemsSource = null;
+            return;
+        }
+        var titles = ctx.Known.Entries.Values
+            .Where(e => e.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)
+                || e.Secondary?.Contains(text, StringComparison.CurrentCultureIgnoreCase) == true)
+            .OrderBy(e => e.Title)
+            .Take(6)
+            .Select(e => (object)new Suggestion(e.Id, e.Title));
+        var filters = SearchFilters.Suggestions(ctx.Known.Facets, SearchPage.Remembered, text)
+            .Select(f => (object)new FilterSuggestion(f.Tag, f.Name));
+        sender.ItemsSource = titles.Concat(filters).ToList();
     }
 
     sealed record Suggestion(uint Id, string Title)
     {
         public override string ToString() => Title;
+    }
+
+    /// <summary>A genre or tag the box offers as a filter: "Filter by Mecha".</summary>
+    sealed record FilterSuggestion(bool Tag, string Name)
+    {
+        public override string ToString() => T.SearchSuggestFilter(Tag ? Name : Searches.GenreName(Name));
     }
 
     void OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args) { }
@@ -1318,6 +1330,20 @@ public sealed partial class MainWindow : Window
         {
             sender.Text = "";
             OpenTitle(s.Id);
+        }
+        else if (args.ChosenSuggestion is FilterSuggestion f)
+        {
+            // The filter stands for the words that found it, as a token in the Mac's field.
+            sender.Text = "";
+            if (Player.Showing)
+                Player.Close();
+            if (ContentFrame.Content is SearchPage page)
+                page.Add(f.Tag, f.Name);
+            else
+            {
+                SearchPage.Want(f.Tag, f.Name);
+                ContentFrame.Navigate(typeof(SearchPage), null, new SuppressNavigationTransitionInfo());
+            }
         }
         else
             ShowSearch(args.QueryText.Trim());
@@ -1875,6 +1901,8 @@ public sealed partial class MainWindow : Window
         Key((VirtualKey)0xBF, VirtualKeyModifiers.Control, ShowShortcuts);
         Key(VirtualKey.F1, VirtualKeyModifiers.None, ShowShortcuts, inPlayer: true);
         Key(VirtualKey.L, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ShowMessages);
+        // Search's filters panel, the Mac's Option-Command-F: Ctrl+F and Ctrl+E are the box's.
+        Key(VirtualKey.F, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ToggleSearchFilters);
         // The mouse's back button, as Alt+Left.
         Root.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
@@ -1899,6 +1927,19 @@ public sealed partial class MainWindow : Window
             act();
         };
         Root.KeyboardAccelerators.Add(accelerator);
+    }
+
+    /// <summary>Ctrl+Shift+F: Search's filters panel opens or closes; from another page, Search comes up with it open.</summary>
+    void ToggleSearchFilters()
+    {
+        if (ContentFrame.Content is SearchPage page)
+        {
+            page.ToggleFilters();
+            return;
+        }
+        SearchPage.FiltersOnArrival = true;
+        var query = SearchBox.Text.Trim();
+        Navigate("search", query.Length > 0 ? query : null);
     }
 
     void SyncNow()
@@ -1941,6 +1982,7 @@ public sealed partial class MainWindow : Window
         Section(T.ShortcutsWindow);
         Line(T.ShortcutsSections, T.ShortcutsKeysRange("Ctrl+1", "Ctrl+9"));
         Line(T.NavSearch, "Ctrl+F, Ctrl+E");
+        Line(T.ShortcutsSearchFilters, "Ctrl+Shift+F");
         Line(T.ActionBack, T.ShortcutsKeysBack("Alt+Left"));
         Line(T.NavSettings, "Ctrl+,");
         Line(T.AccountsSyncNow, "Ctrl+R, F5");

@@ -3,20 +3,34 @@ using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace Kaeri.Windows.Pages;
 
+using Pick = Kaeri.Engine.Model.Pick;
+
 /// <summary>
-/// Search, opened from the title bar's box: the results as a poster grid under a row of filters.
-/// With nothing typed and no filter set it shows this season's titles; a filter with nothing typed
-/// browses, as the engine's query does with no text. The filters stay set for the session, so a
-/// new search from the title bar keeps them. While the page is up, the results follow the box as
-/// it is typed in, and the next page comes as the end of the results comes into sight.
+/// Search, opened from the title bar's box: the results as a poster grid under a row of filters,
+/// each filter set as a chip that takes it off, and every filter the engine offers in a panel at
+/// the right edge (Filters, Ctrl+Shift+F; Esc closes it). With nothing typed and no filter set it
+/// shows this season's titles; a filter with nothing typed browses, as the engine's query does
+/// with no text. The filters are a query of their own with no words, changed through the engine's
+/// rules as on the Mac, and stay set for the session, so a new search from the title bar keeps
+/// them. While the page is up, the results follow the box as it is typed in, and the next page
+/// comes as the end of the results comes into sight.
 /// </summary>
 public sealed partial class SearchPage : Page
 {
-    static SearchFilters remembered = SearchFilters.None;
+    static SearchQuery remembered = Searches.Nothing;
+    /// <summary>Ctrl+Shift+F from another page: the panel opens as Search comes up.</summary>
+    internal static bool FiltersOnArrival;
+    /// <summary>A genre or tag chosen in the title bar's box on another page, added as Search comes up.</summary>
+    static (bool Tag, string Name)? wanted;
+
+    /// <summary>The filters as Search last had them, for the title bar's suggestions.</summary>
+    internal static SearchQuery Remembered => remembered;
 
     readonly Ctx ctx = Ctx.Current;
     /// <summary>
@@ -31,12 +45,16 @@ public sealed partial class SearchPage : Page
     uint pages = 1;
     readonly List<Entry> more = [];
     string query = "";
-    SearchFilters filters = remembered;
+    SearchQuery filters = remembered;
     /// <summary>What was last asked, or null while the page shows this season.</summary>
     SearchQuery? asked;
     Entry[] entries = [];
     readonly SurpriseButton surprise;
     TrendingRail? rail;
+    readonly SearchFiltersPanel panel;
+    bool panelOpen;
+    /// <summary>The chips on screen, so a search that changes none of them makes none again.</summary>
+    (FilterKey Key, string Label)[] chips = [];
 
     public SearchPage()
     {
@@ -72,6 +90,30 @@ public sealed partial class SearchPage : Page
             VerticalScrollMode = ScrollMode.Disabled,
             IsTabStop = false,
         });
+        panel = new SearchFiltersPanel(() => filters, to => Change(to), () => ShowPanel(false));
+        PanelHost.Child = panel;
+        ElementCompositionPreview.SetIsTranslationEnabled(PanelHost, true);
+        ToolTipService.SetToolTip(FiltersButton, T.TooltipWithKey(T.FiltersTitle, "Ctrl+Shift+F"));
+        // Each menu is made again as it opens, so it always says what the filters have now,
+        // whichever way they changed: a chip, the panel or the menu itself.
+        GenreFlyout.Opening += (_, _) => BuildGenres();
+        FormatFlyout.Opening += (_, _) => BuildFormats();
+        StatusFlyout.Opening += (_, _) => BuildStatuses();
+        SeasonMenu.Opening += (_, _) => BuildSeasons();
+        YearMenu.Opening += (_, _) => BuildYears();
+        AvailableMenu.Opening += (_, _) => BuildAvailable();
+        SortMenu.Opening += (_, _) => BuildSorts();
+        // Esc closes the open panel; with it shut, Esc is left to whoever had it.
+        var escape = new KeyboardAccelerator { Key = global::Windows.System.VirtualKey.Escape };
+        escape.Invoked += (_, args) =>
+        {
+            if (!panelOpen)
+                return;
+            args.Handled = true;
+            ShowPanel(false);
+        };
+        KeyboardAccelerators.Add(escape);
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
         // The frame keeps the page for Back and the next visit: the results, the filters and the scroll stay.
         NavigationCacheMode = NavigationCacheMode.Enabled;
     }
@@ -96,6 +138,21 @@ public sealed partial class SearchPage : Page
     {
         query = text;
         openedWith = text;
+        Run();
+    }
+
+    /// <summary>
+    /// A genre or tag chosen in the title bar's box: it stands for the words that found it, so
+    /// they go and the filter is added, as a token in the Mac's field. Off this page, it is added
+    /// as Search comes up.
+    /// </summary>
+    internal static void Want(bool tag, string name) => wanted = (tag, name);
+
+    internal void Add(bool tag, string name)
+    {
+        query = "";
+        openedWith = null;
+        filters = tag ? filters.PickingTag(name, Pick.Include) : filters.PickingGenre(name, Pick.Include);
         Run();
     }
 
@@ -124,21 +181,59 @@ public sealed partial class SearchPage : Page
         openedWith = e.Parameter;
         query = e.Parameter as string ?? (e.Parameter as SearchQuery)?.Text ?? "";
         if (e.Parameter is SearchQuery browse)
-            filters = SearchFilters.None with { Genres = browse.Genres ?? [], Sort = browse.Sort };
+            filters = Searches.FiltersOf(browse);
+        if (wanted is { } want)
+        {
+            wanted = null;
+            query = "";
+            filters = want.Tag ? filters.PickingTag(want.Name, Pick.Include) : filters.PickingGenre(want.Name, Pick.Include);
+        }
 #if KAERI_TESTING
         // --show=browse: a genre and a sort set with nothing typed, for a screenshot.
         if (ctx.Options.Show == "browse")
-            filters = SearchFilters.None with { Genres = ["Adventure"], Sort = SearchSort.Popularity };
+            filters = Searches.Nothing with { Genres = ["Adventure"], Sort = SearchSort.Popularity };
         else if (ctx.Options.Show == "available")
-            filters = SearchFilters.None with { Available = Available.PlaysHere };
+            filters = Searches.Nothing with { Available = Available.PlaysHere };
         else if (ctx.Options.Show == "browse-none")
-            filters = SearchFilters.None with { Genres = ["Horror"], Year = 1971 };
+            filters = Searches.Nothing.WithYear(1971) with { Genres = ["Horror"] };
+        // --show=search-filters: a filter of each kind set and the panel open, for a screenshot;
+        // search-filters-end: the panel scrolled to its end with a tag group open; search-chips:
+        // the filters with the panel shut.
+        else if (ctx.Options.Show is "search-filters" or "search-filters-end" or "search-chips")
+        {
+            filters = Searches.Nothing with
+            {
+                Genres = ["Adventure"],
+                GenresExcluded = ["Romance"],
+                Tags = ["Travel"],
+                Formats = [MediaFormat.Tv],
+                Episodes = new Bounds(null, 12),
+                MinScore = 70,
+                MinPopularity = SearchFilters.ObscureBelow,
+            };
+            FiltersOnArrival = ctx.Options.Show != "search-chips";
+            if (ctx.Options.Show == "search-filters-end")
+            {
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+                timer.Tick += (_, _) =>
+                {
+                    timer.Stop();
+                    panel.ShowEnd();
+                };
+                timer.Start();
+            }
+        }
 #endif
         if (ctx.Known.Facets is null)
             ctx.Send(new Command.LoadSearchFacets());
         BuildFilters();
         Run();
         rail?.Visit();
+        if (FiltersOnArrival)
+        {
+            FiltersOnArrival = false;
+            ShowPanel(true);
+        }
     }
 
 #if KAERI_TESTING
@@ -187,7 +282,7 @@ public sealed partial class SearchPage : Page
         ShowFilters();
         // Surprise me picks from the filters, so it goes when words are typed; the rail shows with nothing asked.
         SurpriseHost.Visibility = query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-        var browsing = query.Length == 0 && !filters.Narrows && filters.Sort is null;
+        var browsing = query.Length == 0 && !filters.Narrows() && filters.Sort is null;
         if (browsing)
         {
             rail ??= new TrendingRail(period => Change(filters with { Sort = SearchSort.Trending, Period = period is TrendPeriod.Today ? null : period }, now: true));
@@ -269,7 +364,10 @@ public sealed partial class SearchPage : Page
         foreach (var e in batch)
         {
             if (e is Event.Facets)
+            {
                 BuildGenres();
+                panel.Facets(ctx.Known.Facets);
+            }
             if (e is Event.Demo or Event.Providers)
                 DemoLine.Visibility = ctx.Known.Demo is { On: true, Only: true } ? Visibility.Visible : Visibility.Collapsed;
             if (e is Event.LiveSearch live)
@@ -354,7 +452,7 @@ public sealed partial class SearchPage : Page
     {
         if (asked is null)
             return States.Unavailable(T.SeasonalEmptyTitle(Wording.SeasonWithYear(KaeriFfiMethods.SeasonAt(DateTimeOffset.UtcNow.ToUnixTimeSeconds()))), T.SeasonalEmptyDetail);
-        if (!filters.Narrows)
+        if (!filters.Narrows())
             return States.Unavailable(T.SearchNothingFound(query), T.SearchNothingFoundDetail);
         var title = query.Length > 0 ? T.SearchNothingFoundWithFilters(query) : T.SearchNothingWithFilters;
         return States.Unavailable(title, T.SearchTryFewerFilters, T.SearchClearFilters, Clear);
@@ -365,31 +463,78 @@ public sealed partial class SearchPage : Page
     void BuildFilters()
     {
         BuildGenres();
+        BuildFormats();
+        BuildStatuses();
+        BuildSeasons();
+        BuildYears();
+        BuildAvailable();
+        BuildSorts();
+    }
+
+    /// <summary>The genres: the engine's list once it has one, AniList's usual ones until then. A tick includes one; the panel leaves one out.</summary>
+    void BuildGenres()
+    {
+        var genres = ctx.Known.Facets?.Genres is { Length: > 0 } g ? g : Searches.Genres;
+        GenreList.Children.Clear();
+        foreach (var genre in genres)
+        {
+            var box = new CheckBox { Content = Searches.GenreName(genre), IsChecked = filters.GenrePick(genre) == Pick.Include };
+            box.Click += (_, _) => Change(filters.PickingGenre(genre, box.IsChecked == true ? Pick.Include : Pick.Off));
+            GenreList.Children.Add(box);
+        }
+    }
+
+    void BuildFormats()
+    {
         FormatList.Children.Clear();
         foreach (var format in Searches.Formats)
         {
-            var box = new CheckBox { Content = Searches.FormatName(format), Tag = format, IsChecked = filters.Formats.Contains(format) };
-            box.Click += (_, _) => Change(filters.Toggle(format));
+            var box = new CheckBox { Content = Searches.FormatName(format), IsChecked = filters.Formats.Contains(format) };
+            box.Click += (_, _) => Change(filters.TogglingFormat(format));
             FormatList.Children.Add(box);
         }
+    }
 
+    void BuildStatuses()
+    {
+        StatusList.Children.Clear();
+        foreach (var status in Searches.Statuses)
+        {
+            var box = new CheckBox { Content = Searches.StatusName(status), IsChecked = filters.Statuses.Contains(status) };
+            box.Click += (_, _) => Change(filters.TogglingStatus(status));
+            StatusList.Children.Add(box);
+        }
+    }
+
+    void BuildSeasons()
+    {
         SeasonMenu.Items.Clear();
         SeasonMenu.Items.Add(Radio(T.FilterAnySeason, "season", filters.Season is null, () => filters with { Season = null }));
         foreach (var season in Enum.GetValues<Season>())
             SeasonMenu.Items.Add(Radio(Wording.SeasonName(season), "season", filters.Season == season, () => filters with { Season = season }));
+    }
 
+    void BuildYears()
+    {
         YearMenu.Items.Clear();
-        YearMenu.Items.Add(Radio(T.FilterAnyYear, "year", filters.Year is null, () => filters with { Year = null }));
+        var single = filters.SingleYear();
+        YearMenu.Items.Add(Radio(T.FilterAnyYear, "year", filters.Years is { Min: null, Max: null }, () => filters.WithYear(null)));
         foreach (var year in Searches.Years(DateTime.Now.Year))
-            YearMenu.Items.Add(Radio(year.ToString(System.Globalization.CultureInfo.InvariantCulture), "year", filters.Year == year, () => filters with { Year = year }));
+            YearMenu.Items.Add(Radio(year.ToString(System.Globalization.CultureInfo.InvariantCulture), "year", single == year, () => filters.WithYear(year)));
+    }
 
+    void BuildAvailable()
+    {
         AvailableMenu.Items.Clear();
         AvailableMenu.Items.Add(Radio(T.SearchAvailableAll, "available", filters.Available is null, () => filters with { Available = null }));
         foreach (var available in new[] { Available.PlaysHere, Available.OnYourServices })
             AvailableMenu.Items.Add(Radio(Searches.AvailableName(available), "available", filters.Available == available, () => filters with { Available = available }));
+    }
 
+    void BuildSorts()
+    {
         SortMenu.Items.Clear();
-        SortMenu.Items.Add(Radio(T.SortRelevance, "sort", filters.Sort is null, () => filters with { Sort = null }));
+        SortMenu.Items.Add(Radio(T.SortRelevance, "sort", filters.Sort is null, () => filters with { Sort = null, Period = null }));
         foreach (var sort in Searches.Sorts)
         {
             if (sort != SearchSort.Trending)
@@ -407,20 +552,7 @@ public sealed partial class SearchPage : Page
         }
     }
 
-    /// <summary>The genres: the engine's list once it has one, AniList's usual ones until then.</summary>
-    void BuildGenres()
-    {
-        var genres = ctx.Known.Facets?.Genres is { Length: > 0 } g ? g : Searches.Genres;
-        GenreList.Children.Clear();
-        foreach (var genre in genres)
-        {
-            var box = new CheckBox { Content = Searches.GenreName(genre), IsChecked = filters.Genres.Contains(genre) };
-            box.Click += (_, _) => Change(filters.Toggle(genre, genres));
-            GenreList.Children.Add(box);
-        }
-    }
-
-    RadioMenuFlyoutItem Radio(string text, string group, bool on, Func<SearchFilters> then)
+    RadioMenuFlyoutItem Radio(string text, string group, bool on, Func<SearchQuery> then)
     {
         var item = new RadioMenuFlyoutItem { Text = text, GroupName = group, IsChecked = on };
         item.Click += (_, _) => Change(then());
@@ -428,29 +560,40 @@ public sealed partial class SearchPage : Page
     }
 
     /// <summary>A filter changed: show it at once, search once the clicks stop.</summary>
-    void Change(SearchFilters to, bool now = false)
+    void Change(SearchQuery to, bool now = false)
     {
         filters = to;
         if (now)
             BuildFilters();
-        ShowFilters();
         // The engine waits until the clicks stop (250 ms) and searches once.
         Run(live: !now);
     }
 
-    /// <summary>Each drop-down says its name, or in amber what it has.</summary>
+    /// <summary>Each drop-down says its name, or in amber what it has; then the chips, the Filters button and the panel.</summary>
     void ShowFilters()
     {
-        Say(GenreButton, T.FilterGenre, SearchFilters.Say(T.FilterGenre, [.. filters.Genres.Select(Searches.GenreName)]), filters.Genres.Length > 0);
+        var words = filters.GenreWords();
+        Say(GenreButton, T.FilterGenre, SearchFilters.Say(T.FilterGenre, words), words.Length > 0);
         Say(FormatButton, T.FilterFormat, SearchFilters.Say(T.FilterFormat, [.. filters.Formats.Select(Searches.FormatName)]), filters.Formats.Length > 0);
+        Say(StatusButton, T.FilterStatus, SearchFilters.Say(T.FilterStatus, [.. filters.Statuses.Select(Searches.StatusName)]), filters.Statuses.Length > 0);
         Say(SeasonButton, T.FilterSeason, filters.Season is { } s ? Wording.SeasonName(s) : T.FilterSeason, filters.Season is not null);
-        Say(YearButton, T.FilterYear, filters.Year?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? T.FilterYear, filters.Year is not null);
+        // A single year as the menu picks it, or the panel's range in the engine's words.
+        var years = filters.SingleYear()?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            ?? filters.Chips().Where(c => c.Key is FilterKey.Years).Select(c => c.Label).FirstOrDefault();
+        Say(YearButton, T.FilterYear, years ?? T.FilterYear, years is not null);
         Say(AvailableButton, T.SearchAvailableName, filters.Available is { } a ? Searches.AvailableName(a) : T.SearchAvailableName, filters.Available is not null);
         Say(SortButton, T.SearchSortName, filters.Sort is { } o ? Searches.SortName(o, filters.Period) : T.SearchSortName, filters.Sort is not null);
-        if (filters.IsEmpty)
+        if (filters.IsEmpty())
             Motion.Hide(ClearButton);
         else
             Motion.Show(ClearButton);
+        var count = filters.AdvancedCount();
+        FiltersBadge.Value = (int)count;
+        FiltersBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(FiltersButton, count > 0 ? T.SearchFiltersButtonSet(count) : T.FiltersTitle);
+        ShowChips();
+        if (panelOpen)
+            panel.Show(filters);
     }
 
     /// <summary>A filter's words, set only when they change, and its spoken name: the filter, then what it has.</summary>
@@ -465,9 +608,102 @@ public sealed partial class SearchPage : Page
             button.ClearValue(Control.ForegroundProperty);
     }
 
+    // The chips.
+
+    /// <summary>
+    /// Each filter set as a chip, in the engine's order, that takes it off. Made again only when
+    /// they change; a chip that held the focus hands it to the one now in its place.
+    /// </summary>
+    void ShowChips()
+    {
+        var next = filters.Chips();
+        if (next.SequenceEqual(chips))
+            return;
+        var focused = XamlRoot is { } root ? FocusManager.GetFocusedElement(root) as UIElement : null;
+        var at = focused is null ? -1 : ChipRow.Children.IndexOf(focused);
+        chips = next;
+        ChipRow.Children.Clear();
+        foreach (var (key, label) in next)
+            ChipRow.Children.Add(Chip(key, label));
+        ChipRow.Visibility = next.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (at < 0)
+            return;
+        if (ChipRow.Children.Count > 0)
+            ((Control)ChipRow.Children[Math.Min(at, ChipRow.Children.Count - 1)]).Focus(FocusState.Keyboard);
+        else
+            FiltersButton.Focus(FocusState.Keyboard);
+    }
+
+    Button Chip(FilterKey key, string label)
+    {
+        var chip = new Button
+        {
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 6,
+                Children =
+                {
+                    new TextBlock { Text = label, FontSize = 12, MaxLines = 1, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 280 },
+                    new FontIcon { Glyph = "", FontSize = 9 },
+                },
+            },
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(10, 3, 10, 4),
+            MinHeight = 26,
+            Background = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("RaisedBrush"),
+            BorderBrush = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("EdgeBrush"),
+            BorderThickness = new Thickness(1),
+        };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(chip, T.FilterRemove(label));
+        chip.Click += (_, _) => Change(filters.Without(key));
+        return chip;
+    }
+
+    // The panel.
+
+    void OnFilters(object sender, RoutedEventArgs e) => ShowPanel(!panelOpen);
+
+    /// <summary>Ctrl+Shift+F on this page: the panel opens, or closes when it is open.</summary>
+    internal void ToggleFilters() => ShowPanel(!panelOpen, fromKeys: true);
+
+    /// <summary>
+    /// The panel slides in from the right edge on the standard spring and fades out as it goes,
+    /// the results taking their new width at once. Opened from the keyboard, it takes the focus;
+    /// closed with the focus in it, the focus goes back to Filters.
+    /// </summary>
+    void ShowPanel(bool open, bool fromKeys = false)
+    {
+        panelOpen = open;
+        FiltersButton.IsChecked = open;
+        var visual = ElementCompositionPreview.GetElementVisual(PanelHost);
+        if (open)
+        {
+            panel.Show(filters, force: true);
+            Motion.ShowStandard(PanelHost);
+            Motion.Spring(visual, "Translation", System.Numerics.Vector3.Zero, new System.Numerics.Vector3(48, 0, 0));
+            if (fromKeys)
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, panel.FocusStart);
+            return;
+        }
+        var inside = XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focused && Within(focused, PanelHost);
+        Motion.Spring(visual, "Translation", new System.Numerics.Vector3(48, 0, 0));
+        Motion.HideStandard(PanelHost);
+        if (inside)
+            FiltersButton.Focus(FocusState.Keyboard);
+    }
+
+    static bool Within(DependencyObject element, DependencyObject ancestor)
+    {
+        for (var at = element; at is not null; at = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(at))
+            if (at == ancestor)
+                return true;
+        return false;
+    }
+
     void Clear()
     {
-        filters = SearchFilters.None;
+        filters = Searches.Nothing;
         BuildFilters();
         Run();
     }

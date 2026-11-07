@@ -957,6 +957,39 @@ public static partial class T
     /// <summary>Search: a filter drop-down with three or more values picked: the first, then how many more.</summary>
     public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</summary>
+    public static string SearchGenreLeftOut(string genre) => Fill(Get("SearchGenreLeftOut"), ("genre", genre));
+
+    /// <summary>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</summary>
+    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search: the shortcut list's line for opening and closing the filters panel.</summary>
+    public static string ShortcutsSearchFilters => Get("ShortcutsSearchFilters");
+
+    /// <summary>Search filters panel: how a genre or tag is picked with the pointer. A right-click offers each choice.</summary>
+    public static string FilterHintClick => Get("FilterHintClick");
+
+    /// <summary>Search filters panel: context menu item that includes a genre or tag in the results.</summary>
+    public static string SearchPickInclude => Get("SearchPickInclude");
+
+    /// <summary>Search filters panel: context menu item that leaves a genre or tag out of the results.</summary>
+    public static string SearchPickLeaveOut => Get("SearchPickLeaveOut");
+
+    /// <summary>Search filters panel: placeholder of the lower bound of a range, such as the first year.</summary>
+    public static string SearchRangeFrom => Get("SearchRangeFrom");
+
+    /// <summary>Search filters panel: placeholder of the upper bound of a range, such as the last year.</summary>
+    public static string SearchRangeTo => Get("SearchRangeTo");
+
+    /// <summary>Search filters panel: the unit after the episode length's bounds, in minutes.</summary>
+    public static string SearchMinutesUnit => Get("SearchMinutesUnit");
+
+    /// <summary>Search filters panel: the score slider's value while no minimum is set.</summary>
+    public static string SearchScoreAny => Get("SearchScoreAny");
+
+    /// <summary>Title bar search box: a suggestion that adds a genre or tag as a filter, rather than searching for the words.</summary>
+    public static string SearchSuggestFilter(string name) => Fill(Get("SearchSuggestFilter"), ("name", name));
+
     /// <summary>Title page: a season in the season picker with when it aired, such as "Season 2 · Spring 2025".</summary>
     public static string TitleSeasonWhen(string season, string when) => Fill(Get("TitleSeasonWhen"), ("season", season), ("when", when));
 
@@ -9115,6 +9148,17 @@ public static partial class T
         ["SearchSortName"] = "Sort",
         ["FilterPickedTwo"] = "{first}, {second}",
         ["FilterPickedMore"] = "{first} +{more}",
+        ["SearchGenreLeftOut"] = "Not {genre}",
+        ["SearchFiltersButtonSet"] = "Filters, {count} set",
+        ["ShortcutsSearchFilters"] = "Search filters",
+        ["FilterHintClick"] = "Click once to include, twice to leave out.",
+        ["SearchPickInclude"] = "Include",
+        ["SearchPickLeaveOut"] = "Leave out",
+        ["SearchRangeFrom"] = "From",
+        ["SearchRangeTo"] = "To",
+        ["SearchMinutesUnit"] = "min",
+        ["SearchScoreAny"] = "Any",
+        ["SearchSuggestFilter"] = "Filter by {name}",
         ["TitleSeasonWhen"] = "{season} · {when}",
         ["EpisodeDownloadText"] = "Download episode {episode}",
         ["EpisodeDownloadFailedText"] = "Couldn't download episode {episode}. Try again.",
