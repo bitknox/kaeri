@@ -17,6 +17,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -25,7 +27,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -574,6 +575,7 @@ private fun StepLabel(step: Int) {
  * start and the page's actions at the end, the filled one last. Skip, where a page has it, sits at
  * the top's end.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StepFrame(
     step: Int,
@@ -617,16 +619,19 @@ private fun StepFrame(
                 )
                 content()
             }
-            Row(
+            // In large text the actions wrap onto their own line at the end, never mid-word.
+            FlowRow(
                 Modifier.fillMaxWidth().padding(top = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(
-                    onClick = back,
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                ) { Text(stringResource(R.string.action_back)) }
-                Spacer(Modifier.weight(1f))
+                Box(Modifier.weight(1f)) {
+                    TextButton(
+                        onClick = back,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                    ) { Text(stringResource(R.string.action_back)) }
+                }
                 actions()
             }
         }
