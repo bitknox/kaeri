@@ -509,7 +509,7 @@ private fun MediumPopRow(place: Place, device: String, medium: KaeriIsFor, pick:
                             if (answer == medium) Icon(Icons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
                         }
                     },
-                    modifier = Modifier.heightIn(min = 48.dp).semantics { if (answer == medium) contentDescription = "$label, $selectedWord" },
+                    modifier = Modifier.heightIn(min = 48.dp).semantics { if (answer == medium) contentDescription = "$label, $selectedWord" }, // i18n-skip
                     onClick = {
                         open = false
                         pick(answer)

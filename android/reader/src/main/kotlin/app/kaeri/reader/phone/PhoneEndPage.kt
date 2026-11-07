@@ -267,7 +267,7 @@ private fun PhoneServerLineText(server: HeldLine, retryFocus: FocusRequester, af
         targetState = server.line,
         transitionSpec = { fadeIn(Motion.reveal()) togetherWith fadeOut(Motion.reveal()) },
         contentAlignment = Alignment.TopStart,
-        label = "server line",
+        label = "server line", // i18n-skip
         modifier = Modifier.fillMaxWidth().semantics {
             liveRegion = LiveRegionMode.Polite
             traversalIndex = 1f

@@ -45,6 +45,7 @@ import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.Place
 import app.kaeri.ui.RowFrame
 import app.kaeri.ui.RowText
+import app.kaeri.ui.kindWord
 
 /**
  * The server's row in Your sources with a second line for progress sent back to it: saved and
@@ -73,7 +74,7 @@ internal fun ServerProgressRow(
             targetState = retry,
             transitionSpec = { fadeIn(Motion.reveal()) togetherWith fadeOut(Motion.reveal()) },
             contentAlignment = Alignment.CenterStart,
-            label = "server progress try again",
+            label = "server progress try again", // i18n-skip
             modifier = modifier,
         ) { show ->
             if (show) {
@@ -102,7 +103,7 @@ internal fun ServerProgressRow(
                             targetState = line,
                             transitionSpec = { fadeIn(Motion.reveal()) togetherWith fadeOut(Motion.reveal()) },
                             contentAlignment = Alignment.TopStart,
-                            label = "server progress line",
+                            label = "server progress line", // i18n-skip
                             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                         ) { shown -> if (shown != null) RowProgressText(shown) }
                     }
@@ -123,7 +124,7 @@ private val WIDE_ROW = 480.dp
 private fun RowProgressText(line: RowLine) {
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
-    val words = rowProgressWords(context, line)
+    val words = rowProgressWords(context, line, kindWord())
     val style = MaterialTheme.typography.bodyMedium
     when (line) {
         is RowLine.Sending -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -150,8 +151,8 @@ private fun RowProgressText(line: RowLine) {
 private const val WARN = "warn"
 
 /** The row's second line in words. */
-internal fun rowProgressWords(context: Context, line: RowLine): String = when (line) {
-    RowLine.Off -> Strings.progressRowOff(context)
+internal fun rowProgressWords(context: Context, line: RowLine, kind: String): String = when (line) {
+    RowLine.Off -> Strings.progressRowOff(context, kind)
     is RowLine.Saved -> Strings.progressRowSaved(context, agoWords(context, line.at))
     is RowLine.Sending -> Strings.progressRowSending(context, line.count)
     is RowLine.Offline -> Strings.progressRowOffline(context, line.count)
