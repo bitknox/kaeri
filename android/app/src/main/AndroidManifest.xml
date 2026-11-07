@@ -16,6 +16,10 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- A cast's stream goes out through this device: the Wi-Fi and the processor stay awake for it. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- The TV remote's and the cast's media sessions run as foreground services of the media
+         playback type, which API 34 and up asks a permission of each. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- No backup: the tokens are sealed with a key that never leaves this device's keystore, so a
          restored copy could not open them, and everything else comes back from AniList and the stores. -->
