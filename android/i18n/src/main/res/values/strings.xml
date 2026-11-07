@@ -461,6 +461,22 @@
     <string name="reading_chapter_percent">Chapter %1$s · %2$d%%</string>
     <!-- Under a cover: a chapter came out that the person has not read. The chapter is its number. -->
     <string name="reading_chapter_new">Chapter %1$s is new</string>
+    <!-- Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. -->
+    <string name="reading_next_part">Part %1$s</string>
+    <!-- Under a cover or the big picture: how far into a light novel's part the person is. -->
+    <string name="reading_part_percent">Part %1$s · %2$d%%</string>
+    <!-- Under a cover: a light novel's part came out that the person has not read. -->
+    <string name="reading_part_new">Part %1$s is new</string>
+    <!-- Under a This week cell: a light novel's part that came out that day, with its own title. -->
+    <string name="reading_part_titled">Part %1$s · %2$s</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today. -->
+    <string name="reading_part_out_today">Part %1$s is out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title. -->
+    <string name="reading_part_out_today_titled">Part %1$s, %2$s, out today</string>
+    <!-- Under a Library cover: the chapter the person is at, and the newest chapter there is. -->
+    <string name="reading_chapter_of">Chapter %1$s of %2$s</string>
+    <!-- Under a Library cover: the volume and part of a light novel the person is at. -->
+    <string name="reading_volume_part">Volume %1$s, part %2$s</string>
     <!-- A search filter: books from Japan. -->
     <string name="reading_origin_japan">Japan</string>
     <!-- A search filter: books from Korea. -->
@@ -578,6 +594,20 @@
     <string name="reading_estimate_mobile">over mobile data</string>
     <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
     <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
+    <!-- The notification's title. -->
+    <string name="reading_downloads_done_title">Downloads finished</string>
+    <!-- The notification's text: one series' chapters are downloaded. -->
+    <plurals name="reading_downloads_done_chapters">
+        <item quantity="one">A chapter of %1$s is ready to read offline.</item>
+        <item quantity="other">%2$d chapters of %1$s are ready to read offline.</item>
+    </plurals>
+    <!-- The notification's text: one light novel's parts are downloaded. -->
+    <plurals name="reading_downloads_done_parts">
+        <item quantity="one">A part of %1$s is ready to read offline.</item>
+        <item quantity="other">%2$d parts of %1$s are ready to read offline.</item>
+    </plurals>
+    <!-- The notification's text: chapters of several series are downloaded. -->
+    <string name="reading_downloads_done_series">Chapters of %1$d series are ready to read offline.</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -4295,6 +4325,10 @@
     <string name="action_continue_chapter">Continue chapter %1$s · page %2$d</string>
     <!-- The main action for a light novel part, part read. -->
     <string name="action_continue_part">Continue part %1$s · %2$d%%</string>
+    <!-- The main action for a light novel part, part read, when how far is not known. -->
+    <string name="action_continue_part_plain">Continue part %1$s</string>
+    <!-- The main action for a light novel part not opened yet. -->
+    <string name="action_read_part">Read part %1$s</string>
     <!-- The main action when every chapter is read. -->
     <string name="action_read_again">Read again</string>
     <!-- Label of the source row on the series page. -->
@@ -4359,8 +4393,6 @@
     <string name="series_tracking">Tracking</string>
     <!-- The More menu: the Read from sheet. -->
     <string name="series_read_from_menu">Change source…</string>
-    <!-- The More menu: turn on choosing chapters in the list. -->
-    <string name="series_select_chapters">Select chapters</string>
     <!-- The More menu: start again from chapter 1. -->
     <string name="series_read_again_menu">Read again from the start…</string>
     <!-- Heading of the chapter list when the series has volumes. -->
@@ -4887,6 +4919,8 @@
     <string name="settings_delete_after_reading_note">Bookmarked chapters are kept</string>
     <!-- Line under New chapters. -->
     <string name="settings_chapter_notifications_note">Series on your Reading list</string>
+    <!-- Line under Downloads finished. -->
+    <string name="settings_downloads_finished_note">When the chapters downloading are all done</string>
     <!-- Under New chapters. -->
     <string name="settings_chapter_notifications_footer">Chapters have their own system channel, so they can be silenced on their own.</string>
     <!-- Credit under the trackers with reading on. -->
@@ -5534,6 +5568,8 @@
     <string name="settings_when_trackers_disagree">When trackers disagree</string>
     <!-- Row: whether a new chapter of a series on your Reading list sends a notification. -->
     <string name="settings_chapter_notifications">New chapters</string>
+    <!-- Row: whether the app sends a notification when the chapters it was downloading are all done. -->
+    <string name="settings_downloads_finished">Downloads finished</string>
     <!-- Row: which Home the app opens at while it is for watching and reading. -->
     <string name="settings_open_at">Open at</string>
     <!-- Row: seeding after watching. -->
@@ -7212,11 +7248,11 @@
     <string name="accounts_tracker_lists">Lists and progress</string>
     <!-- Line under MangaUpdates when it is not signed in. -->
     <string name="accounts_tracker_reading_lists">Reading lists and progress</string>
-    <!-- Line under a tracker on a phone with both media on: it serves shows and reading. -->
+    <!-- Line under a tracker with both media on: it serves shows and reading. -->
     <string name="accounts_tracker_serves_both">Shows and reading</string>
-    <!-- Line under a tracker on a phone with both media on: it serves reading only. -->
+    <!-- Line under a tracker with both media on: it serves reading only. -->
     <string name="accounts_tracker_serves_reading">Reading</string>
-    <!-- Line under a tracker on a phone with both media on: it serves shows only. -->
+    <!-- Line under a tracker with both media on: it serves shows only. -->
     <string name="accounts_tracker_serves_shows">Shows</string>
     <!-- Line under the accounts screen when the library needs a tracker. -->
     <string name="accounts_library_needs">Library and sync need your %1$s account</string>

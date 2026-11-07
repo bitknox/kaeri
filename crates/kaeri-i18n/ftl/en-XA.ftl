@@ -683,6 +683,30 @@ reading-chapter-percent = [Çĥàþţéŕ { $chapter } · { $percent }%~~~~~~]
 # Under a cover: a chapter came out that the person has not read. The chapter is its number.
 reading-chapter-new = [Çĥàþţéŕ { $chapter } îš ñéŵ~~~~~~]
 
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = [Þàŕţ { $part }~~~]
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = [Þàŕţ { $part } · { $percent }%~~~~~]
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = [Þàŕţ { $part } îš ñéŵ~~~~~]
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = [Þàŕţ { $part } · { $title }~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = [Þàŕţ { $part } îš öüţ ţöðàý~~~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = [Þàŕţ { $part }, { $title }, öüţ ţöðàý~~~~~~~~]
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = [Çĥàþţéŕ { $chapter } öƒ { $of }~~~~~~]
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = [Ṽöļüɱé { $volume }, þàŕţ { $part }~~~~~~]
+
 # A search filter: books from Japan.
 reading-origin-japan = [Ĵàþàñ~~]
 
@@ -854,6 +878,26 @@ reading-estimate-mobile = [öṽéŕ ɱöƀîļé ðàţà~~~~~]
 
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
+
+# The notification's title.
+reading-downloads-done-title = [Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] [Å çĥàþţéŕ öƒ { $title } îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]
+       *[other] [{ $count } çĥàþţéŕš öƒ { $title } àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~]
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] [Å þàŕţ öƒ { $title } îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~]
+       *[other] [{ $count } þàŕţš öƒ { $title } àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = [Çĥàþţéŕš öƒ { $count } šéŕîéš àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~~]
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
@@ -8140,6 +8184,12 @@ action-continue-chapter = [Çöñţîñüé çĥàþţéŕ { $n } · þàĝé { 
 # The main action for a light novel part, part read.
 action-continue-part = [Çöñţîñüé þàŕţ { $n } · { $percent }%~~~~~~~~]
 
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = [Çöñţîñüé þàŕţ { $n }~~~~~~]
+
+# The main action for a light novel part not opened yet.
+action-read-part = [Ŕéàð þàŕţ { $n }~~~~]
+
 # The main action when every chapter is read.
 action-read-again = [Ŕéàð àĝàîñ~~~]
 
@@ -8233,9 +8283,6 @@ series-tracking = [Ţŕàçķîñĝ~~~]
 
 # The More menu: the Read from sheet.
 series-read-from-menu = [Çĥàñĝé šöüŕçé…~~~~~]
-
-# The More menu: turn on choosing chapters in the list.
-series-select-chapters = [Šéļéçţ çĥàþţéŕš~~~~~]
 
 # The More menu: start again from chapter 1.
 series-read-again-menu = [Ŕéàð àĝàîñ ƒŕöɱ ţĥé šţàŕţ…~~~~~~~~]
@@ -9019,6 +9066,9 @@ settings-delete-after-reading-note = [Ɓööķɱàŕķéð çĥàþţéŕš àŕ
 
 # Line under New chapters.
 settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]
+
+# Line under Downloads finished.
+settings-downloads-finished-note = [Ŵĥéñ ţĥé çĥàþţéŕš ðöŵñļöàðîñĝ àŕé àļļ ðöñé~~~~~~~~~~~~~]
 
 # Under New chapters.
 settings-chapter-notifications-footer = [Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ţĥéý çàñ ƀé šîļéñçéð öñ ţĥéîŕ öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -9984,6 +10034,9 @@ settings-when-trackers-disagree = [Ŵĥéñ ţŕàçķéŕš ðîšàĝŕéé~~~
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = [Ñéŵ çĥàþţéŕš~~~~]
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = [Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]
 
 # Row: which Home the app opens at while it is for watching and reading.
 settings-open-at = [Öþéñ àţ~~~]
@@ -12496,13 +12549,13 @@ accounts-tracker-lists = [Ļîšţš àñð þŕöĝŕéšš~~~~~~]
 # Line under MangaUpdates when it is not signed in.
 accounts-tracker-reading-lists = [Ŕéàðîñĝ ļîšţš àñð þŕöĝŕéšš~~~~~~~~]
 
-# Line under a tracker on a phone with both media on: it serves shows and reading.
+# Line under a tracker with both media on: it serves shows and reading.
 accounts-tracker-serves-both = [Šĥöŵš àñð ŕéàðîñĝ~~~~~~]
 
-# Line under a tracker on a phone with both media on: it serves reading only.
+# Line under a tracker with both media on: it serves reading only.
 accounts-tracker-serves-reading = [Ŕéàðîñĝ~~~]
 
-# Line under a tracker on a phone with both media on: it serves shows only.
+# Line under a tracker with both media on: it serves shows only.
 accounts-tracker-serves-shows = [Šĥöŵš~~]
 
 # Line under the accounts screen when the library needs a tracker.

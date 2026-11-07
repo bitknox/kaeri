@@ -654,6 +654,30 @@ public static partial class T
     /// <summary>Under a cover: a chapter came out that the person has not read. The chapter is its number.</summary>
     public static string ReadingChapterNew(string chapter) => Fill(Get("ReadingChapterNew"), ("chapter", chapter));
 
+    /// <summary>Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.</summary>
+    public static string ReadingNextPart(string part) => Fill(Get("ReadingNextPart"), ("part", part));
+
+    /// <summary>Under a cover or the big picture: how far into a light novel's part the person is.</summary>
+    public static string ReadingPartPercent(string part, long percent) => Fill(Get("ReadingPartPercent"), ("part", part), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a light novel's part came out that the person has not read.</summary>
+    public static string ReadingPartNew(string part) => Fill(Get("ReadingPartNew"), ("part", part));
+
+    /// <summary>Under a This week cell: a light novel's part that came out that day, with its own title.</summary>
+    public static string ReadingPartTitled(string part, string title) => Fill(Get("ReadingPartTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today.</summary>
+    public static string ReadingPartOutToday(string part) => Fill(Get("ReadingPartOutToday"), ("part", part));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</summary>
+    public static string ReadingPartOutTodayTitled(string part, string title) => Fill(Get("ReadingPartOutTodayTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under a Library cover: the chapter the person is at, and the newest chapter there is.</summary>
+    public static string ReadingChapterOf(string chapter, string of) => Fill(Get("ReadingChapterOf"), ("chapter", chapter), ("of", of));
+
+    /// <summary>Under a Library cover: the volume and part of a light novel the person is at.</summary>
+    public static string ReadingVolumePart(string volume, string part) => Fill(Get("ReadingVolumePart"), ("volume", volume), ("part", part));
+
     /// <summary>A search filter: books from Japan.</summary>
     public static string ReadingOriginJapan => Get("ReadingOriginJapan");
 
@@ -797,6 +821,18 @@ public static partial class T
 
     /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
     public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
+    /// <summary>The notification's title.</summary>
+    public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
+
+    /// <summary>The notification's text: one series' chapters are downloaded.</summary>
+    public static string ReadingDownloadsDoneChapters(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneChapters", count), ("title", title), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The notification's text: one light novel's parts are downloaded.</summary>
+    public static string ReadingDownloadsDoneParts(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneParts", count), ("title", title), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The notification's text: chapters of several series are downloaded.</summary>
+    public static string ReadingDownloadsDoneSeries(long count) => Fill(Get("ReadingDownloadsDoneSeries"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
@@ -5254,6 +5290,12 @@ public static partial class T
     /// <summary>The main action for a light novel part, part read.</summary>
     public static string ActionContinuePart(string n, long percent) => Fill(Get("ActionContinuePart"), ("n", n), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The main action for a light novel part, part read, when how far is not known.</summary>
+    public static string ActionContinuePartPlain(string n) => Fill(Get("ActionContinuePartPlain"), ("n", n));
+
+    /// <summary>The main action for a light novel part not opened yet.</summary>
+    public static string ActionReadPart(string n) => Fill(Get("ActionReadPart"), ("n", n));
+
     /// <summary>The main action when every chapter is read.</summary>
     public static string ActionReadAgain => Get("ActionReadAgain");
 
@@ -5331,9 +5373,6 @@ public static partial class T
 
     /// <summary>The More menu: the Read from sheet.</summary>
     public static string SeriesReadFromMenu => Get("SeriesReadFromMenu");
-
-    /// <summary>The More menu: turn on choosing chapters in the list.</summary>
-    public static string SeriesSelectChapters => Get("SeriesSelectChapters");
 
     /// <summary>The More menu: start again from chapter 1.</summary>
     public static string SeriesReadAgainMenu => Get("SeriesReadAgainMenu");
@@ -6069,6 +6108,9 @@ public static partial class T
 
     /// <summary>Line under New chapters.</summary>
     public static string SettingsChapterNotificationsNote => Get("SettingsChapterNotificationsNote");
+
+    /// <summary>Line under Downloads finished.</summary>
+    public static string SettingsDownloadsFinishedNote => Get("SettingsDownloadsFinishedNote");
 
     /// <summary>Under New chapters.</summary>
     public static string SettingsChapterNotificationsFooter => Get("SettingsChapterNotificationsFooter");
@@ -6990,6 +7032,9 @@ public static partial class T
 
     /// <summary>Row: whether a new chapter of a series on your Reading list sends a notification.</summary>
     public static string SettingsChapterNotifications => Get("SettingsChapterNotifications");
+
+    /// <summary>Row: whether the app sends a notification when the chapters it was downloading are all done.</summary>
+    public static string SettingsDownloadsFinished => Get("SettingsDownloadsFinished");
 
     /// <summary>Row: which Home the app opens at while it is for watching and reading.</summary>
     public static string SettingsOpenAt => Get("SettingsOpenAt");
@@ -9446,13 +9491,13 @@ public static partial class T
     /// <summary>Line under MangaUpdates when it is not signed in.</summary>
     public static string AccountsTrackerReadingLists => Get("AccountsTrackerReadingLists");
 
-    /// <summary>Line under a tracker on a phone with both media on: it serves shows and reading.</summary>
+    /// <summary>Line under a tracker with both media on: it serves shows and reading.</summary>
     public static string AccountsTrackerServesBoth => Get("AccountsTrackerServesBoth");
 
-    /// <summary>Line under a tracker on a phone with both media on: it serves reading only.</summary>
+    /// <summary>Line under a tracker with both media on: it serves reading only.</summary>
     public static string AccountsTrackerServesReading => Get("AccountsTrackerServesReading");
 
-    /// <summary>Line under a tracker on a phone with both media on: it serves shows only.</summary>
+    /// <summary>Line under a tracker with both media on: it serves shows only.</summary>
     public static string AccountsTrackerServesShows => Get("AccountsTrackerServesShows");
 
     /// <summary>Line under the accounts screen when the library needs a tracker.</summary>
@@ -10317,6 +10362,14 @@ public static partial class T
         ["ReadingChapterPage"] = "Chapter {chapter} · page {page}",
         ["ReadingChapterPercent"] = "Chapter {chapter} · {percent}%",
         ["ReadingChapterNew"] = "Chapter {chapter} is new",
+        ["ReadingNextPart"] = "Part {part}",
+        ["ReadingPartPercent"] = "Part {part} · {percent}%",
+        ["ReadingPartNew"] = "Part {part} is new",
+        ["ReadingPartTitled"] = "Part {part} · {title}",
+        ["ReadingPartOutToday"] = "Part {part} is out today",
+        ["ReadingPartOutTodayTitled"] = "Part {part}, {title}, out today",
+        ["ReadingChapterOf"] = "Chapter {chapter} of {of}",
+        ["ReadingVolumePart"] = "Volume {volume}, part {part}",
         ["ReadingOriginJapan"] = "Japan",
         ["ReadingOriginKorea"] = "Korea",
         ["ReadingOriginChina"] = "China",
@@ -10372,6 +10425,12 @@ public static partial class T
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
         ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDownloadsDoneTitle"] = "Downloads finished",
+        ["ReadingDownloadsDoneChapters_one"] = "A chapter of {title} is ready to read offline.",
+        ["ReadingDownloadsDoneChapters_other"] = "{count} chapters of {title} are ready to read offline.",
+        ["ReadingDownloadsDoneParts_one"] = "A part of {title} is ready to read offline.",
+        ["ReadingDownloadsDoneParts_other"] = "{count} parts of {title} are ready to read offline.",
+        ["ReadingDownloadsDoneSeries"] = "Chapters of {count} series are ready to read offline.",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -11906,6 +11965,8 @@ public static partial class T
         ["ActionReadChapter"] = "Read chapter {n}",
         ["ActionContinueChapter"] = "Continue chapter {n} · page {page}",
         ["ActionContinuePart"] = "Continue part {n} · {percent}%",
+        ["ActionContinuePartPlain"] = "Continue part {n}",
+        ["ActionReadPart"] = "Read part {n}",
         ["ActionReadAgain"] = "Read again",
         ["SeriesReadingFrom"] = "Reading from",
         ["SeriesChange"] = "Change",
@@ -11936,7 +11997,6 @@ public static partial class T
         ["ReadFromSearchNone"] = "Nothing found by these words",
         ["SeriesTracking"] = "Tracking",
         ["SeriesReadFromMenu"] = "Change source…",
-        ["SeriesSelectChapters"] = "Select chapters",
         ["SeriesReadAgainMenu"] = "Read again from the start…",
         ["SeriesVolumes"] = "Volumes",
         ["SeriesChapters"] = "Chapters",
@@ -12194,6 +12254,7 @@ public static partial class T
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
+        ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
         ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so they can be silenced on their own.",
         ["AccountsMangaupdatesCredit"] = "MangaUpdates is reached through its public API.",
         ["AccountsUsername"] = "User name",
@@ -12512,6 +12573,7 @@ public static partial class T
         ["SettingsSendProgressAfter"] = "Send progress after",
         ["SettingsWhenTrackersDisagree"] = "When trackers disagree",
         ["SettingsChapterNotifications"] = "New chapters",
+        ["SettingsDownloadsFinished"] = "Downloads finished",
         ["SettingsOpenAt"] = "Open at",
         ["SettingsSeedAfter"] = "Seed after watching",
         ["SettingsSeedFor"] = "Seed for at most",

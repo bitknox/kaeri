@@ -4,7 +4,7 @@
 use kaeri_core::{
     books::{ChapterId, WorkId},
     ids::AnilistId,
-    media::MediaStatus,
+    media::{MediaStatus, Medium},
 };
 use kaeri_meta::{KeptBook, Meta, anilist::books::Book};
 use kaeri_model::{
@@ -91,17 +91,20 @@ pub fn reading(
 pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::BookSources) {
     let read = Read::of(store, tile.work.as_str());
     let list = chapters::of_work(sources, store, &tile.work).map(|(_, _, list)| list);
+    let novel = tile.medium == Medium::Novel;
     if let Some((chapter, page, of)) = &read.in_progress {
         let label = number_of(list.as_deref(), chapter);
-        tile.next = Some(match page {
-            Some(page) => words::chapter_page(&label, *page),
-            None => words::next_chapter(&label),
-        });
         // The page count the reader saw, else the one the source lists.
         let of = of.or_else(|| {
             list.as_deref()
                 .and_then(|l| l.iter().find(|c| c.id == *chapter))
                 .and_then(|c| c.pages)
+        });
+        // A light novel reads in parts, so its place is a part and how far into it.
+        tile.next = Some(match page {
+            _ if novel => words::part_place(&label, words::part_percent(*page, of)),
+            Some(page) => words::chapter_page(&label, *page),
+            None => words::next_chapter(&label),
         });
         tile.progress = match (page, of) {
             (Some(page), Some(of)) if of > 0 => Some((*page as f32 / of as f32).min(1.0)),
@@ -111,13 +114,60 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
         // The dot always has its words: "Chapter 88 is new".
         if let Some(new) = read.new_for_you(list) {
             let number = new.number.clone().unwrap_or_else(|| new.label.clone());
-            tile.next = Some(Msg::Reading(ReadingMsg::ReadingChapterNew { chapter: number }));
+            tile.next = Some(words::unit_new(tile.medium, &number));
             tile.new_chapter = true;
         } else if let Some(next) = read.next(list) {
-            tile.next =
-                Some(words::next_chapter(next.number.as_deref().unwrap_or(&next.label)));
+            tile.next = Some(words::next_unit(
+                tile.medium,
+                next.number.as_deref().unwrap_or(&next.label),
+            ));
         }
     }
+}
+
+/// A Library cover's line: the chapter the person is at and the newest there is, "Chapter 41
+/// of 43", and for a light novel its volume and part, "Volume 6, part 5". Shorter than the
+/// other covers' words, which the track under the cover already says.
+pub fn library_line(
+    tile: &mut WorkTile,
+    store: &Store,
+    sources: &crate::read_sources::BookSources,
+) {
+    let Some((_, _, list)) = chapters::of_work(sources, store, &tile.work) else { return };
+    let read = Read::of(store, tile.work.as_str());
+    let at = read
+        .in_progress
+        .as_ref()
+        .and_then(|(id, _, _)| list.iter().find(|c| c.id == *id))
+        .or_else(|| read.next(&list))
+        .or_else(|| list.iter().rev().find(|c| read.is_read(&c.id)));
+    let Some(at) = at else { return };
+    let number = at.number.clone().unwrap_or_else(|| at.label.clone());
+    let line = if tile.medium == Medium::Novel {
+        match &at.volume {
+            Some(volume) => {
+                ReadingMsg::ReadingVolumePart { volume: volume.clone(), part: number }
+            }
+            None => ReadingMsg::ReadingNextPart { part: number },
+        }
+    } else {
+        match newest_number(&list) {
+            Some(of) => ReadingMsg::ReadingChapterOf { chapter: number, of },
+            None => return,
+        }
+    };
+    tile.next = Some(Msg::Reading(line));
+}
+
+/// The newest chapter's number as people read it: the highest of the numbered ones.
+fn newest_number(list: &[chapters::Kept]) -> Option<String> {
+    list.iter()
+        .filter_map(|c| {
+            let number = c.number.as_deref()?;
+            Some((number.parse::<f64>().ok()?, number))
+        })
+        .max_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|(_, n)| n.to_owned())
 }
 
 /// A chapter's number as a person reads it, from the list when it is there.
@@ -142,32 +192,45 @@ pub fn action(
     let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
         let label = number_of(list.as_deref(), &chapter);
+        // The page count the reader saw, else the one the source lists, as the cover does.
+        let of = of.or_else(|| {
+            list.as_deref()
+                .and_then(|l| l.iter().find(|c| c.id == chapter))
+                .and_then(|c| c.pages)
+        });
         let chapter = ChapterId::new(chapter);
         return match (medium, page) {
-            (kaeri_core::media::Medium::Novel, _) => {
-                let percent = match (page, of) {
-                    (Some(p), Some(of)) if of > 0 => {
-                        (p.saturating_mul(100) / of).min(100) as u8
-                    }
-                    _ => 0,
-                };
-                SeriesAction::ContinuePart { chapter, label, percent }
+            (Medium::Novel, _) => SeriesAction::ContinuePart {
+                chapter,
+                label,
+                percent: words::part_percent(page, of),
+            },
+            (_, Some(page)) => {
+                SeriesAction::Continue { chapter, label, page: words::shown_page(page) }
             }
-            (_, Some(page)) => SeriesAction::Continue { chapter, label, page },
             (_, None) => SeriesAction::Read { chapter, label },
         };
     }
     let Some(list) = list else {
         // Not asked yet: the first chapter, until the source answers.
-        return SeriesAction::Read { chapter: ChapterId::new("1"), label: "1".into() };
+        return read_action(medium, ChapterId::new("1"), "1".into());
     };
     match read.next(&list) {
-        Some(next) => SeriesAction::Read {
-            chapter: ChapterId::new(next.id.clone()),
-            label: next.number.clone().unwrap_or_else(|| next.label.clone()),
-        },
+        Some(next) => read_action(
+            medium,
+            ChapterId::new(next.id.clone()),
+            next.number.clone().unwrap_or_else(|| next.label.clone()),
+        ),
         None if list.is_empty() => SeriesAction::NoSource,
         None => SeriesAction::ReadAgain,
+    }
+}
+
+/// Read a chapter not opened yet: "Read chapter 88", or "Read part 3" for a light novel.
+pub fn read_action(medium: Medium, chapter: ChapterId, label: String) -> SeriesAction {
+    match medium {
+        Medium::Novel => SeriesAction::ReadPart { chapter, label },
+        _ => SeriesAction::Read { chapter, label },
     }
 }
 

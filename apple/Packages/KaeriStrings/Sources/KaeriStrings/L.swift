@@ -864,6 +864,46 @@ public enum L {
         Self.format("reading-chapter-new", fallback: "Chapter %1$@ is new", chapter)
     }
 
+    /// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+    public static func readingNextPart(part: String) -> String {
+        Self.format("reading-next-part", fallback: "Part %1$@", part)
+    }
+
+    /// Under a cover or the big picture: how far into a light novel's part the person is.
+    public static func readingPartPercent(part: String, percent: Int) -> String {
+        Self.format("reading-part-percent", fallback: "Part %1$@ · %2$lld%%", part, percent)
+    }
+
+    /// Under a cover: a light novel's part came out that the person has not read.
+    public static func readingPartNew(part: String) -> String {
+        Self.format("reading-part-new", fallback: "Part %1$@ is new", part)
+    }
+
+    /// Under a This week cell: a light novel's part that came out that day, with its own title.
+    public static func readingPartTitled(part: String, title: String) -> String {
+        Self.format("reading-part-titled", fallback: "Part %1$@ · %2$@", part, title)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today.
+    public static func readingPartOutToday(part: String) -> String {
+        Self.format("reading-part-out-today", fallback: "Part %1$@ is out today", part)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+    public static func readingPartOutTodayTitled(part: String, title: String) -> String {
+        Self.format("reading-part-out-today-titled", fallback: "Part %1$@, %2$@, out today", part, title)
+    }
+
+    /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+    public static func readingChapterOf(chapter: String, of: String) -> String {
+        Self.format("reading-chapter-of", fallback: "Chapter %1$@ of %2$@", chapter, of)
+    }
+
+    /// Under a Library cover: the volume and part of a light novel the person is at.
+    public static func readingVolumePart(volume: String, part: String) -> String {
+        Self.format("reading-volume-part", fallback: "Volume %1$@, part %2$@", volume, part)
+    }
+
     /// A search filter: books from Japan.
     public static var readingOriginJapan: String { string("reading-origin-japan", fallback: "Japan") }
 
@@ -1061,6 +1101,24 @@ public enum L {
 
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     public static var readingEstimateWaitsWifi: String { string("reading-estimate-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// The notification's title.
+    public static var readingDownloadsDoneTitle: String { string("reading-downloads-done-title", fallback: "Downloads finished") }
+
+    /// The notification's text: one series' chapters are downloaded.
+    public static func readingDownloadsDoneChapters(title: String, count: Int) -> String {
+        Self.format("reading-downloads-done-chapters", fallback: "%2$lld chapters of %1$@ are ready to read offline.", title, count)
+    }
+
+    /// The notification's text: one light novel's parts are downloaded.
+    public static func readingDownloadsDoneParts(title: String, count: Int) -> String {
+        Self.format("reading-downloads-done-parts", fallback: "%2$lld parts of %1$@ are ready to read offline.", title, count)
+    }
+
+    /// The notification's text: chapters of several series are downloaded.
+    public static func readingDownloadsDoneSeries(count: Int) -> String {
+        Self.format("reading-downloads-done-series", fallback: "Chapters of %1$lld series are ready to read offline.", count)
+    }
 
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
@@ -7973,6 +8031,16 @@ public enum L {
         Self.format("action-continue-part", fallback: "Continue part %1$@ · %2$lld%%", n, percent)
     }
 
+    /// The main action for a light novel part, part read, when how far is not known.
+    public static func actionContinuePartPlain(n: String) -> String {
+        Self.format("action-continue-part-plain", fallback: "Continue part %1$@", n)
+    }
+
+    /// The main action for a light novel part not opened yet.
+    public static func actionReadPart(n: String) -> String {
+        Self.format("action-read-part", fallback: "Read part %1$@", n)
+    }
+
     /// The main action when every chapter is read.
     public static var actionReadAgain: String { string("action-read-again", fallback: "Read again") }
 
@@ -8066,9 +8134,6 @@ public enum L {
 
     /// The More menu: the Read from sheet.
     public static var seriesReadFromMenu: String { string("series-read-from-menu", fallback: "Change source…") }
-
-    /// The More menu: turn on choosing chapters in the list.
-    public static var seriesSelectChapters: String { string("series-select-chapters", fallback: "Select chapters") }
 
     /// The More menu: start again from chapter 1.
     public static var seriesReadAgainMenu: String { string("series-read-again-menu", fallback: "Read again from the start…") }
@@ -8916,6 +8981,9 @@ public enum L {
 
     /// Line under New chapters.
     public static var settingsChapterNotificationsNote: String { string("settings-chapter-notifications-note", fallback: "Series on your Reading list") }
+
+    /// Line under Downloads finished.
+    public static var settingsDownloadsFinishedNote: String { string("settings-downloads-finished-note", fallback: "When the chapters downloading are all done") }
 
     /// Under New chapters.
     public static var settingsChapterNotificationsFooter: String { string("settings-chapter-notifications-footer", fallback: "Chapters have their own system channel, so they can be silenced on their own.") }
@@ -9953,6 +10021,9 @@ public enum L {
 
     /// Row: whether a new chapter of a series on your Reading list sends a notification.
     public static var settingsChapterNotifications: String { string("settings-chapter-notifications", fallback: "New chapters") }
+
+    /// Row: whether the app sends a notification when the chapters it was downloading are all done.
+    public static var settingsDownloadsFinished: String { string("settings-downloads-finished", fallback: "Downloads finished") }
 
     /// Row: which Home the app opens at while it is for watching and reading.
     public static var settingsOpenAt: String { string("settings-open-at", fallback: "Open at") }
@@ -12811,13 +12882,13 @@ public enum L {
     /// Line under MangaUpdates when it is not signed in.
     public static var accountsTrackerReadingLists: String { string("accounts-tracker-reading-lists", fallback: "Reading lists and progress") }
 
-    /// Line under a tracker on a phone with both media on: it serves shows and reading.
+    /// Line under a tracker with both media on: it serves shows and reading.
     public static var accountsTrackerServesBoth: String { string("accounts-tracker-serves-both", fallback: "Shows and reading") }
 
-    /// Line under a tracker on a phone with both media on: it serves reading only.
+    /// Line under a tracker with both media on: it serves reading only.
     public static var accountsTrackerServesReading: String { string("accounts-tracker-serves-reading", fallback: "Reading") }
 
-    /// Line under a tracker on a phone with both media on: it serves shows only.
+    /// Line under a tracker with both media on: it serves shows only.
     public static var accountsTrackerServesShows: String { string("accounts-tracker-serves-shows", fallback: "Shows") }
 
     /// Line under the accounts screen when the library needs a tracker.

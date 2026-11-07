@@ -1108,6 +1108,9 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
     });
     read(READING_NOVEL, "3", now - DAY, &|e| {
         e.novel_pos = Some("3/0.4.1/120".into());
+        // The reader keeps the page it laid out with the place: a third of the way in.
+        e.page = Some(16);
+        e.of_pages = Some(47);
     });
     seed_reading_catalog(store, now);
     match scene {

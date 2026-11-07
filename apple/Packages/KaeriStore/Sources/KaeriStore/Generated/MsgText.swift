@@ -364,6 +364,14 @@ extension ReadingMsg {
         case .readingChapterPage(let chapter, let page): L.readingChapterPage(chapter: chapter, page: Int(page))
         case .readingChapterPercent(let chapter, let percent): L.readingChapterPercent(chapter: chapter, percent: Int(percent))
         case .readingChapterNew(let chapter): L.readingChapterNew(chapter: chapter)
+        case .readingNextPart(let part): L.readingNextPart(part: part)
+        case .readingPartPercent(let part, let percent): L.readingPartPercent(part: part, percent: Int(percent))
+        case .readingPartNew(let part): L.readingPartNew(part: part)
+        case .readingPartTitled(let part, let title): L.readingPartTitled(part: part, title: title)
+        case .readingPartOutToday(let part): L.readingPartOutToday(part: part)
+        case .readingPartOutTodayTitled(let part, let title): L.readingPartOutTodayTitled(part: part, title: title)
+        case .readingChapterOf(let chapter, let of): L.readingChapterOf(chapter: chapter, of: of)
+        case .readingVolumePart(let volume, let part): L.readingVolumePart(volume: volume, part: part)
         case .readingOriginJapan: L.readingOriginJapan
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
@@ -412,6 +420,10 @@ extension ReadingMsg {
         case .readingEstimateWifi: L.readingEstimateWifi
         case .readingEstimateMobile: L.readingEstimateMobile
         case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
+        case .readingDownloadsDoneTitle: L.readingDownloadsDoneTitle
+        case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
+        case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))
+        case .readingDownloadsDoneSeries(let count): L.readingDownloadsDoneSeries(count: Int(count))
         }
     }
 }

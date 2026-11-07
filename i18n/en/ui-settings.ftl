@@ -253,6 +253,9 @@ settings-when-trackers-disagree = When { -tracker-pl } disagree
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = New chapters
 
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Downloads finished
+
 # Row: which Home the app opens at while it is for watching and reading.
 settings-open-at = Open at
 

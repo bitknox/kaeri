@@ -168,14 +168,18 @@ fn list(kit: &Kit, ask: Ask, segment: LibrarySegmentRead) -> Vec<WorkTile> {
     works
         .iter()
         .filter_map(|work| {
-            if let Some(k) = kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
-                if !ask.adult && k.book.adult() {
-                    return None;
-                }
-                return Some(tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book));
-            }
-            let series = local.iter().find(|s| s.work.as_deref() == Some(work.as_str()))?;
-            Some(local_tile(kit, work, &series.name, &series.medium))
+            let mut tile =
+                match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
+                    Some(k) if !ask.adult && k.book.adult() => return None,
+                    Some(k) => tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book),
+                    None => {
+                        let series =
+                            local.iter().find(|s| s.work.as_deref() == Some(work.as_str()))?;
+                        local_tile(kit, work, &series.name, &series.medium)
+                    }
+                };
+            tiles::library_line(&mut tile, &kit.store, &kit.sources);
+            Some(tile)
         })
         .collect()
 }

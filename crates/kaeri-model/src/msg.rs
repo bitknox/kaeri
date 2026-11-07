@@ -1301,6 +1301,22 @@ pub enum ReadingMsg {
     ReadingChapterPercent { chapter: String, percent: i64 },
     /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
     ReadingChapterNew { chapter: String },
+    /// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+    ReadingNextPart { part: String },
+    /// Under a cover or the big picture: how far into a light novel's part the person is.
+    ReadingPartPercent { part: String, percent: i64 },
+    /// Under a cover: a light novel's part came out that the person has not read.
+    ReadingPartNew { part: String },
+    /// Under a This week cell: a light novel's part that came out that day, with its own title.
+    ReadingPartTitled { part: String, title: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today.
+    ReadingPartOutToday { part: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+    ReadingPartOutTodayTitled { part: String, title: String },
+    /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+    ReadingChapterOf { chapter: String, of: String },
+    /// Under a Library cover: the volume and part of a light novel the person is at.
+    ReadingVolumePart { volume: String, part: String },
     /// A search filter: books from Japan.
     ReadingOriginJapan,
     /// A search filter: books from Korea.
@@ -1397,6 +1413,14 @@ pub enum ReadingMsg {
     ReadingEstimateMobile,
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     ReadingEstimateWaitsWifi,
+    /// The notification's title.
+    ReadingDownloadsDoneTitle,
+    /// The notification's text: one series' chapters are downloaded.
+    ReadingDownloadsDoneChapters { title: String, count: i64 },
+    /// The notification's text: one light novel's parts are downloaded.
+    ReadingDownloadsDoneParts { title: String, count: i64 },
+    /// The notification's text: chapters of several series are downloaded.
+    ReadingDownloadsDoneSeries { count: i64 },
 }
 
 impl ReadingMsg {
@@ -1462,6 +1486,14 @@ impl ReadingMsg {
             Self::ReadingChapterPage { .. } => "reading-chapter-page",
             Self::ReadingChapterPercent { .. } => "reading-chapter-percent",
             Self::ReadingChapterNew { .. } => "reading-chapter-new",
+            Self::ReadingNextPart { .. } => "reading-next-part",
+            Self::ReadingPartPercent { .. } => "reading-part-percent",
+            Self::ReadingPartNew { .. } => "reading-part-new",
+            Self::ReadingPartTitled { .. } => "reading-part-titled",
+            Self::ReadingPartOutToday { .. } => "reading-part-out-today",
+            Self::ReadingPartOutTodayTitled { .. } => "reading-part-out-today-titled",
+            Self::ReadingChapterOf { .. } => "reading-chapter-of",
+            Self::ReadingVolumePart { .. } => "reading-volume-part",
             Self::ReadingOriginJapan => "reading-origin-japan",
             Self::ReadingOriginKorea => "reading-origin-korea",
             Self::ReadingOriginChina => "reading-origin-china",
@@ -1510,6 +1542,10 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
             Self::ReadingEstimateWaitsWifi => "reading-estimate-waits-wifi",
+            Self::ReadingDownloadsDoneTitle => "reading-downloads-done-title",
+            Self::ReadingDownloadsDoneChapters { .. } => "reading-downloads-done-chapters",
+            Self::ReadingDownloadsDoneParts { .. } => "reading-downloads-done-parts",
+            Self::ReadingDownloadsDoneSeries { .. } => "reading-downloads-done-series",
         }
     }
 
@@ -1575,6 +1611,14 @@ impl ReadingMsg {
             Self::ReadingChapterPage { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page))],
             Self::ReadingChapterPercent { chapter, percent } => vec![("chapter", Value::Text(chapter.clone())), ("percent", Value::Int(*percent))],
             Self::ReadingChapterNew { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingNextPart { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartPercent { part, percent } => vec![("part", Value::Text(part.clone())), ("percent", Value::Int(*percent))],
+            Self::ReadingPartNew { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingPartOutToday { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartOutTodayTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingChapterOf { chapter, of } => vec![("chapter", Value::Text(chapter.clone())), ("of", Value::Text(of.clone()))],
+            Self::ReadingVolumePart { volume, part } => vec![("volume", Value::Text(volume.clone())), ("part", Value::Text(part.clone()))],
             Self::ReadingOriginJapan => Vec::new(),
             Self::ReadingOriginKorea => Vec::new(),
             Self::ReadingOriginChina => Vec::new(),
@@ -1623,6 +1667,10 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),
             Self::ReadingEstimateWaitsWifi => Vec::new(),
+            Self::ReadingDownloadsDoneTitle => Vec::new(),
+            Self::ReadingDownloadsDoneChapters { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
+            Self::ReadingDownloadsDoneParts { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
+            Self::ReadingDownloadsDoneSeries { count } => vec![("count", Value::Int(*count))],
         }
     }
 }

@@ -1070,6 +1070,46 @@ pub fn reading_chapter_new(chapter: &str) -> String {
     text("reading-chapter-new", &[("chapter", Arg::Text(chapter))])
 }
 
+/// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+pub fn reading_next_part(part: &str) -> String {
+    text("reading-next-part", &[("part", Arg::Text(part))])
+}
+
+/// Under a cover or the big picture: how far into a light novel's part the person is.
+pub fn reading_part_percent(part: &str, percent: i64) -> String {
+    text("reading-part-percent", &[("part", Arg::Text(part)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a light novel's part came out that the person has not read.
+pub fn reading_part_new(part: &str) -> String {
+    text("reading-part-new", &[("part", Arg::Text(part))])
+}
+
+/// Under a This week cell: a light novel's part that came out that day, with its own title.
+pub fn reading_part_titled(part: &str, title: &str) -> String {
+    text("reading-part-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today.
+pub fn reading_part_out_today(part: &str) -> String {
+    text("reading-part-out-today", &[("part", Arg::Text(part))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+pub fn reading_part_out_today_titled(part: &str, title: &str) -> String {
+    text("reading-part-out-today-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+pub fn reading_chapter_of(chapter: &str, of: &str) -> String {
+    text("reading-chapter-of", &[("chapter", Arg::Text(chapter)), ("of", Arg::Text(of))])
+}
+
+/// Under a Library cover: the volume and part of a light novel the person is at.
+pub fn reading_volume_part(volume: &str, part: &str) -> String {
+    text("reading-volume-part", &[("volume", Arg::Text(volume)), ("part", Arg::Text(part))])
+}
+
 /// A search filter: books from Japan.
 pub fn reading_origin_japan() -> String {
     text("reading-origin-japan", &[])
@@ -1308,6 +1348,26 @@ pub fn reading_estimate_mobile() -> String {
 /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
 pub fn reading_estimate_waits_wifi() -> String {
     text("reading-estimate-waits-wifi", &[])
+}
+
+/// The notification's title.
+pub fn reading_downloads_done_title() -> String {
+    text("reading-downloads-done-title", &[])
+}
+
+/// The notification's text: one series' chapters are downloaded.
+pub fn reading_downloads_done_chapters(title: &str, count: i64) -> String {
+    text("reading-downloads-done-chapters", &[("title", Arg::Text(title)), ("count", Arg::Int(count))])
+}
+
+/// The notification's text: one light novel's parts are downloaded.
+pub fn reading_downloads_done_parts(title: &str, count: i64) -> String {
+    text("reading-downloads-done-parts", &[("title", Arg::Text(title)), ("count", Arg::Int(count))])
+}
+
+/// The notification's text: chapters of several series are downloaded.
+pub fn reading_downloads_done_series(count: i64) -> String {
+    text("reading-downloads-done-series", &[("count", Arg::Int(count))])
 }
 
 /// Toast after joining a plugin store with an invite that names this device's owner.
@@ -13035,6 +13095,16 @@ pub fn action_continue_part(n: &str, percent: i64) -> String {
     text("action-continue-part", &[("n", Arg::Text(n)), ("percent", Arg::Int(percent))])
 }
 
+/// The main action for a light novel part, part read, when how far is not known.
+pub fn action_continue_part_plain(n: &str) -> String {
+    text("action-continue-part-plain", &[("n", Arg::Text(n))])
+}
+
+/// The main action for a light novel part not opened yet.
+pub fn action_read_part(n: &str) -> String {
+    text("action-read-part", &[("n", Arg::Text(n))])
+}
+
 /// The main action when every chapter is read.
 pub fn action_read_again() -> String {
     text("action-read-again", &[])
@@ -13163,11 +13233,6 @@ pub fn series_tracking() -> String {
 /// The More menu: the Read from sheet.
 pub fn series_read_from_menu() -> String {
     text("series-read-from-menu", &[])
-}
-
-/// The More menu: turn on choosing chapters in the list.
-pub fn series_select_chapters() -> String {
-    text("series-select-chapters", &[])
 }
 
 /// The More menu: start again from chapter 1.
@@ -14393,6 +14458,11 @@ pub fn settings_delete_after_reading_note() -> String {
 /// Line under New chapters.
 pub fn settings_chapter_notifications_note() -> String {
     text("settings-chapter-notifications-note", &[])
+}
+
+/// Line under Downloads finished.
+pub fn settings_downloads_finished_note() -> String {
+    text("settings-downloads-finished-note", &[])
 }
 
 /// Under New chapters.
@@ -15928,6 +15998,11 @@ pub fn settings_when_trackers_disagree() -> String {
 /// Row: whether a new chapter of a series on your Reading list sends a notification.
 pub fn settings_chapter_notifications() -> String {
     text("settings-chapter-notifications", &[])
+}
+
+/// Row: whether the app sends a notification when the chapters it was downloading are all done.
+pub fn settings_downloads_finished() -> String {
+    text("settings-downloads-finished", &[])
 }
 
 /// Row: which Home the app opens at while it is for watching and reading.
@@ -20027,17 +20102,17 @@ pub fn accounts_tracker_reading_lists() -> String {
     text("accounts-tracker-reading-lists", &[])
 }
 
-/// Line under a tracker on a phone with both media on: it serves shows and reading.
+/// Line under a tracker with both media on: it serves shows and reading.
 pub fn accounts_tracker_serves_both() -> String {
     text("accounts-tracker-serves-both", &[])
 }
 
-/// Line under a tracker on a phone with both media on: it serves reading only.
+/// Line under a tracker with both media on: it serves reading only.
 pub fn accounts_tracker_serves_reading() -> String {
     text("accounts-tracker-serves-reading", &[])
 }
 
-/// Line under a tracker on a phone with both media on: it serves shows only.
+/// Line under a tracker with both media on: it serves shows only.
 pub fn accounts_tracker_serves_shows() -> String {
     text("accounts-tracker-serves-shows", &[])
 }

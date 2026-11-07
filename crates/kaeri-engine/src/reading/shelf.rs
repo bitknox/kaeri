@@ -108,7 +108,10 @@ pub fn volumes(
         if let Some(place) = places.iter().find(|p| p.chapter == chapter.id.as_str()) {
             row.read_at = place.read_at.filter(|_| marks.is_read(chapter.id.as_str()));
             if let (ChapterReadState::Unread, Some(page)) = (row.state, place.last_page) {
-                row.state = ChapterReadState::InProgress { page, of: place.of_pages };
+                row.state = ChapterReadState::InProgress {
+                    page: kaeri_model::reading::shown_page(page),
+                    of: place.of_pages,
+                };
             }
         }
         match groups.iter_mut().find(|g| g.volume == chapter.volume) {

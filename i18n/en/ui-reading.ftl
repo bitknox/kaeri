@@ -94,6 +94,14 @@ action-continue-chapter = { -continue-cap } chapter { $n } · page { $page }
 # @arg percent: int
 action-continue-part = { -continue-cap } part { $n } · { $percent }%
 
+# The main action for a light novel part, part read, when how far is not known.
+# @arg n: text
+action-continue-part-plain = { -continue-cap } part { $n }
+
+# The main action for a light novel part not opened yet.
+# @arg n: text
+action-read-part = Read part { $n }
+
 # The main action when every chapter is read.
 action-read-again = Read again
 
@@ -196,9 +204,6 @@ series-tracking = Tracking
 
 # The More menu: the Read from sheet.
 series-read-from-menu = Change { -source }…
-
-# The More menu: turn on choosing chapters in the list.
-series-select-chapters = Select chapters
 
 # The More menu: start again from chapter 1.
 series-read-again-menu = Read again from the start…
@@ -1068,6 +1073,9 @@ settings-delete-after-reading-note = Bookmarked chapters are kept
 
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
+
+# Line under Downloads finished.
+settings-downloads-finished-note = When the chapters downloading are all done
 
 # Under New chapters.
 settings-chapter-notifications-footer = Chapters have their own system channel, so they can be silenced on their own.

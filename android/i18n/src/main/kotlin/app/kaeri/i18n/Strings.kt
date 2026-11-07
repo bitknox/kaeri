@@ -861,6 +861,38 @@ object Strings {
     fun readingChapterNew(context: Context, chapter: String): String =
         context.getString(R.string.reading_chapter_new, chapter)
 
+    /** Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. */
+    fun readingNextPart(context: Context, part: String): String =
+        context.getString(R.string.reading_next_part, part)
+
+    /** Under a cover or the big picture: how far into a light novel's part the person is. */
+    fun readingPartPercent(context: Context, part: String, percent: Int): String =
+        context.getString(R.string.reading_part_percent, part, percent)
+
+    /** Under a cover: a light novel's part came out that the person has not read. */
+    fun readingPartNew(context: Context, part: String): String =
+        context.getString(R.string.reading_part_new, part)
+
+    /** Under a This week cell: a light novel's part that came out that day, with its own title. */
+    fun readingPartTitled(context: Context, part: String, title: String): String =
+        context.getString(R.string.reading_part_titled, part, title)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today. */
+    fun readingPartOutToday(context: Context, part: String): String =
+        context.getString(R.string.reading_part_out_today, part)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today, with its title. */
+    fun readingPartOutTodayTitled(context: Context, part: String, title: String): String =
+        context.getString(R.string.reading_part_out_today_titled, part, title)
+
+    /** Under a Library cover: the chapter the person is at, and the newest chapter there is. */
+    fun readingChapterOf(context: Context, chapter: String, of: String): String =
+        context.getString(R.string.reading_chapter_of, chapter, of)
+
+    /** Under a Library cover: the volume and part of a light novel the person is at. */
+    fun readingVolumePart(context: Context, volume: String, part: String): String =
+        context.getString(R.string.reading_volume_part, volume, part)
+
     /** A search filter: books from Japan. */
     fun readingOriginJapan(context: Context): String =
         context.getString(R.string.reading_origin_japan)
@@ -1052,6 +1084,22 @@ object Strings {
     /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
     fun readingEstimateWaitsWifi(context: Context): String =
         context.getString(R.string.reading_estimate_waits_wifi)
+
+    /** The notification's title. */
+    fun readingDownloadsDoneTitle(context: Context): String =
+        context.getString(R.string.reading_downloads_done_title)
+
+    /** The notification's text: one series' chapters are downloaded. */
+    fun readingDownloadsDoneChapters(context: Context, title: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_downloads_done_chapters, count, title, count)
+
+    /** The notification's text: one light novel's parts are downloaded. */
+    fun readingDownloadsDoneParts(context: Context, title: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_downloads_done_parts, count, title, count)
+
+    /** The notification's text: chapters of several series are downloaded. */
+    fun readingDownloadsDoneSeries(context: Context, count: Int): String =
+        context.getString(R.string.reading_downloads_done_series, count)
 
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
@@ -8186,6 +8234,14 @@ object Strings {
     fun actionContinuePart(context: Context, n: String, percent: Int): String =
         context.getString(R.string.action_continue_part, n, percent)
 
+    /** The main action for a light novel part, part read, when how far is not known. */
+    fun actionContinuePartPlain(context: Context, n: String): String =
+        context.getString(R.string.action_continue_part_plain, n)
+
+    /** The main action for a light novel part not opened yet. */
+    fun actionReadPart(context: Context, n: String): String =
+        context.getString(R.string.action_read_part, n)
+
     /** The main action when every chapter is read. */
     fun actionReadAgain(context: Context): String =
         context.getString(R.string.action_read_again)
@@ -8289,10 +8345,6 @@ object Strings {
     /** The More menu: the Read from sheet. */
     fun seriesReadFromMenu(context: Context): String =
         context.getString(R.string.series_read_from_menu)
-
-    /** The More menu: turn on choosing chapters in the list. */
-    fun seriesSelectChapters(context: Context): String =
-        context.getString(R.string.series_select_chapters)
 
     /** The More menu: start again from chapter 1. */
     fun seriesReadAgainMenu(context: Context): String =
@@ -9273,6 +9325,10 @@ object Strings {
     /** Line under New chapters. */
     fun settingsChapterNotificationsNote(context: Context): String =
         context.getString(R.string.settings_chapter_notifications_note)
+
+    /** Line under Downloads finished. */
+    fun settingsDownloadsFinishedNote(context: Context): String =
+        context.getString(R.string.settings_downloads_finished_note)
 
     /** Under New chapters. */
     fun settingsChapterNotificationsFooter(context: Context): String =
@@ -10501,6 +10557,10 @@ object Strings {
     /** Row: whether a new chapter of a series on your Reading list sends a notification. */
     fun settingsChapterNotifications(context: Context): String =
         context.getString(R.string.settings_chapter_notifications)
+
+    /** Row: whether the app sends a notification when the chapters it was downloading are all done. */
+    fun settingsDownloadsFinished(context: Context): String =
+        context.getString(R.string.settings_downloads_finished)
 
     /** Row: which Home the app opens at while it is for watching and reading. */
     fun settingsOpenAt(context: Context): String =
@@ -13782,15 +13842,15 @@ object Strings {
     fun accountsTrackerReadingLists(context: Context): String =
         context.getString(R.string.accounts_tracker_reading_lists)
 
-    /** Line under a tracker on a phone with both media on: it serves shows and reading. */
+    /** Line under a tracker with both media on: it serves shows and reading. */
     fun accountsTrackerServesBoth(context: Context): String =
         context.getString(R.string.accounts_tracker_serves_both)
 
-    /** Line under a tracker on a phone with both media on: it serves reading only. */
+    /** Line under a tracker with both media on: it serves reading only. */
     fun accountsTrackerServesReading(context: Context): String =
         context.getString(R.string.accounts_tracker_serves_reading)
 
-    /** Line under a tracker on a phone with both media on: it serves shows only. */
+    /** Line under a tracker with both media on: it serves shows only. */
     fun accountsTrackerServesShows(context: Context): String =
         context.getString(R.string.accounts_tracker_serves_shows)
 

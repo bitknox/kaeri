@@ -931,6 +931,38 @@
     <value>Chapter {chapter} is new</value>
     <comment>Under a cover: a chapter came out that the person has not read. The chapter is its number.</comment>
   </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>Part {part}</value>
+    <comment>Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.</comment>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>Part {part} · {percent}%</value>
+    <comment>Under a cover or the big picture: how far into a light novel's part the person is.</comment>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>Part {part} is new</value>
+    <comment>Under a cover: a light novel's part came out that the person has not read.</comment>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>Part {part} · {title}</value>
+    <comment>Under a This week cell: a light novel's part that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>Part {part} is out today</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today.</comment>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>Part {part}, {title}, out today</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>Chapter {chapter} of {of}</value>
+    <comment>Under a Library cover: the chapter the person is at, and the newest chapter there is.</comment>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>Volume {volume}, part {part}</value>
+    <comment>Under a Library cover: the volume and part of a light novel the person is at.</comment>
+  </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Japan</value>
     <comment>A search filter: books from Japan.</comment>
@@ -1150,6 +1182,30 @@
   <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
     <value>waits for Wi-Fi</value>
     <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>Downloads finished</value>
+    <comment>The notification's title.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
+    <value>A chapter of {title} is ready to read offline.</value>
+    <comment>The notification's text: one series' chapters are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>{count} chapters of {title} are ready to read offline.</value>
+    <comment>The notification's text: one series' chapters are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
+    <value>A part of {title} is ready to read offline.</value>
+    <comment>The notification's text: one light novel's parts are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>{count} parts of {title} are ready to read offline.</value>
+    <comment>The notification's text: one light novel's parts are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>Chapters of {count} series are ready to read offline.</value>
+    <comment>The notification's text: chapters of several series are downloaded.</comment>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
@@ -7264,6 +7320,14 @@
     <value>Continue part {n} · {percent}%</value>
     <comment>The main action for a light novel part, part read.</comment>
   </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>Continue part {n}</value>
+    <comment>The main action for a light novel part, part read, when how far is not known.</comment>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>Read part {n}</value>
+    <comment>The main action for a light novel part not opened yet.</comment>
+  </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Read again</value>
     <comment>The main action when every chapter is read.</comment>
@@ -7383,10 +7447,6 @@
   <data name="SeriesReadFromMenu" xml:space="preserve">
     <value>Change source…</value>
     <comment>The More menu: the Read from sheet.</comment>
-  </data>
-  <data name="SeriesSelectChapters" xml:space="preserve">
-    <value>Select chapters</value>
-    <comment>The More menu: turn on choosing chapters in the list.</comment>
   </data>
   <data name="SeriesReadAgainMenu" xml:space="preserve">
     <value>Read again from the start…</value>
@@ -8415,6 +8475,10 @@
   <data name="SettingsChapterNotificationsNote" xml:space="preserve">
     <value>Series on your Reading list</value>
     <comment>Line under New chapters.</comment>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>When the chapters downloading are all done</value>
+    <comment>Line under Downloads finished.</comment>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
     <value>Chapters have their own system channel, so they can be silenced on their own.</value>
@@ -9687,6 +9751,10 @@
   <data name="SettingsChapterNotifications" xml:space="preserve">
     <value>New chapters</value>
     <comment>Row: whether a new chapter of a series on your Reading list sends a notification.</comment>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>Downloads finished</value>
+    <comment>Row: whether the app sends a notification when the chapters it was downloading are all done.</comment>
   </data>
   <data name="SettingsOpenAt" xml:space="preserve">
     <value>Open at</value>
@@ -13022,15 +13090,15 @@
   </data>
   <data name="AccountsTrackerServesBoth" xml:space="preserve">
     <value>Shows and reading</value>
-    <comment>Line under a tracker on a phone with both media on: it serves shows and reading.</comment>
+    <comment>Line under a tracker with both media on: it serves shows and reading.</comment>
   </data>
   <data name="AccountsTrackerServesReading" xml:space="preserve">
     <value>Reading</value>
-    <comment>Line under a tracker on a phone with both media on: it serves reading only.</comment>
+    <comment>Line under a tracker with both media on: it serves reading only.</comment>
   </data>
   <data name="AccountsTrackerServesShows" xml:space="preserve">
     <value>Shows</value>
-    <comment>Line under a tracker on a phone with both media on: it serves shows only.</comment>
+    <comment>Line under a tracker with both media on: it serves shows only.</comment>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>Library and sync need your {tracker} account</value>

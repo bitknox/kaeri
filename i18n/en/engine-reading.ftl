@@ -281,6 +281,51 @@ reading-chapter-percent = Chapter { $chapter } · { $percent }%
 # @max 32
 reading-chapter-new = Chapter { $chapter } is new
 
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+# @arg part: text
+# @max 24
+reading-next-part = Part { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+# @arg part: text
+# @arg percent: int
+# @max 32
+reading-part-percent = Part { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+# @arg part: text
+# @max 32
+reading-part-new = Part { $part } is new
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+# @arg part: text
+# @arg title: text
+# @max 40
+reading-part-titled = Part { $part } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+# @arg part: text
+# @max 40
+reading-part-out-today = Part { $part } is out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its
+# title.
+# @arg part: text
+# @arg title: text
+reading-part-out-today-titled = Part { $part }, { $title }, out today
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+# @arg chapter: text
+# @arg of: text
+# @max 32
+reading-chapter-of = Chapter { $chapter } of { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+# @arg volume: text
+# @arg part: text
+# @max 32
+reading-volume-part = Volume { $volume }, part { $part }
+
 # A search filter: books from Japan.
 # @max 16
 reading-origin-japan = Japan
@@ -523,3 +568,30 @@ reading-estimate-mobile = over mobile data
 
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
+
+## Downloads finished
+## The notification a native app shows when the chapters it was downloading are all done, when
+## the person turned it on.
+
+# The notification's title.
+reading-downloads-done-title = Downloads finished
+
+# The notification's text: one series' chapters are downloaded.
+# @arg title: text
+# @arg count: int
+reading-downloads-done-chapters = { $count ->
+    [one] A chapter of { $title } is ready to read offline.
+   *[other] { $count } chapters of { $title } are ready to read offline.
+ }
+
+# The notification's text: one light novel's parts are downloaded.
+# @arg title: text
+# @arg count: int
+reading-downloads-done-parts = { $count ->
+    [one] A part of { $title } is ready to read offline.
+   *[other] { $count } parts of { $title } are ready to read offline.
+ }
+
+# The notification's text: chapters of several series are downloaded.
+# @arg count: int
+reading-downloads-done-series = Chapters of { $count } series are ready to read offline.

@@ -149,9 +149,10 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         ChapterReadState::Read
     } else {
         match &read.in_progress {
-            Some((id, Some(page), of)) if *id == chapter.id => {
-                ChapterReadState::InProgress { page: *page, of: *of }
-            }
+            Some((id, Some(page), of)) if *id == chapter.id => ChapterReadState::InProgress {
+                page: kaeri_model::reading::shown_page(*page),
+                of: *of,
+            },
             _ => ChapterReadState::Unread,
         }
     };

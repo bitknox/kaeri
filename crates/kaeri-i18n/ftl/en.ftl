@@ -683,6 +683,30 @@ reading-chapter-percent = Chapter { $chapter } · { $percent }%
 # Under a cover: a chapter came out that the person has not read. The chapter is its number.
 reading-chapter-new = Chapter { $chapter } is new
 
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Part { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Part { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = Part { $part } is new
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Part { $part } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = Part { $part } is out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Part { $part }, { $title }, out today
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Chapter { $chapter } of { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Volume { $volume }, part { $part }
+
 # A search filter: books from Japan.
 reading-origin-japan = Japan
 
@@ -854,6 +878,26 @@ reading-estimate-mobile = over mobile data
 
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
+
+# The notification's title.
+reading-downloads-done-title = Downloads finished
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] A chapter of { $title } is ready to read offline.
+       *[other] { $count } chapters of { $title } are ready to read offline.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] A part of { $title } is ready to read offline.
+       *[other] { $count } parts of { $title } are ready to read offline.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = Chapters of { $count } series are ready to read offline.
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
@@ -8140,6 +8184,12 @@ action-continue-chapter = Continue chapter { $n } · page { $page }
 # The main action for a light novel part, part read.
 action-continue-part = Continue part { $n } · { $percent }%
 
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Continue part { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Read part { $n }
+
 # The main action when every chapter is read.
 action-read-again = Read again
 
@@ -8233,9 +8283,6 @@ series-tracking = Tracking
 
 # The More menu: the Read from sheet.
 series-read-from-menu = Change source…
-
-# The More menu: turn on choosing chapters in the list.
-series-select-chapters = Select chapters
 
 # The More menu: start again from chapter 1.
 series-read-again-menu = Read again from the start…
@@ -9019,6 +9066,9 @@ settings-delete-after-reading-note = Bookmarked chapters are kept
 
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
+
+# Line under Downloads finished.
+settings-downloads-finished-note = When the chapters downloading are all done
 
 # Under New chapters.
 settings-chapter-notifications-footer = Chapters have their own system channel, so they can be silenced on their own.
@@ -9984,6 +10034,9 @@ settings-when-trackers-disagree = When trackers disagree
 
 # Row: whether a new chapter of a series on your Reading list sends a notification.
 settings-chapter-notifications = New chapters
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Downloads finished
 
 # Row: which Home the app opens at while it is for watching and reading.
 settings-open-at = Open at
@@ -12496,13 +12549,13 @@ accounts-tracker-lists = Lists and progress
 # Line under MangaUpdates when it is not signed in.
 accounts-tracker-reading-lists = Reading lists and progress
 
-# Line under a tracker on a phone with both media on: it serves shows and reading.
+# Line under a tracker with both media on: it serves shows and reading.
 accounts-tracker-serves-both = Shows and reading
 
-# Line under a tracker on a phone with both media on: it serves reading only.
+# Line under a tracker with both media on: it serves reading only.
 accounts-tracker-serves-reading = Reading
 
-# Line under a tracker on a phone with both media on: it serves shows only.
+# Line under a tracker with both media on: it serves shows only.
 accounts-tracker-serves-shows = Shows
 
 # Line under the accounts screen when the library needs a tracker.

@@ -365,6 +365,14 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingChapterPage -> Strings.readingChapterPage(context, this.chapter, this.page.toInt())
         is ReadingMsg.ReadingChapterPercent -> Strings.readingChapterPercent(context, this.chapter, this.percent.toInt())
         is ReadingMsg.ReadingChapterNew -> Strings.readingChapterNew(context, this.chapter)
+        is ReadingMsg.ReadingNextPart -> Strings.readingNextPart(context, this.part)
+        is ReadingMsg.ReadingPartPercent -> Strings.readingPartPercent(context, this.part, this.percent.toInt())
+        is ReadingMsg.ReadingPartNew -> Strings.readingPartNew(context, this.part)
+        is ReadingMsg.ReadingPartTitled -> Strings.readingPartTitled(context, this.part, this.title)
+        is ReadingMsg.ReadingPartOutToday -> Strings.readingPartOutToday(context, this.part)
+        is ReadingMsg.ReadingPartOutTodayTitled -> Strings.readingPartOutTodayTitled(context, this.part, this.title)
+        is ReadingMsg.ReadingChapterOf -> Strings.readingChapterOf(context, this.chapter, this.of)
+        is ReadingMsg.ReadingVolumePart -> Strings.readingVolumePart(context, this.volume, this.part)
         is ReadingMsg.ReadingOriginJapan -> Strings.readingOriginJapan(context)
         is ReadingMsg.ReadingOriginKorea -> Strings.readingOriginKorea(context)
         is ReadingMsg.ReadingOriginChina -> Strings.readingOriginChina(context)
@@ -413,6 +421,10 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingEstimateWifi -> Strings.readingEstimateWifi(context)
         is ReadingMsg.ReadingEstimateMobile -> Strings.readingEstimateMobile(context)
         is ReadingMsg.ReadingEstimateWaitsWifi -> Strings.readingEstimateWaitsWifi(context)
+        is ReadingMsg.ReadingDownloadsDoneTitle -> Strings.readingDownloadsDoneTitle(context)
+        is ReadingMsg.ReadingDownloadsDoneChapters -> Strings.readingDownloadsDoneChapters(context, this.title, this.count.toInt())
+        is ReadingMsg.ReadingDownloadsDoneParts -> Strings.readingDownloadsDoneParts(context, this.title, this.count.toInt())
+        is ReadingMsg.ReadingDownloadsDoneSeries -> Strings.readingDownloadsDoneSeries(context, this.count.toInt())
     }
 
 /** A reason in the person's language, inside a message or on its own. */

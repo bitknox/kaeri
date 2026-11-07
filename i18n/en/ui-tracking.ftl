@@ -30,13 +30,13 @@ accounts-tracker-lists = Lists and progress
 # Line under MangaUpdates when it is not signed in.
 accounts-tracker-reading-lists = Reading lists and progress
 
-# Line under a tracker on a phone with both media on: it serves shows and reading.
+# Line under a tracker with both media on: it serves shows and reading.
 accounts-tracker-serves-both = Shows and reading
 
-# Line under a tracker on a phone with both media on: it serves reading only.
+# Line under a tracker with both media on: it serves reading only.
 accounts-tracker-serves-reading = Reading
 
-# Line under a tracker on a phone with both media on: it serves shows only.
+# Line under a tracker with both media on: it serves shows only.
 accounts-tracker-serves-shows = Shows
 
 # Line under the accounts screen when the library needs a tracker.

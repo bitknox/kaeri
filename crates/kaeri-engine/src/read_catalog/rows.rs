@@ -34,8 +34,8 @@ pub fn line(row: &ChapterRow, kept: Kept, now: i64, zone: &TimeZone) -> Vec<Msg>
             parts.extend(row.read_at.map(|at| ago(at, now, zone)));
         }
         ChapterReadState::InProgress { page, of } => {
-            // Pages count from 0; people count from 1.
-            let page = i64::from(page) + 1;
+            // The state already counts from 1, as everything the engine sends.
+            let page = i64::from(page);
             parts.push(r(match of.filter(|of| *of > 0) {
                 Some(of) => ReadingMsg::ReadingRowPageOf { page, of: i64::from(of) },
                 None => ReadingMsg::ReadingRowPage { page },
@@ -187,11 +187,11 @@ mod tests {
             ["reading-row-new", "reading-ago-yesterday", "verbatim", "reading-row-versions"]
         );
 
-        let page = row(ChapterReadState::InProgress { page: 7, of: Some(19) });
+        let page = row(ChapterReadState::InProgress { page: 8, of: Some(19) });
         assert_eq!(
             line(&page, Kept::Source, NOW, &utc),
             [Msg::Reading(ReadingMsg::ReadingRowPageOf { page: 8, of: 19 })],
-            "the page counts from 1"
+            "the state's page, which counts from 1, as it is"
         );
 
         let wifi = ChapterRow { download: Some(ChapterDownloadState::WaitsForWifi), ..plain };

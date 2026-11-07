@@ -10230,7 +10230,7 @@
       }
     },
     "accounts-tracker-serves-both" : {
-      "comment" : "Line under a tracker on a phone with both media on: it serves shows and reading.",
+      "comment" : "Line under a tracker with both media on: it serves shows and reading.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10242,7 +10242,7 @@
       }
     },
     "accounts-tracker-serves-reading" : {
-      "comment" : "Line under a tracker on a phone with both media on: it serves reading only.",
+      "comment" : "Line under a tracker with both media on: it serves reading only.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10254,7 +10254,7 @@
       }
     },
     "accounts-tracker-serves-shows" : {
-      "comment" : "Line under a tracker on a phone with both media on: it serves shows only.",
+      "comment" : "Line under a tracker with both media on: it serves shows only.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -11137,6 +11137,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continue part %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "action-continue-part-plain" : {
+      "comment" : "The main action for a light novel part, part read, when how far is not known. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue part %1$@"
           }
         }
       }
@@ -13177,6 +13189,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read chapter %1$@"
+          }
+        }
+      }
+    },
+    "action-read-part" : {
+      "comment" : "The main action for a light novel part not opened yet. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read part %1$@"
           }
         }
       }
@@ -170603,6 +170627,18 @@
         }
       }
     },
+    "reading-chapter-of" : {
+      "comment" : "Under a Library cover: the chapter the person is at, and the newest chapter there is. Argument 1: chapter (Text). Argument 2: of (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ of %2$@"
+          }
+        }
+      }
+    },
     "reading-chapter-page" : {
       "comment" : "Under a cover or the big picture: the page the person stopped on in a chapter. Argument 1: chapter (Text). Argument 2: page (Int).",
       "extractionState" : "manual",
@@ -170799,6 +170835,98 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "waits for Wi-Fi"
+          }
+        }
+      }
+    },
+    "reading-downloads-done-chapters" : {
+      "comment" : "The notification's text: one series' chapters are downloaded. Argument 1: title (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "A chapter of %1$@ is ready to read offline."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$lld chapters of %1$@ are ready to read offline."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-downloads-done-parts" : {
+      "comment" : "The notification's text: one light novel's parts are downloaded. Argument 1: title (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "A part of %1$@ is ready to read offline."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$lld parts of %1$@ are ready to read offline."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-downloads-done-series" : {
+      "comment" : "The notification's text: chapters of several series are downloaded. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters of %1$lld series are ready to read offline."
+          }
+        }
+      }
+    },
+    "reading-downloads-done-title" : {
+      "comment" : "The notification's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloads finished"
           }
         }
       }
@@ -171175,6 +171303,18 @@
         }
       }
     },
+    "reading-next-part" : {
+      "comment" : "Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. Argument 1: part (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@"
+          }
+        }
+      }
+    },
     "reading-on-planning" : {
       "comment" : "Under a cover: the series is on the person's Planning list.",
       "extractionState" : "manual",
@@ -171255,6 +171395,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chapter %1$@, %2$@, out today"
+          }
+        }
+      }
+    },
+    "reading-part-new" : {
+      "comment" : "Under a cover: a light novel's part came out that the person has not read. Argument 1: part (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@ is new"
+          }
+        }
+      }
+    },
+    "reading-part-out-today" : {
+      "comment" : "Under the big picture on reading's Home: a light novel's part that came out today. Argument 1: part (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@ is out today"
+          }
+        }
+      }
+    },
+    "reading-part-out-today-titled" : {
+      "comment" : "Under the big picture on reading's Home: a light novel's part that came out today, with its title. Argument 1: part (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@, %2$@, out today"
+          }
+        }
+      }
+    },
+    "reading-part-percent" : {
+      "comment" : "Under a cover or the big picture: how far into a light novel's part the person is. Argument 1: part (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "reading-part-titled" : {
+      "comment" : "Under a This week cell: a light novel's part that came out that day, with its own title. Argument 1: part (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@ · %2$@"
           }
         }
       }
@@ -171731,6 +171931,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usually Wednesdays"
+          }
+        }
+      }
+    },
+    "reading-volume-part" : {
+      "comment" : "Under a Library cover: the volume and part of a light novel the person is at. Argument 1: volume (Text). Argument 2: part (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume %1$@, part %2$@"
           }
         }
       }
@@ -183537,18 +183749,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Score…"
-          }
-        }
-      }
-    },
-    "series-select-chapters" : {
-      "comment" : "The More menu: turn on choosing chapters in the list.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select chapters"
           }
         }
       }
@@ -195845,6 +196045,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tải xuống bằng dữ liệu di động"
+          }
+        }
+      }
+    },
+    "settings-downloads-finished" : {
+      "comment" : "Row: whether the app sends a notification when the chapters it was downloading are all done.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloads finished"
+          }
+        }
+      }
+    },
+    "settings-downloads-finished-note" : {
+      "comment" : "Line under Downloads finished.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the chapters downloading are all done"
           }
         }
       }

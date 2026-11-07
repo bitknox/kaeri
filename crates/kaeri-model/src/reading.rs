@@ -139,10 +139,13 @@ pub struct SeriesView {
 pub enum SeriesAction {
     /// "Read chapter 88".
     Read { chapter: ChapterId, label: String },
-    /// "Continue chapter 41 · page 8".
+    /// "Continue chapter 41 · page 8". The page counts from 1, as every page the engine sends.
     Continue { chapter: ChapterId, label: String, page: u32 },
-    /// Novels, from this device's own page count.
-    ContinuePart { chapter: ChapterId, label: String, percent: u8 },
+    /// A light novel's part, part read: "Continue part 3 · 34%", or "Continue part 3" when how
+    /// far is not known or rounds to nothing.
+    ContinuePart { chapter: ChapterId, label: String, percent: Option<u8> },
+    /// A light novel's part not opened yet: "Read part 3".
+    ReadPart { chapter: ChapterId, label: String },
     /// Finished.
     ReadAgain,
     /// None of your sources has it.
@@ -167,6 +170,9 @@ pub struct BookEditionRow {
     pub latest: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub preferred: bool,
+    /// The series reads from this one now: the person's choice, else the one picked for them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub in_use: bool,
 }
 
 /// A volume's chapters, or the chapters in no volume.
@@ -230,7 +236,11 @@ pub struct ChapterRow {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ChapterReadState {
     Unread,
-    InProgress { page: u32, of: Option<u32> },
+    /// The page counts from 1, as every page the engine sends.
+    InProgress {
+        page: u32,
+        of: Option<u32>,
+    },
     Read,
 }
 
@@ -495,8 +505,9 @@ pub struct ReadWeekEntry {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub usually: bool,
     /// The chapter that came out this day, in words: "Chapter 15", or "Chapter 15 · The Far
-    /// Shore" with its title. `None` for one only expected. The tile's `next` stays the
-    /// person's place.
+    /// Shore" with its title. For one only expected, the chapter the series' rhythm and its
+    /// newest chapter say comes next, and `None` when that is not a confident guess. A light
+    /// novel's says "Part 6". The tile's `next` stays the person's place.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub chapter: Option<Msg>,
 }
@@ -999,11 +1010,57 @@ pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) 
     Some(Msg::Reading(msg))
 }
 
-/// "Chapter 13 · page 9", from the place as kept: pages count from 0 there, from 1 in words.
+/// A page as people count it, from a place as kept: pages count from 0 in the store and from 1
+/// everywhere the engine sends them. The one place the engine turns one into the other.
+pub fn shown_page(kept: u32) -> u32 {
+    kept.saturating_add(1)
+}
+
+/// "Chapter 13 · page 9", from the place as kept.
 pub fn chapter_page(chapter: &str, page: u32) -> Msg {
     Msg::Reading(ReadingMsg::ReadingChapterPage {
         chapter: chapter.to_owned(),
-        page: i64::from(page) + 1,
+        page: i64::from(shown_page(page)),
+    })
+}
+
+/// How far into a light novel's part, as a percent worth saying: none when it is not known or
+/// rounds to nothing, so nothing ever says "0%".
+pub fn part_percent(page: Option<u32>, of: Option<u32>) -> Option<u8> {
+    match (page, of) {
+        (Some(page), Some(of)) if of > 0 => {
+            let percent = (u64::from(page) * 100 / u64::from(of)).min(100) as u8;
+            (percent > 0).then_some(percent)
+        }
+        _ => None,
+    }
+}
+
+/// "Part 3 · 34%", or "Part 3" with no percent worth saying.
+pub fn part_place(part: &str, percent: Option<u8>) -> Msg {
+    Msg::Reading(match percent {
+        Some(percent) => ReadingMsg::ReadingPartPercent {
+            part: part.to_owned(),
+            percent: i64::from(percent),
+        },
+        None => ReadingMsg::ReadingNextPart { part: part.to_owned() },
+    })
+}
+
+/// "Chapter 44", or "Part 4" for a light novel, which reads in parts.
+pub fn next_unit(medium: Medium, number: &str) -> Msg {
+    match medium {
+        Medium::Novel => Msg::Reading(ReadingMsg::ReadingNextPart { part: number.to_owned() }),
+        _ => next_chapter(number),
+    }
+}
+
+/// "Chapter 88 is new", or "Part 4 is new".
+pub fn unit_new(medium: Medium, number: &str) -> Msg {
+    let number = number.to_owned();
+    Msg::Reading(match medium {
+        Medium::Novel => ReadingMsg::ReadingPartNew { part: number },
+        _ => ReadingMsg::ReadingChapterNew { chapter: number },
     })
 }
 
@@ -1329,6 +1386,13 @@ pub enum ReadingEvent {
     Downloads(BookDownloadsView),
     DownloadEstimate(DownloadEstimate),
     NewChapters(Vec<NewChapter>),
+    /// The chapters the person asked to download are all done, for the Downloads finished
+    /// notification: sent only while it is on. `work` is the series when they were all of one.
+    DownloadsDone {
+        work: Option<WorkId>,
+        title: Msg,
+        body: Msg,
+    },
     ExportTargets(Vec<ExportTarget>),
     ExportProgress {
         job: JobId,
@@ -1358,6 +1422,18 @@ pub fn anilist_of(work: &WorkId) -> Option<AnilistId> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_part_says_its_percent_only_when_there_is_one_worth_saying() {
+        assert_eq!(part_percent(Some(16), Some(47)), Some(34));
+        assert_eq!(part_percent(Some(0), Some(47)), None, "never 0%");
+        assert_eq!(part_percent(None, None), None);
+        assert_eq!(part_percent(Some(3), Some(0)), None);
+        assert_eq!(part_place("3", Some(34)).english(), "Part 3 · 34%");
+        assert_eq!(part_place("3", None).english(), "Part 3");
+        assert_eq!(shown_page(8), 9);
+        assert_eq!(chapter_page("13", 9).english(), "Chapter 13 · page 10");
+    }
 
     #[test]
     fn every_failure_has_its_words() {
