@@ -235,10 +235,7 @@ public sealed partial class PlayerView
         return new Border
         {
             Child = words,
-            Background = (Brush)Application.Current.Resources["RaisedBrush"],
-            BorderBrush = (Brush)Application.Current.Resources["HairBrush"],
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(8),
+            Style = (Style)Application.Current.Resources["OverVideoCardStyle"],
             Padding = new Thickness(15, 9, 15, 9),
             HorizontalAlignment = HorizontalAlignment.Left,
             IsHitTestVisible = false,
@@ -373,10 +370,7 @@ public sealed partial class PlayerView
         {
             Child = row,
             Height = 40,
-            Background = (Brush)Application.Current.Resources["RaisedBrush"],
-            BorderBrush = (Brush)Application.Current.Resources["HairBrush"],
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(8),
+            Style = (Style)Application.Current.Resources["OverVideoCardStyle"],
             Padding = new Thickness(10, 0, 15, 0),
             HorizontalAlignment = HorizontalAlignment.Right,
         };
@@ -449,9 +443,9 @@ public sealed partial class PlayerView
     void LiftCorner()
     {
         var card = Corner.Visibility == Visibility.Visible ? Corner.ActualHeight : 0;
-        var bottom = 76 + (card > 0 ? card + 8 : 0);
+        var bottom = 80 + (card > 0 ? card + 8 : 0);
         if (Math.Abs(ChatMoments.Margin.Bottom - bottom) >= 0.5)
-            ChatMoments.Margin = new Thickness(0, 0, 12, bottom);
+            ChatMoments.Margin = new Thickness(0, 0, 24, bottom);
     }
 
     // The field.

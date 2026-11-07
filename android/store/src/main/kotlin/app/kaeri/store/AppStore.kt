@@ -1557,6 +1557,16 @@ class AppStore(
         if (!party.isIn(RoomKey(target.server, target.room))) lookIntoRoom(target.server, target.room)
     }
 
+    /**
+     * Rejoin [target], a recent room: its lobby opens and this device joins at once, without
+     * looking in first. A look into the room takes this device's name there for a moment, so the
+     * join would come in under another.
+     */
+    fun rejoinParty(target: PartyTarget) {
+        party.opened(target)
+        joinParty(target.server, target.room)
+    }
+
     /** Close a lobby a link or code opened. */
     fun closePartyLobby() {
         party.closedLobby()

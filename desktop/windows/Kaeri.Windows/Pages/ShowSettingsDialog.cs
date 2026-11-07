@@ -143,7 +143,7 @@ sealed class ShowSettingsDialog
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
         line.Children.Add(States.ErrorGlyph(14));
         line.Children.Add(Ui.Text(T.ShowSettingsFailed, "HazeCaptionStyle", wrap: false));
-        var again = new HyperlinkButton { Content = T.ActionTryAgain, Padding = new Thickness(4, 0, 4, 0), MinHeight = 0 };
+        var again = new HyperlinkButton { Content = T.ActionTryAgain, Style = Ui.Res<Style>("SilkLinkStyle"), VerticalAlignment = VerticalAlignment.Center };
         again.Click += (_, _) =>
         {
             Say(null);

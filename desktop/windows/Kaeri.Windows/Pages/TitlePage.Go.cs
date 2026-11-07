@@ -55,7 +55,7 @@ public sealed partial class TitlePage
     void ShowAnother()
     {
         AnotherGlyph.Content ??= Dice.Icon();
-        AnotherAction.Visibility = ctx.Pick is { More: true } pick && pick.Id == id ? Visibility.Visible : Visibility.Collapsed;
+        AnotherBox.Visibility = ctx.Pick is { More: true } pick && pick.Id == id ? Visibility.Visible : Visibility.Collapsed;
     }
 
     void OnAnother(object sender, RoutedEventArgs e)
@@ -225,7 +225,7 @@ public sealed partial class TitlePage
     void SayTyped()
     {
         // Under Another when a pick shows it, else where it would stand.
-        TypedCapsule.Margin = new Thickness(0, AnotherAction.Visibility == Visibility.Visible ? 64 : 24, 36, 0);
+        TypedCapsule.Margin = new Thickness(0, AnotherBox.Visibility == Visibility.Visible ? 64 : 24, 36, 0);
         // "Episode 382": the words around the number in haze, the number in silk.
         var number = long.Parse(typed, System.Globalization.CultureInfo.InvariantCulture);
         var words = T.EpisodeNumber(number);

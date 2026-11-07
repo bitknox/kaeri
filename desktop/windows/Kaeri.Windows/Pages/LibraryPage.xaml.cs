@@ -121,7 +121,9 @@ public sealed partial class LibraryPage : Page
     {
         var room = new TextBlock { Text = T.LibraryListCount(name, 888), Opacity = 0 };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(room, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
-        var label = new Grid { Children = { new TextBlock { Text = name }, room } };
+        // A tab made from a Child gets none of the 12 px inset a tab made from Text has: given here,
+        // so these words start where Seasonal's and Calendar's do, on the page title's edge.
+        var label = new Grid { Margin = new Thickness(12, 0, 12, 0), Children = { new TextBlock { Text = name }, room } };
         var item = new SelectorBarItem { Child = label, Tag = s, IsSelected = s == segment };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(item, name);
         return item;

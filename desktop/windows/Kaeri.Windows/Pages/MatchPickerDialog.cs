@@ -276,7 +276,7 @@ sealed class MatchPickerDialog
                     AutomationProperties.SetName(list, T.MatchSectionSource(source));
                     list.ItemClick += (_, e) =>
                     {
-                        if (e.ClickedItem is ListViewItem { Tag: ValueTuple<MatchCandidate, string, string> t })
+                        if (Ui.ClickedRow(list, e.ClickedItem) is { Tag: ValueTuple<MatchCandidate, string, string> t })
                             Pick(t.Item1, t.Item2, t.Item3);
                     };
                     foreach (var candidate in candidates)

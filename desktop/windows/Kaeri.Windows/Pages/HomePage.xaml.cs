@@ -364,16 +364,16 @@ public sealed partial class HomePage : Page, IPageKeys
         {
             if (shape == HomeShape.Week)
             {
-                row.Children.Add(States.Plate(150, 66, 4));
+                row.Children.Add(States.Plate(150, 66, Art.Radius(44)));
                 continue;
             }
             var width = shape == HomeShape.Card ? HomeWording.CardWidth : HomeWording.PosterWidth;
             var card = new StackPanel { Width = width };
-            card.Children.Add(States.Plate(width, shape == HomeShape.Card ? HomeWording.CardHeight : HomeWording.PosterHeight, 4));
+            card.Children.Add(States.Plate(width, shape == HomeShape.Card ? HomeWording.CardHeight : HomeWording.PosterHeight, Art.Radius(width)));
             if (shape == HomeShape.Card)
                 card.Children.Add(new Border { Height = 9 });
             card.Children.Add(new Border { Height = 8 });
-            card.Children.Add(Line(width * 0.8, 12, 19, 0));
+            card.Children.Add(Line(width * 0.8, 12, 20, 0));
             card.Children.Add(Line(width * 0.55, 10, 16, 0));
             row.Children.Add(card);
         }
@@ -412,8 +412,8 @@ public sealed partial class HomePage : Page, IPageKeys
         for (var i = 0; i < 3; i++)
             words.Children.Add(Line(i == 2 ? 260 : 420, 12, 20, 0));
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 34, 0, 0) };
-        buttons.Children.Add(States.Plate(160, 32, 4));
-        buttons.Children.Add(States.Plate(90, 32, 4));
+        buttons.Children.Add(States.Plate(160, 40, 4));
+        buttons.Children.Add(States.Plate(90, 40, 4));
         words.Children.Add(buttons);
         spot.Children.Add(words);
         // The art at the share of the width the spotlight gives it.
@@ -499,7 +499,13 @@ public sealed partial class HomePage : Page, IPageKeys
             }
             if (hit.At > 0)
                 block.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = rest[..hit.At] });
-            var link = new Microsoft.UI.Xaml.Documents.Hyperlink();
+            // In silk and semibold, as SilkLinkStyle draws a link that is not the main action.
+            var link = new Microsoft.UI.Xaml.Documents.Hyperlink
+            {
+                Foreground = Ui.Res<Brush>("SilkBrush"),
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                UnderlineStyle = Microsoft.UI.Xaml.Documents.UnderlineStyle.None,
+            };
             link.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = hit.L.Words });
             var go = hit.L.Go;
             link.Click += (_, _) => go();

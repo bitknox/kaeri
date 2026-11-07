@@ -51,7 +51,7 @@ static class ConflictsDialog
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             var words = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-            words.Children.Add(new TextBlock { Text = conflict.Title, Style = Ui.Res<Style>("BodyStrongTextBlockStyle"), TextWrapping = TextWrapping.WrapWholeWords });
+            words.Children.Add(new TextBlock { Text = conflict.Title, Style = Ui.Res<Style>("ShowTitleStyle"), TextWrapping = TextWrapping.WrapWholeWords });
             var line = T.AccountsClashRow(conflict.Field.FirstUpper(), conflict.Local, conflict.Remote, tracker);
             words.Children.Add(new TextBlock { Text = line, Foreground = Ui.Res<Brush>("HazeBrush"), TextWrapping = TextWrapping.WrapWholeWords });
             grid.Children.Add(words);

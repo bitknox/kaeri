@@ -1860,6 +1860,11 @@ pub fn cloud_loopback_done() -> String {
     text("cloud-loopback-done", &[])
 }
 
+/// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+pub fn sync_device_removed() -> String {
+    text("sync-device-removed", &[])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])

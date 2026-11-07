@@ -31,7 +31,7 @@ sealed class TitleMoreDialog
         this.ctx = ctx;
         this.entry = entry;
         this.root = root;
-        header.Children.Add(Ui.Text(entry.Title, "TitleTextBlockStyle"));
+        header.Children.Add(Ui.Text(entry.Title, "ShowTitleMediumStyle"));
         header.Children.Add(Ui.Haze(T.TitleMoreAbout));
         body = Body();
     }
@@ -221,7 +221,7 @@ sealed class TitleMoreDialog
         spoilerText.Opacity = 0;
         spoilerText.Visibility = Visibility.Collapsed;
         spoilerText.OpacityTransition = new ScalarTransition { Duration = Motion.Quick };
-        var toggle = new HyperlinkButton { Padding = new Thickness(0), Content = T.MoreShowSpoilerTags(hidden.Count) };
+        var toggle = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkLeadingStyle"), Content = T.MoreShowSpoilerTags(hidden.Count) };
         toggle.Click += (_, _) =>
         {
             spoilers = !spoilers;

@@ -1128,6 +1128,9 @@ public static partial class T
     /// <summary>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</summary>
     public static string CloudLoopbackDone => Get("CloudLoopbackDone");
 
+    /// <summary>The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.</summary>
+    public static string SyncDeviceRemoved => Get("SyncDeviceRemoved");
+
     /// <summary>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</summary>
     public static string NoticeSignedIn(string tracker) => Fill(Get("NoticeSignedIn"), ("tracker", tracker));
 
@@ -1553,6 +1556,12 @@ public static partial class T
 
     /// <summary>Setting: whether the app animates.</summary>
     public static string SettingsMotion => Get("SettingsMotion");
+
+    /// <summary>Setting: a mouse wheel glides the page into place rather than moving it in steps.</summary>
+    public static string SettingsSmoothScrolling => Get("SettingsSmoothScrolling");
+
+    /// <summary>Under the Smooth scrolling switch.</summary>
+    public static string SettingsSmoothScrollingDetail => Get("SettingsSmoothScrollingDetail");
 
     /// <summary>Setting: the player opens fullscreen.</summary>
     public static string SettingsStartFullscreen => Get("SettingsStartFullscreen");
@@ -11233,6 +11242,7 @@ public static partial class T
         ["SourcesDemoRemoved"] = "Demo removed",
         ["StoresReadyDemoStays"] = "{store} is ready. The demo stays last in Your sources.",
         ["CloudLoopbackDone"] = "You can close this tab and go back to Kaeri.",
+        ["SyncDeviceRemoved"] = "This device was removed from sync on another device. Join again to sync it.",
         ["NoticeSignedIn"] = "Signed in to {tracker}.",
         ["NoticeSignedInKeychain"] = "Signed in to {tracker}. The token is in the OS keychain.",
         ["NoticeSignedInFile"] = "Signed in to {tracker}. No keychain is available, so the token is in a private file on this device.",
@@ -11382,6 +11392,8 @@ public static partial class T
         ["SettingsAnotherTv"] = "Another TV",
         ["SettingsTheme"] = "Theme",
         ["SettingsMotion"] = "Motion",
+        ["SettingsSmoothScrolling"] = "Smooth scrolling",
+        ["SettingsSmoothScrollingDetail"] = "Each turn of the mouse wheel glides the page into place. Touchpads and touch scroll as before.",
         ["SettingsStartFullscreen"] = "Start in full screen",
         ["SettingsPlayerInterface"] = "Player interface",
         ["SettingsTokenStorage"] = "Token storage",
