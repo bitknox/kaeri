@@ -85,6 +85,8 @@ public struct ReadSearchState: Equatable, Sendable {
     public var page: UInt32 = 0
     public var hasMore = false
     public var otherScope: UInt32?
+    /// How many series AniList found in all, once the engine knows it for sure.
+    public var total: UInt32?
     public var loading = false
     public var failure: ReadingFailure?
 }
@@ -102,6 +104,10 @@ public final class ReadingModel {
     public private(set) var versions: [String: [ChapterVersion]] = [:]
     public private(set) var tracking: [String: [TrackerReadRow]] = [:]
     public private(set) var downloads: BookDownloadsView?
+    /// What the chapters being chosen will take to download, per series.
+    public private(set) var estimates: [String: DownloadEstimate] = [:]
+    /// What Remove from lists came to, per series, until the next removal.
+    public private(set) var removals: [String: [ListRemoval]] = [:]
     public private(set) var failures: [ReadingAbout: ReadingFailure] = [:]
     /// The reader's defaults per medium, for Settings' Reading pane.
     public private(set) var readerDefaults: [Medium: ReaderSettingsView] = [:]
@@ -135,6 +141,7 @@ public final class ReadingModel {
 
     public func runSearch(_ query: ReadSearchQuery) {
         search.query = query
+        search.total = nil
         search.loading = true
         search.failure = nil
         send?(.reading(.search(query: query)))
@@ -205,6 +212,12 @@ public final class ReadingModel {
         send?(.reading(.setStatus(work: work, status: status)))
     }
 
+    /// Takes the series off every signed-in tracker's reading list; Kaeri keeps the place.
+    public func removeFromLists(_ work: String) {
+        removals[work] = nil
+        send?(.reading(.removeFromLists(work: work)))
+    }
+
     public func setScore(_ work: String, _ score: Float) {
         send?(.reading(.setScore(work: work, score: score)))
     }
@@ -235,6 +248,21 @@ public final class ReadingModel {
     public func deleteDownloads(_ work: String, chapters ids: [String]) {
         send?(.reading(.downloadDelete(work: work, chapters: ids)))
         send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
+    }
+
+    /// Delete read: the downloads of the series' read chapters, bookmarked ones kept.
+    public func deleteRead(_ work: String) {
+        send?(.reading(.downloadDeleteRead(work: work)))
+        send?(.reading(.loadDownloads))
+    }
+
+    /// Asks what downloading `pick` will take; an empty pick clears the line.
+    public func estimateDownload(_ work: String, _ pick: DownloadPick) {
+        if case .chapters(let ids) = pick, ids.isEmpty {
+            estimates[work] = nil
+            return
+        }
+        send?(.reading(.estimateDownload(work: work, pick: pick)))
     }
 
     public func loadDownloads() { send?(.reading(.loadDownloads)) }
@@ -279,8 +307,10 @@ public final class ReadingModel {
         case .library(let segment, let tiles):
             lists[segment] = tiles
             listsLoaded.insert(segment)
-        case .search(let query, let page, let tiles, let hasMore, let otherScope):
+        case .search(let query, let page, let tiles, let hasMore, let otherScope, let total):
             guard query == search.query else { return }
+            if page == 0 { search.total = nil }
+            if let total { search.total = total }
             search.tiles = page == 0 ? tiles : search.tiles + tiles
             search.page = page
             search.hasMore = hasMore
@@ -296,6 +326,11 @@ public final class ReadingModel {
             tracking[work] = rows
         case .downloads(let view):
             downloads = view
+        case .downloadEstimate(let estimate):
+            estimates[estimate.work] = estimate
+        case .removedFromLists(let work, let results):
+            removals[work] = results
+            refreshSeries(work)
         case .failed(let about, let failure):
             failures[about] = failure
             if about == .home { homeLoading = false }
@@ -318,6 +353,17 @@ public final class ReadingModel {
 public struct WorkEditions: Equatable, Sendable {
     public var editions: [BookEditionRow]
     public var asking: Bool
+    /// The sources searched without finding it, with why: "Not found in".
+    public var missing: [EditionMiss] = []
+}
+
+/// What "Search there" found in one source for a work.
+public struct SourceSeriesSearch: Equatable, Sendable {
+    public var sourceId: String
+    public var query: String
+    public var choices: [SourceSeriesChoice] = []
+    public var failure: ReadingFailure?
+    public var searching = true
 }
 
 /// Folders, servers and plugins that books come from.
@@ -326,12 +372,14 @@ public final class BookSourcesModel {
     public private(set) var view: BookSourcesView?
     /// The server Add a server found at the address typed, before signing in.
     public private(set) var checked: (address: String, kind: BookServerKind, name: String, version: String)?
-    public private(set) var added: (id: String, kind: BookServerKind, series: UInt32)?
+    public private(set) var added: (id: String, kind: BookServerKind, series: UInt32?)?
     public private(set) var failed: (step: ServerStep, failure: BookServerFailure)?
     public private(set) var checking = false
     public private(set) var matches: [String: [MatchChoice]] = [:]
     /// Which of your sources have a work, as each answers: the Read from sheet.
     public private(set) var forWork: [String: WorkEditions] = [:]
+    /// "Search there" for a work, one source at a time.
+    public private(set) var sourceSeries: [String: SourceSeriesSearch] = [:]
     @ObservationIgnored var send: ((Command) -> Void)?
 
     public init() {}
@@ -355,9 +403,25 @@ public final class BookSourcesModel {
     public func setOrder(_ ids: [String]) { send?(.bookSources(.setOrder(ids: ids))) }
 
     public func loadForWork(_ work: String) {
-        forWork[work] = WorkEditions(editions: forWork[work]?.editions ?? [], asking: true)
+        forWork[work] = WorkEditions(
+            editions: forWork[work]?.editions ?? [], asking: true, missing: forWork[work]?.missing ?? [])
         send?(.bookSources(.loadForWork(work: work)))
     }
+
+    /// "Search there": look for the work in one source by the words typed.
+    public func searchSource(_ work: String, sourceId: String, query: String) {
+        sourceSeries[work] = SourceSeriesSearch(sourceId: sourceId, query: query)
+        send?(.bookSources(.searchSourceForWork(work: work, sourceId: sourceId, query: query)))
+    }
+
+    /// The series picked in that source is the work; the editions come again.
+    public func chooseSourceSeries(_ work: String, sourceId: String, seriesRef: String) {
+        sourceSeries[work] = nil
+        forWork[work]?.asking = true
+        send?(.bookSources(.chooseSourceSeries(work: work, sourceId: sourceId, seriesRef: seriesRef)))
+    }
+
+    public func clearSourceSearch(_ work: String) { sourceSeries[work] = nil }
 
     public func checkServer(_ address: String) {
         checked = nil
@@ -396,12 +460,18 @@ public final class BookSourcesModel {
         case .serverFailed(let step, let failure):
             failed = (step, failure)
             checking = false
-        case .forWork(let work, let editions, let asking):
-            forWork[work] = WorkEditions(editions: editions, asking: asking)
+        case .forWork(let work, let editions, let asking, let missing):
+            forWork[work] = WorkEditions(editions: editions, asking: asking, missing: missing)
+        case .sourceSeries(let work, let sourceId, let query, let choices, let failure):
+            guard let current = sourceSeries[work], current.sourceId == sourceId, current.query == query else { return }
+            sourceSeries[work] = SourceSeriesSearch(
+                sourceId: sourceId, query: query, choices: choices, failure: failure, searching: false)
         }
     }
 
     #if FIXTURES
     public func showcase(_ view: BookSourcesView) { self.view = view }
+    /// For shots: an event as the engine would send it.
+    public func showcase(_ event: BookSourceEvent) { observe(.bookSources(event)) }
     #endif
 }
