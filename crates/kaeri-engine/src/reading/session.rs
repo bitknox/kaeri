@@ -1043,6 +1043,9 @@ impl Session {
         if let Err(e) = cx.services.store.record_read(&event, queued_for) {
             tracing::warn!(error = %e, "a read chapter was not kept");
         }
+        // A book server the person lets Kaeri write to hears of it now, as a mark from the
+        // series page does: it is their own library, not a tracker.
+        cx.services.book_sources.report(&self.work, vec![chapter.clone()], true, at);
         self.dirty = false;
         let _ = cx.tx.send(Event::ProgressQueued);
         cx.send(ReaderEvent::ChapterRead { work: self.work.clone(), chapter, trackers });

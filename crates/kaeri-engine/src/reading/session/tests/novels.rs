@@ -395,9 +395,28 @@ async fn an_epub_of_pictures_reads_as_pages() {
     assert_eq!(leaves.len(), 4, "three pages and the end page");
 }
 
-/// A source whose chapters are text.
+/// A source whose chapters are text. It tells `reports` what it is told was read.
 struct TextSource {
     manifest: BookSourceManifest,
+    reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
+}
+
+fn text_source(
+    reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
+) -> Arc<TextSource> {
+    Arc::new(TextSource {
+        manifest: BookSourceManifest {
+            id: "texts".into(),
+            name: "Texts".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Plugin,
+            media: vec![Medium::Novel],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        },
+        reports,
+    })
 }
 
 #[async_trait]
@@ -427,23 +446,24 @@ impl kaeri_core::traits::BookSource for TextSource {
             "<p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/>"
         )))
     }
+
+    async fn report_progress(
+        &self,
+        series: &str,
+        chapter: &str,
+        read: bool,
+    ) -> Result<(), ProviderError> {
+        if let Some(reports) = &self.reports {
+            let _ = reports.send((series.to_owned(), chapter.to_owned(), read));
+        }
+        Ok(())
+    }
 }
 
 #[tokio::test(start_paused = true)]
 async fn a_sources_text_chapter_is_served_like_a_book() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
-    h.services.book_sources.registry.put(Arc::new(TextSource {
-        manifest: BookSourceManifest {
-            id: "texts".into(),
-            name: "Texts".into(),
-            version: "1".into(),
-            kind: BookSourceKind::Plugin,
-            media: vec![Medium::Novel],
-            languages: vec!["en".into()],
-            allowed_hosts: Vec::new(),
-            capabilities: Vec::new(),
-        },
-    }));
+    h.services.book_sources.registry.put(text_source(None));
     h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
     let (view, novel) = h.open_novel(OpenAt::Start).await;
     assert_eq!(view.next.as_ref().map(|c| c.label.as_str()), Some("2"));
@@ -458,3 +478,46 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     let chapter = view.chapter.id.as_str().to_owned();
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
 }
+
+/// The server a chapter came from, when the person lets Kaeri write progress to it, is told
+/// the chapter was read as the reader marks it: Komga's and Kavita's write-back.
+#[tokio::test(start_paused = true)]
+async fn a_chapter_read_in_the_reader_is_told_to_its_book_server() {
+    for allowed in [true, false] {
+        let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+        let (tx, mut reports) = tokio::sync::mpsc::unbounded_channel();
+        h.services.book_sources.registry.put(text_source(Some(tx)));
+        h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+        h.services
+            .store
+            .put_book_server(&kaeri_store::book_sources::BookServer {
+                id: "texts".into(),
+                kind: "komga".into(),
+                name: "Home shelf".into(),
+                address: "https://books.example".into(),
+                user: Some("reader".into()),
+                report_progress: allowed,
+                signed_out: false,
+                last_seen: None,
+            })
+            .unwrap();
+        let (view, novel) = h.open_novel(OpenAt::Start).await;
+        assert_eq!(novel.spine.len(), 1);
+        let chapter = view.chapter.id.as_str().to_owned();
+        h.at(pos(0, &[0], 0), 1, 2, TurnHow::Turn);
+        let read = h
+            .until(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(read.as_str(), chapter);
+        let told = tokio::time::timeout(Duration::from_secs(5), reports.recv()).await;
+        if allowed {
+            assert_eq!(told.unwrap(), Some(("series-1".into(), "c1".into(), true)));
+        } else {
+            assert!(told.is_err(), "a server that is not to be told hears nothing: {told:?}");
+        }
+    }
+}
+
