@@ -100,8 +100,8 @@ keep_seeding = false       # whether a finished download keeps seeding
 ```
 
 `on_complete` is for refreshing a media library or renaming to a scheme of your own; a failure is
-logged, never fatal. A finished download stops seeding unless you ask otherwise: off by default to
-save upload; turn it on to give back to the swarm. What a watched episode does is set under
+logged, never fatal. A finished download stops seeding unless you turn on `keep_seeding`. It is
+off by default to save upload. What a watched episode does is set under
 [Seeding](/docs/guides/torrents/#seeding).
 
 :::caution
