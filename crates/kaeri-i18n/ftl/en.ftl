@@ -9174,6 +9174,191 @@ read-downloads-read = { $n } read
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Delete read
 
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Send to e-reader
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = For
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = What
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Chapters
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first } to { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Size
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = About { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Prepare and share
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Preparing the chapter
+       *[other] Preparing { $done } of { $total } chapters
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Pages are sized for the { $device } screen
+
+# Under the progress of a send that will be written in parts, because the device takes files up to a limit.
+send-in-parts = The files are too big for one, so they go in parts.
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = in parts over { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Cancel send
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] One file is ready.
+       *[other] { $n } files are ready.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Share again
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Sending to the { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = Fixed-layout EPUB
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Where did you stop?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = You sent chapters to the { $device }. Where did you stop?
+
+# Button in that note.
+stop-note-action = Set my place
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Chapter { $chapter } went to the { $device } on { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Chapters { $first } to { $last } went to the { $device } on { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = I finished chapter { $chapter }
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Set my place
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Keep chapter { $chapter } · page { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Keep my place
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-readers
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Send to e-reader
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDS feed
+
+# Line under the Share on this network switch.
+opds-share-note = An OPDS catalogue e-readers at home can browse
+
+# Footnote under the feed settings.
+opds-footer = Only while Kaeri is open on this { $device }. Progress on those e-readers stays there.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Address
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Turn the feed on to get its address.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Password
+
+# Line under the password row.
+opds-password-note = E-readers ask for it once
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = New password
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Leave it empty to pick a free port
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Port { $wanted } was busy, so the feed uses { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = What it shares
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Downloads
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] One chapter
+       *[other] { $n } chapters
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Manga folder
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Novel folder
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] One series
+       *[other] { $n } series
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Fetched by
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = No e-reader has fetched anything yet.
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] One file
+       *[other] { $n } files
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = E-reader at { $address }
+
 # Button that shows the season before.
 seasonal-previous = Previous season
 

@@ -26,7 +26,8 @@ use kaeri_books::{
 use kaeri_core::config::FeedConfig;
 use kaeri_model::{
     event::Event,
-    reading::{FeedView, ReadingEvent},
+    reading::{FeedClient, FeedShare, FeedShelf, FeedView, ReadingEvent},
+    stores::Secret,
 };
 use kaeri_store::{Store, book_downloads::BookDownloadState};
 use tokio::{
@@ -48,6 +49,61 @@ struct Running {
     port: u16,
     password: String,
     wanted: Option<u16>,
+    shares: Shares,
+    clients: Vec<Client>,
+}
+
+/// Which shelves the feed shares, as the config says.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Shares {
+    downloads: bool,
+    manga: bool,
+    novels: bool,
+}
+
+impl Default for Shares {
+    fn default() -> Self {
+        Self { downloads: true, manga: true, novels: true }
+    }
+}
+
+impl From<&FeedConfig> for Shares {
+    fn from(config: &FeedConfig) -> Self {
+        Self {
+            downloads: config.share_downloads.unwrap_or(true),
+            manga: config.share_manga.unwrap_or(true),
+            novels: config.share_novels.unwrap_or(true),
+        }
+    }
+}
+
+/// An e-reader that asked, kept while the feed listens.
+#[derive(Debug, Clone)]
+struct Client {
+    name: String,
+    address: String,
+    last: i64,
+    files: u32,
+}
+
+/// How many readers are remembered.
+const CLIENTS_KEPT: usize = 12;
+
+fn now_secs() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|d| i64::try_from(d.as_secs()).ok())
+        .unwrap_or(0)
+}
+
+/// The name a reader gives itself: the product at the head of its user agent.
+fn client_name(agent: Option<&str>) -> String {
+    let product = agent.unwrap_or("").split(['/', ' ', ';', '(']).next().unwrap_or("").trim();
+    if product.eq_ignore_ascii_case("mozilla") {
+        return String::new();
+    }
+    product.chars().take(40).collect()
 }
 
 /// The feed the engine holds. Cheap to clone.
@@ -79,9 +135,47 @@ impl Feed {
         state.task.as_ref().map(|_| state.port)
     }
 
+    fn shares(&self) -> Shares {
+        self.state().shares
+    }
+
+    /// Notes a request from an e-reader that has the password; `file` when it took a book.
+    fn heard(&self, address: &str, agent: Option<&str>, file: bool) {
+        let name = client_name(agent);
+        let mut state = self.state();
+        let now = now_secs();
+        let index = state.clients.iter().position(|c| c.address == address && c.name == name);
+        let mut client = match index {
+            Some(i) => state.clients.remove(i),
+            None => Client { name, address: address.to_owned(), last: now, files: 0 },
+        };
+        client.last = now;
+        client.files += u32::from(file);
+        state.clients.insert(0, client);
+        state.clients.truncate(CLIENTS_KEPT);
+    }
+
     /// What the settings pane shows.
-    pub fn view(&self, password: bool, store: &Store) -> FeedView {
+    pub fn view(
+        &self,
+        password: Option<String>,
+        store: &Store,
+        config: &FeedConfig,
+    ) -> FeedView {
         let port = self.port();
+        let shares = Shares::from(config);
+        let (down, manga, novels) = shelf_counts(store);
+        let clients = self
+            .state()
+            .clients
+            .iter()
+            .map(|c| FeedClient {
+                name: c.name.clone(),
+                address: c.address.clone(),
+                last: c.last,
+                files: c.files,
+            })
+            .collect();
         let addresses = match (port, local_address()) {
             (Some(port), Some(ip)) => vec![format!("http://{ip}:{port}/opds")],
             (Some(port), None) => vec![format!("http://localhost:{port}/opds")],
@@ -91,8 +185,15 @@ impl Feed {
             on: port.is_some(),
             addresses,
             port: port.unwrap_or(0),
-            password_set: password,
-            serving: served(store),
+            password_set: password.is_some(),
+            serving: served(store, shares),
+            password: password.map(Secret),
+            shares: vec![
+                FeedShare { shelf: FeedShelf::Downloads, on: shares.downloads, count: down },
+                FeedShare { shelf: FeedShelf::MangaFolders, on: shares.manga, count: manga },
+                FeedShare { shelf: FeedShelf::NovelFolders, on: shares.novels, count: novels },
+            ],
+            clients,
         }
     }
 
@@ -109,11 +210,16 @@ impl Feed {
         let wanted = config.port.filter(|p| *p != 0);
         {
             let mut state = self.state();
+            state.shares = Shares::from(config);
             let same = state.task.is_some()
                 && want
                 && Some(&state.password) == password.as_ref()
                 && state.wanted == wanted;
             if same {
+                drop(state);
+                let _ = tx.send(Event::Reading(ReadingEvent::Feed(
+                    self.view(password, &store, config),
+                )));
                 return;
             }
             if let Some(task) = state.task.take() {
@@ -127,14 +233,16 @@ impl Feed {
                         state.password.clone_from(&password);
                         state.wanted = wanted;
                         let store = store.clone();
-                        state.task = Some(tokio::spawn(serve(listener, password, store)));
+                        state.clients.clear();
+                        state.task =
+                            Some(tokio::spawn(serve(listener, password, store, self.clone())));
                     }
                     None => tracing::warn!("the feed found no port to listen on"),
                 }
             }
         }
         let _ =
-            tx.send(Event::Reading(ReadingEvent::Feed(self.view(password.is_some(), &store))));
+            tx.send(Event::Reading(ReadingEvent::Feed(self.view(password, &store, config))));
     }
 }
 
@@ -158,33 +266,54 @@ fn bind(wanted: Option<u16>) -> Option<TcpListener> {
     None
 }
 
-async fn serve(listener: TcpListener, password: String, store: Store) {
+async fn serve(listener: TcpListener, password: String, store: Store, feed: Feed) {
     loop {
-        let Ok((stream, _)) = listener.accept().await else { continue };
-        let (password, store) = (password.clone(), store.clone());
+        let Ok((stream, peer)) = listener.accept().await else { continue };
+        let (password, store, feed) = (password.clone(), store.clone(), feed.clone());
         tokio::spawn(async move {
             let _ = tokio::time::timeout(
                 Duration::from_secs(300),
-                handle(stream, &password, store),
+                handle(stream, peer.ip(), &password, store, &feed),
             )
             .await;
         });
     }
 }
 
-/// The books the feed lists.
-fn served(store: &Store) -> u32 {
-    let downloads = store
-        .book_downloads(None)
-        .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
-        .unwrap_or(0);
+fn is_novel(medium: &str) -> bool {
+    medium == "novel"
+}
+
+/// The books the feed lists, on the shelves it shares.
+fn served(store: &Store, shares: Shares) -> u32 {
+    let downloads = if shares.downloads {
+        store
+            .book_downloads(None)
+            .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
+            .unwrap_or(0)
+    } else {
+        0
+    };
     let folders: usize = store
         .local_book_series()
         .unwrap_or_default()
         .iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
         .map(|s| store.local_book_files(&s.id).map(|f| f.len()).unwrap_or(0))
         .sum();
     u32::try_from(downloads + folders).unwrap_or(u32::MAX)
+}
+
+/// What each shelf holds: downloaded chapters, manga series, novel series.
+fn shelf_counts(store: &Store) -> (u32, u32, u32) {
+    let chapters = store
+        .book_downloads(None)
+        .map(|rows| rows.iter().filter(|d| d.state == BookDownloadState::Done).count())
+        .unwrap_or(0);
+    let series = store.local_book_series().unwrap_or_default();
+    let novels = series.iter().filter(|s| is_novel(&s.medium)).count();
+    let n = |x: usize| u32::try_from(x).unwrap_or(u32::MAX);
+    (n(chapters), n(series.len() - novels), n(novels))
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -194,6 +323,7 @@ struct Request {
     head: bool,
     path: String,
     authorization: Option<String>,
+    agent: Option<String>,
 }
 
 async fn read_request(stream: &mut TcpStream) -> Option<Request> {
@@ -224,8 +354,13 @@ async fn read_request(stream: &mut TcpStream) -> Option<Request> {
         .filter_map(|l| l.split_once(':'))
         .find(|(k, _)| k.trim().eq_ignore_ascii_case("authorization"))
         .map(|(_, v)| v.trim().to_owned());
+    let agent = text
+        .split("\r\n")
+        .filter_map(|l| l.split_once(':'))
+        .find(|(k, _)| k.trim().eq_ignore_ascii_case("user-agent"))
+        .map(|(_, v)| v.trim().to_owned());
     let path = target.split(['?', '#']).next().unwrap_or("").to_owned();
-    Some(Request { head: method == "HEAD", path, authorization })
+    Some(Request { head: method == "HEAD", path, authorization, agent })
 }
 
 /// Whether the request carries the password, in Basic authorization with any user name.
@@ -279,14 +414,25 @@ impl Response {
     }
 }
 
-async fn handle(mut stream: TcpStream, password: &str, store: Store) {
+async fn handle(
+    mut stream: TcpStream,
+    peer: IpAddr,
+    password: &str,
+    store: Store,
+    feed: &Feed,
+) {
     let Some(request) = read_request(&mut stream).await else {
         let _ =
             send(&mut stream, Response::text("400 Bad Request", "Bad request"), false).await;
         return;
     };
     let response = if authorised(&request, password) {
-        route(&request.path, store).await
+        let response = route(&request.path, store, feed.shares()).await;
+        let file = !request.head
+            && response.status.starts_with("200")
+            && matches!(response.body, Body::File(_));
+        feed.heard(&peer.to_string(), request.agent.as_deref(), file);
+        response
     } else {
         Response {
             challenge: true,
@@ -542,12 +688,20 @@ fn book_entry(book: &Shelved) -> Entry {
     }
 }
 
-async fn route(path: &str, store: Store) -> Response {
+async fn route(path: &str, store: Store, shares: Shares) -> Response {
     let segments: Vec<String> =
         path.trim_matches('/').split('/').filter(|s| !s.is_empty()).map(decode).collect();
     let parts: Vec<&str> = segments.iter().map(String::as_str).collect();
+    let hidden = match parts.as_slice() {
+        ["opds", "downloads", ..] => !shares.downloads,
+        ["opds", "book", "d", ..] => !shares.downloads,
+        _ => false,
+    };
+    if hidden {
+        return Response::text("404 Not Found", "Not found");
+    }
     match parts.as_slice() {
-        ["opds"] => Response::document(&root(&store)),
+        ["opds"] => Response::document(&root(&store, shares)),
         ["opds", "downloads"] => Response::document(&downloads(&store)),
         ["opds", "downloads", work] => Response::document(&acquisition(
             &format!("urn:kaeri:downloads:{work}"),
@@ -555,14 +709,19 @@ async fn route(path: &str, store: Store) -> Response {
             &format!("/opds/downloads/{}", encode(work)),
             &download_books(&store, work),
         )),
-        ["opds", "folders"] => Response::document(&folders(&store)),
-        ["opds", "folders", series] => Response::document(&acquisition(
-            &format!("urn:kaeri:folders:{series}"),
-            series,
-            &format!("/opds/folders/{}", encode(series)),
-            &folder_books(&store, series),
-        )),
+        ["opds", "folders"] => Response::document(&folders(&store, shares)),
+        ["opds", "folders", series] if folder_shared(&store, series, shares) => {
+            Response::document(&acquisition(
+                &format!("urn:kaeri:folders:{series}"),
+                series,
+                &format!("/opds/folders/{}", encode(series)),
+                &folder_books(&store, series),
+            ))
+        }
         ["opds", "book", kind, first, rest @ ..] => {
+            if *kind == "f" && !folder_shared(&store, first, shares) {
+                return Response::text("404 Not Found", "Not found");
+            }
             let (second, tail) = if *kind == "f" {
                 (rest.first().copied(), rest.get(1..).unwrap_or(&[]))
             } else {
@@ -589,24 +748,40 @@ async fn route(path: &str, store: Store) -> Response {
     }
 }
 
-fn root(store: &Store) -> Document {
+/// Whether a folder series is on a shelf the feed shares.
+fn folder_shared(store: &Store, series: &str, shares: Shares) -> bool {
+    store.local_book_series().unwrap_or_default().iter().any(|s| {
+        s.id == series && if is_novel(&s.medium) { shares.novels } else { shares.manga }
+    })
+}
+
+fn root(store: &Store, shares: Shares) -> Document {
     let mut feed = base_feed("urn:kaeri:opds", "Kaeri", FeedKind::Navigation, "/opds");
     let down = store.book_download_works().unwrap_or_default().len();
-    let folders = store.local_book_series().unwrap_or_default().len();
-    feed.entries.push(section(
-        "urn:kaeri:downloads",
-        "Downloads",
-        "/opds/downloads",
-        FeedKind::Navigation,
-        Some(down.to_string()),
-    ));
-    feed.entries.push(section(
-        "urn:kaeri:folders",
-        "Folders",
-        "/opds/folders",
-        FeedKind::Navigation,
-        Some(folders.to_string()),
-    ));
+    let folders = store
+        .local_book_series()
+        .unwrap_or_default()
+        .iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
+        .count();
+    if shares.downloads {
+        feed.entries.push(section(
+            "urn:kaeri:downloads",
+            "Downloads",
+            "/opds/downloads",
+            FeedKind::Navigation,
+            Some(down.to_string()),
+        ));
+    }
+    if shares.manga || shares.novels {
+        feed.entries.push(section(
+            "urn:kaeri:folders",
+            "Folders",
+            "/opds/folders",
+            FeedKind::Navigation,
+            Some(folders.to_string()),
+        ));
+    }
     feed
 }
 
@@ -630,10 +805,15 @@ fn downloads(store: &Store) -> Document {
     feed
 }
 
-fn folders(store: &Store) -> Document {
+fn folders(store: &Store, shares: Shares) -> Document {
     let mut feed =
         base_feed("urn:kaeri:folders", "Folders", FeedKind::Navigation, "/opds/folders");
-    for series in store.local_book_series().unwrap_or_default() {
+    for series in store
+        .local_book_series()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
+    {
         feed.entries.push(section(
             &format!("urn:kaeri:folders:{}", series.id),
             &series.name,
@@ -723,7 +903,10 @@ mod tests {
         _dir: tempfile::TempDir,
         feed: Feed,
         port: u16,
-        _events: tokio::sync::mpsc::UnboundedReceiver<Event>,
+        store: Store,
+        outbox: Outbox,
+        config: FeedConfig,
+        events: tokio::sync::mpsc::UnboundedReceiver<Event>,
     }
 
     fn shelf() -> Shelf {
@@ -747,10 +930,12 @@ mod tests {
         store.book_download_done(id, &path.display().to_string(), Some(3), 100, 20).unwrap();
         let (tx, events) = tokio::sync::mpsc::unbounded_channel();
         let feed = Feed::default();
-        let config = FeedConfig { on: true, port: None, password_set: true };
-        feed.apply(&config, Some(PASSWORD.into()), store, &Outbox::from(tx));
+        let config =
+            FeedConfig { on: true, port: None, password_set: true, ..FeedConfig::default() };
+        let outbox = Outbox::from(tx);
+        feed.apply(&config, Some(PASSWORD.into()), store.clone(), &outbox);
         let port = feed.port().expect("the feed listens");
-        Shelf { _dir: dir, feed, port, _events: events }
+        Shelf { _dir: dir, feed, port, store, outbox, config, events }
     }
 
     #[tokio::test]
@@ -771,7 +956,8 @@ mod tests {
         let (tx, _events) = tokio::sync::mpsc::unbounded_channel();
         let feed = Feed::default();
         let outbox = Outbox::from(tx);
-        let on = FeedConfig { on: true, port: None, password_set: true };
+        let on =
+            FeedConfig { on: true, port: None, password_set: true, ..FeedConfig::default() };
         feed.apply(&on, None, store.clone(), &outbox);
         assert_eq!(feed.port(), None);
         feed.apply(&on, Some(PASSWORD.into()), store.clone(), &outbox);
@@ -826,6 +1012,71 @@ mod tests {
         assert_eq!(&reply.body[..2], b"PK");
         let head = get(s.port, path, Some(PASSWORD), "HEAD").await;
         assert!(head.body.is_empty());
+    }
+
+    async fn get_as(port: u16, path: &str, agent: &str) -> u16 {
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        let auth = STANDARD.encode(format!("reader:{PASSWORD}"));
+        let request = format!(
+            "GET {path} HTTP/1.1\r\nHost: feed.example\r\nUser-Agent: {agent}\r\nAuthorization: Basic {auth}\r\nConnection: close\r\n\r\n"
+        );
+        stream.write_all(request.as_bytes()).await.unwrap();
+        let mut raw = Vec::new();
+        stream.read_to_end(&mut raw).await.unwrap();
+        String::from_utf8_lossy(&raw).split(' ').nth(1).unwrap().parse().unwrap()
+    }
+
+    #[tokio::test]
+    async fn the_view_holds_the_password_the_shelves_and_who_fetched() {
+        let s = shelf();
+        assert_eq!(get_as(s.port, "/opds", "Reader/1.2 (Linux)").await, 200);
+        assert_eq!(get_as(s.port, "/opds/book/d/1/file", "Reader/1.2 (Linux)").await, 200);
+        let view = s.feed.view(Some(PASSWORD.into()), &s.store, &s.config);
+        assert_eq!(view.password, Some(Secret(PASSWORD.into())));
+        let shelves: Vec<_> = view.shares.iter().map(|x| (x.shelf, x.on, x.count)).collect();
+        assert_eq!(
+            shelves,
+            [
+                (FeedShelf::Downloads, true, 1),
+                (FeedShelf::MangaFolders, true, 0),
+                (FeedShelf::NovelFolders, true, 0)
+            ]
+        );
+        assert_eq!(view.clients.len(), 1, "one reader, however often it asks");
+        assert_eq!(view.clients[0].name, "Reader");
+        assert_eq!(view.clients[0].files, 1);
+        assert_eq!(view.clients[0].address, "127.0.0.1");
+        assert!(view.clients[0].last > 0);
+        assert!(
+            !format!("{view:?}").contains(PASSWORD),
+            "the password stays out of debug output"
+        );
+        // A refused request is not remembered.
+        let none = get(s.port, "/opds", None, "GET").await;
+        assert_eq!(none.status, 401);
+        assert_eq!(s.feed.view(Some(PASSWORD.into()), &s.store, &s.config).clients.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_shelf_turned_off_is_not_listed_or_served() {
+        let mut s = shelf();
+        let config = FeedConfig { share_downloads: Some(false), ..s.config.clone() };
+        s.feed.apply(&config, Some(PASSWORD.into()), s.store.clone(), &s.outbox);
+        s.config = config;
+        let mut told = None;
+        while let Ok(event) = s.events.try_recv() {
+            if let Event::Reading(ReadingEvent::Feed(view)) = event {
+                told = Some(view);
+            }
+        }
+        let told = told.expect("the pane is told");
+        assert!(!told.shares[0].on);
+        assert_eq!(told.serving, 0);
+        let root = get(s.port, "/opds", Some(PASSWORD), "GET").await;
+        assert!(!String::from_utf8(root.body).unwrap().contains("/opds/downloads"));
+        for path in ["/opds/downloads", "/opds/downloads/w-1", "/opds/book/d/1/file"] {
+            assert_eq!(get(s.port, path, Some(PASSWORD), "GET").await.status, 404, "{path}");
+        }
     }
 
     #[tokio::test]

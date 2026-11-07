@@ -679,6 +679,10 @@ pub struct FeedConfig {
     /// Whether a password is set. The password itself is in the secure store, with the
     /// trackers' tokens, never in this file; without one the feed does not start.
     pub password_set: bool,
+    /// Which shelves the feed shares. A shelf left unset is shared.
+    pub share_downloads: Option<bool>,
+    pub share_manga: Option<bool>,
+    pub share_novels: Option<bool>,
 }
 
 /// An e-reader the person described: what Send to e-reader prepares files for.

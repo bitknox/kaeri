@@ -125,6 +125,7 @@ pub(crate) fn handles(command: &ReadingCommand) -> bool {
             | ReadingCommand::StoppedAt { .. }
             | ReadingCommand::LoadFeed
             | ReadingCommand::SetFeed { .. }
+            | ReadingCommand::SetFeedShare { .. }
     )
 }
 
@@ -186,6 +187,9 @@ pub(crate) fn command(
         }
         ReadingCommand::SetFeed { on, password } => {
             set_feed(engine, services, on, password.map(|p| p.0), tx);
+        }
+        ReadingCommand::SetFeedShare { shelf, on } => {
+            set_feed_share(engine, services, shelf, on, tx)
         }
         _ => {}
     }
@@ -593,11 +597,46 @@ fn password_of(services: &Services) -> Option<String> {
 }
 
 #[cfg(feature = "opds-feed")]
-fn feed_view(_engine: &EngineState, services: &Services) -> FeedView {
-    services
-        .book_sources
-        .feed
-        .view(password_of(services).is_some(), services.book_sources.store())
+fn feed_view(engine: &EngineState, services: &Services) -> FeedView {
+    services.book_sources.feed.view(
+        password_of(services),
+        services.book_sources.store(),
+        &engine.config.effective().reading.feed,
+    )
+}
+
+#[cfg(feature = "opds-feed")]
+fn set_feed_share(
+    engine: &mut EngineState,
+    services: &Services,
+    shelf: kaeri_model::reading::FeedShelf,
+    on: bool,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue;
+    use kaeri_model::reading::FeedShelf;
+    let key = match shelf {
+        FeedShelf::Downloads => "share_downloads",
+        FeedShelf::MangaFolders => "share_manga",
+        FeedShelf::NovelFolders => "share_novels",
+    };
+    if let Err(e) =
+        engine.config.write(&services.paths, &["reading", "feed"], key, SettingValue::Bool(on))
+    {
+        tracing::warn!(error = %e, "the feed shelf was not kept");
+    }
+    apply_feed(engine, services, tx);
+}
+
+#[cfg(not(feature = "opds-feed"))]
+fn set_feed_share(
+    _: &mut EngineState,
+    _: &Services,
+    _: kaeri_model::reading::FeedShelf,
+    _: bool,
+    tx: &Outbox,
+) {
+    let _ = tx.send(Event::Reading(ReadingEvent::Feed(FeedView::default())));
 }
 
 #[cfg(not(feature = "opds-feed"))]
