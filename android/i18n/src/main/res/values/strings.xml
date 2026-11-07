@@ -1379,6 +1379,97 @@
     <string name="reader_sources_title">Read this chapter from</string>
     <!-- Heading on the Paper mode page above the parts it changes. -->
     <string name="reader_paper_parts">What it changes</string>
+    <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
+    <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
+    <!-- Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. -->
+    <string name="send_ereader_title">Send to e-reader</string>
+    <!-- Heading over the e-readers to prepare the files for. -->
+    <string name="send_ereader_for">For</string>
+    <!-- Heading over what is sent: which chapters. -->
+    <string name="send_ereader_what">What</string>
+    <!-- The chapters sent, as a span of their numbers: "41 to 43". -->
+    <string name="send_ereader_range">%1$s to %2$s</string>
+    <!-- An e-reader's screen size in pixels, beside the file format it gets: "1264 × 1680". -->
+    <string name="send_ereader_screen">%1$d × %2$d</string>
+    <!-- A file format for e-readers: an EPUB whose pages keep a fixed layout, for comics. -->
+    <string name="send_ereader_format_fixed_epub">Fixed-layout EPUB</string>
+    <!-- The EPUB format made for Kobo e-readers. Kobo is a product name: keep it as it is. -->
+    <string name="send_ereader_format_kepub">Kobo EPUB</string>
+    <!-- The plain EPUB e-book format. Keep as it is unless your language writes it otherwise. -->
+    <string name="send_ereader_format_epub">EPUB</string>
+    <!-- The comic book archive format. Keep as it is unless your language writes it otherwise. -->
+    <string name="send_ereader_format_cbz">CBZ</string>
+    <!-- Line in the sheet before preparing: reading progress on the e-reader never comes back to the app. -->
+    <string name="send_ereader_cant_see">Kaeri can\'t see your place on this e-reader. When you come back, the series page asks where you stopped.</string>
+    <!-- The sheet's one main button: make the files, then open the share sheet with them. -->
+    <string name="send_ereader_prepare">Prepare and share</string>
+    <!-- Beside the progress ring while the files are made. -->
+    <plurals name="send_ereader_preparing">
+        <item quantity="one">Preparing the chapter</item>
+        <item quantity="other">Preparing %1$d of %2$d chapters</item>
+    </plurals>
+    <!-- Under the progress while the files are made: they are fitted to the chosen e-reader's screen. -->
+    <string name="send_ereader_sized">Pages are sized for the %1$s screen</string>
+    <!-- Heading when the files could not be made. The cause follows on its own line. -->
+    <string name="send_ereader_failed">Couldn\'t prepare these chapters.</string>
+    <!-- Title of the sheet that asks how far the person read on the e-reader. Also the button that opens it. -->
+    <string name="send_ereader_where_stop">Where did you stop?</string>
+    <!-- On the series page after a send: which e-reader the chapters went to and on which day. -->
+    <string name="send_ereader_sent">Sent to %1$s on %2$s</string>
+    <!-- On the series page after a send, under where the chapters went. -->
+    <string name="send_ereader_cant_see_there">Kaeri can\'t see your place there.</string>
+    <!-- Line at the top of Where did you stop: how many chapters went to which e-reader, and when. -->
+    <plurals name="send_ereader_went">
+        <item quantity="one">One chapter went to %2$s on %3$s.</item>
+        <item quantity="other">%1$d chapters went to %2$s on %3$s.</item>
+    </plurals>
+    <!-- Switch in Where did you stop: the chosen chapter was read to its end. The chapter is the source's own label, such as "Chapter 43" or "Part 5". -->
+    <string name="send_ereader_finished">I finished %1$s</string>
+    <!-- The main button of Where did you stop: move the place to the chosen chapter. -->
+    <string name="send_ereader_set_place">Set my place</string>
+    <!-- Text button in Where did you stop that leaves the place as it is, naming it. -->
+    <string name="send_ereader_keep_chapter">Keep chapter %1$s · page %2$d</string>
+    <!-- Text button in Where did you stop that leaves the place as it is. -->
+    <string name="send_ereader_keep">Keep my place</string>
+    <!-- On a series page whose source failed, under the cause: the chapters downloaded before still open. -->
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">One downloaded chapter still opens.</item>
+        <item quantity="other">%1$d downloaded chapters still open.</item>
+    </plurals>
+    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
+    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
+    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
+    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
+    <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
+    <string name="settings_summary_chapters_on">New chapters on</string>
+    <!-- Line under Notifications in the Settings list: chapter notifications are off. -->
+    <string name="settings_summary_chapters_off">New chapters off</string>
+    <!-- Part of the line under Sources in the Settings list: how many book folders there are. -->
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">1 folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
+    <!-- Part of the line under Sources in the Settings list: how many book servers there are. -->
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">1 server</item>
+        <item quantity="other">%1$d servers</item>
+    </plurals>
+    <!-- Part of the line under Sources in the Settings list: how many plugins there are for books. -->
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">1 plugin</item>
+        <item quantity="other">%1$d plugins</item>
+    </plurals>
+    <!-- Row in Settings' Sources with both media on, and the title of its page: the sources for books. -->
+    <string name="settings_book_sources">Book sources</string>
+    <!-- Line over the Check matches list: how many series of the folders were matched, and how many need a look. -->
+    <plurals name="book_matches_line">
+        <item quantity="one">Kaeri matched %1$d by their details. This one needs a look.</item>
+        <item quantity="other">Kaeri matched %1$d by their details. These %2$d need a look.</item>
+    </plurals>
+    <!-- The folder picker could not be opened, or the folder could not be kept. -->
+    <string name="book_folder_failed">That folder couldn\'t be added. Try another one.</string>
+    <!-- Under the sign-in fields of Add a server for books: progress goes back, and where the password is kept on Android. -->
+    <string name="book_server_note_device">Kaeri sends your reading progress back to this server. The password stays on this device.</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->

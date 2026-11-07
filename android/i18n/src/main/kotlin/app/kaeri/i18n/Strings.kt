@@ -2565,6 +2565,146 @@ object Strings {
     fun readerPaperParts(context: Context): String =
         context.getString(R.string.reader_paper_parts)
 
+    /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
+    fun readHomeOfflineLine(context: Context): String =
+        context.getString(R.string.read_home_offline_line)
+
+    /** Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. */
+    fun sendEreaderTitle(context: Context): String =
+        context.getString(R.string.send_ereader_title)
+
+    /** Heading over the e-readers to prepare the files for. */
+    fun sendEreaderFor(context: Context): String =
+        context.getString(R.string.send_ereader_for)
+
+    /** Heading over what is sent: which chapters. */
+    fun sendEreaderWhat(context: Context): String =
+        context.getString(R.string.send_ereader_what)
+
+    /** The chapters sent, as a span of their numbers: "41 to 43". */
+    fun sendEreaderRange(context: Context, from: String, to: String): String =
+        context.getString(R.string.send_ereader_range, from, to)
+
+    /** An e-reader's screen size in pixels, beside the file format it gets: "1264 × 1680". */
+    fun sendEreaderScreen(context: Context, width: Int, height: Int): String =
+        context.getString(R.string.send_ereader_screen, width, height)
+
+    /** A file format for e-readers: an EPUB whose pages keep a fixed layout, for comics. */
+    fun sendEreaderFormatFixedEpub(context: Context): String =
+        context.getString(R.string.send_ereader_format_fixed_epub)
+
+    /** The EPUB format made for Kobo e-readers. Kobo is a product name: keep it as it is. */
+    fun sendEreaderFormatKepub(context: Context): String =
+        context.getString(R.string.send_ereader_format_kepub)
+
+    /** The plain EPUB e-book format. Keep as it is unless your language writes it otherwise. */
+    fun sendEreaderFormatEpub(context: Context): String =
+        context.getString(R.string.send_ereader_format_epub)
+
+    /** The comic book archive format. Keep as it is unless your language writes it otherwise. */
+    fun sendEreaderFormatCbz(context: Context): String =
+        context.getString(R.string.send_ereader_format_cbz)
+
+    /** Line in the sheet before preparing: reading progress on the e-reader never comes back to the app. */
+    fun sendEreaderCantSee(context: Context): String =
+        context.getString(R.string.send_ereader_cant_see)
+
+    /** The sheet's one main button: make the files, then open the share sheet with them. */
+    fun sendEreaderPrepare(context: Context): String =
+        context.getString(R.string.send_ereader_prepare)
+
+    /** Beside the progress ring while the files are made. */
+    fun sendEreaderPreparing(context: Context, done: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.send_ereader_preparing, total, done, total)
+
+    /** Under the progress while the files are made: they are fitted to the chosen e-reader's screen. */
+    fun sendEreaderSized(context: Context, device: String): String =
+        context.getString(R.string.send_ereader_sized, device)
+
+    /** Heading when the files could not be made. The cause follows on its own line. */
+    fun sendEreaderFailed(context: Context): String =
+        context.getString(R.string.send_ereader_failed)
+
+    /** Title of the sheet that asks how far the person read on the e-reader. Also the button that opens it. */
+    fun sendEreaderWhereStop(context: Context): String =
+        context.getString(R.string.send_ereader_where_stop)
+
+    /** On the series page after a send: which e-reader the chapters went to and on which day. */
+    fun sendEreaderSent(context: Context, device: String, date: String): String =
+        context.getString(R.string.send_ereader_sent, device, date)
+
+    /** On the series page after a send, under where the chapters went. */
+    fun sendEreaderCantSeeThere(context: Context): String =
+        context.getString(R.string.send_ereader_cant_see_there)
+
+    /** Line at the top of Where did you stop: how many chapters went to which e-reader, and when. */
+    fun sendEreaderWent(context: Context, n: Int, device: String, date: String): String =
+        context.resources.getQuantityString(R.plurals.send_ereader_went, n, n, device, date)
+
+    /** Switch in Where did you stop: the chosen chapter was read to its end. The chapter is the source's own label, such as "Chapter 43" or "Part 5". */
+    fun sendEreaderFinished(context: Context, chapter: String): String =
+        context.getString(R.string.send_ereader_finished, chapter)
+
+    /** The main button of Where did you stop: move the place to the chosen chapter. */
+    fun sendEreaderSetPlace(context: Context): String =
+        context.getString(R.string.send_ereader_set_place)
+
+    /** Text button in Where did you stop that leaves the place as it is, naming it. */
+    fun sendEreaderKeepChapter(context: Context, n: String, page: Int): String =
+        context.getString(R.string.send_ereader_keep_chapter, n, page)
+
+    /** Text button in Where did you stop that leaves the place as it is. */
+    fun sendEreaderKeep(context: Context): String =
+        context.getString(R.string.send_ereader_keep)
+
+    /** On a series page whose source failed, under the cause: the chapters downloaded before still open. */
+    fun readSeriesDownloadedOpen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
+
+    /** Downloads' empty line for a person who only reads, under "No downloads". */
+    fun readDownloadsEmptyDetail(context: Context): String =
+        context.getString(R.string.read_downloads_empty_detail)
+
+    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
+    fun readDownloadsEmptyBoth(context: Context): String =
+        context.getString(R.string.read_downloads_empty_both)
+
+    /** Line under Notifications in the Settings list: chapter notifications are on. */
+    fun settingsSummaryChaptersOn(context: Context): String =
+        context.getString(R.string.settings_summary_chapters_on)
+
+    /** Line under Notifications in the Settings list: chapter notifications are off. */
+    fun settingsSummaryChaptersOff(context: Context): String =
+        context.getString(R.string.settings_summary_chapters_off)
+
+    /** Part of the line under Sources in the Settings list: how many book folders there are. */
+    fun settingsSummaryBookFolders(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_folders, n, n)
+
+    /** Part of the line under Sources in the Settings list: how many book servers there are. */
+    fun settingsSummaryBookServers(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_servers, n, n)
+
+    /** Part of the line under Sources in the Settings list: how many plugins there are for books. */
+    fun settingsSummaryBookPlugins(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_plugins, n, n)
+
+    /** Row in Settings' Sources with both media on, and the title of its page: the sources for books. */
+    fun settingsBookSources(context: Context): String =
+        context.getString(R.string.settings_book_sources)
+
+    /** Line over the Check matches list: how many series of the folders were matched, and how many need a look. */
+    fun bookMatchesLine(context: Context, matched: Int, n: Int): String =
+        context.resources.getQuantityString(R.plurals.book_matches_line, n, matched, n)
+
+    /** The folder picker could not be opened, or the folder could not be kept. */
+    fun bookFolderFailed(context: Context): String =
+        context.getString(R.string.book_folder_failed)
+
+    /** Under the sign-in fields of Add a server for books: progress goes back, and where the password is kept on Android. */
+    fun bookServerNoteDevice(context: Context): String =
+        context.getString(R.string.book_server_note_device)
+
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
         context.getString(R.string.tv_pair_request_held, phone, code)
