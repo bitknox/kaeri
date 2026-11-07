@@ -116,6 +116,9 @@ struct ReadFromSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let work: String
+    /// The source "Search there" opened, and the words in its field.
+    @State private var searching: String?
+    @State private var query = ""
 
     var body: some View {
         let title = store.reading.series[work]?.titles.display
@@ -136,13 +139,136 @@ struct ReadFromSheet: View {
                     }
                     .font(.plat(mac: 13, touch: 15))
                     .padding(12)
-                } else {
+                } else if editions?.missing.isEmpty ?? true {
                     PlainEmpty(title: L.seriesReadFromNoneTitle, line: L.seriesReadFromNoneLine)
                         .padding(.horizontal, 12)
+                }
+                if let missing = editions?.missing, !missing.isEmpty {
+                    SheetHeading(text: L.readFromNotFound)
+                    SheetRows {
+                        ForEach(missing, id: \.sourceId) { miss in
+                            missRow(miss, title: title ?? "")
+                        }
+                    }
                 }
             }
         }
         .task { store.bookSources.loadForWork(work) }
+        .onDisappear { store.bookSources.clearSourceSearch(work) }
+    }
+
+    /// A source searched without finding the series: its name and why in haze, and Search
+    /// there, which opens a field under it and lists what the source finds.
+    @ViewBuilder
+    private func missRow(_ miss: EditionMiss, title: String) -> some View {
+        let open = searching == miss.sourceId
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(miss.sourceName)
+                        .font(.plat(mac: 13, touch: 17))
+                        .lineLimit(1)
+                    Text(miss.reason.text)
+                        .font(.plat(mac: 12, touch: 15))
+                        .lineLimit(2)
+                }
+                .foregroundStyle(.haze)
+                Spacer(minLength: 8)
+                if !open {
+                    Button(L.readFromSearchThere) {
+                        searching = miss.sourceId
+                        query = title
+                        store.bookSources.searchSource(work, sourceId: miss.sourceId, query: title)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.plat(mac: 12, touch: 15, weight: .semibold))
+                    .foregroundStyle(.silk)
+                    .pointerHover()
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, Device.isMac ? 9 : 12)
+            if open {
+                searchThere(miss)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func searchThere(_ miss: EditionMiss) -> some View {
+        let found = store.bookSources.sourceSeries[work]
+        HStack(spacing: 8) {
+            TextField(L.readFromSearchPlaceholder(source: miss.sourceName), text: $query)
+                .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
+                .onSubmit { search(miss) }
+            Button(L.readFromSearch) { search(miss) }
+                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 32, raisedSurface: true, fontSize: Device.isMac ? 12 : 15))
+                .fixedSize()
+                .disabled(query.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        if let found, found.sourceId == miss.sourceId {
+            if found.searching {
+                ProgressView().controlSize(.small).padding(.top, 8)
+            } else if let failure = found.failure {
+                FailedLine(failure.words).padding(.top, 8)
+            } else if found.choices.isEmpty {
+                Text(L.readFromSearchNone)
+                    .font(.plat(mac: 12, touch: 15))
+                    .foregroundStyle(.haze)
+                    .padding(.top, 8)
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(found.choices, id: \.seriesRef) { choice in
+                        Button {
+                            searching = nil
+                            store.bookSources.chooseSourceSeries(work, sourceId: miss.sourceId, seriesRef: choice.seriesRef)
+                        } label: {
+                            HStack(spacing: 10) {
+                                BookCover(url: choice.cover, width: Device.isMac ? 28 : 34, radius: 3)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(choice.title)
+                                        .font(.plat(mac: 13, touch: 17))
+                                        .foregroundStyle(.silk)
+                                        .lineLimit(1)
+                                    let facts = choiceFacts(choice)
+                                    if !facts.isEmpty {
+                                        Text(facts)
+                                            .font(.plat(mac: 12, touch: 13))
+                                            .foregroundStyle(.haze)
+                                    }
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.vertical, 6)
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .pointerHover()
+                    }
+                }
+                .padding(.top, 6)
+            }
+        }
+    }
+
+    private func search(_ miss: EditionMiss) {
+        let words = query.trimmingCharacters(in: .whitespaces)
+        guard !words.isEmpty else { return }
+        store.bookSources.searchSource(work, sourceId: miss.sourceId, query: words)
+    }
+
+    /// "2019 · Japanese": the year and language a source gives for one of its series.
+    private func choiceFacts(_ choice: SourceSeriesChoice) -> String {
+        var parts: [String] = []
+        if let year = choice.year { parts.append(String(year)) }
+        if let language = choice.language, !language.isEmpty,
+           let name = AirTime.locale.localizedString(forLanguageCode: language) {
+            parts.append(name)
+        }
+        return parts.joined(separator: " · ") // i18n-skip
     }
 
     private func row(_ edition: BookEditionRow) -> some View {

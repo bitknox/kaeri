@@ -64,8 +64,10 @@ enum ReadSeriesWords {
         return parts.joined(separator: " · ") // i18n-skip
     }
 
-    /// The second line of a chapter row: its state, when it came out, the group and its versions.
+    /// The second line of a chapter row: the engine's words ("Read · 4 days ago · Downloaded",
+    /// "New · yesterday", "Not downloaded"), else its state, when it came out and the group.
     static func chapterLine(_ row: ChapterRow, preferred: String?) -> String {
+        if !row.line.isEmpty { return row.line.map(\.text).joined(separator: " · ") } // i18n-skip
         var parts: [String] = []
         if let state = ReadWords.state(row) { parts.append(state) }
         if row.download == .done { parts.append(L.chapterStateDownloaded) }
@@ -154,6 +156,20 @@ struct SeriesPage: View {
             store.reading.loadSeries(work)
             store.reading.loadTracking(work)
         }
+        #if FIXTURES
+        .onLaunchSheet("read-from", navigator) { navigator.seriesSheet = .source(work) } // i18n-skip: a shot's sheet name
+        .task {
+            // Shots: choosing chapters, with the next three unread ones chosen.
+            guard navigator.launchSheet == "choose-chapters" else { return } // i18n-skip: a shot's sheet name
+            navigator.launchSheet = nil
+            for _ in 0..<30 where store.reading.chapters[work] == nil {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            let rows = store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []
+            let unread = rows.filter { $0.state != .read }.sorted { ($0.number.flatMap(Double.init) ?? 0) < ($1.number.flatMap(Double.init) ?? 0) }
+            choosing = Set(unread.prefix(3).map(\.id))
+        }
+        #endif
         .sheet(item: Binding(
             get: { navigator.seriesSheet.flatMap { $0.work == work ? $0 : nil } },
             set: { navigator.seriesSheet = $0 }
@@ -178,11 +194,24 @@ struct SeriesPage: View {
             Text(L.readAgainLine)
         }
         #if os(iOS)
-        .navigationTitle(series?.titles.display ?? "")
+        .navigationTitle(choosing.map { L.seriesChosen(n: $0.count) } ?? series?.titles.display ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(choosing != nil)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if let series { SeriesMoreMenu(series: series, choosing: $choosing) }
+            if choosing != nil {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(L.actionCancel) { choosing = nil }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(L.seriesChooseAllUnread) {
+                        let rows = store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []
+                        choosing = Set(rows.filter { $0.state != .read }.map(\.id))
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if let series { SeriesMoreMenu(series: series, choosing: $choosing) }
+                }
             }
         }
         #endif
@@ -318,6 +347,7 @@ private struct SeriesActions: View {
     let series: SeriesView
     let stretch: Bool
     @Binding var choosing: Set<String>?
+    @State private var removing = false
 
     private var height: CGFloat { Device.isMac ? 34 : (stretch ? 50 : 44) }
     private var font: CGFloat { Device.isMac ? 13 : 17 }
@@ -325,18 +355,34 @@ private struct SeriesActions: View {
     private var secondaryFont: CGFloat { Device.isMac ? 13 : 15 }
 
     var body: some View {
-        if stretch {
-            VStack(spacing: 12) {
-                main
-                HStack(spacing: 12) {
-                    statusMenu
-                    downloadMenu
+        Group {
+            if stretch {
+                VStack(spacing: 12) {
+                    main
+                    HStack(spacing: 12) {
+                        statusMenu
+                        downloadMenu
+                    }
                 }
+            } else {
+                row
             }
-        } else {
+        }
+        .removeFromLists(series: series, asking: $removing)
+    }
+
+    private var row: some View {
+        Group {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) {
                     main
+                    statusMenu
+                    downloadMenu
+                    SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
+                }
+                // Narrower, before anything wraps: the main action without its book.
+                HStack(spacing: 8) {
+                    mainButton(icon: false)
                     statusMenu
                     downloadMenu
                     SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
@@ -354,14 +400,16 @@ private struct SeriesActions: View {
     }
 
     /// Read or go on in amber; with no source, Read from another source in its place, secondary.
+    private var main: some View { mainButton(icon: !stretch) }
+
     @ViewBuilder
-    private var main: some View {
+    private func mainButton(icon: Bool) -> some View {
         if let words = ReadSeriesWords.action(series.action) {
             Button {
                 ReadSeriesWords.perform(series.action, work: series.work, store: store, navigator: navigator)
             } label: {
                 HStack(spacing: 8) {
-                    if !stretch {
+                    if icon {
                         Image(systemName: "book").font(.ui(font < 15 ? 12 : 15)).accessibilityHidden(true)
                     }
                     Text(words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
@@ -409,6 +457,10 @@ private struct SeriesActions: View {
                         }
                     }
                 }
+            }
+            if series.list != nil {
+                Divider()
+                Button(L.seriesRemoveFromLists) { removing = true }
             }
         } label: {
             menuLabel(series.list.map(ReadWords.list) ?? L.seriesAddToList)
@@ -897,23 +949,9 @@ private struct ChapterVersionsMenu: View {
     }
 }
 
-/// The ring while a chapter's pages arrive.
-private struct DownloadRing: View {
-    let fraction: Double
-
-    var body: some View {
-        ZStack {
-            Circle().stroke(Palette.rule, lineWidth: 2)
-            Circle().trim(from: 0, to: max(0.02, fraction)).stroke(.silk, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            RoundedRectangle(cornerRadius: 1).fill(.silk).frame(width: 6, height: 6)
-        }
-        .frame(width: 20, height: 20)
-        .contentShape(.circle)
-    }
-}
-
-/// Choose chapters' bar: Mark read, and the one amber action with the count.
+/// Choose chapters' bar: Mark read and the one amber action with the count, on glass, with what
+/// the download will take above it ("About 62 MB · over Wi-Fi"). Cancel sits in the bar on a
+/// desktop and in the navigation bar on touch.
 private struct ChooseChaptersBar: View {
     @Environment(AppStore.self) private var store
     let series: SeriesView
@@ -921,35 +959,96 @@ private struct ChooseChaptersBar: View {
     let done: () -> Void
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 12) {
+        let estimate = store.reading.estimates[series.work]
+        let line = estimate.map { $0.line.map(\.text).joined(separator: " · ") } ?? "" // i18n-skip
+        let height: CGFloat = Device.isMac ? 30 : 44
+        VStack(spacing: 10) {
+            if !chosen.isEmpty, !line.isEmpty {
+                Text(line)
+                    .font(.plat(mac: 12, touch: 13))
+                    .foregroundStyle(.haze)
+                    .monospacedDigit()
+                    .transition(.opacity)
+            }
+            HStack(spacing: 8) {
+                #if os(macOS)
                 Button(L.actionCancel, action: done)
-                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 30 : 44, fontSize: Device.isMac ? 13 : 15))
-                Spacer(minLength: 8)
+                    .buttonStyle(SecondaryCapsuleStyle(height: height, fontSize: 13))
+                #endif
                 Button(L.seriesMarkRead) {
                     store.reading.markRead(series.work, chapters: Array(chosen), read: true)
                     done()
                 }
-                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 30 : 44, fontSize: Device.isMac ? 13 : 15))
+                .buttonStyle(SecondaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 15))
+                .fixedSize()
                 .disabled(chosen.isEmpty)
-                Button(L.downloadChapters(n: chosen.count)) {
+                Button {
                     store.reading.download(series.work, .chapters(ids: Array(chosen)))
                     done()
+                } label: {
+                    Text(L.downloadChapters(n: chosen.count))
+                        .lineLimit(1)
+                        .frame(maxWidth: Device.isMac ? nil : .infinity)
                 }
-                .buttonStyle(PrimaryCapsuleStyle(height: Device.isMac ? 30 : 44, fontSize: Device.isMac ? 13 : 17))
+                .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 17))
                 .disabled(chosen.isEmpty)
             }
-            if store.settings.value(.chapterDownloadsOnCellular) != "on" { // i18n-skip
-                Text(L.downloadOverWifi)
-                    .font(.plat(mac: 11, touch: 13))
-                    .foregroundStyle(.haze)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+            .padding(8)
+            .chromeGlass(in: .capsule)
+            .fixedSize(horizontal: Device.isMac, vertical: false)
         }
+        .frame(maxWidth: Device.isMac ? nil : 520)
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Palette.raised)
-        .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
+        .padding(.bottom, Device.isMac ? 20 : 12)
+        .animation(.standard, value: line)
+        .task(id: chosen) {
+            // A pause while the person is still ticking, then one ask.
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            store.reading.estimateDownload(series.work, .chapters(ids: Array(chosen)))
+        }
+    }
+}
+
+/// Remove from lists: asked first, then what each tracker made of it, a line each.
+private struct RemoveFromLists: ViewModifier {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    let series: SeriesView
+    @Binding var asking: Bool
+    @State private var sent = false
+
+    func body(content: Content) -> some View {
+        let results = store.reading.removals[series.work]
+        content
+            .confirmationDialog(
+                L.seriesRemoveFromListsTitle(title: series.titles.display),
+                isPresented: $asking,
+                titleVisibility: .visible
+            ) {
+                Button(L.actionRemove, role: .destructive) {
+                    sent = true
+                    store.reading.removeFromLists(series.work)
+                }
+                Button(L.actionCancel, role: .cancel) {}
+            } message: {
+                Text(L.seriesRemoveFromListsLine)
+            }
+            .alert(L.seriesRemovedTitle, isPresented: Binding(
+                get: { sent && results != nil },
+                set: { if !$0 { sent = false } }
+            )) {
+                Button(L.actionDone) { sent = false }
+            } message: {
+                Text((results ?? []).map { $0.line.map(\.text).joined(separator: " · ") }.joined(separator: "\n")) // i18n-skip
+            }
+            .onLaunchSheet("remove-lists", navigator) { asking = true } // i18n-skip: a shot's sheet name
+    }
+}
+
+extension View {
+    fileprivate func removeFromLists(series: SeriesView, asking: Binding<Bool>) -> some View {
+        modifier(RemoveFromLists(series: series, asking: asking))
     }
 }
 

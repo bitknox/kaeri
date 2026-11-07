@@ -117,6 +117,17 @@ struct BookSourcesList: View {
         }
         .task { store.bookSources.load() }
         .sheet(isPresented: $matchesShown) { CheckMatchesSheet() }
+        #if FIXTURES
+        // Shots: the add-server sheet with a server found, and with it added and its series counted.
+        .onLaunchSheet("add-book-server", navigator) { // i18n-skip: a shot's sheet name
+            AddBookServerStep.shot = .found
+            navigator.addBookSource = .server
+        }
+        .onLaunchSheet("add-book-server-added", navigator) { // i18n-skip: a shot's sheet name
+            AddBookServerStep.shot = .added
+            navigator.addBookSource = .server
+        }
+        #endif
     }
 
     /// "~/Books/Manga · 64 series", or what a scan or a missing drive says.
@@ -410,9 +421,28 @@ private struct AddBookServerStep: View {
     @State private var user = ""
     @State private var password = ""
     @State private var slow = false
+    @State private var staged = false
     @FocusState private var focus: Field?
 
     private enum Field { case address, user, password }
+
+    #if FIXTURES
+    enum Shot { case found, added }
+    /// For shots: the sheet opens in this state, with nothing asked of a real server.
+    @MainActor static var shot: Shot?
+
+    private func stage(_ shot: Shot) {
+        let sources = store.bookSources
+        staged = true
+        address = "books.home.example" // i18n-skip: a made-up host
+        user = "reader" // i18n-skip: a made-up name
+        password = "example-password" // i18n-skip: a made-up password
+        sources.showcase(.serverChecked(address: address, kind: .kavita, name: "Books", version: "0.8")) // i18n-skip
+        if shot == .added {
+            sources.showcase(.serverAdded(id: "fixture-server", kind: .kavita, series: 212)) // i18n-skip
+        }
+    }
+    #endif
 
     var body: some View {
         let sources = store.bookSources
@@ -427,7 +457,12 @@ private struct AddBookServerStep: View {
             if let checked = sources.checked, checked.address == address.trimmingCharacters(in: .whitespaces) {
                 HStack(spacing: 6) {
                     WaterDot()
-                    Text(L.sourcesFoundServer(kind: BookServerWords.kind(checked.kind)))
+                    // Once signed in, how many series it lists, when the server said for sure.
+                    if let added = sources.added, added.kind == checked.kind, let series = added.series {
+                        Text(L.sourcesFoundServerSeries(kind: BookServerWords.kind(checked.kind), n: Int(series)))
+                    } else {
+                        Text(L.sourcesFoundServer(kind: BookServerWords.kind(checked.kind)))
+                    }
                 }
                 .font(.plat(mac: 12, touch: 15))
                 .foregroundStyle(.silk)
@@ -464,27 +499,44 @@ private struct AddBookServerStep: View {
             }
             HStack(spacing: 10) {
                 Spacer()
-                Button(L.actionCancel) { dismiss() }
-                    .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, raisedSurface: true, fontSize: buttonFont))
-                    .keyboardShortcut(.cancelAction)
-                if sources.checked == nil, sources.failed != nil {
-                    Button(L.actionTryAgain) { sources.checkServer(trimmed) }
+                if sources.added != nil {
+                    Button(L.actionDone) { dismiss() }
                         .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
                         .keyboardShortcut(.defaultAction)
                 } else {
-                    Button(L.bookAddServerButton) { add() }
-                        .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
-                        .keyboardShortcut(.defaultAction)
-                        .disabled(sources.checked == nil || user.isEmpty || password.isEmpty || sources.checking)
+                    Button(L.actionCancel) { dismiss() }
+                        .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, raisedSurface: true, fontSize: buttonFont))
+                        .keyboardShortcut(.cancelAction)
+                    if sources.checked == nil, sources.failed != nil {
+                        Button(L.actionTryAgain) { sources.checkServer(trimmed) }
+                            .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                            .keyboardShortcut(.defaultAction)
+                    } else {
+                        Button(L.bookAddServerButton) { add() }
+                            .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                            .keyboardShortcut(.defaultAction)
+                            .disabled(sources.checked == nil || user.isEmpty || password.isEmpty || sources.checking)
+                    }
                 }
             }
             .padding(.top, 22)
         }
         .animation(.standard, value: sources.checked?.address)
-        .onAppear { focus = .address }
+        .onAppear {
+            // A server added before is not this one.
+            sources.resetServerSheet()
+            focus = .address
+            #if FIXTURES
+            if let shot = Self.shot {
+                Self.shot = nil
+                focus = nil
+                stage(shot)
+            }
+            #endif
+        }
         .task(id: address) {
             // Tried as it is typed, once the typing pauses.
-            guard !trimmed.isEmpty else { return }
+            guard !trimmed.isEmpty, !staged else { return }
             try? await Task.sleep(for: .milliseconds(500))
             guard !Task.isCancelled else { return }
             sources.checkServer(trimmed)
@@ -495,8 +547,9 @@ private struct AddBookServerStep: View {
             try? await Task.sleep(for: .milliseconds(600))
             slow = sources.checking
         }
+        // Added: gone at once, unless there is a count of its series to say first, with Done.
         .onChange(of: sources.added?.id) { _, id in
-            if id != nil { dismiss() }
+            if id != nil, sources.added?.series == nil { dismiss() }
         }
     }
 
