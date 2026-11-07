@@ -85,8 +85,13 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         for chapter in new {
             let is_read = read.is_read(&chapter.id);
             let mut chapter_row = row_of(chapter, &read);
-            chapter_row.line =
-                super::rows::line(&chapter_row, super::rows::Kept::Source, ask.now, &zone);
+            chapter_row.line = super::rows::line(
+                &chapter_row,
+                super::rows::Kept::Source,
+                tile.medium,
+                ask.now,
+                &zone,
+            );
             let row = UpdateRow {
                 tile: tile.clone(),
                 chapter: chapter_row,

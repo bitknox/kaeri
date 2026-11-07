@@ -1018,9 +1018,15 @@ pub fn count_words(medium: Medium, chapters: Option<u32>, volumes: Option<u32>) 
 }
 
 /// A page as people count it, from a place as kept: pages count from 0 in the store and from 1
-/// everywhere the engine sends them. The one place the engine turns one into the other.
+/// everywhere the engine sends them. With [`kept_page`], the one place the engine turns one into
+/// the other.
 pub fn shown_page(kept: u32) -> u32 {
     kept.saturating_add(1)
+}
+
+/// The place as kept, from a page as people count it: the other way from [`shown_page`].
+pub fn kept_page(shown: u32) -> u32 {
+    shown.saturating_sub(1)
 }
 
 /// "Chapter 13 · page 9", from the place as kept.

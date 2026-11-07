@@ -402,6 +402,7 @@ fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Out
                 &kit.store,
                 work.as_str(),
                 list.as_ref().map(|(_, _, l)| l.as_slice()),
+                crate::read_catalog::series::medium_of(&kit, &work),
                 now,
                 &kit.clock.zone(),
             );

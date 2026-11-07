@@ -1,11 +1,15 @@
 //! The second line of a chapter row in words, the same wherever chapters are listed: "Read · 4
-//! days ago · Downloaded", "New · yesterday", "Page 8 of 19", "Not downloaded". Every row has
-//! words there; the dot and the track beside them are the app's.
+//! days ago · Downloaded", "New · yesterday", "Page 8 of 19" ("34%" in a light novel's part),
+//! "Not downloaded". Every row has words there; the dot and the track beside them are the app's.
 
 use jiff::tz::TimeZone;
+use kaeri_core::media::Medium;
 use kaeri_model::{
     Msg, ReadingMsg,
-    reading::{ChapterDownloadState, ChapterReadState, ChapterRow, VolumeGroup},
+    reading::{
+        ChapterDownloadState, ChapterReadState, ChapterRow, VolumeGroup, kept_page,
+        part_percent,
+    },
 };
 
 /// Where a row's chapter is read from.
@@ -17,21 +21,42 @@ pub enum Kept {
     Device,
 }
 
-/// Every row's line, for rows read from `kept`.
-pub fn fill(volumes: &mut [VolumeGroup], kept: Kept, now: i64, zone: &TimeZone) {
+/// Every row's line, for rows of a `medium` series read from `kept`.
+pub fn fill(
+    volumes: &mut [VolumeGroup],
+    kept: Kept,
+    medium: Medium,
+    now: i64,
+    zone: &TimeZone,
+) {
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
-        row.line = line(row, kept, now, zone);
+        row.line = line(row, kept, medium, now, zone);
     }
 }
 
-/// A row's line: its reading state, when that happened, then what this device keeps of it.
-pub fn line(row: &ChapterRow, kept: Kept, now: i64, zone: &TimeZone) -> Vec<Msg> {
+/// A row's line: its reading state, when that happened, then what this device keeps of it. A
+/// light novel's part says how far in as a percent, as its Continue does, and nothing of a start
+/// too small to say ("0%" never shows).
+pub fn line(
+    row: &ChapterRow,
+    kept: Kept,
+    medium: Medium,
+    now: i64,
+    zone: &TimeZone,
+) -> Vec<Msg> {
     let r = Msg::Reading;
     let mut parts = Vec::new();
     match row.state {
         ChapterReadState::Read => {
             parts.push(r(ReadingMsg::ReadingRowRead));
             parts.extend(row.read_at.map(|at| ago(at, now, zone)));
+        }
+        ChapterReadState::InProgress { page, of } if medium == Medium::Novel => {
+            // The same figure as the Continue, which works from the place as kept.
+            let percent = part_percent(Some(kept_page(page)), of);
+            parts.extend(percent.map(|percent| {
+                r(ReadingMsg::ReadingRowPercent { percent: i64::from(percent) })
+            }));
         }
         ChapterReadState::InProgress { page, of } => {
             // The state already counts from 1, as everything the engine sends.
@@ -155,7 +180,7 @@ mod tests {
     #[test]
     fn every_row_has_words_in_the_boards_order() {
         let utc = TimeZone::UTC;
-        let words = |row: &ChapterRow, kept| ids(&line(row, kept, NOW, &utc));
+        let words = |row: &ChapterRow, kept| ids(&line(row, kept, Medium::Manga, NOW, &utc));
 
         let plain = row(ChapterReadState::Unread);
         assert_eq!(words(&plain, Kept::Source), ["reading-row-not-downloaded"]);
@@ -189,7 +214,7 @@ mod tests {
 
         let page = row(ChapterReadState::InProgress { page: 8, of: Some(19) });
         assert_eq!(
-            line(&page, Kept::Source, NOW, &utc),
+            line(&page, Kept::Source, Medium::Manga, NOW, &utc),
             [Msg::Reading(ReadingMsg::ReadingRowPageOf { page: 8, of: 19 })],
             "the state's page, which counts from 1, as it is"
         );
@@ -203,6 +228,31 @@ mod tests {
         assert_eq!(
             words(&failed, Kept::Source),
             ["reading-row-failed", "reading-failed-offline"]
+        );
+    }
+
+    #[test]
+    fn a_novels_part_says_the_percent_its_continue_says() {
+        let utc = TimeZone::UTC;
+        let part = row(ChapterReadState::InProgress { page: 17, of: Some(47) });
+        let continue_says = part_percent(Some(16), Some(47));
+        assert_eq!(continue_says, Some(34), "the Continue works from the place as kept");
+        assert_eq!(
+            line(&part, Kept::Source, Medium::Novel, NOW, &utc),
+            [Msg::Reading(ReadingMsg::ReadingRowPercent { percent: 34 })],
+            "never the page, and no page turned into a percent the Continue doesn't say"
+        );
+
+        // Just opened: nothing as small as 0%, so the row says what any unread one says.
+        let opened = row(ChapterReadState::InProgress { page: 1, of: Some(47) });
+        assert_eq!(
+            ids(&line(&opened, Kept::Source, Medium::Novel, NOW, &utc)),
+            ["reading-row-not-downloaded"]
+        );
+        let unknown = row(ChapterReadState::InProgress { page: 5, of: None });
+        assert_eq!(
+            ids(&line(&unknown, Kept::Device, Medium::Novel, NOW, &utc)),
+            ["reading-row-on-device"]
         );
     }
 

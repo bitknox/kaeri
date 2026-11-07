@@ -148,7 +148,8 @@ pub(crate) fn kept_volumes(
 pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now: i64) {
     count_versions(kit, work, volumes);
     mark_new(kit, work, volumes);
-    super::rows::fill(volumes, super::rows::Kept::Source, now, &kit.clock.zone());
+    let medium = medium_of(kit, work);
+    super::rows::fill(volumes, super::rows::Kept::Source, medium, now, &kit.clock.zone());
 }
 
 /// How many versions each chapter has across the person's editions.
@@ -292,6 +293,13 @@ pub(crate) fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
         .into_iter()
         .find(|s| s.work.as_deref() == Some(work.as_str()))
         .map(|s| s.name)
+}
+
+/// The series' medium: the catalogue's, else its folder's.
+pub(crate) fn medium_of(kit: &Kit, work: &WorkId) -> Medium {
+    tiles::anilist(work.as_str())
+        .and_then(|id| kit.meta.kept_book(id))
+        .map_or_else(|| local_medium(kit, work), |k| k.book.medium())
 }
 
 pub(crate) fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
