@@ -30,7 +30,7 @@ use kaeri_model::{
     reading::{FeedClient, FeedPause, FeedShare, FeedShelf, FeedView, ReadingEvent},
     stores::Secret,
 };
-use kaeri_store::{Store, book_downloads::BookDownloadState};
+use kaeri_store::{Store, book_downloads::BookDownloadState, shelf::TitleForm};
 #[cfg(not(test))]
 use network_interface::{Addr, NetworkInterface, NetworkInterfaceConfig};
 use serde::{Deserialize, Serialize};
@@ -73,6 +73,8 @@ struct Running {
     config: FeedConfig,
     /// Where the local addresses come from; the tests give their own.
     lan: Option<fn() -> Lan>,
+    /// The title language setting, so series are named as in the apps.
+    titles: Option<kaeri_meta::titles::Titles>,
 }
 
 /// Which shelves the feed shares, as the config says.
@@ -279,6 +281,16 @@ impl Feed {
 
     fn shares(&self) -> Shares {
         self.state().shares
+    }
+
+    /// Name series in the title language `titles` follows.
+    pub fn use_titles(&self, titles: kaeri_meta::titles::Titles) {
+        self.state().titles = Some(titles);
+    }
+
+    /// The form of a title to show now.
+    fn title_form(&self) -> TitleForm {
+        self.state().titles.as_ref().map(crate::data::title_form).unwrap_or_default()
     }
 
     fn password(&self) -> String {
@@ -732,7 +744,7 @@ async fn handle(
         Response::text("429 Too Many Requests", "Too many wrong passwords. Try again later.")
     } else if authorised(&request, password) {
         feed.forgive(peer);
-        let response = route(&request.path, store, feed.shares()).await;
+        let response = route(&request.path, store, feed.shares(), feed.title_form()).await;
         let file = !request.head
             && response.status.starts_with("200")
             && matches!(response.body, Body::File(_));
@@ -864,17 +876,17 @@ struct Shelved {
     key: String,
 }
 
-fn title_of(store: &Store, work: &str) -> String {
+fn title_of(store: &Store, work: &str, form: TitleForm) -> String {
     store
         .book_work_kind(work)
         .ok()
         .flatten()
-        .and_then(|k| k.title)
+        .and_then(|k| k.title_in(form))
         .unwrap_or_else(|| work.to_owned())
 }
 
-fn download_books(store: &Store, work: &str) -> Vec<Shelved> {
-    let title = title_of(store, work);
+fn download_books(store: &Store, work: &str, form: TitleForm) -> Vec<Shelved> {
+    let title = title_of(store, work, form);
     let mut rows: Vec<_> = store
         .book_downloads(Some(work))
         .unwrap_or_default()
@@ -925,12 +937,20 @@ fn folder_books(store: &Store, series: &str) -> Vec<Shelved> {
 }
 
 /// A book by the segments of its address.
-fn find_book(store: &Store, kind: &str, first: &str, second: Option<&str>) -> Option<Shelved> {
+fn find_book(
+    store: &Store,
+    kind: &str,
+    first: &str,
+    second: Option<&str>,
+    form: TitleForm,
+) -> Option<Shelved> {
     match kind {
         "d" => {
             let id: i64 = first.parse().ok()?;
             let row = store.book_downloads(None).ok()?.into_iter().find(|d| d.id == id)?;
-            download_books(store, &row.work).into_iter().find(|b| b.key == format!("d/{id}"))
+            download_books(store, &row.work, form)
+                .into_iter()
+                .find(|b| b.key == format!("d/{id}"))
         }
         "f" => {
             let series = decode(first);
@@ -997,7 +1017,7 @@ fn book_entry(book: &Shelved) -> Entry {
     }
 }
 
-async fn route(path: &str, store: Store, shares: Shares) -> Response {
+async fn route(path: &str, store: Store, shares: Shares, form: TitleForm) -> Response {
     let segments: Vec<String> =
         path.trim_matches('/').split('/').filter(|s| !s.is_empty()).map(decode).collect();
     let parts: Vec<&str> = segments.iter().map(String::as_str).collect();
@@ -1011,12 +1031,12 @@ async fn route(path: &str, store: Store, shares: Shares) -> Response {
     }
     match parts.as_slice() {
         ["opds"] => Response::document(&root(&store, shares)),
-        ["opds", "downloads"] => Response::document(&downloads(&store)),
+        ["opds", "downloads"] => Response::document(&downloads(&store, form)),
         ["opds", "downloads", work] => Response::document(&acquisition(
             &format!("urn:kaeri:downloads:{work}"),
-            &title_of(&store, work),
+            &title_of(&store, work, form),
             &format!("/opds/downloads/{}", encode(work)),
-            &download_books(&store, work),
+            &download_books(&store, work, form),
         )),
         ["opds", "folders"] => Response::document(&folders(&store, shares)),
         ["opds", "folders", series] if folder_shared(&store, series, shares) => {
@@ -1036,7 +1056,7 @@ async fn route(path: &str, store: Store, shares: Shares) -> Response {
             } else {
                 (None, rest)
             };
-            let Some(book) = find_book(&store, kind, first, second) else {
+            let Some(book) = find_book(&store, kind, first, second, form) else {
                 return Response::text("404 Not Found", "Not found");
             };
             match tail {
@@ -1094,18 +1114,18 @@ fn root(store: &Store, shares: Shares) -> Document {
     feed
 }
 
-fn downloads(store: &Store) -> Document {
+fn downloads(store: &Store, form: TitleForm) -> Document {
     let mut feed =
         base_feed("urn:kaeri:downloads", "Downloads", FeedKind::Navigation, "/opds/downloads");
     let mut works = store.book_download_works().unwrap_or_default();
     works.sort();
     for work in works {
-        if download_books(store, &work).is_empty() {
+        if download_books(store, &work, form).is_empty() {
             continue;
         }
         feed.entries.push(section(
             &format!("urn:kaeri:downloads:{work}"),
-            &title_of(store, &work),
+            &title_of(store, &work, form),
             &format!("/opds/downloads/{}", encode(&work)),
             FeedKind::Acquisition,
             None,
@@ -1474,6 +1494,35 @@ mod tests {
         let none = get(s.port, "/opds", None, "GET").await;
         assert_eq!(none.status, 401);
         assert_eq!(s.feed.view(Some(PASSWORD.into()), &s.store, &s.config).clients.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn series_are_named_in_the_chosen_title_language() {
+        let s = shelf();
+        let row = kaeri_store::book_catalog::BookWork {
+            work: "w-1".into(),
+            medium: "manga".into(),
+            titles: r#"{"romaji":"Touro no Watashibune","english":"The Lantern Ferry","native":null}"#
+                .into(),
+            fetched_at: 3,
+            ..kaeri_store::book_catalog::BookWork::default()
+        };
+        s.store.put_book_work(&row).unwrap();
+        let named = |path: &'static str| async move {
+            String::from_utf8(get(s.port, path, Some(PASSWORD), "GET").await.body).unwrap()
+        };
+
+        // English first until the setting is given.
+        assert!(named("/opds/downloads").await.contains("The Lantern Ferry"));
+
+        let titles = kaeri_meta::titles::Titles::default();
+        s.feed.use_titles(titles.clone());
+        titles.choose(kaeri_core::config::TitleChoice::Romaji);
+        for path in ["/opds/downloads", "/opds/downloads/w-1"] {
+            let text = named(path).await;
+            assert!(text.contains("Touro no Watashibune"), "{path}: {text}");
+            assert!(!text.contains("The Lantern Ferry"), "{path}");
+        }
     }
 
     #[tokio::test]

@@ -144,6 +144,8 @@ impl Services {
             &paths,
         );
         book_sources.downloads.use_titles(meta.titles().clone());
+        #[cfg(feature = "opds-feed")]
+        book_sources.feed.use_titles(meta.titles().clone());
         let servers = crate::servers::Servers::new(tokens.clone(), store.clone(), http.clone());
         let stores = plugin_stores::Stores::with_tokens(config, &paths, tokens.clone())
             .map_err(|e| e.english())?;
