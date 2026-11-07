@@ -1,8 +1,10 @@
 // Where books come from: folders picked through the system's folder picker, Komga, Kavita and OPDS
 // servers with their health in words, and plugins that read. The list is the content; Add a source
-// is secondary and offers three kinds, nothing more. Add a server tries the address as it is typed
-// and says what it found before asking for a sign-in. Check matches puts the folder names that
-// need a look beside a way to find their AniList match.
+// is secondary and offers three kinds, nothing more, each opening its form (CameInForms.kt), which
+// says what came in or why nothing did. A source just added lands in its group 70% of the way into
+// the form's close, and says so; pulling the page down looks again at servers that showed no
+// series. Check matches puts the folder names that need a look beside a way to find their AniList
+// match.
 
 package app.kaeri.ui.reading
 
@@ -64,14 +66,13 @@ import app.kaeri.engine.model.BookFolderRow
 import app.kaeri.engine.model.BookFolderScan
 import app.kaeri.engine.model.BookGroupRow
 import app.kaeri.engine.model.BookPluginRow
-import app.kaeri.engine.model.BookServerFailure
 import app.kaeri.engine.model.BookServerKind
 import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourcesView
 import app.kaeri.engine.model.FolderRef
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
-import app.kaeri.store.ServerAnswer
+import app.kaeri.store.Adding
 import app.kaeri.ui.Icons
 import app.kaeri.ui.InfoRow
 import app.kaeri.ui.LocalAppStore
@@ -89,8 +90,7 @@ import app.kaeri.ui.SheetText
 import app.kaeri.ui.SwitchRow
 import app.kaeri.ui.kindWord
 import app.kaeri.ui.readingWidth
-import app.kaeri.ui.serverProblemText
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 /** The book sources' own page: Settings' Sources with both media on opens it. */
 internal const val BOOK_SOURCES_ROUTE = "sources/books"
@@ -104,10 +104,11 @@ internal fun NavGraphBuilder.bookSourcePages() {
 
 /**
  * The system's folder picker: a folder chosen is kept with a lasting read permission and given to
- * the engine by its tree. [onFailed] hears a picker that would not open or a permission refused.
+ * the engine by its tree, and the folder form opens on it (in first run's page with [inPage]).
+ * [onFailed] hears a picker that would not open or a permission refused.
  */
 @Composable
-internal fun rememberFolderPicker(onFailed: () -> Unit): () -> Unit {
+internal fun rememberFolderPicker(onFailed: () -> Unit, inPage: Boolean = false): () -> Unit {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val failed by rememberUpdatedState(onFailed)
@@ -120,7 +121,11 @@ internal fun rememberFolderPicker(onFailed: () -> Unit): () -> Unit {
             failed()
             return@rememberLauncherForActivityResult
         }
-        store.bookSources.addFolder(FolderRef(path = null, treeUri = uri.toString(), bookmark = null, name = folderName(uri)))
+        val name = folderName(uri)
+        // The folder form opens on it and says what its scan finds.
+        store.cameIn.open(Adding.FOLDER, inPage)
+        store.cameIn.scanning(name)
+        store.bookSources.addFolder(FolderRef(path = null, treeUri = uri.toString(), bookmark = null, name = name))
     }
     return {
         try {
@@ -146,10 +151,13 @@ internal fun serverKindWords(kind: BookServerKind): String = when (kind) {
     BookServerKind.OPDS -> stringResource(R.string.book_sources_opds)
 }
 
-/** "64 series", or what a scan or a missing drive says. */
+/** "64 series", or what a scan or a missing drive says; "Manga · 64 series · 23 files skipped" when some were. */
 @Composable
-private fun folderLine(folder: BookFolderRow): String {
+internal fun folderLine(folder: BookFolderRow): String {
     val context = LocalContext.current
+    if (folder.scan == BookFolderScan.Done && folder.skipped > 0u) {
+        return Strings.sourceRowFolder(context, folder.path ?: folder.name, folder.series.toInt(), folder.skipped.toInt())
+    }
     return listOfNotNull(
         folder.path,
         when (val scan = folder.scan) {
@@ -160,10 +168,16 @@ private fun folderLine(folder: BookFolderRow): String {
     ).joinToString(" · ") // i18n-skip
 }
 
-/** "Kavita · books.home.example · 212 series · progress goes back to the server". */
+/**
+ * "Kavita · books.home.example · 212 series · progress goes back to the server"; "Kavita · 212
+ * series in 2 libraries · added just now" for one added this session; "Kavita · no series yet ·
+ * looks again in 30 minutes" for one that showed none.
+ */
 @Composable
-private fun serverLine(server: BookServerRow): String {
+internal fun serverLine(server: BookServerRow, justAdded: Boolean): String {
     val context = LocalContext.current
+    if (server.empty) return Strings.sourceRowServerEmpty(context, serverKindWords(server.kind))
+    if (justAdded) return Strings.sourceRowServer(context, serverKindWords(server.kind), server.series.toInt(), server.libraries.toInt())
     return listOfNotNull(
         serverKindWords(server.kind),
         server.address.takeIf { it != server.name },
@@ -181,13 +195,6 @@ private fun pluginLine(plugin: BookPluginRow): String {
         plugin.store?.let { Strings.bookSourcesFromStore(context, it) },
         Strings.bookSourcesVersion(context, plugin.version),
     ).joinToString(" · ") // i18n-skip
-}
-
-/** Why a server could not be added, in words. */
-@Composable
-private fun serverFailureWords(failure: BookServerFailure): String = when (failure) {
-    is BookServerFailure.Server -> serverProblemText(failure.failure)
-    BookServerFailure.NotABookServer -> stringResource(R.string.book_sources_not_a_book_server)
 }
 
 /** The folder groups that need a look: not matched, and not kept as they are. */
@@ -231,34 +238,78 @@ internal fun BookSourcesScreen(title: String) {
             }
         },
     ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = padding.calculateTopPadding() + 8.dp, bottom = 48.dp)
-                .padding(horizontal = 16.dp)
-                .readingWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            BookSourcesList(onAdd = { adding = true })
+        BookSourcesRefresh(true, Modifier.padding(top = padding.calculateTopPadding())) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 8.dp, bottom = 48.dp)
+                    .padding(horizontal = 16.dp)
+                    .readingWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                BookSourcesList(onAdd = { adding = true })
+            }
         }
     }
     if (adding) AddSourceSheet { adding = false }
 }
 
 /**
+ * Pulling [content] down looks again at the servers that showed no series, as the 30-minute check
+ * would, with the system's indicator while it does. Only where [enabled].
+ */
+@Composable
+internal fun BookSourcesRefresh(enabled: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    if (!enabled) {
+        Box(modifier) { content() }
+        return
+    }
+    val store = LocalAppStore.current
+    var refreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(refreshing) {
+        if (!refreshing) return@LaunchedEffect
+        val before = store.bookSources.view.value
+        // Until the view changes, or briefly when nothing new came in.
+        kotlinx.coroutines.withTimeoutOrNull(REFRESH_MILLIS) { store.bookSources.view.first { it != before } }
+        refreshing = false
+    }
+    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = {
+            refreshing = true
+            store.cameIn.recheck()
+        },
+        modifier = modifier,
+    ) { content() }
+}
+
+/** The longest the refresh indicator waits on a recheck that changes nothing. */
+private const val REFRESH_MILLIS = 2_500L
+
+/**
  * Folders, servers and plugins, each with what it holds and its health in words; Check matches
  * under the folders while some need a look; and that plugins come from plugin stores. Empty once
- * the engine said so, with Add a source.
+ * the engine said so, with Add a source. The forms Add a source opens sit over it, and a source
+ * just added lands in its group, its notice said once the form has closed.
  */
 @Composable
 internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val view by store.bookSources.view.collectAsStateWithLifecycle()
+    val justAdded by store.cameIn.justAdded.collectAsStateWithLifecycle()
     var matches by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) { store.bookSources.load() }
+    BookSourceDialogs()
+    CameInNoticeHost()
+    // The rows there when the list first showed were not just added here: only later ones land.
+    val there = remember { mutableStateOf<Set<String>?>(null) }
     val shown = view ?: return
+    BookDemoGroup()
+    val ids = shown.folders.map { it.id } + shown.servers.map { it.id }
+    if (there.value == null) there.value = ids.toSet()
+    val lands = { id: String -> id in justAdded && id !in there.value.orEmpty() }
     val folders = shown.folders.filter { !it.removed }
     if (folders.isEmpty() && shown.servers.isEmpty() && shown.plugins.isEmpty()) {
         // As every reading empty state: a title, a line and one outlined button, no picture.
@@ -277,7 +328,7 @@ internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
         SettingsGroup(
             title = stringResource(R.string.book_sources_folders),
             rows = folders.map { folder ->
-                @Composable { place: Place -> FolderRow(place, folder) }
+                @Composable { place: Place -> LandingRow(lands(folder.id)) { FolderRow(place, folder) } }
             } + listOfNotNull(
                 if (unsure > 0) @Composable { place: Place ->
                     InfoRow(place, Strings.bookSourcesCheckMatches(LocalContext.current, unsure), null, onClick = { matches = true }, trailing = chevron)
@@ -288,7 +339,7 @@ internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
     if (shown.servers.isNotEmpty()) {
         SettingsGroup(
             title = stringResource(R.string.book_sources_servers),
-            rows = shown.servers.map { server -> @Composable { place: Place -> ServerRow(place, server) } },
+            rows = shown.servers.map { server -> @Composable { place: Place -> LandingRow(lands(server.id)) { ServerRow(place, server, server.id in justAdded) } } },
         )
     }
     if (shown.plugins.isNotEmpty()) {
@@ -313,7 +364,7 @@ internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
     if (matches) CheckMatchesSheet { matches = false }
 }
 
-/** A folder: its name, what it holds, and More with Look again and Remove. */
+/** A folder: its tile, its name, what it holds, and More with Look again and Remove. */
 @Composable
 private fun FolderRow(place: Place, folder: BookFolderRow) {
     val store = LocalAppStore.current
@@ -321,6 +372,7 @@ private fun FolderRow(place: Place, folder: BookFolderRow) {
         place,
         folder.name,
         folderLine(folder),
+        leading = { CameInTile(CameInGlyphs.Folder) },
         trailing = {
             MoreMenu { close ->
                 DropdownMenuItem(text = { Text(stringResource(R.string.book_sources_scan)) }, onClick = { close(); store.bookSources.scan() })
@@ -338,14 +390,15 @@ private fun FolderRow(place: Place, folder: BookFolderRow) {
  * and More with sending progress back, using it, and Remove.
  */
 @Composable
-private fun ServerRow(place: Place, server: BookServerRow) {
+private fun ServerRow(place: Place, server: BookServerRow, justAdded: Boolean) {
     val store = LocalAppStore.current
-    InfoRow(
+    ServerProgressRow(
+        server,
         place,
         server.name,
-        serverLine(server),
+        serverLine(server, justAdded),
         note = if (server.signedOut) stringResource(R.string.servers_row_signed_out) else null,
-        leading = if (server.signedOut) ({ Icon(Icons.Problem, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }) else null,
+        leading = if (server.signedOut) ({ Icon(Icons.Problem, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }) else ({ CameInTile(CameInGlyphs.Server) }),
         trailing = {
             MoreMenu { close ->
                 CheckedItem(stringResource(R.string.book_sources_report_progress), server.reportProgress) {
@@ -404,13 +457,11 @@ private fun CheckedItem(text: String, on: Boolean, onClick: () -> Unit) {
 internal fun AddSourceSheet(onDismiss: () -> Unit) {
     val store = LocalAppStore.current
     val context = LocalContext.current
-    var server by rememberSaveable { mutableStateOf(false) }
     var failed by rememberSaveable { mutableStateOf(false) }
     val pick = rememberFolderPicker(onFailed = { failed = true })
-    if (server) {
-        AddBookServerSheet(onDismiss = onDismiss)
-        return
-    }
+    // The folder form opens once the picker hands a folder back: the sheet goes then.
+    val open by store.cameIn.open.collectAsStateWithLifecycle()
+    LaunchedEffect(open) { if (open == Adding.FOLDER) onDismiss() }
     SettingsSheet(onDismiss) {
         app.kaeri.ui.SheetTitle(stringResource(R.string.sources_add_title))
         SheetText(stringResource(R.string.book_add_line))
@@ -424,7 +475,12 @@ internal fun AddSourceSheet(onDismiss: () -> Unit) {
                         pick()
                     }, trailing = chevron)
                 },
-                { place -> InfoRow(place, stringResource(R.string.book_add_server), stringResource(R.string.book_add_server_line), onClick = { server = true }, trailing = chevron) },
+                { place ->
+                    InfoRow(place, stringResource(R.string.book_add_server), stringResource(R.string.book_add_server_line), onClick = {
+                        onDismiss()
+                        store.cameIn.open(Adding.SERVER)
+                    }, trailing = chevron)
+                },
                 { place ->
                     InfoRow(place, stringResource(R.string.book_add_store), stringResource(R.string.book_add_store_line), onClick = {
                         onDismiss()
@@ -435,131 +491,6 @@ internal fun AddSourceSheet(onDismiss: () -> Unit) {
         )
         if (failed) SheetProblem(stringResource(R.string.book_folder_failed))
         Spacer(Modifier.height(8.dp))
-    }
-}
-
-/**
- * Add a server, with a sheet header: Cancel at the start, the title, and the one action at the
- * end. The address is tried as it is typed, once typing pauses; a server found shows with a silk
- * check and asks for a sign-in, and Add server, amber, signs in. One that can't be reached says
- * why under the field, and Try again takes Add server's place. Added with a count of its series,
- * it says so with Done; otherwise it closes.
- */
-@Composable
-internal fun AddBookServerSheet(onDismiss: () -> Unit) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    val answer by store.bookSources.server.collectAsStateWithLifecycle()
-    val checking by store.bookSources.checking.collectAsStateWithLifecycle()
-    var address by rememberSaveable { mutableStateOf("") }
-    var user by rememberSaveable { mutableStateOf("") }
-    // Never saved: the password lives only as long as the sheet.
-    var password by remember { mutableStateOf("") }
-    var slow by remember { mutableStateOf(false) }
-    val trimmed = address.trim()
-    DisposableEffect(Unit) {
-        // A server added before is not this one.
-        store.bookSources.resetServerSheet()
-        onDispose { store.bookSources.resetServerSheet() }
-    }
-    LaunchedEffect(trimmed) {
-        if (trimmed.isEmpty()) return@LaunchedEffect
-        delay(500)
-        store.bookSources.checkServer(trimmed)
-    }
-    LaunchedEffect(checking) {
-        slow = false
-        if (!checking) return@LaunchedEffect
-        delay(600)
-        slow = true
-    }
-    val checked = (answer as? ServerAnswer.Checked)?.takeIf { it.address == trimmed }
-    val added = answer as? ServerAnswer.Added
-    val failed = answer as? ServerAnswer.Failed
-    // Kept while signing in, so the fields stay as the person typed them.
-    var found by remember { mutableStateOf<ServerAnswer.Checked?>(null) }
-    LaunchedEffect(checked) { if (checked != null) found = checked }
-    LaunchedEffect(trimmed) { if (found?.address != trimmed) found = null }
-    LaunchedEffect(added) { if (added != null && added.series == null) onDismiss() }
-    val unreachable = found == null && failed != null
-    val ready = found != null && user.isNotBlank() && password.isNotEmpty() && !checking
-    val signIn = { if (ready) store.bookSources.signIn(trimmed, user.trim(), password) }
-    SettingsSheet(onDismiss, tall = true, holdsInput = address.isNotEmpty() && added == null) {
-        // The header: Cancel, the title, the action.
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                if (added == null) QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
-            }
-            Text(
-                stringResource(R.string.book_add_server_title),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.semantics { heading() },
-            )
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                when {
-                    added != null -> Button(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
-                    unreachable -> Button(onClick = { store.bookSources.checkServer(trimmed) }, enabled = !checking) { Text(stringResource(R.string.action_try_again)) }
-                    else -> Button(onClick = signIn, enabled = ready) { Text(stringResource(R.string.book_add_server_button)) }
-                }
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        SheetField(
-            address,
-            { address = it },
-            stringResource(R.string.servers_address),
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next, autoCorrectEnabled = false),
-            error = unreachable,
-        )
-        val shown = found
-        when {
-            shown != null -> {
-                Row(
-                    Modifier.padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // Found is a success: a silk check. Water is only for new.
-                    Icon(Icons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
-                    val series = added?.takeIf { it.kind == shown.kind }?.series
-                    Text(
-                        if (series != null) Strings.sourcesFoundServerSeries(context, serverKindWords(shown.kind), series.toInt())
-                        else Strings.sourcesFoundServer(context, serverKindWords(shown.kind)),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                if (added == null) {
-                    SheetField(
-                        user,
-                        { user = it },
-                        stringResource(R.string.servers_user),
-                        modifier = Modifier.padding(top = 16.dp),
-                        keyboard = KeyboardOptions(imeAction = ImeAction.Next, autoCorrectEnabled = false),
-                    )
-                    SheetField(
-                        password,
-                        { password = it },
-                        stringResource(R.string.servers_password),
-                        modifier = Modifier.padding(top = 12.dp),
-                        password = true,
-                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false),
-                        actions = KeyboardActions(onDone = { signIn() }),
-                        error = failed != null,
-                    )
-                    SheetText(stringResource(R.string.book_server_note_device), Modifier.padding(top = 12.dp))
-                }
-            }
-            checking && slow -> Row(
-                Modifier.padding(top = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SheetText(stringResource(R.string.book_server_looking))
-            }
-        }
-        failed?.let { SheetProblem(serverFailureWords(it.failure)) }
     }
 }
 

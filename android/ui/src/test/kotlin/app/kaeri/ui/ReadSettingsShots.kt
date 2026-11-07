@@ -126,6 +126,8 @@ class ReadSettingsShots : ReadingShotHarness() {
     private fun toMedium(choice: Int?) {
         pump("first launch") { compose.onAllNodesWithText(text(R.string.onboarding_continue)).fetchSemanticsNodes().isNotEmpty() }
         tap(text(R.string.onboarding_continue))
+        // The join page: start here.
+        tap(text(R.string.first_other_no))
         choice?.let { tap(text(it)) }
     }
 

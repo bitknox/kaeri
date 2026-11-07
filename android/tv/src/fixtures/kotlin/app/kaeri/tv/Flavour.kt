@@ -36,6 +36,7 @@ import app.kaeri.engine.model.Event
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.Prelaunch
 import app.kaeri.store.FixtureSync
 import app.kaeri.store.FixtureParty
 import app.kaeri.store.PartyShot
@@ -124,6 +125,13 @@ internal object Flavour {
             store.loadContinue(force = true)
             store.loadDetail(900001u)
             if ("7" in marks) store.apply(listOf(Event.DiscussionFound(900001u, 7u, 6u)))
+        }
+        intent.getStringExtra("prelaunch")?.let { state ->
+            MainScope().launch {
+                store.phase.first { it == AppStore.Phase.Running }
+                delay(1_500)
+                if (!Prelaunch.stage(store, state)) Log.w(TvApp.TAG, "no prelaunch state named $state: ${Prelaunch.STATES.joinToString()}")
+            }
         }
         intent.getStringExtra("sync")?.let { state ->
             MainScope().launch {

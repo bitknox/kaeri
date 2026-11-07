@@ -1,5 +1,6 @@
 // First launch (spec, First launch): short pages over the app before it opens on Continue.
-// Welcome says what Kaeri is; where this build can read, the next page asks what Kaeri is for
+// Welcome says what Kaeri is; the join page offers to set up from another device, which answers
+// the pages after it (FirstLaunchJoin.kt); where this build can read, the next page asks what Kaeri is for
 // (Watch, Read or Both, nothing chosen until a row is); AniList offers the sign-in, worded for that
 // choice; the last page says where shows or books come from: an invite link to a plugin store with
 // the own-risk line, and for books a folder or a server. Every page can be passed over, each step
@@ -26,6 +27,7 @@ import app.kaeri.i18n.Strings
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,24 +65,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.kaeri.store.copyAllSignIns
-import app.kaeri.store.copyNoSignIns
-import app.kaeri.store.joinStoresFrom
-import app.kaeri.store.pairedDevice
-import app.kaeri.store.signInNames
-import app.kaeri.store.storeOffersFrom
-import app.kaeri.store.pairInvite
-import app.kaeri.store.pairStop
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import app.kaeri.design.Motion
+import app.kaeri.design.rememberAnimationsRemoved
+import app.kaeri.engine.model.FirstRunPage
+import app.kaeri.store.JoinStage
+import app.kaeri.store.joinStop
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.design.Nagare
 import app.kaeri.store.AppStore
 import app.kaeri.store.DevicePreferences
 import app.kaeri.store.InviteLinks
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.MediumAsk
-import app.kaeri.ui.reading.AddBookServerSheet
 import app.kaeri.ui.reading.MediumChoiceRows
 import app.kaeri.ui.reading.rememberFolderPicker
 import androidx.compose.foundation.layout.RowScope
@@ -89,7 +89,7 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 
 /** The pages, in order. */
-internal enum class FirstLaunchPage { Welcome, Medium, AniList, Sources, SetUp }
+internal enum class FirstLaunchPage { Welcome, Join, Medium, AniList, Sources }
 
 /** The preference that says the pages have been through, on this device. */
 internal const val FIRST_LAUNCH_DONE = "firstLaunchDone"
@@ -127,7 +127,9 @@ internal fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = Fi
     }
     val covering = !done && !stopped && !away
     LaunchedEffect(covering) { onCover(covering) }
-    if (!covering) return
+    // The end of first run fades through to the app under it.
+    val cover by androidx.compose.animation.core.animateFloatAsState(if (covering) 1f else 0f, Motion.fadeOut(), label = "first launch cover") // i18n-skip
+    if (!covering && cover == 0f) return
     val finish = {
         preferences.edit().putBoolean(FIRST_LAUNCH_DONE, true).apply()
         done = true
@@ -153,7 +155,7 @@ internal fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = Fi
             known || waited -> showing = true
         }
     }
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+    Surface(Modifier.fillMaxSize().graphicsLayer { alpha = cover }, color = MaterialTheme.colorScheme.surface) {
         if (showing) FirstLaunchPages(page, chosen, finish, addShowServer = { away = true })
     }
 }
@@ -179,39 +181,88 @@ private fun FirstLaunchPages(
     // Signed in, the next step; a store joined, the app; an invite link opened, its step.
     val anilist = trackers["anilist"]?.connected == true
     LaunchedEffect(anilist) { if (anilist && page == FirstLaunchPage.AniList) page = FirstLaunchPage.Sources }
-    LaunchedEffect(stores.isNotEmpty()) { if (stores.isNotEmpty() && page == FirstLaunchPage.Sources) finish() }
+    // A store joined on the books page shows what came in from it there first.
+    val cameIn by store.cameIn.open.collectAsStateWithLifecycle()
+    LaunchedEffect(stores.isNotEmpty()) { if (stores.isNotEmpty() && page == FirstLaunchPage.Sources && cameIn != app.kaeri.store.Adding.STORE) finish() }
     LaunchedEffect(joining) { if (!joining.isNullOrEmpty()) page = FirstLaunchPage.Sources }
+    val joinStage by store.sync.join.state.collectAsStateWithLifecycle()
+    // Back to the join page from the page after it starts the join over.
+    val toJoin = {
+        store.joinStop()
+        page = FirstLaunchPage.Join
+    }
     BackHandler(enabled = page != FirstLaunchPage.Welcome) {
-        if (page == FirstLaunchPage.SetUp) {
-            store.pairStop()
-            store.sync.first(false)
-            page = FirstLaunchPage.Welcome
-        } else {
-            page = when (page) {
-                FirstLaunchPage.AniList -> if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.Welcome
-                else -> FirstLaunchPage.entries[page.ordinal - 1]
+        when {
+            page == FirstLaunchPage.Join && joinStage.stage != JoinStage.ASK -> {
+                store.joinStop()
+                if (joinStage.stage == JoinStage.PAIRED) page = FirstLaunchPage.Welcome
             }
+            page == FirstLaunchPage.Join -> page = FirstLaunchPage.Welcome
+            page == FirstLaunchPage.Medium -> toJoin()
+            page == FirstLaunchPage.AniList -> if (choosable) page = FirstLaunchPage.Medium else toJoin()
+            else -> page = FirstLaunchPage.entries[page.ordinal - 1]
         }
     }
-    // A pairing that finished from here was read on its success page: the pages are through.
-    val copied by store.sync.copied.collectAsStateWithLifecycle()
-    val first by store.sync.first.collectAsStateWithLifecycle()
-    LaunchedEffect(copied, first, page) { if ((copied != null || first) && page != FirstLaunchPage.SetUp) page = FirstLaunchPage.SetUp }
+    // A staged state, or the app, asks for the join page or a page further on.
+    val opened by store.sync.join.opened.collectAsStateWithLifecycle()
+    LaunchedEffect(opened) {
+        if (opened) {
+            page = FirstLaunchPage.Join
+            store.sync.join.shown()
+        }
+    }
+    val startAt by store.sync.join.startAt.collectAsStateWithLifecycle()
+    LaunchedEffect(startAt) {
+        startAt?.let {
+            page = when (it) {
+                FirstRunPage.MEDIUM -> if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.AniList
+                FirstRunPage.LISTS -> FirstLaunchPage.AniList
+                FirstRunPage.SOURCES -> FirstLaunchPage.Sources
+            }
+            store.sync.join.started()
+        }
+    }
+    val context = LocalContext.current
+    val snackbars = LocalSnackbars.current
+    val removed = rememberAnimationsRemoved()
+    val axis = with(LocalDensity.current) { 30.dp.roundToPx() }
     AnimatedContent(
         page,
-        transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
+        transitionSpec = {
+            if (removed) fadeIn(tween(200)) togetherWith fadeOut(tween(200)) else sharedAxisX(forward = targetState > initialState, distance = axis)
+        },
         label = "first launch", // i18n-skip
     ) { shown ->
         when (shown) {
             FirstLaunchPage.Welcome -> WelcomePage(
                 four = choosable,
-                next = { page = if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.AniList },
-                setUp = { page = FirstLaunchPage.SetUp },
+                next = { page = FirstLaunchPage.Join },
+            )
+            FirstLaunchPage.Join -> JoinPage(
+                step = if (choosable) 1 else null,
+                choosable = choosable,
+                back = { page = FirstLaunchPage.Welcome },
+                startHere = { page = if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.AniList },
+                next = { to, answered, device ->
+                    answered?.let { chosen = it }
+                    store.sync.first(false)
+                    store.sync.copiedSeen()
+                    when (to) {
+                        FirstRunPage.MEDIUM -> page = FirstLaunchPage.Medium
+                        FirstRunPage.LISTS -> page = FirstLaunchPage.AniList
+                        FirstRunPage.SOURCES -> page = FirstLaunchPage.Sources
+                        null -> {
+                            finish()
+                            device?.let { snackbars.show(Strings.firstJoinSyncing(context, it)) }
+                        }
+                    }
+                },
+                restored = finish,
             )
             FirstLaunchPage.Medium -> MediumPage(
                 chosen = chosen,
                 choose = { chosen = it },
-                back = { page = FirstLaunchPage.Welcome },
+                back = toJoin,
                 next = {
                     chosen?.let { picked ->
                         val ask = store.medium.asking.value
@@ -234,7 +285,6 @@ private fun FirstLaunchPages(
                     notNow = { page = FirstLaunchPage.Sources },
                 )
             }
-            FirstLaunchPage.SetUp -> SetUpPage(done = finish)
             FirstLaunchPage.Sources -> when {
                 choosable && answer == KaeriIsFor.READ -> BooksPage(
                     join = { link -> store.stores.openJoin(link) },
@@ -251,7 +301,7 @@ private fun FirstLaunchPages(
                     },
                 )
                 else -> SourcesPage(
-                    step = if (choosable) 4 else null,
+                    step = if (choosable) 5 else null,
                     join = { link -> store.stores.openJoin(link) },
                     skip = finish,
                     playDemo = {
@@ -270,7 +320,7 @@ private fun FirstLaunchPages(
  * leading with the words and set to the start as the pages after it are, with no picture.
  */
 @Composable
-private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
+private fun WelcomePage(four: Boolean, next: () -> Unit) {
     // The step where the pages after it have theirs.
     val step: (@Composable () -> Unit)? = if (four) {
         { Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) { StepLabel(1) } }
@@ -282,11 +332,6 @@ private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
         lead = four,
         buttons = {
             Button(onClick = next, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.onboarding_continue)) }
-            TextButton(
-                onClick = setUp,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-            ) { Text(stringResource(R.string.first_setup_other)) }
         },
     ) {
         if (!four) Nagare(cell = 5, modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -304,103 +349,6 @@ private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             )
-        }
-    }
-}
-
-/**
- * Set up from another device: this device shows the code and its QR, a device that has Kaeri
- * enters or scans it, and the page turns to the success line, whose Continue closes the pages.
- */
-@Composable
-private fun SetUpPage(done: () -> Unit) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    val invite by store.sync.invite.collectAsStateWithLifecycle()
-    val copied by store.sync.copied.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        // Decision 11: sign-ins come over from first launch unless the person says otherwise.
-        store.sync.first(true)
-        if (store.sync.invite.value == null && store.sync.copied.value == null) {
-            store.copyAllSignIns()
-            store.joinStoresFrom(null)
-            store.pairInvite(systemDeviceName(context))
-        }
-    }
-    val shown = copied
-    if (shown != null) {
-        val status by store.sync.status.collectAsStateWithLifecycle()
-        val offers = status.storeOffersFrom(shown.device)
-        var off by rememberSaveable { mutableStateOf(setOf<String>()) }
-        val paired = status.pairedDevice(shown.device)
-        val names = paired?.signInNames().orEmpty()
-        var copy by rememberSaveable { mutableStateOf(true) }
-        PageFrame(
-            buttons = {
-                Button(
-                    onClick = {
-                        if (paired != null && names.isNotEmpty() && !copy) store.copyNoSignIns(paired.id)
-                        offers?.let { (device, list) ->
-                            val chosen = list.map { it.address }.filter { it !in off }
-                            if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
-                        }
-                        store.sync.copiedSeen()
-                        store.sync.first(false)
-                        done()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.onboarding_continue)) }
-            },
-        ) {
-            PageTitle(stringResource(R.string.pair_ok, shown.device))
-            PageLine(stringResource(R.string.first_ok_line), Modifier.padding(top = 8.dp))
-            if (paired != null && names.isNotEmpty()) {
-                JoinStoreSwitch(
-                    title = Strings.pairCopySignins(context, paired.name),
-                    line = Strings.pairCopySigninsLine(context, names.joinToString(", ")),
-                    checked = copy,
-                    onChange = { copy = it },
-                )
-            }
-            offers?.let { (device, list) ->
-                list.forEach { offer ->
-                    JoinStoreSwitch(
-                        title = Strings.firstJoinStore(context, offer.name),
-                        line = Strings.firstJoinStoreLine(context, device.name, kindWord()),
-                        checked = offer.address !in off,
-                        onChange = { on -> off = if (on) off - offer.address else off + offer.address },
-                    )
-                }
-            }
-        }
-        return
-    }
-    PageFrame(
-        buttons = {
-            TextButton(
-                onClick = {
-                    store.pairStop()
-                    store.sync.first(false)
-                    store.sync.copiedSeen()
-                    done()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-            ) { Text(stringResource(R.string.onboarding_not_now)) }
-        },
-    ) {
-        PageTitle(stringResource(R.string.first_setup_other))
-        PageLine(stringResource(R.string.first_setup_line), Modifier.padding(top = 8.dp))
-        val code = invite
-        if (code != null) {
-            Text(
-                code.code.chunked(3).joinToString(" "), // i18n-skip
-                style = MaterialTheme.typography.displaySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, letterSpacing = 4.sp),
-                modifier = Modifier.padding(top = 24.dp).align(Alignment.CenterHorizontally),
-            )
-            Box(Modifier.padding(top = 16.dp).align(Alignment.CenterHorizontally)) {
-                QrCode("kaeri://pair?port=${code.port}&code=${code.code}", label = stringResource(R.string.pair_show_scan))
-            }
         }
     }
 }
@@ -439,6 +387,39 @@ private fun AniListPage(signIn: () -> Unit, notNow: () -> Unit) {
  */
 @Composable
 private fun SourcesPage(step: Int?, join: (String) -> Unit, skip: () -> Unit, playDemo: () -> Unit) {
+    val store = LocalAppStore.current
+    val cameIn = app.kaeri.ui.reading.rememberCameInState()
+    val removed = rememberAnimationsRemoved()
+    // The invite opens the store form in the page's place; closing it after a join ends first run.
+    androidx.compose.animation.Crossfade(
+        cameIn.open == app.kaeri.store.Adding.STORE && cameIn.inPage,
+        animationSpec = tween(if (removed) 200 else 300),
+        label = "sources page", // i18n-skip
+    ) { form ->
+        if (form) {
+            val close = {
+                val joined = store.stores.stores.value.isNotEmpty()
+                store.stores.closeJoin()
+                store.cameIn.closeQuietly()
+                if (joined) skip()
+            }
+            val shown = storeForm(cameIn, close)
+            BackHandler(onBack = shown.close)
+            StepFrame(step = step?.minus(1), title = shown.title, back = shown.close, actions = { app.kaeri.ui.reading.CameInPageActions(shown) }) {
+                Column(Modifier.padding(top = 16.dp)) { shown.body(this, true) }
+            }
+        } else {
+            SourcesPageList(step, skip, playDemo) { link ->
+                store.cameIn.open(app.kaeri.store.Adding.STORE, inPage = true)
+                store.cameIn.typeAddress(link)
+            }
+        }
+    }
+}
+
+/** The sources page itself: where shows come from, the demo, and the invite field. */
+@Composable
+private fun SourcesPageList(step: Int?, skip: () -> Unit, playDemo: () -> Unit, join: (String) -> Unit) {
     var link by rememberSaveable { mutableStateOf("") }
     val ready = InviteLinks.looksLikeInvite(link)
     PageFrame(
@@ -518,36 +499,13 @@ private fun PageFrame(
     }
 }
 
-/** The success page's "Join the plugin store" switch: its name, what the paired device does, and the switch. */
-@Composable
-private fun JoinStoreSwitch(title: String, line: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    val onWord = stringResource(R.string.value_on)
-    val offWord = stringResource(R.string.value_off)
-    Row(
-        Modifier
-            .padding(top = 24.dp)
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .toggleable(checked, role = Role.Switch, onValueChange = onChange)
-            .semantics { stateDescription = if (checked) onWord else offWord },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        SettingSwitchMark(checked)
-    }
-}
-
 @Composable
 private fun PageTitle(text: String) {
     Text(text, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
 }
 
 @Composable
-private fun PageLine(text: String, modifier: Modifier = Modifier, center: Boolean = false) {
+internal fun PageLine(text: String, modifier: Modifier = Modifier, center: Boolean = false) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge,
@@ -557,13 +515,16 @@ private fun PageLine(text: String, modifier: Modifier = Modifier, center: Boolea
     )
 }
 
-// The four pages, where this build can read
+// The five pages, where this build can read
 
-/** "2 of 4", over a page's title. */
+/** How many pages first run has where this build can read: Welcome, join, medium, lists and sources. */
+private const val STEPS = 5
+
+/** "2 of 5", over a page's title. */
 @Composable
 private fun StepLabel(step: Int) {
     Text(
-        Strings.onboardingStep(LocalContext.current, step, 4),
+        Strings.onboardingStep(LocalContext.current, step, STEPS),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -573,15 +534,18 @@ private fun StepLabel(step: Int) {
  * A step after Welcome, as Android draws it: the step and the title at the top, the content under
  * them scrolling when the window is short, and the foot's row with Back as a text button at the
  * start and the page's actions at the end, the filled one last. Skip, where a page has it, sits at
- * the top's end.
+ * the top's end. [step] counts the pages after Welcome, so 1 is the join page and shows "2 of 5";
+ * null shows none, where first run has no steps. A null [back] leaves the foot to the actions.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun StepFrame(
-    step: Int,
+internal fun StepFrame(
+    step: Int?,
     title: String,
-    back: () -> Unit,
+    back: (() -> Unit)?,
     skip: (() -> Unit)? = null,
+    /** The widest the title runs, so a short question breaks as the board sets it. */
+    titleMax: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp.Unspecified,
     actions: @Composable RowScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -598,7 +562,7 @@ private fun StepFrame(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { StepLabel(step) }
+                Box(Modifier.weight(1f)) { step?.let { StepLabel(it + 1) } }
                 skip?.let {
                     TextButton(
                         onClick = it,
@@ -614,8 +578,8 @@ private fun StepFrame(
             ) {
                 Text(
                     title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(top = 8.dp).semantics { heading() },
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(top = 8.dp).widthIn(max = titleMax).semantics { heading() },
                 )
                 content()
             }
@@ -627,10 +591,12 @@ private fun StepFrame(
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = back,
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                    ) { Text(stringResource(R.string.action_back)) }
+                    back?.let {
+                        TextButton(
+                            onClick = it,
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                        ) { Text(stringResource(R.string.action_back)) }
+                    }
                 }
                 actions()
             }
@@ -728,11 +694,80 @@ private fun ListsPage(answer: KaeriIsFor, signIn: () -> Unit, back: () -> Unit, 
  */
 @Composable
 private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit, showServer: (() -> Unit)? = null) {
-    val context = LocalContext.current
+    val store = LocalAppStore.current
     val both = showServer != null
-    var serverSheet by rememberSaveable { mutableStateOf(false) }
     var folderFailed by rememberSaveable { mutableStateOf(false) }
-    val pickFolder = rememberFolderPicker(onFailed = { folderFailed = true })
+    val pickFolder = rememberFolderPicker(onFailed = { folderFailed = true }, inPage = true)
+    val cameIn = app.kaeri.ui.reading.rememberCameInState()
+    // First run says what came in with a check on its row, not a notice.
+    val notice by store.cameIn.notice.collectAsStateWithLifecycle()
+    LaunchedEffect(notice) { if (notice != null) store.cameIn.noticed() }
+    val removed = rememberAnimationsRemoved()
+    // A form opened from this page takes the page's place, its title the page's, crossfading in place.
+    androidx.compose.animation.Crossfade(
+        cameIn.open.takeIf { cameIn.inPage },
+        animationSpec = tween(if (removed) 200 else 300),
+        label = "books page", // i18n-skip
+    ) { open ->
+        if (open != null) BooksPageForm(open, cameIn, pickFolder) else BooksPageList(join, back, done, showServer, pickFolder, folderFailed) { folderFailed = it }
+    }
+}
+
+/** A form on first run's books page: its title, its body, Back to close it, and its actions at the foot. */
+@Composable
+private fun BooksPageForm(open: app.kaeri.store.Adding, state: app.kaeri.ui.reading.CameInState, pickFolder: () -> Unit) {
+    val store = LocalAppStore.current
+    val close = {
+        store.stores.closeJoin()
+        store.cameIn.closeQuietly()
+    }
+    val form = when (open) {
+        app.kaeri.store.Adding.SERVER -> app.kaeri.ui.reading.serverForm(state, close)
+        app.kaeri.store.Adding.FOLDER -> app.kaeri.ui.reading.folderForm(state, pickAgain = pickFolder, onClose = close)
+        app.kaeri.store.Adding.STORE -> storeForm(state, close)
+    }
+    BackHandler(onBack = form.close)
+    StepFrame(
+        step = 4,
+        title = form.title,
+        back = form.close,
+        actions = { app.kaeri.ui.reading.CameInPageActions(form) },
+    ) {
+        Column(Modifier.padding(top = 16.dp)) { form.body(this, true) }
+    }
+}
+
+/**
+ * The books page's list: what was added from it, each with a check, then a folder and a server
+ * to add, and the invite.
+ */
+@Composable
+private fun BooksPageList(
+    join: (String) -> Unit,
+    back: () -> Unit,
+    done: () -> Unit,
+    showServer: (() -> Unit)?,
+    pickFolder: () -> Unit,
+    folderFailed: Boolean,
+    setFolderFailed: (Boolean) -> Unit,
+) {
+    val store = LocalAppStore.current
+    val both = showServer != null
+    val view by store.bookSources.view.collectAsStateWithLifecycle()
+    val justAdded by store.cameIn.justAdded.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { store.bookSources.load() }
+    val added: List<@Composable () -> Unit> = view?.let { shown ->
+        shown.servers.filter { it.id in justAdded }.map { server ->
+            @Composable { AddedSourceRow(app.kaeri.ui.reading.CameInGlyphs.Server, server.name, app.kaeri.ui.reading.serverLine(server, justAdded = true)) }
+        } + shown.folders.filter { it.id in justAdded }.map { folder ->
+            @Composable { AddedSourceRow(app.kaeri.ui.reading.CameInGlyphs.Folder, folder.name, app.kaeri.ui.reading.folderLine(folder)) }
+        }
+    }.orEmpty()
+    // The invite opens the store form in the page's place, with the link in it.
+    val joinHere = { link: String ->
+        store.cameIn.open(app.kaeri.store.Adding.STORE, inPage = true)
+        store.cameIn.typeAddress(link)
+    }
     StepFrame(
         step = 4,
         title = stringResource(if (both) R.string.onboarding_both_title else R.string.onboarding_books_title),
@@ -742,6 +777,8 @@ private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit
         actions = { Button(onClick = done) { Text(stringResource(R.string.action_done)) } },
     ) {
         PageLine(stringResource(if (both) R.string.onboarding_both_line else R.string.onboarding_books_line), Modifier.padding(top = 8.dp))
+        DemoTryCard(both = both, done = done, modifier = Modifier.padding(top = 24.dp))
+        if (added.isNotEmpty()) app.kaeri.ui.reading.CameInGroup(added, Modifier.padding(top = 24.dp))
         val chevron: @Composable () -> Unit = { androidx.compose.material3.Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
         val bookRows = listOf<@Composable (Place) -> Unit>(
             { place ->
@@ -750,14 +787,22 @@ private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit
                     stringResource(R.string.onboarding_books_folder),
                     stringResource(R.string.onboarding_books_folder_line),
                     onClick = {
-                        folderFailed = false
+                        setFolderFailed(false)
                         pickFolder()
                     },
+                    leading = { app.kaeri.ui.reading.CameInTile(app.kaeri.ui.reading.CameInGlyphs.Folder) },
                     trailing = chevron,
                 )
             },
             { place ->
-                InfoRow(place, stringResource(R.string.onboarding_books_server), stringResource(R.string.onboarding_books_server_line), onClick = { serverSheet = true }, trailing = chevron)
+                InfoRow(
+                    place,
+                    stringResource(R.string.onboarding_books_server),
+                    stringResource(R.string.onboarding_books_server_line),
+                    onClick = { store.cameIn.open(app.kaeri.store.Adding.SERVER, inPage = true) },
+                    leading = { app.kaeri.ui.reading.CameInTile(app.kaeri.ui.reading.CameInGlyphs.Server) },
+                    trailing = chevron,
+                )
             },
         )
         if (showServer != null) {
@@ -773,9 +818,22 @@ private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit
             SettingsGroup(modifier = Modifier.padding(top = 24.dp), rows = bookRows)
         }
         if (folderFailed) SheetProblem(stringResource(R.string.book_folder_failed), Modifier.padding(top = 8.dp))
-        InviteField(join)
+        InviteField(joinHere)
     }
-    if (serverSheet) AddBookServerSheet(onDismiss = { serverSheet = false })
+}
+
+/** A source added from the books page: its tile, its name and what came in, and a check. */
+@Composable
+private fun AddedSourceRow(glyph: androidx.compose.ui.graphics.vector.ImageVector, name: String, line: String) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        app.kaeri.ui.reading.CameInTile(glyph)
+        app.kaeri.ui.reading.CameInRowText(name, line, Modifier.weight(1f))
+        androidx.compose.material3.Icon(Icons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+    }
 }
 
 /** The plugin store invite: its heading, the field with Join, and the line about plugins beside it. */

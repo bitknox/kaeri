@@ -252,6 +252,9 @@ internal object Flavour {
             }
         }
         CastScene.named(intent.getStringExtra("cast"))?.let { return reachedCast(intent, store, it) }
+        intent.getStringExtra("prelaunch")?.let { state ->
+            if (!app.kaeri.store.Prelaunch.stage(store, state)) Log.w(KaeriApp.TAG, "no prelaunch state named $state: ${app.kaeri.store.Prelaunch.STATES.joinToString()}")
+        }
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }

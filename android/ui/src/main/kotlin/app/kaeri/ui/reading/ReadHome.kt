@@ -152,6 +152,7 @@ internal fun ReadHomeScreen(actions: AppActions) {
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val user = trackers.values.firstOrNull { it.connected }?.user
     LaunchedEffect(Unit) { store.reading.loadHome() }
+    DemoLaunchHost(actions)
 
     val view = home
     val failure = failures[ReadingAbout.HOME]
@@ -269,12 +270,17 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
     val hide = rememberHide(gone)
     val yours = heldPlaceholders(ReadHomePart.YOURS in home.pending)
     val discovery = heldPlaceholders(ReadHomePart.DISCOVERY in home.pending || ReadHomePart.BECAUSE in home.pending)
+    // While the demo is the only thing to read, its own spotlight and end, as the demo's board draws them.
+    val demo by store.demo.collectAsStateWithLifecycle()
+    val demoWork = readingDemo.comic?.workId
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
         // The spotlight changes in place, a crossfade when its series or case moves.
         item(key = "spotlight", contentType = "spotlight") {
             val tile = home.spotlight?.takeUnless { it.work in goneSet }
             val spot = home.spot
-            Box(itemMotion()) {
+            if (demo.onlyBooks && (tile == null || tile.work == demoWork)) {
+                Box(itemMotion()) { DemoHomeSpotlight(actions, Modifier.padding(top = 8.dp)) }
+            } else Box(itemMotion()) {
                 AnimatedContent(
                     targetState = if (tile != null && spot != null) tile to spot else null,
                     contentKey = { it?.let { (t, s) -> t.work to s.case } },
@@ -340,7 +346,9 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
                 Box(itemMotion()) { Column { ShelfPlaceholder(); ShelfPlaceholder() } }
             }
         }
-        home.end?.let { end ->
+        if (demo.onlyBooks) {
+            item(key = "end", contentType = "end") { Box(itemMotion()) { DemoHomeEnd() } }
+        } else home.end?.let { end ->
             item(key = "end", contentType = "end") { Box(itemMotion()) { ReadEndLine(end) } }
         }
     }

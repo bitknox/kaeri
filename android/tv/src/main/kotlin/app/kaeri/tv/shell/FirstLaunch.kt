@@ -1,4 +1,4 @@
-// First launch on TV: the spec's three pages, Welcome, AniList and Sources, laid out for focus.
+// First launch on TV: Welcome, the join page, AniList and Sources, laid out for focus.
 // Each page has one focused way on and one way past; every step is in Settings afterwards. Once
 // through they do not come back, and a TV that already has an account or a store never sees them.
 
@@ -40,11 +40,10 @@ import app.kaeri.design.ObiSilk
 import app.kaeri.i18n.R as I18nR
 import app.kaeri.store.AppStore
 import app.kaeri.store.DevicePreferences
-import app.kaeri.store.SyncSheet
-import app.kaeri.store.copyAllSignIns
-import app.kaeri.store.joinStoresFrom
-import app.kaeri.store.pairInvite
-import app.kaeri.tv.sync.tvDeviceName
+import app.kaeri.engine.model.FirstRunPage
+import app.kaeri.i18n.Strings
+import app.kaeri.store.joinStop
+import app.kaeri.tv.ui.LocalNotices
 import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.SignInScreen
 import app.kaeri.tv.ui.AmberButton
@@ -57,7 +56,7 @@ import app.kaeri.tv.ui.entryFocus
 import app.kaeri.tv.ui.exitFade
 
 /** The pages, in order. */
-enum class FirstLaunchPage { Welcome, AniList, Sources }
+enum class FirstLaunchPage { Welcome, Join, AniList, Sources }
 
 /** The preference that says the pages have been through, on this TV: the phone's name for it. */
 const val FIRST_LAUNCH_DONE = "firstLaunchDone"
@@ -77,18 +76,22 @@ fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = FirstLaunch
     var done by rememberSaveable { mutableStateOf(preferences.getBoolean(FIRST_LAUNCH_DONE, false)) }
     val phase by store.phase.collectAsStateWithLifecycle()
     val stopped = phase is AppStore.Phase.Failed || phase is AppStore.Phase.Stopped
+    var showing by rememberSaveable { mutableStateOf(false) }
+    // A staged state asks for the pages, as the Fixtures app and the shots stage one.
+    val opened by store.sync.join.opened.collectAsStateWithLifecycle()
+    val startAt by store.sync.join.startAt.collectAsStateWithLifecycle()
+    LaunchedEffect(opened, startAt) {
+        if (opened || startAt != null) {
+            done = false
+            showing = true
+        }
+    }
     val covering = !done && !stopped
     LaunchedEffect(covering) { onCover(covering) }
     if (!covering) return
     val finish = {
         preferences.edit().putBoolean(FIRST_LAUNCH_DONE, true).apply()
         done = true
-    }
-    // A pairing from the welcome page that was read on its success page: the pages are through.
-    val copied by store.sync.copied.collectAsStateWithLifecycle()
-    var sawCopied by remember { mutableStateOf(false) }
-    LaunchedEffect(copied) {
-        if (copied != null) sawCopied = true else if (sawCopied) finish()
     }
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val stores by store.stores.stores.collectAsStateWithLifecycle()
@@ -100,7 +103,6 @@ fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = FirstLaunch
         waited = true
     }
     val setUp = trackers.values.any { it.connected } || stores.isNotEmpty()
-    var showing by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(storesLoaded, waited, setUp) {
         when {
             showing -> {}
@@ -116,13 +118,51 @@ fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = FirstLaunch
 
 @Composable
 private fun Pages(start: FirstLaunchPage, finish: () -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val notices = LocalNotices.current
     var page by rememberSaveable { mutableStateOf(start) }
-    BackHandler(enabled = page == FirstLaunchPage.Sources) { page = FirstLaunchPage.AniList }
+    // Back from AniList goes to the join page, which starts over at its two ways in.
+    BackHandler(enabled = page == FirstLaunchPage.Sources || page == FirstLaunchPage.AniList) {
+        if (page == FirstLaunchPage.AniList) store.joinStop()
+        page = FirstLaunchPage.entries[page.ordinal - 1]
+    }
+    val opened by store.sync.join.opened.collectAsStateWithLifecycle()
+    LaunchedEffect(opened) {
+        if (opened) {
+            page = FirstLaunchPage.Join
+            store.sync.join.shown()
+        }
+    }
+    val startAt by store.sync.join.startAt.collectAsStateWithLifecycle()
+    LaunchedEffect(startAt) {
+        startAt?.let {
+            page = if (it == FirstRunPage.SOURCES) FirstLaunchPage.Sources else FirstLaunchPage.AniList
+            store.sync.join.started()
+        }
+    }
     val enter = enterFade()
     val exit = exitFade()
     AnimatedContent(page, transitionSpec = { enter togetherWith exit }, label = "first launch") { shown -> // i18n-skip
         when (shown) {
-            FirstLaunchPage.Welcome -> Welcome(onNext = { page = FirstLaunchPage.AniList })
+            FirstLaunchPage.Welcome -> Welcome(onNext = { page = FirstLaunchPage.Join })
+            FirstLaunchPage.Join -> JoinPage(
+                back = { page = FirstLaunchPage.Welcome },
+                startHere = { page = FirstLaunchPage.AniList },
+                next = { to, device ->
+                    store.sync.first(false)
+                    store.sync.copiedSeen()
+                    when (to) {
+                        // The TV asks no medium: it watches.
+                        FirstRunPage.MEDIUM, FirstRunPage.LISTS -> page = FirstLaunchPage.AniList
+                        FirstRunPage.SOURCES -> page = FirstLaunchPage.Sources
+                        null -> {
+                            finish()
+                            device?.takeIf { it.isNotEmpty() }?.let { notices?.say(Strings.firstJoinSyncing(context, it)) }
+                        }
+                    }
+                },
+            )
             // Signed in or Not now, Sources follows.
             FirstLaunchPage.AniList -> SignInScreen("anilist", onDone = { page = FirstLaunchPage.Sources }, cancelLabel = stringResource(I18nR.string.onboarding_not_now))
             FirstLaunchPage.Sources -> SourcesPage(onDone = { finish() })
@@ -133,8 +173,6 @@ private fun Pages(start: FirstLaunchPage, finish: () -> Unit) {
 /** Welcome: Nagare, what Kaeri is, and Continue focused. */
 @Composable
 private fun Welcome(onNext: () -> Unit) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
     val next = remember { FocusRequester() }
     Row(
         Modifier
@@ -147,16 +185,7 @@ private fun Welcome(onNext: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.widthIn(max = 560.dp)) {
             Text("Kaeri", style = MaterialTheme.typography.displaySmall, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() }) // i18n-skip
             Text(stringResource(I18nR.string.onboarding_tagline), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AmberButton(onClick = onNext, icon = null, modifier = Modifier.focusRequester(next)) { ButtonLabel(stringResource(I18nR.string.onboarding_continue)) }
-                TonalButton(onClick = {
-                    store.sync.first(true)
-                    store.copyAllSignIns()
-                    store.joinStoresFrom(null)
-                    store.pairInvite(tvDeviceName(context))
-                    store.sync.show(SyncSheet.CODE)
-                }) { ButtonLabel(stringResource(I18nR.string.first_setup_phone)) }
-            }
+            AmberButton(onClick = onNext, icon = null, modifier = Modifier.padding(top = 8.dp).focusRequester(next)) { ButtonLabel(stringResource(I18nR.string.onboarding_continue)) }
         }
     }
 }

@@ -53,6 +53,7 @@ import app.kaeri.eink.EinkQuestions
 import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
 import app.kaeri.eink.RefreshControllers
+import app.kaeri.reader.LocalServerLines
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.phone.NovelScreen
@@ -86,7 +87,7 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
             app()
         }
         // The cover it grows out of loads as the app's covers do.
-        CompositionLocalProvider(LocalAppStore provides store) {
+        CompositionLocalProvider(LocalAppStore provides store, LocalServerLines provides store.serverLines) {
             ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
         }
     }

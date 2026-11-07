@@ -141,6 +141,9 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_first_launch_join() = shoot("phone-first-launch-join", FRESH, firstLaunch = true) {
+        // Welcome, then the join page's first way in.
+        open("Continue")
+        compose.waitForIdle()
         open("Set up from another device")
         kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "first-ok-join") }
     }
