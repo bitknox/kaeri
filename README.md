@@ -8,7 +8,7 @@
   </picture>
 </a>
 
-<h3>Browse, watch, track and sync anime in one client.</h3>
+<h3>Watch anime and read manga, manhwa and light novels, from sources you add.</h3>
 
 <p>
 Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and one for the terminal.
@@ -44,6 +44,10 @@ Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and o
 Kaeri browses AniList without an account, plays episodes in mpv and keeps your history on your
 device. Connect AniList, MyAnimeList, Kitsu, Simkl or Trakt and your progress syncs there too.
 There is no Kaeri account to make. The project is free, open source and non-commercial.
+
+Books work the same way. Manga, manhwa and light novels open from your own folders, a Komga,
+Kavita or OPDS server you run, or a book plugin, in a paged, strip or novel reader. Your place in
+each one stays on your device and syncs to the trackers you connect.
 
 <table>
   <tr>
