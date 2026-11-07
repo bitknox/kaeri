@@ -1979,7 +1979,9 @@ mod tests {
         assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
         let session = h.session();
         h.send(ReaderCommand::Close { session });
-        drop(h);
+        // The book stays where the first run laid it; only the app is started again.
+        let _books = h._dir;
+        drop((h.reader, h.services, h.tx, h.inbox));
 
         // Started again on the same store.
         let mut h = harness(Store::open(&db).unwrap());
