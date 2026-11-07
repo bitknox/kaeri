@@ -27,6 +27,10 @@ struct KaeriApp: App {
         Window("Kaeri", id: "main") {
             content
                 .hostsReader(delegate.store.reader)
+                // The reader's end page reads the store and opens Add a source: the cover does
+                // not see what `content` sets inside.
+                .environment(delegate.store)
+                .environment(delegate.navigator)
                 .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow)
         }
         // The Fixtures app keeps the exact 1280 by 800 the shot scripts rely on. The real app opens
@@ -62,6 +66,7 @@ struct KaeriApp: App {
         Window(L.readerWindow, id: ReaderWindow.id) {
             ReaderWindowView(model: delegate.store.reader)
                 .environment(delegate.store)
+                .environment(delegate.navigator)
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 760, height: 1000)
@@ -94,6 +99,10 @@ struct KaeriApp: App {
         WindowGroup {
             content
                 .hostsReader(delegate.store.reader)
+                // The reader's end page reads the store and opens Add a source: the cover does
+                // not see what `content` sets inside.
+                .environment(delegate.store)
+                .environment(delegate.navigator)
                 // The player covers the window it plays in, so it is in front while it shows.
                 .focusedSceneValue(\.playerInFront, delegate.player.isPresented)
         }
