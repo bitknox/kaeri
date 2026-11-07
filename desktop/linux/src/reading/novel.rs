@@ -163,7 +163,7 @@ unsafe extern "C" fn serve(request: Object, data: *mut c_void) {
         unsafe { CStr::from_ptr((api.request_uri)(request)) }.to_string_lossy().into_owned();
     let resource = handler.engine.upgrade().and_then(|engine| engine.book_resource(&uri));
     let Some(resource) = resource else {
-        let mut error = glib::Error::new(gio::IOErrorEnum::NotFound, "not a book's file");
+        let mut error = glib::Error::new(gio::IOErrorEnum::NotFound, "not a book's file"); // i18n-skip
         unsafe { (api.request_finish_error)(request, error.to_glib_none_mut().0) };
         return;
     };
@@ -229,9 +229,9 @@ impl NovelView {
         on_end: Rc<dyn Fn()>,
     ) -> Result<Rc<Self>, String> {
         if !crate::trailer::webkit::available() {
-            return Err("WebKitGTK 6 is not available".to_owned());
+            return Err("WebKitGTK 6 is not available".to_owned()); // i18n-skip
         }
-        let api = api().ok_or_else(|| "WebKitGTK 6 could not be loaded".to_owned())?;
+        let api = api().ok_or_else(|| "WebKitGTK 6 could not be loaded".to_owned())?; // i18n-skip
         let assets = kaeri_engine::reading::novel::assets();
         let engine = ctx.hub.engine_link();
         let script = CString::new(assets.script).map_err(|e| e.to_string())?;
@@ -253,7 +253,7 @@ impl NovelView {
             if (api.register_handler)(content.as_ptr(), c"kaeri".as_ptr(), std::ptr::null())
                 == 0
             {
-                return Err("the page could not be wired".to_owned());
+                return Err("the page could not be wired".to_owned()); // i18n-skip
             }
             // WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES, WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START.
             let user_script =
@@ -368,13 +368,13 @@ impl NovelView {
     /// Hand the paginator the engine's style for the person's choices.
     pub fn style(&self, style: &str, _count_key: &str, _counted: &[u32]) {
         if !style.is_empty() {
-            self.call(&format!("window.kaeriReader && window.kaeriReader.configure({style})"));
+            self.call(&format!("window.kaeriReader && window.kaeriReader.configure({style})")); // i18n-skip
         }
     }
 
     pub fn turn(&self, forward: bool) {
         self.call(&format!(
-            "window.kaeriReader && window.kaeriReader.{}('key')",
+            "window.kaeriReader && window.kaeriReader.{}('key')", // i18n-skip
             if forward { "next" } else { "prev" }
         ));
     }
@@ -415,8 +415,8 @@ impl NovelView {
                 });
             }
             Some("key") => match json["key"].as_str() {
-                Some("ArrowRight") => self.turn(!rtl),
-                Some("ArrowLeft") => self.turn(rtl),
+                Some("ArrowRight") => self.turn(!rtl), // i18n-skip
+                Some("ArrowLeft") => self.turn(rtl),   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => self.turn(true),
                 Some("ArrowUp" | "PageUp") => self.turn(false),
                 _ => {}

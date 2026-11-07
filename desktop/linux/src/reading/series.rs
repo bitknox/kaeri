@@ -220,7 +220,7 @@ fn draw_chapters(ctx: &Rc<Ctx>, column: &gtk::Box, work: &WorkId, volumes: &[Vol
         for chapter in &group.chapters {
             let title = chapter.title.clone().filter(|t| !t.is_empty()).map_or_else(
                 || chapter.label.clone(),
-                |title| format!("{} \u{b7} {title}", chapter.label),
+                |title| format!("{} \u{b7} {title}", chapter.label), // i18n-skip
             );
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&title))

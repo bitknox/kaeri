@@ -487,7 +487,7 @@ impl Reader {
         self.stack.set_visible_child_name("paged");
         motion::crossfade_in(&self.picture);
         let total = self.state.borrow().leaves.len();
-        self.counter.set_label(&format!("{} / {total}", index + 1));
+        self.counter.set_label(&format!("{} / {total}", index + 1)); // i18n-skip
         let (session, chapter) = {
             let state = self.state.borrow();
             (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
@@ -769,7 +769,6 @@ impl Reader {
                 tracing::warn!(%why, "the novel reader could not start");
                 self.status.set_icon_name(Some("dialog-warning-symbolic"));
                 self.status.set_title(&t::linux_reader_chapter_failed());
-                self.status.set_description(Some(&why));
                 self.stack.set_visible_child_name("status");
             }
         }

@@ -119,7 +119,7 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
     }
     for failure in &view.failures {
         let line = t::series_chapters_failed(&failure.source_name);
-        column.append(&widgets::haze(&format!("{} \u{b7} {line}", failure.title), "caption"));
+        column.append(&widgets::haze(&format!("{} \u{b7} {line}", failure.title), "caption")); // i18n-skip
     }
     let _ = say::msg;
 }
