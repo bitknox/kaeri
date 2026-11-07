@@ -340,6 +340,10 @@ impl Reader {
             let _ = std::fs::remove_dir_all(
                 novel::cache_dir(&cx.services.paths.cache_dir).join(format!("{}-fixed", s.id)),
             );
+            let _ = std::fs::remove_dir_all(novel::streamed_dir(
+                &cx.services.paths.cache_dir,
+                s.id,
+            ));
         }
     }
 
@@ -417,7 +421,11 @@ impl Reader {
     ) {
         let store = &cx.services.store;
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says its own medium: opened from Home or the first run before its page was
+        // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
+        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
         let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
+            _ if demo.is_some() => demo.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
             (Some(other), _) if other != "manga" && other != "comic" => {
