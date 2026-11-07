@@ -45,6 +45,10 @@ struct TabShell: View {
                 Tab(place.section.title, systemImage: place.section.symbol, value: place.section) {
                     TabStack(section: place.section, place: { AnyView(screen($0)) }) { screen(place.section) }
                 }
+                // On iPad the bar keeps the iPhone's set, so it never runs past its width; the
+                // sidebar has every place.
+                .defaultVisibility(Self.barTabs(store.medium.answer).contains(place.section) ? .automatic : .hidden,
+                                   for: .tabBar)
             }
             if sizeClass == .regular {
                 // In the sidebar's main group, as the Mac has it; Sources holds what plays from where.
@@ -235,13 +239,19 @@ struct IPadDownloadsToolbar: ToolbarContent {
     @Environment(Navigator.self) private var navigator
 
     var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(L.openedOpen, systemImage: "plus") { navigator.openLinkShown = true }
+        // Episodes only: chapters stop one series at a time, from their ring. With no episode
+        // in the list, Pause all would only ever sit there disabled.
+        if store.medium.watches {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L.openedOpen, systemImage: "plus") { navigator.openLinkShown = true }
+            }
         }
         ToolbarItem(placement: .topBarTrailing) {
             let paused = store.downloads.rows.contains { $0.state == .paused }
             let running = store.downloads.rows.contains { $0.state == .active || $0.state == .queued }
-            if running || !paused {
+            if !store.medium.watches || store.downloads.rows.isEmpty {
+                EmptyView()
+            } else if running || !paused {
                 Button(L.downloadsPauseAll) { store.pauseAllDownloads() }.disabled(!running)
             } else {
                 Button(L.downloadsResumeAll) { store.resumeAllDownloads() }

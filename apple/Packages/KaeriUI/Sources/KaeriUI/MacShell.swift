@@ -259,7 +259,10 @@ struct DownloadsToolbar: View {
         let running = store.downloads.rows.contains { $0.state == .active || $0.state == .queued }
         let paused = store.downloads.rows.contains { $0.state == .paused }
         HStack(spacing: 8) {
-            if running || !paused {
+            // Episodes only: chapters stop one series at a time, from their ring.
+            if !store.medium.watches || store.downloads.rows.isEmpty {
+                EmptyView()
+            } else if running || !paused {
                 Button(L.downloadsPauseAll) { store.pauseAllDownloads() }
                     .disabled(!running)
             } else {

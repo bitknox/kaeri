@@ -8,71 +8,14 @@ import KaeriStore
 import KaeriStrings
 import SwiftUI
 
-/// A series' downloaded and queued chapters, in the engine's order.
-struct BookDownloadSeries: Identifiable {
-    let work: String
-    let title: String
-    let rows: [BookDownloadRow]
-    var id: String { work }
+extension BookDownloadSeries: @retroactive Identifiable {
+    public var id: String { work }
 
-    static func group(_ rows: [BookDownloadRow]) -> [BookDownloadSeries] {
-        var order: [String] = []
-        var byWork: [String: [BookDownloadRow]] = [:]
-        for row in rows {
-            if byWork[row.work] == nil { order.append(row.work) }
-            byWork[row.work, default: []].append(row)
-        }
-        return order.map { work in
-            let rows = byWork[work] ?? []
-            return BookDownloadSeries(work: work, title: rows.first?.title ?? "", rows: rows)
-        }
-    }
+    /// The row's line as the engine words it: "6 chapters · 214 MB · 2 read", the chapter
+    /// downloading, or the failure and its cause.
+    var words: String { line.map(\.text).joined(separator: " · ") } // i18n-skip
 
-    var failed: BookDownloadRow? {
-        rows.first { if case .failed = $0.state { true } else { false } }
-    }
-
-    /// Chapters done and already read, which Delete read removes; bookmarked ones stay.
-    var readDone: [BookDownloadRow] {
-        rows.filter { row in
-            guard case .done = row.state, !row.chapter.bookmarked else { return false }
-            if case .read = row.chapter.state { return true }
-            return false
-        }
-    }
-
-    var done: Int { rows.filter { if case .done = $0.state { true } else { false } }.count }
-
-    /// What the row says: the chapter downloading with its pages and what waits after it, the
-    /// failure with its cause, else how many are kept and how many of them are read.
-    var line: String {
-        if let failed, case .failed(let failure) = failed.state {
-            return L.readDownloadsFailed(chapter: Self.name(failed.chapter), reason: failure.words)
-        }
-        let queued = rows.filter { row in
-            switch row.state {
-            case .queued, .waitsForWifi: true
-            default: false
-            }
-        }.count
-        if let active = rows.first(where: { if case .downloading = $0.state { true } else { false } }),
-           case .downloading(let doneParts, let total) = active.state {
-            let now = L.readDownloadsActive(chapter: Self.name(active.chapter), done: Int(doneParts), total: Int(total))
-            return queued > 0 ? now + " · " + L.readDownloadsMoreQueued(n: queued) : now // i18n-skip
-        }
-        if queued > 0, done == 0 {
-            return rows.contains { if case .waitsForWifi = $0.state { true } else { false } }
-                ? L.chapterStateWifi : L.readDownloadsQueued(n: queued)
-        }
-        let kept = L.readDownloadsKept(n: done)
-        let read = readDone.count
-        return read > 0 ? kept + " · " + L.readDownloadsRead(n: read) : kept // i18n-skip
-    }
-
-    /// A chapter as the chapter list names it: by its number, else the source's label.
-    static func name(_ chapter: ChapterRow) -> String {
-        chapter.number.map { L.seriesChapterNumber(n: $0) } ?? chapter.label
-    }
+    var hasFailed: Bool { !failed.isEmpty }
 }
 
 /// The section's heading: Reading, and its chapters and size.
@@ -81,11 +24,18 @@ struct ReadDownloadsHeading: View {
     let title: String
 
     var body: some View {
-        let meter = store.reading.downloads?.meter
-        DownloadsSectionHeading(
-            title: title,
-            total: meter.flatMap { $0.chapters > 0 ? L.readDownloadsTotal(n: Int($0.chapters), size: Wording.bytes($0.used)) : nil }
-        )
+        DownloadsSectionHeading(title: title, total: ReadDownloadsWords.total(store))
+    }
+}
+
+enum ReadDownloadsWords {
+    /// "38 chapters · 1.1 GB", as the engine words the Reading total; nil with nothing kept.
+    @MainActor
+    static func total(_ store: AppStore) -> String? {
+        guard let view = store.reading.downloads else { return nil }
+        if !view.total.isEmpty { return view.total.map(\.text).joined(separator: " · ") } // i18n-skip
+        guard view.meter.chapters > 0 else { return nil }
+        return L.readDownloadsTotal(n: Int(view.meter.chapters), size: Wording.bytes(view.meter.used))
     }
 }
 
@@ -119,40 +69,46 @@ struct BookDownloadSeriesRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            BookCover(url: cover, width: Device.isMac ? 36 : 40)
+            BookCover(url: series.cover ?? cover, width: Device.isMac ? 36 : 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(series.title)
                     .font(.plat(mac: 15, touch: 17, weight: .semibold))
                     .foregroundStyle(.silk)
                     .lineLimit(2)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    if series.failed != nil {
+                    if series.hasFailed {
                         // The one vermilion on the row, as the chapter rows mark a failure.
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.plat(mac: 11, touch: 13))
                             .foregroundStyle(.vermilion)
                             .accessibilityHidden(true)
                     }
-                    Text(series.line)
+                    Text(series.words)
                         .font(.plat(mac: 13, touch: 15))
-                        .foregroundStyle(series.failed != nil ? .silk : .haze)
+                        .foregroundStyle(series.hasFailed ? .silk : .haze)
                         .monospacedDigit()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer(minLength: 8)
-            if let active = activeFraction {
-                DownloadRing(fraction: active, size: Device.isMac ? 16 : 22)
+            if let progress = series.progress {
+                Button {
+                    store.reading.cancelDownloads(series.work, chapters: downloading)
+                } label: {
+                    DownloadRing(fraction: Double(progress))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L.chapterDownloadStop)
             }
-            if let failed = series.failed {
+            if series.hasFailed {
                 Button(L.chapterRetry) {
-                    store.reading.download(series.work, .chapters(ids: [failed.chapter.id]))
+                    store.reading.download(series.work, .chapters(ids: series.failed))
                 }
                 .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 30, raisedSurface: !Device.isMac, fontSize: Device.isMac ? 12 : 15))
                 .fixedSize()
-            } else if !series.readDone.isEmpty {
+            } else if series.read > 0 {
                 Button(L.readDownloadsDeleteRead) {
-                    store.reading.deleteDownloads(series.work, chapters: series.readDone.map(\.chapter.id))
+                    store.reading.deleteRead(series.work)
                 }
                 .buttonStyle(.plain)
                 .font(.plat(mac: 12, touch: 15, weight: .semibold))
@@ -164,7 +120,7 @@ struct BookDownloadSeriesRow: View {
         .contentShape(.rect)
         .onTapGesture { navigator.openSeries(series.work) }
         // Download rows carry no cover; the series' details bring it.
-        .task(id: series.work) { if cover == nil { store.reading.loadSeriesInfo(series.work) } }
+        .task(id: series.work) { if series.cover == nil, cover == nil { store.reading.loadSeriesInfo(series.work) } }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L.homeDetails) { navigator.openSeries(series.work) }
     }
@@ -178,27 +134,37 @@ struct BookDownloadSeriesRow: View {
         return nil
     }
 
-    private var activeFraction: Double? {
-        for row in series.rows {
-            if case .downloading(let done, let total) = row.state, total > 0 { return Double(done) / Double(total) }
-        }
-        return nil
+    /// The series' chapters moving now, which the ring stops.
+    private var downloading: [String] {
+        (store.reading.downloads?.rows ?? []).filter { row in
+            guard row.work == series.work else { return false }
+            switch row.state {
+            case .downloading, .queued, .waitsForWifi: return true
+            default: return false
+            }
+        }.map(\.chapter.id)
     }
 }
 
-/// A small ring for a chapter downloading, as the chapter rows draw it.
-private struct DownloadRing: View {
+/// The ring while bytes move: a silk arc on the rule with a stop square inside, 16 on the Mac
+/// and 22 on touch, as the chapter rows and Downloads draw it.
+struct DownloadRing: View {
     let fraction: Double
-    let size: CGFloat
 
     var body: some View {
+        let size: CGFloat = Device.isMac ? 16 : 22
         ZStack {
-            Circle().stroke(Palette.faintRule, lineWidth: 2)
-            Circle().trim(from: 0, to: fraction).stroke(.silk, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            Circle().stroke(Palette.rule, lineWidth: 2)
+            Circle().trim(from: 0, to: max(0.02, min(fraction, 1)))
+                .stroke(.silk, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            RoundedRectangle(cornerRadius: 1)
+                .fill(.silk)
+                .frame(width: size * 0.3, height: size * 0.3)
         }
         .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        .padding(Device.isMac ? 4 : 11)
+        .contentShape(.circle)
     }
 }
 
@@ -209,7 +175,7 @@ struct ReadDownloadsSection: View {
     var headed = true
 
     var body: some View {
-        let series = BookDownloadSeries.group(store.reading.downloads?.rows ?? [])
+        let series = store.reading.downloads?.series ?? []
         VStack(alignment: .leading, spacing: 0) {
             if headed {
                 ReadDownloadsHeading(title: L.settingsGroupReading)

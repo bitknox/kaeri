@@ -102,7 +102,8 @@ struct DownloadsTitle: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        let used = Double(store.downloads.bytesOnDisk)
+        let books = store.medium.reads ? (store.reading.downloads?.meter.used ?? 0) : 0
+        let used = Double(store.downloads.bytesOnDisk + books)
         let free = FreeSpace.bytes.map { Double($0) }
         VStack(alignment: .leading, spacing: 2) {
             Text(L.downloadsTitle)
