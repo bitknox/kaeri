@@ -2,7 +2,7 @@
 // is; where reading is on, what Kaeri is for comes next, the one page without Skip; AniList
 // offers the sign-in; Sources takes an invite link and says whose code a plugin is, and after
 // Read it offers a folder and a server for books. Each step is in Settings afterwards. A
-// full-screen cover on iPhone, a sheet on Mac (560 × 480 pt) and iPad.
+// full-screen cover on iPhone, a sheet on Mac (560 pt wide, at least 480 tall) and iPad.
 
 import KaeriDesign
 import KaeriKit
@@ -63,7 +63,8 @@ struct FirstLaunchPresenter: ViewModifier {
             .sheet(isPresented: compact ? .constant(false) : $showing, onDismiss: done) { flow }
             #else
             .sheet(isPresented: $showing, onDismiss: done) {
-                flow.frame(width: 560, height: 480)
+                // 480 pt tall, and taller for a page that needs it (the sources page after Both).
+                flow.frame(width: 560).frame(minHeight: 480).fixedSize(horizontal: false, vertical: true)
             }
             #endif
     }

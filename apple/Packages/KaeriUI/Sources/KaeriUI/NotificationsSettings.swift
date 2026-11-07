@@ -227,7 +227,6 @@ struct NotificationsAside: View {
         let on = store.settings.isOn(.episodeNotifications)
         Text(L.settingsNewEpisodes).groupHeaderStyle().macLineHeight(14)
             .accessibilityAddTraits(.isHeader)
-            .padding(.bottom, -6)
         NoticePreview(row: store.notifications.comingUp.first)
             .opacity(on ? 1 : 0.4)
         Text(on ? L.settingsNotifyExplainOn(tracker: AccountsModel.name("anilist")) : L.settingsNotifyExplainOff)
