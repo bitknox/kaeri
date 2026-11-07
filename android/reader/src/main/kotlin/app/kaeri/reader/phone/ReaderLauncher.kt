@@ -17,6 +17,11 @@ data class ReaderRequest(
     val chapter: ChapterId? = null,
     val eink: Boolean = false,
     val cover: String? = null,
+    /**
+     * The cover's place on screen the reader grows out of and closes back into, as the series
+     * screens key it; `null` opens it with the plain zoom.
+     */
+    val from: String? = null,
 )
 
 object ReaderLauncher {

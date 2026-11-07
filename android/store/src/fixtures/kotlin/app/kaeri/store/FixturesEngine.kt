@@ -65,6 +65,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.READING_JOIN_ASK -> FfiScene.ReadingJoinAsk
     FixtureScene.READING_HOME -> FfiScene.ReadingHome
     FixtureScene.READING_SERIES -> FfiScene.ReadingSeries
+    FixtureScene.READING_DOWNLOADS -> FfiScene.ReadingDownloads
     FixtureScene.READER_MANGA_RTL -> FfiScene.ReaderMangaRtl
     FixtureScene.READER_STRIP -> FfiScene.ReaderStrip
     FixtureScene.READER_NOVEL -> FfiScene.ReaderNovel

@@ -309,6 +309,12 @@ enum class FixtureScene {
     /** [READING_HOME] with the manga right to left and a bookmark. */
     READING_SERIES,
 
+    /**
+     * [READING_HOME] with Downloads filled: the manga's chapter 14 downloaded, 15 downloading and
+     * 16 and 17 queued, the novel's chapter 4 downloaded and the strip's chapter 2 failed.
+     */
+    READING_DOWNLOADS,
+
     /** [READING_HOME] for a right-to-left manga in the reader. */
     READER_MANGA_RTL,
 
