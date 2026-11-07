@@ -280,6 +280,9 @@ struct PhoneYourSourcesPage: View {
                 .background(.ground)
             }
         }
+        // Whichever list shows: the phone's providers page names itself too.
+        .navigationTitle(L.sourcesTitle)
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(get: { navigator.addBookSource }, set: { navigator.addBookSource = $0 })) { step in
             AddBookSourceSheet(start: step)
         }
@@ -313,12 +316,12 @@ struct AddBookSourceSheet: View {
     var body: some View {
         Group {
             if step == .server {
-                AddBookServerStep()
+                // Its own header on touch, which reaches the sheet's edges.
+                AddBookServerStep().padding(Device.isMac ? 24 : 0)
             } else {
-                choose
+                choose.padding(Device.isMac ? 24 : 20)
             }
         }
-        .padding(Device.isMac ? 24 : 20)
         .sheetWidth(480)
         .background(.raised)
         .closesOnEscape { dismiss() }
@@ -438,18 +441,77 @@ private struct AddBookServerStep: View {
     }
 
     var body: some View {
-        let sources = store.bookSources
+        #if os(iOS)
+        // On touch, a sheet's header holds Cancel, the title and the action, as Read from does.
+        NavigationStack {
+            ScrollView { form.padding(.horizontal, 20).padding(.vertical, 12) }
+                .scrollBounceBehavior(.basedOnSize)
+                .background(.raised)
+                .navigationTitle(L.bookAddServerTitle)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if store.bookSources.added == nil {
+                        ToolbarItem(placement: .cancellationAction) { Button(L.actionCancel) { dismiss() } }
+                    }
+                    ToolbarItem(placement: .confirmationAction) { action.disabled(actionOff) }
+                }
+        }
+        .presentationBackground(.raised)
+        #else
         VStack(alignment: .leading, spacing: 0) {
             Text(L.bookAddServerTitle)
-                .font(.plat(mac: 17, touch: 22, weight: .bold))
+                .font(.mac(17, weight: .bold))
                 .foregroundStyle(.silk)
                 .accessibilityAddTraits(.isHeader)
-            label(L.serversAddress).padding(.top, 16)
+            form.padding(.top, 16)
+            HStack(spacing: 10) {
+                Spacer()
+                if store.bookSources.added == nil {
+                    Button(L.actionCancel) { dismiss() }
+                        .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, raisedSurface: true, fontSize: buttonFont))
+                        .keyboardShortcut(.cancelAction)
+                }
+                action
+                    .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(actionOff)
+            }
+            .padding(.top, 22)
+        }
+        #endif
+    }
+
+    /// Done once added, Try again after a failed look, else Add server.
+    @ViewBuilder
+    private var action: some View {
+        let sources = store.bookSources
+        if sources.added != nil {
+            Button(L.actionDone) { dismiss() }
+        } else if sources.checked == nil, sources.failed != nil {
+            Button(L.actionTryAgain) { sources.checkServer(trimmed) }
+        } else {
+            Button(L.bookAddServerButton) { add() }
+        }
+    }
+
+    private var actionOff: Bool {
+        let sources = store.bookSources
+        guard sources.added == nil, !(sources.checked == nil && sources.failed != nil) else { return false }
+        return sources.checked == nil || user.isEmpty || password.isEmpty || sources.checking
+    }
+
+    private var form: some View {
+        let sources = store.bookSources
+        return VStack(alignment: .leading, spacing: 0) {
+            label(L.serversAddress)
             field(L.serversAddress, text: $address, prompt: "books.home.example", focus: .address) // i18n-skip
                 .padding(.top, 6)
             if let checked = sources.checked, checked.address == address.trimmingCharacters(in: .whitespaces) {
                 HStack(spacing: 6) {
-                    WaterDot()
+                    // Found is a success: a silk check. Water is only for new.
+                    Image(systemName: "checkmark")
+                        .font(.plat(mac: 11, touch: 13, weight: .semibold))
+                        .accessibilityHidden(true)
                     // Once signed in, how many series it lists, when the server said for sure.
                     if let added = sources.added, added.kind == checked.kind, let series = added.series {
                         Text(L.sourcesFoundServerSeries(kind: BookServerWords.kind(checked.kind), n: Int(series)))
@@ -490,29 +552,6 @@ private struct AddBookServerStep: View {
                 .padding(.top, 10)
                 .accessibilityElement(children: .combine)
             }
-            HStack(spacing: 10) {
-                Spacer()
-                if sources.added != nil {
-                    Button(L.actionDone) { dismiss() }
-                        .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
-                        .keyboardShortcut(.defaultAction)
-                } else {
-                    Button(L.actionCancel) { dismiss() }
-                        .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, raisedSurface: true, fontSize: buttonFont))
-                        .keyboardShortcut(.cancelAction)
-                    if sources.checked == nil, sources.failed != nil {
-                        Button(L.actionTryAgain) { sources.checkServer(trimmed) }
-                            .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
-                            .keyboardShortcut(.defaultAction)
-                    } else {
-                        Button(L.bookAddServerButton) { add() }
-                            .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
-                            .keyboardShortcut(.defaultAction)
-                            .disabled(sources.checked == nil || user.isEmpty || password.isEmpty || sources.checking)
-                    }
-                }
-            }
-            .padding(.top, 22)
         }
         .animation(.standard, value: sources.checked?.address)
         .onAppear {
