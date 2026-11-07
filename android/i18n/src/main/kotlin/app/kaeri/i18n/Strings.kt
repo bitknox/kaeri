@@ -9586,6 +9586,226 @@ object Strings {
     fun readDownloadsDeleteRead(context: Context): String =
         context.getString(R.string.read_downloads_delete_read)
 
+    /** Title of the Send to e-reader sheet, the chapter menu's item and the Settings row. */
+    fun sendTitle(context: Context): String =
+        context.getString(R.string.send_title)
+
+    /** Heading over the e-readers to choose from in the Send to e-reader sheet. */
+    fun sendFor(context: Context): String =
+        context.getString(R.string.send_for)
+
+    /** Heading over what is being sent in the Send to e-reader sheet. */
+    fun sendWhat(context: Context): String =
+        context.getString(R.string.send_what)
+
+    /** Row in the Send to e-reader sheet: the chapters being sent. */
+    fun sendChapters(context: Context): String =
+        context.getString(R.string.send_chapters)
+
+    /** The chapters being sent when there is one: its number or label. */
+    fun sendChaptersOne(context: Context, chapter: String): String =
+        context.getString(R.string.send_chapters_one, chapter)
+
+    /** The chapters being sent when there are several, from the first to the last. */
+    fun sendChaptersRange(context: Context, first: String, last: String): String =
+        context.getString(R.string.send_chapters_range, first, last)
+
+    /** Row in the Send to e-reader sheet: how big the files will be. */
+    fun sendSize(context: Context): String =
+        context.getString(R.string.send_size)
+
+    /** The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made. */
+    fun sendSizeAbout(context: Context, size: String): String =
+        context.getString(R.string.send_size_about, size)
+
+    /** Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent. */
+    fun sendNoPlace(context: Context): String =
+        context.getString(R.string.send_no_place)
+
+    /** The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet. */
+    fun sendPrepare(context: Context): String =
+        context.getString(R.string.send_prepare)
+
+    /** While the files are made: which chapter of how many. The ring beside it shows how far along. */
+    fun sendPreparing(context: Context, done: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.send_preparing, total, done, total)
+
+    /** Under the progress of a send to a device: what the pages are made for. */
+    fun sendSizedFor(context: Context, device: String): String =
+        context.getString(R.string.send_sized_for, device)
+
+    /** Under the progress of a send that will be written in parts, because the device takes files up to a limit. */
+    fun sendInParts(context: Context): String =
+        context.getString(R.string.send_in_parts)
+
+    /** Under an e-reader in the sheet when it takes files in parts: the size where a file is split. */
+    fun sendPartsOver(context: Context, size: String): String =
+        context.getString(R.string.send_parts_over, size)
+
+    /** While a send waits for the network and the person can stop it. The engine's own line comes first. */
+    fun sendWaitingCancel(context: Context): String =
+        context.getString(R.string.send_waiting_cancel)
+
+    /** When the files are ready, over the button that opens the share sheet. The count is how many files. */
+    fun sendReady(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.send_ready, n, n)
+
+    /** Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. */
+    fun sendShareAgain(context: Context): String =
+        context.getString(R.string.send_share_again)
+
+    /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
+    fun sendBanner(context: Context, device: String): String =
+        context.getString(R.string.send_banner, device)
+
+    /** The format of the files an e-reader is sent: a manga as a fixed-layout EPUB. */
+    fun sendFormatFixedEpub(context: Context): String =
+        context.getString(R.string.send_format_fixed_epub)
+
+    /** The format of the files an e-reader is sent: the Kobo form of EPUB. */
+    fun sendFormatKepub(context: Context): String =
+        context.getString(R.string.send_format_kepub)
+
+    /** The format of the files an e-reader is sent: a plain EPUB. */
+    fun sendFormatEpub(context: Context): String =
+        context.getString(R.string.send_format_epub)
+
+    /** The format of the files an e-reader is sent: a comic book archive. */
+    fun sendFormatCbz(context: Context): String =
+        context.getString(R.string.send_format_cbz)
+
+    /** Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels. */
+    fun sendTargetLine(context: Context, format: String, width: String, height: String): String =
+        context.getString(R.string.send_target_line, format, width, height)
+
+    /** Title of the sheet that asks where you stopped reading on the e-reader. */
+    fun stopTitle(context: Context): String =
+        context.getString(R.string.stop_title)
+
+    /** Note on a series page after chapters were sent: opens the question. */
+    fun stopNote(context: Context, device: String): String =
+        context.getString(R.string.stop_note, device)
+
+    /** Button in that note. */
+    fun stopNoteAction(context: Context): String =
+        context.getString(R.string.stop_note_action)
+
+    /** First line of the sheet when one chapter was sent. The date is already written out (such as "2 November"). */
+    fun stopSentOne(context: Context, chapter: String, device: String, date: String): String =
+        context.getString(R.string.stop_sent_one, chapter, device, date)
+
+    /** First line of the sheet when several chapters were sent, from the first to the last. */
+    fun stopSentRange(context: Context, first: String, last: String, device: String, date: String): String =
+        context.getString(R.string.stop_sent_range, first, last, device, date)
+
+    /** Switch in the sheet: the last chapter sent was read to its end. */
+    fun stopFinished(context: Context, chapter: String): String =
+        context.getString(R.string.stop_finished, chapter)
+
+    /** The main button of the sheet: keeps the chapter chosen as the place. */
+    fun stopSet(context: Context): String =
+        context.getString(R.string.stop_set)
+
+    /** The other button of the sheet: leaves the place as it is, with the place named. */
+    fun stopKeep(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.stop_keep, chapter, page)
+
+    /** The other button of the sheet when the place is not a page. */
+    fun stopKeepPlain(context: Context): String =
+        context.getString(R.string.stop_keep_plain)
+
+    /** Heading of the E-readers group in the Reading settings. */
+    fun ereadersGroup(context: Context): String =
+        context.getString(R.string.ereaders_group)
+
+    /** Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name. */
+    fun ereadersSendRow(context: Context): String =
+        context.getString(R.string.ereaders_send_row)
+
+    /** Row in the E-readers group that opens the feed settings. The value is On or Off. */
+    fun ereadersFeedRow(context: Context): String =
+        context.getString(R.string.ereaders_feed_row)
+
+    /** Line under the Share on this network switch. */
+    fun opdsShareNote(context: Context): String =
+        context.getString(R.string.opds_share_note)
+
+    /** Footnote under the feed settings. */
+    fun opdsFooter(context: Context, device: String): String =
+        context.getString(R.string.opds_footer, device)
+
+    /** Row in the feed settings: the web address e-readers are given, with a button that copies it. */
+    fun opdsAddress(context: Context): String =
+        context.getString(R.string.opds_address)
+
+    /** Shown in place of the address while the feed is off or has no password. */
+    fun opdsAddressOff(context: Context): String =
+        context.getString(R.string.opds_address_off)
+
+    /** Row in the feed settings: the password e-readers ask for. */
+    fun opdsPassword(context: Context): String =
+        context.getString(R.string.opds_password)
+
+    /** Line under the password row. */
+    fun opdsPasswordNote(context: Context): String =
+        context.getString(R.string.opds_password_note)
+
+    /** Button in the feed settings that makes a new password. The e-readers ask for the new one. */
+    fun opdsNewPassword(context: Context): String =
+        context.getString(R.string.opds_new_password)
+
+    /** Row in the feed settings: the port the feed listens on. */
+    fun opdsPort(context: Context): String =
+        context.getString(R.string.opds_port)
+
+    /** Line under the port row when it is empty. */
+    fun opdsPortNote(context: Context): String =
+        context.getString(R.string.opds_port_note)
+
+    /** Line under the port row when the port asked for was taken and another is used. */
+    fun opdsPortMoved(context: Context, wanted: Int, port: Int): String =
+        context.getString(R.string.opds_port_moved, wanted, port)
+
+    /** Heading of the group that picks what the feed shares. */
+    fun opdsShares(context: Context): String =
+        context.getString(R.string.opds_shares)
+
+    /** Row in What it shares: the chapters downloaded on this device. */
+    fun opdsShareDownloads(context: Context): String =
+        context.getString(R.string.opds_share_downloads)
+
+    /** Line under that row. */
+    fun opdsShareDownloadsCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.opds_share_downloads_count, n, n)
+
+    /** Row in What it shares: the series in the manga and comic folders. */
+    fun opdsShareManga(context: Context): String =
+        context.getString(R.string.opds_share_manga)
+
+    /** Row in What it shares: the series in the novel folders. */
+    fun opdsShareNovels(context: Context): String =
+        context.getString(R.string.opds_share_novels)
+
+    /** Line under a folder row. */
+    fun opdsShareSeriesCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.opds_share_series_count, n, n)
+
+    /** Heading of the list of e-readers that fetched files from the feed. */
+    fun opdsFetchedBy(context: Context): String =
+        context.getString(R.string.opds_fetched_by)
+
+    /** Line when no e-reader has fetched anything since the feed started. */
+    fun opdsFetchedNone(context: Context): String =
+        context.getString(R.string.opds_fetched_none)
+
+    /** Line under an e-reader in that list: how many files it took. */
+    fun opdsFetchedFiles(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.opds_fetched_files, n, n)
+
+    /** Name for an e-reader that did not give one. */
+    fun opdsReaderUnnamed(context: Context, address: String): String =
+        context.getString(R.string.opds_reader_unnamed, address)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)

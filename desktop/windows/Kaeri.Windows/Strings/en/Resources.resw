@@ -8708,6 +8708,246 @@
     <value>Delete read</value>
     <comment>Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.</comment>
   </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>Send to e-reader</value>
+    <comment>Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.</comment>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>For</value>
+    <comment>Heading over the e-readers to choose from in the Send to e-reader sheet.</comment>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>What</value>
+    <comment>Heading over what is being sent in the Send to e-reader sheet.</comment>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>Chapters</value>
+    <comment>Row in the Send to e-reader sheet: the chapters being sent.</comment>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+    <comment>The chapters being sent when there is one: its number or label.</comment>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>{first} to {last}</value>
+    <comment>The chapters being sent when there are several, from the first to the last.</comment>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>Size</value>
+    <comment>Row in the Send to e-reader sheet: how big the files will be.</comment>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>About {size}</value>
+    <comment>The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.</comment>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.</value>
+    <comment>Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.</comment>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>Prepare and share</value>
+    <comment>The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.</comment>
+  </data>
+  <data name="SendPreparing_one" xml:space="preserve">
+    <value>Preparing the chapter</value>
+    <comment>While the files are made: which chapter of how many. The ring beside it shows how far along.</comment>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>Preparing {done} of {total} chapters</value>
+    <comment>While the files are made: which chapter of how many. The ring beside it shows how far along.</comment>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>Pages are sized for the {device} screen</value>
+    <comment>Under the progress of a send to a device: what the pages are made for.</comment>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>The files are too big for one, so they go in parts.</value>
+    <comment>Under the progress of a send that will be written in parts, because the device takes files up to a limit.</comment>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>in parts over {size}</value>
+    <comment>Under an e-reader in the sheet when it takes files in parts: the size where a file is split.</comment>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>Cancel send</value>
+    <comment>While a send waits for the network and the person can stop it. The engine's own line comes first.</comment>
+  </data>
+  <data name="SendReady_one" xml:space="preserve">
+    <value>One file is ready.</value>
+    <comment>When the files are ready, over the button that opens the share sheet. The count is how many files.</comment>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n} files are ready.</value>
+    <comment>When the files are ready, over the button that opens the share sheet. The count is how many files.</comment>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>Share again</value>
+    <comment>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</comment>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>Sending to the {device}</value>
+    <comment>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</comment>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>Fixed-layout EPUB</value>
+    <comment>The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.</comment>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+    <comment>The format of the files an e-reader is sent: the Kobo form of EPUB.</comment>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+    <comment>The format of the files an e-reader is sent: a plain EPUB.</comment>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+    <comment>The format of the files an e-reader is sent: a comic book archive.</comment>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+    <comment>Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.</comment>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>Where did you stop?</value>
+    <comment>Title of the sheet that asks where you stopped reading on the e-reader.</comment>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>You sent chapters to the {device}. Where did you stop?</value>
+    <comment>Note on a series page after chapters were sent: opens the question.</comment>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>Set my place</value>
+    <comment>Button in that note.</comment>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>Chapter {chapter} went to the {device} on {date}.</value>
+    <comment>First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").</comment>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>Chapters {first} to {last} went to the {device} on {date}.</value>
+    <comment>First line of the sheet when several chapters were sent, from the first to the last.</comment>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>I finished chapter {chapter}</value>
+    <comment>Switch in the sheet: the last chapter sent was read to its end.</comment>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>Set my place</value>
+    <comment>The main button of the sheet: keeps the chapter chosen as the place.</comment>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>Keep chapter {chapter} · page {page}</value>
+    <comment>The other button of the sheet: leaves the place as it is, with the place named.</comment>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>Keep my place</value>
+    <comment>The other button of the sheet when the place is not a page.</comment>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>E-readers</value>
+    <comment>Heading of the E-readers group in the Reading settings.</comment>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>Send to e-reader</value>
+    <comment>Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.</comment>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>OPDS feed</value>
+    <comment>Row in the E-readers group that opens the feed settings. The value is On or Off.</comment>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>An OPDS catalogue e-readers at home can browse</value>
+    <comment>Line under the Share on this network switch.</comment>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>Only while Kaeri is open on this {device}. Progress on those e-readers stays there.</value>
+    <comment>Footnote under the feed settings.</comment>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>Address</value>
+    <comment>Row in the feed settings: the web address e-readers are given, with a button that copies it.</comment>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>Turn the feed on to get its address.</value>
+    <comment>Shown in place of the address while the feed is off or has no password.</comment>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>Password</value>
+    <comment>Row in the feed settings: the password e-readers ask for.</comment>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>E-readers ask for it once</value>
+    <comment>Line under the password row.</comment>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>New password</value>
+    <comment>Button in the feed settings that makes a new password. The e-readers ask for the new one.</comment>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>Port</value>
+    <comment>Row in the feed settings: the port the feed listens on.</comment>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>Leave it empty to pick a free port</value>
+    <comment>Line under the port row when it is empty.</comment>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>Port {wanted} was busy, so the feed uses {port}.</value>
+    <comment>Line under the port row when the port asked for was taken and another is used.</comment>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>What it shares</value>
+    <comment>Heading of the group that picks what the feed shares.</comment>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>Downloads</value>
+    <comment>Row in What it shares: the chapters downloaded on this device.</comment>
+  </data>
+  <data name="OpdsShareDownloadsCount_one" xml:space="preserve">
+    <value>One chapter</value>
+    <comment>Line under that row.</comment>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n} chapters</value>
+    <comment>Line under that row.</comment>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>Manga folder</value>
+    <comment>Row in What it shares: the series in the manga and comic folders.</comment>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>Novel folder</value>
+    <comment>Row in What it shares: the series in the novel folders.</comment>
+  </data>
+  <data name="OpdsShareSeriesCount_one" xml:space="preserve">
+    <value>One series</value>
+    <comment>Line under a folder row.</comment>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n} series</value>
+    <comment>Line under a folder row.</comment>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>Fetched by</value>
+    <comment>Heading of the list of e-readers that fetched files from the feed.</comment>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>No e-reader has fetched anything yet.</value>
+    <comment>Line when no e-reader has fetched anything since the feed started.</comment>
+  </data>
+  <data name="OpdsFetchedFiles_one" xml:space="preserve">
+    <value>One file</value>
+    <comment>Line under an e-reader in that list: how many files it took.</comment>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n} files</value>
+    <comment>Line under an e-reader in that list: how many files it took.</comment>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>E-reader at {address}</value>
+    <comment>Name for an e-reader that did not give one.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>
