@@ -1708,6 +1708,9 @@ linux-reader-novel-unavailable = [Ñöṽéļš çàñ'ţ öþéñ ĥéŕé~~~~~
 # Line under it: what a novel needs on this computer.
 linux-reader-novel-needs-webkit = [Ñöṽéļš ñééð ŴéƀĶîţĜŢĶ 6 ŵîţĥ îţš šàñðƀöẋ ŵöŕķîñĝ.~~~~~~~~~~~~~~~]
 
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = [Þàĝé { $page } öƒ { $pages }~~~~~]
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = [Þŕéṽîéŵ~~~]
 

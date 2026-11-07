@@ -2,8 +2,10 @@
 //! view. The engine opens the chapter, prepares the pages and keeps the place; this shows the
 //! page files it names, turns them on the person's say, and reports what was seen.
 //!
-//! It sits over the window like the player does: Escape closes it, the toolbar is out of the
-//! way until the pointer moves or a key is pressed.
+//! It sits over the window like the player does: Escape closes it. The chrome, a header over the
+//! page and the group at its foot with the scrubber, is out of the way until the pointer moves or
+//! the middle of the page is clicked; it leaves 2 s after the pointer stops, on the next click in
+//! the middle, or on a turn by key.
 
 use std::{
     cell::{Cell, RefCell},
@@ -30,8 +32,16 @@ use kaeri_model::{
     reading::ChapterRow,
 };
 
-use super::{listen, novel::NovelView};
+use super::{
+    listen,
+    novel::{NovelSays, NovelView},
+};
 use crate::{motion, say, window::Ctx};
+
+/// The chrome leaves this long after the pointer stops.
+const CHROME_REST: Duration = Duration::from_secs(2);
+/// The group's width on a wide window (the reader board's Linux frame).
+const GROUP_WIDTH: i32 = 640;
 
 /// Nothing for this long, then the loading line.
 const SILENT: Duration = Duration::from_millis(600);
@@ -74,9 +84,22 @@ pub struct Reader {
     strip: gtk::Box,
     strip_scroll: gtk::ScrolledWindow,
     status: adw::StatusPage,
-    toolbar: gtk::Revealer,
+    /// The header over the page and the group at its foot: they come and go together.
+    head: adw::HeaderBar,
+    group: gtk::Box,
+    head_fade: motion::Fader,
+    group_fade: motion::Fader,
+    /// The pointer over the group keeps the chrome.
+    group_hover: gtk::EventControllerMotion,
+    /// The chrome stays: a shot's.
+    pinned: Cell<bool>,
     title: gtk::Label,
-    counter: gtk::Label,
+    group_title: gtk::Label,
+    line: gtk::Label,
+    scrub: gtk::Scale,
+    scrub_at: gtk::Label,
+    scrub_total: gtk::Label,
+    scrub_timer: RefCell<Option<glib::SourceId>>,
     settings: gtk::MenuButton,
     loading: gtk::Label,
     loading_since: Cell<Option<Instant>>,
@@ -117,31 +140,76 @@ impl Reader {
         stack.add_named(&status, Some("status"));
         stack.add_css_class("reader-ground");
 
+        // The header: back to the series and the series' name, with the window's buttons.
         let title = gtk::Label::new(None);
         title.add_css_class("heading");
         title.set_ellipsize(gtk::pango::EllipsizeMode::End);
-        let counter = gtk::Label::new(None);
-        counter.add_css_class("numeric");
-        counter.add_css_class("haze");
         let close = gtk::Button::from_icon_name("go-previous-symbolic");
         close.set_tooltip_text(Some(&t::reader_close()));
         close.update_property(&[gtk::accessible::Property::Label(&t::reader_close())]);
-        let settings = gtk::MenuButton::builder().icon_name("emblem-system-symbolic").build();
+        let head = adw::HeaderBar::new();
+        head.add_css_class("flat");
+        head.add_css_class("reader-head");
+        head.pack_start(&close);
+        head.set_title_widget(Some(&title));
+        head.set_valign(gtk::Align::Start);
+
+        // The group: the scrubber with the place at its start and the length at its end, then
+        // the series and chapter, Aa and full screen.
+        let scrub_at = gtk::Label::new(None);
+        let scrub_total = gtk::Label::new(None);
+        for label in [&scrub_at, &scrub_total] {
+            label.add_css_class("numeric");
+            label.add_css_class("caption");
+            label.add_css_class("haze");
+            label.set_width_chars(3);
+        }
+        scrub_at.set_xalign(1.0);
+        scrub_total.set_xalign(0.0);
+        let scrub = gtk::Scale::with_range(gtk::Orientation::Horizontal, 1.0, 2.0, 1.0);
+        scrub.set_draw_value(false);
+        scrub.set_round_digits(0);
+        scrub.set_hexpand(true);
+        scrub.add_css_class("reader-scrub");
+        let scrub_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+        scrub_row.add_css_class("reader-scrub-row");
+        scrub_row.append(&scrub_at);
+        scrub_row.append(&scrub);
+        scrub_row.append(&scrub_total);
+
+        let group_title = gtk::Label::new(None);
+        group_title.add_css_class("reader-group-title");
+        let line = gtk::Label::new(None);
+        line.add_css_class("reader-group-line");
+        for label in [&group_title, &line] {
+            label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+            label.set_max_width_chars(1);
+            label.set_hexpand(true);
+        }
+        let names = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        names.set_valign(gtk::Align::Center);
+        names.append(&group_title);
+        names.append(&line);
+        let settings = gtk::MenuButton::builder().icon_name("kaeri-text-look-symbolic").build();
         settings.set_tooltip_text(Some(&t::linux_reader_settings_open()));
-        settings.set_direction(gtk::ArrowType::Down);
-        let chapters = gtk::Button::from_icon_name("view-list-symbolic");
-        chapters.set_tooltip_text(Some(&t::reader_chapters()));
-        let bar = adw::HeaderBar::new();
-        bar.add_css_class("flat");
-        bar.pack_start(&close);
-        bar.pack_end(&settings);
-        bar.pack_end(&counter);
-        bar.set_title_widget(Some(&title));
-        let toolbar = gtk::Revealer::new();
-        toolbar.set_transition_type(gtk::RevealerTransitionType::Crossfade);
-        toolbar.set_valign(gtk::Align::Start);
-        toolbar.set_child(Some(&bar));
-        toolbar.set_reveal_child(true);
+        settings.set_direction(gtk::ArrowType::Up);
+        let full = gtk::Button::from_icon_name("view-fullscreen-symbolic");
+        full.set_tooltip_text(Some(&t::player_fullscreen()));
+        let ends = gtk::Box::new(gtk::Orientation::Horizontal, 2);
+        ends.append(&settings);
+        ends.append(&full);
+        // The names sit in the middle of the group, whatever is at its ends.
+        let row = gtk::CenterBox::new();
+        row.set_center_widget(Some(&names));
+        row.set_end_widget(Some(&ends));
+        let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
+        group.add_css_class("reader-group");
+        group.append(&scrub_row);
+        group.append(&row);
+        group.set_halign(gtk::Align::Center);
+        group.set_valign(gtk::Align::End);
+        group.set_margin_bottom(16);
+        group.set_width_request(GROUP_WIDTH);
 
         let loading = gtk::Label::new(None);
         loading.add_css_class("osd");
@@ -154,11 +222,11 @@ impl Reader {
 
         let widget = gtk::Overlay::new();
         widget.set_child(Some(&stack));
-        widget.add_overlay(&toolbar);
+        widget.add_overlay(&head);
+        widget.add_overlay(&group);
         widget.add_overlay(&loading);
         widget.set_focusable(true);
-
-        let _ = chapters;
+        widget.add_css_class("reader");
         let this = Rc::new(Self {
             widget,
             ctx: Rc::downgrade(ctx),
@@ -170,9 +238,19 @@ impl Reader {
             strip,
             strip_scroll,
             status,
-            toolbar,
+            head,
+            group,
+            head_fade: motion::Fader::always(),
+            group_fade: motion::Fader::always(),
+            group_hover: gtk::EventControllerMotion::new(),
+            pinned: Cell::new(false),
             title,
-            counter,
+            group_title,
+            line,
+            scrub,
+            scrub_at,
+            scrub_total,
+            scrub_timer: RefCell::default(),
             settings,
             loading,
             loading_since: Cell::new(None),
@@ -187,6 +265,24 @@ impl Reader {
                 if let Some(this) = this.upgrade() {
                     this.close();
                 }
+            }
+        });
+        full.connect_clicked({
+            let ctx = Rc::downgrade(ctx);
+            move |_| {
+                if let Some(ctx) = ctx.upgrade() {
+                    let window = &ctx.window;
+                    window.set_fullscreened(!window.is_fullscreen());
+                }
+            }
+        });
+        this.scrub.connect_change_value({
+            let this = Rc::downgrade(&this);
+            move |_, _, value| {
+                if let Some(this) = this.upgrade() {
+                    this.scrubbed(value);
+                }
+                glib::Propagation::Proceed
             }
         });
         this.controls();
@@ -239,7 +335,7 @@ impl Reader {
             chapter,
             surface: self.surface(),
         });
-        self.reveal_toolbar();
+        self.reveal_chrome();
     }
 
     fn reset(&self) {
@@ -253,7 +349,9 @@ impl Reader {
             self.stack.remove(&novel.widget);
         }
         self.title.set_label("");
-        self.counter.set_label("");
+        self.group_title.set_label("");
+        self.line.set_label("");
+        self.progress(0, 0);
     }
 
     /// Set a reader setting for the shots, on the medium's own value. A choice or `on`/`off`.
@@ -396,7 +494,13 @@ impl Reader {
             state.asked.clear();
             state.index = 0;
         }
-        self.title.set_label(&format!("{} \u{b7} {}", view.title, view.chapter.label));
+        self.title.set_label(&view.title);
+        self.group_title.set_label(&view.title);
+        self.line.set_label(&view.chapter.label);
+        // The scrubber runs with the book: right to left fills from the right. A strip runs
+        // top to bottom and fills from the left.
+        let rtl = view.direction == ReadDirection::RightToLeft;
+        self.scrub.set_inverted(rtl && (view.medium == Medium::Novel || !view.mode.flows()));
         self.settings.set_popover(Some(&self.settings_popover()));
         self.apply_look();
         if view.medium == Medium::Novel {
@@ -607,7 +711,7 @@ impl Reader {
         self.stack.set_visible_child_name("paged");
         motion::crossfade_in(&self.picture);
         let total = self.state.borrow().leaves.len();
-        self.counter.set_label(&format!("{} / {total}", index + 1)); // i18n-skip
+        self.progress(index, total);
         let (session, chapter) = {
             let state = self.state.borrow();
             (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
@@ -739,35 +843,34 @@ impl Reader {
         self.scroll_to_leaf(index);
     }
 
-    /// Scroll the strip to a leaf once the layout has room for it.
+    /// Scroll the strip to a leaf once the layout has room for it, and into it as far as the
+    /// place says when it is the image the place was left in, the first one included.
     fn scroll_to_leaf(&self, index: usize) {
-        let adj = self.strip_scroll.vadjustment();
         let target = {
             let state = self.state.borrow();
-            let spacing = self.strip.spacing();
-            let above: i32 = state
-                .strip_frames
-                .iter()
-                .take(index)
-                .map(|(p, _)| p.height_request() + spacing)
-                .sum();
-            // Into the image as far as it was left, the first time only.
-            let into = state
+            let heights: Vec<i32> =
+                state.strip_frames.iter().map(|(p, _)| p.height_request()).collect();
+            let offset = state
                 .start_strip
                 .as_ref()
                 .filter(|s| s.image as usize == index)
-                .zip(state.strip_frames.get(index))
-                .map_or(0.0, |(s, (p, _))| f64::from(s.offset) * f64::from(p.height_request()));
-            f64::from(above) + into
+                .map(|s| s.offset);
+            strip_target(&heights, self.strip.spacing(), index, offset)
         };
-        if index == 0 {
+        self.scroll_strip_to(target);
+    }
+
+    /// Scroll the strip to `target` once the layout reaches that far.
+    fn scroll_strip_to(&self, target: f64) {
+        let adj = self.strip_scroll.vadjustment();
+        if target <= 0.0 {
             adj.set_value(adj.lower());
             return;
         }
         let frames = Cell::new(0);
         self.strip_scroll.add_tick_callback(move |_, _| {
             frames.set(frames.get() + 1);
-            if adj.upper() > target || frames.get() > 30 {
+            if adj.upper() - adj.page_size() >= target || frames.get() > 30 {
                 adj.set_value(target.min(adj.upper() - adj.page_size()));
                 return glib::ControlFlow::Break;
             }
@@ -851,11 +954,8 @@ impl Reader {
         for i in wanted {
             self.want_strip(i);
         }
-        self.counter.set_label(&format!(
-            "{} / {}",
-            here.0 + 1,
-            self.state.borrow().leaves.len()
-        ));
+        let total = self.state.borrow().leaves.len();
+        self.progress(here.0, total);
         if let Some(id) = self.strip_timer.borrow_mut().take() {
             id.remove();
         }
@@ -905,15 +1005,20 @@ impl Reader {
                 hub.send(Command::Reader(command));
             }
         });
-        let ended: Rc<dyn Fn()> = {
+        let tell: Rc<dyn Fn(NovelSays)> = {
             let this = Rc::downgrade(self);
-            Rc::new(move || {
-                if let Some(this) = this.upgrade() {
-                    this.end_of_chapter();
+            Rc::new(move |says| {
+                let Some(this) = this.upgrade() else { return };
+                match says {
+                    NovelSays::Page { page, pages } => {
+                        this.progress(page as usize, pages as usize);
+                    }
+                    NovelSays::Middle => this.toggle_chrome(),
+                    NovelSays::End => this.end_of_chapter(),
                 }
             })
         };
-        match NovelView::new(&ctx, open, sender, ended) {
+        match NovelView::new(&ctx, open, sender, tell) {
             Ok(novel) => {
                 self.stack.add_named(&novel.widget, Some("novel"));
                 self.stack.set_visible_child_name("novel");
@@ -961,6 +1066,14 @@ impl Reader {
 
     /// What the settings change on screen: the ground behind the pages, the fit and the strip.
     fn apply_look(&self) {
+        // Dark keeps the app's dark tokens; Paper, Light and Sepia put the chrome on the light
+        // ones (the reader board). System follows the app, which is dark.
+        let light = chrome_is_light(self.choice(ReaderSettingKey::Look).as_deref());
+        if light {
+            self.widget.add_css_class("reader-light");
+        } else {
+            self.widget.remove_css_class("reader-light");
+        }
         let manga = self.state.borrow().medium == Some(Medium::Manga);
         let ground = if manga { self.choice(ReaderSettingKey::Background) } else { None };
         for view in
@@ -1140,20 +1253,116 @@ impl Reader {
     // ---------------------------------------------------------------------------------------
     // Controls
 
-    fn reveal_toolbar(self: &Rc<Self>) {
-        self.toolbar.set_reveal_child(true);
+    /// Bring the chrome, and take it away again `CHROME_REST` after the last call: the pointer
+    /// moving calls this as it moves. It stays while the settings are open, the pointer is over
+    /// the group or a shot pinned it.
+    fn reveal_chrome(self: &Rc<Self>) {
+        self.head_fade.set(&self.head, true);
+        self.group_fade.set(&self.group, true);
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
         }
         let this = Rc::downgrade(self);
-        let id = glib::timeout_add_local_once(Duration::from_secs(3), move || {
+        let id = glib::timeout_add_local_once(CHROME_REST, move || {
             let Some(this) = this.upgrade() else { return };
             this.hide_timer.borrow_mut().take();
-            if !this.settings.is_active() {
-                this.toolbar.set_reveal_child(false);
+            if this.settings.is_active() || this.group_hovered() || this.pinned.get() {
+                this.reveal_chrome();
+                return;
             }
+            this.hide_chrome();
         });
         *self.hide_timer.borrow_mut() = Some(id);
+    }
+
+    fn hide_chrome(&self) {
+        if let Some(id) = self.hide_timer.borrow_mut().take() {
+            id.remove();
+        }
+        if self.pinned.get() {
+            return;
+        }
+        self.head_fade.set(&self.head, false);
+        self.group_fade.set(&self.group, false);
+    }
+
+    /// A click in the middle of the page: the chrome comes, and the next one takes it away.
+    fn toggle_chrome(self: &Rc<Self>) {
+        if self.head_fade.shown() {
+            self.hide_chrome();
+        } else {
+            self.reveal_chrome();
+        }
+    }
+
+    fn group_hovered(&self) -> bool {
+        self.group_hover.contains_pointer()
+    }
+
+    /// Keep the chrome up for a shot, as the board draws it.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_chrome(self: &Rc<Self>, pinned: bool) {
+        self.pinned.set(pinned);
+        if pinned {
+            self.reveal_chrome();
+        }
+    }
+
+    /// Where the place is, for the scrubber: `index` from 0 of `total`.
+    fn progress(&self, index: usize, total: usize) {
+        let total = total.max(1);
+        let at = (index + 1).min(total);
+        self.scrub.set_range(1.0, total.max(2) as f64);
+        self.scrub.set_sensitive(total > 1);
+        if self.scrub_timer.borrow().is_none() {
+            self.scrub.set_value(at as f64);
+            self.scrub_at.set_label(&at.to_string());
+        }
+        self.scrub_total.set_label(&total.to_string());
+        let said = t::linux_reader_page_of(at as i64, total as i64);
+        self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
+    }
+
+    /// The scrubber dragged or keyed to `value`: the number follows at once, the page once the
+    /// thumb rests.
+    fn scrubbed(self: &Rc<Self>, value: f64) {
+        let (lower, upper) = (self.scrub.adjustment().lower(), self.scrub.adjustment().upper());
+        let at = value.round().clamp(lower, upper) as usize;
+        self.scrub_at.set_label(&at.to_string());
+        self.reveal_chrome();
+        if let Some(id) = self.scrub_timer.borrow_mut().take() {
+            id.remove();
+        }
+        let this = Rc::downgrade(self);
+        let id = glib::timeout_add_local_once(Duration::from_millis(250), move || {
+            let Some(this) = this.upgrade() else { return };
+            this.scrub_timer.borrow_mut().take();
+            this.jump_to(at.saturating_sub(1));
+        });
+        *self.scrub_timer.borrow_mut() = Some(id);
+    }
+
+    /// Go to the scrubber's place: a leaf, a strip image or a novel's page, from 0.
+    fn jump_to(self: &Rc<Self>, index: usize) {
+        let (medium, flows) = {
+            let state = self.state.borrow();
+            (state.medium, state.mode.is_some_and(ReaderMode::flows))
+        };
+        if medium == Some(Medium::Novel) {
+            if let Some(novel) = self.novel.borrow().clone() {
+                novel.go_to(index as u32);
+            }
+        } else if flows {
+            let target = {
+                let state = self.state.borrow();
+                let heights: Vec<i32> =
+                    state.strip_frames.iter().map(|(p, _)| p.height_request()).collect();
+                strip_target(&heights, self.strip.spacing(), index, None)
+            };
+            self.scroll_strip_to(target);
+        } else {
+            self.show_leaf(index, TurnHow::Jump);
+        }
     }
 
     /// What the controller is pointed at: the page, or the settings while they are open.
@@ -1172,15 +1381,9 @@ impl Reader {
             ReaderPad::Turn(Direction::Up) => self.turn(false, TurnHow::Key),
             ReaderPad::Turn(Direction::Down) => self.turn(true, TurnHow::Key),
             ReaderPad::Chapter(by) => self.step_chapter(by),
-            ReaderPad::Bar => {
-                if self.toolbar.reveals_child() {
-                    self.hide_toolbar();
-                } else {
-                    self.reveal_toolbar();
-                }
-            }
+            ReaderPad::Bar => self.toggle_chrome(),
             ReaderPad::Settings => {
-                self.reveal_toolbar();
+                self.reveal_chrome();
                 self.settings.popup();
             }
             ReaderPad::Close => self.close(),
@@ -1199,13 +1402,6 @@ impl Reader {
         {
             self.send(ReaderCommand::OpenChapter { session, chapter: chapter.id });
         }
-    }
-
-    fn hide_toolbar(&self) {
-        if let Some(id) = self.hide_timer.borrow_mut().take() {
-            id.remove();
-        }
-        self.toolbar.set_reveal_child(false);
     }
 
     fn rtl(&self) -> bool {
@@ -1234,13 +1430,13 @@ impl Reader {
                     }
                     _ => return glib::Propagation::Proceed,
                 }
-                this.reveal_toolbar();
+                this.hide_chrome();
                 glib::Propagation::Stop
             }
         });
         self.widget.add_controller(keys);
 
-        // Tap zones: the outer thirds turn, the middle brings the toolbar.
+        // Tap zones: the outer thirds turn, the middle brings the chrome or takes it away.
         let click = gtk::GestureClick::new();
         click.set_button(gdk::BUTTON_PRIMARY);
         click.connect_released({
@@ -1248,7 +1444,7 @@ impl Reader {
             move |gesture, _, x, _| {
                 let Some(this) = this.upgrade() else { return };
                 if this.stack.visible_child_name().as_deref() != Some("paged") {
-                    this.reveal_toolbar();
+                    this.reveal_chrome();
                     return;
                 }
                 let width = f64::from(this.widget.width().max(1));
@@ -1258,7 +1454,7 @@ impl Reader {
                 } else if x > width * 2.0 / 3.0 {
                     this.turn(!rtl, TurnHow::Turn);
                 } else {
-                    this.reveal_toolbar();
+                    this.toggle_chrome();
                 }
                 gesture.set_state(gtk::EventSequenceState::Claimed);
             }
@@ -1269,14 +1465,13 @@ impl Reader {
         moved.connect_motion({
             let this = Rc::downgrade(self);
             move |_, _, _| {
-                if let Some(this) = this.upgrade()
-                    && !this.toolbar.reveals_child()
-                {
-                    this.reveal_toolbar();
+                if let Some(this) = this.upgrade() {
+                    this.reveal_chrome();
                 }
             }
         });
         self.widget.add_controller(moved);
+        self.group.add_controller(self.group_hover.clone());
 
         self.strip_scroll.vadjustment().connect_value_changed({
             let this = Rc::downgrade(self);
@@ -1317,6 +1512,7 @@ impl Reader {
                 if let Some(this) = this.upgrade() {
                     this.apply_fit();
                     this.size_strip();
+                    this.group.set_width_request(GROUP_WIDTH.min(size.0 - 32).max(240));
                 }
                 if let Some(id) = pending.borrow_mut().take() {
                     id.remove();
@@ -1417,5 +1613,56 @@ fn choice_label(name: &str) -> String {
         "black" => t::reader_background_black(),
         "white" => t::reader_background_white(),
         other => other.to_owned(),
+    }
+}
+
+/// Whether a look puts the chrome on the light tokens.
+fn chrome_is_light(look: Option<&str>) -> bool {
+    matches!(look, Some("paper" | "light" | "sepia"))
+}
+
+/// How far down the strip a place sits: the images above `index` with their gaps, and `offset`
+/// of that image's height into it.
+fn strip_target(heights: &[i32], spacing: i32, index: usize, offset: Option<f32>) -> f64 {
+    let above: i32 = heights.iter().take(index).map(|h| h + spacing).sum();
+    let into = offset
+        .zip(heights.get(index))
+        .map_or(0.0, |(o, h)| f64::from(o.clamp(0.0, 1.0)) * f64::from(*h));
+    f64::from(above) + into
+}
+
+#[cfg(test)]
+mod strip_tests {
+    use super::strip_target;
+
+    #[test]
+    fn the_offset_counts_on_the_first_image() {
+        assert_eq!(strip_target(&[1000, 800], 8, 0, Some(0.35)), 350.0);
+        assert_eq!(strip_target(&[1000, 800], 8, 0, None), 0.0);
+    }
+
+    #[test]
+    fn the_offset_counts_on_a_later_image() {
+        // Two images and their gaps above, then half of the third.
+        assert_eq!(strip_target(&[1000, 800, 600], 8, 2, Some(0.5)), 1816.0 + 300.0);
+        assert_eq!(strip_target(&[1000, 800, 600], 0, 1, None), 1000.0);
+    }
+
+    #[test]
+    fn light_looks_put_the_chrome_on_light_tokens() {
+        use super::chrome_is_light;
+        for look in ["paper", "light", "sepia"] {
+            assert!(chrome_is_light(Some(look)), "{look}");
+        }
+        for look in [Some("dark"), Some("system"), None] {
+            assert!(!chrome_is_light(look), "{look:?}");
+        }
+    }
+
+    #[test]
+    fn an_offset_out_of_range_stays_in_its_image() {
+        assert_eq!(strip_target(&[1000], 0, 0, Some(1.7)), 1000.0);
+        assert_eq!(strip_target(&[1000], 0, 0, Some(-0.2)), 0.0);
+        assert_eq!(strip_target(&[], 0, 3, Some(0.5)), 0.0);
     }
 }

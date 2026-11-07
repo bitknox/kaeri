@@ -93,8 +93,11 @@ const CAST: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 /// A die showing five: Surprise me and Another, as on every other platform.
 const DICE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#222" fill-rule="evenodd" d="M4 1.5h8A2.5 2.5 0 0 1 14.5 4v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 12V4A2.5 2.5 0 0 1 4 1.5zm0 1.25A1.25 1.25 0 0 0 2.75 4v8A1.25 1.25 0 0 0 4 13.25h8A1.25 1.25 0 0 0 13.25 12V4A1.25 1.25 0 0 0 12 2.75z"/><g fill="#222"><circle cx="5.25" cy="5.25" r="1.1"/><circle cx="10.75" cy="5.25" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="5.25" cy="10.75" r="1.1"/><circle cx="10.75" cy="10.75" r="1.1"/></g></svg>"##; // i18n-skip
 
+/// A large A and a small a: the reader's Aa, its settings for the page and the text.
+const TEXT_LOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 13.5 5.25 2.5 9 13.5M2.9 9.6h4.7"/><circle cx="12" cy="11" r="2.3"/><path d="M14.3 8.4v5.1"/></svg>"##; // i18n-skip
+
 /// The icons the app draws itself, in the cache's own theme folder: the mini player's, the
-/// people button's, the cast screen's and the die.
+/// people button's, the cast screen's, the die and the reader's Aa.
 pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
     let root = cache.join("icons");
     let dir = root.join("hicolor/scalable/actions");
@@ -103,6 +106,7 @@ pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
         ("kaeri-party-symbolic", PARTY),
         ("kaeri-cast-symbolic", CAST),
         ("kaeri-dice-symbolic", DICE),
+        ("kaeri-text-look-symbolic", TEXT_LOOK),
     ]
     .iter()
     .all(|(name, svg)| {

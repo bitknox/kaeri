@@ -156,3 +156,10 @@ linux-reader-novel-unavailable = Novels can't open here
 # @only linux
 # @max 80
 linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox working.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+# @only linux
+# @max 40
+# @arg page: int
+# @arg pages: int
+linux-reader-page-of = Page { $page } of { $pages }

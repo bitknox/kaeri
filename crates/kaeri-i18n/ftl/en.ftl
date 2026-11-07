@@ -1708,6 +1708,9 @@ linux-reader-novel-unavailable = Novels can't open here
 # Line under it: what a novel needs on this computer.
 linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox working.
 
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Page { $page } of { $pages }
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
 

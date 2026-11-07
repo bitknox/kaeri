@@ -218,7 +218,17 @@ pub struct NovelView {
     session: u64,
     chapter: ChapterId,
     spine: Vec<(String, bool)>,
-    on_end: Rc<dyn Fn()>,
+    tell: Rc<dyn Fn(NovelSays)>,
+}
+
+/// What the novel tells the reader around it.
+pub enum NovelSays {
+    /// The page showing and the document's length in pages, for the scrubber.
+    Page { page: u32, pages: u32 },
+    /// A tap in the middle third: the chrome comes or goes.
+    Middle,
+    /// Past the last page of the last document.
+    End,
 }
 
 impl NovelView {
@@ -226,7 +236,7 @@ impl NovelView {
         ctx: &Rc<Ctx>,
         open: &NovelOpenView,
         send: Rc<dyn Fn(ReaderCommand)>,
-        on_end: Rc<dyn Fn()>,
+        tell: Rc<dyn Fn(NovelSays)>,
     ) -> Result<Rc<Self>, String> {
         if !crate::trailer::webkit::available() {
             return Err("WebKitGTK 6 is not available".to_owned()); // i18n-skip
@@ -284,7 +294,7 @@ impl NovelView {
             session: open.session,
             chapter: open.chapter.clone(),
             spine: open.spine.iter().map(|i| (i.url.clone(), i.linear)).collect(),
-            on_end,
+            tell,
         });
         let read = api.value_string;
         content.connect_local("script-message-received::kaeri", false, {
@@ -351,6 +361,11 @@ impl NovelView {
         }
     }
 
+    /// Show a page of the document, from the scrubber: 0 is the first.
+    pub fn go_to(&self, page: u32) {
+        self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
+    }
+
     pub fn turn(&self, forward: bool) {
         self.call(&format!(
             "window.kaeriReader && window.kaeriReader.{}('key')", // i18n-skip
@@ -392,6 +407,18 @@ impl NovelView {
                     pages: pages.max(1) as u32,
                     how,
                 });
+                (self.tell)(NovelSays::Page { page: page as u32, pages: pages.max(1) as u32 });
+            }
+            // Laid out again for new settings or a new size: the scrubber's length changes.
+            Some("layout") => {
+                if let (Some(page), Some(pages)) =
+                    (json["page"].as_u64(), json["pages"].as_u64())
+                {
+                    (self.tell)(NovelSays::Page {
+                        page: page as u32,
+                        pages: pages.max(1) as u32,
+                    });
+                }
             }
             Some("key") => match json["key"].as_str() {
                 Some("ArrowRight") => self.turn(!rtl), // i18n-skip
@@ -406,6 +433,8 @@ impl NovelView {
                         self.turn(rtl);
                     } else if x > 0.67 {
                         self.turn(!rtl);
+                    } else {
+                        (self.tell)(NovelSays::Middle);
                     }
                 }
             }
@@ -414,7 +443,7 @@ impl NovelView {
                 let at = self.current();
                 match at.and_then(|at| (at + 1..self.spine.len()).find(|&i| self.spine[i].1)) {
                     Some(next) => self.load(&self.spine[next].0.clone()),
-                    None => (self.on_end)(),
+                    None => (self.tell)(NovelSays::End),
                 }
             }
             Some("start") => {

@@ -32,6 +32,7 @@ pub const NAMES: [&str; 21] = [
     "read-strip-light",
     "read-novel",
     "read-novel-light",
+    "read-novel-paper",
     "read-send",
 ];
 
@@ -146,14 +147,32 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             4.0
         }
+        // The novel in each look the board draws, with the chrome up: the theme's (dark), Light,
+        // and Paper with Aa open.
         "read-novel" => {
+            shell.reader.shot_setting(ReaderSettingKey::Look, "system");
             read(shell, NOVEL, "3");
+            shell.reader.shot_chrome(true);
             7.0
         }
         "read-novel-light" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "light");
             read(shell, NOVEL, "3");
+            shell.reader.shot_chrome(true);
             7.0
+        }
+        "read-novel-paper" => {
+            shell.reader.shot_setting(ReaderSettingKey::Look, "paper");
+            read(shell, NOVEL, "3");
+            shell.reader.shot_chrome(true);
+            let reader = Rc::clone(&shell.reader);
+            gtk::glib::timeout_add_local_once(
+                std::time::Duration::from_millis(5000),
+                move || {
+                    reader.pad(kaeri_model::input::ReaderPad::Settings);
+                },
+            );
+            7.5
         }
         "read-send" => {
             series(shell, MANGA);
@@ -172,6 +191,7 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
     if let Some(dialog) = shell.ctx.window.visible_dialog() {
         dialog.force_close();
     }
+    shell.reader.shot_chrome(false);
     shell.reader.close();
     // Settings go back to the defaults the next shot expects.
     shell.reader.shot_setting(ReaderSettingKey::Background, "theme");

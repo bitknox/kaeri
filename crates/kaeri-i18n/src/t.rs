@@ -2635,6 +2635,11 @@ pub fn linux_reader_novel_needs_webkit() -> String {
     text("linux-reader-novel-needs-webkit", &[])
 }
 
+/// The reader's scrubber as a screen reader says it: the page showing and how many there are.
+pub fn linux_reader_page_of(page: i64, pages: i64) -> String {
+    text("linux-reader-page-of", &[("page", Arg::Int(page)), ("pages", Arg::Int(pages))])
+}
+
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 pub fn settings_preview() -> String {
     text("settings-preview", &[])
