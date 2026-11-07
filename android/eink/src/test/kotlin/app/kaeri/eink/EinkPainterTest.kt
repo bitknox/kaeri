@@ -5,10 +5,15 @@ package app.kaeri.eink
 
 import android.view.View
 import app.kaeri.engine.ffi.einkPolicyDefaults
+import app.kaeri.engine.model.EinkMatch
 import app.kaeri.engine.model.EinkPaint
 import app.kaeri.engine.model.EinkPanel
+import app.kaeri.engine.model.EinkProfile
+import app.kaeri.engine.model.NovelSupport
 import app.kaeri.engine.model.Refresh
+import app.kaeri.engine.model.VendorFamily
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,5 +67,31 @@ class EinkPainterTest {
         assertTrue(painter.counter.partials > 0u)
         painter.policy = painter.policy.copy(textEvery = 3u)
         assertEquals(0u, painter.counter.partials)
+    }
+
+    @Test
+    fun a_profile_brings_its_vendors_refresh_and_the_persons_settings() {
+        val asked = mutableListOf<VendorFamily>()
+        val fake = FakeRefresh()
+        val settings = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = false, textEvery = 2u)
+        val profile = EinkProfile(
+            eink = EinkMatch.SURE, panel = EinkPanel.GREY, ppi = 300u, family = VendorFamily.ONYX, refreshHook = true,
+            pageButtons = false, colourSure = true, novels = NovelSupport.FULL, policy = settings,
+        )
+        val painter = EinkPainter.forProfile(profile) { asked += it; fake }
+        assertEquals(listOf(VendorFamily.ONYX), asked)
+        assertEquals(settings, painter.policy)
+        // The person's settings: no full on an image page, a full every second text page, and
+        // each full reaches the vendor's call.
+        assertEquals(Refresh.PARTIAL, painter.paint(view, EinkPaint.ImagePage(colour = false)))
+        val text = List(4) { painter.paint(view, EinkPaint.TextPage) }
+        assertEquals(2, text.count { it == Refresh.FULL })
+        assertEquals(2, fake.requests.count { it.refresh == Refresh.FULL })
+
+        // Before the engine sends the settings, the panel's defaults; with no profile, no vendor.
+        val early = EinkPainter.forProfile(profile.copy(policy = null)) { fake }
+        assertEquals(einkPolicyDefaults(EinkPanel.GREY), early.policy)
+        assertEquals(Refresh.FULL, early.paint(view, EinkPaint.ImagePage(colour = false)))
+        assertSame(NoRefresh, EinkPainter.forProfile(null) { fake }.controller)
     }
 }

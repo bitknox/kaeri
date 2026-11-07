@@ -14,7 +14,7 @@
 use std::{
     collections::BTreeSet,
     sync::{Arc, RwLock},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use futures::future::join_all;
@@ -360,7 +360,8 @@ impl BookRegistry {
 
     /// Fetch page `index` of `pages`, which `source` named for `chapter` of `series`.
     ///
-    /// A page address that answers 403 or 410 has expired: the source is asked once more for the
+    /// A page that fails on the way (a dropped connection, a timeout, a busy server) is fetched
+    /// again after each of [`PAGE_RETRIES`]. A page address that answers 403 or 410 has expired: the source is asked once more for the
     /// chapter, `pages` is replaced with the fresh addresses, and the page is fetched again. A
     /// second refusal is the answer. `plain` fetches an address with the engine's own client,
     /// for a source that does not fetch its own pages.
@@ -378,13 +379,36 @@ impl BookRegistry {
     {
         let ChapterAt { source, series, chapter } = *at;
         let owner = self.get(source).ok_or(ProviderError::NotFound)?;
-        let fetch = |page: PageRef| {
+        let once = |page: PageRef| {
             let owner = owner.clone();
             let plain = &plain;
             async move {
                 match owner.fetch_page(&page).await {
                     Err(PageError::Unsupported) => plain(page).await,
                     other => other,
+                }
+            }
+        };
+        let fetch = |page: PageRef| {
+            let once = &once;
+            async move {
+                let mut waits = PAGE_RETRIES.iter();
+                loop {
+                    match once(page.clone()).await {
+                        Err(error) if error.transient() => match waits.next() {
+                            Some(wait) => {
+                                tracing::debug!(
+                                    source,
+                                    chapter,
+                                    ?error,
+                                    "a page failed on the way; trying again"
+                                );
+                                tokio::time::sleep(*wait).await;
+                            }
+                            None => return Err(error),
+                        },
+                        other => return other,
+                    }
                 }
             }
         };
@@ -419,6 +443,9 @@ impl BookRegistry {
         .await;
     }
 }
+
+/// The waits before a page that failed on the way is fetched again: two more tries.
+pub const PAGE_RETRIES: [Duration; 2] = [Duration::from_millis(500), Duration::from_secs(2)];
 
 fn page_failure(error: PageError) -> ProviderError {
     match error {
@@ -719,6 +746,92 @@ mod tests {
             .unwrap_err();
         assert_eq!(error, ProviderError::Blocked("page answered 403".into()));
         assert_eq!(inner.contents.load(Ordering::SeqCst), 1);
+    }
+
+    /// A source whose pages fail with `errors` in turn, then load.
+    struct Flaky {
+        inner: Arc<Fake>,
+        errors: Mutex<Vec<PageError>>,
+        fetched: AtomicU32,
+    }
+
+    #[async_trait]
+    impl BookSource for Flaky {
+        fn manifest(&self) -> &BookSourceManifest {
+            self.inner.manifest()
+        }
+        async fn search(
+            &self,
+            q: &str,
+            h: &BookHints,
+        ) -> Result<Vec<SeriesHit>, ProviderError> {
+            self.inner.search(q, h).await
+        }
+        async fn series(&self, i: &str, h: &BookHints) -> Result<SeriesDetail, ProviderError> {
+            self.inner.series(i, h).await
+        }
+        async fn chapters(
+            &self,
+            i: &str,
+            h: &BookHints,
+        ) -> Result<Vec<SourceChapter>, ProviderError> {
+            self.inner.chapters(i, h).await
+        }
+        async fn content(&self, s: &str, c: &str) -> Result<ChapterContent, ProviderError> {
+            self.inner.content(s, c).await
+        }
+        async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+            self.fetched.fetch_add(1, Ordering::SeqCst);
+            let mut errors = self.errors.lock().unwrap();
+            if errors.is_empty() {
+                Ok(page.url.clone().into_bytes())
+            } else {
+                Err(errors.remove(0))
+            }
+        }
+    }
+
+    async fn fetch_flaky(errors: Vec<PageError>) -> (Result<Vec<u8>, ProviderError>, u32) {
+        let flaky = Arc::new(Flaky {
+            inner: Fake::new("a", BookSourceKind::Plugin, &[]),
+            errors: Mutex::new(errors),
+            fetched: AtomicU32::new(0),
+        });
+        let registry = BookRegistry::new();
+        registry.put(flaky.clone());
+        let mut pages = vec![PageRef::new("https://pages.example/p1")];
+        let result = registry
+            .fetch_page(
+                &ChapterAt { source: "a", series: "s", chapter: "c" },
+                &mut pages,
+                0,
+                1,
+                |_| async { Err(PageError::Unsupported) },
+            )
+            .await;
+        (result, flaky.fetched.load(Ordering::SeqCst))
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_page_that_fails_on_the_way_is_fetched_again() {
+        let transport = || PageError::Failed(ProviderError::Transport("reset".into()));
+        let started = tokio::time::Instant::now();
+        let (result, fetched) = fetch_flaky(vec![transport(), PageError::Status(503)]).await;
+        assert_eq!(result.unwrap(), b"https://pages.example/p1");
+        assert_eq!(fetched, 3);
+        assert!(started.elapsed() >= PAGE_RETRIES[0] + PAGE_RETRIES[1]);
+
+        // Three failures in a row are the answer.
+        let (result, fetched) =
+            fetch_flaky(vec![PageError::Status(502), transport(), PageError::Status(429)])
+                .await;
+        assert_eq!(result.unwrap_err(), ProviderError::Blocked("page answered 429".into()));
+        assert_eq!(fetched, 3);
+
+        // A server that answered is believed at once.
+        let (result, fetched) = fetch_flaky(vec![PageError::Status(404)]).await;
+        assert_eq!(result.unwrap_err(), ProviderError::NotFound);
+        assert_eq!(fetched, 1);
     }
 
     #[tokio::test]

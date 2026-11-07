@@ -218,6 +218,10 @@
     <string name="reading_failed_needs_newer">Det här tillägg kräver en nyare Kaeri (%1$s). Uppdatera Kaeri för att använda det.</string>
     <string name="reading_failed_off">Läsning är inte tillgängligt i den här versionen av Kaeri.</string>
     <string name="reading_failed_other">Något gick fel. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s är %3$s, och %2$s tar emot filer upp till %4$s. Skicka färre kapitel åt gången och försök igen.</string>
+    <string name="reading_failed_send_missing">%1$s saknar %2$s, så filen skickades inte. Försök igen.</string>
+    <string name="reading_failed_send_encoding">%2$s i %1$s har fel textkodning, så filen skickades inte. Försök igen.</string>
+    <string name="reading_failed_send_malformed">%2$s i %1$s är inte giltig, så filen skickades inte. Försök igen.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -274,6 +278,7 @@
     <string name="reading_row_read">Läst</string>
     <string name="reading_row_new">Ny</string>
     <string name="reading_row_downloaded">Nedladdad</string>
+    <string name="reading_row_gone_from_source">Borttagen från källan</string>
     <string name="reading_row_not_downloaded">Inte nedladdad</string>
     <string name="reading_row_on_device">På den här enheten</string>
     <string name="reading_row_queued">I kö</string>
@@ -483,6 +488,7 @@
     <string name="cause_proxy_needs_address">En proxy behöver en värd och en port.</string>
     <string name="cause_proxy_address_unusable">Proxyns adress kan inte användas för en kontroll.</string>
     <string name="cause_server_unreachable">Det gick inte att nå servern.</string>
+    <string name="legal_hosts_no_content">Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</string>
     <string name="notice_saved">Sparade %1$s.</string>
     <string name="notice_not_saved">Det gick inte att spara inställningen. %1$s</string>
     <string name="notice_title_load_failed">Det gick inte att läsa in titeln. Kontrollera anslutningen och försök igen.</string>

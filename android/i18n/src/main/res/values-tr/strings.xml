@@ -218,6 +218,10 @@
     <string name="reading_failed_needs_newer">Bu eklenti, daha yeni bir Kaeri gerektiriyor (%1$s). Kullanmak için Kaeri uygulamasını güncelleyin.</string>
     <string name="reading_failed_off">Okuma, Kaeri uygulamasının bu yapısında kullanılamıyor.</string>
     <string name="reading_failed_other">Bir şeyler ters gitti. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s %3$s boyutunda, %2$s ise en fazla %4$s boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin.</string>
+    <string name="reading_failed_send_missing">%1$s içinde %2$s eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
+    <string name="reading_failed_send_encoding">%1$s içindeki %2$s yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
+    <string name="reading_failed_send_malformed">%1$s içindeki %2$s geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -274,6 +278,7 @@
     <string name="reading_row_read">Okundu</string>
     <string name="reading_row_new">Yeni</string>
     <string name="reading_row_downloaded">İndirildi</string>
+    <string name="reading_row_gone_from_source">Kaynak artık listelemiyor</string>
     <string name="reading_row_not_downloaded">İndirilmedi</string>
     <string name="reading_row_on_device">Bu cihazda</string>
     <string name="reading_row_queued">Sırada</string>
@@ -483,6 +488,7 @@
     <string name="cause_proxy_needs_address">Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</string>
     <string name="cause_proxy_address_unusable">Vekil sunucunun adresi denetim için kullanılamıyor.</string>
     <string name="cause_server_unreachable">Sunucuya ulaşılamadı.</string>
+    <string name="legal_hosts_no_content">Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.</string>
     <string name="notice_saved">Kaydedildi: %1$s.</string>
     <string name="notice_not_saved">Bu ayar kaydedilemedi. %1$s</string>
     <string name="notice_title_load_failed">Bu başlık yüklenemedi. Bağlantınızı denetleyin ve yeniden deneyin.</string>

@@ -582,6 +582,18 @@ public static partial class T
     /// <summary>Why something about reading failed, for any other reason. The reason is as it came.</summary>
     public static string ReadingFailedOther(string reason) => Fill(Get("ReadingFailedOther"), ("reason", reason));
 
+    /// <summary>Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.</summary>
+    public static string ReadingFailedSendTooLarge(string file, string target, string size, string limit) => Fill(Get("ReadingFailedSendTooLarge"), ("file", file), ("target", target), ("size", size), ("limit", limit));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.</summary>
+    public static string ReadingFailedSendMissing(string file, string part) => Fill(Get("ReadingFailedSendMissing"), ("file", file), ("part", part));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.</summary>
+    public static string ReadingFailedSendEncoding(string file, string part) => Fill(Get("ReadingFailedSendEncoding"), ("file", file), ("part", part));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.</summary>
+    public static string ReadingFailedSendMalformed(string file, string part) => Fill(Get("ReadingFailedSendMalformed"), ("file", file), ("part", part));
+
     /// <summary>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</summary>
     public static string ReadingKindManga => Get("ReadingKindManga");
 
@@ -722,6 +734,9 @@ public static partial class T
 
     /// <summary>A chapter row's state: it is kept on this device to read offline.</summary>
     public static string ReadingRowDownloaded => Get("ReadingRowDownloaded");
+
+    /// <summary>A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.</summary>
+    public static string ReadingRowGoneFromSource => Get("ReadingRowGoneFromSource");
 
     /// <summary>A chapter row's state: it is read from the source and nothing of it is on this device.</summary>
     public static string ReadingRowNotDownloaded => Get("ReadingRowNotDownloaded");
@@ -10783,6 +10798,10 @@ public static partial class T
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
         ["ReadingFailedOther"] = "Something went wrong. {reason}",
+        ["ReadingFailedSendTooLarge"] = "{file} is {size}, and {target} takes files up to {limit}. Send fewer chapters at a time and try again.",
+        ["ReadingFailedSendMissing"] = "{file} is missing {part}, so it wasn't sent. Try again.",
+        ["ReadingFailedSendEncoding"] = "{part} in {file} has the wrong text encoding, so it wasn't sent. Try again.",
+        ["ReadingFailedSendMalformed"] = "{part} in {file} isn't valid, so it wasn't sent. Try again.",
         ["ReadingKindManga"] = "Manga",
         ["ReadingKindManhwa"] = "Manhwa",
         ["ReadingKindManhua"] = "Manhua",
@@ -10833,6 +10852,7 @@ public static partial class T
         ["ReadingRowRead"] = "Read",
         ["ReadingRowNew"] = "New",
         ["ReadingRowDownloaded"] = "Downloaded",
+        ["ReadingRowGoneFromSource"] = "Gone from the source",
         ["ReadingRowNotDownloaded"] = "Not downloaded",
         ["ReadingRowOnDevice"] = "On this device",
         ["ReadingRowQueued"] = "Queued",

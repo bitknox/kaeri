@@ -9,7 +9,8 @@
 //! **One chapter at a time.** The queue drains oldest first, chapters asked for by hand before
 //! those kept ready, with a short rest between chapters so a long queue is paced rather than a
 //! burst. A fetch is written under a temporary name and renamed, so a path the shelf gives out
-//! always holds a whole file.
+//! always holds a whole file. Each page of a chapter of images is kept as it lands
+//! (see `kept`), so a fetch cut short fetches only the pages it lacks when it runs again.
 //!
 //! **Wi-Fi only until told otherwise.** On cellular, in Low Data Mode, offline, or with the app
 //! off screen (but for a downloads window) the queue holds; rows show as waiting for Wi-Fi
@@ -244,18 +245,31 @@ impl BookDownloads {
     }
 
     /// Fetches the last run left half done go back in the queue, and half-written files go.
+    /// The pages a fetch kept stay for it to pick up, while its chapter is still to be fetched.
     pub fn recover(&self, store: &Store, now: i64) {
         match store.book_downloads_recover(now) {
             Ok(0) => {}
             Ok(n) => tracing::info!(n, "chapter downloads cut short are queued again"),
             Err(e) => tracing::warn!(error = %e, "downloads cut short were not queued again"),
         }
+        let Ok(rows) = store.book_downloads(None) else { return };
+        let to_fetch: HashSet<PathBuf> = rows
+            .iter()
+            .filter(|r| {
+                matches!(r.state, BookDownloadState::Queued | BookDownloadState::Failed)
+            })
+            .map(|r| pages_of(&self.file_stem(r)))
+            .collect();
         let Ok(works) = std::fs::read_dir(&self.0.dir) else { return };
         for work in works.flatten() {
             let Ok(files) = std::fs::read_dir(work.path()) else { continue };
             for file in files.flatten() {
-                if file.path().extension().is_some_and(|e| e == "part") {
-                    let _ = std::fs::remove_file(file.path());
+                let path = file.path();
+                let ext = path.extension().and_then(|e| e.to_str()).unwrap_or_default();
+                if ext == "part" {
+                    let _ = std::fs::remove_file(&path);
+                } else if ext == "pages" && !to_fetch.contains(&path) {
+                    KeptPages::remove(&path);
                 }
             }
         }
@@ -822,34 +836,59 @@ impl BookDownloads {
                 if total == 0 {
                     return Err(ReadingFailure::NotFound.into());
                 }
-                let file =
-                    File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
-                let mut cbz = kaeri_books::write::CbzWriter::new(BufWriter::new(file), None)
-                    .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                // Each page is kept as it lands, so a fetch cut short fetches only the pages it
+                // lacks next time.
+                let dir = pages_of(&stem);
+                let mut kept = KeptPages::open(&dir, total)
+                    .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                if kept.len() > 0 {
+                    tracing::info!(
+                        kept = kept.len(),
+                        total,
+                        "a chapter fetch picks up its pages"
+                    );
+                }
                 for index in 0..total {
                     if self.setup().hold {
                         return Err(Stop::Held);
                     }
                     if !(job.wanted)() {
+                        KeptPages::remove(&dir);
                         return Err(Stop::Cancelled);
                     }
-                    if self.free().is_some_and(|free| free < KEEP_FREE) {
-                        return Err(ReadingFailure::DiskFull.into());
+                    if !kept.has(index) {
+                        if self.free().is_some_and(|free| free < KEEP_FREE) {
+                            return Err(ReadingFailure::DiskFull.into());
+                        }
+                        let bytes = lent
+                            .sources
+                            .page(&mut opened, index as usize, lent.clock.now())
+                            .await
+                            .map_err(Stop::Failed)?;
+                        kept.put(index, &bytes)
+                            .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
                     }
-                    let bytes = lent
-                        .sources
-                        .page(&mut opened, index as usize, lent.clock.now())
-                        .await
-                        .map_err(Stop::Failed)?;
+                    (job.progress)(index + 1, total);
+                }
+                let file =
+                    File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
+                let mut cbz = kaeri_books::write::CbzWriter::new(BufWriter::new(file), None)
+                    .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                for index in 0..total {
+                    let bytes =
+                        kept.read(index).map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
                     cbz.add_page(&bytes)
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
-                    (job.progress)(index + 1, total);
                 }
                 let mut out =
                     cbz.finish().map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 out.flush().map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
                 drop(out);
-                finish(&part, &stem.with_extension("cbz"), Some(total))
+                let done = finish(&part, &stem.with_extension("cbz"), Some(total));
+                if done.is_ok() {
+                    KeptPages::remove(&dir);
+                }
+                done
             }
             ChapterContent::Text(body) => {
                 let file =
@@ -1007,6 +1046,7 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
         version_label: d.version_label.clone(),
         read_at: None,
         line: Vec::new(),
+        gone_from_source: false,
     }
 }
 
@@ -1159,6 +1199,9 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
     resume(engine, services, tx);
 }
 
+mod kept;
 mod sizes;
 #[cfg(test)]
 mod tests;
+
+use kept::{KeptPages, pages_of};

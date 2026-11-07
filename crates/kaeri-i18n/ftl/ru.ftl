@@ -621,6 +621,18 @@ reading-failed-off = В этой версии Kaeri чтение недосту�
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Что-то пошло не так. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } весит { $size }, а { $target } принимает файлы до { $limit }. Отправляйте меньше глав за раз и попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = В { $file } отсутствует { $part }, поэтому файл не отправлен. Попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = У части { $part } в { $file } неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = Часть { $part } в { $file } некорректна, поэтому файл не отправлен. Попробуйте снова.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Манга
 
@@ -779,6 +791,9 @@ reading-row-new = Новая
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Скачана
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Источник удалил главу
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Не скачана
@@ -1361,6 +1376,9 @@ cause-proxy-address-unusable = Адрес прокси не подходит д�
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Не удалось связаться с сервером.
+
+# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
+legal-hosts-no-content = Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Сохранено: { $label }.

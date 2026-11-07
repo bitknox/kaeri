@@ -164,6 +164,33 @@ reading-failed-off = Reading isn't available in this version of { -app-name }.
 # @arg reason: text
 reading-failed-other = Something went wrong. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or
+# its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown
+# with Try again.
+# @arg file: text
+# @arg target: text
+# @arg size: bytes
+# @arg limit: bytes
+reading-failed-send-too-large = { $file } is { $size }, and { $target } takes files up to { $limit }. Send fewer chapters at a time and try again.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri
+# made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-missing = { $file } is missing { $part }, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or
+# use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-encoding = { $part } in { $file } has the wrong text encoding, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as
+# the book format requires. Part is a path inside the file. Shown with Try again.
+# @arg file: text
+# @arg part: text
+reading-failed-send-malformed = { $part } in { $file } isn't valid, so it wasn't sent. Try again.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 # @max 16
 reading-kind-manga = Manga
@@ -396,6 +423,11 @@ reading-row-new = New
 # A chapter row's state: it is kept on this device to read offline.
 # @max 20
 reading-row-downloaded = Downloaded
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It
+# still opens from the download.
+# @max 28
+reading-row-gone-from-source = Gone from the { -source }
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 # @max 20

@@ -18,10 +18,10 @@ use kaeri_books::{
     epub::Direction as BookDirection,
     write::{
         BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES,
-        split_parts,
+        ProblemKind, check_epub, split_parts,
     },
 };
-use kaeri_model::reading::{ExportFile, ExportFormat, ReadingFailure};
+use kaeri_model::reading::{ExportFile, ExportFormat, ReadingFailure, SendProblem};
 use kaeri_pages::{
     export::{ExportPage, prepare as prepare_page},
     layout::Direction,
@@ -111,11 +111,47 @@ pub fn run(
     }
     fs::create_dir_all(&req.out).map_err(|e| io(&e, &req.out))?;
     let result = if text { novel(req, progress, cancel) } else { manga(req, progress, cancel) };
+    let result = result.and_then(|files| preflight(req, &files).map(|()| files));
     if result.is_err() {
         // Nothing half written is left to be shared.
         let _ = fs::remove_dir_all(&req.out);
     }
     result
+}
+
+/// The check before a send: every file within what the target takes, and every EPUB or KEPUB
+/// laid out as the format requires, declaring UTF-8, and opening again. A file that fails names
+/// the exact reason, and nothing is sent.
+fn preflight(req: &Request, files: &[ExportFile]) -> Result<(), Stop> {
+    for file in files {
+        if let Some(limit) = req.profile.max_file_bytes
+            && file.bytes > limit
+        {
+            return Err(ReadingFailure::SendTooLarge {
+                file: file.name.clone(),
+                target: req.profile.name.clone(),
+                bytes: file.bytes,
+                limit,
+            }
+            .into());
+        }
+        if req.format == ExportFormat::Cbz {
+            continue;
+        }
+        check_epub(Path::new(&file.path), &Limits::default()).map_err(|problem| {
+            tracing::warn!(file = %file.name, part = %problem.part, kind = ?problem.kind, "a prepared file failed its check");
+            ReadingFailure::SendCheck {
+                file: file.name.clone(),
+                part: problem.part,
+                problem: match problem.kind {
+                    ProblemKind::Missing => SendProblem::Missing,
+                    ProblemKind::NotUtf8 => SendProblem::NotUtf8,
+                    ProblemKind::Malformed => SendProblem::Malformed,
+                },
+            }
+        })?;
+    }
+    Ok(())
 }
 
 fn unsupported(format: ExportFormat) -> Stop {
@@ -663,6 +699,184 @@ mod tests {
         run(&req, &mut |d, t| seen.push((d, t)), &AtomicBool::new(false)).unwrap();
         assert_eq!(seen.first(), Some(&(0, 4)));
         assert_eq!(seen.last(), Some(&(4, 4)));
+    }
+
+    /// The XML documents in an EPUB, by path.
+    fn documents(path: &Path) -> Vec<(String, String)> {
+        let mut zip = zip::ZipArchive::new(File::open(path).unwrap()).unwrap();
+        let names: Vec<String> = zip.file_names().map(|n| n.unwrap().into_owned()).collect();
+        let mut out = Vec::new();
+        for name in names {
+            if [".xhtml", ".opf", ".xml", ".ncx"].iter().any(|e| name.ends_with(e)) {
+                let mut text = String::new();
+                std::io::Read::read_to_string(&mut zip.by_name(&name).unwrap(), &mut text)
+                    .unwrap();
+                out.push((name, text));
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn a_title_beyond_ascii_keeps_its_name_and_every_document_says_utf8() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("n.epub");
+        text_epub(&path, "Ferry Notes", 5);
+        let title = "Ränder des Flusses: 渡し舟の灯り, Été";
+        for (format, profile) in [
+            (ExportFormat::Epub, "kindle"),
+            (ExportFormat::Kepub, "kobo"),
+            (ExportFormat::FixedEpub, "kindle"),
+        ] {
+            let chapters = if format == ExportFormat::FixedEpub {
+                chapters(dir.path(), 1, 1)
+            } else {
+                vec![Chapter { label: "第一章 Départ".into(), path: path.clone() }]
+            };
+            let mut req = request(dir.path(), chapters, profile, format);
+            req.title = title.into();
+            req.out = dir.path().join(format!("out-{format:?}"));
+            let files = go(&req).unwrap();
+            let file = &files[0];
+            assert!(file.name.contains("渡し舟の灯り"), "{}", file.name);
+            assert!(file.name.contains("Ränder") && file.name.contains("Été"), "{}", file.name);
+            let at = Path::new(&file.path);
+            assert!(at.exists());
+            check_epub(at, &Limits::default()).unwrap();
+            let Ok(Book::Epub(epub)) = kaeri_books::open(at, &Limits::default()) else {
+                panic!("not an EPUB");
+            };
+            assert_eq!(epub.metadata().titles.first().map(String::as_str), Some(title));
+            for (name, text) in documents(at) {
+                let head: String = text.chars().take(60).collect::<String>().to_lowercase();
+                assert!(head.contains("encoding=\"utf-8\""), "{format:?} {name}: {head}");
+                if name.ends_with(".xhtml") {
+                    assert!(text.contains("<meta charset=\"utf-8\"/>"), "{format:?} {name}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_file_over_the_targets_limit_is_not_sent_and_says_why() {
+        let dir = tempfile::tempdir().unwrap();
+        // The Kindle class splits into parts under its limit, so a set too big for one file
+        // still goes out.
+        let mut req =
+            request(dir.path(), chapters(dir.path(), 3, 2), "kindle", ExportFormat::FixedEpub);
+        req.limit = Some(512 * 1024 + 1);
+        let files = go(&req).unwrap();
+        assert!(files.len() > 1, "{files:?}");
+        // A target that takes files up to a size, given a chapter set over it in one file.
+        let mut req =
+            request(dir.path(), chapters(dir.path(), 3, 2), "kobo", ExportFormat::Kepub);
+        req.profile.max_file_bytes = Some(50_000);
+        let Err(Stop::Failed(failure)) = go(&req) else { panic!("an oversize file was sent") };
+        let ReadingFailure::SendTooLarge { file, target, bytes, limit } = &failure else {
+            panic!("{failure:?}");
+        };
+        assert!(file.ends_with(".kepub.epub"), "{file}");
+        assert_eq!(target, "Kobo");
+        assert!(*bytes > 50_000);
+        assert_eq!(*limit, 50_000);
+        assert!(!req.out.exists(), "nothing is left to share");
+        let words = failure.msg().english();
+        assert!(words.contains("Kobo takes files up to 50 kB"), "{words}");
+        assert!(words.ends_with("try again."), "{words}");
+        // The built-in targets know their limits.
+        assert_eq!(profile("kindle").max_file_bytes, Some(200_000_000));
+        assert_eq!(profile("kobo").max_file_bytes, Some(4_294_967_295));
+        assert_eq!(profile("tablet").max_file_bytes, None);
+    }
+
+    #[test]
+    fn a_damaged_epub_fails_the_check_and_names_the_part() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("n.epub");
+        text_epub(&path, "Ferry Notes", 5);
+        let req = request(
+            dir.path(),
+            vec![Chapter { label: "Chapter 1".into(), path }],
+            "kobo",
+            ExportFormat::Epub,
+        );
+        let files = go(&req).unwrap();
+        let good = Path::new(&files[0].path);
+        check_epub(good, &Limits::default()).unwrap();
+        let docs = documents(good);
+        let opf = docs.iter().find(|(n, _)| n.ends_with(".opf")).unwrap().0.clone();
+        let chapter = docs
+            .iter()
+            .find(|(n, t)| n.ends_with(".xhtml") && !t.contains("epub:type=\"toc\""))
+            .unwrap()
+            .0
+            .clone();
+
+        // Each damage, made by copying the book with one part changed, or left out for `None`.
+        type Change<'a> = &'a dyn Fn(&str, Vec<u8>) -> Option<Vec<u8>>;
+        let copy = |name: &str, change: Change<'_>| {
+            let to = dir.path().join(name);
+            let mut from = zip::ZipArchive::new(File::open(good).unwrap()).unwrap();
+            let mut w = zip::ZipWriter::new(File::create(&to).unwrap());
+            for i in 0..from.len() {
+                let mut entry = from.by_index(i).unwrap();
+                let entry_name = entry.name().unwrap().into_owned();
+                let options = zip::write::SimpleFileOptions::default()
+                    .compression_method(entry.compression());
+                let mut data = Vec::new();
+                std::io::Read::read_to_end(&mut entry, &mut data).unwrap();
+                if let Some(data) = change(&entry_name, data) {
+                    w.start_file(entry_name, options).unwrap();
+                    std::io::Write::write_all(&mut w, &data).unwrap();
+                }
+            }
+            w.finish().unwrap();
+            to
+        };
+        let latin1 = |text: &str| -> Vec<u8> {
+            text.replace("utf-8", "iso-8859-1").replace("UTF-8", "iso-8859-1").into_bytes()
+        };
+        let cases: Vec<(PathBuf, &str, ProblemKind)> = vec![
+            (
+                copy("no-chapter.epub", &|n, d| (n != chapter).then_some(d)),
+                &chapter,
+                ProblemKind::Missing,
+            ),
+            (
+                copy("latin1.epub", &|n, d| {
+                    Some(if n == opf { latin1(std::str::from_utf8(&d).unwrap()) } else { d })
+                }),
+                &opf,
+                ProblemKind::NotUtf8,
+            ),
+            (
+                copy("broken.epub", &|n, d| {
+                    Some(if n == chapter {
+                        b"<?xml version=\"1.0\" encoding=\"utf-8\"?><html><head><meta charset=\"utf-8\"/></head><body>".to_vec()
+                    } else {
+                        d
+                    })
+                }),
+                &chapter,
+                ProblemKind::Malformed,
+            ),
+            (
+                copy("no-mimetype.epub", &|n, d| (n != "mimetype").then_some(d)),
+                "mimetype",
+                ProblemKind::Missing,
+            ),
+        ];
+        for (path, part, kind) in cases {
+            let problem = check_epub(&path, &Limits::default()).unwrap_err();
+            assert_eq!((problem.part.as_str(), problem.kind), (part, kind), "{path:?}");
+        }
+        let failure = ReadingFailure::SendCheck {
+            file: "Ferry Notes.epub".into(),
+            part: opf.clone(),
+            problem: SendProblem::NotUtf8,
+        };
+        let words = failure.msg().english();
+        assert!(words.contains(&opf) && words.contains("text encoding"), "{words}");
     }
 
     #[test]

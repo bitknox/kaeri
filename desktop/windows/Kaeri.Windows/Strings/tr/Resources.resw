@@ -629,6 +629,18 @@
   <data name="ReadingFailedOther" xml:space="preserve">
     <value>Bir şeyler ters gitti. {reason}</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} {size} boyutunda, {target} ise en fazla {limit} boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} içinde {part} eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{file} içindeki {part} yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{file} içindeki {part} geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>Manga</value>
   </data>
@@ -778,6 +790,9 @@
   </data>
   <data name="ReadingRowDownloaded" xml:space="preserve">
     <value>İndirildi</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Kaynak artık listelemiyor</value>
   </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>İndirilmedi</value>
@@ -1315,6 +1330,9 @@
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Sunucuya ulaşılamadı.</value>
+  </data>
+  <data name="LegalHostsNoContent" xml:space="preserve">
+    <value>Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Kaydedildi: {label}.</value>

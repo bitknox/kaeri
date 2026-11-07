@@ -218,6 +218,10 @@
     <string name="reading_failed_needs_newer">Dieses Plugin braucht eine neuere Version von Kaeri (%1$s). Aktualisiere Kaeri, um es zu nutzen.</string>
     <string name="reading_failed_off">Lesen ist in dieser Version von Kaeri nicht verfügbar.</string>
     <string name="reading_failed_other">Etwas ist schiefgelaufen. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s ist %3$s groß, und %2$s nimmt nur Dateien bis %4$s an. Sende weniger Kapitel auf einmal und versuche es erneut.</string>
+    <string name="reading_failed_send_missing">In %1$s fehlt %2$s, daher wurde die Datei nicht gesendet. Versuche es erneut.</string>
+    <string name="reading_failed_send_encoding">%2$s in %1$s hat die falsche Textkodierung, daher wurde die Datei nicht gesendet. Versuche es erneut.</string>
+    <string name="reading_failed_send_malformed">%2$s in %1$s ist ungültig, daher wurde die Datei nicht gesendet. Versuche es erneut.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -274,6 +278,7 @@
     <string name="reading_row_read">Gelesen</string>
     <string name="reading_row_new">Neu</string>
     <string name="reading_row_downloaded">Heruntergeladen</string>
+    <string name="reading_row_gone_from_source">Nicht mehr in der Quelle</string>
     <string name="reading_row_not_downloaded">Nicht geladen</string>
     <string name="reading_row_on_device">Auf diesem Gerät</string>
     <string name="reading_row_queued">Eingereiht</string>
@@ -483,6 +488,7 @@
     <string name="cause_proxy_needs_address">Ein Proxy braucht einen Host und einen Port.</string>
     <string name="cause_proxy_address_unusable">Die Adresse des Proxys kann für eine Prüfung nicht verwendet werden.</string>
     <string name="cause_server_unreachable">Der Server war nicht erreichbar.</string>
+    <string name="legal_hosts_no_content">Kaeri hostet keine Serien oder Bücher. Du fügst deine eigenen Quellen hinzu.</string>
     <string name="notice_saved">%1$s gespeichert.</string>
     <string name="notice_not_saved">Diese Einstellung konnte nicht gespeichert werden. %1$s</string>
     <string name="notice_title_load_failed">Dieser Titel konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.</string>

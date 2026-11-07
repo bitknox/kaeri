@@ -602,6 +602,18 @@
   <data name="ReadingFailedOther" xml:space="preserve">
     <value>Terjadi kesalahan. {reason}</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} berukuran {size}, dan {target} hanya menerima file hingga {limit}. Kirim lebih sedikit bab sekaligus, lalu coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} tidak memiliki {part}, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} di {file} memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} di {file} tidak valid, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>Manga</value>
   </data>
@@ -742,6 +754,9 @@
   </data>
   <data name="ReadingRowDownloaded" xml:space="preserve">
     <value>Terunduh</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Hilang dari sumber</value>
   </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>Belum diunduh</value>
@@ -1234,6 +1249,9 @@
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Server tidak dapat dihubungi.</value>
+  </data>
+  <data name="LegalHostsNoContent" xml:space="preserve">
+    <value>Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>{label} disimpan.</value>

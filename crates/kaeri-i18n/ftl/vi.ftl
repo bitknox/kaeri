@@ -594,6 +594,18 @@ reading-failed-off = Bản Kaeri này chưa hỗ trợ đọc truyện.
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Đã xảy ra lỗi. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } có dung lượng { $size }, còn { $target } chỉ nhận tệp tối đa { $limit }. Hãy gửi ít chương hơn mỗi lần rồi thử lại.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } thiếu { $part } nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } trong { $file } dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } trong { $file } không hợp lệ nên tệp chưa được gửi. Hãy thử lại.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Manga
 
@@ -743,6 +755,9 @@ reading-row-new = Mới
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Đã tải
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Đã bị gỡ khỏi nguồn
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Chưa tải
@@ -1280,6 +1295,9 @@ cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy nà
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Không kết nối được tới máy chủ.
+
+# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
+legal-hosts-no-content = Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Đã lưu { $label }.

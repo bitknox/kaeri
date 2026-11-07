@@ -236,6 +236,10 @@
     <string name="reading_failed_needs_newer">Для этого плагина нужна более новая версия Kaeri (%1$s). Обновите Kaeri, чтобы им пользоваться.</string>
     <string name="reading_failed_off">В этой версии Kaeri чтение недоступно.</string>
     <string name="reading_failed_other">Что-то пошло не так. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s весит %3$s, а %2$s принимает файлы до %4$s. Отправляйте меньше глав за раз и попробуйте снова.</string>
+    <string name="reading_failed_send_missing">В %1$s отсутствует %2$s, поэтому файл не отправлен. Попробуйте снова.</string>
+    <string name="reading_failed_send_encoding">У части %2$s в %1$s неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова.</string>
+    <string name="reading_failed_send_malformed">Часть %2$s в %1$s некорректна, поэтому файл не отправлен. Попробуйте снова.</string>
     <string name="reading_kind_manga">Манга</string>
     <string name="reading_kind_manhwa">Манхва</string>
     <string name="reading_kind_manhua">Маньхуа</string>
@@ -298,6 +302,7 @@
     <string name="reading_row_read">Прочитано</string>
     <string name="reading_row_new">Новая</string>
     <string name="reading_row_downloaded">Скачана</string>
+    <string name="reading_row_gone_from_source">Источник удалил главу</string>
     <string name="reading_row_not_downloaded">Не скачана</string>
     <string name="reading_row_on_device">Хранится здесь</string>
     <string name="reading_row_queued">В очереди</string>
@@ -537,6 +542,7 @@
     <string name="cause_proxy_needs_address">Для прокси нужны хост и порт.</string>
     <string name="cause_proxy_address_unusable">Адрес прокси не подходит для проверки.</string>
     <string name="cause_server_unreachable">Не удалось связаться с сервером.</string>
+    <string name="legal_hosts_no_content">Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.</string>
     <string name="notice_saved">Сохранено: %1$s.</string>
     <string name="notice_not_saved">Не удалось сохранить настройку. %1$s</string>
     <string name="notice_title_load_failed">Не удалось загрузить этот тайтл. Проверьте подключение и попробуйте ещё раз.</string>

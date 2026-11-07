@@ -209,6 +209,10 @@
     <string name="reading_failed_needs_newer">Plugin ini butuh Kaeri yang lebih baru (%1$s). Perbarui Kaeri untuk memakainya.</string>
     <string name="reading_failed_off">Fitur baca tidak tersedia di versi Kaeri ini.</string>
     <string name="reading_failed_other">Terjadi kesalahan. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s berukuran %3$s, dan %2$s hanya menerima file hingga %4$s. Kirim lebih sedikit bab sekaligus, lalu coba lagi.</string>
+    <string name="reading_failed_send_missing">%1$s tidak memiliki %2$s, jadi file tidak dikirim. Coba lagi.</string>
+    <string name="reading_failed_send_encoding">%2$s di %1$s memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.</string>
+    <string name="reading_failed_send_malformed">%2$s di %1$s tidak valid, jadi file tidak dikirim. Coba lagi.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -262,6 +266,7 @@
     <string name="reading_row_read">Dibaca</string>
     <string name="reading_row_new">Baru</string>
     <string name="reading_row_downloaded">Terunduh</string>
+    <string name="reading_row_gone_from_source">Hilang dari sumber</string>
     <string name="reading_row_not_downloaded">Belum diunduh</string>
     <string name="reading_row_on_device">Di perangkat ini</string>
     <string name="reading_row_queued">Antre</string>
@@ -456,6 +461,7 @@
     <string name="cause_proxy_needs_address">Proxy memerlukan host dan port.</string>
     <string name="cause_proxy_address_unusable">Alamat proxy tidak dapat diperiksa.</string>
     <string name="cause_server_unreachable">Server tidak dapat dihubungi.</string>
+    <string name="legal_hosts_no_content">Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.</string>
     <string name="notice_saved">%1$s disimpan.</string>
     <string name="notice_not_saved">Tidak dapat menyimpan pengaturan itu. %1$s</string>
     <string name="notice_title_load_failed">Tidak dapat memuat judul ini. Periksa koneksi Anda, lalu coba lagi.</string>

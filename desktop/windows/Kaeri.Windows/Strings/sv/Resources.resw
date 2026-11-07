@@ -629,6 +629,18 @@
   <data name="ReadingFailedOther" xml:space="preserve">
     <value>Något gick fel. {reason}</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} är {size}, och {target} tar emot filer upp till {limit}. Skicka färre kapitel åt gången och försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} saknar {part}, så filen skickades inte. Försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} i {file} har fel textkodning, så filen skickades inte. Försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} i {file} är inte giltig, så filen skickades inte. Försök igen.</value>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>Manga</value>
   </data>
@@ -778,6 +790,9 @@
   </data>
   <data name="ReadingRowDownloaded" xml:space="preserve">
     <value>Nedladdad</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Borttagen från källan</value>
   </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>Inte nedladdad</value>
@@ -1315,6 +1330,9 @@
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Det gick inte att nå servern.</value>
+  </data>
+  <data name="LegalHostsNoContent" xml:space="preserve">
+    <value>Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Sparade {label}.</value>

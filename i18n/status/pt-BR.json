@@ -8877,11 +8877,14 @@
     "at": "2026-10-31"
   },
   "legal-hosts-no-content": {
-    "source": "79ea79e8a842",
+    "source": "4a5a5a964c7b",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-01",
-    "back": "Kaeri hosts no show. You add your own sources."
+    "at": "2026-11-07",
+    "flags": [
+      "The legal line now covers books (approved in English 2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Kaeri hosts no shows or books. You add your own sources."
   },
   "library-add-planning": {
     "source": "7164d161006c",
@@ -19233,6 +19236,46 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reading-failed-send-encoding": {
+    "source": "e4c1135293c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} has the wrong text encoding, so the file was not sent. Try again."
+  },
+  "reading-failed-send-malformed": {
+    "source": "646ddc05957c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} is not valid, so the file was not sent. Try again."
+  },
+  "reading-failed-send-missing": {
+    "source": "f0be1888e15b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} is missing in {file}, so the file was not sent. Try again."
+  },
+  "reading-failed-send-too-large": {
+    "source": "9cbb9e6ab169",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{file} has {size}, and {target} accepts files of up to {limit}. Send fewer chapters at a time and try again."
+  },
   "reading-failed-sign-in": {
     "source": "60eb04781d66",
     "state": "draft",
@@ -19454,6 +19497,16 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reading-row-gone-from-source": {
+    "source": "ebf1ae400b57",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of the new chapter row state (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Removed from the source"
   },
   "reading-row-new": {
     "source": "3741f519c32a",

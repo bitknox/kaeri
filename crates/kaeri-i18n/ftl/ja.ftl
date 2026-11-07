@@ -594,6 +594,18 @@ reading-failed-off = このバージョンのKaeriでは読書機能を使えま
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = 問題が発生しました。{ $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file }は{ $size }ですが、{ $target }で扱えるファイルは{ $limit }までです。一度に送る章を減らして、もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file }に{ $part }がないため、送信しませんでした。もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $file }の{ $part }の文字コードが正しくないため、送信しませんでした。もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $file }の{ $part }が無効なため、送信しませんでした。もう一度お試しください。
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = マンガ
 
@@ -743,6 +755,9 @@ reading-row-new = 新着
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = ダウンロード済み
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = ソースから削除済み
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = 未ダウンロード
@@ -1280,6 +1295,9 @@ cause-proxy-address-unusable = プロキシのアドレスは、確認に使え�
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = サーバーに接続できませんでした。
+
+# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
+legal-hosts-no-content = Kaeriは作品も本もホストしていません。ソースはご自身で追加します。
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label }を保存しました。

@@ -312,6 +312,16 @@ impl PageError {
     pub const fn expired(&self) -> bool {
         matches!(self, Self::Status(403 | 410))
     }
+
+    /// Whether the failure was on the way rather than the server's answer, so the same address
+    /// may work a moment later: a dropped connection, a timeout, a busy or failing server.
+    pub fn transient(&self) -> bool {
+        match self {
+            Self::Status(status) => matches!(status, 408 | 425 | 429 | 500..=599),
+            Self::Failed(ProviderError::Transport(_)) => true,
+            _ => false,
+        }
+    }
 }
 
 /// Something that can play a [`Stream`].

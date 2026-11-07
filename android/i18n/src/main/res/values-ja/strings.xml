@@ -209,6 +209,10 @@
     <string name="reading_failed_needs_newer">このプラグインには、より新しいKaeri(%1$s)が必要です。使うにはKaeriを更新してください。</string>
     <string name="reading_failed_off">このバージョンのKaeriでは読書機能を使えません。</string>
     <string name="reading_failed_other">問題が発生しました。%1$s</string>
+    <string name="reading_failed_send_too_large">%1$sは%3$sですが、%2$sで扱えるファイルは%4$sまでです。一度に送る章を減らして、もう一度お試しください。</string>
+    <string name="reading_failed_send_missing">%1$sに%2$sがないため、送信しませんでした。もう一度お試しください。</string>
+    <string name="reading_failed_send_encoding">%1$sの%2$sの文字コードが正しくないため、送信しませんでした。もう一度お試しください。</string>
+    <string name="reading_failed_send_malformed">%1$sの%2$sが無効なため、送信しませんでした。もう一度お試しください。</string>
     <string name="reading_kind_manga">マンガ</string>
     <string name="reading_kind_manhwa">マンファ</string>
     <string name="reading_kind_manhua">マンホア</string>
@@ -262,6 +266,7 @@
     <string name="reading_row_read">既読</string>
     <string name="reading_row_new">新着</string>
     <string name="reading_row_downloaded">ダウンロード済み</string>
+    <string name="reading_row_gone_from_source">ソースから削除済み</string>
     <string name="reading_row_not_downloaded">未ダウンロード</string>
     <string name="reading_row_on_device">このデバイス内</string>
     <string name="reading_row_queued">待機中</string>
@@ -456,6 +461,7 @@
     <string name="cause_proxy_needs_address">プロキシにはホストとポートが必要です。</string>
     <string name="cause_proxy_address_unusable">プロキシのアドレスは、確認に使えないアドレスです。</string>
     <string name="cause_server_unreachable">サーバーに接続できませんでした。</string>
+    <string name="legal_hosts_no_content">Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</string>
     <string name="notice_saved">%1$sを保存しました。</string>
     <string name="notice_not_saved">設定を保存できませんでした。%1$s</string>
     <string name="notice_title_load_failed">この作品の詳細を読み込めませんでした。接続を確認して、もう一度お試しください。</string>

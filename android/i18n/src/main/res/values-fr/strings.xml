@@ -227,6 +227,10 @@
     <string name="reading_failed_needs_newer">Ce plugin demande une version plus récente de Kaeri (%1$s). Mettez à jour Kaeri pour l\'utiliser.</string>
     <string name="reading_failed_off">La lecture n\'est pas disponible dans cette version de Kaeri.</string>
     <string name="reading_failed_other">Une erreur est survenue. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s pèse %3$s, et %2$s accepte les fichiers jusqu’à %4$s. Envoyez moins de chapitres à la fois et réessayez.</string>
+    <string name="reading_failed_send_missing">Il manque %2$s dans %1$s, le fichier n’a donc pas été envoyé. Réessayez.</string>
+    <string name="reading_failed_send_encoding">%2$s dans %1$s n’a pas le bon encodage de texte, le fichier n’a donc pas été envoyé. Réessayez.</string>
+    <string name="reading_failed_send_malformed">%2$s dans %1$s n’est pas valide, le fichier n’a donc pas été envoyé. Réessayez.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -286,6 +290,7 @@
     <string name="reading_row_read">Lu</string>
     <string name="reading_row_new">Nouveau</string>
     <string name="reading_row_downloaded">Téléchargé</string>
+    <string name="reading_row_gone_from_source">Retiré de la source</string>
     <string name="reading_row_not_downloaded">Non téléchargé</string>
     <string name="reading_row_on_device">Sur cet appareil</string>
     <string name="reading_row_queued">En attente</string>
@@ -510,6 +515,7 @@
     <string name="cause_proxy_needs_address">Un proxy a besoin d\'un hôte et d\'un port.</string>
     <string name="cause_proxy_address_unusable">L\'adresse du proxy ne peut pas être utilisée pour une vérification.</string>
     <string name="cause_server_unreachable">Le serveur est injoignable.</string>
+    <string name="legal_hosts_no_content">Kaeri n’héberge aucune série ni aucun livre. Vous ajoutez vos propres sources.</string>
     <string name="notice_saved">« %1$s » enregistré.</string>
     <string name="notice_not_saved">Impossible d’enregistrer ce réglage. %1$s</string>
     <string name="notice_title_load_failed">Impossible de charger ce titre. Vérifiez votre connexion, puis réessayez.</string>

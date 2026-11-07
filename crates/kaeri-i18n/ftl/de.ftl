@@ -603,6 +603,18 @@ reading-failed-off = Lesen ist in dieser Version von Kaeri nicht verfügbar.
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Etwas ist schiefgelaufen. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } ist { $size } groß, und { $target } nimmt nur Dateien bis { $limit } an. Sende weniger Kapitel auf einmal und versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = In { $file } fehlt { $part }, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } in { $file } hat die falsche Textkodierung, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } in { $file } ist ungültig, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Manga
 
@@ -755,6 +767,9 @@ reading-row-new = Neu
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Heruntergeladen
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Nicht mehr in der Quelle
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Nicht geladen
@@ -1307,6 +1322,9 @@ cause-proxy-address-unusable = Die Adresse des Proxys kann für eine Prüfung ni
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Der Server war nicht erreichbar.
+
+# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
+legal-hosts-no-content = Kaeri hostet keine Serien oder Bücher. Du fügst deine eigenen Quellen hinzu.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label } gespeichert.

@@ -224,6 +224,8 @@ pub struct BookSources {
     /// The OPDS feed, on the desktop builds.
     #[cfg(feature = "opds-feed")]
     pub feed: crate::export::feed::Feed,
+    /// Reading progress waiting for book servers: see [`crate::write_back`].
+    pub write_back: crate::write_back::WriteBack,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -260,6 +262,7 @@ impl BookSources {
             exports: crate::export::Exports::new(paths.data_dir.join("exports")),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
+            write_back: crate::write_back::WriteBack::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -333,6 +336,24 @@ impl BookSources {
             .entry(id.to_owned())
             .or_default()
             .clone()
+    }
+
+    /// How `server` refuses a sign-in it no longer takes: a password for a Basic sign-in, a key
+    /// or token otherwise.
+    pub(crate) fn refusal_of(
+        &self,
+        server: &str,
+    ) -> kaeri_model::book_sources::WriteBackProblem {
+        use kaeri_model::book_sources::WriteBackProblem as P;
+        match self.tokens.get(&secret_key(server)) {
+            Ok(credential) if credential.starts_with("basic:") => P::RefusedPassword,
+            _ => P::RefusedKey,
+        }
+    }
+
+    /// Ask `server` once more after it refused the sign-in.
+    pub(crate) fn forget_refusal(&self, server: &str) {
+        self.flag(server).store(false, Ordering::Relaxed);
     }
 
     fn put_server(&self, server: &BookServer) {
@@ -470,6 +491,8 @@ impl BookSources {
             .into_iter()
             .filter_map(|s| {
                 let meta = self.server_meta(&s.id);
+                let (pending, sending, saved_at, problem, problem_at) =
+                    self.write_back_row(&s.id, s.report_progress);
                 Some(BookServerRow {
                     kind: kind_of(Kind::parse(&s.kind)?),
                     off: self.registry.is_off(&s.id),
@@ -483,6 +506,11 @@ impl BookSources {
                     empty: meta.empty,
                     rechecks_at: meta.rechecks_at(),
                     key_last4: meta.key_last4,
+                    progress_pending: pending,
+                    progress_sending: sending,
+                    progress_saved_at: saved_at,
+                    progress_problem: problem,
+                    progress_problem_at: problem_at,
                 })
             })
             .collect();
@@ -685,6 +713,7 @@ pub fn command(
             let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
         }
     };
+    this.write_back.set_publisher(Arc::new(publish.clone()));
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
@@ -827,6 +856,13 @@ pub fn command(
                 let _ =
                     this.store.put_book_server(&BookServer { report_progress: on, ..server });
             }
+            if !on {
+                this.drop_progress(&id);
+            }
+            publish();
+        }
+        BookSourceCommand::RetryProgress { id } => {
+            this.retry_progress(&id, now);
             publish();
         }
         BookSourceCommand::SetOrder { ids } => {
@@ -1193,6 +1229,7 @@ impl BookSources {
                 version_label: chapter.version_label.clone(),
                 read_at,
                 line: Vec::new(),
+                gone_from_source: false,
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),
@@ -1204,6 +1241,7 @@ impl BookSources {
                 }),
             }
         }
+        keep_dropped(&self.store, work, &read, &bookmarks, &mut groups);
         for group in &mut groups {
             group.all_read =
                 group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
@@ -1269,40 +1307,77 @@ impl BookSources {
             .await
             .map_err(|e| failure(&opened.source_id, &e))
     }
+}
 
-    /// Tell the source a chapter was read or taken back, when the person allows it for that
-    /// server. A failure is for the log: the mark itself is kept.
-    pub fn report(&self, work: &WorkId, chapters: Vec<ChapterId>, read: bool, now: i64) {
-        let this = self.clone();
-        let work = work.clone();
-        tokio::spawn(async move {
-            let Some((source, series)) = this.edition_of(&work, None) else { return };
-            let allowed = this
-                .store
-                .book_server(&source)
-                .ok()
-                .flatten()
-                .is_some_and(|s| s.report_progress);
-            if !allowed {
-                return;
+/// Chapters downloaded here that the source no longer lists stay on the series page, marked as
+/// gone from the source, in their place among the others: the file is still on the device and
+/// still opens.
+fn keep_dropped(
+    store: &Store,
+    work: &WorkId,
+    read: &HashMap<String, kaeri_store::reading::ReadChapter>,
+    bookmarks: &HashSet<String>,
+    groups: &mut Vec<VolumeGroup>,
+) {
+    let listed: HashSet<String> = groups
+        .iter()
+        .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
+        .collect();
+    let downloads = store.book_downloads(Some(work.as_str())).unwrap_or_default();
+    for d in downloads.iter().filter(|d| {
+        d.state == kaeri_store::book_downloads::BookDownloadState::Done
+            && d.path.as_deref().is_some_and(|p| std::path::Path::new(p).exists())
+            && !listed.contains(&d.chapter)
+    }) {
+        let was = read.get(&d.chapter);
+        let mut row = crate::downloads::books::chapter_row(
+            d,
+            was.is_some_and(|r| r.read),
+            bookmarks.contains(&d.chapter),
+        );
+        if let Some(r) = was {
+            row.read_at = r.read_at;
+            if !r.read
+                && let Some(page) = r.last_page
+            {
+                row.state = ChapterReadState::InProgress {
+                    page: kaeri_model::reading::shown_page(page),
+                    of: r.of_pages,
+                };
             }
-            let Ok(listed) =
-                this.registry.chapters(&source, &series, &BookHints::default(), now).await
-            else {
-                return;
-            };
-            let restarts = restarts_per_volume(&listed);
-            for chapter in listed.iter().filter(|c| chapters.contains(&c.key(restarts).id())) {
-                if let Err(e) = this
-                    .registry
-                    .report_progress(&source, &series, &chapter.id, read, now)
-                    .await
-                {
-                    tracing::info!(error = %e, "a server was not told what was read");
-                }
+        }
+        row.gone_from_source = true;
+        let group = match groups.iter().position(|g| g.volume == row.volume) {
+            Some(at) => &mut groups[at],
+            None => {
+                groups.push(VolumeGroup {
+                    volume: row.volume.clone(),
+                    title: None,
+                    chapters: Vec::new(),
+                    all_read: false,
+                });
+                groups.last_mut().expect("just pushed")
             }
-        });
+        };
+        let at = place_of(&group.chapters, &row);
+        group.chapters.insert(at, row);
     }
+}
+
+/// Where a row goes among others listed in number order, rising or falling; the end when its
+/// number is not known.
+fn place_of(rows: &[ChapterRow], row: &ChapterRow) -> usize {
+    let range = |r: &ChapterRow| r.id.key().and_then(|k| k.range());
+    let Some(mine) = range(row) else { return rows.len() };
+    let falling = match (rows.first().and_then(range), rows.last().and_then(range)) {
+        (Some(first), Some(last)) => first > last,
+        _ => false,
+    };
+    rows.iter()
+        .position(|r| {
+            range(r).is_some_and(|theirs| if falling { theirs < mine } else { theirs > mine })
+        })
+        .unwrap_or(rows.len())
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.

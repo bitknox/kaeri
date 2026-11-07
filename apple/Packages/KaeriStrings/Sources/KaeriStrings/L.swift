@@ -778,6 +778,26 @@ public enum L {
         Self.format("reading-failed-other", fallback: "Something went wrong. %1$@", reason)
     }
 
+    /// Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+    public static func readingFailedSendTooLarge(file: String, target: String, size: String, limit: String) -> String {
+        Self.format("reading-failed-send-too-large", fallback: "%1$@ is %3$@, and %2$@ takes files up to %4$@. Send fewer chapters at a time and try again.", file, target, size, limit)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+    public static func readingFailedSendMissing(file: String, part: String) -> String {
+        Self.format("reading-failed-send-missing", fallback: "%1$@ is missing %2$@, so it wasn't sent. Try again.", file, part)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+    public static func readingFailedSendEncoding(file: String, part: String) -> String {
+        Self.format("reading-failed-send-encoding", fallback: "%2$@ in %1$@ has the wrong text encoding, so it wasn't sent. Try again.", file, part)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+    public static func readingFailedSendMalformed(file: String, part: String) -> String {
+        Self.format("reading-failed-send-malformed", fallback: "%2$@ in %1$@ isn't valid, so it wasn't sent. Try again.", file, part)
+    }
+
     /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
     public static var readingKindManga: String { string("reading-kind-manga", fallback: "Manga") }
 
@@ -954,6 +974,9 @@ public enum L {
 
     /// A chapter row's state: it is kept on this device to read offline.
     public static var readingRowDownloaded: String { string("reading-row-downloaded", fallback: "Downloaded") }
+
+    /// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+    public static var readingRowGoneFromSource: String { string("reading-row-gone-from-source", fallback: "Gone from the source") }
 
     /// A chapter row's state: it is read from the source and nothing of it is on this device.
     public static var readingRowNotDownloaded: String { string("reading-row-not-downloaded", fallback: "Not downloaded") }

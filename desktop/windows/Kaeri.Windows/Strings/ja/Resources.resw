@@ -602,6 +602,18 @@
   <data name="ReadingFailedOther" xml:space="preserve">
     <value>問題が発生しました。{reason}</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file}は{size}ですが、{target}で扱えるファイルは{limit}までです。一度に送る章を減らして、もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file}に{part}がないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{file}の{part}の文字コードが正しくないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{file}の{part}が無効なため、送信しませんでした。もう一度お試しください。</value>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>マンガ</value>
   </data>
@@ -742,6 +754,9 @@
   </data>
   <data name="ReadingRowDownloaded" xml:space="preserve">
     <value>ダウンロード済み</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>ソースから削除済み</value>
   </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>未ダウンロード</value>
@@ -1234,6 +1249,9 @@
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>サーバーに接続できませんでした。</value>
+  </data>
+  <data name="LegalHostsNoContent" xml:space="preserve">
+    <value>Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>{label}を保存しました。</value>

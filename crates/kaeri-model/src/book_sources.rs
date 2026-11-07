@@ -139,6 +139,100 @@ pub struct BookServerRow {
     /// The last four characters of the Kavita key it signs in with: "Key ••••1234".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub key_last4: Option<String>,
+    /// Chapters whose progress waits for this server, held ones included.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_pending: u32,
+    /// A send to it is under way: "Sending 3 chapters…".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_sending: bool,
+    /// When it last took progress, in seconds since the epoch.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_saved_at: Option<i64>,
+    /// Why progress waits, while it does: the last try's failure, `Offline` while the device
+    /// is, and `NotSetToReceive` for a server set not to receive progress (with no queue).
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_problem: Option<WriteBackProblem>,
+    /// When the last try failed.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_problem_at: Option<i64>,
+}
+
+/// Why reading progress has not reached a book server yet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum WriteBackProblem {
+    /// The device is offline: it sends when back online.
+    Offline,
+    /// The server did not answer: Kaeri tries again, after 30 s, 2 min, 10 min, then hourly.
+    NoAnswer,
+    /// The server answered with an error: tried again as for `NoAnswer`.
+    ServerError,
+    /// The server refused the key. Not tried again until Try again.
+    RefusedKey,
+    /// The server refused the user name or password. Not tried again until Try again.
+    RefusedPassword,
+    /// The series is not on the server any more. Not tried again until Try again.
+    SeriesGone,
+    /// A day of tries without an answer. Not tried again until Try again.
+    NoAnswerForADay,
+    /// The server is set not to receive progress: it stays on this device.
+    NotSetToReceive,
+}
+
+impl WriteBackProblem {
+    /// Whether Kaeri tries again on its own: otherwise the progress waits for Try again.
+    pub const fn retries(self) -> bool {
+        matches!(self, Self::Offline | Self::NoAnswer | Self::ServerError)
+    }
+
+    /// The name the store keeps it by.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Offline => "offline",
+            Self::NoAnswer => "no-answer",
+            Self::ServerError => "server-error",
+            Self::RefusedKey => "refused-key",
+            Self::RefusedPassword => "refused-password",
+            Self::SeriesGone => "series-gone",
+            Self::NoAnswerForADay => "no-answer-for-a-day",
+            Self::NotSetToReceive => "not-set-to-receive",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Self> {
+        [
+            Self::Offline,
+            Self::NoAnswer,
+            Self::ServerError,
+            Self::RefusedKey,
+            Self::RefusedPassword,
+            Self::SeriesGone,
+            Self::NoAnswerForADay,
+            Self::NotSetToReceive,
+        ]
+        .into_iter()
+        .find(|p| p.as_str() == text)
+    }
+}
+
+/// What became of one chapter's progress sent to its book server, for the page between
+/// chapters.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum WriteBackResult {
+    /// "Saved to books.home.example".
+    Saved,
+    /// Kept, and sent later without being asked: offline, no answer, a server error.
+    Waiting { problem: WriteBackProblem },
+    /// Kept until Try again: a refused key or password, the series gone, a day without an
+    /// answer, or a server set not to receive.
+    NotSaved { problem: WriteBackProblem },
+}
+
+impl WriteBackResult {
+    pub const fn of(problem: WriteBackProblem) -> Self {
+        if problem.retries() { Self::Waiting { problem } } else { Self::NotSaved { problem } }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -217,6 +311,10 @@ pub enum BookSourceCommand {
     SetReportProgress {
         id: String,
         on: bool,
+    },
+    /// Try again: send every chapter's progress waiting for this server now, the held ones too.
+    RetryProgress {
+        id: String,
     },
     SetOrder {
         ids: Vec<String>,

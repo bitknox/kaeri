@@ -656,6 +656,18 @@
   <data name="ReadingFailedOther" xml:space="preserve">
     <value>Algo deu errado. {reason}</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} tem {size}, e {target} aceita arquivos de até {limit}. Envie menos capítulos por vez e tente de novo.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>Falta {part} em {file}, então o arquivo não foi enviado. Tente de novo.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} em {file} está com a codificação de texto errada, então o arquivo não foi enviado. Tente de novo.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} em {file} não é válido, então o arquivo não foi enviado. Tente de novo.</value>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>Mangá</value>
   </data>
@@ -814,6 +826,9 @@
   </data>
   <data name="ReadingRowDownloaded" xml:space="preserve">
     <value>Baixado</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Removido da fonte</value>
   </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>Não baixado</value>
@@ -1396,6 +1411,9 @@
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Não foi possível alcançar o servidor.</value>
+  </data>
+  <data name="LegalHostsNoContent" xml:space="preserve">
+    <value>O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Configuração salva: {label}.</value>

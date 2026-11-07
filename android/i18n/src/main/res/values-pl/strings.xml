@@ -236,6 +236,10 @@
     <string name="reading_failed_needs_newer">Ta wtyczka wymaga nowszej wersji aplikacji Kaeri (%1$s). Zaktualizuj Kaeri, aby jej używać.</string>
     <string name="reading_failed_off">Czytanie nie jest dostępne w tej wersji aplikacji Kaeri.</string>
     <string name="reading_failed_other">Coś poszło nie tak. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s ma %3$s, a %2$s przyjmuje pliki do %4$s. Wyślij mniej rozdziałów naraz i spróbuj ponownie.</string>
+    <string name="reading_failed_send_missing">W %1$s brakuje elementu %2$s, więc plik nie został wysłany. Spróbuj ponownie.</string>
+    <string name="reading_failed_send_encoding">Element %2$s w %1$s ma złe kodowanie tekstu, więc plik nie został wysłany. Spróbuj ponownie.</string>
+    <string name="reading_failed_send_malformed">Element %2$s w %1$s jest nieprawidłowy, więc plik nie został wysłany. Spróbuj ponownie.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -298,6 +302,7 @@
     <string name="reading_row_read">Przeczytany</string>
     <string name="reading_row_new">Nowy</string>
     <string name="reading_row_downloaded">Pobrany</string>
+    <string name="reading_row_gone_from_source">Usunięte przez źródło</string>
     <string name="reading_row_not_downloaded">Niepobrany</string>
     <string name="reading_row_on_device">To urządzenie</string>
     <string name="reading_row_queued">W kolejce</string>
@@ -537,6 +542,7 @@
     <string name="cause_proxy_needs_address">Proxy wymaga hosta i portu.</string>
     <string name="cause_proxy_address_unusable">Adres proxy nie nadaje się do sprawdzenia.</string>
     <string name="cause_server_unreachable">Nie udało się połączyć z serwerem.</string>
+    <string name="legal_hosts_no_content">Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.</string>
     <string name="notice_saved">Zapisano: %1$s.</string>
     <string name="notice_not_saved">Nie udało się zapisać tego ustawienia. %1$s</string>
     <string name="notice_title_load_failed">Nie udało się wczytać tego tytułu. Sprawdź połączenie i spróbuj ponownie.</string>

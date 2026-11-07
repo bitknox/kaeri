@@ -53,6 +53,7 @@ impl ShelfChapter {
             version_label: None,
             read_at: None,
             line: Vec::new(),
+            gone_from_source: false,
         }
     }
 }

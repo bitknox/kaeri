@@ -209,6 +209,10 @@
     <string name="reading_failed_needs_newer">Plugin này cần Kaeri mới hơn (%1$s). Hãy cập nhật Kaeri để dùng.</string>
     <string name="reading_failed_off">Bản Kaeri này chưa hỗ trợ đọc truyện.</string>
     <string name="reading_failed_other">Đã xảy ra lỗi. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s có dung lượng %3$s, còn %2$s chỉ nhận tệp tối đa %4$s. Hãy gửi ít chương hơn mỗi lần rồi thử lại.</string>
+    <string name="reading_failed_send_missing">%1$s thiếu %2$s nên tệp chưa được gửi. Hãy thử lại.</string>
+    <string name="reading_failed_send_encoding">%2$s trong %1$s dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.</string>
+    <string name="reading_failed_send_malformed">%2$s trong %1$s không hợp lệ nên tệp chưa được gửi. Hãy thử lại.</string>
     <string name="reading_kind_manga">Manga</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -262,6 +266,7 @@
     <string name="reading_row_read">Đã đọc</string>
     <string name="reading_row_new">Mới</string>
     <string name="reading_row_downloaded">Đã tải</string>
+    <string name="reading_row_gone_from_source">Đã bị gỡ khỏi nguồn</string>
     <string name="reading_row_not_downloaded">Chưa tải</string>
     <string name="reading_row_on_device">Trên thiết bị này</string>
     <string name="reading_row_queued">Đang chờ</string>
@@ -456,6 +461,7 @@
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
     <string name="cause_proxy_address_unusable">Không kiểm tra được địa chỉ proxy này.</string>
     <string name="cause_server_unreachable">Không kết nối được tới máy chủ.</string>
+    <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
     <string name="notice_saved">Đã lưu %1$s.</string>
     <string name="notice_not_saved">Không lưu được cài đặt đó. %1$s</string>
     <string name="notice_title_load_failed">Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.</string>

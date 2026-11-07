@@ -594,6 +594,18 @@ reading-failed-off = Fitur baca tidak tersedia di versi Kaeri ini.
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Terjadi kesalahan. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } berukuran { $size }, dan { $target } hanya menerima file hingga { $limit }. Kirim lebih sedikit bab sekaligus, lalu coba lagi.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } tidak memiliki { $part }, jadi file tidak dikirim. Coba lagi.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } di { $file } memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } di { $file } tidak valid, jadi file tidak dikirim. Coba lagi.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Manga
 
@@ -743,6 +755,9 @@ reading-row-new = Baru
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Terunduh
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Hilang dari sumber
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Belum diunduh
@@ -1280,6 +1295,9 @@ cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Server tidak dapat dihubungi.
+
+# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
+legal-hosts-no-content = Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label } disimpan.

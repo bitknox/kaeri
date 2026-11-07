@@ -227,6 +227,10 @@
     <string name="reading_failed_needs_newer">Este plugin precisa de um Kaeri mais novo (%1$s). Atualize o Kaeri para usá-lo.</string>
     <string name="reading_failed_off">A leitura não está disponível nesta edição do Kaeri.</string>
     <string name="reading_failed_other">Algo deu errado. %1$s</string>
+    <string name="reading_failed_send_too_large">%1$s tem %3$s, e %2$s aceita arquivos de até %4$s. Envie menos capítulos por vez e tente de novo.</string>
+    <string name="reading_failed_send_missing">Falta %2$s em %1$s, então o arquivo não foi enviado. Tente de novo.</string>
+    <string name="reading_failed_send_encoding">%2$s em %1$s está com a codificação de texto errada, então o arquivo não foi enviado. Tente de novo.</string>
+    <string name="reading_failed_send_malformed">%2$s em %1$s não é válido, então o arquivo não foi enviado. Tente de novo.</string>
     <string name="reading_kind_manga">Mangá</string>
     <string name="reading_kind_manhwa">Manhwa</string>
     <string name="reading_kind_manhua">Manhua</string>
@@ -286,6 +290,7 @@
     <string name="reading_row_read">Lido</string>
     <string name="reading_row_new">Novo</string>
     <string name="reading_row_downloaded">Baixado</string>
+    <string name="reading_row_gone_from_source">Removido da fonte</string>
     <string name="reading_row_not_downloaded">Não baixado</string>
     <string name="reading_row_on_device">Neste dispositivo</string>
     <string name="reading_row_queued">Na fila</string>
@@ -510,6 +515,7 @@
     <string name="cause_proxy_needs_address">Um proxy precisa de um endereço e de uma porta.</string>
     <string name="cause_proxy_address_unusable">O endereço do proxy não pode ser usado na verificação.</string>
     <string name="cause_server_unreachable">Não foi possível alcançar o servidor.</string>
+    <string name="legal_hosts_no_content">O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes.</string>
     <string name="notice_saved">Configuração salva: %1$s.</string>
     <string name="notice_not_saved">Não foi possível salvar essa configuração. %1$s</string>
     <string name="notice_title_load_failed">Não foi possível carregar este título. Verifique sua conexão e tente de novo.</string>

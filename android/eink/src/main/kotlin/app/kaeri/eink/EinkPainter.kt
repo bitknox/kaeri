@@ -12,7 +12,9 @@ import app.kaeri.engine.model.EinkDecision
 import app.kaeri.engine.model.EinkPaint
 import app.kaeri.engine.model.EinkPolicy
 import app.kaeri.engine.model.EinkPanel
+import app.kaeri.engine.model.EinkProfile
 import app.kaeri.engine.model.Refresh
+import app.kaeri.engine.model.VendorFamily
 
 class EinkPainter(
     policy: EinkPolicy,
@@ -40,5 +42,16 @@ class EinkPainter(
     companion object {
         /** A painter for [panel] with the engine's default policy. */
         fun defaults(panel: EinkPanel, controller: RefreshController): EinkPainter = EinkPainter(einkPolicyDefaults(panel), controller)
+
+        /**
+         * The painter for [profile]: its vendor family's full refresh from [controllerOf]
+         * (RefreshControllers.of on a device), and the person's Refresh settings.
+         */
+        fun forProfile(profile: EinkProfile?, controllerOf: (VendorFamily) -> RefreshController): EinkPainter =
+            EinkPainter(policyOf(profile), profile?.let { controllerOf(it.family) } ?: NoRefresh)
+
+        /** The person's Refresh settings, or the panel's defaults before the engine sends them. */
+        fun policyOf(profile: EinkProfile?): EinkPolicy =
+            profile?.policy ?: einkPolicyDefaults(profile?.panel ?: EinkPanel.GREY)
     }
 }
