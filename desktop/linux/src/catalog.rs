@@ -338,10 +338,9 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
             ("restyle", "restyle", t::settings_subs_styled_restyle()),   // i18n-skip
             ("strip", "remove all styling", t::settings_subs_styled_strip()), // i18n-skip
         ]),
-        K::OpenAt => strs(&[
-            ("watch", "watch", t::nav_watch()),
-            ("read", "read", t::nav_read()),
-        ]),
+        K::OpenAt => {
+            strs(&[("watch", "watch", t::nav_watch()), ("read", "read", t::nav_read())])
+        }
         K::NewChapters => strs(&[
             ("off", "off", t::value_off()),
             ("reading", "reading", t::settings_new_chapters_reading()),
