@@ -569,6 +569,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Nie można połączyć się z {server}. Sprawdź serwer lub spróbuj ponownie.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} ma {size}, a {target} przyjmuje pliki do {limit}. Wyślij mniej rozdziałów naraz i spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>W {file} brakuje elementu {part}, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>Element {part} w {file} ma złe kodowanie tekstu, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>Element {part} w {file} jest nieprawidłowy, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Usunięte przez źródło</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Dołączono do {store} jako {member}.</value>
   </data>

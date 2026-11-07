@@ -180,6 +180,11 @@
     <string name="party_rejoined">Birlikte izlemeye yeniden bağlandı.</string>
     <string name="party_left">Birlikte izlemeden ayrıldı.</string>
     <string name="party_server_unreachable">%1$s sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.</string>
+    <string name="reading_failed_send_too_large">%1$s %3$s boyutunda, %2$s ise en fazla %4$s boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin.</string>
+    <string name="reading_failed_send_missing">%1$s içinde %2$s eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
+    <string name="reading_failed_send_encoding">%1$s içindeki %2$s yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
+    <string name="reading_failed_send_malformed">%1$s içindeki %2$s geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin.</string>
+    <string name="reading_row_gone_from_source">Kaynak artık listelemiyor</string>
     <string name="store_joined">%1$s: %2$s olarak katıldınız.</string>
     <string name="store_joined_unnamed">%1$s: isim olmadan katıldınız.</string>
     <string name="store_left">%1$s bırakıldı. Kurulu eklentiler kalır.</string>

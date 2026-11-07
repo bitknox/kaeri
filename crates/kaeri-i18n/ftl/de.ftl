@@ -494,6 +494,21 @@ party-left = Du hast die Watchparty verlassen.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = { $server } ist nicht erreichbar. Prüfe den Server oder versuche es erneut.
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } ist { $size } groß, und { $target } nimmt nur Dateien bis { $limit } an. Sende weniger Kapitel auf einmal und versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = In { $file } fehlt { $part }, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } in { $file } hat die falsche Textkodierung, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } in { $file } ist ungültig, daher wurde die Datei nicht gesendet. Versuche es erneut.
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Nicht mehr in der Quelle
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Du bist { $store } als { $member } beigetreten.
 

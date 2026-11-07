@@ -545,6 +545,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Impossible de joindre {server}. Vérifiez le serveur ou réessayez.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} pèse {size}, et {target} accepte les fichiers jusqu’à {limit}. Envoyez moins de chapitres à la fois et réessayez.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>Il manque {part} dans {file}, le fichier n’a donc pas été envoyé. Réessayez.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} dans {file} n’a pas le bon encodage de texte, le fichier n’a donc pas été envoyé. Réessayez.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} dans {file} n’est pas valide, le fichier n’a donc pas été envoyé. Réessayez.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Retiré de la source</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Vous avez rejoint {store} en tant que {member}.</value>
   </data>

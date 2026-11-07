@@ -497,6 +497,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Không kết nối được với {server}. Hãy kiểm tra máy chủ hoặc thử lại.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} có dung lượng {size}, còn {target} chỉ nhận tệp tối đa {limit}. Hãy gửi ít chương hơn mỗi lần rồi thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} thiếu {part} nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} trong {file} dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} trong {file} không hợp lệ nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Đã bị gỡ khỏi nguồn</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Đã tham gia {store} với tên {member}.</value>
   </data>

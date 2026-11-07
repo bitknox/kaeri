@@ -196,6 +196,11 @@
     <string name="party_rejoined">Ponownie połączono. Wspólne oglądanie trwa.</string>
     <string name="party_left">Opuszczono wspólne oglądanie.</string>
     <string name="party_server_unreachable">Nie można połączyć się z %1$s. Sprawdź serwer lub spróbuj ponownie.</string>
+    <string name="reading_failed_send_too_large">%1$s ma %3$s, a %2$s przyjmuje pliki do %4$s. Wyślij mniej rozdziałów naraz i spróbuj ponownie.</string>
+    <string name="reading_failed_send_missing">W %1$s brakuje elementu %2$s, więc plik nie został wysłany. Spróbuj ponownie.</string>
+    <string name="reading_failed_send_encoding">Element %2$s w %1$s ma złe kodowanie tekstu, więc plik nie został wysłany. Spróbuj ponownie.</string>
+    <string name="reading_failed_send_malformed">Element %2$s w %1$s jest nieprawidłowy, więc plik nie został wysłany. Spróbuj ponownie.</string>
+    <string name="reading_row_gone_from_source">Usunięte przez źródło</string>
     <string name="store_joined">Dołączono do %1$s jako %2$s.</string>
     <string name="store_joined_unnamed">Dołączono do %1$s bez nazwy.</string>
     <string name="store_left">Opuszczono %1$s. Jego wtyczki pozostają zainstalowane.</string>

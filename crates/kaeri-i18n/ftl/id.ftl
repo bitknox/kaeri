@@ -486,6 +486,21 @@ party-left = Keluar dari nonton bareng.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Tidak bisa menjangkau { $server }. Periksa servernya, atau coba lagi.
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } berukuran { $size }, dan { $target } hanya menerima file hingga { $limit }. Kirim lebih sedikit bab sekaligus, lalu coba lagi.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } tidak memiliki { $part }, jadi file tidak dikirim. Coba lagi.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } di { $file } memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } di { $file } tidak valid, jadi file tidak dikirim. Coba lagi.
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Hilang dari sumber
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Bergabung dengan { $store } sebagai { $member }.
 

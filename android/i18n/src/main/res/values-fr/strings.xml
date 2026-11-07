@@ -188,6 +188,11 @@
     <string name="party_rejoined">De retour dans le visionnage en groupe.</string>
     <string name="party_left">Vous avez quitté le visionnage en groupe.</string>
     <string name="party_server_unreachable">Impossible de joindre %1$s. Vérifiez le serveur ou réessayez.</string>
+    <string name="reading_failed_send_too_large">%1$s pèse %3$s, et %2$s accepte les fichiers jusqu’à %4$s. Envoyez moins de chapitres à la fois et réessayez.</string>
+    <string name="reading_failed_send_missing">Il manque %2$s dans %1$s, le fichier n’a donc pas été envoyé. Réessayez.</string>
+    <string name="reading_failed_send_encoding">%2$s dans %1$s n’a pas le bon encodage de texte, le fichier n’a donc pas été envoyé. Réessayez.</string>
+    <string name="reading_failed_send_malformed">%2$s dans %1$s n’est pas valide, le fichier n’a donc pas été envoyé. Réessayez.</string>
+    <string name="reading_row_gone_from_source">Retiré de la source</string>
     <string name="store_joined">Vous avez rejoint %1$s en tant que %2$s.</string>
     <string name="store_joined_unnamed">Vous avez rejoint %1$s sans nom.</string>
     <string name="store_left">Vous avez quitté %1$s. Ses plugins restent installés.</string>

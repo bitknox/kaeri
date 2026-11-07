@@ -16869,6 +16869,56 @@
     "at": "2026-10-31",
     "back": "{ $size }/sec"
   },
+  "reading-failed-send-encoding": {
+    "source": "e4c1135293c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Because the character encoding of {part} in {file} is not correct, it was not sent. Please try again."
+  },
+  "reading-failed-send-malformed": {
+    "source": "646ddc05957c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Because {part} in {file} is invalid, it was not sent. Please try again."
+  },
+  "reading-failed-send-missing": {
+    "source": "f0be1888e15b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Because {file} has no {part}, it was not sent. Please try again."
+  },
+  "reading-failed-send-too-large": {
+    "source": "9cbb9e6ab169",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{file} is {size}, but {target} handles files up to {limit}. Send fewer chapters at once and please try again."
+  },
+  "reading-row-gone-from-source": {
+    "source": "ebf1ae400b57",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of the new chapter row state (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Removed from the source"
+  },
   "reason-busy-anilist": {
     "source": "fcf4a3b3d59d",
     "state": "draft",

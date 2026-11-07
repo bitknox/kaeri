@@ -486,6 +486,21 @@ party-left = 同時視聴から退出しました。
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = { $server }に接続できません。サーバーを確認するか、もう一度お試しください。
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file }は{ $size }ですが、{ $target }で扱えるファイルは{ $limit }までです。一度に送る章を減らして、もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file }に{ $part }がないため、送信しませんでした。もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $file }の{ $part }の文字コードが正しくないため、送信しませんでした。もう一度お試しください。
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $file }の{ $part }が無効なため、送信しませんでした。もう一度お試しください。
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = ソースから削除済み
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = { $store }に{ $member }として参加しました。
 

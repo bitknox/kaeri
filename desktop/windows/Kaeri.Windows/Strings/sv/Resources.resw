@@ -521,6 +521,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Kunde inte nå {server}. Kontrollera servern eller försök igen.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} är {size}, och {target} tar emot filer upp till {limit}. Skicka färre kapitel åt gången och försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} saknar {part}, så filen skickades inte. Försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} i {file} har fel textkodning, så filen skickades inte. Försök igen.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} i {file} är inte giltig, så filen skickades inte. Försök igen.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Borttagen från källan</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Gick med i {store} som {member}.</value>
   </data>

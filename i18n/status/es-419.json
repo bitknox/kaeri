@@ -16962,6 +16962,56 @@
     "at": "2026-10-31",
     "back": "{ $size }/s"
   },
+  "reading-failed-send-encoding": {
+    "source": "e4c1135293c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} has an incorrect text encoding, so it was not sent. Try again."
+  },
+  "reading-failed-send-malformed": {
+    "source": "646ddc05957c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} is not valid, so it was not sent. Try again."
+  },
+  "reading-failed-send-missing": {
+    "source": "f0be1888e15b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{file} lacks {part}, so it was not sent. Try again."
+  },
+  "reading-failed-send-too-large": {
+    "source": "9cbb9e6ab169",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{file} weighs {size} and {target} accepts files up to {limit}. Send fewer chapters at a time and try again."
+  },
+  "reading-row-gone-from-source": {
+    "source": "ebf1ae400b57",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of the new chapter row state (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "No longer in the source"
+  },
   "reason-busy-anilist": {
     "source": "fcf4a3b3d59d",
     "state": "draft",

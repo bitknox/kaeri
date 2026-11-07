@@ -171245,10 +171245,82 @@
       "comment" : "Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again. Argument 1: file (Text). Argument 2: part (Text).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ in %1$@ hat die falsche Textkodierung, daher wurde die Datei nicht gesendet. Versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%2$@ in %1$@ has the wrong text encoding, so it wasn't sent. Try again."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ en %1$@ tiene una codificación de texto incorrecta, así que no se envió. Vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ dans %1$@ n’a pas le bon encodage de texte, le fichier n’a donc pas été envoyé. Réessayez."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ di %1$@ memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ in %1$@ ha la codifica del testo sbagliata, quindi il file non è stato inviato. Riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@の%2$@の文字コードが正しくないため、送信しませんでした。もう一度お試しください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element %2$@ w %1$@ ma złe kodowanie tekstu, więc plik nie został wysłany. Spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ em %1$@ está com a codificação de texto errada, então o arquivo não foi enviado. Tente de novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У части %2$@ в %1$@ неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ i %1$@ har fel textkodning, så filen skickades inte. Försök igen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ içindeki %2$@ yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ trong %1$@ dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại."
           }
         }
       }
@@ -171257,10 +171329,82 @@
       "comment" : "Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again. Argument 1: file (Text). Argument 2: part (Text).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ in %1$@ ist ungültig, daher wurde die Datei nicht gesendet. Versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%2$@ in %1$@ isn't valid, so it wasn't sent. Try again."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ en %1$@ no es válido, así que no se envió. Vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ dans %1$@ n’est pas valide, le fichier n’a donc pas été envoyé. Réessayez."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ di %1$@ tidak valid, jadi file tidak dikirim. Coba lagi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ in %1$@ non è valido, quindi il file non è stato inviato. Riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@の%2$@が無効なため、送信しませんでした。もう一度お試しください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element %2$@ w %1$@ jest nieprawidłowy, więc plik nie został wysłany. Spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ em %1$@ não é válido, então o arquivo não foi enviado. Tente de novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часть %2$@ в %1$@ некорректна, поэтому файл не отправлен. Попробуйте снова."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ i %1$@ är inte giltig, så filen skickades inte. Försök igen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ içindeki %2$@ geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ trong %1$@ không hợp lệ nên tệp chưa được gửi. Hãy thử lại."
           }
         }
       }
@@ -171269,10 +171413,82 @@
       "comment" : "Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again. Argument 1: file (Text). Argument 2: part (Text).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %1$@ fehlt %2$@, daher wurde die Datei nicht gesendet. Versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ is missing %2$@, so it wasn't sent. Try again."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A %1$@ le falta %2$@, así que no se envió. Vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il manque %2$@ dans %1$@, le fichier n’a donc pas été envoyé. Réessayez."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ tidak memiliki %2$@, jadi file tidak dikirim. Coba lagi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %1$@ manca %2$@, quindi il file non è stato inviato. Riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@に%2$@がないため、送信しませんでした。もう一度お試しください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W %1$@ brakuje elementu %2$@, więc plik nie został wysłany. Spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta %2$@ em %1$@, então o arquivo não foi enviado. Tente de novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В %1$@ отсутствует %2$@, поэтому файл не отправлен. Попробуйте снова."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ saknar %2$@, så filen skickades inte. Försök igen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ içinde %2$@ eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ thiếu %2$@ nên tệp chưa được gửi. Hãy thử lại."
           }
         }
       }
@@ -171281,10 +171497,82 @@
       "comment" : "Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again. Argument 1: file (Text). Argument 2: target (Text). Argument 3: size (Bytes). Argument 4: limit (Bytes).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ist %3$@ groß, und %2$@ nimmt nur Dateien bis %4$@ an. Sende weniger Kapitel auf einmal und versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ is %3$@, and %2$@ takes files up to %4$@. Send fewer chapters at a time and try again."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pesa %3$@ y %2$@ acepta archivos de hasta %4$@. Envía menos capítulos a la vez y vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pèse %3$@, et %2$@ accepte les fichiers jusqu’à %4$@. Envoyez moins de chapitres à la fois et réessayez."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ berukuran %3$@, dan %2$@ hanya menerima file hingga %4$@. Kirim lebih sedikit bab sekaligus, lalu coba lagi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pesa %3$@ e %2$@ accetta file fino a %4$@. Invia meno capitoli alla volta e riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@は%3$@ですが、%2$@で扱えるファイルは%4$@までです。一度に送る章を減らして、もう一度お試しください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ma %3$@, a %2$@ przyjmuje pliki do %4$@. Wyślij mniej rozdziałów naraz i spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ tem %3$@, e %2$@ aceita arquivos de até %4$@. Envie menos capítulos por vez e tente de novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ весит %3$@, а %2$@ принимает файлы до %4$@. Отправляйте меньше глав за раз и попробуйте снова."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ är %3$@, och %2$@ tar emot filer upp till %4$@. Skicka färre kapitel åt gången och försök igen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %3$@ boyutunda, %2$@ ise en fazla %4$@ boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ có dung lượng %3$@, còn %2$@ chỉ nhận tệp tối đa %4$@. Hãy gửi ít chương hơn mỗi lần rồi thử lại."
           }
         }
       }
@@ -171737,10 +172025,82 @@
       "comment" : "A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht mehr in der Quelle"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gone from the source"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya no está en la fuente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retiré de la source"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hilang dari sumber"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non più nella fonte"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ソースから削除済み"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunięte przez źródło"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removido da fonte"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источник удалил главу"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borttagen från källan"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaynak artık listelemiyor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã bị gỡ khỏi nguồn"
           }
         }
       }

@@ -521,6 +521,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>{server} sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} {size} boyutunda, {target} ise en fazla {limit} boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} içinde {part} eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{file} içindeki {part} yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{file} içindeki {part} geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Kaynak artık listelemiyor</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}: {member} olarak katıldınız.</value>
   </data>

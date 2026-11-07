@@ -497,6 +497,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Tidak bisa menjangkau {server}. Periksa servernya, atau coba lagi.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} berukuran {size}, dan {target} hanya menerima file hingga {limit}. Kirim lebih sedikit bab sekaligus, lalu coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} tidak memiliki {part}, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} di {file} memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} di {file} tidak valid, jadi file tidak dikirim. Coba lagi.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Hilang dari sumber</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Bergabung dengan {store} sebagai {member}.</value>
   </data>

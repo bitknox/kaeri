@@ -188,6 +188,11 @@
     <string name="party_rejoined">De vuelta en la watch party.</string>
     <string name="party_left">Saliste de la watch party.</string>
     <string name="party_server_unreachable">No se pudo conectar con %1$s. Revisa el servidor o inténtalo de nuevo.</string>
+    <string name="reading_failed_send_too_large">%1$s pesa %3$s y %2$s acepta archivos de hasta %4$s. Envía menos capítulos a la vez y vuelve a intentarlo.</string>
+    <string name="reading_failed_send_missing">A %1$s le falta %2$s, así que no se envió. Vuelve a intentarlo.</string>
+    <string name="reading_failed_send_encoding">%2$s en %1$s tiene una codificación de texto incorrecta, así que no se envió. Vuelve a intentarlo.</string>
+    <string name="reading_failed_send_malformed">%2$s en %1$s no es válido, así que no se envió. Vuelve a intentarlo.</string>
+    <string name="reading_row_gone_from_source">Ya no está en la fuente</string>
     <string name="store_joined">Te uniste a %1$s como %2$s.</string>
     <string name="store_joined_unnamed">Te uniste a %1$s sin nombre.</string>
     <string name="store_left">Saliste de %1$s. Sus complementos siguen instalados.</string>

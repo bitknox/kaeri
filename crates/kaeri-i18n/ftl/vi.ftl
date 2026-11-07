@@ -486,6 +486,21 @@ party-left = Đã rời xem chung.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Không kết nối được với { $server }. Hãy kiểm tra máy chủ hoặc thử lại.
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } có dung lượng { $size }, còn { $target } chỉ nhận tệp tối đa { $limit }. Hãy gửi ít chương hơn mỗi lần rồi thử lại.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } thiếu { $part } nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } trong { $file } dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } trong { $file } không hợp lệ nên tệp chưa được gửi. Hãy thử lại.
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Đã bị gỡ khỏi nguồn
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Đã tham gia { $store } với tên { $member }.
 

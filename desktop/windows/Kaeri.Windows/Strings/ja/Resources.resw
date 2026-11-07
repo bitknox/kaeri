@@ -497,6 +497,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>{server}に接続できません。サーバーを確認するか、もう一度お試しください。</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file}は{size}ですが、{target}で扱えるファイルは{limit}までです。一度に送る章を減らして、もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file}に{part}がないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{file}の{part}の文字コードが正しくないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{file}の{part}が無効なため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>ソースから削除済み</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}に{member}として参加しました。</value>
   </data>

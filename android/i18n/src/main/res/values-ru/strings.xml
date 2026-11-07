@@ -196,6 +196,11 @@
     <string name="party_rejoined">Совместный просмотр снова на связи.</string>
     <string name="party_left">Вы покинули совместный просмотр.</string>
     <string name="party_server_unreachable">Не удалось связаться с %1$s. Проверьте сервер или попробуйте ещё раз.</string>
+    <string name="reading_failed_send_too_large">%1$s весит %3$s, а %2$s принимает файлы до %4$s. Отправляйте меньше глав за раз и попробуйте снова.</string>
+    <string name="reading_failed_send_missing">В %1$s отсутствует %2$s, поэтому файл не отправлен. Попробуйте снова.</string>
+    <string name="reading_failed_send_encoding">У части %2$s в %1$s неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова.</string>
+    <string name="reading_failed_send_malformed">Часть %2$s в %1$s некорректна, поэтому файл не отправлен. Попробуйте снова.</string>
+    <string name="reading_row_gone_from_source">Источник удалил главу</string>
     <string name="store_joined">Подключено к %1$s как %2$s.</string>
     <string name="store_joined_unnamed">Подключено к %1$s без имени.</string>
     <string name="store_left">Вы вышли из %1$s. Его плагины остаются установленными.</string>

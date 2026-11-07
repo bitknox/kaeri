@@ -172,6 +172,11 @@
     <string name="party_rejoined">同時視聴に戻りました。</string>
     <string name="party_left">同時視聴から退出しました。</string>
     <string name="party_server_unreachable">%1$sに接続できません。サーバーを確認するか、もう一度お試しください。</string>
+    <string name="reading_failed_send_too_large">%1$sは%3$sですが、%2$sで扱えるファイルは%4$sまでです。一度に送る章を減らして、もう一度お試しください。</string>
+    <string name="reading_failed_send_missing">%1$sに%2$sがないため、送信しませんでした。もう一度お試しください。</string>
+    <string name="reading_failed_send_encoding">%1$sの%2$sの文字コードが正しくないため、送信しませんでした。もう一度お試しください。</string>
+    <string name="reading_failed_send_malformed">%1$sの%2$sが無効なため、送信しませんでした。もう一度お試しください。</string>
+    <string name="reading_row_gone_from_source">ソースから削除済み</string>
     <string name="store_joined">%1$sに%2$sとして参加しました。</string>
     <string name="store_joined_unnamed">%1$sに名前なしで参加しました。</string>
     <string name="store_left">%1$sから退出しました。インストール済みのプラグインはそのまま残ります。</string>

@@ -172,6 +172,11 @@
     <string name="party_rejoined">Kembali ke nonton bareng.</string>
     <string name="party_left">Keluar dari nonton bareng.</string>
     <string name="party_server_unreachable">Tidak bisa menjangkau %1$s. Periksa servernya, atau coba lagi.</string>
+    <string name="reading_failed_send_too_large">%1$s berukuran %3$s, dan %2$s hanya menerima file hingga %4$s. Kirim lebih sedikit bab sekaligus, lalu coba lagi.</string>
+    <string name="reading_failed_send_missing">%1$s tidak memiliki %2$s, jadi file tidak dikirim. Coba lagi.</string>
+    <string name="reading_failed_send_encoding">%2$s di %1$s memakai pengodean teks yang salah, jadi file tidak dikirim. Coba lagi.</string>
+    <string name="reading_failed_send_malformed">%2$s di %1$s tidak valid, jadi file tidak dikirim. Coba lagi.</string>
+    <string name="reading_row_gone_from_source">Hilang dari sumber</string>
     <string name="store_joined">Bergabung dengan %1$s sebagai %2$s.</string>
     <string name="store_joined_unnamed">Bergabung dengan %1$s tanpa nama.</string>
     <string name="store_left">Keluar dari %1$s. plugin-plugin tetap terpasang.</string>

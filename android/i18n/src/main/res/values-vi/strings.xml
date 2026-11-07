@@ -172,6 +172,11 @@
     <string name="party_rejoined">Đã trở lại xem chung.</string>
     <string name="party_left">Đã rời xem chung.</string>
     <string name="party_server_unreachable">Không kết nối được với %1$s. Hãy kiểm tra máy chủ hoặc thử lại.</string>
+    <string name="reading_failed_send_too_large">%1$s có dung lượng %3$s, còn %2$s chỉ nhận tệp tối đa %4$s. Hãy gửi ít chương hơn mỗi lần rồi thử lại.</string>
+    <string name="reading_failed_send_missing">%1$s thiếu %2$s nên tệp chưa được gửi. Hãy thử lại.</string>
+    <string name="reading_failed_send_encoding">%2$s trong %1$s dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.</string>
+    <string name="reading_failed_send_malformed">%2$s trong %1$s không hợp lệ nên tệp chưa được gửi. Hãy thử lại.</string>
+    <string name="reading_row_gone_from_source">Đã bị gỡ khỏi nguồn</string>
     <string name="store_joined">Đã tham gia %1$s với tên %2$s.</string>
     <string name="store_joined_unnamed">Đã tham gia %1$s mà không có tên.</string>
     <string name="store_left">Đã rời %1$s. Các plugin đã cài vẫn được giữ lại.</string>

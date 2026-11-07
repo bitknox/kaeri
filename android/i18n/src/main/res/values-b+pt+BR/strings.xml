@@ -188,6 +188,11 @@
     <string name="party_rejoined">De volta à sessão em grupo.</string>
     <string name="party_left">Você saiu da sessão em grupo.</string>
     <string name="party_server_unreachable">Não foi possível acessar %1$s. Verifique o servidor ou tente de novo.</string>
+    <string name="reading_failed_send_too_large">%1$s tem %3$s, e %2$s aceita arquivos de até %4$s. Envie menos capítulos por vez e tente de novo.</string>
+    <string name="reading_failed_send_missing">Falta %2$s em %1$s, então o arquivo não foi enviado. Tente de novo.</string>
+    <string name="reading_failed_send_encoding">%2$s em %1$s está com a codificação de texto errada, então o arquivo não foi enviado. Tente de novo.</string>
+    <string name="reading_failed_send_malformed">%2$s em %1$s não é válido, então o arquivo não foi enviado. Tente de novo.</string>
+    <string name="reading_row_gone_from_source">Removido da fonte</string>
     <string name="store_joined">Entrou em %1$s como %2$s.</string>
     <string name="store_joined_unnamed">Entrou em %1$s sem nome.</string>
     <string name="store_left">Saiu de %1$s. Os plugins continuam instalados.</string>

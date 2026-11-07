@@ -569,6 +569,21 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Не удалось связаться с {server}. Проверьте сервер или попробуйте ещё раз.</value>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} весит {size}, а {target} принимает файлы до {limit}. Отправляйте меньше глав за раз и попробуйте снова.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>В {file} отсутствует {part}, поэтому файл не отправлен. Попробуйте снова.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>У части {part} в {file} неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>Часть {part} в {file} некорректна, поэтому файл не отправлен. Попробуйте снова.</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Источник удалил главу</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Подключено к {store} как {member}.</value>
   </data>

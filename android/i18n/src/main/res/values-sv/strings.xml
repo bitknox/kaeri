@@ -180,6 +180,11 @@
     <string name="party_rejoined">Tillbaka i watch party.</string>
     <string name="party_left">Lämnade watch party.</string>
     <string name="party_server_unreachable">Kunde inte nå %1$s. Kontrollera servern eller försök igen.</string>
+    <string name="reading_failed_send_too_large">%1$s är %3$s, och %2$s tar emot filer upp till %4$s. Skicka färre kapitel åt gången och försök igen.</string>
+    <string name="reading_failed_send_missing">%1$s saknar %2$s, så filen skickades inte. Försök igen.</string>
+    <string name="reading_failed_send_encoding">%2$s i %1$s har fel textkodning, så filen skickades inte. Försök igen.</string>
+    <string name="reading_failed_send_malformed">%2$s i %1$s är inte giltig, så filen skickades inte. Försök igen.</string>
+    <string name="reading_row_gone_from_source">Borttagen från källan</string>
     <string name="store_joined">Gick med i %1$s som %2$s.</string>
     <string name="store_joined_unnamed">Gick med i %1$s utan namn.</string>
     <string name="store_left">Lämnade %1$s. Dess tillägg finns kvar installerade.</string>

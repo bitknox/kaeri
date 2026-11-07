@@ -188,6 +188,11 @@
     <string name="party_rejoined">Di nuovo nel watch party.</string>
     <string name="party_left">Uscito dal watch party.</string>
     <string name="party_server_unreachable">Impossibile raggiungere %1$s. Controlla il server o riprova.</string>
+    <string name="reading_failed_send_too_large">%1$s pesa %3$s e %2$s accetta file fino a %4$s. Invia meno capitoli alla volta e riprova.</string>
+    <string name="reading_failed_send_missing">In %1$s manca %2$s, quindi il file non è stato inviato. Riprova.</string>
+    <string name="reading_failed_send_encoding">%2$s in %1$s ha la codifica del testo sbagliata, quindi il file non è stato inviato. Riprova.</string>
+    <string name="reading_failed_send_malformed">%2$s in %1$s non è valido, quindi il file non è stato inviato. Riprova.</string>
+    <string name="reading_row_gone_from_source">Non più nella fonte</string>
     <string name="store_joined">Ti sei unito a %1$s come %2$s.</string>
     <string name="store_joined_unnamed">Ti sei unito a %1$s senza nome.</string>
     <string name="store_left">Hai lasciato %1$s. I suoi plugin restano installati.</string>
