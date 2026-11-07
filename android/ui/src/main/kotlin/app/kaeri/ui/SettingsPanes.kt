@@ -180,7 +180,8 @@ internal fun NotificationsPane(actions: AppActions) {
         SettingsGroup(
             footer = listOfNotNull(
                 if (answer.reads) stringResource(R.string.settings_chapter_notifications_footer) else null,
-                stringResource(R.string.settings_notify_permission_note),
+                // The system asks for the permission from Android 13; before that there is nothing to ask.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) stringResource(R.string.settings_notify_permission_note) else null,
             ).joinToString(" "), // i18n-skip
             rows = listOfNotNull(
                 if (answer.reads) chapterNoticesRow else null,
