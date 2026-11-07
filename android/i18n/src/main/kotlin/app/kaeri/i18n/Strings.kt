@@ -5265,6 +5265,82 @@ object Strings {
     fun episodeDownloadFailed(context: Context, episode: Int): String =
         context.getString(R.string.episode_download_failed, episode)
 
+    /** First run, page 2 of 5. */
+    fun firstOtherTitle(context: Context): String =
+        context.getString(R.string.first_other_title)
+
+    /** Under the title. */
+    fun firstOtherLine(context: Context): String =
+        context.getString(R.string.first_other_line)
+
+    /** Line under the pair row. */
+    fun firstOtherPairLine(context: Context): String =
+        context.getString(R.string.first_other_pair_line)
+
+    /** Row that restores from a sync folder. */
+    fun firstOtherRestore(context: Context): String =
+        context.getString(R.string.first_other_restore)
+
+    /** Line under it. */
+    fun firstOtherRestoreLine(context: Context): String =
+        context.getString(R.string.first_other_restore_line)
+
+    /** Primary action: go on with the first run on this device alone. */
+    fun firstOtherNo(context: Context): String =
+        context.getString(R.string.first_other_no)
+
+    /** Beside a spinner, after 600 ms. */
+    fun pairWaiting(context: Context): String =
+        context.getString(R.string.pair_waiting)
+
+    /** After 30 seconds with nothing. */
+    fun pairNothingYet(context: Context): String =
+        context.getString(R.string.pair_nothing_yet)
+
+    /** Group header for what the other device brings. */
+    fun firstJoinGroup(context: Context, device: String): String =
+        context.getString(R.string.first_join_group, device)
+
+    /** Row while the rest arrives. */
+    fun firstJoinLooking(context: Context, device: String): String =
+        context.getString(R.string.first_join_looking, device)
+
+    /** Row with a pop-up of Watch, Read and Both. */
+    fun firstJoinMedium(context: Context): String =
+        context.getString(R.string.first_join_medium)
+
+    /** Line under it when the other device reads. */
+    fun firstJoinMediumLine(context: Context, device: String): String =
+        context.getString(R.string.first_join_medium_line, device)
+
+    /** Line under the sign-ins switch: the trackers the other device is signed in to, already joined. */
+    fun firstJoinSigninsLine(context: Context, trackers: String): String =
+        context.getString(R.string.first_join_signins_line, trackers)
+
+    /** Switch, one per book server. */
+    fun firstJoinServer(context: Context, host: String): String =
+        context.getString(R.string.first_join_server, host)
+
+    /** Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore. */
+    fun firstJoinServerLine(context: Context, kind: String, device: String, store: String): String =
+        context.getString(R.string.first_join_server_line, kind, device, store)
+
+    /** Note under the list. */
+    fun firstJoinFolders(context: Context, device: String): String =
+        context.getString(R.string.first_join_folders, device)
+
+    /** Note when the setup answered the remaining pages. */
+    fun firstJoinStepsDone(context: Context): String =
+        context.getString(R.string.first_join_steps_done)
+
+    /** Row error when a plugin store refused this device. */
+    fun firstJoinStoreRefused(context: Context, store: String, owner: String): String =
+        context.getString(R.string.first_join_store_refused, store, owner)
+
+    /** Notice on Home, for 4 seconds. */
+    fun firstJoinSyncing(context: Context, device: String): String =
+        context.getString(R.string.first_join_syncing, device)
+
     /** Name of the Home section in the sidebar, the tab bar and the window title. */
     fun homeTitle(context: Context): String =
         context.getString(R.string.home_title)
@@ -8350,6 +8426,102 @@ object Strings {
     fun readerLookSystem(context: Context): String =
         context.getString(R.string.reader_look_system)
 
+    /** Button in the first run that opens the reading demo. */
+    fun onboardingReadDemo(context: Context): String =
+        context.getString(R.string.onboarding_read_demo)
+
+    /** Under the first run's demo heading when the device is for reading. */
+    fun onboardingDemoBooksDetail(context: Context): String =
+        context.getString(R.string.onboarding_demo_books_detail)
+
+    /** Under the first run's demo heading when the device is for both. */
+    fun onboardingDemoBothDetail(context: Context): String =
+        context.getString(R.string.onboarding_demo_both_detail)
+
+    /** Home, under the spotlight, when the demo is the only thing to read. */
+    fun homeDemoOnlyBooks(context: Context): String =
+        context.getString(R.string.home_demo_only_books)
+
+    /** Primary action on Home's spotlight for a book. */
+    fun homeSpotlightRead(context: Context): String =
+        context.getString(R.string.home_spotlight_read)
+
+    /** The demo comic's facts line on its series page. */
+    fun demoSeriesFacts(context: Context, pages: Int): String =
+        context.resources.getQuantityString(R.plurals.demo_series_facts, pages, pages)
+
+    /** The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0". */
+    fun demoCreditBook(context: Context, title: String, author: String, licence: String): String =
+        context.getString(R.string.demo_credit_book, title, author, licence)
+
+    /** The story's credit in About the demo. */
+    fun demoCreditStory(context: Context, title: String, author: String): String =
+        context.getString(R.string.demo_credit_story, title, author)
+
+    /** Credit capsule in the reader's top bar on page 1. */
+    fun readerDemoCredit(context: Context, title: String, author: String, licence: String): String =
+        context.getString(R.string.reader_demo_credit, title, author, licence)
+
+    /** A demo result's line in Search. */
+    fun searchDemoReads(context: Context): String =
+        context.getString(R.string.search_demo_reads)
+
+    /** Search, under the demo results, when only the demo is on. */
+    fun searchDemoOnlyBooks(context: Context): String =
+        context.getString(R.string.search_demo_only_books)
+
+    /** Title of the card after the demo's last page. */
+    fun readerDemoEnd(context: Context): String =
+        context.getString(R.string.reader_demo_end)
+
+    /** Line under it. */
+    fun readerDemoEndLine(context: Context): String =
+        context.getString(R.string.reader_demo_end_line)
+
+    /** The card's primary action. */
+    fun readerDemoAddSource(context: Context): String =
+        context.getString(R.string.reader_demo_add_source)
+
+    /** The card's secondary action, back to the first page. */
+    fun readerDemoAgain(context: Context): String =
+        context.getString(R.string.reader_demo_again)
+
+    /** The demo row's line in Your sources when reading is on. */
+    fun sourcesDemoBooksLine(context: Context): String =
+        context.getString(R.string.sources_demo_books_line)
+
+    /** About the demo, first line, when reading is on. */
+    fun sourcesDemoBooksWhat(context: Context): String =
+        context.getString(R.string.sources_demo_books_what)
+
+    /** About the demo, in place of sources-demo-private when reading is on. */
+    fun sourcesDemoBooksPrivate(context: Context): String =
+        context.getString(R.string.sources_demo_books_private)
+
+    /** Group on the demo's series page. */
+    fun demoChapters(context: Context): String =
+        context.getString(R.string.demo_chapters)
+
+    /** Group on the demo's series page: the other demo work. */
+    fun demoAlso(context: Context): String =
+        context.getString(R.string.demo_also)
+
+    /** Group in About the demo. */
+    fun demoCredits(context: Context): String =
+        context.getString(R.string.demo_credits)
+
+    /** A chapter row's line on the demo's series page. */
+    fun demoPages(context: Context, pages: Int): String =
+        context.resources.getQuantityString(R.plurals.demo_pages, pages, pages)
+
+    /** The story's row on the demo's series page. The licence is "Public domain" as the engine says it. */
+    fun demoStoryRow(context: Context, author: String, licence: String): String =
+        context.getString(R.string.demo_story_row, author, licence)
+
+    /** Primary action on the demo's series page. */
+    fun demoReadChapter(context: Context, number: String): String =
+        context.getString(R.string.demo_read_chapter, number)
+
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =
         context.getString(R.string.nav_watch)
@@ -11313,6 +11485,250 @@ object Strings {
     /** Row: the port the shared catalogue listens on. Empty picks a free one. */
     fun settingsOpdsPort(context: Context): String =
         context.getString(R.string.settings_opds_port)
+
+    /** Label of the address field in the Add a server sheet. */
+    fun bookServerAddress(context: Context): String =
+        context.getString(R.string.book_server_address)
+
+    /** Note under the empty address field. */
+    fun bookServerAddressHint(context: Context): String =
+        context.getString(R.string.book_server_address_hint)
+
+    /** Note under the address field once a Kavita OPDS link is pasted. */
+    fun bookServerKavitaKey(context: Context): String =
+        context.getString(R.string.book_server_kavita_key)
+
+    /** Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore. */
+    fun bookServerKeyKept(context: Context, store: String): String =
+        context.getString(R.string.book_server_key_kept, store)
+
+    /** Chip inside the address field, showing the key's last four characters after four dots. */
+    fun bookServerKey(context: Context, last: String): String =
+        context.getString(R.string.book_server_key, last)
+
+    /** Result title once the server signed in. */
+    fun bookServerFoundTitle(context: Context, series: Int, libraries: Int): String =
+        context.resources.getQuantityString(R.plurals.book_server_found_title, libraries, series, libraries)
+
+    /** Line under the result title. The kind is Komga, Kavita or OPDS. */
+    fun bookServerFoundLine(context: Context, kind: String, host: String): String =
+        context.getString(R.string.book_server_found_line, kind, host)
+
+    /** A library row's line in the result. */
+    fun bookServerLibraryLine(context: Context, series: Int): String =
+        context.getString(R.string.book_server_library_line, series)
+
+    /** Switch in the result, on to start with. */
+    fun bookServerSyncProgress(context: Context): String =
+        context.getString(R.string.book_server_sync_progress)
+
+    /** Line under the switch. */
+    fun bookServerSyncProgressLine(context: Context, host: String): String =
+        context.getString(R.string.book_server_sync_progress_line, host)
+
+    /** Field label. */
+    fun bookServerUsername(context: Context): String =
+        context.getString(R.string.book_server_username)
+
+    /** Field label. */
+    fun bookServerPassword(context: Context): String =
+        context.getString(R.string.book_server_password)
+
+    /** Error title when the server could not be reached. */
+    fun bookServerErrUnreachable(context: Context, host: String): String =
+        context.getString(R.string.book_server_err_unreachable, host)
+
+    /** Line under it. */
+    fun bookServerErrUnreachableLine(context: Context): String =
+        context.getString(R.string.book_server_err_unreachable_line)
+
+    /** Error title when the server turned the password down. */
+    fun bookServerErrPassword(context: Context, host: String): String =
+        context.getString(R.string.book_server_err_password, host)
+
+    /** Line under it. The kind is Komga, Kavita or OPDS. */
+    fun bookServerErrPasswordLine(context: Context, kind: String): String =
+        context.getString(R.string.book_server_err_password_line, kind)
+
+    /** Error title when Kavita turned the key in an OPDS link down. */
+    fun bookServerErrKey(context: Context, host: String): String =
+        context.getString(R.string.book_server_err_key, host)
+
+    /** Line under it. */
+    fun bookServerErrKeyLine(context: Context): String =
+        context.getString(R.string.book_server_err_key_line)
+
+    /** Title when the server lets the account in and shows it no series. */
+    fun bookServerEmpty(context: Context, host: String): String =
+        context.getString(R.string.book_server_empty, host)
+
+    /** Line under it. */
+    fun bookServerEmptyLine(context: Context): String =
+        context.getString(R.string.book_server_empty_line)
+
+    /** Note under it. */
+    fun bookServerEmptyRecheck(context: Context): String =
+        context.getString(R.string.book_server_empty_recheck)
+
+    /** Line under an error when the address is not a book server. */
+    fun bookServerNotBooksLine(context: Context): String =
+        context.getString(R.string.book_server_not_books_line)
+
+    /** Folder result title. */
+    fun bookFolderFound(context: Context, series: Int, files: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_found, files, series, files)
+
+    /** Line under it: the folder's path, then how many series were matched by their own details. */
+    fun bookFolderFoundLine(context: Context, path: String, matched: Int): String =
+        context.getString(R.string.book_folder_found_line, path, matched)
+
+    /** Row in the folder result: files that are books in formats Kaeri can't open. */
+    fun bookFolderUnsupported(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_unsupported, count, count)
+
+    /** Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3". */
+    fun bookFolderUnsupportedLine(context: Context, kinds: String): String =
+        context.getString(R.string.book_folder_unsupported_line, kinds)
+
+    /** One item of that list: EPUB files locked with DRM or a password. */
+    fun bookFolderDrm(context: Context, count: Int): String =
+        context.getString(R.string.book_folder_drm, count)
+
+    /** Note under the folder result. */
+    fun bookFolderOpens(context: Context): String =
+        context.getString(R.string.book_folder_opens)
+
+    /** Row action that lists the files skipped. */
+    fun bookFolderShowFiles(context: Context): String =
+        context.getString(R.string.book_folder_show_files)
+
+    /** Primary action in the Add a folder sheet. */
+    fun bookFolderAdd(context: Context): String =
+        context.getString(R.string.book_folder_add)
+
+    /** Folder row action that picks another folder. */
+    fun bookFolderChange(context: Context): String =
+        context.getString(R.string.book_folder_change)
+
+    /** Title when a folder holds nothing Kaeri can open. */
+    fun bookFolderEmpty(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_empty, folder)
+
+    /** Line under it. */
+    fun bookFolderEmptyLine(context: Context, files: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_empty_line, files, files)
+
+    /** Primary action after an empty folder. */
+    fun bookFolderChooseOther(context: Context): String =
+        context.getString(R.string.book_folder_choose_other)
+
+    /** Title of the Join a plugin store sheet. */
+    fun storeJoinTitle(context: Context): String =
+        context.getString(R.string.store_join_title)
+
+    /** Label of the invite field. */
+    fun storeInviteField(context: Context): String =
+        context.getString(R.string.store_invite_field)
+
+    /** Result title once a plugin store is joined. */
+    fun storeJoinedTitle(context: Context, store: String): String =
+        context.getString(R.string.store_joined_title, store)
+
+    /** Line under it. The owner is who runs the store. */
+    fun storeJoinedLine(context: Context, owner: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_joined_line, count, owner, count)
+
+    /** Group header in the joined store's list. */
+    fun storeGroupReading(context: Context): String =
+        context.getString(R.string.store_group_reading)
+
+    /** Group header in the joined store's list. */
+    fun storeGroupWatching(context: Context): String =
+        context.getString(R.string.store_group_watching)
+
+    /** Row action. */
+    fun storeInstall(context: Context): String =
+        context.getString(R.string.store_install)
+
+    /** Row state once installed. */
+    fun storeInstalledRow(context: Context): String =
+        context.getString(R.string.store_installed_row)
+
+    /** Primary action when two or more plugins are for reading. */
+    fun storeInstallAllReading(context: Context): String =
+        context.getString(R.string.store_install_all_reading)
+
+    /** Result after installing. */
+    fun storeInstalled(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_installed, count, count)
+
+    /** Info title when every plugin in a store is for watching, and watching is off here. */
+    fun storeOtherMedium(context: Context, store: String): String =
+        context.getString(R.string.store_other_medium, store)
+
+    /** Line under it. */
+    fun storeOtherMediumLine(context: Context): String =
+        context.getString(R.string.store_other_medium_line)
+
+    /** Secondary action under it. */
+    fun storeTurnOnWatching(context: Context): String =
+        context.getString(R.string.store_turn_on_watching)
+
+    /** Info title when a store has no plugins. */
+    fun storeEmpty(context: Context, store: String): String =
+        context.getString(R.string.store_empty, store)
+
+    /** Line under it. */
+    fun storeEmptyLine(context: Context, owner: String): String =
+        context.getString(R.string.store_empty_line, owner)
+
+    /** Error title when the store doesn't answer. */
+    fun storeErrUnreachable(context: Context, host: String): String =
+        context.getString(R.string.store_err_unreachable, host)
+
+    /** Line under it. */
+    fun storeErrUnreachableLine(context: Context, owner: String): String =
+        context.getString(R.string.store_err_unreachable_line, owner)
+
+    /** Under the reading group: plugins for watching while watching is off here. */
+    fun storeOtherMediumMore(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_other_medium_more, count, count)
+
+    /** On a TV, under the list: plugins for reading, which a TV doesn't do. */
+    fun storeTvReadingOnly(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_tv_reading_only, count, count)
+
+    /** On a TV, info title when every plugin in a store is for reading. */
+    fun storeTvAllReading(context: Context, store: String): String =
+        context.getString(R.string.store_tv_all_reading, store)
+
+    /** Plugin row in an invite's result. */
+    fun storePluginRow(context: Context, version: String, hosts: String): String =
+        context.getString(R.string.store_plugin_row, version, hosts)
+
+    /** Notice after a server or folder is added, for 4 seconds. */
+    fun sourceAdded(context: Context, name: String, series: Int): String =
+        context.getString(R.string.source_added, name, series)
+
+    /** Notice after Install all, for 4 seconds. */
+    fun sourceAddedPlugins(context: Context, count: Int, store: String): String =
+        context.resources.getQuantityString(R.plurals.source_added_plugins, count, count, store)
+
+    /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. */
+    fun sourceRowServer(context: Context, kind: String, series: Int, libraries: Int): String =
+        context.resources.getQuantityString(R.plurals.source_row_server, libraries, kind, series, libraries)
+
+    /** A server's row in Your sources while it shows no series. */
+    fun sourceRowServerEmpty(context: Context, kind: String): String =
+        context.getString(R.string.source_row_server_empty, kind)
+
+    /** A folder's row in Your sources. */
+    fun sourceRowFolder(context: Context, path: String, series: Int, skipped: Int): String =
+        context.resources.getQuantityString(R.plurals.source_row_folder, skipped, path, series, skipped)
+
+    /** A plugin's row in Your sources. The medium is "Reading" or "Watching". */
+    fun sourceRowPlugin(context: Context, store: String, medium: String, version: String): String =
+        context.getString(R.string.source_row_plugin, store, medium, version)
 
     /** Title of the screen or section that lists sources. */
     fun sourcesTitle(context: Context): String =

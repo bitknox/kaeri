@@ -85,6 +85,12 @@ pub struct BookFolderRow {
     /// Removed, with Undo for 8 seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub removed: bool,
+    /// Every file the last scan met: "312 files".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub files: u32,
+    /// Files the last scan set aside as books Kaeri can't open, or locked: "23 files skipped".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub skipped: u32,
 }
 
 /// Books in a folder that read as one series, matched or kept as Your files.
@@ -121,6 +127,18 @@ pub struct BookServerRow {
     pub off: bool,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub signed_out: bool,
+    /// The libraries added: "212 series in 2 libraries". Nought for an OPDS catalogue.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub libraries: u32,
+    /// It showed no series when last asked: "no series yet · looks again in 30 minutes".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub empty: bool,
+    /// When Kaeri looks at an empty server again, as a Unix time.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub rechecks_at: Option<i64>,
+    /// The last four characters of the Kavita key it signs in with: "Key ••••1234".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub key_last4: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -225,6 +243,28 @@ pub enum BookSourceCommand {
         source_id: String,
         series_ref: String,
     },
+    /// Sign in to a server and say what it holds, without adding it yet. `address` may be a
+    /// Kavita OPDS link (`https://host/api/opds/{key}`), whose key signs in with no user or
+    /// password. Answered with `Event::CameIn`: `Found`, or `Empty` with the reason.
+    Probe {
+        address: String,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        user: Option<String>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        password: Option<Secret>,
+    },
+    /// Add a server `Probe` found, asking only `libraries` (empty asks every one). Its sign-in
+    /// goes to the secure store. Answered with `Event::CameIn(ServerAdded)` and the view.
+    AddServer {
+        pending: String,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        libraries: Vec<String>,
+        report_progress: bool,
+    },
+    /// Look again at servers that showed no series, now: pull to refresh. Scan does too.
+    Recheck,
+    /// Fetch the reading demo's first pages ahead, as the books page shows with the demo on.
+    PrefetchDemo,
 }
 
 impl BookSourceCommand {
@@ -235,6 +275,9 @@ impl BookSourceCommand {
             Self::CheckServer { .. } => "checking the server".into(),
             Self::SignIn { .. } => "signing in to the server".into(),
             Self::LoadForWork { .. } => "asking your sources".into(),
+            Self::Probe { .. } => "checking the server".into(),
+            Self::AddServer { .. } => "adding the server".into(),
+            Self::Recheck => "looking at your servers again".into(),
             Self::SearchSourceForWork { .. } => "searching the source".into(),
             _ => return None,
         })

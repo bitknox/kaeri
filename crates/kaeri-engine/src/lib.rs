@@ -144,6 +144,7 @@ pub mod remote;
 pub mod servers;
 pub mod services;
 pub mod settings;
+pub mod setup_from;
 pub mod show_settings;
 pub mod skip_find;
 pub mod skip_marks;

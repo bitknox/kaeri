@@ -1643,14 +1643,218 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "book-folder-add": {
+    "source": "4994bf45e758",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-choose-other": {
+    "source": "4505c7ba8e62",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-drm": {
+    "source": "7d2a3a98cc4c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-empty": {
+    "source": "1ca197eaa044",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-empty-line": {
+    "source": "d0a6c22d58be",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-found": {
+    "source": "ce1634675d9f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-found-line": {
+    "source": "25691dd6dc4b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-opens": {
+    "source": "b4f2fb2c63ac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-show-files": {
+    "source": "17d6146e0176",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-unsupported": {
+    "source": "d3d7e97d79d7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-folder-unsupported-line": {
+    "source": "8f958636d00e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-address": {
+    "source": "fcdd8e672c75",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-address-hint": {
+    "source": "5164b4954cd5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-empty": {
+    "source": "edb8e362fe0b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-empty-line": {
+    "source": "ed986de99841",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-empty-recheck": {
+    "source": "93b3c087ca0e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-key": {
+    "source": "ef7b78529590",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-key-line": {
+    "source": "db6d111ec52f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-password": {
+    "source": "fea30568622b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-password-line": {
+    "source": "eac14cdc9de3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-unreachable": {
+    "source": "0bd12e306551",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-err-unreachable-line": {
+    "source": "50a5fc297d30",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-found-line": {
+    "source": "f68762af2f5b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-found-title": {
+    "source": "a7b8fdb3bc5b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-kavita-key": {
+    "source": "3acee6f74ed2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-key": {
+    "source": "3d8288fe27f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-key-kept": {
+    "source": "a0bdce5ad708",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-library-line": {
+    "source": "d32b2ee34dbc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "book-server-looking": {
     "source": "090691cc5152",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
   },
+  "book-server-not-books-line": {
+    "source": "0187f301f7ca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "book-server-note": {
     "source": "22bd1fe9a80a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-password": {
+    "source": "f6e1665c7022",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-sync-progress": {
+    "source": "489f1534cfcc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-sync-progress-line": {
+    "source": "ba04096a607a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-username": {
+    "source": "03f42eea7215",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -4041,6 +4245,60 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Yesterday"
+  },
+  "demo-also": {
+    "source": "8f3ea2dead65",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-chapters": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-credit-book": {
+    "source": "1f91556445ae",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-credit-story": {
+    "source": "1f669ef20616",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-credits": {
+    "source": "7a391ae3182a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-pages": {
+    "source": "e2df2533ab4c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-read-chapter": {
+    "source": "93f292cc71e4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-series-facts": {
+    "source": "56fe5a5511ae",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "demo-story-row": {
+    "source": "34a6e66a72a3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "device-kind-computer": {
     "source": "0af16b6b2e49",
@@ -7539,6 +7797,60 @@
     "at": "2026-10-31",
     "back": "Filters"
   },
+  "first-join-folders": {
+    "source": "cb0e192d0bd6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-group": {
+    "source": "3439dad9f2e9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-looking": {
+    "source": "aedb54c08bb6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-medium": {
+    "source": "d133e2baf4c0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-medium-line": {
+    "source": "2aba9a543f72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-server": {
+    "source": "88c0f977ed8d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-server-line": {
+    "source": "bd34441c09c6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-signins-line": {
+    "source": "8d5497c3d0c2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-steps-done": {
+    "source": "39b7abf9bfb1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "first-join-store": {
     "source": "c55c13ca477b",
     "state": "draft",
@@ -7551,11 +7863,59 @@
     "by": "agent",
     "at": "2026-11-05"
   },
+  "first-join-store-refused": {
+    "source": "7ad69a98c0d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-join-syncing": {
+    "source": "719938ca14d7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "first-ok-line": {
     "source": "db41a8c1b1e5",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-05"
+  },
+  "first-other-line": {
+    "source": "04376ff96c5f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-other-no": {
+    "source": "b27730f3ac45",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-other-pair-line": {
+    "source": "2393234778ec",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-other-restore": {
+    "source": "99ce0c760f16",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-other-restore-line": {
+    "source": "8ea107452294",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "first-other-title": {
+    "source": "f3d2aa2fdfdf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "first-restore": {
     "source": "aff8502dc4cb",
@@ -7830,6 +8190,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "home-demo-only-books": {
+    "source": "b0bdd46090fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "home-details": {
     "source": "355b21b89ce5",
     "state": "draft",
@@ -8088,6 +8454,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "home-spotlight-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "home-spotlight-recommended": {
     "source": "fcdc05d9cb26",
@@ -13468,6 +13840,18 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "onboarding-demo-books-detail": {
+    "source": "0a8cf8238b1b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-demo-both-detail": {
+    "source": "a07e09b7f299",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "onboarding-demo-detail": {
     "source": "9194d089360c",
     "state": "draft",
@@ -13596,6 +13980,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "onboarding-read-demo": {
+    "source": "26e7267811c9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "onboarding-skip": {
     "source": "66413c24dcf6",
@@ -14334,6 +14724,12 @@
     "by": "agent",
     "at": "2026-11-05"
   },
+  "pair-nothing-yet": {
+    "source": "e64971fc4b9b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "pair-ok": {
     "source": "2f54bdc43b5b",
     "state": "draft",
@@ -14399,6 +14795,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-05"
+  },
+  "pair-waiting": {
+    "source": "6586f16b6af0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "pair-which-profile": {
     "source": "6118a9aa7aa9",
@@ -18735,6 +19137,36 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reader-demo-add-source": {
+    "source": "b930414eb315",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-demo-again": {
+    "source": "273a9ca2accd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-demo-credit": {
+    "source": "38f3e9b20a52",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-demo-end": {
+    "source": "f9aeb29d6391",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-demo-end-line": {
+    "source": "a7279651c0cd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "reader-detected-left-to-right": {
     "source": "e66f58953d6b",
     "state": "draft",
@@ -21458,11 +21890,23 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "search-demo-only-books": {
+    "source": "668f3765ace5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "search-demo-plays": {
     "source": "5ccea23d567b",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "search-demo-reads": {
+    "source": "f50cda9a5685",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "search-detail-episode": {
     "source": "527db15e0c97",
@@ -27418,6 +27862,18 @@
     "at": "2026-10-31",
     "back": "Score"
   },
+  "source-added": {
+    "source": "0dd0df5ea28f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "source-added-plugins": {
+    "source": "6e08746b082e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "source-note-ambiguous": {
     "source": "13ce2b037219",
     "state": "draft",
@@ -27544,6 +28000,30 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "One seed / { $count } seeds / { $count } seeds"
+  },
+  "source-row-folder": {
+    "source": "d258ef89c014",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "source-row-plugin": {
+    "source": "4a19406f0855",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "source-row-server": {
+    "source": "62f0476bdb00",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "source-row-server-empty": {
+    "source": "40a0d7b67531",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "source-switched-off": {
     "source": "55e6488ce17f",
@@ -27681,6 +28161,24 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "sources-demo-books-line": {
+    "source": "beb33786f6d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "sources-demo-books-private": {
+    "source": "48d3a499a87a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "sources-demo-books-what": {
+    "source": "adcafbedcdf1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "sources-demo-credit": {
     "source": "539ca829d46d",
@@ -28890,6 +29388,66 @@
     "at": "2026-10-31",
     "back": "All the devices that joined with the link were removed."
   },
+  "store-empty": {
+    "source": "69f967a9cc02",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-empty-line": {
+    "source": "381369a31b4f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-err-unreachable": {
+    "source": "0bd12e306551",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-err-unreachable-line": {
+    "source": "3fcee85ce2f2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-group-reading": {
+    "source": "2ccdfeabefc0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-group-watching": {
+    "source": "bccdd3914adc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-install": {
+    "source": "6196153c4b0c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-install-all-reading": {
+    "source": "7b47f9dc24fa",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-installed": {
+    "source": "152caddbcf8c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-installed-row": {
+    "source": "10e80d4c01c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "store-invite-cancelled": {
     "source": "3b4f30f3574d",
     "state": "draft",
@@ -28914,6 +29472,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "store-invite-field": {
+    "source": "2afc9a717c16",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "store-invite-needs-link": {
     "source": "e011bc7e6cf2",
@@ -28941,6 +29505,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "store-join-title": {
+    "source": "ed50a1073de9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "store-join-would-unname": {
     "source": "0adbd6a050b0",
     "state": "draft",
@@ -28954,6 +29524,18 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "You joined { $store } as { $member }."
+  },
+  "store-joined-line": {
+    "source": "0e858f2af316",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-joined-title": {
+    "source": "2af92d23fdd5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "store-joined-unnamed": {
     "source": "6ebad99aa14b",
@@ -29053,12 +29635,36 @@
     "at": "2026-10-31",
     "back": "This link no longer lets anyone join. Ask the person in charge of the plugin store for a new link or an invitation."
   },
+  "store-other-medium": {
+    "source": "1f86efc91f10",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-other-medium-line": {
+    "source": "276aa7bfc66a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-other-medium-more": {
+    "source": "9122c25ab5f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "store-plugin-changed": {
     "source": "31b9a57f0588",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "{ $store } changed { $plugin } since it was shown. Review it again before installing it."
+  },
+  "store-plugin-row": {
+    "source": "f67f7ffbaef1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "store-plugin-withdrawn": {
     "source": "18fab9e8cde4",
@@ -29086,6 +29692,24 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "The token of this plugin store could not be saved. { $reason }"
+  },
+  "store-turn-on-watching": {
+    "source": "4e71420589ed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-tv-all-reading": {
+    "source": "b659f57eb110",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "store-tv-reading-only": {
+    "source": "24c6a17fdbef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "store-unreachable": {
     "source": "18d0c5ef8e1d",

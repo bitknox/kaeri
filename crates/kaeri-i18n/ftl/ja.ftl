@@ -5716,6 +5716,63 @@ episode-download-done = ダウンロード済み
 # Line under that button after a failure.
 episode-download-failed = 第{ $episode }話をダウンロードできませんでした。もう一度お試しください。
 
+# First run, page 2 of 5.
+first-other-title = ほかのデバイスですでにKaeriを使っていますか？
+
+# Under the title.
+first-other-line = ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。
+
+# Line under the pair row.
+first-other-pair-line = そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。
+
+# Row that restores from a sync folder.
+first-other-restore = クラウドフォルダーから復元
+
+# Line under it.
+first-other-restore-line = 保存した復元キーを使います
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = いいえ、ここから始める
+
+# Beside a spinner, after 600 ms.
+pair-waiting = もう一方のデバイスを待っています
+
+# After 30 seconds with nothing.
+pair-nothing-yet = まだ何も表示されませんか？2台のデバイスが同じWi-Fiに接続されている必要があります。
+
+# Group header for what the other device brings.
+first-join-group = { $device }から
+
+# Row while the rest arrives.
+first-join-looking = { $device }の内容を確認しています…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeriの用途
+
+# Line under it when the other device reads.
+first-join-medium-line = { $device }と同じ、読書
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = { $host }を追加
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · { $device }のキーでサインイン、{ $store }に保存
+
+# Note under the list.
+first-join-folders = フォルダーは{ $device }に残ります。このデバイスのフォルダーはソースで追加してください。
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = リストとソースは設定済みなので、初回設定はここで終わりです。設定から変更できます。
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store }はこのデバイスの参加を許可しませんでした。{ $owner }が招待を送れます。
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = { $device }と同期中
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = ホーム
 
@@ -8078,6 +8135,84 @@ reader-gap-small = 小
 # Look choice that follows the system's light or dark.
 reader-look-system = システム
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = デモを読む
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = 作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = 読む
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+       *[other] デモ · コミック · { $pages }ページ
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $author }「{ $title }」。ライセンス: { $licence }。Wikimedia Commonsから読み込んでいます。
+
+# The story's credit in About the demo.
+demo-credit-story = { $author }「{ $title }」。パブリックドメイン。アプリに付属しています。
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = デモ · 今すぐ読めます
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = デモだけがオンです。ソースを追加すると、ほかのタイトルが表示されます。
+
+# Title of the card after the demo's last page.
+reader-demo-end = デモはここまでです
+
+# Line under it.
+reader-demo-end-line = 自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。
+
+# The card's primary action.
+reader-demo-add-source = ソースを追加
+
+# The card's secondary action, back to the first page.
+reader-demo-again = 1ページ目に戻る
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = コミックと物語 · CC BY 4.0とパブリックドメイン
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = 作者がCreative Commonsで共有している作品なので、ソースを追加する前にKaeriを試せます。保存しておくソースではありません。
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = デモはどこにもサインインせず、連携サービスにも書き込みません。
+
+# Group on the demo's series page.
+demo-chapters = 章
+
+# Group on the demo's series page: the other demo work.
+demo-also = デモ内のほかの作品
+
+# Group in About the demo.
+demo-credits = クレジット
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+       *[other] { $pages }ページ
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = 物語 · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = 第{ $number }章を読む
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = 視聴
 
@@ -10387,6 +10522,222 @@ settings-opds-password = フィードのパスワード
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = フィードのポート
+
+# Label of the address field in the Add a server sheet.
+book-server-address = アドレス
+
+# Note under the empty address field.
+book-server-address-hint = アドレス、またはKavitaのOPDSリンク全体を入力します。
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeriはキーを{ $store }に保存し、末尾4文字だけを表示します。
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = キー ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+       *[other] { $libraries }件のライブラリで{ $series }シリーズが見つかりました
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $host }の{ $kind }です。追加するライブラリを選んでください。
+
+# A library row's line in the result.
+book-server-library-line = { $series }シリーズ
+
+# Switch in the result, on to start with.
+book-server-sync-progress = サーバーに進捗を送る
+
+# Line under the switch.
+book-server-sync-progress-line = ここで読んだページは{ $host }に送られ、{ $host }の進捗がここに反映されます。
+
+# Field label.
+book-server-username = ユーザー名
+
+# Field label.
+book-server-password = パスワード
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = { $host }に接続できませんでした
+
+# Line under it.
+book-server-err-unreachable-line = アドレスと、サーバーが起動していてこのネットワーク上にあるかを確認してください。
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host }はそのパスワードを受け付けませんでした
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = ブラウザーで{ $kind }に使っているユーザー名とパスワードを入力してください。
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host }はそのキーを受け付けませんでした
+
+# Line under it.
+book-server-err-key-line = キーはKavitaでリセットすると変わります。Kavitaのアカウント設定からOPDSリンクをもう一度コピーしてください。
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host }には、このアカウントで表示できるシリーズがありません
+
+# Line under it.
+book-server-empty-line = サーバーには入れますが、サーバーがまだスキャン中か、このアカウントに本へのアクセス権がない可能性があります。
+
+# Note under it.
+book-server-empty-recheck = 今すぐ追加できます。Kaeriは30分ごとに再確認します。
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeriは、Komga、Kavita、OPDSのカタログから読み込みます。
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+       *[other] { $files }個のファイルに{ $series }シリーズが見つかりました
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }。Kaeriは、そのうち{ $matched }シリーズを詳細情報で照合しました。
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+       *[other] Kaeriで開けないファイルが{ $count }個
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }。これらはフォルダー内にそのまま残ります。
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = DRMで保護されたEPUBが{ $count }個
+
+# Note under the folder result.
+book-folder-opens = Kaeriは、CBZ、CBR、EPUB、PDFファイルと、画像のフォルダーを開けます。
+
+# Row action that lists the files skipped.
+book-folder-show-files = ファイルを表示
+
+# Primary action in the Add a folder sheet.
+book-folder-add = フォルダーを追加
+
+# Folder row action that picks another folder.
+book-folder-change = 変更
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = { $folder }にKaeriで開けるものはありません
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+       *[other] { $files }個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = 別のフォルダーを選ぶ
+
+# Title of the Join a plugin store sheet.
+store-join-title = プラグインストアに参加
+
+# Label of the invite field.
+store-invite-field = 招待
+
+# Result title once a plugin store is joined.
+store-joined-title = { $store }に参加しました
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+       *[other] { $owner }がプラグインを{ $count }個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。
+    }
+
+# Group header in the joined store's list.
+store-group-reading = 読書用
+
+# Group header in the joined store's list.
+store-group-watching = 視聴用
+
+# Row action.
+store-install = インストール
+
+# Row state once installed.
+store-installed-row = インストール済み
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = 読書用をすべてインストール
+
+# Result after installing.
+store-installed =
+    { $count ->
+       *[other] プラグインを{ $count }個インストールしました。ソースに入っています。
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = { $store }のプラグインはすべて視聴用です
+
+# Line under it.
+store-other-medium-line = このデバイスでは視聴がオフなので、ソースには表示されません。
+
+# Secondary action under it.
+store-turn-on-watching = 視聴をオンにする
+
+# Info title when a store has no plugins.
+store-empty = { $store }にはまだプラグインがありません
+
+# Line under it.
+store-empty-line = メンバーなので、{ $owner }が追加すると、新しいプラグインがプラグインストアに表示されます。
+
+# Error title when the store doesn't answer.
+store-err-unreachable = { $host }に接続できませんでした
+
+# Line under it.
+store-err-unreachable-line = 招待は正しいようですが、ストアが応答していません。しばらくしてからもう一度試すか、稼働しているか{ $owner }に確認してください。
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+       *[other] ほかに{ $count }個は視聴用ですが、このデバイスでは視聴がオフです。
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+       *[other] ほかに{ $count }個は読書用ですが、このTVでは読書できません。
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = { $store }のプラグインはすべて読書用ですが、このTVでは読書できません。
+
+# Plugin row in an invite's result.
+store-plugin-row = バージョン{ $version } · { $hosts }に接続する場合があります
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = { $name }を追加しました · { $series }シリーズ
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+       *[other] { $store }からプラグインを{ $count }個インストールしました
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+       *[other] { $kind } · { $libraries }件のライブラリに{ $series }シリーズ · 追加したばかり
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · シリーズはまだありません · 30分後に再確認します
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+       *[other] { $path } · { $series }シリーズ · { $skipped }個のファイルをスキップ
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = { $store }から · { $medium } · バージョン{ $version }
 
 # Title of the screen or section that lists sources.
 sources-title = ソース

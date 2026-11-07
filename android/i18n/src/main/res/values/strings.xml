@@ -2804,6 +2804,44 @@
     <string name="episode_download_done">Downloaded</string>
     <!-- Line under that button after a failure. -->
     <string name="episode_download_failed">Couldn\'t download episode %1$d. Try again.</string>
+    <!-- First run, page 2 of 5. -->
+    <string name="first_other_title">Already use Kaeri on another device?</string>
+    <!-- Under the title. -->
+    <string name="first_other_line">Pair with it and this device gets your sources, trackers and history. The steps after this are then done.</string>
+    <!-- Line under the pair row. -->
+    <string name="first_other_pair_line">Shows a code to enter on that device. Both need the same Wi-Fi.</string>
+    <!-- Row that restores from a sync folder. -->
+    <string name="first_other_restore">Restore from a cloud folder</string>
+    <!-- Line under it. -->
+    <string name="first_other_restore_line">Uses the recovery key you saved</string>
+    <!-- Primary action: go on with the first run on this device alone. -->
+    <string name="first_other_no">No, start here</string>
+    <!-- Beside a spinner, after 600 ms. -->
+    <string name="pair_waiting">Waiting for your other device</string>
+    <!-- After 30 seconds with nothing. -->
+    <string name="pair_nothing_yet">Nothing yet? Both devices need to be on the same Wi-Fi.</string>
+    <!-- Group header for what the other device brings. -->
+    <string name="first_join_group">From %1$s</string>
+    <!-- Row while the rest arrives. -->
+    <string name="first_join_looking">Looking at what %1$s has…</string>
+    <!-- Row with a pop-up of Watch, Read and Both. -->
+    <string name="first_join_medium">Kaeri is for</string>
+    <!-- Line under it when the other device reads. -->
+    <string name="first_join_medium_line">Reading, as on %1$s</string>
+    <!-- Line under the sign-ins switch: the trackers the other device is signed in to, already joined. -->
+    <string name="first_join_signins_line">%1$s</string>
+    <!-- Switch, one per book server. -->
+    <string name="first_join_server">Add %1$s</string>
+    <!-- Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore. -->
+    <string name="first_join_server_line">%1$s · signs in with the key from %2$s, kept in %3$s</string>
+    <!-- Note under the list. -->
+    <string name="first_join_folders">Folders stay on %1$s. Add this device’s own folders in Your sources.</string>
+    <!-- Note when the setup answered the remaining pages. -->
+    <string name="first_join_steps_done">Lists and sources are set up, so first run ends here. You can change them in Settings.</string>
+    <!-- Row error when a plugin store refused this device. -->
+    <string name="first_join_store_refused">%1$s didn’t let this device in. %2$s can send you an invite.</string>
+    <!-- Notice on Home, for 4 seconds. -->
+    <string name="first_join_syncing">Syncing with %1$s</string>
     <!-- Name of the Home section in the sidebar, the tab bar and the window title. -->
     <string name="home_title">Home</string>
     <!-- Main action for an episode part way through. -->
@@ -4389,6 +4427,60 @@
     <string name="reader_gap_small">Small</string>
     <!-- Look choice that follows the system's light or dark. -->
     <string name="reader_look_system">System</string>
+    <!-- Button in the first run that opens the reading demo. -->
+    <string name="onboarding_read_demo">Read the demo</string>
+    <!-- Under the first run's demo heading when the device is for reading. -->
+    <string name="onboarding_demo_books_detail">The demo reads a short comic and a short story their makers share under Creative Commons.</string>
+    <!-- Under the first run's demo heading when the device is for both. -->
+    <string name="onboarding_demo_both_detail">One short episode and one short comic, shared by their makers under Creative Commons.</string>
+    <!-- Home, under the spotlight, when the demo is the only thing to read. -->
+    <string name="home_demo_only_books">Only the demo is on. Add a folder, a server or a plugin store to read your own books.</string>
+    <!-- Primary action on Home's spotlight for a book. -->
+    <string name="home_spotlight_read">Read</string>
+    <!-- The demo comic's facts line on its series page. -->
+    <plurals name="demo_series_facts">
+        <item quantity="one">Demo · Comic · one page</item>
+        <item quantity="other">Demo · Comic · %1$d pages</item>
+    </plurals>
+    <!-- The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0". -->
+    <string name="demo_credit_book">%1$s by %2$s. Licensed %3$s. Read from Wikimedia Commons.</string>
+    <!-- The story's credit in About the demo. -->
+    <string name="demo_credit_story">%1$s by %2$s. Public domain. It comes with the app.</string>
+    <!-- Credit capsule in the reader's top bar on page 1. -->
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <!-- A demo result's line in Search. -->
+    <string name="search_demo_reads">Demo · Reads now</string>
+    <!-- Search, under the demo results, when only the demo is on. -->
+    <string name="search_demo_only_books">Only the demo is on. Other titles appear once you add a source.</string>
+    <!-- Title of the card after the demo's last page. -->
+    <string name="reader_demo_end">That’s the end of the demo</string>
+    <!-- Line under it. -->
+    <string name="reader_demo_end_line">To read your own books, add a folder, a server or a plugin store.</string>
+    <!-- The card's primary action. -->
+    <string name="reader_demo_add_source">Add a source</string>
+    <!-- The card's secondary action, back to the first page. -->
+    <string name="reader_demo_again">Back to page 1</string>
+    <!-- The demo row's line in Your sources when reading is on. -->
+    <string name="sources_demo_books_line">A comic and a story · CC BY 4.0 and public domain</string>
+    <!-- About the demo, first line, when reading is on. -->
+    <string name="sources_demo_books_what">Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.</string>
+    <!-- About the demo, in place of sources-demo-private when reading is on. -->
+    <string name="sources_demo_books_private">The demo never signs in anywhere and never writes to a tracker.</string>
+    <!-- Group on the demo's series page. -->
+    <string name="demo_chapters">Chapters</string>
+    <!-- Group on the demo's series page: the other demo work. -->
+    <string name="demo_also">Also in the demo</string>
+    <!-- Group in About the demo. -->
+    <string name="demo_credits">Credits</string>
+    <!-- A chapter row's line on the demo's series page. -->
+    <plurals name="demo_pages">
+        <item quantity="one">One page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- The story's row on the demo's series page. The licence is "Public domain" as the engine says it. -->
+    <string name="demo_story_row">Story · %1$s · %2$s</string>
+    <!-- Primary action on the demo's series page. -->
+    <string name="demo_read_chapter">Read chapter %1$s</string>
     <!-- Sidebar and tab label: the shows' Home when both media are on. -->
     <string name="nav_watch">Watch</string>
     <!-- Sidebar and tab label: reading's Home. -->
@@ -5958,6 +6050,161 @@
     <string name="settings_opds_password">Feed password</string>
     <!-- Row: the port the shared catalogue listens on. Empty picks a free one. -->
     <string name="settings_opds_port">Feed port</string>
+    <!-- Label of the address field in the Add a server sheet. -->
+    <string name="book_server_address">Address</string>
+    <!-- Note under the empty address field. -->
+    <string name="book_server_address_hint">An address, or the whole OPDS link from Kavita.</string>
+    <!-- Note under the address field once a Kavita OPDS link is pasted. -->
+    <string name="book_server_kavita_key">This is a Kavita OPDS link. Its key signs you in, so no password is needed.</string>
+    <!-- Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore. -->
+    <string name="book_server_key_kept">Kaeri keeps the key in %1$s and shows only its last four characters.</string>
+    <!-- Chip inside the address field, showing the key's last four characters after four dots. -->
+    <string name="book_server_key">Key ••••%1$s</string>
+    <!-- Result title once the server signed in. -->
+    <plurals name="book_server_found_title">
+        <item quantity="one">Found %1$d series</item>
+        <item quantity="other">Found %1$d series in %2$d libraries</item>
+    </plurals>
+    <!-- Line under the result title. The kind is Komga, Kavita or OPDS. -->
+    <string name="book_server_found_line">%1$s at %2$s. Pick the libraries to add.</string>
+    <!-- A library row's line in the result. -->
+    <string name="book_server_library_line">%1$d series</string>
+    <!-- Switch in the result, on to start with. -->
+    <string name="book_server_sync_progress">Send progress to the server</string>
+    <!-- Line under the switch. -->
+    <string name="book_server_sync_progress_line">Pages you read here go back to %1$s, and its progress comes here.</string>
+    <!-- Field label. -->
+    <string name="book_server_username">Username</string>
+    <!-- Field label. -->
+    <string name="book_server_password">Password</string>
+    <!-- Error title when the server could not be reached. -->
+    <string name="book_server_err_unreachable">Couldn’t reach %1$s</string>
+    <!-- Line under it. -->
+    <string name="book_server_err_unreachable_line">Check the address, and that the server is on and on this network.</string>
+    <!-- Error title when the server turned the password down. -->
+    <string name="book_server_err_password">%1$s didn’t accept that password</string>
+    <!-- Line under it. The kind is Komga, Kavita or OPDS. -->
+    <string name="book_server_err_password_line">Use the username and password you use for %1$s in a browser.</string>
+    <!-- Error title when Kavita turned the key in an OPDS link down. -->
+    <string name="book_server_err_key">%1$s didn’t accept that key</string>
+    <!-- Line under it. -->
+    <string name="book_server_err_key_line">The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.</string>
+    <!-- Title when the server lets the account in and shows it no series. -->
+    <string name="book_server_empty">%1$s shows this account no series</string>
+    <!-- Line under it. -->
+    <string name="book_server_empty_line">It lets you in, but the server may still be scanning, or this account may not have access to its books.</string>
+    <!-- Note under it. -->
+    <string name="book_server_empty_recheck">You can add it now. Kaeri looks again every 30 minutes.</string>
+    <!-- Line under an error when the address is not a book server. -->
+    <string name="book_server_not_books_line">Kaeri reads from Komga, Kavita and OPDS catalogues.</string>
+    <!-- Folder result title. -->
+    <plurals name="book_folder_found">
+        <item quantity="one">Found %1$d series in one file</item>
+        <item quantity="other">Found %1$d series in %2$d files</item>
+    </plurals>
+    <!-- Line under it: the folder's path, then how many series were matched by their own details. -->
+    <string name="book_folder_found_line">%1$s. Kaeri matched %2$d of them by their details.</string>
+    <!-- Row in the folder result: files that are books in formats Kaeri can't open. -->
+    <plurals name="book_folder_unsupported">
+        <item quantity="one">One file Kaeri can’t open</item>
+        <item quantity="other">%1$d files Kaeri can’t open</item>
+    </plurals>
+    <!-- Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3". -->
+    <string name="book_folder_unsupported_line">%1$s. They stay in the folder as they are.</string>
+    <!-- One item of that list: EPUB files locked with DRM or a password. -->
+    <string name="book_folder_drm">%1$d EPUB locked with DRM</string>
+    <!-- Note under the folder result. -->
+    <string name="book_folder_opens">Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.</string>
+    <!-- Row action that lists the files skipped. -->
+    <string name="book_folder_show_files">Show files</string>
+    <!-- Primary action in the Add a folder sheet. -->
+    <string name="book_folder_add">Add folder</string>
+    <!-- Folder row action that picks another folder. -->
+    <string name="book_folder_change">Change</string>
+    <!-- Title when a folder holds nothing Kaeri can open. -->
+    <string name="book_folder_empty">Nothing in %1$s that Kaeri can open</string>
+    <!-- Line under it. -->
+    <plurals name="book_folder_empty_line">
+        <item quantity="one">It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.</item>
+        <item quantity="other">It holds %1$d files, none of them CBZ, CBR, EPUB, PDF or images.</item>
+    </plurals>
+    <!-- Primary action after an empty folder. -->
+    <string name="book_folder_choose_other">Choose another folder</string>
+    <!-- Title of the Join a plugin store sheet. -->
+    <string name="store_join_title">Join a plugin store</string>
+    <!-- Label of the invite field. -->
+    <string name="store_invite_field">Invite</string>
+    <!-- Result title once a plugin store is joined. -->
+    <string name="store_joined_title">Joined %1$s</string>
+    <!-- Line under it. The owner is who runs the store. -->
+    <plurals name="store_joined_line">
+        <item quantity="one">%1$s offers one plugin. Joining installs nothing; install it here or later.</item>
+        <item quantity="other">%1$s offers %2$d plugins. Joining installs nothing; pick the ones you want here or later.</item>
+    </plurals>
+    <!-- Group header in the joined store's list. -->
+    <string name="store_group_reading">For reading</string>
+    <!-- Group header in the joined store's list. -->
+    <string name="store_group_watching">For watching</string>
+    <!-- Row action. -->
+    <string name="store_install">Install</string>
+    <!-- Row state once installed. -->
+    <string name="store_installed_row">Installed</string>
+    <!-- Primary action when two or more plugins are for reading. -->
+    <string name="store_install_all_reading">Install all for reading</string>
+    <!-- Result after installing. -->
+    <plurals name="store_installed">
+        <item quantity="one">One plugin installed. It’s in Your sources.</item>
+        <item quantity="other">%1$d plugins installed. They’re in Your sources.</item>
+    </plurals>
+    <!-- Info title when every plugin in a store is for watching, and watching is off here. -->
+    <string name="store_other_medium">Every plugin in %1$s is for watching</string>
+    <!-- Line under it. -->
+    <string name="store_other_medium_line">Watching is off on this device, so none of them show in Your sources.</string>
+    <!-- Secondary action under it. -->
+    <string name="store_turn_on_watching">Turn on watching</string>
+    <!-- Info title when a store has no plugins. -->
+    <string name="store_empty">%1$s has no plugins yet</string>
+    <!-- Line under it. -->
+    <string name="store_empty_line">You’re a member, so new plugins show in Plugin stores when %1$s adds them.</string>
+    <!-- Error title when the store doesn't answer. -->
+    <string name="store_err_unreachable">Couldn’t reach %1$s</string>
+    <!-- Line under it. -->
+    <string name="store_err_unreachable_line">The invite looks right, but the store isn’t answering. Try again later, or ask %1$s if it’s running.</string>
+    <!-- Under the reading group: plugins for watching while watching is off here. -->
+    <plurals name="store_other_medium_more">
+        <item quantity="one">One more is for watching, which is off on this device.</item>
+        <item quantity="other">%1$d more are for watching, which is off on this device.</item>
+    </plurals>
+    <!-- On a TV, under the list: plugins for reading, which a TV doesn't do. -->
+    <plurals name="store_tv_reading_only">
+        <item quantity="one">One more is for reading, which this TV doesn’t do.</item>
+        <item quantity="other">%1$d more are for reading, which this TV doesn’t do.</item>
+    </plurals>
+    <!-- On a TV, info title when every plugin in a store is for reading. -->
+    <string name="store_tv_all_reading">Every plugin in %1$s is for reading, which this TV doesn’t do.</string>
+    <!-- Plugin row in an invite's result. -->
+    <string name="store_plugin_row">Version %1$s · may contact %2$s</string>
+    <!-- Notice after a server or folder is added, for 4 seconds. -->
+    <string name="source_added">Added %1$s · %2$d series</string>
+    <!-- Notice after Install all, for 4 seconds. -->
+    <plurals name="source_added_plugins">
+        <item quantity="one">Installed one plugin from %2$s</item>
+        <item quantity="other">Installed %1$d plugins from %2$s</item>
+    </plurals>
+    <!-- A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. -->
+    <plurals name="source_row_server">
+        <item quantity="one">%1$s · %2$d series · added just now</item>
+        <item quantity="other">%1$s · %2$d series in %3$d libraries · added just now</item>
+    </plurals>
+    <!-- A server's row in Your sources while it shows no series. -->
+    <string name="source_row_server_empty">%1$s · no series yet · looks again in 30 minutes</string>
+    <!-- A folder's row in Your sources. -->
+    <plurals name="source_row_folder">
+        <item quantity="one">%1$s · %2$d series · one file skipped</item>
+        <item quantity="other">%1$s · %2$d series · %3$d files skipped</item>
+    </plurals>
+    <!-- A plugin's row in Your sources. The medium is "Reading" or "Watching". -->
+    <string name="source_row_plugin">From %1$s · %2$s · version %3$s</string>
     <!-- Title of the screen or section that lists sources. -->
     <string name="sources_title">Sources</string>
     <!-- Shown on the sources screen when none is installed. -->

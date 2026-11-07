@@ -5716,6 +5716,63 @@ episode-download-done = Đã tải
 # Line under that button after a failure.
 episode-download-failed = Không tải được tập { $episode }. Hãy thử lại.
 
+# First run, page 2 of 5.
+first-other-title = Bạn đã dùng Kaeri trên thiết bị khác?
+
+# Under the title.
+first-other-line = Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.
+
+# Line under the pair row.
+first-other-pair-line = Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Khôi phục từ thư mục đám mây
+
+# Line under it.
+first-other-restore-line = Dùng khóa khôi phục bạn đã lưu
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Không, bắt đầu từ đây
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Đang chờ thiết bị kia của bạn
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Chưa thấy gì? các thiết bị cần cùng một mạng Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = Từ { $device }
+
+# Row while the rest arrives.
+first-join-looking = Đang xem { $device } có gì…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri dùng để
+
+# Line under it when the other device reads.
+first-join-medium-line = Đọc, như trên { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Thêm { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · đăng nhập bằng khóa từ { $device }, lưu trong { $store }
+
+# Note under the list.
+first-join-folders = Thư mục vẫn ở trên { $device }. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } không cho thiết bị này vào. { $owner } có thể gửi lời mời cho bạn.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Đang đồng bộ với { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Trang chủ
 
@@ -8078,6 +8135,84 @@ reader-gap-small = Nhỏ
 # Look choice that follows the system's light or dark.
 reader-look-system = Theo hệ thống
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Đọc bản demo
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc cửa hàng plugin để đọc sách của bạn.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Đọc
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+       *[other] Demo · Truyện tranh · { $pages } trang
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } của { $author }. Giấy phép { $licence }. Đọc từ Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } của { $author }. Phạm vi công cộng. Đi kèm trong ứng dụng.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Đọc được ngay
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Bản demo kết thúc ở đây
+
+# Line under it.
+reader-demo-end-line = Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.
+
+# The card's primary action.
+reader-demo-add-source = Thêm nguồn
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Về trang 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Một truyện tranh và một truyện ngắn · CC BY 4.0 và phạm vi công cộng
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Các tác phẩm do tác giả chia sẻ theo Creative Commons, để bạn thử Kaeri trước khi thêm nguồn. Đây không phải nguồn để giữ lại.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Bản demo không đăng nhập ở đâu và không bao giờ ghi vào dịch vụ theo dõi.
+
+# Group on the demo's series page.
+demo-chapters = Các chương
+
+# Group on the demo's series page: the other demo work.
+demo-also = Cũng có trong demo
+
+# Group in About the demo.
+demo-credits = Ghi công
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+       *[other] { $pages } trang
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Truyện ngắn · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Đọc chương { $number }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Xem
 
@@ -10387,6 +10522,222 @@ settings-opds-password = Mật khẩu của feed
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Cổng của feed
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Địa chỉ
+
+# Note under the empty address field.
+book-server-address-hint = Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri lưu khóa trong { $store } và chỉ hiện bốn ký tự cuối của khóa.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Khóa ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+       *[other] Tìm thấy { $series } bộ trong { $libraries } thư viện
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } tại { $host }. Chọn các thư viện cần thêm.
+
+# A library row's line in the result.
+book-server-library-line = { $series } bộ
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Gửi tiến độ lên máy chủ
+
+# Line under the switch.
+book-server-sync-progress-line = Các trang bạn đọc ở đây được gửi về { $host }, và tiến độ của máy chủ đó được đưa về đây.
+
+# Field label.
+book-server-username = Tên người dùng
+
+# Field label.
+book-server-password = Mật khẩu
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Không kết nối được với { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Kiểm tra địa chỉ, và xem máy chủ đã bật và nằm trong mạng này chưa.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } không chấp nhận mật khẩu đó
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Dùng tên người dùng và mật khẩu bạn dùng cho { $kind } trong trình duyệt.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } không chấp nhận khóa đó
+
+# Line under it.
+book-server-err-key-line = Khóa thay đổi khi được đặt lại trong Kavita. Hãy sao chép lại liên kết OPDS từ phần cài đặt tài khoản của bạn ở đó.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } không hiện bộ truyện nào cho tài khoản này
+
+# Line under it.
+book-server-empty-line = Tài khoản vào được, nhưng máy chủ có thể vẫn đang quét, hoặc tài khoản này chưa có quyền truy cập sách của nó.
+
+# Note under it.
+book-server-empty-recheck = Bạn có thể thêm ngay bây giờ. Kaeri sẽ kiểm tra lại mỗi 30 phút.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri đọc từ các danh mục Komga, Kavita và OPDS.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+       *[other] Tìm thấy { $series } bộ trong { $files } tệp
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri đã khớp { $matched } trong số đó theo thông tin chi tiết của chúng.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+       *[other] { $count } tệp mà Kaeri không mở được
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Các tệp này vẫn nằm nguyên trong thư mục.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB bị khóa bằng DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri mở tệp CBZ, CBR, EPUB và PDF, cùng các thư mục ảnh.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Hiện tệp
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Thêm thư mục
+
+# Folder row action that picks another folder.
+book-folder-change = Thay đổi
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Không có gì trong { $folder } mà Kaeri mở được
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+       *[other] Thư mục có { $files } tệp, không tệp nào là CBZ, CBR, EPUB, PDF hay ảnh.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Chọn thư mục khác
+
+# Title of the Join a plugin store sheet.
+store-join-title = Tham gia cửa hàng plugin
+
+# Label of the invite field.
+store-invite-field = Lời mời
+
+# Result title once a plugin store is joined.
+store-joined-title = Đã tham gia { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+       *[other] { $owner } cung cấp các plugin: { $count }. Tham gia không cài gì cả; hãy chọn cái bạn muốn tại đây hoặc sau.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Để đọc
+
+# Group header in the joined store's list.
+store-group-watching = Để xem
+
+# Row action.
+store-install = Cài đặt
+
+# Row state once installed.
+store-installed-row = Đã cài
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Cài tất cả để đọc
+
+# Result after installing.
+store-installed =
+    { $count ->
+       *[other] Đã cài, các plugin: { $count }. Chúng nằm trong mục “các nguồn”.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Mọi plugin trong { $store } đều để xem
+
+# Line under it.
+store-other-medium-line = Xem đang tắt trên thiết bị này, nên không cái nào hiện trong mục “các nguồn”.
+
+# Secondary action under it.
+store-turn-on-watching = Bật xem
+
+# Info title when a store has no plugins.
+store-empty = { $store } chưa có các plugin
+
+# Line under it.
+store-empty-line = Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi { $owner } thêm chúng.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Không kết nối được với { $host }
+
+# Line under it.
+store-err-unreachable-line = Lời mời có vẻ đúng, nhưng cửa hàng không phản hồi. Hãy thử lại sau, hoặc hỏi { $owner } xem nó có đang chạy không.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+       *[other] Còn { $count } cái để xem, nhưng xem đang tắt trên thiết bị này.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+       *[other] Còn { $count } cái để đọc, nhưng TV này không hỗ trợ đọc.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Mọi plugin trong { $store } đều để đọc, nhưng TV này không hỗ trợ đọc.
+
+# Plugin row in an invite's result.
+store-plugin-row = Phiên bản { $version } · có thể kết nối tới { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = Đã thêm { $name } · { $series } bộ
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+       *[other] Đã cài từ { $store }, các plugin: { $count }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+       *[other] { $kind } · { $series } bộ trong { $libraries } thư viện · vừa thêm
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+       *[other] { $path } · { $series } bộ · đã bỏ qua { $skipped } tệp
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = Từ { $store } · { $medium } · phiên bản { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Các nguồn

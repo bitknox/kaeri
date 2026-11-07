@@ -791,6 +791,8 @@ impl App {
             }
             // Joining a store through a paired device is the apps' first launch.
             Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
+            // The first run's setup sheets and the add-source reports are the apps'.
+            Event::SetupFrom(_) | Event::CameIn(_) => {}
         }
     }
 

@@ -411,6 +411,11 @@ impl Engine {
             account.as_ref().map(|(answer, writer)| (answer.as_str(), writer.clone())),
             new_install,
         );
+        services.syncing.set_medium(state.reading.answer());
+        // The reading demo sits beside the watching demo, under the same switch.
+        if state.reading.available && state.config.effective().sources.demo {
+            services.book_sources.put_demo();
+        }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]
@@ -520,6 +525,16 @@ impl Engine {
                 services.meta.anilist().clone(),
                 inbox.sender(),
             );
+            if state.reading.available {
+                // Servers that showed no series are looked at again every half hour.
+                let clock = services.clock.clone();
+                crate::read_sources::spawn_rechecks(
+                    services.book_sources.clone(),
+                    services.meta.anilist().clone(),
+                    inbox.sender(),
+                    move || clock.now(),
+                );
+            }
             // What waits for AniSkip from the last run, as the tracker queues are sent.
             if state.config.effective().playback.share_skip_times == Some(true) {
                 crate::aniskip::Sharing::shared()

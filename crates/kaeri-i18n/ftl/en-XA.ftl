@@ -5787,6 +5787,63 @@ episode-download-done = [Ðöŵñļöàðéð~~~]
 # Line under that button after a failure.
 episode-download-failed = [Çöüļðñ'ţ ðöŵñļöàð éþîšöðé { $episode }. Ţŕý àĝàîñ.~~~~~~~~~~~~~]
 
+# First run, page 2 of 5.
+first-other-title = [Åļŕéàðý üšé Ķàéŕî öñ àñöţĥéŕ ðéṽîçé?~~~~~~~~~~~]
+
+# Under the title.
+first-other-line = [Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý. Ţĥé šţéþš àƒţéŕ ţĥîš àŕé ţĥéñ ðöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under the pair row.
+first-other-pair-line = [Šĥöŵš à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~]
+
+# Row that restores from a sync folder.
+first-other-restore = [Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ~~~~~~~~~]
+
+# Line under it.
+first-other-restore-line = [Ûšéš ţĥé ŕéçöṽéŕý ķéý ýöü šàṽéð~~~~~~~~~~]
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = [Ñö, šţàŕţ ĥéŕé~~~~~]
+
+# Beside a spinner, after 600 ms.
+pair-waiting = [Ŵàîţîñĝ ƒöŕ ýöüŕ öţĥéŕ ðéṽîçé~~~~~~~~~]
+
+# After 30 seconds with nothing.
+pair-nothing-yet = [Ñöţĥîñĝ ýéţ? Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~]
+
+# Group header for what the other device brings.
+first-join-group = [Ƒŕöɱ { $device }~~~]
+
+# Row while the rest arrives.
+first-join-looking = [Ļööķîñĝ àţ ŵĥàţ { $device } ĥàš…~~~~~~~~]
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = [Ķàéŕî îš ƒöŕ~~~~]
+
+# Line under it when the other device reads.
+first-join-medium-line = [Ŕéàðîñĝ, àš öñ { $device }~~~~~~]
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = [{ $trackers }~]
+
+# Switch, one per book server.
+first-join-server = [Åðð { $host }~~~]
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = [{ $kind } · šîĝñš îñ ŵîţĥ ţĥé ķéý ƒŕöɱ { $device }, ķéþţ îñ { $store }~~~~~~~~~~~~~~~]
+
+# Note under the list.
+first-join-folders = [Ƒöļðéŕš šţàý öñ { $device }. Åðð ţĥîš ðéṽîçé’š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = [Ļîšţš àñð šöüŕçéš àŕé šéţ üþ, šö ƒîŕšţ ŕüñ éñðš ĥéŕé. Ýöü çàñ çĥàñĝé ţĥéɱ îñ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = [{ $store } ðîðñ’ţ ļéţ ţĥîš ðéṽîçé îñ. { $owner } çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = [Šýñçîñĝ ŵîţĥ { $device }~~~~~]
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = [Ĥöɱé~~]
 
@@ -8167,6 +8224,86 @@ reader-gap-small = [Šɱàļļ~~]
 # Look choice that follows the system's light or dark.
 reader-look-system = [Šýšţéɱ~~]
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = [Ţĥé ðéɱö ŕéàðš à šĥöŕţ çöɱîç àñð à šĥöŕţ šţöŕý ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = [Öñé šĥöŕţ éþîšöðé àñð öñé šĥöŕţ çöɱîç, šĥàŕéð ƀý ţĥéîŕ ɱàķéŕš üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = [Öñļý ţĥé ðéɱö îš öñ. Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ýöüŕ öŵñ ƀööķš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = [Ŕéàð~~]
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] [Ðéɱö · Çöɱîç · öñé þàĝé~~~~~~~]
+       *[other] [Ðéɱö · Çöɱîç · { $pages } þàĝéš~~~~~~~~]
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = [{ $title } ƀý { $author }. Ļîçéñšéð { $licence }. Ŕéàð ƒŕöɱ Ŵîķîɱéðîà Çöɱɱöñš.~~~~~~~~~~~~~~~~~]
+
+# The story's credit in About the demo.
+demo-credit-story = [{ $title } ƀý { $author }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~]
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = [{ $title } · { $author } · { $licence }~~~~~]
+
+# A demo result's line in Search.
+search-demo-reads = [Ðéɱö · Ŕéàðš ñöŵ~~~~~]
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = [Öñļý ţĥé ðéɱö îš öñ. Öţĥéŕ ţîţļéš àþþéàŕ öñçé ýöü àðð à šöüŕçé.~~~~~~~~~~~~~~~~~~~]
+
+# Title of the card after the demo's last page.
+reader-demo-end = [Ţĥàţ’š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]
+
+# Line under it.
+reader-demo-end-line = [Ţö ŕéàð ýöüŕ öŵñ ƀööķš, àðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~]
+
+# The card's primary action.
+reader-demo-add-source = [Åðð à šöüŕçé~~~~]
+
+# The card's secondary action, back to the first page.
+reader-demo-again = [Ɓàçķ ţö þàĝé 1~~~~~]
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = [Å çöɱîç àñð à šţöŕý · ÇÇ ƁÝ 4.0 àñð þüƀļîç ðöɱàîñ~~~~~~~~~~~~~~~]
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = [Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ’ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = [Ţĥé ðéɱö ñéṽéŕ šîĝñš îñ àñýŵĥéŕé àñð ñéṽéŕ ŵŕîţéš ţö à ţŕàçķéŕ.~~~~~~~~~~~~~~~~~~~]
+
+# Group on the demo's series page.
+demo-chapters = [Çĥàþţéŕš~~~]
+
+# Group on the demo's series page: the other demo work.
+demo-also = [Åļšö îñ ţĥé ðéɱö~~~~~]
+
+# Group in About the demo.
+demo-credits = [Çŕéðîţš~~~]
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] [Öñé þàĝé~~~]
+       *[other] [{ $pages } þàĝéš~~~]
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = [Šţöŕý · { $author } · { $licence }~~~~~~]
+
+# Primary action on the demo's series page.
+demo-read-chapter = [Ŕéàð çĥàþţéŕ { $number }~~~~~]
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = [Ŵàţçĥ~~]
 
@@ -10505,6 +10642,233 @@ settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = [Ƒééð þöŕţ~~~]
+
+# Label of the address field in the Add a server sheet.
+book-server-address = [Åððŕéšš~~~]
+
+# Note under the empty address field.
+book-server-address-hint = [Åñ àððŕéšš, öŕ ţĥé ŵĥöļé ÖÞÐŠ ļîñķ ƒŕöɱ Ķàṽîţà.~~~~~~~~~~~~~~~]
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = [Ţĥîš îš à Ķàṽîţà ÖÞÐŠ ļîñķ. Îţš ķéý šîĝñš ýöü îñ, šö ñö þàššŵöŕð îš ñééðéð.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = [Ķàéŕî ķééþš ţĥé ķéý îñ { $store } àñð šĥöŵš öñļý îţš ļàšţ ƒöüŕ çĥàŕàçţéŕš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = [Ķéý ••••{ $last }~~~~]
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] [Ƒöüñð { $series } šéŕîéš~~~~~]
+       *[other] [Ƒöüñð { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš~~~~~~~~~~]
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = [{ $kind } àţ { $host }. Þîçķ ţĥé ļîƀŕàŕîéš ţö àðð.~~~~~~~~~~~~]
+
+# A library row's line in the result.
+book-server-library-line = [{ $series } šéŕîéš~~~]
+
+# Switch in the result, on to start with.
+book-server-sync-progress = [Šéñð þŕöĝŕéšš ţö ţĥé šéŕṽéŕ~~~~~~~~~]
+
+# Line under the switch.
+book-server-sync-progress-line = [Þàĝéš ýöü ŕéàð ĥéŕé ĝö ƀàçķ ţö { $host }, àñð îţš þŕöĝŕéšš çöɱéš ĥéŕé.~~~~~~~~~~~~~~~~~~~~]
+
+# Field label.
+book-server-username = [Ûšéŕñàɱé~~~]
+
+# Field label.
+book-server-password = [Þàššŵöŕð~~~]
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+
+# Line under it.
+book-server-err-unreachable-line = [Çĥéçķ ţĥé àððŕéšš, àñð ţĥàţ ţĥé šéŕṽéŕ îš öñ àñð öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~]
+
+# Error title when the server turned the password down.
+book-server-err-password = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = [Ûšé ţĥé üšéŕñàɱé àñð þàššŵöŕð ýöü üšé ƒöŕ { $kind } îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~~~~]
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ ķéý~~~~~~~~]
+
+# Line under it.
+book-server-err-key-line = [Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ’š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = [{ $host } šĥöŵš ţĥîš àççöüñţ ñö šéŕîéš~~~~~~~~~~]
+
+# Line under it.
+book-server-empty-line = [Îţ ļéţš ýöü îñ, ƀüţ ţĥé šéŕṽéŕ ɱàý šţîļļ ƀé šçàññîñĝ, öŕ ţĥîš àççöüñţ ɱàý ñöţ ĥàṽé àççéšš ţö îţš ƀööķš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Note under it.
+book-server-empty-recheck = [Ýöü çàñ àðð îţ ñöŵ. Ķàéŕî ļööķš àĝàîñ éṽéŕý 30 ɱîñüţéš.~~~~~~~~~~~~~~~~~]
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = [Ķàéŕî ŕéàðš ƒŕöɱ Ķöɱĝà, Ķàṽîţà àñð ÖÞÐŠ çàţàļöĝüéš.~~~~~~~~~~~~~~~~]
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] [Ƒöüñð { $series } šéŕîéš îñ öñé ƒîļé~~~~~~~~~]
+       *[other] [Ƒöüñð { $series } šéŕîéš îñ { $files } ƒîļéš~~~~~~~~~]
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = [{ $path }. Ķàéŕî ɱàţçĥéð { $matched } öƒ ţĥéɱ ƀý ţĥéîŕ ðéţàîļš.~~~~~~~~~~~~~~~]
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] [Öñé ƒîļé Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
+       *[other] [{ $count } ƒîļéš Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = [{ $kinds }. Ţĥéý šţàý îñ ţĥé ƒöļðéŕ àš ţĥéý àŕé.~~~~~~~~~~~~~]
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = [{ $count } ÉÞÛƁ ļöçķéð ŵîţĥ ÐŔṀ~~~~~~~~]
+
+# Note under the folder result.
+book-folder-opens = [Ķàéŕî öþéñš ÇƁŽ, ÇƁŔ, ÉÞÛƁ àñð ÞÐƑ ƒîļéš, àñð ƒöļðéŕš öƒ îɱàĝéš.~~~~~~~~~~~~~~~~~~~~]
+
+# Row action that lists the files skipped.
+book-folder-show-files = [Šĥöŵ ƒîļéš~~~]
+
+# Primary action in the Add a folder sheet.
+book-folder-add = [Åðð ƒöļðéŕ~~~]
+
+# Folder row action that picks another folder.
+book-folder-change = [Çĥàñĝé~~]
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = [Ñöţĥîñĝ îñ { $folder } ţĥàţ Ķàéŕî çàñ öþéñ~~~~~~~~~~~]
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] [Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ’ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]
+       *[other] [Îţ ĥöļðš { $files } ƒîļéš, ñöñé öƒ ţĥéɱ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ îɱàĝéš.~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Title of the Join a plugin store sheet.
+store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]
+
+# Label of the invite field.
+store-invite-field = [Îñṽîţé~~]
+
+# Result title once a plugin store is joined.
+store-joined-title = [Ĵöîñéð { $store }~~~]
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] [{ $owner } öƒƒéŕš öñé þļüĝîñ. Ĵöîñîñĝ îñšţàļļš ñöţĥîñĝ; îñšţàļļ îţ ĥéŕé öŕ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $owner } öƒƒéŕš { $count } þļüĝîñš. Ĵöîñîñĝ îñšţàļļš ñöţĥîñĝ; þîçķ ţĥé öñéš ýöü ŵàñţ ĥéŕé öŕ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Group header in the joined store's list.
+store-group-reading = [Ƒöŕ ŕéàðîñĝ~~~~]
+
+# Group header in the joined store's list.
+store-group-watching = [Ƒöŕ ŵàţçĥîñĝ~~~~]
+
+# Row action.
+store-install = [Îñšţàļļ~~~]
+
+# Row state once installed.
+store-installed-row = [Îñšţàļļéð~~~]
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = [Îñšţàļļ àļļ ƒöŕ ŕéàðîñĝ~~~~~~~]
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] [Öñé þļüĝîñ îñšţàļļéð. Îţ’š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]
+       *[other] [{ $count } þļüĝîñš îñšţàļļéð. Ţĥéý’ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŵàţçĥîñĝ~~~~~~~~~~~]
+
+# Line under it.
+store-other-medium-line = [Ŵàţçĥîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Secondary action under it.
+store-turn-on-watching = [Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]
+
+# Info title when a store has no plugins.
+store-empty = [{ $store } ĥàš ñö þļüĝîñš ýéţ~~~~~~~]
+
+# Line under it.
+store-empty-line = [Ýöü’ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ { $owner } àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Error title when the store doesn't answer.
+store-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+
+# Line under it.
+store-err-unreachable-line = [Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ’ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ { $owner } îƒ îţ’š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] [Öñé ɱöŕé îš ƒöŕ ŵàţçĥîñĝ, ŵĥîçĥ îš öƒƒ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŵàţçĥîñĝ, ŵĥîçĥ îš öƒƒ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~]
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] [Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~]
+       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~]
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~~~~]
+
+# Plugin row in an invite's result.
+store-plugin-row = [Ṽéŕšîöñ { $version } · ɱàý çöñţàçţ { $hosts }~~~~~~~~~]
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = [Åððéð { $name } · { $series } šéŕîéš~~~~~~~]
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] [Îñšţàļļéð öñé þļüĝîñ ƒŕöɱ { $store }~~~~~~~~~]
+       *[other] [Îñšţàļļéð { $count } þļüĝîñš ƒŕöɱ { $store }~~~~~~~~~]
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] [{ $kind } · { $series } šéŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~]
+       *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = [{ $kind } · ñö šéŕîéš ýéţ · ļööķš àĝàîñ îñ 30 ɱîñüţéš~~~~~~~~~~~~~~~]
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] [{ $path } · { $series } šéŕîéš · öñé ƒîļé šķîþþéð~~~~~~~~~~~]
+       *[other] [{ $path } · { $series } šéŕîéš · { $skipped } ƒîļéš šķîþþéð~~~~~~~~~~~]
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = [Ƒŕöɱ { $store } · { $medium } · ṽéŕšîöñ { $version }~~~~~~~~~]
 
 # Title of the screen or section that lists sources.
 sources-title = [Šöüŕçéš~~~]

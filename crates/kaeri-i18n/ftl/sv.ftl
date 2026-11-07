@@ -5784,6 +5784,63 @@ episode-download-done = Nedladdad
 # Line under that button after a failure.
 episode-download-failed = Det gick inte att ladda ner avsnitt { $episode }. Försök igen.
 
+# First run, page 2 of 5.
+first-other-title = Använder du redan Kaeri på en annan enhet?
+
+# Under the title.
+first-other-line = Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.
+
+# Line under the pair row.
+first-other-pair-line = Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Återställ från en molnmapp
+
+# Line under it.
+first-other-restore-line = Använder återställningsnyckeln du sparade
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Nej, börja här
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Väntar på din andra enhet
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Inget än? Dina två enheter måste vara på samma Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = Från { $device }
+
+# Row while the rest arrives.
+first-join-looking = Tittar på vad { $device } har…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri är till för
+
+# Line under it when the other device reads.
+first-join-medium-line = Läsning, som på { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Lägg till { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · loggar in med nyckeln från { $device }, sparad i { $store }
+
+# Note under the list.
+first-join-folders = Mappar stannar på { $device }. Lägg till egna mappar för denna enhet i Dina källor.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } släppte inte in denna enhet. { $owner } kan skicka en inbjudan till dig.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Synkar med { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Hem
 
@@ -8164,6 +8221,86 @@ reader-gap-small = Liten
 # Look choice that follows the system's light or dark.
 reader-look-system = System
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Läs demon
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Bara demon är på. Lägg till en mapp, en server eller en tilläggsbutik för att läsa dina egna böcker.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Läs
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Tecknad serie · en sida
+       *[other] Demo · Tecknad serie · { $pages } sidor
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } av { $author }. Licensierad under { $licence }. Läses från Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } av { $author }. Allmän egendom. Den följer med appen.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Läsbar nu
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Bara demon är på. Andra titlar visas när du lägger till en källa.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Det här är slutet på demon
+
+# Line under it.
+reader-demo-end-line = För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.
+
+# The card's primary action.
+reader-demo-add-source = Lägg till en källa
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Tillbaka till sida 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = En tecknad serie och en novell · CC BY 4.0 och allmän egendom
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Verk som upphovspersonerna delar under Creative Commons, så att du kan prova Kaeri innan du lägger till en källa. Det är ingen källa att behålla.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Demon loggar aldrig in någonstans och skriver aldrig till en tracker.
+
+# Group on the demo's series page.
+demo-chapters = Kapitel
+
+# Group on the demo's series page: the other demo work.
+demo-also = Även i demon
+
+# Group in About the demo.
+demo-credits = Upphovsuppgifter
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] En sida
+       *[other] { $pages } sidor
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Novell · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Läs kapitel { $number }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Titta
 
@@ -10502,6 +10639,233 @@ settings-opds-password = Flödeslösenord
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Flödesport
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Adress
+
+# Note under the empty address field.
+book-server-address-hint = En adress, eller hela OPDS-länken från Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri sparar nyckeln i { $store } och visar bara de fyra sista tecknen.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Nyckel ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Hittade { $series } serier
+       *[other] Hittade { $series } serier i { $libraries } bibliotek
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } på { $host }. Välj vilka bibliotek som ska läggas till.
+
+# A library row's line in the result.
+book-server-library-line = { $series } serier
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Skicka framsteg till servern
+
+# Line under the switch.
+book-server-sync-progress-line = Sidor du läser här skickas till { $host }, och dess framsteg kommer hit.
+
+# Field label.
+book-server-username = Användarnamn
+
+# Field label.
+book-server-password = Lösenord
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Det gick inte att nå { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Kontrollera adressen och att servern är igång och på det här nätverket.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } godkände inte lösenordet
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Använd användarnamnet och lösenordet du använder för { $kind } i en webbläsare.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } godkände inte nyckeln
+
+# Line under it.
+book-server-err-key-line = Nyckeln ändras när den återställs i Kavita. Kopiera OPDS-länken igen från dina kontoinställningar där.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } visar inga serier för det här kontot
+
+# Line under it.
+book-server-empty-line = Du släpps in, men servern kanske fortfarande skannar, eller så saknar kontot åtkomst till böckerna.
+
+# Note under it.
+book-server-empty-recheck = Du kan lägga till den nu. Kaeri tittar igen var 30:e minut.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri läser från Komga-, Kavita- och OPDS-kataloger.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Hittade { $series } serier i en fil
+       *[other] Hittade { $series } serier i { $files } filer
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri matchade { $matched } av dem utifrån deras uppgifter.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] En fil som Kaeri inte kan öppna
+       *[other] { $count } filer som Kaeri inte kan öppna
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. De ligger kvar i mappen som de är.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB låsta med DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri öppnar CBZ-, CBR-, EPUB- och PDF-filer samt mappar med bilder.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Visa filer
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Lägg till mapp
+
+# Folder row action that picks another folder.
+book-folder-change = Ändra
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Inget i { $folder } som Kaeri kan öppna
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] Den innehåller en fil, som inte är CBZ, CBR, EPUB, PDF eller en bild.
+       *[other] Den innehåller { $files } filer, ingen av dem CBZ, CBR, EPUB, PDF eller bilder.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Välj en annan mapp
+
+# Title of the Join a plugin store sheet.
+store-join-title = Gå med i en tilläggsbutik
+
+# Label of the invite field.
+store-invite-field = Inbjudan
+
+# Result title once a plugin store is joined.
+store-joined-title = Gick med i { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } erbjuder ett tillägg. Att gå med installerar ingenting; installera det här eller senare.
+       *[other] { $owner } erbjuder { $count } tillägg. Att gå med installerar ingenting; välj de du vill ha här eller senare.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = För läsning
+
+# Group header in the joined store's list.
+store-group-watching = För tittande
+
+# Row action.
+store-install = Installera
+
+# Row state once installed.
+store-installed-row = Installerat
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Installera alla för läsning
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Ett tillägg installerat. Det finns i Dina källor.
+       *[other] { $count } tillägg installerade. De finns i Dina källor.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Alla tillägg i { $store } är för tittande
+
+# Line under it.
+store-other-medium-line = Tittande är avstängt på denna enhet, så inget av dem syns i Dina källor.
+
+# Secondary action under it.
+store-turn-on-watching = Slå på tittande
+
+# Info title when a store has no plugins.
+store-empty = { $store } har inga tillägg än
+
+# Line under it.
+store-empty-line = Du är medlem, så nya tillägg visas i Tilläggsbutiker när { $owner } lägger till dem.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Det gick inte att nå { $host }
+
+# Line under it.
+store-err-unreachable-line = Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga { $owner } om den är igång.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Ett till är för tittande, vilket är avstängt på denna enhet.
+       *[other] { $count } till är för tittande, vilket är avstängt på denna enhet.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Ett till är för läsning, vilket den här TV:n inte klarar.
+       *[other] { $count } till är för läsning, vilket den här TV:n inte klarar.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Alla tillägg i { $store } är för läsning, vilket den här TV:n inte klarar.
+
+# Plugin row in an invite's result.
+store-plugin-row = Version { $version } · kan kontakta { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = La till { $name } · { $series } serier
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Installerade ett tillägg från { $store }
+       *[other] Installerade { $count } tillägg från { $store }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $series } serier · nyss tillagd
+       *[other] { $kind } · { $series } serier i { $libraries } bibliotek · nyss tillagd
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · inga serier än · tittar igen om 30 minuter
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } serier · en fil hoppades över
+       *[other] { $path } · { $series } serier · { $skipped } filer hoppades över
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = Från { $store } · { $medium } · version { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Källor

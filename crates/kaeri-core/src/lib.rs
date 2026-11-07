@@ -13,6 +13,7 @@ pub mod hash;
 pub mod ids;
 pub mod media;
 pub mod profile;
+pub mod reading_demo;
 pub mod settings;
 pub mod shared_settings;
 pub mod stream;

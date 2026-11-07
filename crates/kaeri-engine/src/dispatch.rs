@@ -948,6 +948,31 @@ pub(crate) fn dispatch(
                 crate::store_join::join_from(&ctx, &tx, device, stores, address).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AskSetupFrom {
+            device,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::setup_from::ask(&ctx, &tx, device, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AddBookServersFrom {
+            device,
+            servers,
+        }) => {
+            let ctx = Ctx::of(services);
+            crate::setup_from::add_from(&ctx, tx, &device, &servers, services.clock.now());
+            if engine.reading.available {
+                crate::reading::book_sources(
+                    &engine.reading,
+                    services,
+                    kaeri_model::book_sources::BookSourceCommand::Load,
+                    tx,
+                );
+            }
+        }
         Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
             let (ctx, tx) = (Ctx::of(services), tx.clone());
             tokio::spawn(async move {
@@ -1103,6 +1128,11 @@ pub(crate) fn dispatch(
         Command::InstallPlugin { store, plugin } => {
             store_task(job, engine, services, tx, move |context| {
                 context.install_plugin(store, plugin)
+            })
+        }
+        Command::InstallAllForReading { store } => {
+            store_task(job, engine, services, tx, move |context| {
+                context.install_all_for_reading(store)
             })
         }
         Command::RemovePlugin { plugin } => {

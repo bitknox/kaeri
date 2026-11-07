@@ -178,6 +178,7 @@ pub(crate) fn medium(
         }
         engine.reading.account = Some(answer);
     }
+    services.syncing.set_medium(engine.reading.answer());
     let _ = tx.send(Event::Medium(engine.reading.view()));
     // Accounts lists the trackers that serve what Kaeri is for.
     if answer.is_some() {

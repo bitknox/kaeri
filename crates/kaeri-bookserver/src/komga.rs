@@ -208,9 +208,46 @@ pub async fn sign_in(
     })
 }
 
+/// A library, as `api/v1/libraries` lists it.
+#[derive(Deserialize)]
+struct LibraryRow {
+    id: String,
+    #[serde(default)]
+    name: String,
+}
+
+/// How many series the account sees, from the total of a one-row page.
+pub async fn count_series(http: &Http) -> Result<Option<u32>> {
+    Ok(http
+        .json::<Page<serde::de::IgnoredAny>>("api/v1/series?size=1")
+        .await
+        .ok()
+        .map(|p| p.total))
+}
+
+/// The libraries this account sees, each with its series counted.
+pub async fn libraries(http: &Http) -> Result<Vec<crate::Library>> {
+    let rows: Vec<LibraryRow> = http.json("api/v1/libraries").await?;
+    let mut out = Vec::with_capacity(rows.len());
+    for row in rows {
+        let series = http
+            .json::<Page<serde::de::IgnoredAny>>(&format!(
+                "api/v1/series?size=1&library_id={}",
+                encode(&row.id)
+            ))
+            .await
+            .ok()
+            .map(|p| p.total);
+        out.push(crate::Library { id: row.id, name: row.name, series });
+    }
+    Ok(out)
+}
+
 /// A Komga server as a book source.
 pub struct KomgaSource {
     manifest: BookSourceManifest,
+    /// The libraries asked, by id; every one when empty.
+    libraries: Vec<String>,
     http: Http,
     keep: PathBuf,
     signed_out: Arc<AtomicBool>,
@@ -235,10 +272,18 @@ impl KomgaSource {
                 allowed_hosts: Vec::new(),
                 capabilities: vec!["progress".into()],
             },
+            libraries: Vec::new(),
             http,
             keep,
             signed_out,
         }
+    }
+
+    /// Ask only these libraries, by id. Empty asks every one.
+    #[must_use]
+    pub fn in_libraries(mut self, libraries: Vec<String>) -> Self {
+        self.libraries = libraries;
+        self
     }
 
     fn aim(&self, error: ServerError) -> ProviderError {
@@ -353,7 +398,10 @@ impl BookSource for KomgaSource {
         query: &str,
         _hints: &BookHints,
     ) -> std::result::Result<Vec<SeriesHit>, ProviderError> {
-        let path = format!("api/v1/series?size=60&search={}", encode(query));
+        let mut path = format!("api/v1/series?size=60&search={}", encode(query));
+        for library in &self.libraries {
+            path.push_str(&format!("&library_id={}", encode(library)));
+        }
         let page: Page<Series> = self.page(&path).await.map_err(|e| self.aim(e))?;
         Ok(page
             .content

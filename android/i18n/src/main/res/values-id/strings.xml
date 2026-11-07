@@ -1431,6 +1431,25 @@
     <string name="episode_download_paused">Unduhan dijeda di %1$s</string>
     <string name="episode_download_done">Diunduh</string>
     <string name="episode_download_failed">Episode %1$d tidak dapat diunduh. Coba lagi.</string>
+    <string name="first_other_title">Sudah memakai Kaeri di perangkat lain?</string>
+    <string name="first_other_line">Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.</string>
+    <string name="first_other_pair_line">Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</string>
+    <string name="first_other_restore">Pulihkan dari folder cloud</string>
+    <string name="first_other_restore_line">Memakai kunci pemulihan yang Anda simpan</string>
+    <string name="first_other_no">Tidak, mulai di sini</string>
+    <string name="pair_waiting">Menunggu perangkat Anda yang lain</string>
+    <string name="pair_nothing_yet">Belum ada? Kedua perangkat harus memakai Wi-Fi yang sama.</string>
+    <string name="first_join_group">Dari %1$s</string>
+    <string name="first_join_looking">Melihat isi %1$s…</string>
+    <string name="first_join_medium">Kaeri untuk</string>
+    <string name="first_join_medium_line">Membaca, seperti di %1$s</string>
+    <string name="first_join_signins_line">%1$s</string>
+    <string name="first_join_server">Tambah %1$s</string>
+    <string name="first_join_server_line">%1$s · masuk dengan kunci dari %2$s, disimpan di %3$s</string>
+    <string name="first_join_folders">Folder tetap berada di %1$s. Tambahkan folder milik perangkat ini di “sumber-sumber”.</string>
+    <string name="first_join_steps_done">Daftar dan sumber-sumber sudah diatur, jadi penyiapan awal selesai di sini. Anda dapat mengubahnya di Pengaturan.</string>
+    <string name="first_join_store_refused">%1$s tidak mengizinkan perangkat ini masuk. %2$s dapat mengirimi Anda undangan.</string>
+    <string name="first_join_syncing">Menyinkronkan dengan %1$s</string>
     <string name="home_title">Beranda</string>
     <string name="home_resume_episode">Lanjutkan episode %1$d</string>
     <string name="home_play_episode">Putar episode %1$d</string>
@@ -2244,6 +2263,34 @@
     <string name="reader_gap_none">Tanpa jarak</string>
     <string name="reader_gap_small">Kecil</string>
     <string name="reader_look_system">Sistem</string>
+    <string name="onboarding_read_demo">Baca demo</string>
+    <string name="onboarding_demo_books_detail">Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.</string>
+    <string name="onboarding_demo_both_detail">Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</string>
+    <string name="home_demo_only_books">Hanya demo yang aktif. Tambahkan folder, server, atau toko plugin untuk membaca buku Anda sendiri.</string>
+    <string name="home_spotlight_read">Baca</string>
+    <plurals name="demo_series_facts">
+        <item quantity="other">Demo · Komik · %1$d halaman</item>
+    </plurals>
+    <string name="demo_credit_book">%1$s oleh %2$s. Berlisensi %3$s. Dibaca dari Wikimedia Commons.</string>
+    <string name="demo_credit_story">%1$s oleh %2$s. Domain publik. Sudah ada di dalam aplikasi.</string>
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <string name="search_demo_reads">Demo · Dapat dibaca sekarang</string>
+    <string name="search_demo_only_books">Hanya demo yang aktif. Judul lain muncul setelah Anda menambahkan sumber.</string>
+    <string name="reader_demo_end">Demo selesai</string>
+    <string name="reader_demo_end_line">Untuk membaca buku Anda sendiri, tambahkan folder, server, atau toko plugin.</string>
+    <string name="reader_demo_add_source">Tambah sumber</string>
+    <string name="reader_demo_again">Kembali ke halaman 1</string>
+    <string name="sources_demo_books_line">Satu komik dan satu cerita · CC BY 4.0 dan domain publik</string>
+    <string name="sources_demo_books_what">Karya yang dibagikan pembuatnya di bawah Creative Commons, supaya Anda bisa mencoba Kaeri sebelum menambahkan sumber. Ini bukan sumber untuk disimpan.</string>
+    <string name="sources_demo_books_private">Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke pelacak.</string>
+    <string name="demo_chapters">Bab</string>
+    <string name="demo_also">Juga di demo</string>
+    <string name="demo_credits">Kredit</string>
+    <plurals name="demo_pages">
+        <item quantity="other">%1$d halaman</item>
+    </plurals>
+    <string name="demo_story_row">Cerita · %1$s · %2$s</string>
+    <string name="demo_read_chapter">Baca bab %1$s</string>
     <string name="nav_watch">Tonton</string>
     <string name="nav_read">Baca</string>
     <string name="nav_updates">Pembaruan</string>
@@ -3043,6 +3090,89 @@
     <string name="settings_opds_feed">Bagikan di jaringan ini</string>
     <string name="settings_opds_password">Kata sandi feed</string>
     <string name="settings_opds_port">Port feed</string>
+    <string name="book_server_address">Alamat</string>
+    <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
+    <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>
+    <string name="book_server_key_kept">Kaeri menyimpan kunci di %1$s dan hanya menampilkan empat karakter terakhirnya.</string>
+    <string name="book_server_key">Kunci ••••%1$s</string>
+    <plurals name="book_server_found_title">
+        <item quantity="other">Ditemukan %1$d seri di %2$d pustaka</item>
+    </plurals>
+    <string name="book_server_found_line">%1$s di %2$s. Pilih pustaka yang akan ditambahkan.</string>
+    <string name="book_server_library_line">%1$d seri</string>
+    <string name="book_server_sync_progress">Kirim progres ke server</string>
+    <string name="book_server_sync_progress_line">Halaman yang Anda baca di sini dikirim ke %1$s, dan progresnya datang ke sini.</string>
+    <string name="book_server_username">Nama pengguna</string>
+    <string name="book_server_password">Kata sandi</string>
+    <string name="book_server_err_unreachable">Tidak dapat menjangkau %1$s</string>
+    <string name="book_server_err_unreachable_line">Periksa alamatnya, dan pastikan server menyala serta berada di jaringan ini.</string>
+    <string name="book_server_err_password">%1$s tidak menerima kata sandi itu</string>
+    <string name="book_server_err_password_line">Gunakan nama pengguna dan kata sandi yang Anda pakai untuk %1$s di browser.</string>
+    <string name="book_server_err_key">%1$s tidak menerima kunci itu</string>
+    <string name="book_server_err_key_line">Kunci berubah saat direset di Kavita. Salin lagi tautan OPDS dari pengaturan akun Anda di sana.</string>
+    <string name="book_server_empty">%1$s tidak menampilkan seri untuk akun ini</string>
+    <string name="book_server_empty_line">Akun ini bisa masuk, tetapi server mungkin masih memindai, atau akun ini mungkin tidak punya akses ke bukunya.</string>
+    <string name="book_server_empty_recheck">Anda dapat menambahkannya sekarang. Kaeri memeriksa lagi setiap 30 menit.</string>
+    <string name="book_server_not_books_line">Kaeri membaca dari katalog Komga, Kavita, dan OPDS.</string>
+    <plurals name="book_folder_found">
+        <item quantity="other">Ditemukan %1$d seri di %2$d berkas</item>
+    </plurals>
+    <string name="book_folder_found_line">%1$s. Kaeri mencocokkan %2$d di antaranya berdasarkan detailnya.</string>
+    <plurals name="book_folder_unsupported">
+        <item quantity="other">%1$d berkas yang tidak dapat dibuka Kaeri</item>
+    </plurals>
+    <string name="book_folder_unsupported_line">%1$s. Berkas ini tetap berada di folder apa adanya.</string>
+    <string name="book_folder_drm">%1$d EPUB terkunci dengan DRM</string>
+    <string name="book_folder_opens">Kaeri membuka berkas CBZ, CBR, EPUB, dan PDF, serta folder gambar.</string>
+    <string name="book_folder_show_files">Tampilkan berkas</string>
+    <string name="book_folder_add">Tambah folder</string>
+    <string name="book_folder_change">Ubah</string>
+    <string name="book_folder_empty">Tidak ada yang dapat dibuka Kaeri di %1$s</string>
+    <plurals name="book_folder_empty_line">
+        <item quantity="other">Berisi %1$d berkas, tidak ada yang berupa CBZ, CBR, EPUB, PDF, atau gambar.</item>
+    </plurals>
+    <string name="book_folder_choose_other">Pilih folder lain</string>
+    <string name="store_join_title">Gabung ke toko plugin</string>
+    <string name="store_invite_field">Undangan</string>
+    <string name="store_joined_title">Bergabung dengan %1$s</string>
+    <plurals name="store_joined_line">
+        <item quantity="other">%1$s menawarkan plugin-plugin: %2$d. Bergabung tidak memasang apa pun; pilih yang Anda mau di sini atau nanti.</item>
+    </plurals>
+    <string name="store_group_reading">Untuk dibaca</string>
+    <string name="store_group_watching">Untuk ditonton</string>
+    <string name="store_install">Pasang</string>
+    <string name="store_installed_row">Terpasang</string>
+    <string name="store_install_all_reading">Pasang semua untuk dibaca</string>
+    <plurals name="store_installed">
+        <item quantity="other">Terpasang, plugin-plugin: %1$d. Semuanya ada di bagian “sumber-sumber”.</item>
+    </plurals>
+    <string name="store_other_medium">Setiap plugin di %1$s untuk ditonton</string>
+    <string name="store_other_medium_line">Menonton nonaktif di perangkat ini, jadi tidak ada yang muncul di bagian “sumber-sumber”.</string>
+    <string name="store_turn_on_watching">Aktifkan menonton</string>
+    <string name="store_empty">%1$s belum punya plugin-plugin</string>
+    <string name="store_empty_line">Anda anggota, jadi plugin-plugin baru muncul di “Toko-toko plugin” saat %1$s menambahkannya.</string>
+    <string name="store_err_unreachable">Tidak dapat menjangkau %1$s</string>
+    <string name="store_err_unreachable_line">Undangan tampak benar, tetapi toko tidak menjawab. Coba lagi nanti, atau tanyakan kepada %1$s apakah sudah berjalan.</string>
+    <plurals name="store_other_medium_more">
+        <item quantity="other">%1$d lagi untuk ditonton, yang nonaktif di perangkat ini.</item>
+    </plurals>
+    <plurals name="store_tv_reading_only">
+        <item quantity="other">%1$d lagi untuk dibaca, yang tidak didukung TV ini.</item>
+    </plurals>
+    <string name="store_tv_all_reading">Setiap plugin di %1$s untuk dibaca, yang tidak didukung TV ini.</string>
+    <string name="store_plugin_row">Versi %1$s · dapat menghubungi %2$s</string>
+    <string name="source_added">%1$s ditambahkan · %2$d seri</string>
+    <plurals name="source_added_plugins">
+        <item quantity="other">Terpasang dari %2$s, plugin-plugin: %1$d</item>
+    </plurals>
+    <plurals name="source_row_server">
+        <item quantity="other">%1$s · %2$d seri di %3$d pustaka · baru ditambahkan</item>
+    </plurals>
+    <string name="source_row_server_empty">%1$s · belum ada seri · diperiksa lagi dalam 30 menit</string>
+    <plurals name="source_row_folder">
+        <item quantity="other">%1$s · %2$d seri · %3$d berkas dilewati</item>
+    </plurals>
+    <string name="source_row_plugin">Dari %1$s · %2$s · versi %3$s</string>
     <string name="sources_title">Sumber-sumber</string>
     <string name="sources_empty">Belum ada sumber-sumber. Bergabung ke toko plugin untuk menambahkannya.</string>
     <string name="plugin_risk_warning">Plugin-plugin ditulis oleh orang lain dan berjalan di perangkat Anda. Pasang hanya plugin-plugin yang Anda percaya, untuk sumber-sumber yang memang berhak Anda gunakan.</string>

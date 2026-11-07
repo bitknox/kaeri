@@ -28,7 +28,7 @@ use kaeri_core::{
 };
 
 pub use crate::{
-    address::{candidates, host_of, root_of},
+    address::{KavitaLink, candidates, host_of, kavita_link, last_four, root_of},
     error::{Result, ServerError},
     http::{Auth, Http, basic},
 };
@@ -175,6 +175,75 @@ pub async fn sign_in(
     }
 }
 
+/// Sign in to Kavita with the API key from an account's OPDS link: no user name or password.
+/// A key Kavita does not know is [`ServerError::Unauthorized`].
+pub async fn sign_in_with_key(client: &reqwest::Client, link: &KavitaLink) -> Result<SignedIn> {
+    kavita::sign_in_with_key(client, &link.root, &link.key).await
+}
+
+/// One library on a server, with how many series this account sees in it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Library {
+    /// The server's own id for it.
+    pub id: String,
+    pub name: String,
+    /// `None` when the server did not say.
+    pub series: Option<u32>,
+}
+
+/// The libraries this account sees on a signed-in server. An OPDS catalogue has none to tell
+/// apart and answers an empty list. A library whose count failed is still listed, without one.
+pub async fn libraries(
+    client: &reqwest::Client,
+    address: &str,
+    kind: Kind,
+    credential: &str,
+) -> Result<Vec<Library>> {
+    let root = root_of(address);
+    match kind {
+        Kind::Komga => {
+            let credential = komga::Credential::parse(credential)
+                .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
+            komga::libraries(&Http::new(client, root, credential.auth())).await
+        }
+        Kind::Kavita => {
+            let tokens = kavita::Tokens::parse(credential)
+                .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
+            kavita::libraries(&Http::new(client, root, Auth::Bearer(tokens.token))).await
+        }
+        Kind::Opds => Ok(Vec::new()),
+    }
+}
+
+/// How many series a signed-in server lists for this account now, for the recheck of a server
+/// that had none. `None` when it did not say.
+pub async fn count_series(
+    client: &reqwest::Client,
+    address: &str,
+    kind: Kind,
+    credential: &str,
+) -> Result<Option<u32>> {
+    match kind {
+        Kind::Komga => {
+            let credential = komga::Credential::parse(credential)
+                .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
+            komga::count_series(&Http::new(client, root_of(address), credential.auth())).await
+        }
+        Kind::Kavita => {
+            let tokens = kavita::Tokens::parse(credential)
+                .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
+            let http = Http::new(client, root_of(address), Auth::Bearer(tokens.token));
+            kavita::count_all(&http).await
+        }
+        Kind::Opds => {
+            let b64 = credential
+                .strip_prefix("basic:")
+                .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
+            opds::count(client, address, &Auth::Basic(b64.to_owned())).await
+        }
+    }
+}
+
 /// A server that was signed in to, as the app keeps it.
 pub struct Server<'a> {
     pub id: &'a str,
@@ -192,17 +261,33 @@ pub fn source(
     keep: PathBuf,
     signed_out: Arc<AtomicBool>,
 ) -> Option<Arc<dyn BookSource>> {
+    source_with(client, server, &[], keep, signed_out)
+}
+
+/// [`source`], asking only the libraries in `libraries` (their ids), or every one when it is
+/// empty. An OPDS catalogue has no libraries and ignores it.
+pub fn source_with(
+    client: &reqwest::Client,
+    server: &Server<'_>,
+    libraries: &[String],
+    keep: PathBuf,
+    signed_out: Arc<AtomicBool>,
+) -> Option<Arc<dyn BookSource>> {
     let Server { id, name, kind, address, credential } = *server;
     match kind {
         Kind::Komga => {
             let credential = komga::Credential::parse(credential)?;
             let http = Http::new(client, root_of(address), credential.auth());
-            Some(Arc::new(komga::KomgaSource::new(id, name, http, keep, signed_out)))
+            let source = komga::KomgaSource::new(id, name, http, keep, signed_out)
+                .in_libraries(libraries.to_vec());
+            Some(Arc::new(source))
         }
         Kind::Kavita => {
             let tokens = kavita::Tokens::parse(credential)?;
             let http = Http::new(client, root_of(address), Auth::Bearer(tokens.token.clone()));
-            Some(Arc::new(kavita::KavitaSource::new(id, name, http, &tokens, keep, signed_out)))
+            let source = kavita::KavitaSource::new(id, name, http, &tokens, keep, signed_out)
+                .in_libraries(libraries.to_vec());
+            Some(Arc::new(source))
         }
         Kind::Opds => {
             let b64 = credential.strip_prefix("basic:")?;

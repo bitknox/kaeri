@@ -5716,6 +5716,63 @@ episode-download-done = Diunduh
 # Line under that button after a failure.
 episode-download-failed = Episode { $episode } tidak dapat diunduh. Coba lagi.
 
+# First run, page 2 of 5.
+first-other-title = Sudah memakai Kaeri di perangkat lain?
+
+# Under the title.
+first-other-line = Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.
+
+# Line under the pair row.
+first-other-pair-line = Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.
+
+# Row that restores from a sync folder.
+first-other-restore = Pulihkan dari folder cloud
+
+# Line under it.
+first-other-restore-line = Memakai kunci pemulihan yang Anda simpan
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Tidak, mulai di sini
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Menunggu perangkat Anda yang lain
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Belum ada? Kedua perangkat harus memakai Wi-Fi yang sama.
+
+# Group header for what the other device brings.
+first-join-group = Dari { $device }
+
+# Row while the rest arrives.
+first-join-looking = Melihat isi { $device }…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri untuk
+
+# Line under it when the other device reads.
+first-join-medium-line = Membaca, seperti di { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Tambah { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · masuk dengan kunci dari { $device }, disimpan di { $store }
+
+# Note under the list.
+first-join-folders = Folder tetap berada di { $device }. Tambahkan folder milik perangkat ini di “sumber-sumber”.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Daftar dan sumber-sumber sudah diatur, jadi penyiapan awal selesai di sini. Anda dapat mengubahnya di Pengaturan.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } tidak mengizinkan perangkat ini masuk. { $owner } dapat mengirimi Anda undangan.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Menyinkronkan dengan { $device }
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Beranda
 
@@ -8078,6 +8135,84 @@ reader-gap-small = Kecil
 # Look choice that follows the system's light or dark.
 reader-look-system = Sistem
 
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Baca demo
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Hanya demo yang aktif. Tambahkan folder, server, atau toko plugin untuk membaca buku Anda sendiri.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Baca
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+       *[other] Demo · Komik · { $pages } halaman
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title } oleh { $author }. Berlisensi { $licence }. Dibaca dari Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title } oleh { $author }. Domain publik. Sudah ada di dalam aplikasi.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Dapat dibaca sekarang
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Hanya demo yang aktif. Judul lain muncul setelah Anda menambahkan sumber.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Demo selesai
+
+# Line under it.
+reader-demo-end-line = Untuk membaca buku Anda sendiri, tambahkan folder, server, atau toko plugin.
+
+# The card's primary action.
+reader-demo-add-source = Tambah sumber
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Kembali ke halaman 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Satu komik dan satu cerita · CC BY 4.0 dan domain publik
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Karya yang dibagikan pembuatnya di bawah Creative Commons, supaya Anda bisa mencoba Kaeri sebelum menambahkan sumber. Ini bukan sumber untuk disimpan.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke pelacak.
+
+# Group on the demo's series page.
+demo-chapters = Bab
+
+# Group on the demo's series page: the other demo work.
+demo-also = Juga di demo
+
+# Group in About the demo.
+demo-credits = Kredit
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+       *[other] { $pages } halaman
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Cerita · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Baca bab { $number }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Tonton
 
@@ -10387,6 +10522,222 @@ settings-opds-password = Kata sandi feed
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port feed
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Alamat
+
+# Note under the empty address field.
+book-server-address-hint = Sebuah alamat, atau seluruh tautan OPDS dari Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri menyimpan kunci di { $store } dan hanya menampilkan empat karakter terakhirnya.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Kunci ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+       *[other] Ditemukan { $series } seri di { $libraries } pustaka
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } di { $host }. Pilih pustaka yang akan ditambahkan.
+
+# A library row's line in the result.
+book-server-library-line = { $series } seri
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Kirim progres ke server
+
+# Line under the switch.
+book-server-sync-progress-line = Halaman yang Anda baca di sini dikirim ke { $host }, dan progresnya datang ke sini.
+
+# Field label.
+book-server-username = Nama pengguna
+
+# Field label.
+book-server-password = Kata sandi
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Tidak dapat menjangkau { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Periksa alamatnya, dan pastikan server menyala serta berada di jaringan ini.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } tidak menerima kata sandi itu
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Gunakan nama pengguna dan kata sandi yang Anda pakai untuk { $kind } di browser.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } tidak menerima kunci itu
+
+# Line under it.
+book-server-err-key-line = Kunci berubah saat direset di Kavita. Salin lagi tautan OPDS dari pengaturan akun Anda di sana.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } tidak menampilkan seri untuk akun ini
+
+# Line under it.
+book-server-empty-line = Akun ini bisa masuk, tetapi server mungkin masih memindai, atau akun ini mungkin tidak punya akses ke bukunya.
+
+# Note under it.
+book-server-empty-recheck = Anda dapat menambahkannya sekarang. Kaeri memeriksa lagi setiap 30 menit.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri membaca dari katalog Komga, Kavita, dan OPDS.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+       *[other] Ditemukan { $series } seri di { $files } berkas
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri mencocokkan { $matched } di antaranya berdasarkan detailnya.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+       *[other] { $count } berkas yang tidak dapat dibuka Kaeri
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Berkas ini tetap berada di folder apa adanya.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = { $count } EPUB terkunci dengan DRM
+
+# Note under the folder result.
+book-folder-opens = Kaeri membuka berkas CBZ, CBR, EPUB, dan PDF, serta folder gambar.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Tampilkan berkas
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Tambah folder
+
+# Folder row action that picks another folder.
+book-folder-change = Ubah
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = Tidak ada yang dapat dibuka Kaeri di { $folder }
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+       *[other] Berisi { $files } berkas, tidak ada yang berupa CBZ, CBR, EPUB, PDF, atau gambar.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Pilih folder lain
+
+# Title of the Join a plugin store sheet.
+store-join-title = Gabung ke toko plugin
+
+# Label of the invite field.
+store-invite-field = Undangan
+
+# Result title once a plugin store is joined.
+store-joined-title = Bergabung dengan { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+       *[other] { $owner } menawarkan plugin-plugin: { $count }. Bergabung tidak memasang apa pun; pilih yang Anda mau di sini atau nanti.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Untuk dibaca
+
+# Group header in the joined store's list.
+store-group-watching = Untuk ditonton
+
+# Row action.
+store-install = Pasang
+
+# Row state once installed.
+store-installed-row = Terpasang
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Pasang semua untuk dibaca
+
+# Result after installing.
+store-installed =
+    { $count ->
+       *[other] Terpasang, plugin-plugin: { $count }. Semuanya ada di bagian “sumber-sumber”.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Setiap plugin di { $store } untuk ditonton
+
+# Line under it.
+store-other-medium-line = Menonton nonaktif di perangkat ini, jadi tidak ada yang muncul di bagian “sumber-sumber”.
+
+# Secondary action under it.
+store-turn-on-watching = Aktifkan menonton
+
+# Info title when a store has no plugins.
+store-empty = { $store } belum punya plugin-plugin
+
+# Line under it.
+store-empty-line = Anda anggota, jadi plugin-plugin baru muncul di “Toko-toko plugin” saat { $owner } menambahkannya.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Tidak dapat menjangkau { $host }
+
+# Line under it.
+store-err-unreachable-line = Undangan tampak benar, tetapi toko tidak menjawab. Coba lagi nanti, atau tanyakan kepada { $owner } apakah sudah berjalan.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+       *[other] { $count } lagi untuk ditonton, yang nonaktif di perangkat ini.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+       *[other] { $count } lagi untuk dibaca, yang tidak didukung TV ini.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Setiap plugin di { $store } untuk dibaca, yang tidak didukung TV ini.
+
+# Plugin row in an invite's result.
+store-plugin-row = Versi { $version } · dapat menghubungi { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = { $name } ditambahkan · { $series } seri
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+       *[other] Terpasang dari { $store }, plugin-plugin: { $count }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+source-row-server =
+    { $libraries ->
+       *[other] { $kind } · { $series } seri di { $libraries } pustaka · baru ditambahkan
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · belum ada seri · diperiksa lagi dalam 30 menit
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+       *[other] { $path } · { $series } seri · { $skipped } berkas dilewati
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = Dari { $store } · { $medium } · versi { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Sumber-sumber
