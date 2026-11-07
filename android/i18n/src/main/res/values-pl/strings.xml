@@ -2392,7 +2392,6 @@
     <string name="settings_artwork">Grafiki na licencji CC BY-NC</string>
     <string name="settings_artwork_detail">Przypisanie autorstwa w uwagach aplikacji</string>
     <string name="settings_new_episodes">Nowe odcinki</string>
-    <string name="settings_new_episodes_detail">Dla tytułów z listy oglądanych</string>
     <string name="settings_notify_detail">Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</string>
     <string name="settings_coming_up">Wkrótce · najbliższe 7 dni</string>
     <string name="settings_system_notifications">Ustawienia powiadomień</string>

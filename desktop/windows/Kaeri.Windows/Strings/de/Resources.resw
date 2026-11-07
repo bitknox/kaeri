@@ -5894,9 +5894,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Neue Folgen</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Für Serien in deiner Liste „Wird geschaut“</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Eine Benachrichtigung, wenn eine Folge einer Serie erscheint, der du folgst: die Serie und die Folgennummer, nie der Folgentitel. Eine Serie kann ihre eigenen in den Einstellungen ausschalten.</value>
   </data>

@@ -3741,6 +3741,30 @@
         }
       }
     },
+    "accounts-brings-lists-both" : {
+      "comment" : "Line under AniList when Kaeri is for watching and reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brings in your lists and fills Continue with what you are watching and reading."
+          }
+        }
+      }
+    },
+    "accounts-brings-lists-read" : {
+      "comment" : "Line under AniList when Kaeri is for reading: what signing in brings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brings in your lists and fills Continue with what you are reading."
+          }
+        }
+      }
+    },
     "accounts-browser-failed" : {
       "comment" : "Notice when the browser could not be opened.",
       "extractionState" : "manual",
@@ -10177,6 +10201,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Theo lựa chọn của %1$@"
+          }
+        }
+      }
+    },
+    "accounts-tracker-lists" : {
+      "comment" : "Line under a tracker that is not signed in: what it keeps in step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists and progress"
+          }
+        }
+      }
+    },
+    "accounts-tracker-reading-lists" : {
+      "comment" : "Line under MangaUpdates when it is not signed in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading lists and progress"
+          }
+        }
+      }
+    },
+    "accounts-tracker-serves-both" : {
+      "comment" : "Line under a tracker on a phone with both media on: it serves shows and reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows and reading"
+          }
+        }
+      }
+    },
+    "accounts-tracker-serves-reading" : {
+      "comment" : "Line under a tracker on a phone with both media on: it serves reading only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        }
+      }
+    },
+    "accounts-tracker-serves-shows" : {
+      "comment" : "Line under a tracker on a phone with both media on: it serves shows only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows"
           }
         }
       }
@@ -112719,6 +112803,78 @@
         }
       }
     },
+    "onboarding-both-books" : {
+      "comment" : "Heading over the books' rows on that page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Books"
+          }
+        }
+      }
+    },
+    "onboarding-both-line" : {
+      "comment" : "Line under the title of that page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner."
+          }
+        }
+      }
+    },
+    "onboarding-both-shows" : {
+      "comment" : "Heading over the shows' rows on that page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows"
+          }
+        }
+      }
+    },
+    "onboarding-both-shows-folder-line" : {
+      "comment" : "Line under Add a folder in the shows' part, on a computer. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video files on this %1$@"
+          }
+        }
+      }
+    },
+    "onboarding-both-shows-server-line" : {
+      "comment" : "Line under Add a server in the shows' part.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Jellyfin server"
+          }
+        }
+      }
+    },
+    "onboarding-both-title" : {
+      "comment" : "Title of the last first-run page after Both: where shows and books come from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where your shows and books come from"
+          }
+        }
+      }
+    },
     "onboarding-connect" : {
       "comment" : "The first-run page's main button: sign in to the tracker. Argument 1: tracker (Text).",
       "extractionState" : "manual",
@@ -167763,6 +167919,66 @@
         }
       }
     },
+    "read-from-not-found" : {
+      "comment" : "Heading in Read from over the sources searched without finding the series.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not found in"
+          }
+        }
+      }
+    },
+    "read-from-search" : {
+      "comment" : "Button that runs that search.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        }
+      }
+    },
+    "read-from-search-none" : {
+      "comment" : "Under the field when the source found nothing by those words.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found by these words"
+          }
+        }
+      }
+    },
+    "read-from-search-placeholder" : {
+      "comment" : "Placeholder of the field that looks for the series in one source. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search %1$@"
+          }
+        }
+      }
+    },
+    "read-from-search-there" : {
+      "comment" : "Button beside such a source: look for the series there by other words.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search there"
+          }
+        }
+      }
+    },
     "read-library-empty" : {
       "comment" : "A reading list with nothing on it. A Search button follows. Argument 1: list (Text).",
       "extractionState" : "manual",
@@ -182871,6 +183087,52 @@
         }
       }
     },
+    "series-choose-all-unread" : {
+      "comment" : "Button while choosing chapters on a phone: choose every unread chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All unread"
+          }
+        }
+      }
+    },
+    "series-chosen" : {
+      "comment" : "Title while choosing chapters on a phone: how many are chosen. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "series-collapsed" : {
       "comment" : "Accessibility value of a volume heading.",
       "extractionState" : "manual",
@@ -183215,6 +183477,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove bookmark"
+          }
+        }
+      }
+    },
+    "series-remove-from-lists" : {
+      "comment" : "Last item of a series' list menu: take the series off every tracker's list. Asks first.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from lists…"
+          }
+        }
+      }
+    },
+    "series-remove-from-lists-line" : {
+      "comment" : "Line in that question.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri."
+          }
+        }
+      }
+    },
+    "series-remove-from-lists-title" : {
+      "comment" : "Title of the question before a series is taken off the lists. Argument 1: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %1$@ from your lists?"
+          }
+        }
+      }
+    },
+    "series-removed-title" : {
+      "comment" : "Heading over what the removal came to, one line per tracker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your lists"
           }
         }
       }
@@ -190235,6 +190545,18 @@
         }
       }
     },
+    "settings-accounts-sync-note-read" : {
+      "comment" : "Footnote of the AniList group in Accounts when the app is for reading. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress and list changes sync to %1$@. Library shows your %1$@ lists."
+          }
+        }
+      }
+    },
     "settings-adult" : {
       "comment" : "Row: show adult titles.",
       "extractionState" : "manual",
@@ -191155,6 +191477,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaeri dùng được không cần tài khoản. Lịch sử xem vẫn ở trên thiết bị này khi bạn đăng xuất."
+          }
+        }
+      }
+    },
+    "settings-aside-accounts-both" : {
+      "comment" : "Side note in Accounts when the app is for watching and reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri works without an account. Your watch and reading history stays on this device when you sign out."
+          }
+        }
+      }
+    },
+    "settings-aside-accounts-read" : {
+      "comment" : "Side note in Accounts when the app is for reading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri works without an account. Your reading history stays on this device when you sign out."
           }
         }
       }
@@ -199695,82 +200041,10 @@
       "comment" : "Line under it.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Für Serien in deiner Liste „Wird geschaut“"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For shows in your Watching list"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Para series de tu lista Viendo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pour les séries de votre liste En cours"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untuk serial di daftar Menonton Anda"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Per le serie che guardi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "視聴リストに入っている作品が対象です。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dla tytułów z listy oglądanych"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Para séries na sua lista Assistindo"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для сериалов из списка «Смотрю»"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "För serier i din Tittlista"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İzleme listenizdeki diziler için"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cho các tựa trong danh sách Đang xem"
+            "value" : "Shows on your Watching list"
           }
         }
       }
@@ -207067,6 +207341,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bắt đầu ở toàn màn hình"
+          }
+        }
+      }
+    },
+    "settings-storage-read" : {
+      "comment" : "Legend of the storage bar: what downloads take for chapters already read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "settings-storage-seen-both" : {
+      "comment" : "Legend of the storage bar with both media on: episodes watched and chapters read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watched or read"
+          }
+        }
+      }
+    },
+    "settings-storage-unread" : {
+      "comment" : "Legend of the storage bar: what downloads take for chapters not read yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not read yet"
+          }
+        }
+      }
+    },
+    "settings-storage-unseen-both" : {
+      "comment" : "Legend of the storage bar with both media on: episodes not watched and chapters not read.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not watched or read yet"
           }
         }
       }

@@ -18,6 +18,27 @@ accounts-welcome-detail = Sign in to { $tracker } to sync your list and where yo
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Brings in your lists and fills { -continue-cap } with what you are watching.
 
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Brings in your lists and fills { -continue-cap } with what you are reading.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Brings in your lists and fills { -continue-cap } with what you are watching and reading.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Lists and progress
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Reading lists and progress
+
+# Line under a tracker on a phone with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Shows and reading
+
+# Line under a tracker on a phone with both media on: it serves reading only.
+accounts-tracker-serves-reading = Reading
+
+# Line under a tracker on a phone with both media on: it serves shows only.
+accounts-tracker-serves-shows = Shows
+
 # Line under the accounts screen when the library needs a tracker.
 # @arg tracker: text
 accounts-library-needs = { -library-cap } and sync need your { $tracker } account

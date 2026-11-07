@@ -320,7 +320,7 @@ settings-artwork-detail = Attribution in the app's notices
 settings-new-episodes = New episodes
 
 # Line under it.
-settings-new-episodes-detail = For shows in your Watching list
+settings-new-episodes-detail = Shows on your Watching list
 
 # Line explaining what a notification says.
 settings-notify-detail = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
@@ -518,6 +518,12 @@ settings-upscaling-sharp = Sharp · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = { -app-name } works without an account. Your watch history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = { -app-name } works without an account. Your reading history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = { -app-name } works without an account. Your watch and reading history stays on this { -device } when you sign out.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = today

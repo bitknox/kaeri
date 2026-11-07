@@ -8238,6 +8238,50 @@ object Strings {
     fun seriesAddToList(context: Context): String =
         context.getString(R.string.series_add_to_list)
 
+    /** Last item of a series' list menu: take the series off every tracker's list. Asks first. */
+    fun seriesRemoveFromLists(context: Context): String =
+        context.getString(R.string.series_remove_from_lists)
+
+    /** Title of the question before a series is taken off the lists. */
+    fun seriesRemoveFromListsTitle(context: Context, title: String): String =
+        context.getString(R.string.series_remove_from_lists_title, title)
+
+    /** Line in that question. */
+    fun seriesRemoveFromListsLine(context: Context): String =
+        context.getString(R.string.series_remove_from_lists_line)
+
+    /** Heading over what the removal came to, one line per tracker. */
+    fun seriesRemovedTitle(context: Context): String =
+        context.getString(R.string.series_removed_title)
+
+    /** Title while choosing chapters on a phone: how many are chosen. */
+    fun seriesChosen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.series_chosen, n, n)
+
+    /** Button while choosing chapters on a phone: choose every unread chapter. */
+    fun seriesChooseAllUnread(context: Context): String =
+        context.getString(R.string.series_choose_all_unread)
+
+    /** Heading in Read from over the sources searched without finding the series. */
+    fun readFromNotFound(context: Context): String =
+        context.getString(R.string.read_from_not_found)
+
+    /** Button beside such a source: look for the series there by other words. */
+    fun readFromSearchThere(context: Context): String =
+        context.getString(R.string.read_from_search_there)
+
+    /** Placeholder of the field that looks for the series in one source. */
+    fun readFromSearchPlaceholder(context: Context, source: String): String =
+        context.getString(R.string.read_from_search_placeholder, source)
+
+    /** Button that runs that search. */
+    fun readFromSearch(context: Context): String =
+        context.getString(R.string.read_from_search)
+
+    /** Under the field when the source found nothing by those words. */
+    fun readFromSearchNone(context: Context): String =
+        context.getString(R.string.read_from_search_none)
+
     /** The More menu: the Tracking sheet. */
     fun seriesTracking(context: Context): String =
         context.getString(R.string.series_tracking)
@@ -8977,6 +9021,30 @@ object Strings {
     /** Line under the invite field: whose code a plugin is. */
     fun onboardingBooksPluginLine(context: Context): String =
         context.getString(R.string.onboarding_books_plugin_line)
+
+    /** Title of the last first-run page after Both: where shows and books come from. */
+    fun onboardingBothTitle(context: Context): String =
+        context.getString(R.string.onboarding_both_title)
+
+    /** Line under the title of that page. */
+    fun onboardingBothLine(context: Context): String =
+        context.getString(R.string.onboarding_both_line)
+
+    /** Heading over the shows' rows on that page. */
+    fun onboardingBothShows(context: Context): String =
+        context.getString(R.string.onboarding_both_shows)
+
+    /** Heading over the books' rows on that page. */
+    fun onboardingBothBooks(context: Context): String =
+        context.getString(R.string.onboarding_both_books)
+
+    /** Line under Add a folder in the shows' part, on a computer. */
+    fun onboardingBothShowsFolderLine(context: Context, device: String): String =
+        context.getString(R.string.onboarding_both_shows_folder_line, device)
+
+    /** Line under Add a server in the shows' part. */
+    fun onboardingBothShowsServerLine(context: Context): String =
+        context.getString(R.string.onboarding_both_shows_server_line)
 
     /** Accessibility value of a choice row: its place among the three. */
     fun mediumChoicePosition(context: Context, n: Int, total: Int): String =
@@ -10729,6 +10797,14 @@ object Strings {
     /** Side note in Accounts. */
     fun settingsAsideAccounts(context: Context): String =
         context.getString(R.string.settings_aside_accounts)
+
+    /** Side note in Accounts when the app is for reading. */
+    fun settingsAsideAccountsRead(context: Context): String =
+        context.getString(R.string.settings_aside_accounts_read)
+
+    /** Side note in Accounts when the app is for watching and reading. */
+    fun settingsAsideAccountsBoth(context: Context): String =
+        context.getString(R.string.settings_aside_accounts_both)
 
     /** Today, inside a line such as "Thursday 16:30". */
     fun widgetDayToday(context: Context): String =
@@ -13673,6 +13749,34 @@ object Strings {
     /** Line under a tracker that brings in lists. */
     fun accountsBringsLists(context: Context): String =
         context.getString(R.string.accounts_brings_lists)
+
+    /** Line under AniList when Kaeri is for reading: what signing in brings. */
+    fun accountsBringsListsRead(context: Context): String =
+        context.getString(R.string.accounts_brings_lists_read)
+
+    /** Line under AniList when Kaeri is for watching and reading. */
+    fun accountsBringsListsBoth(context: Context): String =
+        context.getString(R.string.accounts_brings_lists_both)
+
+    /** Line under a tracker that is not signed in: what it keeps in step. */
+    fun accountsTrackerLists(context: Context): String =
+        context.getString(R.string.accounts_tracker_lists)
+
+    /** Line under MangaUpdates when it is not signed in. */
+    fun accountsTrackerReadingLists(context: Context): String =
+        context.getString(R.string.accounts_tracker_reading_lists)
+
+    /** Line under a tracker on a phone with both media on: it serves shows and reading. */
+    fun accountsTrackerServesBoth(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_both)
+
+    /** Line under a tracker on a phone with both media on: it serves reading only. */
+    fun accountsTrackerServesReading(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_reading)
+
+    /** Line under a tracker on a phone with both media on: it serves shows only. */
+    fun accountsTrackerServesShows(context: Context): String =
+        context.getString(R.string.accounts_tracker_serves_shows)
 
     /** Line under the accounts screen when the library needs a tracker. */
     fun accountsLibraryNeeds(context: Context, tracker: String): String =

@@ -8717,9 +8717,6 @@ settings-artwork-detail = Przypisanie autorstwa w uwagach aplikacji
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Nowe odcinki
 
-# Line under it.
-settings-new-episodes-detail = Dla tytułów z listy oglądanych
-
 # Line explaining what a notification says.
 settings-notify-detail = Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.
 

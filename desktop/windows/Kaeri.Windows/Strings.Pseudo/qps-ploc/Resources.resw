@@ -7328,6 +7328,54 @@
     <value>[Åðð ţö ļîšţ~~~~]</value>
     <comment>Status menu's label before the series is on a list.</comment>
   </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>[Ŕéɱöṽé ƒŕöɱ ļîšţš…~~~~~~]</value>
+    <comment>Last item of a series' list menu: take the series off every tracker's list. Asks first.</comment>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>[Ŕéɱöṽé {title} ƒŕöɱ ýöüŕ ļîšţš?~~~~~~~~~]</value>
+    <comment>Title of the question before a series is taken off the lists.</comment>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>[Îţ çöɱéš öƒƒ ýöüŕ ļîšţ öñ éàçĥ ţŕàçķéŕ ýöü ĥàṽé çöññéçţéð. Ýöüŕ þļàçé àñð ŕéàð çĥàþţéŕš šţàý îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line in that question.</comment>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>[Ýöüŕ ļîšţš~~~]</value>
+    <comment>Heading over what the removal came to, one line per tracker.</comment>
+  </data>
+  <data name="SeriesChosen_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ~~~]</value>
+    <comment>Title while choosing chapters on a phone: how many are chosen.</comment>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš~~~~]</value>
+    <comment>Title while choosing chapters on a phone: how many are chosen.</comment>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>[Åļļ üñŕéàð~~~]</value>
+    <comment>Button while choosing chapters on a phone: choose every unread chapter.</comment>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>[Ñöţ ƒöüñð îñ~~~~]</value>
+    <comment>Heading in Read from over the sources searched without finding the series.</comment>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>[Šéàŕçĥ ţĥéŕé~~~~]</value>
+    <comment>Button beside such a source: look for the series there by other words.</comment>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>[Šéàŕçĥ {source}~~~]</value>
+    <comment>Placeholder of the field that looks for the series in one source.</comment>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>[Šéàŕçĥ~~]</value>
+    <comment>Button that runs that search.</comment>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ƒöüñð ƀý ţĥéšé ŵöŕðš~~~~~~~~~]</value>
+    <comment>Under the field when the source found nothing by those words.</comment>
+  </data>
   <data name="SeriesTracking" xml:space="preserve">
     <value>[Ţŕàçķîñĝ~~~]</value>
     <comment>The More menu: the Tracking sheet.</comment>
@@ -8103,6 +8151,30 @@
   <data name="OnboardingBooksPluginLine" xml:space="preserve">
     <value>[Þļüĝîñš ŕüñ çöðé ƒŕöɱ þéöþļé ýöü ţŕüšţ. Öñļý ĵöîñ þļüĝîñ šţöŕéš ŵĥöšé öŵñéŕ ýöü ķñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the invite field: whose code a plugin is.</comment>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>[Ŵĥéŕé ýöüŕ šĥöŵš àñð ƀööķš çöɱé ƒŕöɱ~~~~~~~~~~~]</value>
+    <comment>Title of the last first-run page after Both: where shows and books come from.</comment>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>[Ķàéŕî çöɱéš ŵîţĥ ñö šĥöŵš öŕ ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title of that page.</comment>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>Heading over the shows' rows on that page.</comment>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>[Ɓööķš~~]</value>
+    <comment>Heading over the books' rows on that page.</comment>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>[Ṽîðéö ƒîļéš öñ ţĥîš {device}~~~~~~~]</value>
+    <comment>Line under Add a folder in the shows' part, on a computer.</comment>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>[Ýöüŕ Ĵéļļýƒîñ šéŕṽéŕ~~~~~~]</value>
+    <comment>Line under Add a server in the shows' part.</comment>
   </data>
   <data name="MediumChoicePosition" xml:space="preserve">
     <value>[{n} öƒ {total}~~~]</value>
@@ -9685,7 +9757,7 @@
     <comment>Heading and row for notifications of new episodes.</comment>
   </data>
   <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>[Ƒöŕ šĥöŵš îñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~~]</value>
+    <value>[Šĥöŵš öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
@@ -9915,6 +9987,14 @@
   <data name="SettingsAsideAccounts" xml:space="preserve">
     <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Side note in Accounts.</comment>
+  </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Side note in Accounts when the app is for reading.</comment>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ àñð ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Side note in Accounts when the app is for watching and reading.</comment>
   </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>[ţöðàý~~]</value>
@@ -12907,6 +12987,34 @@
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under a tracker that brings in lists.</comment>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under AniList when Kaeri is for reading: what signing in brings.</comment>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ àñð ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under AniList when Kaeri is for watching and reading.</comment>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>[Ļîšţš àñð þŕöĝŕéšš~~~~~~]</value>
+    <comment>Line under a tracker that is not signed in: what it keeps in step.</comment>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>[Ŕéàðîñĝ ļîšţš àñð þŕöĝŕéšš~~~~~~~~]</value>
+    <comment>Line under MangaUpdates when it is not signed in.</comment>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>[Šĥöŵš àñð ŕéàðîñĝ~~~~~~]</value>
+    <comment>Line under a tracker on a phone with both media on: it serves shows and reading.</comment>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>Line under a tracker on a phone with both media on: it serves reading only.</comment>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>Line under a tracker on a phone with both media on: it serves shows only.</comment>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>[Ļîƀŕàŕý àñð šýñç ñééð ýöüŕ {tracker} àççöüñţ~~~~~~~~~~~~]</value>

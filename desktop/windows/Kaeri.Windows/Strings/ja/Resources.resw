@@ -5726,9 +5726,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>新しいエピソード</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>視聴リストに入っている作品が対象です。</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。</value>
   </data>

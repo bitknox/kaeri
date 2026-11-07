@@ -6062,9 +6062,6 @@
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Novos episódios</value>
   </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Para séries na sua lista Assistindo</value>
-  </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Uma notificação quando um episódio de uma série que você acompanha sai: o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.</value>
   </data>

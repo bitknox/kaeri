@@ -5293,6 +5293,39 @@ public static partial class T
     /// <summary>Status menu's label before the series is on a list.</summary>
     public static string SeriesAddToList => Get("SeriesAddToList");
 
+    /// <summary>Last item of a series' list menu: take the series off every tracker's list. Asks first.</summary>
+    public static string SeriesRemoveFromLists => Get("SeriesRemoveFromLists");
+
+    /// <summary>Title of the question before a series is taken off the lists.</summary>
+    public static string SeriesRemoveFromListsTitle(string title) => Fill(Get("SeriesRemoveFromListsTitle"), ("title", title));
+
+    /// <summary>Line in that question.</summary>
+    public static string SeriesRemoveFromListsLine => Get("SeriesRemoveFromListsLine");
+
+    /// <summary>Heading over what the removal came to, one line per tracker.</summary>
+    public static string SeriesRemovedTitle => Get("SeriesRemovedTitle");
+
+    /// <summary>Title while choosing chapters on a phone: how many are chosen.</summary>
+    public static string SeriesChosen(long n) => Fill(GetPlural("SeriesChosen", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button while choosing chapters on a phone: choose every unread chapter.</summary>
+    public static string SeriesChooseAllUnread => Get("SeriesChooseAllUnread");
+
+    /// <summary>Heading in Read from over the sources searched without finding the series.</summary>
+    public static string ReadFromNotFound => Get("ReadFromNotFound");
+
+    /// <summary>Button beside such a source: look for the series there by other words.</summary>
+    public static string ReadFromSearchThere => Get("ReadFromSearchThere");
+
+    /// <summary>Placeholder of the field that looks for the series in one source.</summary>
+    public static string ReadFromSearchPlaceholder(string source) => Fill(Get("ReadFromSearchPlaceholder"), ("source", source));
+
+    /// <summary>Button that runs that search.</summary>
+    public static string ReadFromSearch => Get("ReadFromSearch");
+
+    /// <summary>Under the field when the source found nothing by those words.</summary>
+    public static string ReadFromSearchNone => Get("ReadFromSearchNone");
+
     /// <summary>The More menu: the Tracking sheet.</summary>
     public static string SeriesTracking => Get("SeriesTracking");
 
@@ -5847,6 +5880,24 @@ public static partial class T
 
     /// <summary>Line under the invite field: whose code a plugin is.</summary>
     public static string OnboardingBooksPluginLine => Get("OnboardingBooksPluginLine");
+
+    /// <summary>Title of the last first-run page after Both: where shows and books come from.</summary>
+    public static string OnboardingBothTitle => Get("OnboardingBothTitle");
+
+    /// <summary>Line under the title of that page.</summary>
+    public static string OnboardingBothLine => Get("OnboardingBothLine");
+
+    /// <summary>Heading over the shows' rows on that page.</summary>
+    public static string OnboardingBothShows => Get("OnboardingBothShows");
+
+    /// <summary>Heading over the books' rows on that page.</summary>
+    public static string OnboardingBothBooks => Get("OnboardingBothBooks");
+
+    /// <summary>Line under Add a folder in the shows' part, on a computer.</summary>
+    public static string OnboardingBothShowsFolderLine(string device) => Fill(Get("OnboardingBothShowsFolderLine"), ("device", device));
+
+    /// <summary>Line under Add a server in the shows' part.</summary>
+    public static string OnboardingBothShowsServerLine => Get("OnboardingBothShowsServerLine");
 
     /// <summary>Accessibility value of a choice row: its place among the three.</summary>
     public static string MediumChoicePosition(long n, long total) => Fill(Get("MediumChoicePosition"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -7161,6 +7212,12 @@ public static partial class T
 
     /// <summary>Side note in Accounts.</summary>
     public static string SettingsAsideAccounts => Get("SettingsAsideAccounts");
+
+    /// <summary>Side note in Accounts when the app is for reading.</summary>
+    public static string SettingsAsideAccountsRead => Get("SettingsAsideAccountsRead");
+
+    /// <summary>Side note in Accounts when the app is for watching and reading.</summary>
+    public static string SettingsAsideAccountsBoth => Get("SettingsAsideAccountsBoth");
 
     /// <summary>Today, inside a line such as "Thursday 16:30".</summary>
     public static string WidgetDayToday => Get("WidgetDayToday");
@@ -9364,6 +9421,27 @@ public static partial class T
 
     /// <summary>Line under a tracker that brings in lists.</summary>
     public static string AccountsBringsLists => Get("AccountsBringsLists");
+
+    /// <summary>Line under AniList when Kaeri is for reading: what signing in brings.</summary>
+    public static string AccountsBringsListsRead => Get("AccountsBringsListsRead");
+
+    /// <summary>Line under AniList when Kaeri is for watching and reading.</summary>
+    public static string AccountsBringsListsBoth => Get("AccountsBringsListsBoth");
+
+    /// <summary>Line under a tracker that is not signed in: what it keeps in step.</summary>
+    public static string AccountsTrackerLists => Get("AccountsTrackerLists");
+
+    /// <summary>Line under MangaUpdates when it is not signed in.</summary>
+    public static string AccountsTrackerReadingLists => Get("AccountsTrackerReadingLists");
+
+    /// <summary>Line under a tracker on a phone with both media on: it serves shows and reading.</summary>
+    public static string AccountsTrackerServesBoth => Get("AccountsTrackerServesBoth");
+
+    /// <summary>Line under a tracker on a phone with both media on: it serves reading only.</summary>
+    public static string AccountsTrackerServesReading => Get("AccountsTrackerServesReading");
+
+    /// <summary>Line under a tracker on a phone with both media on: it serves shows only.</summary>
+    public static string AccountsTrackerServesShows => Get("AccountsTrackerServesShows");
 
     /// <summary>Line under the accounts screen when the library needs a tracker.</summary>
     public static string AccountsLibraryNeeds(string tracker) => Fill(Get("AccountsLibraryNeeds"), ("tracker", tracker));
@@ -11832,6 +11910,18 @@ public static partial class T
         ["SeriesReadFromAnother"] = "Read from another source",
         ["SeriesScore"] = "Score…",
         ["SeriesAddToList"] = "Add to list",
+        ["SeriesRemoveFromLists"] = "Remove from lists…",
+        ["SeriesRemoveFromListsTitle"] = "Remove {title} from your lists?",
+        ["SeriesRemoveFromListsLine"] = "It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.",
+        ["SeriesRemovedTitle"] = "Your lists",
+        ["SeriesChosen_one"] = "1 chapter",
+        ["SeriesChosen_other"] = "{n} chapters",
+        ["SeriesChooseAllUnread"] = "All unread",
+        ["ReadFromNotFound"] = "Not found in",
+        ["ReadFromSearchThere"] = "Search there",
+        ["ReadFromSearchPlaceholder"] = "Search {source}",
+        ["ReadFromSearch"] = "Search",
+        ["ReadFromSearchNone"] = "Nothing found by these words",
         ["SeriesTracking"] = "Tracking",
         ["SeriesReadFromMenu"] = "Change source…",
         ["SeriesSelectChapters"] = "Select chapters",
@@ -12026,6 +12116,12 @@ public static partial class T
         ["OnboardingBooksInviteHeading"] = "Plugin store invite",
         ["OnboardingBooksInvitePlaceholder"] = "Paste an invite",
         ["OnboardingBooksPluginLine"] = "Plugins run code from people you trust. Only join plugin stores whose owner you know.",
+        ["OnboardingBothTitle"] = "Where your shows and books come from",
+        ["OnboardingBothLine"] = "Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.",
+        ["OnboardingBothShows"] = "Shows",
+        ["OnboardingBothBooks"] = "Books",
+        ["OnboardingBothShowsFolderLine"] = "Video files on this {device}",
+        ["OnboardingBothShowsServerLine"] = "Your Jellyfin server",
         ["MediumChoicePosition"] = "{n} of {total}",
         ["MediumChangeLater"] = "You can change it in Settings.",
         ["MediumUpdateLine"] = "Kaeri can now read manga, webtoons and light novels from your sources. Pick what Kaeri is for on this {device}.",
@@ -12421,7 +12517,7 @@ public static partial class T
         ["SettingsArtwork"] = "Artwork under CC BY-NC",
         ["SettingsArtworkDetail"] = "Attribution in the app's notices",
         ["SettingsNewEpisodes"] = "New episodes",
-        ["SettingsNewEpisodesDetail"] = "For shows in your Watching list",
+        ["SettingsNewEpisodesDetail"] = "Shows on your Watching list",
         ["SettingsNotifyDetail"] = "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.",
         ["SettingsComingUp"] = "Coming up · next 7 days",
         ["SettingsSystemNotifications"] = "Notification settings",
@@ -12479,6 +12575,8 @@ public static partial class T
         ["SettingsSignedIn"] = "Signed in",
         ["SettingsUpscalingSharp"] = "Sharp · Anime4K",
         ["SettingsAsideAccounts"] = "Kaeri works without an account. Your watch history stays on this device when you sign out.",
+        ["SettingsAsideAccountsRead"] = "Kaeri works without an account. Your reading history stays on this device when you sign out.",
+        ["SettingsAsideAccountsBoth"] = "Kaeri works without an account. Your watch and reading history stays on this device when you sign out.",
         ["WidgetDayToday"] = "today",
         ["WidgetDayYesterday"] = "yesterday",
         ["WidgetLineStart"] = "Play {episode}",
@@ -13229,6 +13327,13 @@ public static partial class T
         ["AccountsOtherTrackersNote"] = "Other trackers are in Accounts.",
         ["AccountsWelcomeDetail"] = "Sign in to {tracker} to sync your list and where you stopped.",
         ["AccountsBringsLists"] = "Brings in your lists and fills Continue with what you are watching.",
+        ["AccountsBringsListsRead"] = "Brings in your lists and fills Continue with what you are reading.",
+        ["AccountsBringsListsBoth"] = "Brings in your lists and fills Continue with what you are watching and reading.",
+        ["AccountsTrackerLists"] = "Lists and progress",
+        ["AccountsTrackerReadingLists"] = "Reading lists and progress",
+        ["AccountsTrackerServesBoth"] = "Shows and reading",
+        ["AccountsTrackerServesReading"] = "Reading",
+        ["AccountsTrackerServesShows"] = "Shows",
         ["AccountsLibraryNeeds"] = "Library and sync need your {tracker} account",
         ["AccountsLibraryFrom"] = "Library shows your lists from {tracker}.",
         ["AccountsListsComeFrom"] = "Your lists come from {tracker}.",

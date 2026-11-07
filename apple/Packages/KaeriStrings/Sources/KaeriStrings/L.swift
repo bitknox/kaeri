@@ -2776,6 +2776,18 @@ public enum L {
     /// Legend of the storage bar: what downloads take for episodes not yet watched.
     public static var settingsStorageUnwatched: String { string("settings-storage-unwatched", fallback: "Not watched yet") }
 
+    /// Legend of the storage bar: what downloads take for chapters not read yet.
+    public static var settingsStorageUnread: String { string("settings-storage-unread", fallback: "Not read yet") }
+
+    /// Legend of the storage bar: what downloads take for chapters already read.
+    public static var settingsStorageRead: String { string("settings-storage-read", fallback: "Read") }
+
+    /// Legend of the storage bar with both media on: episodes not watched and chapters not read.
+    public static var settingsStorageUnseenBoth: String { string("settings-storage-unseen-both", fallback: "Not watched or read yet") }
+
+    /// Legend of the storage bar with both media on: episodes watched and chapters read.
+    public static var settingsStorageSeenBoth: String { string("settings-storage-seen-both", fallback: "Watched or read") }
+
     /// Line under the storage bar: what downloads take.
     public static func settingsStorageUsed(size: String) -> String {
         Self.format("settings-storage-used", fallback: "%1$@ in downloads.", size)
@@ -2794,6 +2806,11 @@ public enum L {
     /// Footnote of the AniList group in Accounts.
     public static func settingsAccountsSyncNote(tracker: String) -> String {
         Self.format("settings-accounts-sync-note", fallback: "Progress and list changes sync to %1$@. Library and the Calendar's My list show your %1$@ lists.", tracker)
+    }
+
+    /// Footnote of the AniList group in Accounts when the app is for reading.
+    public static func settingsAccountsSyncNoteRead(tracker: String) -> String {
+        Self.format("settings-accounts-sync-note-read", fallback: "Progress and list changes sync to %1$@. Library shows your %1$@ lists.", tracker)
     }
 
     /// Row title in Accounts: titles that differ between this device and the tracker.
@@ -8005,6 +8022,45 @@ public enum L {
     /// Status menu's label before the series is on a list.
     public static var seriesAddToList: String { string("series-add-to-list", fallback: "Add to list") }
 
+    /// Last item of a series' list menu: take the series off every tracker's list. Asks first.
+    public static var seriesRemoveFromLists: String { string("series-remove-from-lists", fallback: "Remove from lists…") }
+
+    /// Title of the question before a series is taken off the lists.
+    public static func seriesRemoveFromListsTitle(title: String) -> String {
+        Self.format("series-remove-from-lists-title", fallback: "Remove %1$@ from your lists?", title)
+    }
+
+    /// Line in that question.
+    public static var seriesRemoveFromListsLine: String { string("series-remove-from-lists-line", fallback: "It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.") }
+
+    /// Heading over what the removal came to, one line per tracker.
+    public static var seriesRemovedTitle: String { string("series-removed-title", fallback: "Your lists") }
+
+    /// Title while choosing chapters on a phone: how many are chosen.
+    public static func seriesChosen(n: Int) -> String {
+        Self.format("series-chosen", fallback: "%1$lld chapters", n)
+    }
+
+    /// Button while choosing chapters on a phone: choose every unread chapter.
+    public static var seriesChooseAllUnread: String { string("series-choose-all-unread", fallback: "All unread") }
+
+    /// Heading in Read from over the sources searched without finding the series.
+    public static var readFromNotFound: String { string("read-from-not-found", fallback: "Not found in") }
+
+    /// Button beside such a source: look for the series there by other words.
+    public static var readFromSearchThere: String { string("read-from-search-there", fallback: "Search there") }
+
+    /// Placeholder of the field that looks for the series in one source.
+    public static func readFromSearchPlaceholder(source: String) -> String {
+        Self.format("read-from-search-placeholder", fallback: "Search %1$@", source)
+    }
+
+    /// Button that runs that search.
+    public static var readFromSearch: String { string("read-from-search", fallback: "Search") }
+
+    /// Under the field when the source found nothing by those words.
+    public static var readFromSearchNone: String { string("read-from-search-none", fallback: "Nothing found by these words") }
+
     /// The More menu: the Tracking sheet.
     public static var seriesTracking: String { string("series-tracking", fallback: "Tracking") }
 
@@ -8649,6 +8705,26 @@ public enum L {
 
     /// Line under the invite field: whose code a plugin is.
     public static var onboardingBooksPluginLine: String { string("onboarding-books-plugin-line", fallback: "Plugins run code from people you trust. Only join plugin stores whose owner you know.") }
+
+    /// Title of the last first-run page after Both: where shows and books come from.
+    public static var onboardingBothTitle: String { string("onboarding-both-title", fallback: "Where your shows and books come from") }
+
+    /// Line under the title of that page.
+    public static var onboardingBothLine: String { string("onboarding-both-line", fallback: "Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.") }
+
+    /// Heading over the shows' rows on that page.
+    public static var onboardingBothShows: String { string("onboarding-both-shows", fallback: "Shows") }
+
+    /// Heading over the books' rows on that page.
+    public static var onboardingBothBooks: String { string("onboarding-both-books", fallback: "Books") }
+
+    /// Line under Add a folder in the shows' part, on a computer.
+    public static func onboardingBothShowsFolderLine(device: String) -> String {
+        Self.format("onboarding-both-shows-folder-line", fallback: "Video files on this %1$@", device)
+    }
+
+    /// Line under Add a server in the shows' part.
+    public static var onboardingBothShowsServerLine: String { string("onboarding-both-shows-server-line", fallback: "Your Jellyfin server") }
 
     /// Accessibility value of a choice row: its place among the three.
     public static func mediumChoicePosition(n: Int, total: Int) -> String {
@@ -9930,7 +10006,7 @@ public enum L {
     public static var settingsNewEpisodes: String { string("settings-new-episodes", fallback: "New episodes") }
 
     /// Line under it.
-    public static var settingsNewEpisodesDetail: String { string("settings-new-episodes-detail", fallback: "For shows in your Watching list") }
+    public static var settingsNewEpisodesDetail: String { string("settings-new-episodes-detail", fallback: "Shows on your Watching list") }
 
     /// Line explaining what a notification says.
     public static var settingsNotifyDetail: String { string("settings-notify-detail", fallback: "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.") }
@@ -10113,6 +10189,12 @@ public enum L {
 
     /// Side note in Accounts.
     public static var settingsAsideAccounts: String { string("settings-aside-accounts", fallback: "Kaeri works without an account. Your watch history stays on this device when you sign out.") }
+
+    /// Side note in Accounts when the app is for reading.
+    public static var settingsAsideAccountsRead: String { string("settings-aside-accounts-read", fallback: "Kaeri works without an account. Your reading history stays on this device when you sign out.") }
+
+    /// Side note in Accounts when the app is for watching and reading.
+    public static var settingsAsideAccountsBoth: String { string("settings-aside-accounts-both", fallback: "Kaeri works without an account. Your watch and reading history stays on this device when you sign out.") }
 
     /// Today, inside a line such as "Thursday 16:30".
     public static var widgetDayToday: String { string("widget-day-today", fallback: "today") }
@@ -12704,6 +12786,27 @@ public enum L {
 
     /// Line under a tracker that brings in lists.
     public static var accountsBringsLists: String { string("accounts-brings-lists", fallback: "Brings in your lists and fills Continue with what you are watching.") }
+
+    /// Line under AniList when Kaeri is for reading: what signing in brings.
+    public static var accountsBringsListsRead: String { string("accounts-brings-lists-read", fallback: "Brings in your lists and fills Continue with what you are reading.") }
+
+    /// Line under AniList when Kaeri is for watching and reading.
+    public static var accountsBringsListsBoth: String { string("accounts-brings-lists-both", fallback: "Brings in your lists and fills Continue with what you are watching and reading.") }
+
+    /// Line under a tracker that is not signed in: what it keeps in step.
+    public static var accountsTrackerLists: String { string("accounts-tracker-lists", fallback: "Lists and progress") }
+
+    /// Line under MangaUpdates when it is not signed in.
+    public static var accountsTrackerReadingLists: String { string("accounts-tracker-reading-lists", fallback: "Reading lists and progress") }
+
+    /// Line under a tracker on a phone with both media on: it serves shows and reading.
+    public static var accountsTrackerServesBoth: String { string("accounts-tracker-serves-both", fallback: "Shows and reading") }
+
+    /// Line under a tracker on a phone with both media on: it serves reading only.
+    public static var accountsTrackerServesReading: String { string("accounts-tracker-serves-reading", fallback: "Reading") }
+
+    /// Line under a tracker on a phone with both media on: it serves shows only.
+    public static var accountsTrackerServesShows: String { string("accounts-tracker-serves-shows", fallback: "Shows") }
 
     /// Line under the accounts screen when the library needs a tracker.
     public static func accountsLibraryNeeds(tracker: String) -> String {

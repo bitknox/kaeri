@@ -13100,6 +13100,61 @@ pub fn series_add_to_list() -> String {
     text("series-add-to-list", &[])
 }
 
+/// Last item of a series' list menu: take the series off every tracker's list. Asks first.
+pub fn series_remove_from_lists() -> String {
+    text("series-remove-from-lists", &[])
+}
+
+/// Title of the question before a series is taken off the lists.
+pub fn series_remove_from_lists_title(title: &str) -> String {
+    text("series-remove-from-lists-title", &[("title", Arg::Text(title))])
+}
+
+/// Line in that question.
+pub fn series_remove_from_lists_line() -> String {
+    text("series-remove-from-lists-line", &[])
+}
+
+/// Heading over what the removal came to, one line per tracker.
+pub fn series_removed_title() -> String {
+    text("series-removed-title", &[])
+}
+
+/// Title while choosing chapters on a phone: how many are chosen.
+pub fn series_chosen(n: i64) -> String {
+    text("series-chosen", &[("n", Arg::Int(n))])
+}
+
+/// Button while choosing chapters on a phone: choose every unread chapter.
+pub fn series_choose_all_unread() -> String {
+    text("series-choose-all-unread", &[])
+}
+
+/// Heading in Read from over the sources searched without finding the series.
+pub fn read_from_not_found() -> String {
+    text("read-from-not-found", &[])
+}
+
+/// Button beside such a source: look for the series there by other words.
+pub fn read_from_search_there() -> String {
+    text("read-from-search-there", &[])
+}
+
+/// Placeholder of the field that looks for the series in one source.
+pub fn read_from_search_placeholder(source: &str) -> String {
+    text("read-from-search-placeholder", &[("source", Arg::Text(source))])
+}
+
+/// Button that runs that search.
+pub fn read_from_search() -> String {
+    text("read-from-search", &[])
+}
+
+/// Under the field when the source found nothing by those words.
+pub fn read_from_search_none() -> String {
+    text("read-from-search-none", &[])
+}
+
 /// The More menu: the Tracking sheet.
 pub fn series_tracking() -> String {
     text("series-tracking", &[])
@@ -14023,6 +14078,36 @@ pub fn onboarding_books_invite_placeholder() -> String {
 /// Line under the invite field: whose code a plugin is.
 pub fn onboarding_books_plugin_line() -> String {
     text("onboarding-books-plugin-line", &[])
+}
+
+/// Title of the last first-run page after Both: where shows and books come from.
+pub fn onboarding_both_title() -> String {
+    text("onboarding-both-title", &[])
+}
+
+/// Line under the title of that page.
+pub fn onboarding_both_line() -> String {
+    text("onboarding-both-line", &[])
+}
+
+/// Heading over the shows' rows on that page.
+pub fn onboarding_both_shows() -> String {
+    text("onboarding-both-shows", &[])
+}
+
+/// Heading over the books' rows on that page.
+pub fn onboarding_both_books() -> String {
+    text("onboarding-both-books", &[])
+}
+
+/// Line under Add a folder in the shows' part, on a computer.
+pub fn onboarding_both_shows_folder_line(device: &str) -> String {
+    text("onboarding-both-shows-folder-line", &[("device", Arg::Text(device))])
+}
+
+/// Line under Add a server in the shows' part.
+pub fn onboarding_both_shows_server_line() -> String {
+    text("onboarding-both-shows-server-line", &[])
 }
 
 /// Accessibility value of a choice row: its place among the three.
@@ -16213,6 +16298,16 @@ pub fn settings_upscaling_sharp() -> String {
 /// Side note in Accounts.
 pub fn settings_aside_accounts() -> String {
     text("settings-aside-accounts", &[])
+}
+
+/// Side note in Accounts when the app is for reading.
+pub fn settings_aside_accounts_read() -> String {
+    text("settings-aside-accounts-read", &[])
+}
+
+/// Side note in Accounts when the app is for watching and reading.
+pub fn settings_aside_accounts_both() -> String {
+    text("settings-aside-accounts-both", &[])
 }
 
 /// Today, inside a line such as "Thursday 16:30".
@@ -19890,6 +19985,41 @@ pub fn accounts_welcome_detail(tracker: &str) -> String {
 /// Line under a tracker that brings in lists.
 pub fn accounts_brings_lists() -> String {
     text("accounts-brings-lists", &[])
+}
+
+/// Line under AniList when Kaeri is for reading: what signing in brings.
+pub fn accounts_brings_lists_read() -> String {
+    text("accounts-brings-lists-read", &[])
+}
+
+/// Line under AniList when Kaeri is for watching and reading.
+pub fn accounts_brings_lists_both() -> String {
+    text("accounts-brings-lists-both", &[])
+}
+
+/// Line under a tracker that is not signed in: what it keeps in step.
+pub fn accounts_tracker_lists() -> String {
+    text("accounts-tracker-lists", &[])
+}
+
+/// Line under MangaUpdates when it is not signed in.
+pub fn accounts_tracker_reading_lists() -> String {
+    text("accounts-tracker-reading-lists", &[])
+}
+
+/// Line under a tracker on a phone with both media on: it serves shows and reading.
+pub fn accounts_tracker_serves_both() -> String {
+    text("accounts-tracker-serves-both", &[])
+}
+
+/// Line under a tracker on a phone with both media on: it serves reading only.
+pub fn accounts_tracker_serves_reading() -> String {
+    text("accounts-tracker-serves-reading", &[])
+}
+
+/// Line under a tracker on a phone with both media on: it serves shows only.
+pub fn accounts_tracker_serves_shows() -> String {
+    text("accounts-tracker-serves-shows", &[])
 }
 
 /// Line under the accounts screen when the library needs a tracker.

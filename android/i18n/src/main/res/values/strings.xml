@@ -4330,6 +4330,31 @@
     <string name="series_score">Score…</string>
     <!-- Status menu's label before the series is on a list. -->
     <string name="series_add_to_list">Add to list</string>
+    <!-- Last item of a series' list menu: take the series off every tracker's list. Asks first. -->
+    <string name="series_remove_from_lists">Remove from lists…</string>
+    <!-- Title of the question before a series is taken off the lists. -->
+    <string name="series_remove_from_lists_title">Remove %1$s from your lists?</string>
+    <!-- Line in that question. -->
+    <string name="series_remove_from_lists_line">It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.</string>
+    <!-- Heading over what the removal came to, one line per tracker. -->
+    <string name="series_removed_title">Your lists</string>
+    <!-- Title while choosing chapters on a phone: how many are chosen. -->
+    <plurals name="series_chosen">
+        <item quantity="one">1 chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+    <!-- Button while choosing chapters on a phone: choose every unread chapter. -->
+    <string name="series_choose_all_unread">All unread</string>
+    <!-- Heading in Read from over the sources searched without finding the series. -->
+    <string name="read_from_not_found">Not found in</string>
+    <!-- Button beside such a source: look for the series there by other words. -->
+    <string name="read_from_search_there">Search there</string>
+    <!-- Placeholder of the field that looks for the series in one source. -->
+    <string name="read_from_search_placeholder">Search %1$s</string>
+    <!-- Button that runs that search. -->
+    <string name="read_from_search">Search</string>
+    <!-- Under the field when the source found nothing by those words. -->
+    <string name="read_from_search_none">Nothing found by these words</string>
     <!-- The More menu: the Tracking sheet. -->
     <string name="series_tracking">Tracking</string>
     <!-- The More menu: the Read from sheet. -->
@@ -4727,6 +4752,18 @@
     <string name="onboarding_books_invite_placeholder">Paste an invite</string>
     <!-- Line under the invite field: whose code a plugin is. -->
     <string name="onboarding_books_plugin_line">Plugins run code from people you trust. Only join plugin stores whose owner you know.</string>
+    <!-- Title of the last first-run page after Both: where shows and books come from. -->
+    <string name="onboarding_both_title">Where your shows and books come from</string>
+    <!-- Line under the title of that page. -->
+    <string name="onboarding_both_line">Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.</string>
+    <!-- Heading over the shows' rows on that page. -->
+    <string name="onboarding_both_shows">Shows</string>
+    <!-- Heading over the books' rows on that page. -->
+    <string name="onboarding_both_books">Books</string>
+    <!-- Line under Add a folder in the shows' part, on a computer. -->
+    <string name="onboarding_both_shows_folder_line">Video files on this %1$s</string>
+    <!-- Line under Add a server in the shows' part. -->
+    <string name="onboarding_both_shows_server_line">Your Jellyfin server</string>
     <!-- Accessibility value of a choice row: its place among the three. -->
     <string name="medium_choice_position">%1$d of %2$d</string>
     <!-- Under the choices in the sheet. -->
@@ -5532,7 +5569,7 @@
     <!-- Heading and row for notifications of new episodes. -->
     <string name="settings_new_episodes">New episodes</string>
     <!-- Line under it. -->
-    <string name="settings_new_episodes_detail">For shows in your Watching list</string>
+    <string name="settings_new_episodes_detail">Shows on your Watching list</string>
     <!-- Line explaining what a notification says. -->
     <string name="settings_notify_detail">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. A show can turn its own off in its settings.</string>
     <!-- Row: the coming-up digest. -->
@@ -5648,6 +5685,10 @@
     <string name="settings_upscaling_sharp">Sharp · Anime4K</string>
     <!-- Side note in Accounts. -->
     <string name="settings_aside_accounts">Kaeri works without an account. Your watch history stays on this device when you sign out.</string>
+    <!-- Side note in Accounts when the app is for reading. -->
+    <string name="settings_aside_accounts_read">Kaeri works without an account. Your reading history stays on this device when you sign out.</string>
+    <!-- Side note in Accounts when the app is for watching and reading. -->
+    <string name="settings_aside_accounts_both">Kaeri works without an account. Your watch and reading history stays on this device when you sign out.</string>
     <!-- Today, inside a line such as "Thursday 16:30". -->
     <string name="widget_day_today">today</string>
     <!-- Yesterday, inside a line. -->
@@ -7155,6 +7196,20 @@
     <string name="accounts_welcome_detail">Sign in to %1$s to sync your list and where you stopped.</string>
     <!-- Line under a tracker that brings in lists. -->
     <string name="accounts_brings_lists">Brings in your lists and fills Continue with what you are watching.</string>
+    <!-- Line under AniList when Kaeri is for reading: what signing in brings. -->
+    <string name="accounts_brings_lists_read">Brings in your lists and fills Continue with what you are reading.</string>
+    <!-- Line under AniList when Kaeri is for watching and reading. -->
+    <string name="accounts_brings_lists_both">Brings in your lists and fills Continue with what you are watching and reading.</string>
+    <!-- Line under a tracker that is not signed in: what it keeps in step. -->
+    <string name="accounts_tracker_lists">Lists and progress</string>
+    <!-- Line under MangaUpdates when it is not signed in. -->
+    <string name="accounts_tracker_reading_lists">Reading lists and progress</string>
+    <!-- Line under a tracker on a phone with both media on: it serves shows and reading. -->
+    <string name="accounts_tracker_serves_both">Shows and reading</string>
+    <!-- Line under a tracker on a phone with both media on: it serves reading only. -->
+    <string name="accounts_tracker_serves_reading">Reading</string>
+    <!-- Line under a tracker on a phone with both media on: it serves shows only. -->
+    <string name="accounts_tracker_serves_shows">Shows</string>
     <!-- Line under the accounts screen when the library needs a tracker. -->
     <string name="accounts_library_needs">Library and sync need your %1$s account</string>
     <!-- Line on the settings page: where the library gets its lists. -->

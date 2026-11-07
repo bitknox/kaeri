@@ -8477,9 +8477,6 @@ settings-artwork-detail = 表記はアプリ内のお知らせに記載してい
 # Heading and row for notifications of new episodes.
 settings-new-episodes = 新しいエピソード
 
-# Line under it.
-settings-new-episodes-detail = 視聴リストに入っている作品が対象です。
-
 # Line explaining what a notification says.
 settings-notify-detail = フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。
 

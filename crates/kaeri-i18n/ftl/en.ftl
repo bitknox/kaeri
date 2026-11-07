@@ -8191,6 +8191,43 @@ series-score = Score…
 # Status menu's label before the series is on a list.
 series-add-to-list = Add to list
 
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Remove from lists…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = Remove { $title } from your lists?
+
+# Line in that question.
+series-remove-from-lists-line = It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Your lists
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] 1 chapter
+       *[other] { $n } chapters
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = All unread
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Not found in
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Search there
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = Search { $source }
+
+# Button that runs that search.
+read-from-search = Search
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = Nothing found by these words
+
 # The More menu: the Tracking sheet.
 series-tracking = Tracking
 
@@ -8781,6 +8818,24 @@ onboarding-books-invite-placeholder = Paste an invite
 
 # Line under the invite field: whose code a plugin is.
 onboarding-books-plugin-line = Plugins run code from people you trust. Only join plugin stores whose owner you know.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Where your shows and books come from
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Shows
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Books
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Video files on this { $device }
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Your Jellyfin server
 
 # Accessibility value of a choice row: its place among the three.
 medium-choice-position = { $n } of { $total }
@@ -9982,7 +10037,7 @@ settings-artwork-detail = Attribution in the app's notices
 settings-new-episodes = New episodes
 
 # Line under it.
-settings-new-episodes-detail = For shows in your Watching list
+settings-new-episodes-detail = Shows on your Watching list
 
 # Line explaining what a notification says.
 settings-notify-detail = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
@@ -10155,6 +10210,12 @@ settings-upscaling-sharp = Sharp · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = Kaeri works without an account. Your watch history stays on this device when you sign out.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri works without an account. Your reading history stays on this device when you sign out.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri works without an account. Your watch and reading history stays on this device when you sign out.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = today
@@ -12410,6 +12471,27 @@ accounts-welcome-detail = Sign in to { $tracker } to sync your list and where yo
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Brings in your lists and fills Continue with what you are watching.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Brings in your lists and fills Continue with what you are reading.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Brings in your lists and fills Continue with what you are watching and reading.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Lists and progress
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Reading lists and progress
+
+# Line under a tracker on a phone with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Shows and reading
+
+# Line under a tracker on a phone with both media on: it serves reading only.
+accounts-tracker-serves-reading = Reading
+
+# Line under a tracker on a phone with both media on: it serves shows only.
+accounts-tracker-serves-shows = Shows
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Library and sync need your { $tracker } account

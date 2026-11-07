@@ -152,6 +152,45 @@ series-score = Score…
 # Status menu's label before the series is on a list.
 series-add-to-list = Add to list
 
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Remove from lists…
+
+# Title of the question before a series is taken off the lists.
+# @arg title: text
+series-remove-from-lists-title = Remove { $title } from your lists?
+
+# Line in that question.
+series-remove-from-lists-line = It comes off your list on each { -tracker } you have connected. Your place and read chapters stay in { -app-name }.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Your lists
+
+# Title while choosing chapters on a phone: how many are chosen.
+# @arg n: int
+series-chosen = { $n ->
+    [one] 1 chapter
+   *[other] { $n } chapters
+}
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = All unread
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Not found in
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Search there
+
+# Placeholder of the field that looks for the series in one source.
+# @arg source: text
+read-from-search-placeholder = Search { $source }
+
+# Button that runs that search.
+read-from-search = Search
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = Nothing found by these words
+
 # The More menu: the Tracking sheet.
 series-tracking = Tracking
 
@@ -810,6 +849,25 @@ onboarding-books-invite-placeholder = Paste an invite
 
 # Line under the invite field: whose code a plugin is.
 onboarding-books-plugin-line = { -plugin-cap-pl } run code from people you trust. Only join { -plugin-store-pl } whose owner you know.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Where your shows and books come from
+
+# Line under the title of that page.
+onboarding-both-line = { -app-name } comes with no shows or books. Add what you already have, or join a { -plugin-store } with an invite from its owner.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Shows
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Books
+
+# Line under Add a folder in the shows' part, on a computer.
+# @arg device: text
+onboarding-both-shows-folder-line = Video files on this { $device }
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Your Jellyfin server
 
 ## Asking what Kaeri is for after the update and on joining
 

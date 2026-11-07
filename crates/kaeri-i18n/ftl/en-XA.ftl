@@ -8191,6 +8191,43 @@ series-score = [Šçöŕé…~~]
 # Status menu's label before the series is on a list.
 series-add-to-list = [Åðð ţö ļîšţ~~~~]
 
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = [Ŕéɱöṽé ƒŕöɱ ļîšţš…~~~~~~]
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = [Ŕéɱöṽé { $title } ƒŕöɱ ýöüŕ ļîšţš?~~~~~~~~~]
+
+# Line in that question.
+series-remove-from-lists-line = [Îţ çöɱéš öƒƒ ýöüŕ ļîšţ öñ éàçĥ ţŕàçķéŕ ýöü ĥàṽé çöññéçţéð. Ýöüŕ þļàçé àñð ŕéàð çĥàþţéŕš šţàý îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = [Ýöüŕ ļîšţš~~~]
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] [1 çĥàþţéŕ~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = [Åļļ üñŕéàð~~~]
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = [Ñöţ ƒöüñð îñ~~~~]
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = [Šéàŕçĥ ţĥéŕé~~~~]
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = [Šéàŕçĥ { $source }~~~]
+
+# Button that runs that search.
+read-from-search = [Šéàŕçĥ~~]
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = [Ñöţĥîñĝ ƒöüñð ƀý ţĥéšé ŵöŕðš~~~~~~~~~]
+
 # The More menu: the Tracking sheet.
 series-tracking = [Ţŕàçķîñĝ~~~]
 
@@ -8781,6 +8818,24 @@ onboarding-books-invite-placeholder = [Þàšţé àñ îñṽîţé~~~~~]
 
 # Line under the invite field: whose code a plugin is.
 onboarding-books-plugin-line = [Þļüĝîñš ŕüñ çöðé ƒŕöɱ þéöþļé ýöü ţŕüšţ. Öñļý ĵöîñ þļüĝîñ šţöŕéš ŵĥöšé öŵñéŕ ýöü ķñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = [Ŵĥéŕé ýöüŕ šĥöŵš àñð ƀööķš çöɱé ƒŕöɱ~~~~~~~~~~~]
+
+# Line under the title of that page.
+onboarding-both-line = [Ķàéŕî çöɱéš ŵîţĥ ñö šĥöŵš öŕ ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = [Šĥöŵš~~]
+
+# Heading over the books' rows on that page.
+onboarding-both-books = [Ɓööķš~~]
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = [Ṽîðéö ƒîļéš öñ ţĥîš { $device }~~~~~~~]
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = [Ýöüŕ Ĵéļļýƒîñ šéŕṽéŕ~~~~~~]
 
 # Accessibility value of a choice row: its place among the three.
 medium-choice-position = [{ $n } öƒ { $total }~~~]
@@ -9982,7 +10037,7 @@ settings-artwork-detail = [Åţţŕîƀüţîöñ îñ ţĥé àþþ'š ñöţî
 settings-new-episodes = [Ñéŵ éþîšöðéš~~~~]
 
 # Line under it.
-settings-new-episodes-detail = [Ƒöŕ šĥöŵš îñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~~]
+settings-new-episodes-detail = [Šĥöŵš öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~]
 
 # Line explaining what a notification says.
 settings-notify-detail = [Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ: ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ îţš ñàɱé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -10155,6 +10210,12 @@ settings-upscaling-sharp = [Šĥàŕþ · Åñîɱé4Ķ~~~~~]
 
 # Side note in Accounts.
 settings-aside-accounts = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ àñð ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = [ţöðàý~~]
@@ -12410,6 +12471,27 @@ accounts-welcome-detail = [Šîĝñ îñ ţö { $tracker } ţö šýñç ýöü�
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~]
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = [Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ àñð ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = [Ļîšţš àñð þŕöĝŕéšš~~~~~~]
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = [Ŕéàðîñĝ ļîšţš àñð þŕöĝŕéšš~~~~~~~~]
+
+# Line under a tracker on a phone with both media on: it serves shows and reading.
+accounts-tracker-serves-both = [Šĥöŵš àñð ŕéàðîñĝ~~~~~~]
+
+# Line under a tracker on a phone with both media on: it serves reading only.
+accounts-tracker-serves-reading = [Ŕéàðîñĝ~~~]
+
+# Line under a tracker on a phone with both media on: it serves shows only.
+accounts-tracker-serves-shows = [Šĥöŵš~~]
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = [Ļîƀŕàŕý àñð šýñç ñééð ýöüŕ { $tracker } àççöüñţ~~~~~~~~~~~~]

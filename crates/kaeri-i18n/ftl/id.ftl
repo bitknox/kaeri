@@ -8477,9 +8477,6 @@ settings-artwork-detail = Atribusi ada di pemberitahuan aplikasi
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Episode baru
 
-# Line under it.
-settings-new-episodes-detail = Untuk serial di daftar Menonton Anda
-
 # Line explaining what a notification says.
 settings-notify-detail = Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.
 
