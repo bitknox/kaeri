@@ -173,6 +173,8 @@ shell wm dismiss-keyguard
 # own belongs in a shot.
 setting global hide_error_dialogs 1
 shell svc power stayon true
+# The reader goes full screen; the system's one-time "Viewing full screen" hint belongs in no shot.
+setting secure immersive_mode_confirmations confirmed
 shell cmd uimode night yes >/dev/null
 # The boards' clock reads 19:30, on a 24-hour clock.
 setting system time_12_24 24
