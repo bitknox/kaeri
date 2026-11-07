@@ -297,6 +297,7 @@ pub struct ListRemoval {
     pub outcome: ListRemovalOutcome,
     /// In words, as parts the app joins with " · ": "Removed from AniList", "Still on your
     /// Kitsu list · You're offline. ...".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
 }
 
@@ -693,6 +694,9 @@ pub struct DownloadEstimate {
     /// The chosen chapters not downloaded yet.
     pub chapters: u32,
     pub bytes: u64,
+    /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
+    /// left to download.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
 }
 
