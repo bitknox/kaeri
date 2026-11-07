@@ -521,3 +521,63 @@ async fn a_chapter_read_in_the_reader_is_told_to_its_book_server() {
     }
 }
 
+/// A vertical book as Japanese EPUBs are made: a stylesheet setting `vertical-rl` on the root and
+/// the spine read right to left.
+fn vertical(path: &Path) {
+    let file = std::fs::File::create(path).unwrap();
+    let mut zip = zip::ZipWriter::new(file);
+    let stored = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Stored);
+    zip.start_file("mimetype", stored).unwrap();
+    zip.write_all(b"application/epub+zip").unwrap();
+    let o = zip::write::SimpleFileOptions::default();
+    let mut put = |name: &str, text: &str| {
+        zip.start_file(name, o).unwrap();
+        zip.write_all(text.as_bytes()).unwrap();
+    };
+    put(
+        "META-INF/container.xml",
+        r#"<?xml version="1.0" encoding="utf-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="item/standard.opf" media-type="application/oebps-package+xml"/></rootfiles></container>"#,
+    );
+    put(
+        "item/standard.opf",
+        r#"<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:00000000-0000-4000-8000-000000000002</dc:identifier><dc:title>灯台守の夜</dc:title><dc:language>ja</dc:language></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style/book.css" media-type="text/css"/><item id="p1" href="xhtml/p1.xhtml" media-type="application/xhtml+xml"/></manifest><spine page-progression-direction="rtl"><itemref idref="p1"/></spine></package>"#,
+    );
+    put(
+        "item/nav.xhtml",
+        r#"<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>目次</title></head><body><nav epub:type="toc"><ol><li><a href="xhtml/p1.xhtml">一</a></li></ol></nav></body></html>"#,
+    );
+    put(
+        "item/style/book.css",
+        "html { -epub-writing-mode: vertical-rl; writing-mode: vertical-rl; }\np { text-indent: 1em; }",
+    );
+    put(
+        "item/xhtml/p1.xhtml",
+        r#"<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja"><head><meta charset="utf-8"/><title>一</title><link rel="stylesheet" type="text/css" href="../style/book.css"/></head><body><p>灯台守は階段を上った。</p><p>潮が桟橋の下に満ちてきた。</p></body></html>"#,
+    );
+    zip.finish().unwrap();
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_vertical_book_opens_vertical_and_reads_right_to_left() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |books| {
+        let path = books.join("Volume 1.epub");
+        vertical(&path);
+        vec![shelf_file(&path, 1, "epub")]
+    });
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    assert_eq!(novel.writing_mode, kaeri_model::reader::WritingMode::VerticalRightToLeft);
+    assert_eq!(novel.progression, kaeri_model::reader::ReadDirection::RightToLeft);
+
+    // The document keeps its stylesheet, and the stylesheet keeps the writing mode, so the web
+    // view lays it out in columns from the right.
+    let doc = h.get(&novel.entry);
+    assert_eq!(doc.status, 200);
+    let body = text(&doc);
+    assert!(body.contains("灯台守は階段を上った。"), "{body}");
+    assert!(body.contains("book.css"), "{body}");
+    let base = novel.entry.rsplit_once("/xhtml/").unwrap().0;
+    let sheet = h.get(&format!("{base}/style/book.css"));
+    assert_eq!((sheet.status, sheet.mime.as_str()), (200, "text/css"));
+    assert!(text(&sheet).contains("vertical-rl"), "{}", text(&sheet));
+}
