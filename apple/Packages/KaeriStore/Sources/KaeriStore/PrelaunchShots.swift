@@ -15,6 +15,9 @@ import Foundation
 ///              demo-about, demo-search
 ///     Piece 3  join-step, join-code, join-nothing, join-expired, join-arriving, join-paired,
 ///              join-refused, join-home, join-other
+///     Piece 4  progress-saved, progress-sending, progress-offline, progress-retrying,
+///              progress-failed (the page between chapters, with reader=end on a reader scene);
+///              row-saved, row-waiting, row-retrying, row-failed, row-off (Your sources)
 public enum PrelaunchScene: String, Sendable, CaseIterable {
     case kavitaLink = "kavita-link", looking, found, unreachable, wrongPassword = "wrong-password"
     case wrongKey = "wrong-key", empty, notBook = "not-book", folder, folderNothing = "folder-nothing"
@@ -26,6 +29,10 @@ public enum PrelaunchScene: String, Sendable, CaseIterable {
     case joinStep = "join-step", joinCode = "join-code", joinNothing = "join-nothing"
     case joinExpired = "join-expired", joinArriving = "join-arriving", joinPaired = "join-paired"
     case joinRefused = "join-refused", joinHome = "join-home", joinOther = "join-other"
+    case progressSaved = "progress-saved", progressSending = "progress-sending", progressOffline = "progress-offline"
+    case progressRetrying = "progress-retrying", progressFailed = "progress-failed"
+    case rowSaved = "row-saved", rowWaiting = "row-waiting", rowRetrying = "row-retrying", rowFailed = "row-failed"
+    case rowOff = "row-off"
 
     public static let argument = "-KaeriPrelaunch"
 
@@ -38,6 +45,10 @@ public enum PrelaunchScene: String, Sendable, CaseIterable {
     /// The first-run page a join state is drawn on.
     public var isJoin: Bool { rawValue.hasPrefix("join-") }
     public var isDemo: Bool { rawValue.hasPrefix("demo-") }
+    /// Piece 4 on the page between chapters.
+    public var isProgressLine: Bool { rawValue.hasPrefix("progress-") }
+    /// Piece 4 on the server's row.
+    public var isProgressRow: Bool { rawValue.hasPrefix("row-") }
 }
 
 /// The made-up server, folder and store the states show. Hosts end in `.example`.
@@ -142,5 +153,83 @@ extension SyncModel {
         default:
             staged = true
         }
+    }
+}
+
+// MARK: - Piece 4
+
+extension PrelaunchFixtures {
+    static let comicsHost = "comics.home.example"
+
+    /// Your sources as the board draws it: books.home.example with its progress as `scene` says,
+    /// comics.home.example, and one plugin from Kim's shelf. The Demo row comes from the demo.
+    static func sources(_ scene: PrelaunchScene?) -> BookSourcesView {
+        let now = Int64(Date.now.timeIntervalSince1970)
+        var books = BookServerRow(
+            id: "s1", kind: .kavita, name: host, address: "https://\(host)", series: 212, reportProgress: true,
+            off: false, signedOut: false, libraries: 2, empty: false, rechecksAt: nil, keyLast4: "3f9a",
+            progressPending: 0, progressSending: false, progressSavedAt: now - 120, progressProblem: nil,
+            progressProblemAt: nil)
+        switch scene {
+        case .rowWaiting?:
+            books.progressPending = 3
+            books.progressProblem = .offline
+        case .rowRetrying?:
+            books.progressPending = 3
+            books.progressProblem = .noAnswer
+            books.progressProblemAt = now - 40
+        case .rowFailed?:
+            books.progressPending = 3
+            books.progressProblem = .refusedKey
+            books.progressProblemAt = now - 40
+        case .rowOff?:
+            books.reportProgress = false
+            books.progressSavedAt = nil
+            books.progressProblem = .notSetToReceive
+        default:
+            break
+        }
+        let comics = BookServerRow(
+            id: "s2", kind: .opds, name: comicsHost, address: "https://\(comicsHost)", series: 38,
+            reportProgress: false, off: false, signedOut: false, libraries: 1, empty: false, rechecksAt: nil,
+            keyLast4: nil, progressPending: 0, progressSending: false, progressSavedAt: nil, progressProblem: nil,
+            progressProblemAt: nil)
+        let plugin = BookPluginRow(id: "tsuru", name: "Tsuru", version: "1.4", media: [.manga], languages: ["en"], // i18n-skip: made up
+                                   off: false, store: "Kim’s shelf") // i18n-skip: made up
+        return BookSourcesView(folders: [], groups: [], servers: [books, comics], plugins: [plugin], order: ["s1", "s2", "tsuru"])
+    }
+
+    /// The page between chapters' line for a piece 4 state.
+    static func line(_ scene: PrelaunchScene) -> ServerLine? {
+        switch scene {
+        case .progressSaved: .saved(host: host)
+        case .progressSending: .sending(host: host)
+        case .progressOffline: .offline(host: host)
+        case .progressRetrying: .retrying(host: host)
+        case .progressFailed: .failed(host: host, why: .key)
+        default: nil
+        }
+    }
+}
+
+extension AppStore {
+    /// For shots: Your sources with the board's rows, kept on screen over the engine's own. Every
+    /// prelaunch state drawn on Your sources shows them; piece 4's set the server's progress.
+    public func stagePrelaunchSources(_ scene: PrelaunchScene) {
+        #if FIXTURES
+        held.remove("bookSourcesView")
+        apply(.bookSources(.view(PrelaunchFixtures.sources(scene.isProgressRow ? scene : nil))))
+        held.insert("bookSourcesView")
+        #endif
+    }
+
+    /// For shots: the page between chapters of the open reader read, AniList updated, with the
+    /// server line a piece 4 state names.
+    public func stagePrelaunchLine(_ scene: PrelaunchScene) {
+        #if FIXTURES
+        guard scene.isProgressLine, let chapter = reader.view?.chapter.id else { return }
+        reader.stageRead(trackers: ["AniList"]) // i18n-skip: a tracker's name
+        serverProgress.stage(chapter: chapter, line: PrelaunchFixtures.line(scene), server: "s1")
+        #endif
     }
 }

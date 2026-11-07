@@ -20,6 +20,10 @@ extension ReaderModel {
         case "readermangartl", "readermoved": return "a:900301"
         case "readernovel": return "a:900302"
         case "readerstrip": return "a:900303"
+        // The reading demo's comic, for its reader and its end (prelaunch=demo-reader, demo-end).
+        case "readingdemo":
+            guard let scene = PrelaunchScene.named(in: arguments), scene == .demoReader || scene == .demoEnd else { return nil }
+            return readingDemoInfo().works.first { !$0.novel }?.work
         default: return nil
         }
     }

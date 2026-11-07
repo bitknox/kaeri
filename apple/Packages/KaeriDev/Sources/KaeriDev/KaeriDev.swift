@@ -147,8 +147,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)
             store.sync.stage(prelaunch: scene)
+            if !scene.isJoin, !scene.isProgressLine { store.stagePrelaunchSources(scene) }
         }
         if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil { _ = await store.reader.stage() }
+        if let scene = PrelaunchScene.named() { store.stagePrelaunchLine(scene) }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is
         // there: wait for the sheet to be taken, and for it to slide in.
