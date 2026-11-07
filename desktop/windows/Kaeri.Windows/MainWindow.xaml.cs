@@ -95,6 +95,7 @@ public sealed partial class MainWindow : Window
         (var engine, dirs) = StartEngine(host);
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
         ChatSetting.Load(dirs.Config);
+        SmoothScrolling.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif
@@ -1027,21 +1028,17 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// A title's page: drill-in, with the cover carried from where it was clicked when one was
-    /// (a connected animation). With animation effects off, both become a crossfade.
+    /// A title's page, as the Mac opens one: the page crossfades over the one it leaves on the
+    /// standard token, and the cover flies from where it was clicked when one was (a connected
+    /// animation, on the standard spring). With animation effects off, only the crossfade.
     /// </summary>
     internal void OpenTitle(uint id)
     {
         if (Player.Showing)
             Player.Close();
-        if (Motion.Enabled)
-            ContentFrame.Navigate(typeof(TitlePage), id, new DrillInNavigationTransitionInfo());
-        else
-        {
+        if (!Motion.Enabled)
             ConnectedAnimationService.GetForCurrentView().GetAnimation(TitlePage.CoverAnimation)?.Cancel();
-            ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
-            Motion.FadeIn(ContentFrame, Motion.Standard);
-        }
+        Crossfade.Swap(ContentFrame, () => ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo()));
     }
 
     /// <summary>
@@ -1069,6 +1066,12 @@ public sealed partial class MainWindow : Window
     internal void ShowSearch(string query)
     {
         SearchBox.Text = query;
+        // Enter on Search searches there, as typing does, rather than adding a page for Back.
+        if (ContentFrame.Content is SearchPage page)
+        {
+            page.Submit(query);
+            return;
+        }
         ContentFrame.Navigate(typeof(SearchPage), query, new SuppressNavigationTransitionInfo());
     }
 
@@ -1274,7 +1277,12 @@ public sealed partial class MainWindow : Window
         if (Player.Showing)
             Player.Close();
         else if (ContentFrame.CanGoBack)
-            ContentFrame.GoBack();
+            // Back crossfades as the page came in.
+            Crossfade.Swap(ContentFrame, () =>
+            {
+                if (ContentFrame.CanGoBack)
+                    ContentFrame.GoBack();
+            });
     }
 
     void OnPaneToggleRequested(TitleBar sender, object args) => Nav.IsPaneOpen = !Nav.IsPaneOpen;
@@ -1350,10 +1358,15 @@ public sealed partial class MainWindow : Window
     }
 
     RectInt32? beforeMini;
+    /// <summary>How the window was before the mini player: maximised, full screen or neither.</summary>
+    bool miniFromMaximised, miniFromFullscreen;
+    /// <summary>Where the mini player was last, so it opens there and at that size again.</summary>
+    RectInt32? lastMini;
 
     /// <summary>
     /// The mini player: the window as a small one that stays on top of the others, the video and
-    /// its few controls in it, and the way back to where the window was.
+    /// its few controls in it, and the way back to the window as it was, maximised and full
+    /// screen included. It opens where and at the size it was last left.
     /// </summary>
     void Mini(bool on)
     {
@@ -1362,19 +1375,36 @@ public sealed partial class MainWindow : Window
             return;
         if (on)
         {
-            if (AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
+            miniFromFullscreen = AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
+            if (miniFromFullscreen)
                 Fullscreen(false);
+            miniFromMaximised = AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized };
+            // A maximised window keeps its restored place: the size it goes back to when it is
+            // made smaller again.
+            if (miniFromMaximised && AppWindow.Presenter is OverlappedPresenter maximised)
+                maximised.Restore();
             beforeMini = new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
             AppWindow.SetPresenter(AppWindowPresenterKind.CompactOverlay);
-            var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
-            AppWindow.Resize(new SizeInt32((int)(480 * scale), (int)(270 * scale)));
+            if (lastMini is { } at)
+                AppWindow.MoveAndResize(at);
+            else
+            {
+                var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
+                AppWindow.Resize(new SizeInt32((int)(480 * scale), (int)(270 * scale)));
+            }
         }
         else
         {
+            lastMini = new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
             AppWindow.SetPresenter(AppWindowPresenterKind.Default);
             if (beforeMini is { } was)
                 AppWindow.MoveAndResize(was);
             beforeMini = null;
+            if (miniFromMaximised && AppWindow.Presenter is OverlappedPresenter overlapped)
+                overlapped.Maximize();
+            else if (miniFromFullscreen && !Player.Closing)
+                Fullscreen(true);
+            miniFromMaximised = miniFromFullscreen = false;
         }
     }
 

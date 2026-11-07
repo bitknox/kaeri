@@ -22,3 +22,6 @@ desktop/windows/Kaeri.Windows/Strings/** text eol=lf
 
 # Flag images are binary: no line-ending conversion.
 *.png binary
+
+# The demo story is compared byte for byte by a test, so a Windows checkout keeps its line endings.
+assets/demo/*.txt text eol=lf

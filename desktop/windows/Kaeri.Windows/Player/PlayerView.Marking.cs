@@ -164,9 +164,9 @@ public sealed partial class PlayerView
             markBar = new Border
             {
                 HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(16, 64, 16, 0), MaxWidth = 720, MinWidth = 420,
-                Background = (Brush)Application.Current.Resources["RaisedBrush"], CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16, 10, 12, 12), Visibility = Visibility.Collapsed,
+                Margin = new Thickness(24, 64, 24, 0), MaxWidth = 720, MinWidth = 420,
+                Style = (Style)Application.Current.Resources["OverVideoCardStyle"],
+                Padding = new Thickness(15, 9, 11, 11), Visibility = Visibility.Collapsed,
             };
             AutomationProperties.SetName(markBar, T.PlayerMarkSkipTimes);
             VideoPanel.Children.Add(markBar);
@@ -449,7 +449,9 @@ public sealed partial class PlayerView
             promptCard = new Border
             {
                 Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom,
-                Background = (Brush)Application.Current.Resources["RaisedBrush"], CornerRadius = new CornerRadius(8), Padding = new Thickness(16, 8, 8, 8),
+                // A corner card: the corner's padding, so found times fill the corner's width.
+                Style = (Style)Application.Current.Resources["OverVideoCardStyle"],
+                Padding = (Thickness)Application.Current.Resources["OverVideoCornerPadding"],
             };
             AutomationProperties.SetLiveSetting(promptCard, AutomationLiveSetting.Polite);
             Corner.Children.Add(promptCard);

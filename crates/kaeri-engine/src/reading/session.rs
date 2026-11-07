@@ -422,6 +422,7 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         let store = &cx.services.store;
+        let form = crate::data::title_form(cx.services.meta.titles());
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
@@ -435,7 +436,7 @@ impl Reader {
             }
             _ => Medium::Manga,
         };
-        let Some((index, page, resumed)) =
+        let Some(Start { index, page, strip, resumed }) =
             start_of(cx, &work, &chapters, chapter.as_ref(), &at)
         else {
             let failure = ReadingFailure::NotFound;
@@ -462,7 +463,8 @@ impl Reader {
         let resumed = resumed || (matches!(at, OpenAt::Resume) && restore.is_some());
         let start = match &at {
             OpenAt::Place { place } if place.chapter == chapters[index].id => place.clone(),
-            _ => place(&work, &chapters[index].id, Some(page)),
+            // A kept place in a long strip comes back to the same spot in its image.
+            _ => ReadPlace { strip, ..place(&work, &chapters[index].id, Some(page)) },
         };
         // The catalogue's word comes before the pages' shape: a webtoon (tagged a long strip,
         // or from Korea or China) opens as the Webtoons default says, unless the series has a
@@ -486,7 +488,7 @@ impl Reader {
             medium,
             // The demo's works are never fetched from the catalogue: their series names them.
             title: kind
-                .and_then(|k| k.title)
+                .and_then(|k| k.title_in(form))
                 .or_else(|| demo_work.map(|w| w.series.to_owned()))
                 .unwrap_or_default(),
             ended,
@@ -590,6 +592,17 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
     }
 }
 
+/// Where a chapter opens.
+struct Start {
+    /// The chapter's index in the shelf.
+    index: usize,
+    page: u32,
+    /// The kept place within a long strip's image, when the open resumes one.
+    strip: Option<StripPos>,
+    /// Whether that resumes a place.
+    resumed: bool,
+}
+
 /// Which chapter to open and at which page, and whether that resumes a place.
 fn start_of(
     cx: &Cx<'_>,
@@ -597,7 +610,7 @@ fn start_of(
     chapters: &[ShelfChapter],
     chapter: Option<&ChapterId>,
     at: &OpenAt,
-) -> Option<(usize, u32, bool)> {
+) -> Option<Start> {
     if chapters.is_empty() {
         return None;
     }
@@ -605,19 +618,26 @@ fn start_of(
     let kept = store.read_chapters(work.as_str()).unwrap_or_default();
     let marks = store.read_marks(work.as_str()).unwrap_or_default();
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
+    // The kept place of an unfinished chapter: its page, and in a long strip how far into that
+    // page's image. A strip read partway down its first image is a place too.
     let left_at = |id: &ChapterId| {
-        kept.iter()
-            .find(|k| k.chapter == id.as_str() && !k.read)
-            .and_then(|k| k.last_page)
-            .filter(|p| *p > 0)
+        let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
+        let strip = k
+            .strip_image
+            .zip(k.strip_offset)
+            .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
+        let page = k.last_page.or(strip.map(|s| s.image)).unwrap_or(0);
+        let strip = strip.filter(|s| s.image == page);
+        (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip))
     };
+    let at_page = |index, page| Start { index, page, strip: None, resumed: false };
     Some(match at {
-        OpenAt::Place { place } => (index_of(&place.chapter)?, place.page.unwrap_or(0), false),
-        OpenAt::Page { page } => (chapter.and_then(index_of).unwrap_or(0), *page, false),
+        OpenAt::Place { place } => at_page(index_of(&place.chapter)?, place.page.unwrap_or(0)),
+        OpenAt::Page { page } => at_page(chapter.and_then(index_of).unwrap_or(0), *page),
         OpenAt::Start => {
             let first_unread =
                 chapters.iter().position(|c| !marks.is_read(c.id.as_str())).unwrap_or(0);
-            (chapter.and_then(index_of).unwrap_or(first_unread), 0, false)
+            at_page(chapter.and_then(index_of).unwrap_or(first_unread), 0)
         }
         OpenAt::Resume => {
             let index = match chapter {
@@ -643,8 +663,8 @@ fn start_of(
                 }
             };
             match left_at(&chapters[index].id) {
-                Some(page) => (index, page, true),
-                None => (index, 0, false),
+                Some((page, strip)) => Start { index, page, strip, resumed: true },
+                None => at_page(index, 0),
             }
         }
     })
@@ -694,6 +714,14 @@ impl Session {
         }
         let page = self.leaves.get(leaf as usize).and_then(|l| l.parts.first()).map(|p| p.page);
         (page, None)
+    }
+
+    /// The e-ink leaf of a strip cut that holds `at`: the last cut starting at or above it.
+    fn leaf_of_strip(&self, at: StripPos) -> u32 {
+        self.cuts
+            .iter()
+            .rposition(|c| c.image < at.image || (c.image == at.image && c.offset <= at.offset))
+            .unwrap_or(0) as u32
     }
 
     fn leaf_of_page(&self, page: u32) -> u32 {
@@ -775,6 +803,8 @@ impl Session {
         self.generation += 1;
         let chapter = self.chapter().clone();
         self.start.page = Some(page);
+        // The place within a strip holds only while the chapter opens at its image.
+        self.start.strip = self.start.strip.filter(|s| s.image == page);
         if novel::prepares(&chapter) {
             // Opened off the actor: a novel goes to the web view, pictures to the worker.
             self.prepare(cx, &chapter);
@@ -862,7 +892,10 @@ impl Session {
             let msg = ReadingMsg::ReaderResumed { page: i64::from(page) + 1 };
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
-        let start = self.leaf_of_page(self.start.page.unwrap_or(0));
+        let start = match self.start.strip {
+            Some(at) if !self.cuts.is_empty() => self.leaf_of_strip(at),
+            _ => self.leaf_of_page(self.start.page.unwrap_or(0)),
+        };
         pages.want(self.id, self.generation, vec![start, start + 1], cx.tx);
         // Another device that read further while this one was away moves the reader, as it
         // would had it read while the reader was open.
@@ -1951,6 +1984,56 @@ mod tests {
         assert_eq!(to.page, Some(0));
     }
 
+    /// A long strip opens again where it was left: at the image and how far into it, in the
+    /// same run and after a restart on the same store.
+    #[tokio::test(start_paused = true)]
+    async fn a_strip_resumes_inside_its_image_after_a_restart() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = dir.path().join("data/kaeri.db");
+        let mut h = harness(Store::open(&db).unwrap());
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!((view.mode, view.start.strip), (ReaderMode::Strip, None));
+        let strip_at = |h: &mut Harness, at: StripPos| {
+            let session = h.session();
+            let chapter = ChapterId::new("1");
+            h.send(ReaderCommand::StripAt { session, chapter, at, foot_visible: false });
+            h.send(ReaderCommand::Close { session });
+        };
+        let at = StripPos { image: 1, offset: 0.4 };
+        strip_at(&mut h, at);
+        let kept = h.kept("1").unwrap();
+        assert_eq!((kept.last_page, kept.strip_image), (Some(1), Some(1)));
+
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        // The book stays where the first run laid it; only the app is started again.
+        let _books = h._dir;
+        drop((h.reader, h.services, h.tx, h.inbox));
+
+        // Started again on the same store.
+        let mut h = harness(Store::open(&db).unwrap());
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.mode, ReaderMode::Strip);
+        assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+
+        // Partway down the first image is a place too.
+        let top = StripPos { image: 0, offset: 0.25 };
+        strip_at(&mut h, top);
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!((view.start.page, view.start.strip), (Some(0), Some(top)));
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // From the start, nothing of the strip's place.
+        let (view, _, _) = h.open(OpenAt::Start).await;
+        assert_eq!((view.start.page, view.start.strip), (Some(0), None));
+    }
+
     #[tokio::test(start_paused = true)]
     async fn a_jump_offers_the_page_it_left() {
         let mut h = harness(Store::open_in_memory().unwrap());
@@ -2055,6 +2138,15 @@ mod tests {
         desk.record_read(&ahead, Vec::new()).unwrap();
         carry(&desk);
         h.synced();
+        // The move opens chapter 2 on the page worker, which may finish before the events are
+        // looked at, so the open is waited for first and what came before it is looked at after.
+        let opened = h
+            .until(|e| match e {
+                ReaderEvent::Opened(view) => Some((view.chapter.id.clone(), view.start.page)),
+                _ => None,
+            })
+            .await;
+        assert_eq!((opened.0.as_str(), opened.1), ("2", Some(2)));
         let said = h.drain();
         let moved = said.iter().find_map(|e| match e {
             ReaderEvent::Moved { to, from_device, back, .. } => {
@@ -2071,13 +2163,6 @@ mod tests {
                 device: "Desk".into()
             }]
         );
-        let opened = h
-            .until(|e| match e {
-                ReaderEvent::Opened(view) => Some((view.chapter.id.clone(), view.start.page)),
-                _ => None,
-            })
-            .await;
-        assert_eq!((opened.0.as_str(), opened.1), ("2", Some(2)));
 
         h.send(ReaderCommand::GoBack { session: h.session() });
         let back = h

@@ -320,8 +320,10 @@ internal fun WebDavSheet() {
         SheetField(address, { address = it }, stringResource(R.string.cloud_nextcloud_address), keyboard = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next))
         SheetField(user, { user = it }, stringResource(R.string.accounts_user_or_email), modifier = Modifier.padding(top = 8.dp), keyboard = KeyboardOptions(imeAction = ImeAction.Next), error = refused)
         SheetField(password, { password = it }, stringResource(R.string.accounts_password), modifier = Modifier.padding(top = 8.dp), password = true, error = refused)
+        // problemWords names Nextcloud for a server it can't find, which this sheet is not.
         if (refused) SheetProblem(stringResource(R.string.cloud_err_webdav))
-        else problemWords(context, problem, address.removePrefix("https://").trimEnd('/'))?.let { SheetProblem(it) }
+        else if (problem is SyncProblem.Unreachable) SheetProblem(Strings.cloudErrOffline(context, address.trim().removePrefix("https://").removePrefix("http://").trimEnd('/')))
+        else problemWords(context, problem)?.let { SheetProblem(it) }
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(SyncSheet.PICKER) }
             Button(enabled = address.isNotBlank() && user.isNotBlank() && password.isNotBlank(), onClick = {

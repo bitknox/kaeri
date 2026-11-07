@@ -823,3 +823,32 @@ async fn kept_pages_go_with_a_chapter_taken_out_of_the_queue() {
     kit.queue.recover(kit.store(), 10);
     assert!(!kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe("1"))).exists());
 }
+
+#[tokio::test]
+async fn series_are_named_in_the_chosen_title_language() {
+    let kit = kit(&["1"]);
+    let work = WorkId::new(WORK);
+    kit.queue.download(&kit.lent, work.clone(), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+    let row = kaeri_store::book_catalog::BookWork {
+        work: WORK.into(),
+        medium: "manga".into(),
+        titles:
+            r#"{"romaji":"Touro no Watashibune","english":"The Lantern Ferry","native":null}"#
+                .into(),
+        fetched_at: 3,
+        ..kaeri_store::book_catalog::BookWork::default()
+    };
+    kit.store().put_book_work(&row).unwrap();
+
+    // English first until the setting is given.
+    let view = kit.queue.view(kit.store());
+    assert_eq!(view.series[0].title, "The Lantern Ferry");
+
+    let titles = kaeri_meta::titles::Titles::default();
+    kit.queue.use_titles(titles.clone());
+    titles.choose(kaeri_core::config::TitleChoice::Romaji);
+    let view = kit.queue.view(kit.store());
+    assert_eq!(view.series[0].title, "Touro no Watashibune");
+    assert_eq!(view.rows[0].title, "Touro no Watashibune");
+}

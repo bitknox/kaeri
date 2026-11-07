@@ -1213,6 +1213,9 @@ stores-ready-demo-stays = [{ $store } îš ŕéàðý. Ţĥé ðéɱö šţàý�
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = [Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
 
@@ -4721,6 +4724,18 @@ tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çö
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
+
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
+
+# Line under the title of that page.
+tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš àŕé ŕéàð îñ ţĥé Ķàéŕî àþþš, àñð ýöüŕ ŕéàðîñĝ šţàýš îñ šţéþ ţĥŕöüĝĥ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàéŕî îš ƒöŕ.~~~~~~~~~~~~]
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = [{ $key } ţö çĥàñĝé~~~~]
 
 # Title of the about page.
 about-title = [Åƀöüţ~~]

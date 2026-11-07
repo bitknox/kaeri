@@ -714,14 +714,18 @@ pub struct SourcesConfig {
 
 /// Defines a closed set of named choices a config key holds, with the name the file uses and the
 /// walk through them a settings row steps along.
+/// A setting with a fixed set of choices. The file holds each choice under its `$file` name, both
+/// written and read; an earlier spelling the file may still hold is read through `| "alias"`.
+/// Reading used to go by the variant's own name in kebab case, which differs where a choice's file
+/// name does not follow it ("none" for `NoEdge`): a choice the Settings screen wrote then left a
+/// file that refused to load, and every later save with it.
 macro_rules! choices {
-    ($(#[$meta:meta])* $name:ident { $($(#[$vmeta:meta])* $variant:ident => $file:literal),+ $(,)? }) => {
+    ($(#[$meta:meta])* $name:ident { $($(#[$vmeta:meta])* $variant:ident => $file:literal $(| $alias:literal)*),+ $(,)? }) => {
         $(#[$meta])*
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
         #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
-        #[serde(rename_all = "kebab-case")]
         pub enum $name {
-            $($(#[$vmeta])* $variant),+
+            $($(#[$vmeta])* #[serde(rename = $file $(, alias = $alias)*)] $variant),+
         }
 
         impl $name {
@@ -823,7 +827,7 @@ choices! {
         #[default]
         Outline => "outline",
         DropShadow => "drop-shadow",
-        NoEdge => "none",
+        NoEdge => "none" | "no-edge",
     }
 }
 choices! {
@@ -839,7 +843,7 @@ choices! {
     /// A plate behind the text.
     SubtitleBackground {
         #[default]
-        NoBackground => "none",
+        NoBackground => "none" | "no-background",
         /// A box behind each line.
         EachLine => "each-line",
         /// One box behind all the lines.
@@ -2044,6 +2048,69 @@ mod tests {
 
         presence.client_id = Some("1234567890".into());
         assert_eq!(presence.resolved_client_id(), Some("1234567890"));
+    }
+
+    /// Each subtitle choice the Settings screen writes, by the name it writes, loads again. "None"
+    /// for the edge and the background used to be written but refused on reading, after which no
+    /// setting could be saved.
+    #[test]
+    fn every_subtitle_choice_reads_back_as_written() {
+        for edge in SubtitleEdge::ALL {
+            let config = Config::from_toml(&format!(
+                "[subtitles]
+edge = \"{}\"
+",
+                edge.name()
+            ))
+            .unwrap();
+            assert_eq!(config.subtitles.edge, *edge);
+        }
+        for background in SubtitleBackground::ALL {
+            let config = Config::from_toml(&format!(
+                "[subtitles]
+background = \"{}\"
+",
+                background.name()
+            ))
+            .unwrap();
+            assert_eq!(config.subtitles.background, *background);
+        }
+        for font in SubtitleFont::ALL {
+            let config = Config::from_toml(&format!(
+                "[subtitles]
+font = \"{}\"
+",
+                font.name()
+            ))
+            .unwrap();
+            assert_eq!(config.subtitles.font, *font);
+        }
+        for (key, value) in [
+            ("colour", SubtitleColour::ALL.iter().map(|c| c.name()).collect::<Vec<_>>()),
+            ("thickness", SubtitleThickness::ALL.iter().map(|c| c.name()).collect()),
+            ("styled", StyledSubtitles::ALL.iter().map(|c| c.name()).collect()),
+        ] {
+            for name in value {
+                Config::from_toml(&format!(
+                    "[subtitles]
+{key} = \"{name}\"
+"
+                ))
+                .unwrap();
+            }
+        }
+        // The spelling a hand-edited file may hold still reads.
+        let old = Config::from_toml(
+            "[subtitles]
+edge = \"no-edge\"
+background = \"no-background\"
+",
+        )
+        .unwrap();
+        assert_eq!(
+            (old.subtitles.edge, old.subtitles.background),
+            (SubtitleEdge::NoEdge, SubtitleBackground::NoBackground)
+        );
     }
 
     #[test]

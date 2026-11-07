@@ -43,10 +43,10 @@ sealed partial class HomeWeek : Grid
         var head = new Grid { Margin = new Thickness(0, 0, 0, 12) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        title = new TextBlock { FontSize = 20, LineHeight = 28, FontWeight = FontWeights.SemiBold };
+        title = new TextBlock { Style = Ui.Res<Style>("SectionTitleStyle"), TextWrapping = TextWrapping.NoWrap };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
         head.Children.Add(title);
-        link = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle"), Padding = new Thickness(0) };
+        link = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkStyle") };
         link.Click += (_, _) => page.OpenViewAll(SectionKind.ThisWeek, this.section.ViewAll);
         Grid.SetColumn(link, 1);
         head.Children.Add(link);
@@ -67,7 +67,7 @@ sealed partial class HomeWeek : Grid
             days[d] = new TextBlock { FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold };
             AutomationProperties.SetHeadingLevel(days[d], AutomationHeadingLevel.Level3);
             nothing[d] = Ui.Text(T.HomeNothingAiring, "HazeCaptionStyle");
-            mores[d] = new HyperlinkButton { Padding = new Thickness(0), FontSize = 13 };
+            mores[d] = new HyperlinkButton { Style = Ui.Res<Style>("SilkLinkCaptionStyle") };
             mores[d].Click += (_, _) => page.OpenViewAll(SectionKind.ThisWeek, null);
             Grid.SetColumn(columns[d], d);
             strip.Children.Add(columns[d]);
@@ -192,7 +192,7 @@ sealed partial class HomeWeek : Grid
             time = new TextBlock { FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
             when.Children.Add(time);
             text.Children.Add(when);
-            name = new TextBlock { Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 13, LineHeight = 17, MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis };
+            name = new TextBlock { Style = Ui.Res<Style>("ShowTitleSmallStyle"), MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis };
             text.Children.Add(name);
             episode = new TextBlock { Style = Ui.Res<Style>("HazeCaptionStyle") };
             text.Children.Add(episode);
@@ -224,7 +224,7 @@ sealed partial class HomeWeek : Grid
                 var cover = new CoverItem(now.Entry).Load(Ctx.Current.Art);
                 if (row.Children.Count > 1)
                     row.Children.RemoveAt(0);
-                row.Children.Insert(0, HomeArt.Make(cover, 44, 66, 4, false));
+                row.Children.Insert(0, HomeArt.Make(cover, 44, 66, Art.Radius(44), false));
                 card = new HomeCard(now, cover, "", "");
             }
             else if (card is { } c)

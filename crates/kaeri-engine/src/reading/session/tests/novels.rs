@@ -395,28 +395,34 @@ async fn an_epub_of_pictures_reads_as_pages() {
     assert_eq!(leaves.len(), 4, "three pages and the end page");
 }
 
-/// A source whose chapters are text. It tells `reports` what it is told was read.
+/// A source whose chapters are text. It tells `reports` what it is told was read, and with a
+/// gate, chapter `c1` waits for it to open.
 struct TextSource {
     manifest: BookSourceManifest,
     reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
+    gate: Option<Arc<tokio::sync::Notify>>,
 }
 
-fn text_source(
-    reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
-) -> Arc<TextSource> {
-    Arc::new(TextSource {
-        manifest: BookSourceManifest {
-            id: "texts".into(),
-            name: "Texts".into(),
-            version: "1".into(),
-            kind: BookSourceKind::Plugin,
-            media: vec![Medium::Novel],
-            languages: vec!["en".into()],
-            allowed_hosts: Vec::new(),
-            capabilities: Vec::new(),
-        },
-        reports,
-    })
+impl TextSource {
+    fn new(
+        reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
+        gate: Option<Arc<tokio::sync::Notify>>,
+    ) -> Arc<Self> {
+        Arc::new(Self {
+            manifest: BookSourceManifest {
+                id: "texts".into(),
+                name: "Texts".into(),
+                version: "1".into(),
+                kind: BookSourceKind::Plugin,
+                media: vec![Medium::Novel],
+                languages: vec!["en".into()],
+                allowed_hosts: Vec::new(),
+                capabilities: Vec::new(),
+            },
+            reports,
+            gate,
+        })
+    }
 }
 
 #[async_trait]
@@ -442,6 +448,9 @@ impl kaeri_core::traits::BookSource for TextSource {
     }
 
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+        if let Some(gate) = self.gate.as_ref().filter(|_| chapter == "c1") {
+            gate.notified().await;
+        }
         Ok(ChapterContent::Text(format!(
             "<p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/>"
         )))
@@ -463,7 +472,7 @@ impl kaeri_core::traits::BookSource for TextSource {
 #[tokio::test(start_paused = true)]
 async fn a_sources_text_chapter_is_served_like_a_book() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
-    h.services.book_sources.registry.put(text_source(None));
+    h.services.book_sources.registry.put(TextSource::new(None, None));
     h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
     let (view, novel) = h.open_novel(OpenAt::Start).await;
     assert_eq!(view.next.as_ref().map(|c| c.label.as_str()), Some("2"));
@@ -555,7 +564,7 @@ async fn a_chapter_read_in_the_reader_is_told_to_its_book_server() {
     for allowed in [true, false] {
         let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
         let (tx, mut reports) = tokio::sync::mpsc::unbounded_channel();
-        h.services.book_sources.registry.put(text_source(Some(tx)));
+        h.services.book_sources.registry.put(TextSource::new(Some(tx), None));
         h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
         h.services
             .store
@@ -676,4 +685,36 @@ async fn the_demo_comic_opens_under_its_name_and_reads_left_to_right() {
     let (view, _, _) = h.open_work(comic, OpenAt::Start).await;
     assert_eq!(view.title, "Pepper&Carrot");
     assert_eq!(view.direction, kaeri_model::reader::ReadDirection::LeftToRight);
+}
+
+/// Two chapters opened one after the other can finish out of order: the first one's open,
+/// finishing last, must not take the place of the second one's, which still opens.
+#[tokio::test(start_paused = true)]
+async fn a_chapter_opened_while_the_one_before_is_still_opening_opens() {
+    let gate = Arc::new(tokio::sync::Notify::new());
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.services.book_sources.registry.put(TextSource::new(None, Some(gate.clone())));
+    h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+    let work = WorkId::new(WORK);
+    h.send(ReaderCommand::Open { work, chapter: None, at: OpenAt::Start, surface: surface() });
+    // The chapters are listed off the actor; the session starts once they arrive, and its
+    // first chapter's open then waits at the gate.
+    while h.reader.session.is_none() {
+        let envelope = h.inbox.recv().await.expect("the inbox is open");
+        h.carry(envelope);
+    }
+    let second = h.reader.session.as_ref().unwrap().chapters[1].id.clone();
+    h.send(ReaderCommand::OpenChapter { session: h.session(), chapter: second.clone() });
+
+    // The second chapter's open finishes first, then the first one's, before either is
+    // carried out.
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    gate.notify_one();
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    let opened = h.drain().into_iter().find_map(|e| match e {
+        ReaderEvent::NovelOpen(view) => Some(view.chapter),
+        _ => None,
+    });
+    assert_eq!(opened, Some(second));
 }

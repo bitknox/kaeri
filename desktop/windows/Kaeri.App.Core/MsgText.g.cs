@@ -151,6 +151,7 @@ public static class MsgText
         Msg.PartyLeft => T.PartyLeft,
         Msg.PartyServerUnreachable x => T.PartyServerUnreachable(x.Server),
         Msg.CloudLoopbackDone => T.CloudLoopbackDone,
+        Msg.SyncDeviceRemoved => T.SyncDeviceRemoved,
         Msg.NoticeSignedIn x => T.NoticeSignedIn(x.Tracker),
         Msg.NoticeSignedInKeychain x => T.NoticeSignedInKeychain(x.Tracker),
         Msg.NoticeSignedInFile x => T.NoticeSignedInFile(x.Tracker),

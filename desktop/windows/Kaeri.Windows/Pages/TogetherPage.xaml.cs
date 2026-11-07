@@ -129,6 +129,10 @@ public sealed partial class TogetherPage : Page
 
     readonly Dictionary<string, FrameworkElement> blocks = [];
     List<FrameworkElement> laying = [];
+    /// <summary>The blocks made in this pass, which fade in when the page changes between the place, a room looked into and the lobby.</summary>
+    readonly HashSet<FrameworkElement> made = [];
+    /// <summary>Which of the three the page last showed, if it has shown one.</summary>
+    string? shownMode;
 
     /// <summary>The block under <paramref name="key"/>: kept, or made, then brought up to date.</summary>
     T Block<T>(string key, Func<T> make, Action<T>? update = null) where T : FrameworkElement
@@ -137,6 +141,7 @@ public sealed partial class TogetherPage : Page
         {
             block = make();
             blocks[key] = block;
+            made.Add(block);
         }
         update?.Invoke(block);
         laying.Add(block);
@@ -153,6 +158,7 @@ public sealed partial class TogetherPage : Page
     void Show()
     {
         laying = [];
+        made.Clear();
         Block("heading", () =>
         {
             var made = Ui.Text(T.TogetherTitle, "PageTitleStyle");
@@ -190,6 +196,16 @@ public sealed partial class TogetherPage : Page
         }
         foreach (var key in blocks.Where(b => !wanted.Contains(b.Value)).Select(b => b.Key).ToList())
             blocks.Remove(key);
+        // Into the lobby, out of it or to a room looked into: what is new comes in on standard,
+        // as the Mac crossfades the two, rather than all at once.
+        var mode = inLobby ? "lobby" : ctx.Known.PartyLooking is null ? "place" : "looking";
+        if (shownMode is not null && shownMode != mode)
+            foreach (var block in wanted.Where(made.Contains))
+            {
+                block.Opacity = 0;
+                Motion.ShowStandard(block);
+            }
+        shownMode = mode;
     }
 
     // --- Out of a party ---
@@ -233,16 +249,21 @@ public sealed partial class TogetherPage : Page
             Block($"look-failure|{failure}", () => new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = failure });
     }
 
-    /// <summary>A list's rows by key: a row that is still there stays the same element, in its new place.</summary>
+    /// <summary>
+    /// A list's rows by key: a row that is still there stays the same element, in its new place.
+    /// A row joining a list already shown fades in on standard, as the Mac's list inserts do.
+    /// </summary>
     static void Rows(Panel panel, (string Key, Func<FrameworkElement> Make)[] rows)
     {
         var old = panel.Children.OfType<FrameworkElement>().Where(e => e.Tag is string).ToDictionary(e => (string)e.Tag, e => e);
+        var fresh = new List<FrameworkElement>();
         var wanted = rows.Select(r =>
         {
             if (old.TryGetValue(r.Key, out var kept))
                 return kept;
             var made = r.Make();
             made.Tag = r.Key;
+            fresh.Add(made);
             return made;
         }).ToList();
         for (var i = panel.Children.Count - 1; i >= 0; i--)
@@ -257,6 +278,12 @@ public sealed partial class TogetherPage : Page
                 panel.Children.RemoveAt(at);
             panel.Children.Insert(i, wanted[i]);
         }
+        if (old.Count > 0)
+            foreach (var made in fresh)
+            {
+                made.Opacity = 0;
+                Motion.ShowStandard(made);
+            }
     }
 
     FrameworkElement Recent(PartyRecentRoom room)
@@ -266,7 +293,7 @@ public sealed partial class TogetherPage : Page
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Ui.Text(room.Title, "BodyStrongTextBlockStyle", wrap: false));
+        text.Children.Add(Ui.Text(room.Title, "ShowTitleStyle", wrap: false));
         var when = DateTimeOffset.FromUnixTimeSeconds(room.LastAt).LocalDateTime.ToString("d");
         text.Children.Add(Ui.Text(T.TogetherRecentRow(room.Episode, string.Join(", ", room.Names), when), "HazeCaptionStyle", wrap: false));
         grid.Children.Add(text);
@@ -293,7 +320,11 @@ public sealed partial class TogetherPage : Page
         Block("section-watching", () => Section(T.PartyRoomWatching));
         if (glimpse?.RoomEpisode is { } watching)
         {
-            Line("room-title", watching.Title.Length > 0 ? watching.Title : watching.File, "SubtitleTextBlockStyle");
+            // A show's title in the show font; a file's name, when that is all there is, in Segoe.
+            if (watching.Title.Length > 0)
+                Line("room-show", watching.Title, "ShowTitleMediumStyle");
+            else
+                Line("room-title", watching.File, "SubtitleTextBlockStyle");
             Line("room-episode", T.EpisodeNumber(long.TryParse(watching.Episode, out var n) ? n : 0));
         }
         else if (glimpse is not null)
@@ -358,7 +389,11 @@ public sealed partial class TogetherPage : Page
         Block("section-watching", () => Section(T.PartyRoomWatching));
         if (party.RoomEpisode is { } room)
         {
-            Line("room-title", room.Title.Length > 0 ? room.Title : room.File, "SubtitleTextBlockStyle");
+            // A show's title in the show font; a file's name, when that is all there is, in Segoe.
+            if (room.Title.Length > 0)
+                Line("room-show", room.Title, "ShowTitleMediumStyle");
+            else
+                Line("room-title", room.File, "SubtitleTextBlockStyle");
             Line("room-episode", T.EpisodeNumber(long.TryParse(room.Episode, out var n) ? n : 0));
             if (room.Found == PartyFound.Name)
                 Line("room-found", T.PartyRoomFoundByName);

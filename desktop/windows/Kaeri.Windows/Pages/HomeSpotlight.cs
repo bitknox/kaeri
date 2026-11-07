@@ -56,10 +56,10 @@ public sealed partial class HomeSpotlight : Grid
         Children.Add(face);
         if (old is not null && crossfade && Motion.Enabled)
         {
+            // The spotlight changing case: a crossfade in place on standard.
             face.Opacity = 0;
-            Motion.Fade(face, 1);
-            Motion.Fade(old, 0);
-            _ = Task.Delay(Motion.FadeOutTime).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            Motion.Crossfade(old, face);
+            _ = Task.Delay(Motion.Standard).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
             {
                 // Both faces share the cell while they cross, so it is as tall as the taller.
                 // With the old one gone the cell eases to the new face's height, and the
@@ -111,10 +111,7 @@ public sealed partial class HomeSpotlight : Grid
         readonly TextBlock label = new() { Style = Ui.Res<Style>("HazeBodyStyle"), FontSize = 14, LineHeight = 19, Margin = new Thickness(0, 0, 0, 8) };
         readonly TextBlock title = new()
         {
-            FontFamily = Ui.Res<FontFamily>("ShowFont"),
-            FontWeight = FontWeights.Bold,
-            FontSize = 30,
-            LineHeight = 38,
+            Style = Ui.Res<Style>("ShowTitleDisplayStyle"),
             MaxLines = 2,
             TextWrapping = TextWrapping.Wrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
@@ -153,10 +150,11 @@ public sealed partial class HomeSpotlight : Grid
         /// </summary>
         readonly ActionRow buttons = new() { Spacing = 10, Margin = new Thickness(0, 18, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
         readonly TextBlock notFound = new() { Text = T.HomeNotFound, Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 12, 0, 0) };
-        readonly Button main = new() { Style = Ui.Res<Style>("AccentButtonStyle"), MinHeight = 32 };
-        readonly Button second = new() { MinHeight = 32 };
-        readonly Button trailer = new() { MinHeight = 32, Content = T.TitleTrailer };
-        readonly Button more = new() { MinHeight = 32, MinWidth = 32, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
+        // 40 high, as the title page's and the hover card's actions are: the main one amber and semibold.
+        readonly Button main = new() { Style = Ui.Res<Style>("PrimaryActionStyle") };
+        readonly Button second = new() { MinHeight = 40 };
+        readonly Button trailer = new() { MinHeight = 40, Content = T.TitleTrailer };
+        readonly Button more = new() { Width = 40, Height = 40, Padding = new Thickness(0), Content = new FontIcon { Glyph = "", FontSize = 16 } };
         bool wide = true;
 
         public Spotlight Spot { get; private set; }
@@ -235,11 +233,17 @@ public sealed partial class HomeSpotlight : Grid
             text.Margin = new Thickness(0, side ? 0 : 16, 0, 0);
             if (!side)
                 art.HorizontalAlignment = HorizontalAlignment.Left;
+            // Stacked, as on phones: the main action full width, the others in a row under it.
+            buttons.Full = !side;
+            buttons.HorizontalAlignment = side ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+            // A button keeps to its own width unless told to fill what it is given.
+            main.HorizontalAlignment = side ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         }
 
         void SizeArt(double width)
         {
-            var w = wide ? Math.Min(HomeWording.ArtMaxWidth, Math.Round(width * HomeWording.ArtShare)) : Math.Min(HomeWording.ArtMaxWidth, width);
+            // Stacked, the art takes the column's whole width, with nothing beside it.
+            var w = wide ? Math.Min(HomeWording.ArtMaxWidth, Math.Round(width * HomeWording.ArtShare)) : Math.Round(width);
             if (w <= 0 || Math.Abs(art.Width - w) < 0.5)
                 return;
             art.Width = w;
@@ -412,7 +416,20 @@ sealed partial class ActionRow : Panel
 {
     public double Spacing { get; set; } = 10;
 
-    bool stacked;
+    /// <summary>The stacked spotlight's layout: the first button the row's whole width, the rest under it.</summary>
+    public bool Full
+    {
+        get => full;
+        set
+        {
+            if (full == value)
+                return;
+            full = value;
+            InvalidateMeasure();
+        }
+    }
+
+    bool stacked, full;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -434,6 +451,12 @@ sealed partial class ActionRow : Panel
             shown++;
         }
         var row = firstWidth + (shown > 1 ? Spacing + restWidth : 0);
+        if (full && !double.IsInfinity(availableSize.Width))
+        {
+            stacked = shown > 1;
+            var width = Math.Max(availableSize.Width, Math.Max(firstWidth, restWidth));
+            return new Size(width, firstHeight + (stacked ? Spacing + restHeight : 0));
+        }
         stacked = shown > 1 && row > availableSize.Width;
         return stacked
             ? new Size(Math.Max(firstWidth, restWidth), firstHeight + Spacing + restHeight)
@@ -452,7 +475,8 @@ sealed partial class ActionRow : Panel
                 continue;
             }
             var size = child.DesiredSize;
-            child.Arrange(new Rect(x, y, size.Width, size.Height));
+            var width = full && index == 0 ? finalSize.Width : size.Width;
+            child.Arrange(new Rect(x, y, width, size.Height));
             if (stacked && index == 0)
             {
                 x = 0;

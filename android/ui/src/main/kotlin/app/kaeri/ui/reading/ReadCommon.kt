@@ -53,6 +53,7 @@ import app.kaeri.engine.model.LibrarySegmentRead
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingMsg
+import app.kaeri.engine.model.readingFailureMsg
 import app.kaeri.engine.model.SeriesAction
 import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.R
@@ -335,8 +336,7 @@ internal fun failureWords(context: Context, failure: ReadingFailure): String = w
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(failure.world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(failure.reason)
-    // Sizes at human scale, as Send to e-reader says them: the engine words these two.
-    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> app.kaeri.engine.model.readingFailureMsg(failure)
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(failure)
 }.text(context)
 
 // Between places

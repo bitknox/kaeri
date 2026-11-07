@@ -14,6 +14,14 @@ static class Ui
 {
     public static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
+    /// <summary>
+    /// The row an <see cref="ListViewBase.ItemClick"/> was for. When a list holds its rows as
+    /// ListViewItems, WinUI names the row's content as the clicked item rather than the row, so a
+    /// handler that looked for the row's tag found nothing and every click did nothing.
+    /// </summary>
+    public static ListViewItem? ClickedRow(ListViewBase list, object? clicked) =>
+        clicked as ListViewItem ?? list.Items.OfType<ListViewItem>().FirstOrDefault(i => ReferenceEquals(i.Content, clicked));
+
     /// <summary>The first <typeparamref name="T"/> in <paramref name="at"/>'s visual tree, such as a NumberBox's own text field.</summary>
     public static T? Descendant<T>(DependencyObject at) where T : DependencyObject
     {
@@ -109,8 +117,7 @@ static class Ui
         {
             Width = width,
             Height = height,
-            // Small thumbnails round at 6, covers above 40 wide at 8.
-            CornerRadius = new CornerRadius(width > 40 ? 8 : 6),
+            CornerRadius = Art.Corner(width),
             Background = Res<Brush>("RaisedBrush"),
             Child = image,
         };

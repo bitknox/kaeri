@@ -3,22 +3,22 @@ Kaeri                                                      plugins ·  ·  kitsu
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Keys                                                             Page 1 of 3
 ────────────────────────────────────────────────────────────────────────────────
-  Global                                Move down                  j / ↓
-    Show keys                      ?    Move left                  h / ←
-    Run a command         : / ctrl+k    Move right                 l / →
-    Quit                  Q / ctrl+c    Jump to top                    g
-    Back                     q / esc    Jump to bottom                 G
-    Toggle rail width            tab    Jump to today                  T
-    Refresh this view              r    Jump to previous day           {
-    Force a full resync            R    Jump to next day               }
-    Subbed or dubbed               t    Page up                   ctrl+u
-    Go to section                1–0    Page down                 ctrl+d
-    Search                         /  Lists
-    Recent messages                !    Open                           ↵
-    Copy the bug report            C    Play next unwatched        space
-    Delete the crash report        E    Set list status                a
-  Movement                              Rate this title                *
-    Move up                    k / ↑    Expand synopsis                i
+  Global                              Movement
+    Show keys                      ?    Move up                    k / ↑
+    Run a command         : / ctrl+k    Move down                  j / ↓
+    Quit                  Q / ctrl+c    Move left                  h / ←
+    Back                     q / esc    Move right                 l / →
+    Toggle rail width            tab    Jump to top                    g
+    Refresh this view              r    Jump to bottom                 G
+    Force a full resync            R    Jump to today                  T
+    Subbed or dubbed               t    Jump to previous day           {
+    Kaeri is for                   I    Jump to next day               }
+    Go to section                1–0    Page up                   ctrl+u
+    Search                         /    Page down                 ctrl+d
+    Recent messages                !  Lists
+    Copy the bug report            C    Open                           ↵
+    Delete the crash report        E    Play next unwatched        space
+                                        Set list status                a
 
 ────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                                     ↑↓ page   esc close

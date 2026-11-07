@@ -55,3 +55,23 @@ tui-together-not-a-link = That is not a party link or code.
 # @arg when: text
 # @only tui
 tui-together-recent-alone = Episode { $episode } · { $when }
+
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+# @max 40
+# @only tui
+tui-medium-read-title = Reading is in the apps
+
+# Line under the title of that page.
+# @only tui
+tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels are read in the { -app-name } apps, and your reading stays in step through sync.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# @arg key: text
+# @only tui
+tui-medium-read-change = Press { $key } to change what { -app-name } is for.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+# @arg key: text
+# @max 24
+# @only tui
+tui-medium-settings-hint = { $key } to change

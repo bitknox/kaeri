@@ -1860,6 +1860,11 @@ pub fn cloud_loopback_done() -> String {
     text("cloud-loopback-done", &[])
 }
 
+/// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+pub fn sync_device_removed() -> String {
+    text("sync-device-removed", &[])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])
@@ -7461,6 +7466,26 @@ pub fn tui_together_not_a_link() -> String {
 /// Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 pub fn tui_together_recent_alone(episode: &str, when: &str) -> String {
     text("tui-together-recent-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
+}
+
+/// Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+pub fn tui_medium_read_title() -> String {
+    text("tui-medium-read-title", &[])
+}
+
+/// Line under the title of that page.
+pub fn tui_medium_read_line() -> String {
+    text("tui-medium-read-line", &[])
+}
+
+/// Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+pub fn tui_medium_read_change(key: &str) -> String {
+    text("tui-medium-read-change", &[("key", Arg::Text(key))])
+}
+
+/// Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+pub fn tui_medium_settings_hint(key: &str) -> String {
+    text("tui-medium-settings-hint", &[("key", Arg::Text(key))])
 }
 
 /// Title of the about page.

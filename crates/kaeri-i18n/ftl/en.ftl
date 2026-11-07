@@ -1213,6 +1213,9 @@ stores-ready-demo-stays = { $store } is ready. The demo stays last in Your sourc
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = You can close this tab and go back to Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = This device was removed from sync on another device. Join again to sync it.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Signed in to { $tracker }.
 
@@ -4721,6 +4724,18 @@ tui-together-not-a-link = That is not a party link or code.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
+
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = Reading is in the apps
+
+# Line under the title of that page.
+tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels are read in the Kaeri apps, and your reading stays in step through sync.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Press { $key } to change what Kaeri is for.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key } to change
 
 # Title of the about page.
 about-title = About
