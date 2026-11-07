@@ -115,7 +115,7 @@ struct FirstLaunch: View {
             case "welcome": .welcome // i18n-skip
             case "welcome-medium": .medium // i18n-skip
             case "welcome-lists", "welcome-lists-read": .anilist // i18n-skip
-            case "welcome-sources", "welcome-books": .sources // i18n-skip
+            case "welcome-sources", "welcome-books", "welcome-both": .sources // i18n-skip
             case "welcome-setup": .setup // i18n-skip
             default: nil
             }
@@ -124,7 +124,7 @@ struct FirstLaunch: View {
         /// What a shot of a later page took as the answer on the medium page.
         static func shotAnswer(_ name: String) -> KaeriIsFor? {
             switch name {
-            case "welcome-lists": .both // i18n-skip
+            case "welcome-lists", "welcome-both": .both // i18n-skip
             case "welcome-lists-read", "welcome-books": .read // i18n-skip
             default: nil
             }
@@ -184,7 +184,8 @@ struct FirstLaunch: View {
         .sheet(item: $bookSheet) { step in AddBookSourceSheet(start: step) }
         .sheet(isPresented: Bindable(navigator).addServerShown) { AddServerSheet() }
         .onChange(of: store.servers.added) { _, added in
-            if added != nil, page == .sources { finish(nil) }
+            // The combined page stays for the books part.
+            if added != nil, page == .sources, !(asks && reads) { finish(nil) }
         }
         // An invite link opened from Messages or Mail jumps here, filled in.
         .onChange(of: navigator.invite) { _, invite in
@@ -612,21 +613,37 @@ struct FirstLaunch: View {
         .keyboardShortcut(.defaultAction)
     }
 
-    /// Where books come from, 4 of 4 after Read or Both: a folder, a server, an invite. No list
-    /// of sources and no suggestion; the plugin line sits beside the invite field.
+    /// Where books come from, 4 of 4 after Read: a folder, a server, an invite. After Both, the
+    /// same page with a Shows part and a Books part over the one invite field. No list of
+    /// sources and no suggestion; the plugin line sits beside the invite field.
     private var books: some View {
         let trimmed = link.trimmingCharacters(in: .whitespacesAndNewlines)
         let looksRight = InviteLinks.looksLikeInvite(trimmed)
+        let both = (chosen ?? store.medium.answer) == .both
         return VStack(alignment: .leading, spacing: 0) {
-            top(4, L.onboardingBooksTitle, L.onboardingBooksLine)
-            VStack(spacing: 0) {
-                bookRow(L.onboardingBooksFolder, L.onboardingBooksFolderLine) { addFolder() }
-                Rectangle().fill(Palette.faintRule).frame(height: 1).padding(.leading, Device.isMac ? 12 : 16)
-                    .accessibilityHidden(true)
-                bookRow(L.onboardingBooksServer, L.onboardingBooksServerLine) { bookSheet = .server }
+            if both {
+                top(4, L.onboardingBothTitle, L.onboardingBothLine)
+                partHeading(L.onboardingBothShows)
+                    .padding(.top, Device.isMac ? 14 : 20)
+                rows {
+                    if devicePicksFolders {
+                        bookRow(L.onboardingBooksFolder, L.onboardingBothShowsFolderLine(device: Device.name)) {
+                            FolderPicker.choose { store.addFolder($0) }
+                        }
+                        rowRule
+                    }
+                    bookRow(L.onboardingBooksServer, L.onboardingBothShowsServerLine) { navigator.addServerShown = true }
+                }
+                .padding(.top, 6)
+                partHeading(L.onboardingBothBooks)
+                    .padding(.top, Device.isMac ? 14 : 20)
+                bookRows
+                    .padding(.top, 6)
+            } else {
+                top(4, L.onboardingBooksTitle, L.onboardingBooksLine)
+                bookRows
+                    .padding(.top, Device.isMac ? 16 : 24)
             }
-            .background(.raised, in: .rect(cornerRadius: Device.isMac ? 10 : 26))
-            .padding(.top, Device.isMac ? 16 : 24)
             Text(L.onboardingBooksInviteHeading)
                 .font(.plat(mac: 13, touch: 15, weight: .semibold))
                 .foregroundStyle(.silk)
@@ -685,11 +702,39 @@ struct FirstLaunch: View {
         }
         #endif
         .onChange(of: store.bookSources.added?.id) { _, added in
-            if added != nil { bookSheet = nil }
+            // The sheet says how many series it found first, when it knows, and closes on Done.
+            if added != nil, store.bookSources.added?.series == nil { bookSheet = nil }
         }
     }
 
     @State private var pickingFolder = false
+
+    /// A folder and a server for books, on one raised card.
+    private var bookRows: some View {
+        rows {
+            bookRow(L.onboardingBooksFolder, L.onboardingBooksFolderLine) { addFolder() }
+            rowRule
+            bookRow(L.onboardingBooksServer, L.onboardingBooksServerLine) { bookSheet = .server }
+        }
+    }
+
+    private func rows<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(.raised, in: .rect(cornerRadius: Device.isMac ? 10 : 26))
+    }
+
+    private var rowRule: some View {
+        Rectangle().fill(Palette.faintRule).frame(height: 1).padding(.leading, Device.isMac ? 12 : 16)
+            .accessibilityHidden(true)
+    }
+
+    /// Shows or Books over its rows on the combined page, as a list's group heading.
+    private func partHeading(_ text: String) -> some View {
+        Text(text)
+            .groupHeaderStyle()
+            .padding(.horizontal, Device.isMac ? 12 : 16)
+            .accessibilityAddTraits(.isHeader)
+    }
 
     private func addFolder() {
         #if os(macOS)

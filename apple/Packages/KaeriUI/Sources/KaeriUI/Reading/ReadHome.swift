@@ -534,8 +534,9 @@ private struct ReadWeekCell: View {
                         .fixedLineHeight(17, relativeTo: .footnote)
                         .foregroundStyle(.silk)
                         .lineLimit(2)
-                    if let next = tile.next {
-                        Text(next.text)
+                    // The chapter that came out this day; for one only expected, the person's place.
+                    if let line = entry.chapter?.text ?? tile.next?.text {
+                        Text(line)
                             .font(.ui(12))
                             .fixedLineHeight(16, relativeTo: .caption)
                             .foregroundStyle(.haze)

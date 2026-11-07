@@ -153,7 +153,7 @@ private struct ReadSearchBody: View {
             }
         } else if browsing {
             VStack(alignment: .leading, spacing: 12) {
-                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters))
+                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                 ReadGrid(tiles: search.tiles)
@@ -279,12 +279,14 @@ enum ReadFilterWords {
     }
 
     /// The line over browsing: what is shown, and where the list comes from.
-    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters) -> String {
+    /// "Popular · from AniList", or once every result is listed, "Popular · 214 series from AniList".
+    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters, total: UInt32? = nil) -> String {
         var parts = labels(query.formats, in: filters.formats) + labels(query.origins, in: filters.origins)
         if let status = query.status { parts += labels([status], in: filters.statuses) }
         parts += query.genres
         let what = parts.isEmpty ? sort(query.sort ?? filters.sorts.first ?? "") : parts.joined(separator: ", ") // i18n-skip
-        return L.readSearchBrowseLine(what: what)
+        guard let total else { return L.readSearchBrowseLine(what: what) }
+        return [what, L.readSearchTotal(n: Int(total))].joined(separator: " · ") // i18n-skip
     }
 
     static func sort(_ key: String) -> String {
