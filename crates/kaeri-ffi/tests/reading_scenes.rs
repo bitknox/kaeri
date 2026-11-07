@@ -321,7 +321,8 @@ fn a_reading_scene_started_again_on_its_home_keeps_the_reader_settings_changed_i
     let read = read_until(&engine, |event| {
         matches!(
             event,
-            Event::Reader(ReaderEvent::Leaves { .. }) | Event::Reading(ReadingEvent::Failed { .. })
+            Event::Reader(ReaderEvent::Leaves { .. })
+                | Event::Reading(ReadingEvent::Failed { .. })
         )
     });
     let opened = read
