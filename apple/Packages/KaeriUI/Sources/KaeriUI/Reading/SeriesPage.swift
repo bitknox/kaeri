@@ -151,19 +151,17 @@ struct SeriesPage: View {
             }
             .padding(.horizontal, wide ? 24 : 16)
             .padding(.top, wide ? 8 : 0)
-            .padding(.bottom, Device.isMac && choosing != nil ? 120 : 32)
+            .padding(.bottom, 32)
             .frame(maxWidth: 1_120, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .scrollIndicators(.automatic)
         .background(.ground)
-        #if os(iOS)
         // The list insets above the bar and fades under it, as a bottom toolbar does.
         .safeAreaBar(edge: .bottom) { chooseBar(series) }
+        #if os(iOS)
         // Choosing is a mode of its own: its bar takes the tab bar's place, as in Photos.
         .toolbar(choosing == nil ? .automatic : .hidden, for: .tabBar)
-        #else
-        .overlay(alignment: .bottom) { chooseBar(series) }
         #endif
         .animation(.standard, value: choosing == nil)
         .task(id: work) {
@@ -1033,18 +1031,12 @@ private struct ChooseChaptersBar: View {
         let height: CGFloat = Device.isMac ? 30 : 44
         VStack(spacing: 10) {
             if !chosen.isEmpty, !line.isEmpty {
-                // Plain words above the capsule on touch, where the bar's scroll edge keeps them
-                // readable. The Mac's bar floats over the list, so its words keep a glass of their own.
+                // Plain words above the capsule: the bar's scroll edge keeps them readable.
                 Text(line)
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                     .monospacedDigit()
                     .lineLimit(1)
-                    #if os(macOS)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .chromeGlass(in: .capsule)
-                    #endif
                     .transition(.opacity)
             }
             HStack(spacing: 8) {
