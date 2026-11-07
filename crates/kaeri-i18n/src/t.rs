@@ -14665,9 +14665,44 @@ pub fn send_sized_for(device: &str) -> String {
     text("send-sized-for", &[("device", Arg::Text(device))])
 }
 
-/// Under the progress of a send that will be written in parts, because the device takes files up to a limit.
-pub fn send_in_parts() -> String {
-    text("send-in-parts", &[])
+/// Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+pub fn send_in_parts(size: &str) -> String {
+    text("send-in-parts", &[("size", Arg::Text(size))])
+}
+
+/// A send that failed on one chapter. The cause is the sentence that says why.
+pub fn send_failed_chapter(chapter: &str, cause: &str) -> String {
+    text("send-failed-chapter", &[("chapter", Arg::Text(chapter)), ("cause", Arg::Text(cause))])
+}
+
+/// A send that failed before or after its chapters. The cause is the sentence that says why.
+pub fn send_failed(cause: &str) -> String {
+    text("send-failed", &[("cause", Arg::Text(cause))])
+}
+
+/// Text of the Send sheet's Size row while the size is still being worked out.
+pub fn send_size_working() -> String {
+    text("send-size-working", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is open.
+pub fn send_chapters_open() -> String {
+    text("send-chapters-open", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is closed.
+pub fn send_chapters_closed() -> String {
+    text("send-chapters-closed", &[])
+}
+
+/// Spoken value of the ring in a send under way. Already a number from 0 to 100.
+pub fn send_progress_spoken(percent: i64) -> String {
+    text("send-progress-spoken", &[("percent", Arg::Int(percent))])
+}
+
+/// Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+pub fn send_chapter_action() -> String {
+    text("send-chapter-action", &[])
 }
 
 /// Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
@@ -14868,6 +14903,36 @@ pub fn opds_fetched_by() -> String {
 /// Line when no e-reader has fetched anything since the feed started.
 pub fn opds_fetched_none() -> String {
     text("opds-fetched-none", &[])
+}
+
+/// Shown in place of the address while the feed is switched on and starting to listen.
+pub fn opds_starting() -> String {
+    text("opds-starting", &[])
+}
+
+/// Shown in place of the address while the feed is on but the Mac is on no local network.
+pub fn opds_paused_none() -> String {
+    text("opds-paused-none", &[])
+}
+
+/// Shown in place of the address while the feed is on but the only connection goes through a VPN.
+pub fn opds_paused_vpn() -> String {
+    text("opds-paused-vpn", &[])
+}
+
+/// Title of the question before a new feed password is made.
+pub fn opds_new_password_title() -> String {
+    text("opds-new-password-title", &[])
+}
+
+/// Text of that question.
+pub fn opds_new_password_warning() -> String {
+    text("opds-new-password-warning", &[])
+}
+
+/// Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+pub fn opds_fetched_time(time: &str) -> String {
+    text("opds-fetched-time", &[("time", Arg::Text(time))])
 }
 
 /// Line under an e-reader in that list: how many files it took.

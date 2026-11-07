@@ -8757,12 +8757,40 @@
     <comment>While the files are made: which chapter of how many. The ring beside it shows how far along.</comment>
   </data>
   <data name="SendSizedFor" xml:space="preserve">
-    <value>[Þàĝéš àŕé šîžéð ƒöŕ ţĥé {device} šçŕééñ~~~~~~~~~~~]</value>
+    <value>[Þàĝéš àŕé šîžéð ƒöŕ {device}~~~~~~~]</value>
     <comment>Under the progress of a send to a device: what the pages are made for.</comment>
   </data>
   <data name="SendInParts" xml:space="preserve">
-    <value>[Ţĥé ƒîļéš àŕé ţöö ƀîĝ ƒöŕ öñé, šö ţĥéý ĝö îñ þàŕţš.~~~~~~~~~~~~~~~~]</value>
-    <comment>Under the progress of a send that will be written in parts, because the device takes files up to a limit.</comment>
+    <value>[Öṽéŕ {size}, šö ţĥé ƒîļéš ĝö îñ þàŕţš.~~~~~~~~~~~]</value>
+    <comment>Under the size in the Send sheet when the files are over what the e-reader takes in one file.</comment>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>[Çöüļðñ'ţ þŕéþàŕé çĥàþţéŕ {chapter}. {cause}~~~~~~~~~~]</value>
+    <comment>A send that failed on one chapter. The cause is the sentence that says why.</comment>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ þŕéþàŕé ţĥé ƒîļéš. {cause}~~~~~~~~~~]</value>
+    <comment>A send that failed before or after its chapters. The cause is the sentence that says why.</comment>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>[Ŵöŕķîñĝ îţ öüţ~~~~~]</value>
+    <comment>Text of the Send sheet's Size row while the size is still being worked out.</comment>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>[Öþéñ~~]</value>
+    <comment>Spoken value of the Chapters row in the Send sheet while its list is open.</comment>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>[Çļöšéð~~]</value>
+    <comment>Spoken value of the Chapters row in the Send sheet while its list is closed.</comment>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>[{percent} þéŕçéñţ~~~~]</value>
+    <comment>Spoken value of the ring in a send under way. Already a number from 0 to 100.</comment>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>[Šéñð ţö é-ŕéàðéŕ~~~~~]</value>
+    <comment>Spoken action on a chapter row of a series: sends that chapter to an e-reader.</comment>
   </data>
   <data name="SendPartsOver" xml:space="preserve">
     <value>[îñ þàŕţš öṽéŕ {size}~~~~~~]</value>
@@ -8785,7 +8813,7 @@
     <comment>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</comment>
   </data>
   <data name="SendBanner" xml:space="preserve">
-    <value>[Šéñðîñĝ ţö ţĥé {device}~~~~~~]</value>
+    <value>[Šéñðîñĝ ţö {device}~~~~~]</value>
     <comment>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</comment>
   </data>
   <data name="SendFormatFixedEpub" xml:space="preserve">
@@ -8813,7 +8841,7 @@
     <comment>Title of the sheet that asks where you stopped reading on the e-reader.</comment>
   </data>
   <data name="StopNote" xml:space="preserve">
-    <value>[Ýöü šéñţ çĥàþţéŕš ţö ţĥé {device}. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü šéñţ çĥàþţéŕš ţö {device}. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~]</value>
     <comment>Note on a series page after chapters were sent: opens the question.</comment>
   </data>
   <data name="StopNoteAction" xml:space="preserve">
@@ -8821,11 +8849,11 @@
     <comment>Button in that note.</comment>
   </data>
   <data name="StopSentOne" xml:space="preserve">
-    <value>[Çĥàþţéŕ {chapter} ŵéñţ ţö ţĥé {device} öñ {date}.~~~~~~~~~~~]</value>
+    <value>[Çĥàþţéŕ {chapter} ŵéñţ ţö {device} öñ {date}.~~~~~~~~~~]</value>
     <comment>First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").</comment>
   </data>
   <data name="StopSentRange" xml:space="preserve">
-    <value>[Çĥàþţéŕš {first} ţö {last} ŵéñţ ţö ţĥé {device} öñ {date}.~~~~~~~~~~~~~]</value>
+    <value>[Çĥàþţéŕš {first} ţö {last} ŵéñţ ţö {device} öñ {date}.~~~~~~~~~~~~]</value>
     <comment>First line of the sheet when several chapters were sent, from the first to the last.</comment>
   </data>
   <data name="StopFinished" xml:space="preserve">
@@ -8889,7 +8917,7 @@
     <comment>Row in the feed settings: the port the feed listens on.</comment>
   </data>
   <data name="OpdsPortNote" xml:space="preserve">
-    <value>[Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ~~~~~~~~~~~]</value>
+    <value>[Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the port row when it is empty.</comment>
   </data>
   <data name="OpdsPortMoved" xml:space="preserve">
@@ -8935,6 +8963,30 @@
   <data name="OpdsFetchedNone" xml:space="preserve">
     <value>[Ñö é-ŕéàðéŕ ĥàš ƒéţçĥéð àñýţĥîñĝ ýéţ.~~~~~~~~~~~~]</value>
     <comment>Line when no e-reader has fetched anything since the feed started.</comment>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>[Šţàŕţîñĝ…~~~]</value>
+    <comment>Shown in place of the address while the feed is switched on and starting to listen.</comment>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>[Þàüšéð. Ţĥîš Ṁàç îšñ'ţ öñ à ļöçàļ ñéţŵöŕķ.~~~~~~~~~~~~~]</value>
+    <comment>Shown in place of the address while the feed is on but the Mac is on no local network.</comment>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>[Þàüšéð. Ţĥîš Ṁàç îš öñļý çöññéçţéð ţĥŕöüĝĥ à ṼÞÑ.~~~~~~~~~~~~~~~]</value>
+    <comment>Shown in place of the address while the feed is on but the only connection goes through a VPN.</comment>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>[Ṁàķé à ñéŵ þàššŵöŕð?~~~~~~]</value>
+    <comment>Title of the question before a new feed password is made.</comment>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>[É-ŕéàðéŕš ţĥàţ àļŕéàðý üšé ţĥé ƒééð šţöþ ŵöŕķîñĝ üñţîļ ýöü ţýþé ţĥé ñéŵ þàššŵöŕð îñţö éàçĥ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Text of that question.</comment>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>[Ļàšţ àšķéð {time}~~~~~]</value>
+    <comment>Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.</comment>
   </data>
   <data name="OpdsFetchedFiles_one" xml:space="preserve">
     <value>[Öñé ƒîļé~~~]</value>

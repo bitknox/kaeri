@@ -234,7 +234,7 @@ struct SettingsResults: View {
     let query: String
 
     /// Each row's name, and its pane.
-    static let index: [(title: String, pane: SettingsPane)] = [
+    static let index: [(title: String, pane: SettingsPane)] = ([
         (L.settingsKaeriIsFor, .general), (L.settingsOpenAt, .general),
         (L.settingsTitleLanguage, .general), (L.settingsLanguageApp, .general), (L.settingsAdult, .general),
         (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.ereadersGroup, .reading), (L.ereadersSendRow, .reading),
@@ -260,7 +260,16 @@ struct SettingsResults: View {
         (L.profilesTitle, .profiles), (L.profilesAdd, .profiles),
         (L.settingsCheckUpdates, updatesPane),
         (L.settingsMpvOptions, .advanced),
-    ].filter { SettingsPane.shown.contains($0.pane) }
+    ] + feedEntries).filter { SettingsPane.shown.contains($0.pane) }
+
+    /// The Mac's feed has rows of its own to find.
+    private static var feedEntries: [(title: String, pane: SettingsPane)] {
+        #if os(macOS)
+        [(L.ereadersFeedRow, .reading), (L.settingsOpdsFeed, .reading), (L.opdsPassword, .reading)]
+        #else
+        []
+        #endif
+    }
 
     /// The rows about Discord, which only an engine with a presence has.
     static let presenceRows: [(title: String, pane: SettingsPane)] = [

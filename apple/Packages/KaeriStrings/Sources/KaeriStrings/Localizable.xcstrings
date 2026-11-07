@@ -115163,6 +115163,18 @@
         }
       }
     },
+    "opds-fetched-time" : {
+      "comment" : "Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out. Argument 1: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last asked %1$@"
+          }
+        }
+      }
+    },
     "opds-footer" : {
       "comment" : "Footnote under the feed settings. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -115187,6 +115199,30 @@
         }
       }
     },
+    "opds-new-password-title" : {
+      "comment" : "Title of the question before a new feed password is made.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make a new password?"
+          }
+        }
+      }
+    },
+    "opds-new-password-warning" : {
+      "comment" : "Text of that question.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-readers that already use the feed stop working until you type the new password into each one."
+          }
+        }
+      }
+    },
     "opds-password" : {
       "comment" : "Row in the feed settings: the password e-readers ask for.",
       "extractionState" : "manual",
@@ -115207,6 +115243,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E-readers ask for it once"
+          }
+        }
+      }
+    },
+    "opds-paused-none" : {
+      "comment" : "Shown in place of the address while the feed is on but the Mac is on no local network.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused. This Mac isn't on a local network."
+          }
+        }
+      }
+    },
+    "opds-paused-vpn" : {
+      "comment" : "Shown in place of the address while the feed is on but the only connection goes through a VPN.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused. This Mac is only connected through a VPN."
           }
         }
       }
@@ -115242,7 +115302,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leave it empty to pick a free port"
+            "value" : "Leave it empty to pick a free port, or use 1024 to 65535"
           }
         }
       }
@@ -115383,6 +115443,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What it shares"
+          }
+        }
+      }
+    },
+    "opds-starting" : {
+      "comment" : "Shown in place of the address while the feed is switched on and starting to listen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting…"
           }
         }
       }
@@ -183682,7 +183754,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sending to the %1$@"
+            "value" : "Sending to %1$@"
+          }
+        }
+      }
+    },
+    "send-chapter-action" : {
+      "comment" : "Spoken action on a chapter row of a series: sends that chapter to an e-reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send to e-reader"
           }
         }
       }
@@ -183699,6 +183783,18 @@
         }
       }
     },
+    "send-chapters-closed" : {
+      "comment" : "Spoken value of the Chapters row in the Send sheet while its list is closed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closed"
+          }
+        }
+      }
+    },
     "send-chapters-one" : {
       "comment" : "The chapters being sent when there is one: its number or label. Argument 1: chapter (Text).",
       "extractionState" : "manual",
@@ -183711,6 +183807,18 @@
         }
       }
     },
+    "send-chapters-open" : {
+      "comment" : "Spoken value of the Chapters row in the Send sheet while its list is open.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
     "send-chapters-range" : {
       "comment" : "The chapters being sent when there are several, from the first to the last. Argument 1: first (Text). Argument 2: last (Text).",
       "extractionState" : "manual",
@@ -183719,6 +183827,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "send-failed" : {
+      "comment" : "A send that failed before or after its chapters. The cause is the sentence that says why. Argument 1: cause (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't prepare the files. %1$@"
+          }
+        }
+      }
+    },
+    "send-failed-chapter" : {
+      "comment" : "A send that failed on one chapter. The cause is the sentence that says why. Argument 1: chapter (Text). Argument 2: cause (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't prepare chapter %1$@. %2$@"
           }
         }
       }
@@ -183784,13 +183916,13 @@
       }
     },
     "send-in-parts" : {
-      "comment" : "Under the progress of a send that will be written in parts, because the device takes files up to a limit.",
+      "comment" : "Under the size in the Send sheet when the files are over what the e-reader takes in one file. Argument 1: size (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The files are too big for one, so they go in parts."
+            "value" : "Over %1$@, so the files go in parts."
           }
         }
       }
@@ -183865,6 +183997,18 @@
         }
       }
     },
+    "send-progress-spoken" : {
+      "comment" : "Spoken value of the ring in a send under way. Already a number from 0 to 100. Argument 1: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld percent"
+          }
+        }
+      }
+    },
     "send-ready" : {
       "comment" : "When the files are ready, over the button that opens the share sheet. The count is how many files. Argument 1: n (Int).",
       "extractionState" : "manual",
@@ -183935,6 +184079,18 @@
         }
       }
     },
+    "send-size-working" : {
+      "comment" : "Text of the Send sheet's Size row while the size is still being worked out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Working it out"
+          }
+        }
+      }
+    },
     "send-sized-for" : {
       "comment" : "Under the progress of a send to a device: what the pages are made for. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -183942,7 +184098,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pages are sized for the %1$@ screen"
+            "value" : "Pages are sized for %1$@"
           }
         }
       }
@@ -236582,7 +236738,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You sent chapters to the %1$@. Where did you stop?"
+            "value" : "You sent chapters to %1$@. Where did you stop?"
           }
         }
       }
@@ -236606,7 +236762,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chapter %1$@ went to the %2$@ on %3$@."
+            "value" : "Chapter %1$@ went to %2$@ on %3$@."
           }
         }
       }
@@ -236618,7 +236774,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chapters %1$@ to %2$@ went to the %3$@ on %4$@."
+            "value" : "Chapters %1$@ to %2$@ went to %3$@ on %4$@."
           }
         }
       }

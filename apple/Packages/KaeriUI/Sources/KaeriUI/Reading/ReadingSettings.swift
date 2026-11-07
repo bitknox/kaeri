@@ -84,11 +84,16 @@ struct ReadingPane: View {
 
     var body: some View {
         #if os(macOS)
-        if feedOpen {
-            FeedPane { feedOpen = false }
-        } else {
-            groups
+        Group {
+            if feedOpen {
+                FeedPane { withAnimation(.standard) { feedOpen = false } }
+                    .transition(.opacity)
+            } else {
+                groups
+                    .transition(.opacity)
+            }
         }
+        .animation(.standard, value: feedOpen)
         #else
         groups
         #endif
@@ -138,7 +143,7 @@ struct ReadingPane: View {
             #if os(macOS)
             SettingsRow(title: L.ereadersFeedRow) {
                 Button {
-                    feedOpen = true
+                    withAnimation(.standard) { feedOpen = true }
                 } label: {
                     HStack(spacing: 6) {
                         Text(store.reading.sending.feed?.on == true ? L.readerOn : L.readerOff)

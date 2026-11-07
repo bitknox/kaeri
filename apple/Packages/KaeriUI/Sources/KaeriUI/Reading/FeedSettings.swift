@@ -95,6 +95,8 @@ struct FeedPane: View {
     let back: () -> Void
     @State private var port = ""
     @State private var copied: String?
+    @State private var askingNewPassword = false
+    @FocusState private var portFocused: Bool
 
     var body: some View {
         let sending = store.reading.sending
@@ -126,16 +128,20 @@ struct FeedPane: View {
             }
             SettingsRow(title: L.opdsAddress) {
                 HStack(spacing: 8) {
-                    Text(feed?.addresses.first ?? L.opdsAddressOff)
+                    Text(addressWords(feed))
                         .font(.mac(12, design: feed?.addresses.first == nil ? .default : .monospaced))
                         .foregroundStyle(feed?.addresses.first == nil ? .haze : .silk)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.trailing)
                         .truncationMode(.middle)
                         .textSelection(.enabled)
+                        .id(addressWords(feed))
+                        .transition(.opacity)
                     if let address = feed?.addresses.first {
                         copyButton(address)
                     }
                 }
+                .animation(.standard, value: addressWords(feed))
             }
             SettingsRow(title: L.opdsPassword, note: L.opdsPasswordNote) {
                 HStack(spacing: 8) {
@@ -146,12 +152,19 @@ struct FeedPane: View {
                             .textSelection(.enabled)
                         copyButton(password)
                     }
-                    Button(L.opdsNewPassword) {
-                        sending.setFeed(on: feed?.on ?? false, password: SendModel.newPassword())
+                    if feed?.passwordSet == true {
+                        Button(L.opdsNewPassword) { askingNewPassword = true }
+                            .buttonStyle(SecondaryCapsuleStyle(height: 24, raisedSurface: true, fontSize: 12))
+                            .fixedSize()
+                            .confirmationDialog(L.opdsNewPasswordTitle, isPresented: $askingNewPassword, titleVisibility: .visible) {
+                                Button(L.opdsNewPassword) {
+                                    sending.setFeed(on: feed?.on ?? false, password: SendModel.newPassword())
+                                }
+                                Button(L.actionCancel, role: .cancel) {}
+                            } message: {
+                                Text(L.opdsNewPasswordWarning)
+                            }
                     }
-                    .buttonStyle(SecondaryCapsuleStyle(height: 24, raisedSurface: true, fontSize: 12))
-                    .fixedSize()
-                    .disabled(feed == nil)
                 }
             }
             SettingsRow(title: L.opdsPort, note: portNote(feed)) {
@@ -159,8 +172,17 @@ struct FeedPane: View {
                     .textFieldStyle(.plain)
                     .font(.mac(12, design: .monospaced))
                     .multilineTextAlignment(.trailing)
-                    .frame(width: 70)
+                    .focused($portFocused)
+                    .frame(width: 64)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.faintRule.opacity(0.5), in: .rect(cornerRadius: 6))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(portFocused ? Palette.amber : .clear, lineWidth: 1.5)
+                    }
                     .onSubmit { savePort() }
+                    .onChange(of: portFocused) { _, focused in if !focused { savePort() } }
                     .accessibilityLabel(L.opdsPort)
             }
         }
@@ -182,7 +204,7 @@ struct FeedPane: View {
                 if feed?.clients.isEmpty ?? true {
                     SettingsRow(title: L.opdsFetchedNone)
                 }
-                ForEach(feed?.clients ?? [], id: \.address) { client in
+                ForEach(feed?.clients ?? [], id: \.rowKey) { client in
                     SettingsRow(
                         title: client.name.isEmpty ? L.opdsReaderUnnamed(address: client.address) : client.name,
                         note: L.opdsFetchedFiles(n: Int(client.files))
@@ -199,11 +221,8 @@ struct FeedPane: View {
             .task {
                 port = store.settings.row(.opdsPort)?.value ?? ""
                 if sending.stageFeed() { return }
-                // The list of who fetched changes while the pane is open.
-                while !Task.isCancelled {
-                    sending.loadFeed()
-                    try? await Task.sleep(for: .seconds(4))
-                }
+                // The engine tells the pane when the feed or who fetched changes.
+                sending.loadFeed()
             }
     }
 
@@ -222,10 +241,24 @@ struct FeedPane: View {
         .animation(nil, value: copied)
     }
 
+    /// Kept as digits in 1024 to 65535, the ports a program may listen on; anything else is
+    /// emptied, which picks a free one.
     private func savePort() {
         let digits = port.filter(\.isNumber)
-        port = digits
-        store.setSetting(.opdsPort, to: .str(digits))
+        let kept = UInt16(digits).flatMap { (1024...65535).contains($0) ? String($0) : nil } ?? ""
+        port = kept
+        store.setSetting(.opdsPort, to: .str(kept))
+    }
+
+    /// What the address row says: the address, why there is none, or that it is starting.
+    private func addressWords(_ feed: FeedView?) -> String {
+        guard let feed, feed.on else { return L.opdsAddressOff }
+        if let address = feed.addresses.first { return address }
+        switch feed.pause {
+        case .noNetwork?: return L.opdsPausedNone
+        case .vpnOnly?: return L.opdsPausedVpn
+        case nil: return L.opdsStarting
+        }
     }
 
     /// What the port row says under it: that a free one is picked when it is empty, or that the
@@ -236,5 +269,10 @@ struct FeedPane: View {
         }
         return port.isEmpty ? L.opdsPortNote : ""
     }
+}
+
+private extension FeedClient {
+    /// Two readers may share an address, or one may change its name.
+    var rowKey: String { address + "|" + name } // i18n-skip
 }
 #endif

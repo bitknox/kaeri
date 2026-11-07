@@ -18,6 +18,8 @@ struct ReadSheetFrame<Content: View>: View {
     var tallest: CGFloat = 560
     /// Held under the scrolling content on touch, where a long list would push it off screen.
     var pinned: AnyView?
+    /// The iPad sheet is as big as its content, not a tall form.
+    var fitted = false
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -46,9 +48,9 @@ struct ReadSheetFrame<Content: View>: View {
         NavigationStack {
             ScrollView { content().padding(.horizontal, 16).padding(.vertical, 8) }
                 .background(.raised)
-                .safeAreaInset(edge: .bottom, spacing: 0) {
+                .safeAreaBar(edge: .bottom, spacing: 0) {
                     if let pinned {
-                        pinned.padding(.horizontal, 16).padding(.vertical, 12).background(.raised)
+                        pinned.padding(.horizontal, 16).padding(.vertical, 12)
                     }
                 }
                 .navigationTitle(title)
@@ -66,6 +68,7 @@ struct ReadSheetFrame<Content: View>: View {
                 }
         }
         .presentationDetents([.medium, .large])
+        .presentationSizing(fitted ? .fitted : .automatic)
         .presentationBackground(.raised)
         #endif
     }

@@ -481,6 +481,9 @@ impl OneSend {
         if asked_all_downloaded {
             // Nothing to fetch, so nothing to ask a source.
             let chapters = chosen(store, self.work.as_str(), &self.pick);
+            let n = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
+            self.told.of.store(n, Ordering::Relaxed);
+            self.told.gathered.store(n, Ordering::Relaxed);
             return Ok((chapters, 0));
         }
         let now = self.lent.clock.now();

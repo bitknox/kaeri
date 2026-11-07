@@ -95,6 +95,8 @@ struct SendSheet: View {
     @State private var ids: [String]
     @State private var sendId: Int?
     @State private var choosingChapters = false
+    /// The size is still being worked out after a moment: the row says so.
+    @State private var waitedForSize = false
     #if os(iOS)
     @State private var sharing: SharedFiles?
     #endif
@@ -111,21 +113,39 @@ struct SendSheet: View {
     }
     private var send: EReaderSend? { sendId.flatMap { store.reading.sending.send($0) } }
 
+    /// The board's three e-readers; every other screen the engine knows sits under Other e-reader.
+    private static let listed = ["kobo", "kindle"]
+    private var primary: [ExportTarget] { targets.filter { Self.listed.contains($0.id) } }
+    private var others: [ExportTarget] { targets.filter { !Self.listed.contains($0.id) } }
+
+    /// Closing once a send has started is not cancelling it: the status row keeps going.
+    private var closeWords: String {
+        guard let send else { return L.actionCancel }
+        if case .ready = send.phase { return L.actionDone }
+        return L.actionClose
+    }
+
     var body: some View {
-        ReadSheetFrame(title: L.sendTitle, subtitle: store.reading.series[request.work]?.titles.display, close: L.actionCancel, tallest: 740, pinned: pinnedFooter) {
+        ReadSheetFrame(title: L.sendTitle, subtitle: store.reading.series[request.work]?.titles.display, close: closeWords, tallest: 740, fitted: true, pinned: pinnedFooter) {
             VStack(alignment: .leading, spacing: 0) {
                 SheetHeading(text: L.sendFor)
                 SheetRows {
-                    ForEach(targets, id: \.id) { item in targetRow(item) }
+                    ForEach(primary, id: \.id) { item in targetRow(item) }
+                    if !others.isEmpty { otherRow }
                 }
                 .disabled(send?.isRunning == true)
                 SheetHeading(text: L.sendWhat)
                 SheetRows {
                     chaptersRow
+                    #if os(macOS)
                     if choosingChapters { chapterPicker }
+                    #endif
                     sizeRow
                 }
                 .disabled(send?.isRunning == true)
+                if let size = estimatedBytes, target?.split == true, !novel, size > Self.partsOver {
+                    SheetNote(text: L.sendInParts(size: Wording.bytes(Self.partsOver)))
+                }
                 SheetNote(text: L.sendNoPlace)
                 if pinnedFooter == nil {
                     footer
@@ -140,9 +160,13 @@ struct SendSheet: View {
             await stageIfAsked()
         }
         .task(id: ids) {
+            waitedForSize = false
             try? await Task.sleep(for: .milliseconds(150))
             guard !Task.isCancelled else { return }
             store.reading.estimateDownload(request.work, .chapters(ids: ids))
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else { return }
+            withAnimation(.standard) { waitedForSize = true }
         }
         .onChange(of: send?.phase) { _, phase in
             #if os(iOS)
@@ -200,63 +224,116 @@ struct SendSheet: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    private var chaptersRow: some View {
-        Button {
-            withAnimation(.standard) { choosingChapters.toggle() }
+    /// Other e-reader: the screens the board does not list, in a menu on the row.
+    private var otherRow: some View {
+        let kept = others.first { $0.id == target?.id }
+        let on = kept != nil
+        let shown = kept ?? others.first { $0.id == "other" } ?? others[0]
+        return Menu {
+            ForEach(others, id: \.id) { item in
+                Button {
+                    chosen = item.id
+                } label: {
+                    if item.id == target?.id { Image(systemName: "checkmark") }
+                    Text(item.name)
+                    Text(SendWords.line(item, novel: novel))
+                }
+            }
         } label: {
-            HStack(spacing: 8) {
-                Text(L.sendChapters).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(on && shown.id != "other" ? shown.name : (others.first { $0.id == "other" }?.name ?? shown.name))
+                        .font(.plat(mac: 13, touch: 17))
+                        .foregroundStyle(.silk)
+                        .lineLimit(1)
+                    Text(SendWords.line(shown, novel: novel))
+                        .font(.plat(mac: 12, touch: 15))
+                        .foregroundStyle(.haze)
+                        .lineLimit(2)
+                }
                 Spacer(minLength: 8)
-                Text(SendWords.chapters(SendWords.rows(ids, work: request.work, store)))
-                    .font(.plat(mac: 13, touch: 17))
+                if on {
+                    Image(systemName: "checkmark")
+                        .font(.ui(13, weight: .semibold))
+                        .foregroundStyle(.silk)
+                        .accessibilityHidden(true)
+                }
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.ui(11, weight: .semibold))
                     .foregroundStyle(.haze)
-                    .monospacedDigit()
-                Image(systemName: "chevron.right")
-                    .font(.ui(12, weight: .semibold))
-                    .foregroundStyle(.haze)
-                    .rotationEffect(.degrees(choosingChapters ? 90 : 0))
                     .accessibilityHidden(true)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, Device.isMac ? 9 : 12)
+            .padding(.vertical, Device.isMac ? 5 : 12)
             .contentShape(.rect)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .pointerHover()
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    private var chaptersLabel: some View {
+        HStack(spacing: 8) {
+            Text(L.sendChapters).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
+            Spacer(minLength: 8)
+            Text(SendWords.chapters(SendWords.rows(ids, work: request.work, store)))
+                .font(.plat(mac: 13, touch: 17))
+                .foregroundStyle(.haze)
+                .monospacedDigit()
+            Image(systemName: "chevron.right")
+                .font(.ui(12, weight: .semibold))
+                .foregroundStyle(.haze)
+                .rotationEffect(.degrees(Device.isMac && choosingChapters ? 90 : 0))
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, Device.isMac ? 9 : 12)
+        .contentShape(.rect)
+    }
+
+    /// On the Mac the chapters open in place; on touch they are a screen of their own, by volume.
+    @ViewBuilder
+    private var chaptersRow: some View {
+        #if os(iOS)
+        NavigationLink {
+            ScrollView {
+                SendChapterList(work: request.work, ids: $ids)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+            }
+            .background(.raised)
+            .navigationTitle(L.sendChapters)
+            .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            chaptersLabel
+        }
+        .buttonStyle(.plain)
+        #else
+        Button {
+            withAnimation(.standard) { choosingChapters.toggle() }
+        } label: {
+            chaptersLabel
         }
         .buttonStyle(.plain)
         .pointerHover()
+        .accessibilityValue(choosingChapters ? L.sendChaptersOpen : L.sendChaptersClosed)
+        #endif
     }
 
-    /// Every chapter of the series, ticked or not, to change what is sent.
+    /// What the files will take, as far as it is known.
+    private var estimatedBytes: UInt64? { SendWords.size(ids, work: request.work, store) }
+    /// The size where a file is split, near 200 MB.
+    private static let partsOver: UInt64 = 200 * 1_000_000
+
+    /// Every chapter of the series by volume, ticked or not, to change what is sent. Scrolls on
+    /// its own past a height, so the sheet does not grow past the screen.
     private var chapterPicker: some View {
-        let rows = store.reading.chapters[request.work]?.volumes.flatMap(\.chapters) ?? []
-        return VStack(spacing: 0) {
-            ForEach(rows, id: \.id) { row in
-                Button {
-                    if ids.contains(row.id) {
-                        if ids.count > 1 { ids.removeAll { $0 == row.id } }
-                    } else {
-                        ids.append(row.id)
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Text(row.label).font(.plat(mac: 13, touch: 15)).foregroundStyle(.silk).lineLimit(1)
-                        if let title = row.title {
-                            Text(title).font(.plat(mac: 13, touch: 15)).foregroundStyle(.haze).lineLimit(1)
-                        }
-                        Spacer(minLength: 8)
-                        if ids.contains(row.id) {
-                            Image(systemName: "checkmark").font(.ui(12, weight: .semibold)).foregroundStyle(.silk)
-                                .accessibilityHidden(true)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, Device.isMac ? 6 : 9)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .pointerHover()
-                .accessibilityAddTraits(ids.contains(row.id) ? .isSelected : [])
-            }
+        ScrollView {
+            SendChapterList(work: request.work, ids: $ids)
         }
+        .frame(maxHeight: 240)
         .transition(.opacity)
     }
 
@@ -264,11 +341,16 @@ struct SendSheet: View {
         HStack {
             Text(L.sendSize).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
             Spacer(minLength: 8)
-            if let bytes = SendWords.size(ids, work: request.work, store) {
+            if let bytes = estimatedBytes {
                 Text(L.sendSizeAbout(size: Wording.bytes(bytes)))
                     .font(.plat(mac: 13, touch: 17))
                     .foregroundStyle(.haze)
                     .monospacedDigit()
+            } else if waitedForSize {
+                Text(L.sendSizeWorking)
+                    .font(.plat(mac: 13, touch: 17))
+                    .foregroundStyle(.haze)
+                    .transition(.opacity)
             }
         }
         .padding(.horizontal, 12)
@@ -347,14 +429,15 @@ struct SendProgress: View {
     var body: some View {
         VStack(spacing: 6) {
             switch send.phase {
-            case .preparing(let fraction):
+            case .preparing(let fraction, let done, let total):
                 HStack(spacing: 12) {
                     Button { store.reading.sending.cancel(send.id) } label: {
                         DownloadRing(fraction: fraction ?? 0)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(L.sendWaitingCancel)
-                    Text(preparing(fraction))
+                    .accessibilityValue(L.sendProgressSpoken(percent: percent(fraction)))
+                    Text(preparing(done: done, total: total))
                         .font(.plat(mac: 13, touch: 17))
                         .foregroundStyle(.silk)
                         .monospacedDigit()
@@ -362,11 +445,6 @@ struct SendProgress: View {
                 .frame(minHeight: Device.isMac ? 30 : 50)
                 if let target, !novel {
                     Text(L.sendSizedFor(device: target.name))
-                        .font(.plat(mac: 12, touch: 13))
-                        .foregroundStyle(.haze)
-                }
-                if target?.split == true, !novel {
-                    Text(L.sendInParts)
                         .font(.plat(mac: 12, touch: 13))
                         .foregroundStyle(.haze)
                 }
@@ -392,13 +470,26 @@ struct SendProgress: View {
         }
         .frame(maxWidth: .infinity)
         .multilineTextAlignment(.center)
+        .animation(.standard, value: send.kind)
+        .onChange(of: quarter) { _, now in
+            guard now > 0 else { return }
+            AccessibilityNotification.Announcement(L.sendProgressSpoken(percent: now * 25)).post()
+        }
     }
 
-    /// Which chapter of how many, from how far along the pages are.
-    private func preparing(_ fraction: Double?) -> String {
-        let total = max(count, 1)
-        let at = min(total, Int((fraction ?? 0) * Double(total)) + 1)
-        return L.sendPreparing(done: at, total: total)
+    private func percent(_ fraction: Double?) -> Int { Int(((fraction ?? 0) * 100).rounded()) }
+
+    /// How many quarters of the way, for the spoken updates.
+    private var quarter: Int {
+        guard case .preparing(let fraction, _, _) = send.phase else { return 0 }
+        return min(4, Int((fraction ?? 0) * 4))
+    }
+
+    /// Which chapter of how many, as the engine counts them.
+    private func preparing(done: Int, total: Int) -> String {
+        let all = max(total > 0 ? total : count, 1)
+        let at = min(all, (total > 0 ? done : 0) + 1)
+        return L.sendPreparing(done: at, total: all)
     }
 }
 
@@ -439,18 +530,23 @@ struct SendStatusRows: View {
 
     var body: some View {
         let sends = store.reading.sending.sends.filter { work == nil || $0.work == work }
-        if !sends.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(sends) { send in
-                    SendStatusRow(send: send)
-                    if send.id != sends.last?.id { Rectangle().fill(.faintRule).frame(height: 1) }
-                }
-            }
-            .padding(.horizontal, 14)
-            .background(.raised, in: .rect(cornerRadius: 12))
-            .padding(.top, 20)
-            .transition(.opacity)
+        Group {
+            if !sends.isEmpty { rows(sends) }
         }
+        .animation(.standard, value: sends.map(\.id))
+    }
+
+    private func rows(_ sends: [EReaderSend]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(sends) { send in
+                SendStatusRow(send: send)
+                if send.id != sends.last?.id { Rectangle().fill(.faintRule).frame(height: 1) }
+            }
+        }
+        .padding(.horizontal, 14)
+        .background(.raised, in: .rect(cornerRadius: 12))
+        .padding(.top, 20)
+        .transition(.opacity)
     }
 }
 
@@ -475,12 +571,13 @@ private struct SendStatusRow: View {
                 }
                 Spacer(minLength: 8)
                 switch send.phase {
-                case .preparing(let fraction):
+                case .preparing(let fraction, _, _):
                     Button { store.reading.sending.cancel(send.id) } label: {
                         DownloadRing(fraction: fraction ?? 0)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(L.sendWaitingCancel)
+                    .accessibilityValue(L.sendProgressSpoken(percent: Int(((fraction ?? 0) * 100).rounded())))
                 case .waiting:
                     Button(L.sendWaitingCancel) { store.reading.sending.cancel(send.id) }
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 30, raisedSurface: true, fontSize: Device.isMac ? 12 : 15))
@@ -523,7 +620,8 @@ private struct SendStatusRow: View {
             }
         }
         .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+        .animation(.standard, value: send.kind)
         #if os(iOS)
         .sheet(item: $sharing) { files in
             ActivitySheet(urls: files.urls) { done in
@@ -555,7 +653,7 @@ struct StoppedSheet: View {
     var body: some View {
         let rows = SendWords.rows(sent.chapters, work: work, store)
         let at = rows.first { $0.id == picked } ?? rows.last
-        ReadSheetFrame(title: L.stopTitle, subtitle: nil, close: L.actionCancel) {
+        ReadSheetFrame(title: L.stopTitle, subtitle: nil, close: L.actionCancel, fitted: true) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(sentLine(rows))
                     .font(.plat(mac: 13, touch: 15))
@@ -734,3 +832,54 @@ private struct ShareAnchorView: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) { anchor.view = view }
 }
 #endif
+
+
+/// Every chapter of a series by volume, ticked or not. At least one stays ticked.
+struct SendChapterList: View {
+    @Environment(AppStore.self) private var store
+    let work: String
+    @Binding var ids: [String]
+
+    var body: some View {
+        let groups = store.reading.chapters[work]?.volumes ?? []
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
+                if groups.count > 1 || group.volume != nil {
+                    SheetHeading(text: group.volume.map { L.seriesVolume(n: $0) } ?? L.seriesNoVolume)
+                }
+                SheetRows {
+                    ForEach(group.chapters, id: \.id) { row in chapter(row) }
+                }
+            }
+        }
+    }
+
+    private func chapter(_ row: ChapterRow) -> some View {
+        let on = ids.contains(row.id)
+        return Button {
+            if on {
+                if ids.count > 1 { ids.removeAll { $0 == row.id } }
+            } else {
+                ids.append(row.id)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(row.label).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk).lineLimit(1)
+                if let title = row.title {
+                    Text(title).font(.plat(mac: 13, touch: 17)).foregroundStyle(.haze).lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                if on {
+                    Image(systemName: "checkmark").font(.ui(12, weight: .semibold)).foregroundStyle(.silk)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, Device.isMac ? 6 : 12)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+}

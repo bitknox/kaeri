@@ -9634,9 +9634,37 @@ object Strings {
     fun sendSizedFor(context: Context, device: String): String =
         context.getString(R.string.send_sized_for, device)
 
-    /** Under the progress of a send that will be written in parts, because the device takes files up to a limit. */
-    fun sendInParts(context: Context): String =
-        context.getString(R.string.send_in_parts)
+    /** Under the size in the Send sheet when the files are over what the e-reader takes in one file. */
+    fun sendInParts(context: Context, size: String): String =
+        context.getString(R.string.send_in_parts, size)
+
+    /** A send that failed on one chapter. The cause is the sentence that says why. */
+    fun sendFailedChapter(context: Context, chapter: String, cause: String): String =
+        context.getString(R.string.send_failed_chapter, chapter, cause)
+
+    /** A send that failed before or after its chapters. The cause is the sentence that says why. */
+    fun sendFailed(context: Context, cause: String): String =
+        context.getString(R.string.send_failed, cause)
+
+    /** Text of the Send sheet's Size row while the size is still being worked out. */
+    fun sendSizeWorking(context: Context): String =
+        context.getString(R.string.send_size_working)
+
+    /** Spoken value of the Chapters row in the Send sheet while its list is open. */
+    fun sendChaptersOpen(context: Context): String =
+        context.getString(R.string.send_chapters_open)
+
+    /** Spoken value of the Chapters row in the Send sheet while its list is closed. */
+    fun sendChaptersClosed(context: Context): String =
+        context.getString(R.string.send_chapters_closed)
+
+    /** Spoken value of the ring in a send under way. Already a number from 0 to 100. */
+    fun sendProgressSpoken(context: Context, percent: Int): String =
+        context.getString(R.string.send_progress_spoken, percent)
+
+    /** Spoken action on a chapter row of a series: sends that chapter to an e-reader. */
+    fun sendChapterAction(context: Context): String =
+        context.getString(R.string.send_chapter_action)
 
     /** Under an e-reader in the sheet when it takes files in parts: the size where a file is split. */
     fun sendPartsOver(context: Context, size: String): String =
@@ -9797,6 +9825,30 @@ object Strings {
     /** Line when no e-reader has fetched anything since the feed started. */
     fun opdsFetchedNone(context: Context): String =
         context.getString(R.string.opds_fetched_none)
+
+    /** Shown in place of the address while the feed is switched on and starting to listen. */
+    fun opdsStarting(context: Context): String =
+        context.getString(R.string.opds_starting)
+
+    /** Shown in place of the address while the feed is on but the Mac is on no local network. */
+    fun opdsPausedNone(context: Context): String =
+        context.getString(R.string.opds_paused_none)
+
+    /** Shown in place of the address while the feed is on but the only connection goes through a VPN. */
+    fun opdsPausedVpn(context: Context): String =
+        context.getString(R.string.opds_paused_vpn)
+
+    /** Title of the question before a new feed password is made. */
+    fun opdsNewPasswordTitle(context: Context): String =
+        context.getString(R.string.opds_new_password_title)
+
+    /** Text of that question. */
+    fun opdsNewPasswordWarning(context: Context): String =
+        context.getString(R.string.opds_new_password_warning)
+
+    /** Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out. */
+    fun opdsFetchedTime(context: Context, time: String): String =
+        context.getString(R.string.opds_fetched_time, time)
 
     /** Line under an e-reader in that list: how many files it took. */
     fun opdsFetchedFiles(context: Context, n: Int): String =

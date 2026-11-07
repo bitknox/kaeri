@@ -6301,8 +6301,29 @@ public static partial class T
     /// <summary>Under the progress of a send to a device: what the pages are made for.</summary>
     public static string SendSizedFor(string device) => Fill(Get("SendSizedFor"), ("device", device));
 
-    /// <summary>Under the progress of a send that will be written in parts, because the device takes files up to a limit.</summary>
-    public static string SendInParts => Get("SendInParts");
+    /// <summary>Under the size in the Send sheet when the files are over what the e-reader takes in one file.</summary>
+    public static string SendInParts(string size) => Fill(Get("SendInParts"), ("size", size));
+
+    /// <summary>A send that failed on one chapter. The cause is the sentence that says why.</summary>
+    public static string SendFailedChapter(string chapter, string cause) => Fill(Get("SendFailedChapter"), ("chapter", chapter), ("cause", cause));
+
+    /// <summary>A send that failed before or after its chapters. The cause is the sentence that says why.</summary>
+    public static string SendFailed(string cause) => Fill(Get("SendFailed"), ("cause", cause));
+
+    /// <summary>Text of the Send sheet's Size row while the size is still being worked out.</summary>
+    public static string SendSizeWorking => Get("SendSizeWorking");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is open.</summary>
+    public static string SendChaptersOpen => Get("SendChaptersOpen");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is closed.</summary>
+    public static string SendChaptersClosed => Get("SendChaptersClosed");
+
+    /// <summary>Spoken value of the ring in a send under way. Already a number from 0 to 100.</summary>
+    public static string SendProgressSpoken(long percent) => Fill(Get("SendProgressSpoken"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken action on a chapter row of a series: sends that chapter to an e-reader.</summary>
+    public static string SendChapterAction => Get("SendChapterAction");
 
     /// <summary>Under an e-reader in the sheet when it takes files in parts: the size where a file is split.</summary>
     public static string SendPartsOver(string size) => Fill(Get("SendPartsOver"), ("size", size));
@@ -6423,6 +6444,24 @@ public static partial class T
 
     /// <summary>Line when no e-reader has fetched anything since the feed started.</summary>
     public static string OpdsFetchedNone => Get("OpdsFetchedNone");
+
+    /// <summary>Shown in place of the address while the feed is switched on and starting to listen.</summary>
+    public static string OpdsStarting => Get("OpdsStarting");
+
+    /// <summary>Shown in place of the address while the feed is on but the Mac is on no local network.</summary>
+    public static string OpdsPausedNone => Get("OpdsPausedNone");
+
+    /// <summary>Shown in place of the address while the feed is on but the only connection goes through a VPN.</summary>
+    public static string OpdsPausedVpn => Get("OpdsPausedVpn");
+
+    /// <summary>Title of the question before a new feed password is made.</summary>
+    public static string OpdsNewPasswordTitle => Get("OpdsNewPasswordTitle");
+
+    /// <summary>Text of that question.</summary>
+    public static string OpdsNewPasswordWarning => Get("OpdsNewPasswordWarning");
+
+    /// <summary>Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.</summary>
+    public static string OpdsFetchedTime(string time) => Fill(Get("OpdsFetchedTime"), ("time", time));
 
     /// <summary>Line under an e-reader in that list: how many files it took.</summary>
     public static string OpdsFetchedFiles(long n) => Fill(GetPlural("OpdsFetchedFiles", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -12624,24 +12663,31 @@ public static partial class T
         ["SendPrepare"] = "Prepare and share",
         ["SendPreparing_one"] = "Preparing the chapter",
         ["SendPreparing_other"] = "Preparing {done} of {total} chapters",
-        ["SendSizedFor"] = "Pages are sized for the {device} screen",
-        ["SendInParts"] = "The files are too big for one, so they go in parts.",
+        ["SendSizedFor"] = "Pages are sized for {device}",
+        ["SendInParts"] = "Over {size}, so the files go in parts.",
+        ["SendFailedChapter"] = "Couldn't prepare chapter {chapter}. {cause}",
+        ["SendFailed"] = "Couldn't prepare the files. {cause}",
+        ["SendSizeWorking"] = "Working it out",
+        ["SendChaptersOpen"] = "Open",
+        ["SendChaptersClosed"] = "Closed",
+        ["SendProgressSpoken"] = "{percent} percent",
+        ["SendChapterAction"] = "Send to e-reader",
         ["SendPartsOver"] = "in parts over {size}",
         ["SendWaitingCancel"] = "Cancel send",
         ["SendReady_one"] = "One file is ready.",
         ["SendReady_other"] = "{n} files are ready.",
         ["SendShareAgain"] = "Share again",
-        ["SendBanner"] = "Sending to the {device}",
+        ["SendBanner"] = "Sending to {device}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",
         ["SendFormatEpub"] = "EPUB",
         ["SendFormatCbz"] = "CBZ",
         ["SendTargetLine"] = "{format} · {width} × {height}",
         ["StopTitle"] = "Where did you stop?",
-        ["StopNote"] = "You sent chapters to the {device}. Where did you stop?",
+        ["StopNote"] = "You sent chapters to {device}. Where did you stop?",
         ["StopNoteAction"] = "Set my place",
-        ["StopSentOne"] = "Chapter {chapter} went to the {device} on {date}.",
-        ["StopSentRange"] = "Chapters {first} to {last} went to the {device} on {date}.",
+        ["StopSentOne"] = "Chapter {chapter} went to {device} on {date}.",
+        ["StopSentRange"] = "Chapters {first} to {last} went to {device} on {date}.",
         ["StopFinished"] = "I finished chapter {chapter}",
         ["StopSet"] = "Set my place",
         ["StopKeep"] = "Keep chapter {chapter} · page {page}",
@@ -12657,7 +12703,7 @@ public static partial class T
         ["OpdsPasswordNote"] = "E-readers ask for it once",
         ["OpdsNewPassword"] = "New password",
         ["OpdsPort"] = "Port",
-        ["OpdsPortNote"] = "Leave it empty to pick a free port",
+        ["OpdsPortNote"] = "Leave it empty to pick a free port, or use 1024 to 65535",
         ["OpdsPortMoved"] = "Port {wanted} was busy, so the feed uses {port}.",
         ["OpdsShares"] = "What it shares",
         ["OpdsShareDownloads"] = "Downloads",
@@ -12669,6 +12715,12 @@ public static partial class T
         ["OpdsShareSeriesCount_other"] = "{n} series",
         ["OpdsFetchedBy"] = "Fetched by",
         ["OpdsFetchedNone"] = "No e-reader has fetched anything yet.",
+        ["OpdsStarting"] = "Starting…",
+        ["OpdsPausedNone"] = "Paused. This Mac isn't on a local network.",
+        ["OpdsPausedVpn"] = "Paused. This Mac is only connected through a VPN.",
+        ["OpdsNewPasswordTitle"] = "Make a new password?",
+        ["OpdsNewPasswordWarning"] = "E-readers that already use the feed stop working until you type the new password into each one.",
+        ["OpdsFetchedTime"] = "Last asked {time}",
         ["OpdsFetchedFiles_one"] = "One file",
         ["OpdsFetchedFiles_other"] = "{n} files",
         ["OpdsReaderUnnamed"] = "E-reader at {address}",

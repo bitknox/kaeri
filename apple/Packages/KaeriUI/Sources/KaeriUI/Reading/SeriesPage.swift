@@ -864,6 +864,7 @@ private struct SeriesChapters: View {
 /// The ring shows only while bytes move, and stops the download when pressed.
 private struct ChapterRowView: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let series: SeriesView
     let row: ChapterRow
     let preferred: String?
@@ -948,6 +949,7 @@ private struct ChapterRowView: View {
                     .tint(Palette.raised)
             }
         }
+        .accessibilityAction(named: L.sendChapterAction) { navigator.seriesSheet = .send(series.work, chapters: [row.id]) }
         #endif
     }
 }

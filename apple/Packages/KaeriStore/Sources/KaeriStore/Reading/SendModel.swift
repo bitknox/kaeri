@@ -5,14 +5,16 @@
 // of a held send all come from the engine.
 
 import KaeriKit
+import KaeriStrings
 import Foundation
 import Observation
 
 /// One send, from the moment the sheet asks for it until the files are shared or it is dropped.
 public struct EReaderSend: Identifiable, Equatable, Sendable {
     public enum Phase: Equatable, Sendable {
-        /// Under way. `fraction` is how far, when the engine has said.
-        case preparing(fraction: Double?)
+        /// Under way. `fraction` is how far, when the engine has said; `done` of `total` chapters
+        /// are gathered (zero `total` until the engine has said).
+        case preparing(fraction: Double?, done: Int, total: Int)
         /// Held for Wi-Fi, in the engine's words. The next progress says it is going again.
         case waiting(line: String)
         case ready([ExportFile])
@@ -30,6 +32,16 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
     public internal(set) var phase: Phase
     /// Stopped before the engine named its job: stopped as soon as it does.
     var cancelOnBind = false
+
+    /// Which phase it is in, whatever it carries: for animating between them.
+    public var kind: Int {
+        switch phase {
+        case .preparing: 0
+        case .waiting: 1
+        case .ready: 2
+        case .failed: 3
+        }
+    }
 
     public var isWaiting: Bool {
         if case .waiting = phase { return true }
@@ -51,20 +63,14 @@ public final class SendModel {
     public private(set) var sends: [EReaderSend] = []
     /// The Mac's feed, as last told.
     public private(set) var feed: FeedView?
-    /// The e-reader the sheet offers first, kept on this device.
+    /// The e-reader the sheet offers first: the engine keeps it, on this device only.
     public private(set) var chosenTarget: String?
     @ObservationIgnored var command: ((Command) -> Void)?
     @ObservationIgnored private var lastId = 0
     /// A shot's feed, told by hand: the engine's own view no longer replaces it.
     @ObservationIgnored private var feedStaged = false
-    @ObservationIgnored private let defaults: UserDefaults
 
-    static let targetKey = "kaeri.sendTarget"
-
-    public init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-        chosenTarget = defaults.string(forKey: Self.targetKey)
-    }
+    public init() {}
 
     // MARK: Targets
 
@@ -76,8 +82,9 @@ public final class SendModel {
     }
 
     public func choose(target id: String) {
+        guard chosenTarget != id else { return }
         chosenTarget = id
-        defaults.set(id, forKey: Self.targetKey)
+        command?(.reading(.setSendTarget(target: id)))
     }
 
     /// The format a target is sent in for pages or text: the first it takes, as the engine lists
@@ -96,7 +103,7 @@ public final class SendModel {
         lastId += 1
         sends.append(EReaderSend(
             id: lastId, job: nil, work: work, target: target.id, chapters: chapters,
-            phase: .preparing(fraction: nil)))
+            phase: .preparing(fraction: nil, done: 0, total: 0)))
         choose(target: target.id)
         command?(.reading(.prepare(work: work, pick: .chapters(ids: chapters), target: target.id, format: format)))
         return lastId
@@ -169,9 +176,13 @@ public final class SendModel {
         switch event {
         case .exportTargets(let list):
             targets = list
-        case .exportProgress(let job, let done, let total):
+            if let kept = list.first(where: \.chosen) { chosenTarget = kept.id }
+        case .exportProgress(let job, let done, let total, let chaptersDone, let chapters):
             let fraction = total > 0 ? min(1, max(0, Double(done) / Double(total))) : nil
-            update(job: job) { $0.phase = .preparing(fraction: fraction) }
+            update(job: job) { $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters)) }
+        case .exportFailed(let job, let chapter, let failure):
+            let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.words) } ?? L.sendFailed(cause: failure.words)
+            update(job: job) { $0.phase = .failed(words) }
         case .exportWaiting(let job, let work, let target, let line):
             update(job: job, work: work, target: target) { $0.phase = .waiting(line: line.text) }
         case .exportReady(let job, let files):
@@ -179,8 +190,8 @@ public final class SendModel {
         case .feed(let view):
             if !feedStaged { feed = view }
         case .failed(.export, let failure):
-            // The engine names no job for a failure: it is the one that was waiting for an
-            // answer, else the latest still going.
+            // A send the engine could not even start names no job: it is the one that was
+            // waiting for an answer, else the latest still going.
             let index = sends.firstIndex { $0.job == nil && $0.isRunning }
                 ?? sends.lastIndex { $0.isRunning }
             if let index { sends[index].phase = .failed(failure.words) }
@@ -203,7 +214,7 @@ public final class SendModel {
             lastId += 1
             sends.append(EReaderSend(
                 id: lastId, job: job, work: work ?? "", target: target ?? "", chapters: [],
-                phase: .preparing(fraction: nil)))
+                phase: .preparing(fraction: nil, done: 0, total: 0)))
             index = sends.count - 1
         }
         if let work, sends[index].work.isEmpty { sends[index].work = work }
@@ -229,9 +240,9 @@ public final class SendModel {
         lastId += 1
         let phase: EReaderSend.Phase = switch state {
         case "waiting": .waiting(line: "\(max(1, chapters.count - 1)) chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.")
-        case "failed": .failed(ReadingFailure.offline.words)
+        case "failed": .failed(L.sendFailedChapter(chapter: chapters.last ?? "1", cause: ReadingFailure.offline.words))
         case "ready": .ready([])
-        default: .preparing(fraction: 0.62)
+        default: .preparing(fraction: 0.62, done: 2, total: min(3, max(chapters.count, 1)))
         }
         sends.append(EReaderSend(id: lastId, job: nil, work: work, target: target, chapters: chapters, phase: phase))
         return lastId
@@ -253,10 +264,11 @@ public final class SendModel {
         #if FIXTURES
         guard let index = arguments.firstIndex(of: "-KaeriFeed"), arguments.indices.contains(index + 1) else { return false }
         feedStaged = true
-        let on = arguments[index + 1] == "on"
+        let paused = arguments[index + 1] == "paused"
+        let on = arguments[index + 1] == "on" || paused
         let now = Int64(Date().timeIntervalSince1970)
         feed = FeedView(
-            on: on, addresses: on ? ["http://192.168.1.24:8484"] : [], port: 8484, passwordSet: true,
+            on: on, addresses: on && !paused ? ["http://192.168.1.24:8484"] : [], port: 8484, passwordSet: true,
             serving: 126, password: "48219930",
             shares: [
                 FeedShare(shelf: .downloads, on: true, count: 126),
@@ -266,7 +278,8 @@ public final class SendModel {
             clients: on ? [
                 FeedClient(name: "Kobo Libra", address: "192.168.1.31", last: now - 240, files: 3),
                 FeedClient(name: "", address: "192.168.1.40", last: now - 3 * 86_400, files: 12),
-            ] : [])
+            ] : [],
+            pause: paused ? .vpnOnly : nil)
         return true
         #else
         return false

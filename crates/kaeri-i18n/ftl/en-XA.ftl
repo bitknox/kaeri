@@ -9212,10 +9212,31 @@ send-preparing =
     }
 
 # Under the progress of a send to a device: what the pages are made for.
-send-sized-for = [Þàĝéš àŕé šîžéð ƒöŕ ţĥé { $device } šçŕééñ~~~~~~~~~~~]
+send-sized-for = [Þàĝéš àŕé šîžéð ƒöŕ { $device }~~~~~~~]
 
-# Under the progress of a send that will be written in parts, because the device takes files up to a limit.
-send-in-parts = [Ţĥé ƒîļéš àŕé ţöö ƀîĝ ƒöŕ öñé, šö ţĥéý ĝö îñ þàŕţš.~~~~~~~~~~~~~~~~]
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = [Öṽéŕ { $size }, šö ţĥé ƒîļéš ĝö îñ þàŕţš.~~~~~~~~~~~]
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = [Çöüļðñ'ţ þŕéþàŕé çĥàþţéŕ { $chapter }. { $cause }~~~~~~~~~~]
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = [Çöüļðñ'ţ þŕéþàŕé ţĥé ƒîļéš. { $cause }~~~~~~~~~~]
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = [Ŵöŕķîñĝ îţ öüţ~~~~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = [Öþéñ~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = [Çļöšéð~~]
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = [{ $percent } þéŕçéñţ~~~~]
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = [Šéñð ţö é-ŕéàðéŕ~~~~~]
 
 # Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
 send-parts-over = [îñ þàŕţš öṽéŕ { $size }~~~~~~]
@@ -9234,7 +9255,7 @@ send-ready =
 send-share-again = [Šĥàŕé àĝàîñ~~~~]
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
-send-banner = [Šéñðîñĝ ţö ţĥé { $device }~~~~~~]
+send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
 
 # The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
 send-format-fixed-epub = [Ƒîẋéð-ļàýöüţ ÉÞÛƁ~~~~~~]
@@ -9255,16 +9276,16 @@ send-target-line = [{ $format } · { $width } × { $height }~~~~~]
 stop-title = [Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~]
 
 # Note on a series page after chapters were sent: opens the question.
-stop-note = [Ýöü šéñţ çĥàþţéŕš ţö ţĥé { $device }. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~~]
+stop-note = [Ýöü šéñţ çĥàþţéŕš ţö { $device }. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~]
 
 # Button in that note.
 stop-note-action = [Šéţ ɱý þļàçé~~~~]
 
 # First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
-stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö ţĥé { $device } öñ { $date }.~~~~~~~~~~~]
+stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~]
 
 # First line of the sheet when several chapters were sent, from the first to the last.
-stop-sent-range = [Çĥàþţéŕš { $first } ţö { $last } ŵéñţ ţö ţĥé { $device } öñ { $date }.~~~~~~~~~~~~~]
+stop-sent-range = [Çĥàþţéŕš { $first } ţö { $last } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~~~]
 
 # Switch in the sheet: the last chapter sent was read to its end.
 stop-finished = [Î ƒîñîšĥéð çĥàþţéŕ { $chapter }~~~~~~~]
@@ -9312,7 +9333,7 @@ opds-new-password = [Ñéŵ þàššŵöŕð~~~~]
 opds-port = [Þöŕţ~~]
 
 # Line under the port row when it is empty.
-opds-port-note = [Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ~~~~~~~~~~~]
+opds-port-note = [Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]
 
 # Line under the port row when the port asked for was taken and another is used.
 opds-port-moved = [Þöŕţ { $wanted } ŵàš ƀüšý, šö ţĥé ƒééð üšéš { $port }.~~~~~~~~~~~~]
@@ -9348,6 +9369,24 @@ opds-fetched-by = [Ƒéţçĥéð ƀý~~~]
 
 # Line when no e-reader has fetched anything since the feed started.
 opds-fetched-none = [Ñö é-ŕéàðéŕ ĥàš ƒéţçĥéð àñýţĥîñĝ ýéţ.~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = [Šţàŕţîñĝ…~~~]
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = [Þàüšéð. Ţĥîš Ṁàç îšñ'ţ öñ à ļöçàļ ñéţŵöŕķ.~~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = [Þàüšéð. Ţĥîš Ṁàç îš öñļý çöññéçţéð ţĥŕöüĝĥ à ṼÞÑ.~~~~~~~~~~~~~~~]
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = [Ṁàķé à ñéŵ þàššŵöŕð?~~~~~~]
+
+# Text of that question.
+opds-new-password-warning = [É-ŕéàðéŕš ţĥàţ àļŕéàðý üšé ţĥé ƒééð šţöþ ŵöŕķîñĝ üñţîļ ýöü ţýþé ţĥé ñéŵ þàššŵöŕð îñţö éàçĥ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = [Ļàšţ àšķéð { $time }~~~~~]
 
 # Line under an e-reader in that list: how many files it took.
 opds-fetched-files =

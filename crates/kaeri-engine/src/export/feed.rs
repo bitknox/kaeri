@@ -213,6 +213,13 @@ fn classify(found: &[(String, IpAddr)]) -> Lan {
     lan
 }
 
+/// The engine's tests listen on this computer only, whatever network the machine is on.
+#[cfg(test)]
+fn lan_now() -> Lan {
+    Lan { addrs: vec![IpAddr::from([127, 0, 0, 1])], tunnel: false }
+}
+
+#[cfg(not(test))]
 fn lan_now() -> Lan {
     let found: Vec<(String, IpAddr)> = NetworkInterface::show()
         .unwrap_or_default()

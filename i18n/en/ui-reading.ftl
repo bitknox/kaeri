@@ -1178,10 +1178,36 @@ send-preparing = { $total ->
 
 # Under the progress of a send to a device: what the pages are made for.
 # @arg device: text
-send-sized-for = Pages are sized for the { $device } screen
+send-sized-for = Pages are sized for { $device }
 
-# Under the progress of a send that will be written in parts, because the device takes files up to a limit.
-send-in-parts = The files are too big for one, so they go in parts.
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+# @arg size: text
+send-in-parts = Over { $size }, so the files go in parts.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+# @arg chapter: text
+# @arg cause: text
+send-failed-chapter = Couldn't prepare chapter { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+# @arg cause: text
+send-failed = Couldn't prepare the files. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Working it out
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Open
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Closed
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+# @arg percent: int
+send-progress-spoken = { $percent } percent
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Send to e-reader
 
 # Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
 # @arg size: text
@@ -1202,7 +1228,7 @@ send-share-again = Share again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text
-send-banner = Sending to the { $device }
+send-banner = Sending to { $device }
 
 # The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
 send-format-fixed-epub = Fixed-layout EPUB
@@ -1229,7 +1255,7 @@ stop-title = Where did you stop?
 
 # Note on a series page after chapters were sent: opens the question.
 # @arg device: text
-stop-note = You sent chapters to the { $device }. Where did you stop?
+stop-note = You sent chapters to { $device }. Where did you stop?
 
 # Button in that note.
 stop-note-action = Set my place
@@ -1238,14 +1264,14 @@ stop-note-action = Set my place
 # @arg chapter: text
 # @arg device: text
 # @arg date: text
-stop-sent-one = Chapter { $chapter } went to the { $device } on { $date }.
+stop-sent-one = Chapter { $chapter } went to { $device } on { $date }.
 
 # First line of the sheet when several chapters were sent, from the first to the last.
 # @arg first: text
 # @arg last: text
 # @arg device: text
 # @arg date: text
-stop-sent-range = Chapters { $first } to { $last } went to the { $device } on { $date }.
+stop-sent-range = Chapters { $first } to { $last } went to { $device } on { $date }.
 
 # Switch in the sheet: the last chapter sent was read to its end.
 # @arg chapter: text
@@ -1299,7 +1325,7 @@ opds-new-password = New password
 opds-port = Port
 
 # Line under the port row when it is empty.
-opds-port-note = Leave it empty to pick a free port
+opds-port-note = Leave it empty to pick a free port, or use 1024 to 65535
 
 # Line under the port row when the port asked for was taken and another is used.
 # @arg wanted: int
@@ -1337,6 +1363,25 @@ opds-fetched-by = Fetched by
 
 # Line when no e-reader has fetched anything since the feed started.
 opds-fetched-none = No e-reader has fetched anything yet.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Starting…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Paused. This Mac isn't on a local network.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Paused. This Mac is only connected through a VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Make a new password?
+
+# Text of that question.
+opds-new-password-warning = E-readers that already use the feed stop working until you type the new password into each one.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+# @arg time: text
+opds-fetched-time = Last asked { $time }
 
 # Line under an e-reader in that list: how many files it took.
 # @arg n: int
