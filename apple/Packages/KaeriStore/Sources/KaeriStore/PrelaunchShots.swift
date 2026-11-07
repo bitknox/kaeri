@@ -33,6 +33,9 @@ public enum PrelaunchScene: String, Sendable, CaseIterable {
     case progressRetrying = "progress-retrying", progressFailed = "progress-failed"
     case rowSaved = "row-saved", rowWaiting = "row-waiting", rowRetrying = "row-retrying", rowFailed = "row-failed"
     case rowOff = "row-off"
+    /// For motion clips: the line goes Sending, then Saved; the row goes Not saved, Try again is
+    /// pressed, Sending, then Saved. Each holds long enough to film.
+    case progressMotion = "progress-motion", rowMotion = "row-motion"
 
     public static let argument = "-KaeriPrelaunch"
 
@@ -47,6 +50,8 @@ public enum PrelaunchScene: String, Sendable, CaseIterable {
     public var isDemo: Bool { rawValue.hasPrefix("demo-") }
     /// Piece 4 on the page between chapters.
     public var isProgressLine: Bool { rawValue.hasPrefix("progress-") }
+    /// A motion clip's scene: it plays by itself after the screen is up.
+    public var isMotion: Bool { rawValue.hasSuffix("-motion") }
     /// Piece 4 on the server's row.
     public var isProgressRow: Bool { rawValue.hasPrefix("row-") }
 }
@@ -178,7 +183,7 @@ extension PrelaunchFixtures {
             books.progressPending = 3
             books.progressProblem = .noAnswer
             books.progressProblemAt = now - 40
-        case .rowFailed?:
+        case .rowFailed?, .rowMotion?:
             books.progressPending = 3
             books.progressProblem = .refusedKey
             books.progressProblemAt = now - 40
@@ -207,6 +212,7 @@ extension PrelaunchFixtures {
         case .progressOffline: .offline(host: host)
         case .progressRetrying: .retrying(host: host)
         case .progressFailed: .failed(host: host, why: .key)
+        case .progressMotion: .sending(host: host)
         default: nil
         }
     }
@@ -230,6 +236,29 @@ extension AppStore {
         guard scene.isProgressLine, let chapter = reader.view?.chapter.id else { return }
         reader.stageRead(trackers: ["AniList"]) // i18n-skip: a tracker's name
         serverProgress.stage(chapter: chapter, line: PrelaunchFixtures.line(scene), server: "s1")
+        if scene == .progressMotion {
+            let progress = serverProgress
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3))
+                progress.stage(chapter: chapter, line: .saved(host: PrelaunchFixtures.host), server: "s1")
+            }
+        }
+        #endif
+    }
+
+    /// For motion clips: the row's Try again pressed, Sending, then Saved, as `row-motion` plays.
+    public func playPrelaunchRow(_ scene: PrelaunchScene) {
+        #if FIXTURES
+        guard scene == .rowMotion else { return }
+        let progress = serverProgress
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            progress.stage(row: "s1", line: .failed(count: 3, why: .key), pressing: true)
+            try? await Task.sleep(for: .seconds(1))
+            progress.stage(row: "s1", line: .sending(count: 3), pressing: false)
+            try? await Task.sleep(for: .seconds(2))
+            progress.stage(row: "s1", line: .saved(at: Int64(Date.now.timeIntervalSince1970)))
+        }
         #endif
     }
 }

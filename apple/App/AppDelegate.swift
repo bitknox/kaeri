@@ -281,6 +281,7 @@ final class AppDelegate: NSObject {
             store.sync.stage(prelaunch: scene)
             if !scene.isJoin, !scene.isProgressLine { store.stagePrelaunchSources(scene) }
             store.stagePrelaunchLine(scene)
+            store.playPrelaunchRow(scene)
         }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {
