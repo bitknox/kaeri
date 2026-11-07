@@ -502,6 +502,13 @@ struct PhoneDownloadsPage: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             }
+            if !store.reading.sending.sends.isEmpty {
+                Section {
+                    SendStatusRows(work: nil)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+            }
             if !books.isEmpty {
                 Section {
                     ForEach(books) { series in

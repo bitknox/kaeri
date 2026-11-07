@@ -42,6 +42,8 @@ impl Profile {
             formats: self.formats.clone(),
             manga_formats: self.accepts(false),
             novel_formats: self.accepts(true),
+            split: self.split,
+            chosen: false,
         }
     }
 

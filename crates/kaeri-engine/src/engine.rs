@@ -3752,7 +3752,7 @@ mod tests {
             assert!(seen.iter().any(|e| matches!(e, Event::JobStarted { .. })));
             assert!(seen.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportProgress { total: 4, .. })
+                Event::Reading(ReadingEvent::ExportProgress { total: 4, chapters: 2, .. })
             )));
             let files = seen
                 .iter()
@@ -3793,7 +3793,11 @@ mod tests {
             );
             assert!(!all.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )));
             assert!(!dir.path().join("data/exports").join(job.get().to_string()).exists());
 
@@ -3982,7 +3986,9 @@ mod tests {
                 matches!(
                     e,
                     Event::Reading(
-                        ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. }
+                        ReadingEvent::ExportReady { .. }
+                            | ReadingEvent::ExportFailed { .. }
+                            | ReadingEvent::Failed { .. }
                     )
                 )
             })
@@ -4007,7 +4013,7 @@ mod tests {
             // Progress covered the fetching and the preparing on one scale.
             assert!(seen.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportProgress { total: 200, .. })
+                Event::Reading(ReadingEvent::ExportProgress { total: 200, chapters: 2, .. })
             )));
             // The fetched chapter is not a download, and no file of it is left.
             let rows = store.book_downloads(Some(WORK)).unwrap();
@@ -4041,7 +4047,11 @@ mod tests {
             );
             assert!(!all.iter().any(|e| matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )));
             let rows = store.book_downloads(Some(WORK)).unwrap();
             assert_eq!(rows.len(), 1, "a send adds no downloads");
@@ -4125,7 +4135,11 @@ mod tests {
         fn send_ended(e: &Event) -> bool {
             matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+                Event::Reading(
+                    ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )
         }
 
@@ -4321,10 +4335,11 @@ mod tests {
                 seen.iter().any(|e| {
                     matches!(
                         e,
-                        Event::Reading(ReadingEvent::Failed {
+                        Event::Reading(ReadingEvent::ExportFailed {
+                            job,
+                            chapter: Some(_),
                             failure: ReadingFailure::Offline,
-                            ..
-                        })
+                        }) if job.get() != 0
                     )
                 })
             };
