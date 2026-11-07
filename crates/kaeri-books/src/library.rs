@@ -59,6 +59,9 @@ pub struct ScannedFile {
     pub novel: bool,
     /// Why the file would not open, if it did not. It is kept so the series can say so.
     pub broken: Option<String>,
+    /// It would not open because it is locked: DRM, or a password.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 /// The files of one series.
@@ -84,6 +87,39 @@ pub struct Scan {
     pub ignored: u32,
     /// Books that would not open. They are still in their series, marked `broken`.
     pub broken: u32,
+    /// Every file the scan met, books or not, hidden ones aside.
+    pub seen: u32,
+    /// Books Kaeri can't open, by format (`MOBI`, `AZW3`), most first.
+    pub unsupported: Vec<(String, u32)>,
+    /// Books that would not open because they are locked: DRM, or a password. They are also
+    /// counted in `broken`.
+    pub locked: u32,
+    /// The files behind `unsupported` and `locked`, for a screen that shows them; at most
+    /// [`MAX_LISTED`].
+    pub unsupported_files: Vec<String>,
+}
+
+/// The most unsupported files a scan lists by path.
+pub const MAX_LISTED: usize = 200;
+
+/// Book formats Kaeri can't open. A file with one of these is counted as a book that came in
+/// but can't be read, not as a stray file.
+pub const UNSUPPORTED_BOOKS: &[&str] = &[
+    "mobi", "azw", "azw3", "azw4", "kfx", "prc", "pdb", "lit", "lrf", "fb2", "djvu", "djv",
+    "cbt", "cba", "xps", "oxps", "ibooks", "chm", "kepub",
+];
+
+impl Scan {
+    fn count_unsupported(&mut self, format: &str, path: &Path) {
+        let format = format.to_ascii_uppercase();
+        match self.unsupported.iter_mut().find(|(f, _)| *f == format) {
+            Some((_, n)) => *n += 1,
+            None => self.unsupported.push((format, 1)),
+        }
+        if self.unsupported_files.len() < MAX_LISTED {
+            self.unsupported_files.push(slash(path));
+        }
+    }
 }
 
 /// What the scan asks of the world outside it.
@@ -163,6 +199,13 @@ pub fn scan(
     out.series.sort_by(|a, b| crate::natural::compare(&a.name, &b.name));
     out.broken =
         out.series.iter().flat_map(|s| &s.files).filter(|f| f.broken.is_some()).count() as u32;
+    out.locked = out.series.iter().flat_map(|s| &s.files).filter(|f| f.locked).count() as u32;
+    for file in out.series.iter().flat_map(|s| &s.files).filter(|f| f.locked) {
+        if out.unsupported_files.len() < MAX_LISTED {
+            out.unsupported_files.push(file.path.clone());
+        }
+    }
+    out.unsupported.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     Ok(out)
 }
 
@@ -221,6 +264,7 @@ fn walk(
         } else if extension(&path)
             .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
         {
+            out.seen += 1;
             match scan_file(&path, root, known, limits, false) {
                 Some(file) => {
                     let group = if file.novel {
@@ -237,7 +281,13 @@ fn walk(
                 }
                 None => out.ignored += 1,
             }
+        } else if let Some(format) =
+            extension(&path).filter(|x| UNSUPPORTED_BOOKS.contains(&x.as_str()))
+        {
+            out.seen += 1;
+            out.count_unsupported(&format, &path);
         } else {
+            out.seen += 1;
             out.ignored += 1;
         }
     }
@@ -309,6 +359,7 @@ fn scan_file(
         language: None,
         novel: false,
         broken: None,
+        locked: false,
     };
     open_into(&mut file, path, limits);
     Some(file)
@@ -381,7 +432,10 @@ fn open_into(file: &mut ScannedFile, path: &Path, limits: &Limits) {
                 file.label = title;
             }
         }
-        Err(error) => file.broken = Some(error.to_string()),
+        Err(error) => {
+            file.locked = matches!(error, crate::BookError::Protected);
+            file.broken = Some(error.to_string());
+        }
     }
 }
 
