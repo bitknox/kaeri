@@ -30,7 +30,7 @@ public static class SettingsCatalog
         SettingKey.Torrents, SettingKey.Syncplay, SettingKey.UpdateCheck, SettingKey.UpdateBeta, SettingKey.SpoilerProtection,
         SettingKey.DownloadsOnCellular, SettingKey.TorrentsOnCellular, SettingKey.EpisodeNotifications,
         SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading,
-        SettingKey.SeriesChoicesFollow, SettingKey.ChapterNotifications,
+        SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications,
         SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting,
     ];
 
@@ -91,6 +91,12 @@ public static class SettingsCatalog
             [Str("standard", "standard", T.SettingsDownloadStandard), Str("higher", "higher", T.SettingsDownloadHigher)],
         SettingKey.KeepNextEpisodes =>
             [.. new long[] { 0, 1, 2, 3, 5, 10 }.Select(n => Int(n, n == 0 ? "off" : KaeriFfiMethods.Plural((ulong)n, "episode"), n == 0 ? T.ValueOff : T.EpisodesCount(n)))],
+        SettingKey.NewChapters => [Str("off", "off", T.ValueOff), Str("reading", "reading", T.SettingsNewChaptersReading)],
+        SettingKey.WebtoonMode => [Str("strip", "strip", T.SettingsReaderStrip), Str("paged", "paged", T.SettingsReaderPages)],
+        SettingKey.SendProgressAfter =>
+            [Str("chapter", "chapter", T.SettingsProgressChapter), Str("close", "close", T.SettingsProgressClose)],
+        SettingKey.WhenTrackersDisagree =>
+            [Str("furthest", "furthest", T.SettingsDisagreeFurthest), Str("latest", "latest", T.SettingsDisagreeLatest)],
         _ when IsSwitch(key) => [new(new SettingValue.Bool(false), "off", T.ValueOff), new(new SettingValue.Bool(true), "on", T.ValueOn)],
         _ => [],
     };

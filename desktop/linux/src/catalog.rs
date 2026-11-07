@@ -82,6 +82,11 @@ pub fn label(key: SettingKey) -> String {
         K::KeepChaptersReady => t::settings_keep_chapters_ready(),
         K::DeleteAfterReading => t::settings_delete_after_reading(),
         K::SeriesChoicesFollow => t::settings_series_choices_follow(),
+        K::LookFollows => t::settings_look_follows(),
+        K::NewChapters => t::settings_new_chapters_download(),
+        K::WebtoonMode => t::settings_reader_webtoons(),
+        K::SendProgressAfter => t::settings_send_progress_after(),
+        K::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
         K::ChapterNotifications => t::settings_chapter_notifications(),
         K::OpenAt => t::settings_open_at(),
         K::AdultTitles => t::settings_label_adult_titles(),
@@ -176,6 +181,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::KeepChaptersReady
             | K::DeleteAfterReading
             | K::SeriesChoicesFollow
+            | K::LookFollows
             | K::ChapterNotifications
             | K::EpisodeNotifications
             | K::ControllerInput
@@ -324,6 +330,22 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
             ("keep", "keep their look", t::settings_subs_styled_keep()), // i18n-skip
             ("restyle", "restyle", t::settings_subs_styled_restyle()),   // i18n-skip
             ("strip", "remove all styling", t::settings_subs_styled_strip()), // i18n-skip
+        ]),
+        K::NewChapters => strs(&[
+            ("off", "off", t::value_off()),
+            ("reading", "reading", t::settings_new_chapters_reading()),
+        ]),
+        K::WebtoonMode => strs(&[
+            ("strip", "strip", t::settings_reader_strip()),
+            ("paged", "paged", t::settings_reader_pages()),
+        ]),
+        K::SendProgressAfter => strs(&[
+            ("chapter", "chapter", t::settings_progress_chapter()),
+            ("close", "close", t::settings_progress_close()),
+        ]),
+        K::WhenTrackersDisagree => strs(&[
+            ("furthest", "furthest", t::settings_disagree_furthest()),
+            ("latest", "latest", t::settings_disagree_latest()),
         ]),
         _ if is_switch(key) => vec![
             Choice::new(V::Bool(false), "off", t::value_off()),
