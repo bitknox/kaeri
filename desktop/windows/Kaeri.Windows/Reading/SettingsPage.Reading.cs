@@ -113,6 +113,9 @@ public sealed partial class SettingsPage
             feedStaged = true;
             feedOpen = true;
             reading.Sending.StageFeed(StagedFeed(ctx.Options.Feed));
+            // Shots: the firewall question over the feed, as turning it on first asks.
+            if (ctx.Options.Feed == "firewall")
+                DispatcherQueue.TryEnqueue(async () => await FeedFirewall.Ask(XamlRoot));
         }
 #endif
         if (feedOpen)

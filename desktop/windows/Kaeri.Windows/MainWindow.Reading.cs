@@ -15,8 +15,8 @@ namespace Kaeri.Windows;
 public sealed partial class MainWindow
 {
     /// <summary>With both media on: whether Library and Search show reading. Each keeps its own.</summary>
-    internal bool LibraryReading { get; private set; }
-    internal bool SearchReading { get; private set; }
+    internal bool LibraryReading { get; set; }
+    internal bool SearchReading { get; set; }
 
     KaeriIsFor shownAnswer = KaeriIsFor.Watch;
     bool askingMedium;

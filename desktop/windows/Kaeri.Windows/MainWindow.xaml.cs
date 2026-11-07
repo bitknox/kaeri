@@ -402,6 +402,7 @@ public sealed partial class MainWindow : Window
                 "reading-downloads" => new FfiScene.ReadingDownloads(),
                 "reader-moved" => new FfiScene.ReaderMoved(),
                 "reading-dark" => new FfiScene.ReadingDark(),
+                "reading-demo" => new FfiScene.ReadingDemo(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
@@ -490,6 +491,17 @@ public sealed partial class MainWindow : Window
                 OpenLink(opens);
             });
         var page = options.Page ?? "home";
+#if KAERI_TESTING
+        // Shots: Library or Search on the Reading side, with both media on.
+        if (page is "library-reading" or "search-reading")
+        {
+            page = page[..page.IndexOf('-')];
+            if (page == "library")
+                LibraryReading = true;
+            else
+                SearchReading = true;
+        }
+#endif
         if (options.Query is not null)
             ShowSearch(options.Query);
         else
