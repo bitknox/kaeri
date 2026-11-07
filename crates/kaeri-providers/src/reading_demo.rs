@@ -195,6 +195,7 @@ impl ReadingDemo {
         SeriesHit {
             format: Some(if work.novel { ReadingFormat::Novel } else { ReadingFormat::Manga }),
             language: Some("en".into()),
+            cover: work.cover().map(Into::into),
             ..SeriesHit::new(work.id, work.series)
         }
     }
@@ -250,6 +251,7 @@ impl BookSource for ReadingDemo {
         let work = work_for(id)?;
         Ok(SeriesDetail {
             description: Some(work.synopsis.into()),
+            cover: work.cover().map(Into::into),
             authors: vec![work.author.into()],
             format: Some(if work.novel { ReadingFormat::Novel } else { ReadingFormat::Manga }),
             languages: vec!["en".into()],

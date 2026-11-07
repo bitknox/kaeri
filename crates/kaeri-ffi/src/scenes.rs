@@ -244,6 +244,9 @@ pub enum FfiScene {
     /// [`Self::ReadingHome`] with the manga read further on Kim's iPad a minute ago: chapter 14
     /// at page 5, for "Moved to where you were on Kim's iPad".
     ReaderMoved,
+    /// Reading on and set to Read with nothing added and the reading demo on: the demo is the
+    /// only thing to read, as after a first run that added no source.
+    ReadingDemo,
     /// Reading on and set to Read, e-ink on and the screen in greys.
     EinkGrey,
     /// Reading on and set to Read, e-ink on and the screen unsure: "Is this a colour screen?"
@@ -412,6 +415,7 @@ impl FfiScene {
             | Self::ReaderStrip
             | Self::ReaderNovel
             | Self::ReaderMoved
+            | Self::ReadingDemo
             | Self::EinkGrey
             | Self::EinkKaleidoUnsure => Some(true),
             Self::ReadingDark => Some(false),
@@ -814,6 +818,9 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
         FfiScene::CrashSaved => crash_config(now),
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
         FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),
+        FfiScene::ReadingDemo => {
+            "[reading]\nkaeri_is_for = \"read\"\n\n[sources]\ndemo = true\n".to_owned()
+        }
         FfiScene::ReadingJoinAsk => "[reading]\nkaeri_is_for = \"watch\"\n".to_owned(),
         FfiScene::ReadingDownloads => {
             "[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n".to_owned()
@@ -933,6 +940,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::StoreInvited
         | FfiScene::ReadingFirstRun
         | FfiScene::ReadingUpdateSheet
+        | FfiScene::ReadingDemo
         | FfiScene::EinkGrey
         | FfiScene::EinkKaleidoUnsure
         | FfiScene::ReadingDark => {}
