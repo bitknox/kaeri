@@ -9190,9 +9190,25 @@ object Strings {
     fun settingsCountsReadNote(context: Context): String =
         context.getString(R.string.settings_counts_read_note)
 
-    /** Value of Counts as read. */
+    /** Value of Counts as read: a short stay on the last page, or moving on past it. */
     fun settingsCountsReadValue(context: Context): String =
         context.getString(R.string.settings_counts_read_value)
+
+    /** Value of Counts as read: only moving on past the last page, to the end or the next chapter. */
+    fun settingsCountsReadMovingOn(context: Context): String =
+        context.getString(R.string.settings_counts_read_moving_on)
+
+    /** Line under Counts as read when it is Moving on from it. */
+    fun settingsCountsReadMovingOnNote(context: Context): String =
+        context.getString(R.string.settings_counts_read_moving_on_note)
+
+    /** Value of Counts as read: only the person's own marks; the reader marks nothing. */
+    fun settingsCountsReadMarked(context: Context): String =
+        context.getString(R.string.settings_counts_read_marked)
+
+    /** Line under Counts as read when it is When you mark it. */
+    fun settingsCountsReadMarkedNote(context: Context): String =
+        context.getString(R.string.settings_counts_read_marked_note)
 
     /** Group: series settings that follow you to your other devices. */
     fun settingsFollowGroup(context: Context): String =

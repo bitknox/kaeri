@@ -8957,8 +8957,20 @@ settings-counts-read = [Çöüñţš àš ŕéàð~~~~~]
 # Line under Counts as read.
 settings-counts-read-note = [Å šĥöŕţ šţàý öñ ţĥé ļàšţ þàĝé, öŕ ɱöṽîñĝ öñ ţö ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~~~]
 
-# Value of Counts as read.
+# Value of Counts as read: a short stay on the last page, or moving on past it.
 settings-counts-read-value = [Åƒţéŕ ţĥé ļàšţ þàĝé~~~~~~]
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = [Ṁöṽîñĝ öñ ƒŕöɱ îţ~~~~~~]
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = [Ţüŕñîñĝ þàšţ ţĥé ļàšţ þàĝé, öŕ öþéñîñĝ ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~]
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = [Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = [Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = [Šéŕîéš šéţţîñĝš ţĥàţ ƒöļļöŵ ýöü~~~~~~~~~~]

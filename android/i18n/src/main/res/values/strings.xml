@@ -4845,8 +4845,16 @@
     <string name="settings_counts_read">Counts as read</string>
     <!-- Line under Counts as read. -->
     <string name="settings_counts_read_note">A short stay on the last page, or moving on to the next chapter</string>
-    <!-- Value of Counts as read. -->
+    <!-- Value of Counts as read: a short stay on the last page, or moving on past it. -->
     <string name="settings_counts_read_value">After the last page</string>
+    <!-- Value of Counts as read: only moving on past the last page, to the end or the next chapter. -->
+    <string name="settings_counts_read_moving_on">Moving on from it</string>
+    <!-- Line under Counts as read when it is Moving on from it. -->
+    <string name="settings_counts_read_moving_on_note">Turning past the last page, or opening the next chapter</string>
+    <!-- Value of Counts as read: only the person's own marks; the reader marks nothing. -->
+    <string name="settings_counts_read_marked">When you mark it</string>
+    <!-- Line under Counts as read when it is When you mark it. -->
+    <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
     <!-- Group: series settings that follow you to your other devices. -->
     <string name="settings_follow_group">Series settings that follow you</string>
     <!-- Row in that group. -->

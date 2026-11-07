@@ -8334,7 +8334,23 @@
   </data>
   <data name="SettingsCountsReadValue" xml:space="preserve">
     <value>After the last page</value>
-    <comment>Value of Counts as read.</comment>
+    <comment>Value of Counts as read: a short stay on the last page, or moving on past it.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>Moving on from it</value>
+    <comment>Value of Counts as read: only moving on past the last page, to the end or the next chapter.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>Turning past the last page, or opening the next chapter</value>
+    <comment>Line under Counts as read when it is Moving on from it.</comment>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>When you mark it</value>
+    <comment>Value of Counts as read: only the person's own marks; the reader marks nothing.</comment>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>Continue and your trackers follow your marks</value>
+    <comment>Line under Counts as read when it is When you mark it.</comment>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Series settings that follow you</value>

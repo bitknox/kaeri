@@ -23,6 +23,7 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["meta"], "calendar_mine"),
     (&["notifications"], "episodes"),
     (&["notifications"], "chapters"),
+    (&["reading"], "counts_as_read"),
     (&["reading", "manga"], "mode"),
     (&["reading", "manga"], "direction"),
     (&["reading", "manga"], "colour"),

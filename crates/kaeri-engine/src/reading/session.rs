@@ -13,7 +13,7 @@ use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
-    config::{SendProgressAfter, WebtoonMode},
+    config::{CountsAsRead, SendProgressAfter, WebtoonMode},
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -503,7 +503,7 @@ impl Reader {
             ReaderWake::Laid => s.laid_out(cx, &pages),
             ReaderWake::Prepared(n) => s.prepared_now(cx, &pages, n),
             ReaderWake::Listed => {}
-            ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx),
+            ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx, Reached::Stayed),
             ReaderWake::Flush(n) if n == s.flush_timer => {
                 s.flush_pending = false;
                 s.flush(cx);
@@ -855,7 +855,7 @@ impl Session {
                     return;
                 };
                 if index == self.at + 1 {
-                    self.chapter_read(cx);
+                    self.chapter_read(cx, Reached::MovedOn);
                 }
                 let store = &cx.services.store;
                 let page = store
@@ -894,7 +894,7 @@ impl Session {
         let story = self.leaves.len() as u32;
         if leaf >= story {
             // The end page, in the flow: read at once.
-            self.chapter_read(cx);
+            self.chapter_read(cx, Reached::MovedOn);
             self.say_end_page(cx);
             return;
         }
@@ -960,16 +960,18 @@ impl Session {
     }
 
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
-        if !self.read_fired {
+        if !self.read_fired && counts(cx, Reached::Stayed) {
             after(cx.tx, READ_AFTER, self.id, ReaderWake::ReadRule(self.read_timer));
         }
     }
 
-    /// The read rule fired: a finished read event, the trackers queued, `ChapterRead`.
-    fn chapter_read(&mut self, cx: &Cx<'_>) {
-        if std::mem::replace(&mut self.read_fired, true) {
+    /// The read rule fired: a finished read event, the trackers queued, `ChapterRead`. Nothing,
+    /// when the person's Counts as read takes no account of how the last page was `reached`.
+    pub(super) fn chapter_read(&mut self, cx: &Cx<'_>, reached: Reached) {
+        if self.read_fired || !counts(cx, reached) {
             return;
         }
+        self.read_fired = true;
         let chapter = self.chapter().id.clone();
         let at = cx.now();
         let mut event = ReadEvent::new(self.work.as_str(), chapter.as_str(), at);
@@ -1134,6 +1136,25 @@ fn moved_msg(label: &str, page: i64, device: String) -> ReadingMsg {
             ReadingMsg::ReaderMovedNumber { chapter: number.to_string(), page, device }
         }
         None => ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device },
+    }
+}
+
+/// How the reader came to the end of a chapter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Reached {
+    /// The last page stayed on screen for [`READ_AFTER`].
+    Stayed,
+    /// The person moved past the last page: to the end page, or to the next chapter.
+    MovedOn,
+}
+
+/// Whether the chapter counts as read, by the person's Counts as read, when its last page was
+/// `reached` so. Their own marks count under every rule; the reader's never under `marked`.
+pub(super) fn counts(cx: &Cx<'_>, reached: Reached) -> bool {
+    match cx.config.effective().reading.counts_as_read {
+        CountsAsRead::LastPage => true,
+        CountsAsRead::MovingOn => reached == Reached::MovedOn,
+        CountsAsRead::Marked => false,
     }
 }
 
@@ -1693,6 +1714,91 @@ mod tests {
         let said = h.drain();
         assert!(said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. })), "at once");
         assert!(h.kept("1").unwrap().read);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn moving_on_counts_a_chapter_read_only_past_its_last_page() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.config.effective_mut().reading.counts_as_read = CountsAsRead::MovingOn;
+        let read_now = |said: &[ReaderEvent]| {
+            said.iter().find_map(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.as_str().to_owned()),
+                _ => None,
+            })
+        };
+
+        // Opening the next chapter counts the one before it.
+        h.open(OpenAt::Resume).await;
+        h.shown(0, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        let read = h
+            .until(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(read.as_str(), "1");
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+
+        // Holding the last page is not enough; turning past it to the end page is.
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert_eq!(read_now(&h.drain()), None);
+        assert!(h.kept("2").is_none_or(|c| !c.read), "the last page held is not enough");
+        h.shown(3, TurnHow::Turn).await;
+        assert_eq!(read_now(&h.drain()).as_deref(), Some("2"), "at once");
+        assert!(h.kept("2").unwrap().read);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn marked_leaves_reading_to_the_persons_marks_and_continue_and_trackers_follow() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness_signed(store, "manga", two_chapters, None, true);
+        h.config.effective_mut().reading.counts_as_read = CountsAsRead::Marked;
+        let queued = |h: &Harness| h.services.store.read_outbox("anilist").unwrap();
+        let any_read = |said: &[ReaderEvent]| {
+            said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+        };
+
+        // Neither the last page held nor the end page reads the chapter.
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        h.shown(3, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(!any_read(&h.drain()));
+        assert!(h.kept("1").is_none_or(|c| !c.read), "the reader marks nothing");
+        assert!(queued(&h).is_empty(), "nor tells the trackers");
+
+        // Continue follows the marks: opened again, reading goes on in the unmarked chapter.
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let (view, _, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.chapter.id.as_str(), "1");
+
+        // Nor does opening the next chapter.
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        assert!(!any_read(&h.drain()));
+        assert!(h.kept("1").is_none_or(|c| !c.read));
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+
+        // The person's own mark counts, and what the trackers hold follows it: the next sync
+        // sends the work's tracked progress.
+        let tracked = |h: &Harness| h.services.store.tracked_progress(WORK).unwrap().0;
+        assert_eq!(tracked(&h), 0);
+        super::super::mark_read(
+            &h.services,
+            WorkId::new(WORK),
+            vec![ChapterId::new("1")],
+            true,
+            &h.tx,
+        );
+        assert!(h.kept("1").unwrap().read);
+        assert_eq!(tracked(&h), 1);
     }
 
     #[tokio::test(start_paused = true)]

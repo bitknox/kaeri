@@ -212,6 +212,7 @@ impl App {
             | S::WebtoonMode
             | S::SendProgressAfter
             | S::WhenTrackersDisagree
+            | S::CountsAsRead
             | S::ChapterNotifications
             | S::OpenAt
             | S::TorrentsOnCellular
@@ -352,6 +353,7 @@ fn label_text(key: SettingKey) -> String {
         S::WebtoonMode => t::settings_reader_webtoons(),
         S::SendProgressAfter => t::settings_send_progress_after(),
         S::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
+        S::CountsAsRead => t::settings_counts_read(),
         S::ChapterNotifications => t::settings_chapter_notifications(),
         S::OpenAt => t::settings_open_at(),
         S::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
