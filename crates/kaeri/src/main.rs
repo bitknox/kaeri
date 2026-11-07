@@ -25,7 +25,11 @@ use kaeri_net::HttpClient;
 use kaeri_store::Store;
 
 #[derive(Parser, Debug)]
-#[command(name = "kaeri", version, about = "An anime streaming TUI")]
+#[command(
+    name = "kaeri",
+    version,
+    about = "Kaeri in the terminal. It plays episodes from the sources you add and keeps your trackers in step."
+)]
 // Nothing here means anything to `store` or `plugin`, and `--stats plugin stamp …` ran the stamp
 // without a word about the flag it dropped.
 #[command(args_conflicts_with_subcommands = true)]
@@ -48,7 +52,7 @@ use kaeri_store::Store;
         .args(["login", "login_url", "logout", "token_to_file"])
 ))]
 struct Cli {
-    /// Force a theme mode, overriding config.
+    /// Use this theme mode for this run, whatever the config says.
     #[arg(long, value_parser = ["adaptive", "immersive", "light", "dark"])]
     theme: Option<String>,
 
@@ -79,8 +83,8 @@ struct Cli {
 
     /// Render one frame to stdout as text and exit.
     ///
-    /// Lets the layout be inspected without an interactive terminal — useful for checking
-    /// the design at a given size, and for seeing it at all over a non-tty connection.
+    /// For looking at the layout without an interactive terminal: at a given size, or over a
+    /// connection that isn't a tty.
     #[arg(long, value_name = "WIDTHxHEIGHT", value_parser = parse_size)]
     preview: Option<(u16, u16)>,
 
@@ -91,9 +95,9 @@ struct Cli {
     /// Sign in to a tracker and exit.
     ///
     /// With no value, runs the configured flow: `loopback` opens a browser and catches the
-    /// token automatically, `paste` prints the URL and reads the token from stdin. Pass `-` to
-    /// read from stdin regardless, or a token directly — though that puts a year-long account
-    /// credential in your shell history.
+    /// token by itself, and `paste` prints the URL and reads the token from stdin. Pass `-` to
+    /// read from stdin either way. A token passed directly also works, but then a year-long
+    /// account credential sits in your shell history.
     #[arg(long, value_name = "TOKEN", num_args = 0..=1, default_missing_value = "")]
     login: Option<String>,
 
@@ -112,16 +116,15 @@ struct Cli {
 
     /// Drain the outbox and pull the library once, reporting what happened, then exit.
     ///
-    /// The non-interactive way to see whether sync actually works, which is otherwise only
-    /// observable as a badge.
+    /// In the interface, sync shows only as a badge. This prints what it did.
     #[arg(long)]
     sync: bool,
 
     /// Move a stored token out of the OS keychain into a `0600` file, then exit.
     ///
-    /// Costs one keychain prompt — the last one. macOS keys keychain access on the binary, and
-    /// every `cargo build` produces a new one, so during development "Always Allow" can never
-    /// stick. Set `trackers.token_storage = "file"` and run this once.
+    /// It costs one last keychain prompt. macOS ties keychain access to the binary, and every
+    /// `cargo build` makes a new one, so "Always Allow" never sticks during development. Set
+    /// `trackers.token_storage = "file"` and run this once.
     #[arg(long)]
     token_to_file: bool,
 
@@ -147,8 +150,7 @@ struct Cli {
 
     /// Emit JSON instead of text: for `--search`, `--stats` and `--random`.
     ///
-    /// The point of the non-interactive commands: composable with `jq` and friends rather than a
-    /// walled garden.
+    /// Pipe it into `jq` or any other tool.
     // Refused by name beside the other commands: `--doctor --json` was told it lacked
     // `--search`, `--stats` or `--random`, as though it had asked for one of them.
     #[arg(long, requires = "json_command", conflicts_with_all = [
@@ -160,10 +162,9 @@ struct Cli {
 
     /// Resolve one episode to a playable URL, print it, and hold it open.
     ///
-    /// The thing that was missing when playback failed silently: something to point mpv, VLC or
-    /// curl at by hand, so "Kaeri is broken" and "my player is broken" can be told apart. The
-    /// torrent session has to stay alive for the URL to serve anything, so this waits for Ctrl-C
-    /// rather than exiting.
+    /// Point mpv, VLC or curl at the URL by hand to tell a problem in Kaeri from a problem in
+    /// the player. A torrent's URL serves only while its session is alive, so this waits for
+    /// Ctrl-C instead of exiting.
     #[arg(long, value_name = "ANILIST_ID")]
     stream_url: Option<u32>,
 
@@ -173,17 +174,17 @@ struct Cli {
     #[arg(long, requires = "episode_command")]
     episode: Option<String>,
 
-    /// Play one title without the TUI: resolve, hand to mpv, record history, exit.
+    /// Play one title in mpv without the interface, add it to your history, then exit.
     ///
-    /// The same session the app runs — resume, skips, chapters, tracker queueing — narrated
-    /// to stdout instead of drawn. Composable: `kaeri --search x --json | jq` finds the
-    /// id, this plays it.
+    /// It is the same session the app runs, with resume, skips, chapters and tracker updates,
+    /// written to stdout instead of drawn. `kaeri --search x --json | jq` finds the id, and this
+    /// plays it.
     #[arg(long, value_name = "ANILIST_ID")]
     play: Option<u32>,
 
     /// Play a magnet link, an info hash or a torrent file you have, in mpv, then exit.
     ///
-    /// Through torrent playback and its protection check, as a source's torrents are.
+    /// It goes through the same torrent playback and protection check as a source's torrents.
     #[arg(long, value_name = "LINK_OR_FILE")]
     open_torrent: Option<String>,
 
@@ -193,8 +194,8 @@ struct Cli {
 
     /// List installed plugins with what each one is permitted to reach, then exit.
     ///
-    /// A plugin registry means running other people's code, so what a plugin may contact should
-    /// be inspectable without reading its source.
+    /// Plugins are other people's code. This shows what each one may contact, without reading
+    /// its source.
     #[arg(long)]
     plugins: bool,
 
@@ -367,7 +368,7 @@ async fn main() -> Result<()> {
     }
     if args.continue_watching {
         let Some(top) = store.continue_list(1).unwrap_or_default().into_iter().next() else {
-            anyhow::bail!("nothing in your history yet — watch something first");
+            anyhow::bail!("nothing in your history yet; watch something first");
         };
         // Half-finished resumes; anything else moves on to the episode after the last one
         // that counted. The same reading of history the home screen's CONTINUE rail uses.
