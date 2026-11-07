@@ -122,7 +122,11 @@ impl Tracker for TraktTracker {
                 self.mapping.tvdb_id(*anilist_id).is_some()
                     && self.mapping.season_episode(*anilist_id, *episode).is_some()
             }
-            TrackOp::SetStatus { .. } | TrackOp::SetScore { .. } => true,
+            TrackOp::SetStatus { .. }
+            | TrackOp::SetScore { .. }
+            | TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => true,
         }
     }
 

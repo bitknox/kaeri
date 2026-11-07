@@ -43,6 +43,8 @@ use crate::{
     tenrai::{Tenrai, TenraiError},
 };
 
+pub mod books;
+
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum MetaError {
     #[error("{0}")]

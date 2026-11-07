@@ -92,6 +92,23 @@ enum NoticeWords {
 }
 
 /// The New episodes switch: on asks for permission the first time; declined, it stays off.
+/// The Downloads finished switch: on asks for permission first, as New episodes does.
+struct DownloadsFinishedToggle<Label: View>: View {
+    @Environment(AppStore.self) private var store
+    @ViewBuilder let label: Label
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { store.settings.isOn(.downloadsFinished) },
+            set: { on in Task { await store.setDownloadsFinished(on) } }
+        )) {
+            label
+        }
+        .tint(.amber)
+        .disabled(store.settings.row(.downloadsFinished) == nil)
+    }
+}
+
 struct EpisodeNoticesToggle<Label: View>: View {
     @Environment(AppStore.self) private var store
     @ViewBuilder let label: Label
@@ -157,19 +174,38 @@ struct ComingUpRow: View {
 
 // MARK: - Mac and iPad
 
-/// The Notifications pane: the New episodes switch, and what will notify in the next 7 days.
+/// The Notifications pane: one group with New chapters and New episodes, as the medium has them,
+/// then what will notify in the next 7 days.
 struct NotificationsPane: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
-        SettingsGroup(title: L.settingsNewEpisodes, footnote: NoticeWords.permission) {
-            SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
-                EpisodeNoticesToggle { Text(L.settingsNewEpisodes) }
-                    .toggleStyle(.switch)
-                    .labelsHidden()
+        SettingsGroup(footnote: footnote) {
+            if store.medium.reads {
+                ChapterNoticesRow()
+                DownloadsFinishedRow()
+            }
+            if store.medium.watches {
+                SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
+                    EpisodeNoticesToggle { Text(L.settingsNewEpisodes) }
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
             }
         }
+        if store.medium.watches {
+            comingUp
+        }
+    }
+
+    /// What the system allows. Apple has no channels, so chapters have no line of their own.
+    private var footnote: String {
+        NoticeWords.permission
+    }
+
+    @ViewBuilder
+    private var comingUp: some View {
         SettingsGroup(title: L.settingsComingUp, footnote: NoticeWords.leftOut(store)) {
             let rows = store.notifications.comingUp
             if rows.isEmpty {
@@ -348,15 +384,47 @@ struct PhoneNotificationsPage: View {
         let overrides = Int(store.notifications.week?.overrides ?? 0)
         PhoneList {
             Section {
-                EpisodeNoticesToggle {
-                    PhoneRowTitle(title: L.settingsNewEpisodes, note: NoticeWords.line(store, counts: false))
+                if store.medium.reads {
+                    PhoneSettingSwitch(key: .chapterNotifications, note: L.settingsChapterNotificationsNote)
+                    DownloadsFinishedToggle {
+                        PhoneRowTitle(title: SettingKey.downloadsFinished.title, note: L.settingsDownloadsFinishedNote)
+                    }
+                    .listRowBackground(Palette.raised)
                 }
-                .listRowBackground(Palette.raised)
-            } header: {
-                PhoneSectionHeader(L.settingsNewEpisodes)
+                if store.medium.watches {
+                    EpisodeNoticesToggle {
+                        PhoneRowTitle(title: L.settingsNewEpisodes, note: NoticeWords.line(store, counts: false))
+                    }
+                    .listRowBackground(Palette.raised)
+                }
             } footer: {
-                Text(overrides > 0 ? "\(NoticeWords.overridden(overrides)). \(NoticeWords.permission)" : NoticeWords.permission)
+                Text(footer(overrides))
             }
+            if store.medium.watches {
+                comingUp
+            }
+            systemSection
+        }
+        .navigationTitle(L.settingsGroupNotifications)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await store.notifications.refreshPermission()
+            store.refreshNotices()
+        }
+    }
+
+    /// The shows that set their own, and what the system allows.
+    private func footer(_ overrides: Int) -> String {
+        var lines: [String] = []
+        if store.medium.watches, overrides > 0 {
+            lines.append("\(NoticeWords.overridden(overrides)).") // i18n-skip
+        }
+        lines.append(NoticeWords.permission)
+        return lines.joined(separator: " ") // i18n-skip
+    }
+
+    @ViewBuilder
+    private var comingUp: some View {
             Section {
                 let rows = store.notifications.comingUp
                 if rows.isEmpty {
@@ -375,6 +443,9 @@ struct PhoneNotificationsPage: View {
             } footer: {
                 Text(NoticeWords.leftOut(store))
             }
+    }
+
+    private var systemSection: some View {
             Section {
                 Button {
                     NoticeWords.settingsURL.map { openURL($0) }
@@ -387,13 +458,6 @@ struct PhoneNotificationsPage: View {
                 }
                 .listRowBackground(Palette.raised)
             }
-        }
-        .navigationTitle(L.settingsGroupNotifications)
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await store.notifications.refreshPermission()
-            store.refreshNotices()
-        }
     }
 }
 

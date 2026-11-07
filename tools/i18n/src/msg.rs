@@ -70,14 +70,24 @@ struct Nested {
 }
 
 /// The engine files whose messages are a nested enum of `Msg`, by group.
-const NESTED: &[(&str, Nested)] = &[(
-    "engine-stores",
-    Nested {
-        variant: "Store",
-        ty: "StoreMsg",
-        doc: "A plugin store's, a source's or a torrent's message: see [`StoreMsg`].",
-    },
-)];
+const NESTED: &[(&str, Nested)] = &[
+    (
+        "engine-stores",
+        Nested {
+            variant: "Store",
+            ty: "StoreMsg",
+            doc: "A plugin store's, a source's or a torrent's message: see [`StoreMsg`].",
+        },
+    ),
+    (
+        "engine-reading",
+        Nested {
+            variant: "Reading",
+            ty: "ReadingMsg",
+            doc: "A message about reading manga and novels: see [`ReadingMsg`].",
+        },
+    ),
+];
 
 fn enumeration(
     name: &str,

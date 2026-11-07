@@ -42,6 +42,9 @@ pub struct ProviderHealth {
     /// When the provider last failed while down or went down, so it is asked again after
     /// [`RETRY_DOWN_AFTER`].
     pub down_since: Option<Instant>,
+    /// When, by the wall clock, the current run of failures began: "Not answering since 10:12".
+    /// Cleared by any success.
+    pub failing_since: Option<i64>,
 }
 
 impl ProviderHealth {
@@ -55,6 +58,7 @@ impl ProviderHealth {
             last_checked: None,
             held_back: None,
             down_since: None,
+            failing_since: None,
         }
     }
 
@@ -121,6 +125,7 @@ impl HealthTracker {
             let entry = Self::entry(list, id);
             entry.health = Health::Ready;
             entry.down_since = None;
+            entry.failing_since = None;
             entry.consecutive_failures = 0;
             entry.last_error = None;
             entry.last_latency = Some(latency);
@@ -142,6 +147,9 @@ impl HealthTracker {
                 return;
             }
 
+            if entry.consecutive_failures == 0 || entry.failing_since.is_none() {
+                entry.failing_since = Some(now);
+            }
             entry.consecutive_failures = entry.consecutive_failures.saturating_add(1);
             entry.last_error = Some(error.to_string());
             entry.health = if entry.consecutive_failures >= DOWN_AFTER {
@@ -199,6 +207,7 @@ impl HealthTracker {
             let entry = Self::entry(list, id);
             entry.health = Health::Unknown;
             entry.down_since = None;
+            entry.failing_since = None;
             entry.consecutive_failures = 0;
             entry.last_error = None;
         });
@@ -212,6 +221,7 @@ impl HealthTracker {
             for entry in list.iter_mut().filter(|h| h.health == Health::Down) {
                 entry.health = Health::Unknown;
                 entry.down_since = None;
+                entry.failing_since = None;
                 entry.consecutive_failures = 0;
                 entry.last_error = None;
             }
@@ -234,6 +244,26 @@ mod tests {
         assert_eq!(h.health, Health::Unknown);
         assert!(h.is_usable(), "never having been tried is not a reason to skip it");
         assert_eq!(h.state_label(), "unchecked");
+    }
+
+    #[test]
+    fn the_wall_clock_time_a_run_of_failures_began_is_kept_until_a_success() {
+        let t = tracker();
+        let err = ProviderError::Transport("refused".into());
+        t.record_failure("torrent", &err, 600);
+        t.record_failure("torrent", &err, 700);
+        t.record_failure("torrent", &err, 800);
+        assert_eq!(
+            t.get("torrent").unwrap().failing_since,
+            Some(600),
+            "the first, not the last"
+        );
+        t.record_failure("torrent", &ProviderError::NotFound, 900);
+        assert_eq!(t.get("torrent").unwrap().failing_since, Some(600), "a miss is no answer");
+        t.record_success("torrent", Duration::from_millis(5), 1_000);
+        assert_eq!(t.get("torrent").unwrap().failing_since, None);
+        t.record_failure("torrent", &err, 1_100);
+        assert_eq!(t.get("torrent").unwrap().failing_since, Some(1_100), "a new run");
     }
 
     #[test]

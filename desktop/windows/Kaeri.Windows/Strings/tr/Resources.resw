@@ -4382,6 +4382,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} bölüm {episode} için yok</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} henüz {episode}. bölüme sahip değil. Başka bir kaynak ile oynatılıyor.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} yanıt vermedi</value>
   </data>
@@ -5890,9 +5893,6 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Yeni bölümler</value>
-  </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>İzleme listenizdeki diziler için</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.</value>

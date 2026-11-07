@@ -7,8 +7,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.design"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
     sourceSets {
         named("main") {
             // The two typefaces and their licences, from android/scripts/fonts.sh.

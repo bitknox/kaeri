@@ -14,6 +14,7 @@ public final class Navigator {
         didSet {
             if section != oldValue {
                 titleOnMac = nil
+                seriesOnMac = nil
                 pageGone()
             }
         }
@@ -23,6 +24,30 @@ public final class Navigator {
     public internal(set) var titleOnMac: AnilistId? {
         didSet { if titleOnMac != oldValue { endClosedEpisodeVisits() } }
     }
+    /// The series page open over the section on the Mac, by work id. On iPhone and iPad it is
+    /// pushed on the tab's stack.
+    public var seriesOnMac: String?
+    /// Whether the Library shows reading rather than shows, with both media on. Each screen
+    /// keeps its own.
+    public var libraryReading = false
+    /// Whether Search looks for reading rather than shows, with both media on.
+    public var searchReading = false
+    /// A genre to browse in reading's Search, from Home's genre shelf.
+    public var readingGenre: String?
+    /// The Library's reading list on screen.
+    public var readingSegment: LibrarySegmentRead = .reading
+    /// The series whose sheet is up, and which: change source, tracking, choose chapters.
+    public var seriesSheet: SeriesSheet?
+    /// Whether the Add a source sheet is up, and the Add a server step of it.
+    public var addBookSource: AddBookSourceStep?
+    /// Whether first launch has decided: shown and gone, or not due. Until then the medium
+    /// question of a first run waits for its page.
+    public var firstLaunchSettled = false
+    /// A shot's first-launch page and the medium answer before it, taken as the pages appear.
+    var firstLaunchStart: (FirstLaunch.Page, KaeriIsFor?)?
+    /// On iPhone and in a narrow window, a place with no tab of its own (Calendar, Seasonal or
+    /// Updates when both media are on), pushed onto the tab that leads to it.
+    var placePushed: AppSection?
     /// The element the Mac's title page was opened from, which its art flies back to on Back.
     public internal(set) var openedFrom: TitleSource?
     /// The art on its way between that element and the page, on the Mac (M3).
@@ -190,6 +215,15 @@ public final class Navigator {
         if route.sheet == "server" { addServerShown = true }
         if route.sheet == "certificate" { addServerShown = true; certificateLaunch = true }
         launchSourceKey = route.source
+        libraryReading = route.reading
+        searchReading = route.reading
+        if let work = route.work {
+            #if os(macOS)
+            seriesOnMac = work
+            #else
+            paths[route.section] = [TitleRoute(work: work)]
+            #endif
+        }
         if route.fold == "open", let title = route.title { watchedOpen.insert(title) }
         launchCalendarMine = route.calendarMine
         if let day = route.day {
@@ -211,6 +245,35 @@ public final class Navigator {
     /// Open a section, as the sidebar, a tab or ⌘1 to ⌘7 does.
     public func open(_ section: AppSection) {
         self.section = section
+    }
+
+    /// A series' page: over the section on the Mac, pushed on the tab's stack elsewhere.
+    public func openSeries(_ work: String) {
+        #if os(macOS)
+        titleOnMac = nil
+        withAnimation(.standard) { seriesOnMac = work }
+        #else
+        paths[section, default: []].append(TitleRoute(work: work))
+        #endif
+    }
+
+    /// A reading list in the Library.
+    public func readingList(_ segment: LibrarySegmentRead) {
+        libraryReading = true
+        readingSegment = segment
+        open(.library)
+    }
+
+    /// Reading's Search, browsing `genre` when one is given.
+    public func openReadingSearch(genre: String? = nil) {
+        searchReading = true
+        readingGenre = genre
+        open(.search)
+    }
+
+    /// Back from a series' page on the Mac.
+    public func closeSeries() {
+        withAnimation(.standard) { seriesOnMac = nil }
     }
 
     /// Providers, where a source is added: its section on the Mac and iPad, its page of the

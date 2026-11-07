@@ -68,6 +68,11 @@ public final class NotificationsModel {
             }
         case .settings(let view):
             notifying = Self.notifies(view)
+        case .reading(.downloadsDone(let work, let title, let body)):
+            // The engine sends it only while the setting is on; the system's permission still rules.
+            guard let scheduler, permission == .allowed else { return }
+            let identifier = "downloads.\(work ?? "all")" // i18n-skip: an identifier
+            Task { await scheduler.centre.post(identifier: identifier, title: title.text, body: body.text) }
         case .showSettings(let sheet):
             let row = sheet.rows.first { $0.key == .notifyNewEpisodes }
             if let row {
@@ -225,6 +230,13 @@ extension AppStore {
         if on, !(await notifications.permit()) { return }
         setSwitch(.episodeNotifications, on: on)
         refreshNotices()
+    }
+
+    /// Turn the Downloads finished notification on or off. On asks for permission as New
+    /// episodes does, and stays off when it is declined.
+    public func setDownloadsFinished(_ on: Bool) async {
+        if on, !(await notifications.permit()) { return }
+        setSwitch(.downloadsFinished, on: on)
     }
 
     /// A show's own switch. On asks for permission as the setting's does.

@@ -397,7 +397,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path "dist/$name/third-party" | Out-Null
           Copy-Item assets/THIRD-PARTY.md "dist/$name/third-party/"
           Copy-Item assets/shaders/THIRD-PARTY.md "dist/$name/third-party/THIRD-PARTY-shaders.md"
-          Copy-Item assets/mpv/licenses/*,assets/shaders/LICENSE-* "dist/$name/third-party/"
+          Copy-Item assets/mpv/licenses/*,assets/shaders/LICENSE-*,assets/hyphenation/LICENSE-hyphenation-patterns.txt "dist/$name/third-party/"
           Copy-Item target/THIRD-PARTY-rust.txt "dist/$name/third-party/"
           Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
           (Get-FileHash "dist/$name.zip" -Algorithm SHA256).Hash.ToLower() +

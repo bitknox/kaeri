@@ -14,6 +14,7 @@ player-start-place = { $place } av { $total } { -source-pl }
 player-start-pinned = Ditt val för den här serien
 player-start-miss-no-match = { $name } har inte den här serien
 player-start-miss-no-episode = { $name } har inte avsnitt { $episode }
+player-start-pin-missed = { $name } har inte avsnitt { $episode } än. Spelar från en annan { -source }.
 player-start-miss-failed = { $name } svarade inte
 player-start-miss-timed-out = { $name } tog för lång tid
 player-start-miss-skipped = Du hoppade över { $name }

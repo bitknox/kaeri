@@ -222,8 +222,14 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     /** Why the last typed code did not pair, and the device that turned it down when one did. */
     val pairFailed: StateFlow<Pair<app.kaeri.engine.model.SyncPairProblem, String?>?> = _pairFailed.asStateFlow()
 
+    /** The DNS-SD the engine was handed for typed-code pairing. */
+    internal var network: app.kaeri.engine.ffi.FfiSyncNetwork? = null
+
     internal fun pairFailed(problem: app.kaeri.engine.model.SyncPairProblem, device: String?) {
         _pairFailed.value = problem to device
+        // No device showing a code answered: one may have moved, which a browse below Android 14
+        // finds only by resolving it again.
+        if (problem == app.kaeri.engine.model.SyncPairProblem.NOT_FOUND) (network as? NsdRelook)?.relook()
     }
 
     private val _storeJoins = MutableStateFlow<List<StoreJoin>>(emptyList())

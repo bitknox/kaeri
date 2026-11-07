@@ -9,7 +9,9 @@ install them, are entitled to use. A plugin must not get round DRM, paywalls, si
 access controls. Kaeri does not review, sign or distribute plugins; stores are run by the
 people who own them.
 
-A plugin is a WebAssembly component: search terms in, episodes and stream URLs out.
+A plugin is a WebAssembly component: search terms in, episodes and stream URLs out. A book
+source plugin is the same with chapters and pages in place of episodes and streams; see
+[Book sources](#book-sources).
 Kaeri loads `*.wasm` from the plugin directory (`kaeri --plugins` prints it) and treats it
 like a native source, with the same ranking, health tracking and failover. Any WASI 0.2 language
 works, and reference implementations in Rust and JavaScript live in `plugins/`.
@@ -96,6 +98,49 @@ Do not flatten `not-found` into `other`. A missing title is an answer, and repor
 Sources screen and the failure message would otherwise show a fault where the source only lacks
 the title.
 
+## Book sources
+
+A plugin that finds manga, comics or novels is built for a second contract,
+`wit/kaeri-books.wit`, package `kaeri:books@1.0.0`. It is its own package, so a book source needs
+that one file, and the two contracts change on their own majors. The host is the same: the same
+five lent functions with the same allowlist, the same sandbox and the same limits.
+
+```wit
+interface source {                        // what a book source exports
+    describe:        func() -> manifest;
+    search:          func(query: string, hints: title-hints)
+                       -> result<list<series-hit>, source-error>;
+    series:          func(id: string, hints: title-hints)
+                       -> result<series-detail, source-error>;
+    list-chapters:   func(id: string, hints: title-hints)
+                       -> result<list<chapter>, source-error>;
+    chapter-content: func(series: string, chapter: string)
+                       -> result<content, source-error>;
+}
+```
+
+- The manifest adds `media` (`manga`, `novel`) and `languages` (BCP 47 tags). Media the host
+  does not know are ignored.
+- `hints` carries the AniList id, a MyAnimeList manga id, the titles and synonyms, and the medium
+  the host wants, every field optional.
+- `list-chapters` returns every chapter the source lists, every version and language. `number` is
+  the source's own label, kept as written (`10.5`, `12-13`, `Extra`); the host reads a number from
+  it. `version-label` tells two versions of one chapter apart.
+- `chapter-content` returns `images`, the pages in reading order, or `text`, an XHTML body
+  fragment that the host sanitises before showing it.
+- The plugin never fetches a page image. It names each page's URL and the headers it needs, and
+  the host fetches it through the plugin's own `allowed-hosts`, so list the page image hosts there
+  too. A download fetches the pages again later the same way.
+- The errors are the show sources' errors, with the same failover rules.
+
+The host tells the two kinds apart by what a component imports and exports, so the kind comes
+from the plugin itself. Book sources go in the same plugin directory. Kaeri loads them only while
+reading is available, and a version without reading leaves them alone. A book source cannot take
+the id `folders` or `servers`, the names of Kaeri's own book sources.
+
+Start from `plugins/example-books/src/lib.rs`. It uses every part of the contract against
+made-up hosts, and answers everything but `search` from data it keeps.
+
 ## Rust
 
 ```sh
@@ -130,6 +175,20 @@ another major with a message that says it needs rebuilding against the current W
 Major 3 added the `hints` argument to `search`, `list-episodes` and `resolve`. A plugin built for
 major 2 is refused with a message that says to rebuild it; rebuild against the current WIT file and
 add the argument to those three functions.
+
+`kaeri:books` is at major 1. A plugin built for a later major of either contract is refused with a
+message that says it needs a newer Kaeri.
+
+Adding a field to a record changes the contract. The component model checks an export's types
+when a plugin is instantiated, and it matches a record by its exact list of fields and a variant
+by its exact list of cases. A plugin built before a field was added, even an `option` field, fails
+to load, and so does one built before a case or a function was added. The conformance suite proves
+this with a grown copy of the book contract (`a_record_that_grows_a_field_is_a_different_world` and
+`a_variant_that_grows_a_case_is_a_different_world` in `crates/kaeri-plugin/tests/book_conformance.rs`).
+So every change to the records, variants or functions a plugin exports is a new major. The
+contracts grow without one in two ways: a plugin declares new behaviour as a `capabilities`
+string, which an older host ignores, and a value it needs from the person comes through
+`config-get`.
 
 ## Cost
 
@@ -177,7 +236,9 @@ cargo test -p kaeri-plugin       # skips itself if components are not built
 
 The conformance suite runs the same assertions against both references, plus `test-hostile`,
 which spins, allocates without bound, fetches an undeclared host and probes undeclared settings.
-Copy the `assert_reference_behaviour` shape for your own plugin.
+Copy the `assert_reference_behaviour` shape for your own plugin. `book_conformance.rs` does the
+same for book sources against `example-books` and `test-hostile-books`, which also names page
+images on a host it never declared.
 
 To share a plugin, publish it to a plugin store ([plugin-stores.md](plugin-stores.md)), or hand
 over the `.wasm` for someone to put in their plugin directory. Either way, declare the narrowest
@@ -187,7 +248,8 @@ over the `.wasm` for someone to put in their plugin directory. Either way, decla
 A store reads the id, version and hosts from the plugin itself, and checks them:
 
 - The id is 1 to 64 characters of `a`–`z`, `0`–`9`, `-` and `_`, and does not start with `-` or
-  `_`. It cannot be `torrent`, `remote` or `plugins`, the names of Kaeri's own sources. The id
+  `_`. It cannot be `torrent`, `remote`, `plugins`, `folders` or `servers`, the names of
+  Kaeri's own sources. The id
   becomes the file name on every member's machine, so use one no other plugin uses.
 - The version is 1 to 64 letters, digits and `.+-_`, and does not start with `.`.
 - A published version never changes. Publish a new version for any change, however small.
@@ -202,6 +264,6 @@ kaeri plugin stamp plugin.wasm            # in place, or --out stamped.wasm
 ```
 
 Stamping loads the plugin with no capabilities, asks it to describe itself and writes the answer
-into the file. A store that can run the plugin checks the section against the plugin's own answer.
+into the file. For a book source the answer also says it is one, and which media it serves. A store that can run the plugin checks the section against the plugin's own answer.
 Every member's app loads the plugin before installing it and refuses one whose answer differs from
 the store's list, so nothing trusts the section further than that.

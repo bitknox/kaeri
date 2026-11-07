@@ -7058,6 +7058,9 @@ player-start-miss-no-match = { $name } bu diziye sahip değil
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } bölüm { $episode } için yok
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } henüz { $episode }. bölüme sahip değil. Başka bir kaynak ile oynatılıyor.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } yanıt vermedi
 
@@ -8553,9 +8556,6 @@ settings-artwork-detail = Atıf, uygulamanın yasal notlarında
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Yeni bölümler
-
-# Line under it.
-settings-new-episodes-detail = İzleme listenizdeki diziler için
 
 # Line explaining what a notification says.
 settings-notify-detail = İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.

@@ -221,6 +221,7 @@ fn home_ask(engine: &EngineState, services: &Services, refresh: bool) -> HomeAsk
         listed: downloads::ahead::listed(services),
         adult: engine.config.effective().meta.adult,
         now: services.clock.now(),
+        clock: services.clock.clone(),
         zone: services.clock.zone(),
         offline: engine.network.offline,
         refresh,
@@ -440,7 +441,9 @@ pub(crate) fn dispatch(
         Command::LoadDetail(id) => {
             // Another title's page: the episode names looked up for the one left stop.
             engine.names.leave_for(id);
-            spawn(job, services, tx, move |lent| load_detail(lent, id))
+            // "Also a book" shows only to someone who both watches and reads.
+            let both = engine.reading.answer() == kaeri_model::medium::KaeriIsFor::Both;
+            spawn(job, services, tx, move |lent| load_detail(lent, id, both))
         }
         Command::LoadCards { ids } => {
             spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
@@ -454,6 +457,18 @@ pub(crate) fn dispatch(
         }
         Command::OpenExternal { url } => open_external(url, services, tx),
 
+        // Reading's catalogue and Fix this match for a book folder: see `read_catalog`. The
+        // rest of reading is further down.
+        Command::Reading(command) if crate::read_catalog::handles(&command) => {
+            crate::read_catalog::command(engine, services, command, tx)
+        }
+        Command::BookSources(kaeri_model::book_sources::BookSourceCommand::FindMatch {
+            group,
+            query,
+        }) if engine.reading.available => {
+            crate::read_catalog::find_match(engine, services, group, query, tx)
+        }
+
         // The licensed services: kept in the database, with no job.
         Command::Licensed(command) => licensed_command(command, services, tx),
         Command::Local(command) => {
@@ -464,6 +479,69 @@ pub(crate) fn dispatch(
             let order = engine.config.effective().providers.order.clone();
             crate::servers::command(command, services, order, tx)
         }
+
+        // Send to e-reader, where you stopped, and the feed: see `export`.
+        Command::Reading(command) if crate::export::handles(&command) => {
+            crate::export::command(engine, services, command, job, tx)
+        }
+
+        // Reading: refused in place while it ships dark. See `reading`.
+        Command::Reading(kaeri_model::reading::ReadingCommand::LoadTracking { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::load(services, work.clone(), tx);
+            crate::read_tracking::resolve_for(services, &work, tx);
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ChooseMapping {
+            work,
+            tracker,
+            tracker_id,
+        }) if engine.reading.available => {
+            crate::read_tracking::choose(services, work, &tracker, tracker_id, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ResolveConflict {
+            work,
+            tracker,
+            keep_local,
+        }) if engine.reading.available => {
+            crate::read_tracking::resolve(services, work, &tracker, keep_local, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::RemoveFromLists { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::remove_from_lists(services, work.clone(), tx);
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            crate::read_catalog::series::header(&kit, ask, &work, tx);
+            crate::read_tracking::load(services, work, tx);
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ConnectMangaUpdates {
+            username,
+            password,
+        }) if engine.reading.available => {
+            crate::read_tracking::connect_mangaupdates(services, username, password.0, tx)
+        }
+        Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
+        Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
+        // Read from and "Not found in" search with the catalogue's names for the work.
+        Command::BookSources(
+            command @ (kaeri_model::book_sources::BookSourceCommand::LoadForWork { .. }
+            | kaeri_model::book_sources::BookSourceCommand::SearchSourceForWork {
+                ..
+            }
+            | kaeri_model::book_sources::BookSourceCommand::ChooseSourceSeries {
+                ..
+            }),
+        ) if engine.reading.available => crate::read_catalog::editions::command(
+            &crate::read_catalog::Kit::of(services),
+            crate::read_catalog::Ask::of(engine, services),
+            command,
+            tx,
+        ),
+        Command::BookSources(command) => {
+            crate::reading::book_sources(&engine.reading, services, command, tx)
+        }
+        Command::Medium(command) => crate::reading::medium(engine, services, command, tx),
 
         // An episode's discussion: off the loop, with no job, each answered with the
         // discussion whole. See `discussion`.
@@ -627,7 +705,13 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
+            if phase != kaeri_model::command::AppState::Foreground {
+                let EngineState { config, reader, .. } = engine;
+                let cx = reader.cx(config, services, tx);
+                reader.background(&cx);
+            }
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
@@ -636,6 +720,7 @@ pub(crate) fn dispatch(
             services.connection.send_replace(offline);
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
@@ -1141,8 +1226,28 @@ pub(crate) async fn handle_internal(
     }
     match message {
         // What runs on cellular may have changed with it.
-        Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
-        Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::SettingsSaved => {
+            crate::phases::settings_saved(engine, tx);
+            crate::downloads::books::resume(engine, services, tx);
+            crate::export::apply_feed(engine, services, tx);
+        }
+        Internal::LetGo => {
+            ahead::let_go(engine, services, tx);
+            crate::downloads::books::launched(engine, services, tx);
+            crate::export::apply_feed(engine, services, tx);
+        }
+        Internal::Reader { session, wake } => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.wake(&mut cx, session, wake);
+        }
+        Internal::ReadingSynced => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.synced(&mut cx);
+            let lent = crate::downloads::books::Lent::of(services, tx);
+            services.book_sources.downloads.sweep(&lent, None);
+        }
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);

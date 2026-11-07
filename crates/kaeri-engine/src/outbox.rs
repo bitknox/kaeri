@@ -37,6 +37,27 @@ pub enum Internal {
     /// A pass through the sync folder brought settings and the like from other devices: carry
     /// out what [`crate::syncing::SyncHub::take_effects`] holds.
     SyncEffects,
+    /// Something for the open reader session: the page worker laid a chapter out, or one of its
+    /// timers ran out.
+    Reader { session: u64, wake: ReaderWake },
+    /// Reading arrived from another device: the open reader may move on.
+    ReadingSynced,
+}
+
+/// What woke the reader session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReaderWake {
+    /// The page worker laid the chapter out: the leaves are in the session's shared layout.
+    Laid,
+    /// The read rule's timer, by its number; an older timer's wake is ignored.
+    ReadRule(u64),
+    /// The place's write, held back to one a second, by its number.
+    Flush(u64),
+    /// A novel or a source's chapter was opened off the actor, for the session's layout of this
+    /// generation.
+    Prepared(u64),
+    /// A source listed the work's chapters for an open waiting on them.
+    Listed,
 }
 
 /// One item of the engine side's inbox, in the order it was sent.

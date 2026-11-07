@@ -239,7 +239,7 @@ modules:
         done
       - install -Dm644 -t /app/share/kaeri/fonts assets/mpv/fonts/ZenKakuGothicNew-*.ttf
       - install -Dm644 LICENSE /app/share/licenses/app.kaeri.desktop/LICENSE
-      - install -Dm644 -t /app/share/licenses/app.kaeri.desktop assets/mpv/licenses/*
+      - install -Dm644 -t /app/share/licenses/app.kaeri.desktop assets/mpv/licenses/* assets/hyphenation/LICENSE-hyphenation-patterns.txt
     sources:
       - type: dir
         path: ../..

@@ -924,6 +924,9 @@ fn carry_out(services: &Ctx, tx: &Outbox, report: FolderReport) {
             .extend(report.effects);
         let _ = tx.internal(Internal::SyncEffects);
     }
+    if !report.works.is_empty() {
+        let _ = tx.internal(Internal::ReadingSynced);
+    }
     if report.ops_applied > 0 {
         let _ = tx.send(Event::ProgressQueued);
     }
@@ -1217,6 +1220,8 @@ async fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
             ops_applied: report.applied.ops,
             effects: report.applied.effects.clone(),
             watches: report.applied.watches.clone(),
+            works: report.applied.works.clone(),
+            read_notes: report.applied.read_notes.clone(),
             ..FolderReport::default()
         },
     );

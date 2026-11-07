@@ -4244,6 +4244,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} tidak punya episode {episode}</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} belum punya episode {episode}. Diputar dari sumber lain.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} tidak merespons</value>
   </data>
@@ -5722,9 +5725,6 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Episode baru</value>
-  </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Untuk serial di daftar Menonton Anda</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</value>

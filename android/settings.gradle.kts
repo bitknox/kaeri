@@ -28,5 +28,9 @@ include(":i18n")
 include(":widgets")
 // The TV app, a separate APK on Android 11 and up.
 include(":tv")
+// Reading: the reader surface that binds the engine's reader session, its page, strip and novel
+// views, and the e-ink pieces (tokens, refresh, detection, keys) the phone app and the e-reader
+// build share. Both at Android 11, as the e-reader build is.
+include(":reader", ":eink")
 // What the tests share: the engine's events recorded as scenes, and the fixture titles' art.
 include(":testkit")

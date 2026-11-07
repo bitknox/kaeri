@@ -172,19 +172,35 @@ struct Meter: View {
 struct PrimaryCapsuleStyle: ButtonStyle {
     var height: CGFloat = 34
     var fontSize: CGFloat = 13
+    /// Whether off draws raised with silk text at 38%, as a choice that waits for an answer does,
+    /// instead of dimmed amber.
+    var offIsRaised = false
 
     func makeBody(configuration: Configuration) -> some View {
+        PrimaryCapsule(configuration: configuration, height: height, fontSize: fontSize, offIsRaised: offIsRaised)
+    }
+}
+
+private struct PrimaryCapsule: View {
+    @Environment(\.isEnabled) private var isEnabled
+    let configuration: ButtonStyleConfiguration
+    let height: CGFloat
+    let fontSize: CGFloat
+    let offIsRaised: Bool
+
+    var body: some View {
+        let raised = offIsRaised && !isEnabled
         configuration.label
             .font(.board(fontSize, weight: .semibold))
             .monospacedDigit()
-            .foregroundStyle(.ground)
+            .foregroundStyle(raised ? Palette.silk : Palette.ground)
             .modifier(CapsuleLines())
             .padding(.horizontal, height < 34 ? 14 : 18)
             .frame(minHeight: height)
-            .background(.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
+            .background(raised ? Palette.raised : Palette.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
             .contentShape(.capsule)
             .pointerLift()
-            .modifier(DimmedWhenDisabled())
+            .opacity(isEnabled ? 1 : raised ? 0.38 : 0.45)
     }
 }
 

@@ -88,7 +88,8 @@ impl FfiEngine {
         start: FfiStart,
     ) -> Result<Arc<Self>, FfiError> {
         let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
-        let host = Adapter::new(host, start.secrets_mode(), &opened.config, &opened.paths);
+        let host = Adapter::new(host, start.secrets_mode(), &opened.config, &opened.paths)
+            .with_page_decoder(start.page_decoder.clone());
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
         let started = runtime.block_on(async {
@@ -119,6 +120,16 @@ impl FfiEngine {
             self.remote.report(report);
         }
         lock(&self.engine).as_ref()?.send(command)
+    }
+
+    /// The answer to a novel's web view asking for `url`: what the platform's scheme handler
+    /// (`kaeri-book://`, or Android's asset loader under `/book/`) returns, with its headers.
+    /// `None` for a URL that is no book's, which the host fails. Reads the book on the
+    /// caller's thread without waiting on the engine's commands; call it from the handler's
+    /// own thread, not the main one.
+    pub fn book_resource(&self, url: String) -> Option<kaeri_model::reader::BookResource> {
+        let novels = lock(&self.engine).as_ref()?.novels();
+        novels.resource(&url)
     }
 
     /// The events there are, waiting for at least one: a batch for the front end to apply in
@@ -314,6 +325,7 @@ impl Opened {
         if let Some(platform) = start.platform {
             platform.device_label().clone_into(&mut options.device_label);
             options.handheld = platform.handheld();
+            options.phone = platform.phone();
             options.device_kind = Some(platform.sync_kind());
         }
         options.language.clone_from(&start.language);
@@ -322,6 +334,8 @@ impl Opened {
         options.saved = Some(config);
         options.app_clients = start.app_clients();
         options.audio_tap = start.audio_tap;
+        options.reading = start.reading;
+        options.edition = start.edition();
         options
     }
 }

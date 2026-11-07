@@ -775,6 +775,636 @@ pub fn party_server_unreachable(server: &str) -> String {
     text("party-server-unreachable", &[("server", Arg::Text(server))])
 }
 
+/// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+pub fn reading_next_chapter(chapter: &str) -> String {
+    text("reading-next-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_mondays() -> String {
+    text("reading-usually-mondays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_tuesdays() -> String {
+    text("reading-usually-tuesdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_wednesdays() -> String {
+    text("reading-usually-wednesdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_thursdays() -> String {
+    text("reading-usually-thursdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_fridays() -> String {
+    text("reading-usually-fridays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_saturdays() -> String {
+    text("reading-usually-saturdays", &[])
+}
+
+/// Under a cover or on a series page: when new chapters usually come out.
+pub fn reading_usually_sundays() -> String {
+    text("reading-usually-sundays", &[])
+}
+
+/// Under a cover or on a series page: how often new chapters come out, in weeks.
+pub fn reading_about_every_weeks(weeks: i64) -> String {
+    text("reading-about-every-weeks", &[("weeks", Arg::Int(weeks))])
+}
+
+/// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+pub fn reading_also_a_show() -> String {
+    text("reading-also-a-show", &[])
+}
+
+/// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+pub fn reading_also_a_book() -> String {
+    text("reading-also-a-book", &[])
+}
+
+/// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+pub fn reading_split_chapter(chapter: &str, whole: &str) -> String {
+    text("reading-split-chapter", &[("chapter", Arg::Text(chapter)), ("whole", Arg::Text(whole))])
+}
+
+/// A notice over the page when a chapter opens where it was left. It offers Start over.
+pub fn reader_resumed(page: i64) -> String {
+    text("reader-resumed", &[("page", Arg::Int(page))])
+}
+
+/// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+pub fn reader_back_to_page(page: i64) -> String {
+    text("reader-back-to-page", &[("page", Arg::Int(page))])
+}
+
+/// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+pub fn reader_moved(chapter: &str, page: i64, device: &str) -> String {
+    text("reader-moved", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+}
+
+/// The same notice for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number(chapter: &str, page: i64, device: &str) -> String {
+    text("reader-moved-number", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+}
+
+/// A notice the first time a series opens with its reading direction guessed. It offers Change.
+pub fn reader_detected_right_to_left() -> String {
+    text("reader-detected-right-to-left", &[])
+}
+
+/// A notice the first time a series opens with its reading direction guessed. It offers Change.
+pub fn reader_detected_left_to_right() -> String {
+    text("reader-detected-left-to-right", &[])
+}
+
+/// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+pub fn reader_detected_strip() -> String {
+    text("reader-detected-strip", &[])
+}
+
+/// Why a chapter or a list could not load: there is no connection.
+pub fn reading_failed_offline() -> String {
+    text("reading-failed-offline", &[])
+}
+
+/// Why a chapter or a list could not load: the source did not answer. The source is its name.
+pub fn reading_failed_source_down(source: &str) -> String {
+    text("reading-failed-source-down", &[("source", Arg::Text(source))])
+}
+
+/// Why a chapter could not load: the source no longer has it.
+pub fn reading_failed_not_found() -> String {
+    text("reading-failed-not-found", &[])
+}
+
+/// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+pub fn reading_failed_blocked(source: &str, reason: &str) -> String {
+    text("reading-failed-blocked", &[("source", Arg::Text(source)), ("reason", Arg::Text(reason))])
+}
+
+/// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+pub fn reading_failed_parse(source: &str) -> String {
+    text("reading-failed-parse", &[("source", Arg::Text(source))])
+}
+
+/// Why one page did not load. The status is the server's HTTP status code, such as 404.
+pub fn reading_failed_page(status: i64) -> String {
+    text("reading-failed-page", &[("status", Arg::Int(status))])
+}
+
+/// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+pub fn reading_failed_sign_in(what: &str) -> String {
+    text("reading-failed-sign-in", &[("what", Arg::Text(what))])
+}
+
+/// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+pub fn reading_failed_file_missing(path: &str) -> String {
+    text("reading-failed-file-missing", &[("path", Arg::Text(path))])
+}
+
+/// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+pub fn reading_failed_unreadable(path: &str, format: &str) -> String {
+    text("reading-failed-unreadable", &[("path", Arg::Text(path)), ("format", Arg::Text(format))])
+}
+
+/// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+pub fn reading_failed_unsupported(kind: &str) -> String {
+    text("reading-failed-unsupported", &[("kind", Arg::Text(kind))])
+}
+
+/// Why a book could not open: it is copy-protected or encrypted.
+pub fn reading_failed_protected() -> String {
+    text("reading-failed-protected", &[])
+}
+
+/// Why a chapter could not be saved: the disk is full.
+pub fn reading_failed_disk_full() -> String {
+    text("reading-failed-disk-full", &[])
+}
+
+/// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+pub fn reading_failed_webview(version: i64) -> String {
+    text("reading-failed-webview", &[("version", Arg::Int(version))])
+}
+
+/// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+pub fn reading_failed_needs_newer(world: &str) -> String {
+    text("reading-failed-needs-newer", &[("world", Arg::Text(world))])
+}
+
+/// Why a reading request was refused: reading is not available in this build.
+pub fn reading_failed_off() -> String {
+    text("reading-failed-off", &[])
+}
+
+/// Why something about reading failed, for any other reason. The reason is as it came.
+pub fn reading_failed_other(reason: &str) -> String {
+    text("reading-failed-other", &[("reason", Arg::Text(reason))])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+pub fn reading_kind_manga() -> String {
+    text("reading-kind-manga", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+pub fn reading_kind_manhwa() -> String {
+    text("reading-kind-manhwa", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+pub fn reading_kind_manhua() -> String {
+    text("reading-kind-manhua", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+pub fn reading_kind_webtoon() -> String {
+    text("reading-kind-webtoon", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+pub fn reading_kind_one_shot() -> String {
+    text("reading-kind-one-shot", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+pub fn reading_kind_light_novel() -> String {
+    text("reading-kind-light-novel", &[])
+}
+
+/// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+pub fn reading_kind_novel() -> String {
+    text("reading-kind-novel", &[])
+}
+
+/// Under a cover or on a series page: new chapters are still coming out.
+pub fn reading_status_releasing() -> String {
+    text("reading-status-releasing", &[])
+}
+
+/// Under a cover or on a series page: the story is complete.
+pub fn reading_status_finished() -> String {
+    text("reading-status-finished", &[])
+}
+
+/// Under a cover or on a series page: new chapters have stopped for a while.
+pub fn reading_status_hiatus() -> String {
+    text("reading-status-hiatus", &[])
+}
+
+/// Under a cover or on a series page: the story was stopped before it ended.
+pub fn reading_status_cancelled() -> String {
+    text("reading-status-cancelled", &[])
+}
+
+/// Under a cover or on a series page: the first chapter is not out yet.
+pub fn reading_status_not_yet() -> String {
+    text("reading-status-not-yet", &[])
+}
+
+/// Under a cover or on a series page: how many chapters the series has.
+pub fn reading_chapters(count: i64) -> String {
+    text("reading-chapters", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover or on a series page: how many volumes the series has.
+pub fn reading_volumes(count: i64) -> String {
+    text("reading-volumes", &[("count", Arg::Int(count))])
+}
+
+/// Under a cover: the series is on the person's Planning list.
+pub fn reading_on_planning() -> String {
+    text("reading-on-planning", &[])
+}
+
+/// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+pub fn reading_spotlight_new_chapter() -> String {
+    text("reading-spotlight-new-chapter", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the series the person was reading last.
+pub fn reading_spotlight_continue() -> String {
+    text("reading-spotlight-continue", &[])
+}
+
+/// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+pub fn reading_spotlight_up_next() -> String {
+    text("reading-spotlight-up-next", &[])
+}
+
+/// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+pub fn reading_spotlight_popular() -> String {
+    text("reading-spotlight-popular", &[])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+pub fn reading_out_today(chapter: &str) -> String {
+    text("reading-out-today", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under the big picture on reading's Home: a chapter that came out today, with its title.
+pub fn reading_out_today_titled(chapter: &str, title: &str) -> String {
+    text("reading-out-today-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// Under a cover or the big picture: the page the person stopped on in a chapter.
+pub fn reading_chapter_page(chapter: &str, page: i64) -> String {
+    text("reading-chapter-page", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+}
+
+/// Under a cover or the big picture: how far into a novel's chapter the person is.
+pub fn reading_chapter_percent(chapter: &str, percent: i64) -> String {
+    text("reading-chapter-percent", &[("chapter", Arg::Text(chapter)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+pub fn reading_chapter_new(chapter: &str) -> String {
+    text("reading-chapter-new", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+pub fn reading_next_part(part: &str) -> String {
+    text("reading-next-part", &[("part", Arg::Text(part))])
+}
+
+/// Under a cover or the big picture: how far into a light novel's part the person is.
+pub fn reading_part_percent(part: &str, percent: i64) -> String {
+    text("reading-part-percent", &[("part", Arg::Text(part)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a light novel's part came out that the person has not read.
+pub fn reading_part_new(part: &str) -> String {
+    text("reading-part-new", &[("part", Arg::Text(part))])
+}
+
+/// Under a This week cell: a light novel's part that came out that day, with its own title.
+pub fn reading_part_titled(part: &str, title: &str) -> String {
+    text("reading-part-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today.
+pub fn reading_part_out_today(part: &str) -> String {
+    text("reading-part-out-today", &[("part", Arg::Text(part))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+pub fn reading_part_out_today_titled(part: &str, title: &str) -> String {
+    text("reading-part-out-today-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+pub fn reading_chapter_of(chapter: &str, of: &str) -> String {
+    text("reading-chapter-of", &[("chapter", Arg::Text(chapter)), ("of", Arg::Text(of))])
+}
+
+/// Under a Library cover: the volume and part of a light novel the person is at.
+pub fn reading_volume_part(volume: &str, part: &str) -> String {
+    text("reading-volume-part", &[("volume", Arg::Text(volume)), ("part", Arg::Text(part))])
+}
+
+/// A search filter: books from Japan.
+pub fn reading_origin_japan() -> String {
+    text("reading-origin-japan", &[])
+}
+
+/// A search filter: books from Korea.
+pub fn reading_origin_korea() -> String {
+    text("reading-origin-korea", &[])
+}
+
+/// A search filter: books from China.
+pub fn reading_origin_china() -> String {
+    text("reading-origin-china", &[])
+}
+
+/// A search filter: books from Taiwan.
+pub fn reading_origin_taiwan() -> String {
+    text("reading-origin-taiwan", &[])
+}
+
+/// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+pub fn export_device_other() -> String {
+    text("export-device-other", &[])
+}
+
+/// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+pub fn export_device_eink_6() -> String {
+    text("export-device-eink-6", &[])
+}
+
+/// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+pub fn export_device_eink_7() -> String {
+    text("export-device-eink-7", &[])
+}
+
+/// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+pub fn export_device_colour_eink() -> String {
+    text("export-device-colour-eink", &[])
+}
+
+/// Send to e-reader: a device class, a colour tablet.
+pub fn export_device_tablet() -> String {
+    text("export-device-tablet", &[])
+}
+
+/// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+pub fn export_chapter(chapter: &str) -> String {
+    text("export-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+pub fn export_waits_for_wifi(n: i64) -> String {
+    text("export-waits-for-wifi", &[("n", Arg::Int(n))])
+}
+
+/// Under a This week cell: the chapter that came out that day, with its own title.
+pub fn reading_chapter_titled(chapter: &str, title: &str) -> String {
+    text("reading-chapter-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
+}
+
+/// A chapter row's state: the person read it.
+pub fn reading_row_read() -> String {
+    text("reading-row-read", &[])
+}
+
+/// A chapter row's state: it came out since the person last read and is not read.
+pub fn reading_row_new() -> String {
+    text("reading-row-new", &[])
+}
+
+/// A chapter row's state: it is kept on this device to read offline.
+pub fn reading_row_downloaded() -> String {
+    text("reading-row-downloaded", &[])
+}
+
+/// A chapter row's state: it is read from the source and nothing of it is on this device.
+pub fn reading_row_not_downloaded() -> String {
+    text("reading-row-not-downloaded", &[])
+}
+
+/// A chapter row's state: a file in one of the person's folders, or one already on the device.
+pub fn reading_row_on_device() -> String {
+    text("reading-row-on-device", &[])
+}
+
+/// A chapter row's state: it waits its turn to download.
+pub fn reading_row_queued() -> String {
+    text("reading-row-queued", &[])
+}
+
+/// A chapter row's state: it waits to download until the device is on Wi-Fi.
+pub fn reading_row_waits_wifi() -> String {
+    text("reading-row-waits-wifi", &[])
+}
+
+/// A chapter row's state while it downloads.
+pub fn reading_row_downloading(done: i64, total: i64) -> String {
+    text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter row's state: the download failed. The reason follows as the next part.
+pub fn reading_row_failed() -> String {
+    text("reading-row-failed", &[])
+}
+
+/// A chapter row's state: the page the person stopped on, of how many.
+pub fn reading_row_page_of(page: i64, of: i64) -> String {
+    text("reading-row-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+}
+
+/// A chapter row's state: the page the person stopped on, when the length isn't known.
+pub fn reading_row_page(page: i64) -> String {
+    text("reading-row-page", &[("page", Arg::Int(page))])
+}
+
+/// A novel's chapter row: how far into it the person is.
+pub fn reading_row_percent(percent: i64) -> String {
+    text("reading-row-percent", &[("percent", Arg::Int(percent))])
+}
+
+/// A chapter row: how long its pages are, for a file on the device.
+pub fn reading_row_pages(n: i64) -> String {
+    text("reading-row-pages", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+pub fn reading_row_versions(n: i64) -> String {
+    text("reading-row-versions", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: when it was read or came out, under a minute ago.
+pub fn reading_ago_now() -> String {
+    text("reading-ago-now", &[])
+}
+
+/// A chapter row: when it was read or came out, in minutes.
+pub fn reading_ago_minutes(minutes: i64) -> String {
+    text("reading-ago-minutes", &[("minutes", Arg::Int(minutes))])
+}
+
+/// A chapter row: when it was read or came out, earlier today.
+pub fn reading_ago_today() -> String {
+    text("reading-ago-today", &[])
+}
+
+/// A chapter row: when it was read or came out, the day before today.
+pub fn reading_ago_yesterday() -> String {
+    text("reading-ago-yesterday", &[])
+}
+
+/// A chapter row: when it was read or came out, in days, under a week.
+pub fn reading_ago_days(days: i64) -> String {
+    text("reading-ago-days", &[("days", Arg::Int(days))])
+}
+
+/// A chapter row: when it was read or came out, in weeks, under two months.
+pub fn reading_ago_weeks(weeks: i64) -> String {
+    text("reading-ago-weeks", &[("weeks", Arg::Int(weeks))])
+}
+
+/// A chapter row: when it was read or came out, in months, under a year.
+pub fn reading_ago_months(months: i64) -> String {
+    text("reading-ago-months", &[("months", Arg::Int(months))])
+}
+
+/// A chapter row: when it was read or came out, in years.
+pub fn reading_ago_years(years: i64) -> String {
+    text("reading-ago-years", &[("years", Arg::Int(years))])
+}
+
+/// The tracker took the series off its list.
+pub fn reading_removed_from(tracker: &str) -> String {
+    text("reading-removed-from", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker's list did not hold the series, so there was nothing to remove.
+pub fn reading_removed_not_there(tracker: &str) -> String {
+    text("reading-removed-not-there", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The app never learned which of the tracker's entries this series is, so it asked nothing.
+pub fn reading_removed_unmatched(tracker: &str) -> String {
+    text("reading-removed-unmatched", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The tracker could not take the series off. The reason follows.
+pub fn reading_removed_failed(tracker: &str) -> String {
+    text("reading-removed-failed", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Why a removal failed: the tracker turned the sign-in away.
+pub fn reading_removed_sign_in(tracker: &str) -> String {
+    text("reading-removed-sign-in", &[("tracker", Arg::Text(tracker))])
+}
+
+/// The source answered the search and has no series by the series' names.
+pub fn reading_miss_no_series() -> String {
+    text("reading-miss-no-series", &[])
+}
+
+/// The source has failed every ask since this time of day, in the person's zone.
+pub fn reading_miss_down_since(time: &str) -> String {
+    text("reading-miss-down-since", &[("time", Arg::Text(time))])
+}
+
+/// The source has failed every ask, since a time on another day or not known.
+pub fn reading_miss_down() -> String {
+    text("reading-miss-down", &[])
+}
+
+/// How many parts of a light novel are downloaded.
+pub fn reading_dl_parts(count: i64) -> String {
+    text("reading-dl-parts", &[("count", Arg::Int(count))])
+}
+
+/// What the downloads take up on this device.
+pub fn reading_dl_size(size: &str) -> String {
+    text("reading-dl-size", &[("size", Arg::Text(size))])
+}
+
+/// How many of the downloaded chapters are read, which Delete read clears.
+pub fn reading_dl_read(count: i64) -> String {
+    text("reading-dl-read", &[("count", Arg::Int(count))])
+}
+
+/// The chapter downloading now.
+pub fn reading_dl_chapter(chapter: &str) -> String {
+    text("reading-dl-chapter", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How far the chapter downloading now has come.
+pub fn reading_dl_pages(done: i64, total: i64) -> String {
+    text("reading-dl-pages", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Chapters waiting their turn after the one downloading.
+pub fn reading_dl_more_queued(count: i64) -> String {
+    text("reading-dl-more-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters waiting their turn, none downloaded yet.
+pub fn reading_dl_queued(count: i64) -> String {
+    text("reading-dl-queued", &[("count", Arg::Int(count))])
+}
+
+/// Chapters that wait for Wi-Fi to download.
+pub fn reading_dl_waits_wifi() -> String {
+    text("reading-dl-waits-wifi", &[])
+}
+
+/// A chapter that failed. The reason follows as the next part.
+pub fn reading_dl_failed(chapter: &str) -> String {
+    text("reading-dl-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+pub fn reading_estimate_size(size: &str) -> String {
+    text("reading-estimate-size", &[("size", Arg::Text(size))])
+}
+
+/// The chapters download only on Wi-Fi, as the settings say.
+pub fn reading_estimate_wifi() -> String {
+    text("reading-estimate-wifi", &[])
+}
+
+/// The device is on mobile data, and the settings let chapters download on it.
+pub fn reading_estimate_mobile() -> String {
+    text("reading-estimate-mobile", &[])
+}
+
+/// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+pub fn reading_estimate_waits_wifi() -> String {
+    text("reading-estimate-waits-wifi", &[])
+}
+
+/// The notification's title.
+pub fn reading_downloads_done_title() -> String {
+    text("reading-downloads-done-title", &[])
+}
+
+/// The notification's text: one series' chapters are downloaded.
+pub fn reading_downloads_done_chapters(title: &str, count: i64) -> String {
+    text("reading-downloads-done-chapters", &[("title", Arg::Text(title)), ("count", Arg::Int(count))])
+}
+
+/// The notification's text: one light novel's parts are downloaded.
+pub fn reading_downloads_done_parts(title: &str, count: i64) -> String {
+    text("reading-downloads-done-parts", &[("title", Arg::Text(title)), ("count", Arg::Int(count))])
+}
+
+/// The notification's text: chapters of several series are downloaded.
+pub fn reading_downloads_done_series(count: i64) -> String {
+    text("reading-downloads-done-series", &[("count", Arg::Int(count))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -1008,6 +1638,11 @@ pub fn plugin_publish_failed(plugin: &str, reason: &str) -> String {
 /// Error: a plugin to publish is no longer in the plugin folder.
 pub fn plugin_missing_locally(plugin: &str) -> String {
     text("plugin-missing-locally", &[("plugin", Arg::Text(plugin))])
+}
+
+/// Error: a book source cannot be published to a store whose server is too old to list book sources.
+pub fn store_takes_no_books(store: &str) -> String {
+    text("store-takes-no-books", &[("store", Arg::Text(store))])
 }
 
 /// Error: an invite for another device cannot be made from a device that joined with the open link.
@@ -11318,6 +11953,11 @@ pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
     text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
 }
 
+/// Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+pub fn player_start_pin_missed(name: &str, episode: &str) -> String {
+    text("player-start-pin-missed", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
 /// Detail line when a source failed and the next is asked.
 pub fn player_start_miss_failed(name: &str) -> String {
     text("player-start-miss-failed", &[("name", Arg::Text(name))])
@@ -12228,6 +12868,1741 @@ pub fn player_subs_bg_box() -> String {
 /// Button in the subtitles panel that opens Settings.
 pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
+}
+
+/// Under a page that is still loading after four seconds.
+pub fn reader_page_loading(page: i64) -> String {
+    text("reader-page-loading", &[("page", Arg::Int(page))])
+}
+
+/// Heading where a page could not be loaded.
+pub fn reader_page_failed(page: i64) -> String {
+    text("reader-page-failed", &[("page", Arg::Int(page))])
+}
+
+/// Button that loads a failed page again.
+pub fn reader_try_again() -> String {
+    text("reader-try-again", &[])
+}
+
+/// Closes the reader and goes back to the series.
+pub fn reader_close() -> String {
+    text("reader-close", &[])
+}
+
+/// Under the top line of the page between chapters, once the chapter counts as read.
+pub fn reader_end_read() -> String {
+    text("reader-end-read", &[])
+}
+
+/// Small heading above the next chapter on the page between chapters.
+pub fn reader_end_next() -> String {
+    text("reader-end-next", &[])
+}
+
+/// A reading mode, and a reading direction.
+pub fn reader_mode_rtl() -> String {
+    text("reader-mode-rtl", &[])
+}
+
+/// A reading mode, and a reading direction.
+pub fn reader_mode_ltr() -> String {
+    text("reader-mode-ltr", &[])
+}
+
+/// A reading mode: one long scroll of images.
+pub fn reader_mode_strip() -> String {
+    text("reader-mode-strip", &[])
+}
+
+/// A choice for how a page is fitted.
+pub fn reader_fit_screen() -> String {
+    text("reader-fit-screen", &[])
+}
+
+/// A choice for how a page is fitted.
+pub fn reader_fit_width() -> String {
+    text("reader-fit-width", &[])
+}
+
+/// A choice of typeface.
+pub fn reader_font_serif() -> String {
+    text("reader-font-serif", &[])
+}
+
+/// A choice of typeface.
+pub fn reader_font_sans() -> String {
+    text("reader-font-sans", &[])
+}
+
+/// A look for reading: warm paper.
+pub fn reader_look_paper() -> String {
+    text("reader-look-paper", &[])
+}
+
+/// A look for reading: a light page.
+pub fn reader_look_light() -> String {
+    text("reader-look-light", &[])
+}
+
+/// A look for reading: a brown page.
+pub fn reader_look_sepia() -> String {
+    text("reader-look-sepia", &[])
+}
+
+/// A look for reading: a dark page.
+pub fn reader_look_dark() -> String {
+    text("reader-look-dark", &[])
+}
+
+/// A choice of margins.
+pub fn reader_margins_narrow() -> String {
+    text("reader-margins-narrow", &[])
+}
+
+/// A choice of margins.
+pub fn reader_margins_wide() -> String {
+    text("reader-margins-wide", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_auto() -> String {
+    text("reader-layout-auto", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_single() -> String {
+    text("reader-layout-single", &[])
+}
+
+/// A choice for page layout.
+pub fn reader_layout_double() -> String {
+    text("reader-layout-double", &[])
+}
+
+/// A choice for wide pages: cut in two.
+pub fn reader_spreads_split() -> String {
+    text("reader-spreads-split", &[])
+}
+
+/// A choice for wide pages: turned to fill the screen.
+pub fn reader_spreads_rotate() -> String {
+    text("reader-spreads-rotate", &[])
+}
+
+/// A choice for wide pages: shown whole.
+pub fn reader_spreads_whole() -> String {
+    text("reader-spreads-whole", &[])
+}
+
+/// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+pub fn reader_tap_edges() -> String {
+    text("reader-tap-edges", &[])
+}
+
+/// A choice for the reader's tap zones: the left and right halves turn the page.
+pub fn reader_tap_sides() -> String {
+    text("reader-tap-sides", &[])
+}
+
+/// A choice for the reader's tap zones: taps do not turn the page.
+pub fn reader_tap_off() -> String {
+    text("reader-tap-off", &[])
+}
+
+/// Button in the reader's controls that opens the chapters and the page grid.
+pub fn reader_chapters() -> String {
+    text("reader-chapters", &[])
+}
+
+/// Line in the margin of a novel's page.
+pub fn reader_pages_left(count: i64) -> String {
+    text("reader-pages-left", &[("count", Arg::Int(count))])
+}
+
+/// Chapters sheet and the chapter list: the list is on its way.
+pub fn reader_chapters_loading() -> String {
+    text("reader-chapters-loading", &[])
+}
+
+/// Background choice.
+pub fn reader_background_theme() -> String {
+    text("reader-background-theme", &[])
+}
+
+/// Background choice.
+pub fn reader_background_black() -> String {
+    text("reader-background-black", &[])
+}
+
+/// Background choice.
+pub fn reader_background_white() -> String {
+    text("reader-background-white", &[])
+}
+
+/// Title of the end page when the series has no newer chapter.
+pub fn reader_end_caught_up() -> String {
+    text("reader-end-caught-up", &[])
+}
+
+/// A choice for the gap between a strip's images: none at all.
+pub fn reader_gap_none() -> String {
+    text("reader-gap-none", &[])
+}
+
+/// A choice for the gap between a strip's images: a small one.
+pub fn reader_gap_small() -> String {
+    text("reader-gap-small", &[])
+}
+
+/// Look choice that follows the system's light or dark.
+pub fn reader_look_system() -> String {
+    text("reader-look-system", &[])
+}
+
+/// Sidebar and tab label: the shows' Home when both media are on.
+pub fn nav_watch() -> String {
+    text("nav-watch", &[])
+}
+
+/// Sidebar and tab label: reading's Home.
+pub fn nav_read() -> String {
+    text("nav-read", &[])
+}
+
+/// Sidebar and tab label: new chapters from followed series.
+pub fn nav_updates() -> String {
+    text("nav-updates", &[])
+}
+
+/// Shelf heading on Read: series releasing now.
+pub fn home_read_releasing() -> String {
+    text("home-read-releasing", &[])
+}
+
+/// Line under the spotlight of a popular series, when the engine gives no line of its own.
+pub fn home_read_checked_on_open() -> String {
+    text("home-read-checked-on-open", &[])
+}
+
+/// Line at the end of Read, under the last shelf.
+pub fn home_read_end() -> String {
+    text("home-read-end", &[])
+}
+
+/// Line at the end of Read with no book sources yet. A button to add one follows it.
+pub fn home_read_no_sources() -> String {
+    text("home-read-no-sources", &[])
+}
+
+/// Under a day in Read's week: what usually comes out that day, when the time isn't known.
+pub fn week_usually() -> String {
+    text("week-usually", &[])
+}
+
+/// Under a day in Read's week with nothing due.
+pub fn week_nothing_usually() -> String {
+    text("week-nothing-usually", &[])
+}
+
+/// Line under Updates' title on iPhone and iPad.
+pub fn updates_checked(ago: &str) -> String {
+    text("updates-checked", &[("ago", Arg::Text(ago))])
+}
+
+/// Line above Updates on the Mac: when it checked, and which series it checks.
+pub fn chapter_updates_checked_caught_up(ago: &str) -> String {
+    text("chapter-updates-checked-caught-up", &[("ago", Arg::Text(ago))])
+}
+
+/// Line while Updates asks every followed series now.
+pub fn chapter_updates_checking() -> String {
+    text("chapter-updates-checking", &[])
+}
+
+/// Toolbar button: queue every unread chapter in Updates.
+pub fn updates_download_new() -> String {
+    text("updates-download-new", &[])
+}
+
+/// Updates with nothing in it.
+pub fn updates_empty_title() -> String {
+    text("updates-empty-title", &[])
+}
+
+/// Line under Updates' empty title.
+pub fn chapter_updates_empty_line() -> String {
+    text("chapter-updates-empty-line", &[])
+}
+
+/// Day heading in Updates.
+pub fn chapter_updates_today() -> String {
+    text("chapter-updates-today", &[])
+}
+
+/// Day heading in Updates.
+pub fn chapter_updates_yesterday() -> String {
+    text("chapter-updates-yesterday", &[])
+}
+
+/// After a chapter on an Updates row, when several groups put it out.
+pub fn chapter_updates_versions(n: i64) -> String {
+    text("chapter-updates-versions", &[("n", Arg::Int(n))])
+}
+
+/// Accessibility label on an Updates row's cover, which opens the series.
+pub fn chapter_updates_open_series(title: &str) -> String {
+    text("chapter-updates-open-series", &[("title", Arg::Text(title))])
+}
+
+/// Accessibility hint on an Updates row.
+pub fn chapter_updates_open_chapter_hint() -> String {
+    text("chapter-updates-open-chapter-hint", &[])
+}
+
+/// Context menu item on an Updates row.
+pub fn chapter_updates_open_series_menu() -> String {
+    text("chapter-updates-open-series-menu", &[])
+}
+
+/// The series page's main action, and the spotlight's.
+pub fn action_read_chapter(n: &str) -> String {
+    text("action-read-chapter", &[("n", Arg::Text(n))])
+}
+
+/// The main action when a chapter is part read.
+pub fn action_continue_chapter(n: &str, page: i64) -> String {
+    text("action-continue-chapter", &[("n", Arg::Text(n)), ("page", Arg::Int(page))])
+}
+
+/// The main action for a light novel part, part read.
+pub fn action_continue_part(n: &str, percent: i64) -> String {
+    text("action-continue-part", &[("n", Arg::Text(n)), ("percent", Arg::Int(percent))])
+}
+
+/// The main action for a light novel part, part read, when how far is not known.
+pub fn action_continue_part_plain(n: &str) -> String {
+    text("action-continue-part-plain", &[("n", Arg::Text(n))])
+}
+
+/// The main action for a light novel part not opened yet.
+pub fn action_read_part(n: &str) -> String {
+    text("action-read-part", &[("n", Arg::Text(n))])
+}
+
+/// The main action when every chapter is read.
+pub fn action_read_again() -> String {
+    text("action-read-again", &[])
+}
+
+/// Label of the source row on the series page.
+pub fn series_reading_from() -> String {
+    text("series-reading-from", &[])
+}
+
+/// Button beside a row on the series page that opens its sheet.
+pub fn series_change() -> String {
+    text("series-change", &[])
+}
+
+/// After the source's name: how many other sources have the series.
+pub fn series_sources_more(n: i64) -> String {
+    text("series-sources-more", &[("n", Arg::Int(n))])
+}
+
+/// Value of the trackers row while a tracker asks which series this is.
+pub fn series_tracker_ask() -> String {
+    text("series-tracker-ask", &[])
+}
+
+/// Value of the group row: the chosen group is used for this series.
+pub fn series_preferred_group() -> String {
+    text("series-preferred-group", &[])
+}
+
+/// A tracker's progress in chapters, with the total.
+pub fn series_tracker_chapters_of(n: i64, total: i64) -> String {
+    text("series-tracker-chapters-of", &[("n", Arg::Int(n)), ("total", Arg::Int(total))])
+}
+
+/// A tracker's progress in chapters, total unknown.
+pub fn series_tracker_chapters(n: i64) -> String {
+    text("series-tracker-chapters", &[("n", Arg::Int(n))])
+}
+
+/// A tracker's progress in chapters, then the volume.
+pub fn series_tracker_with_volume(chapters: &str, volume: i64) -> String {
+    text("series-tracker-with-volume", &[("chapters", Arg::Text(chapters)), ("volume", Arg::Int(volume))])
+}
+
+/// A light novel tracker's progress in volumes.
+pub fn series_tracker_volumes(volume: i64, total: i64) -> String {
+    text("series-tracker-volumes", &[("volume", Arg::Int(volume)), ("total", Arg::Int(total))])
+}
+
+/// Main place when the source can't be read from.
+pub fn series_read_from_another() -> String {
+    text("series-read-from-another", &[])
+}
+
+/// Status menu item: a score submenu.
+pub fn series_score() -> String {
+    text("series-score", &[])
+}
+
+/// Status menu's label before the series is on a list.
+pub fn series_add_to_list() -> String {
+    text("series-add-to-list", &[])
+}
+
+/// Last item of a series' list menu: take the series off every tracker's list. Asks first.
+pub fn series_remove_from_lists() -> String {
+    text("series-remove-from-lists", &[])
+}
+
+/// Title of the question before a series is taken off the lists.
+pub fn series_remove_from_lists_title(title: &str) -> String {
+    text("series-remove-from-lists-title", &[("title", Arg::Text(title))])
+}
+
+/// Line in that question.
+pub fn series_remove_from_lists_line() -> String {
+    text("series-remove-from-lists-line", &[])
+}
+
+/// Heading over what the removal came to, one line per tracker.
+pub fn series_removed_title() -> String {
+    text("series-removed-title", &[])
+}
+
+/// Title while choosing chapters on a phone: how many are chosen.
+pub fn series_chosen(n: i64) -> String {
+    text("series-chosen", &[("n", Arg::Int(n))])
+}
+
+/// Button while choosing chapters on a phone: choose every unread chapter.
+pub fn series_choose_all_unread() -> String {
+    text("series-choose-all-unread", &[])
+}
+
+/// Heading in Read from over the sources searched without finding the series.
+pub fn read_from_not_found() -> String {
+    text("read-from-not-found", &[])
+}
+
+/// Button beside such a source: look for the series there by other words.
+pub fn read_from_search_there() -> String {
+    text("read-from-search-there", &[])
+}
+
+/// Placeholder of the field that looks for the series in one source.
+pub fn read_from_search_placeholder(source: &str) -> String {
+    text("read-from-search-placeholder", &[("source", Arg::Text(source))])
+}
+
+/// Button that runs that search.
+pub fn read_from_search() -> String {
+    text("read-from-search", &[])
+}
+
+/// Under the field when the source found nothing by those words.
+pub fn read_from_search_none() -> String {
+    text("read-from-search-none", &[])
+}
+
+/// The More menu: the Tracking sheet.
+pub fn series_tracking() -> String {
+    text("series-tracking", &[])
+}
+
+/// The More menu: the Read from sheet.
+pub fn series_read_from_menu() -> String {
+    text("series-read-from-menu", &[])
+}
+
+/// The More menu: start again from chapter 1.
+pub fn series_read_again_menu() -> String {
+    text("series-read-again-menu", &[])
+}
+
+/// Heading of the chapter list when the series has volumes.
+pub fn series_volumes() -> String {
+    text("series-volumes", &[])
+}
+
+/// Heading of the chapter list.
+pub fn series_chapters() -> String {
+    text("series-chapters", &[])
+}
+
+/// Accessibility label of the chapter order menu.
+pub fn series_order() -> String {
+    text("series-order", &[])
+}
+
+/// Chapter order.
+pub fn series_newest_first() -> String {
+    text("series-newest-first", &[])
+}
+
+/// Chapter order.
+pub fn series_oldest_first() -> String {
+    text("series-oldest-first", &[])
+}
+
+/// A volume's heading in the chapter list.
+pub fn series_volume(n: &str) -> String {
+    text("series-volume", &[("n", Arg::Text(n))])
+}
+
+/// The heading for chapters that are in no volume yet.
+pub fn series_no_volume() -> String {
+    text("series-no-volume", &[])
+}
+
+/// After a volume's heading: which chapters it holds.
+pub fn series_chapter_range(from: &str, to: &str) -> String {
+    text("series-chapter-range", &[("from", Arg::Text(from)), ("to", Arg::Text(to))])
+}
+
+/// After a volume's heading when every chapter in it is read.
+pub fn series_volume_read() -> String {
+    text("series-volume-read", &[])
+}
+
+/// Accessibility value of a volume heading.
+pub fn series_expanded() -> String {
+    text("series-expanded", &[])
+}
+
+/// Accessibility value of a volume heading.
+pub fn series_collapsed() -> String {
+    text("series-collapsed", &[])
+}
+
+/// The chapter list when the source has none.
+pub fn series_no_chapters_title() -> String {
+    text("series-no-chapters-title", &[])
+}
+
+/// Line under it.
+pub fn series_no_chapters_line() -> String {
+    text("series-no-chapters-line", &[])
+}
+
+/// The chapter list when the source failed. Downloaded chapters are listed under it.
+pub fn series_chapters_failed(source: &str) -> String {
+    text("series-chapters-failed", &[("source", Arg::Text(source))])
+}
+
+/// A chapter row's title.
+pub fn series_chapter_number(n: &str) -> String {
+    text("series-chapter-number", &[("n", Arg::Text(n))])
+}
+
+/// Accessibility label of the bookmark mark on a chapter row.
+pub fn series_bookmarked() -> String {
+    text("series-bookmarked", &[])
+}
+
+/// Chapter menu and swipe action.
+pub fn series_mark_read() -> String {
+    text("series-mark-read", &[])
+}
+
+/// Chapter menu and swipe action.
+pub fn series_mark_unread() -> String {
+    text("series-mark-unread", &[])
+}
+
+/// Chapter menu item: every chapter before this one is read too.
+pub fn series_mark_read_up_to() -> String {
+    text("series-mark-read-up-to", &[])
+}
+
+/// Chapter menu and swipe action.
+pub fn series_download() -> String {
+    text("series-download", &[])
+}
+
+/// Chapter menu item: open the chapter in the reader.
+pub fn series_read_chapter_menu() -> String {
+    text("series-read-chapter-menu", &[])
+}
+
+/// Chapter menu item.
+pub fn series_bookmark() -> String {
+    text("series-bookmark", &[])
+}
+
+/// Chapter menu item.
+pub fn series_remove_bookmark() -> String {
+    text("series-remove-bookmark", &[])
+}
+
+/// Menu of a chapter that several groups put out.
+pub fn series_versions(n: i64) -> String {
+    text("series-versions", &[("n", Arg::Int(n))])
+}
+
+/// In that menu while the versions load.
+pub fn series_versions_loading() -> String {
+    text("series-versions-loading", &[])
+}
+
+/// The version in use, in that menu.
+pub fn series_version_in_use(name: &str) -> String {
+    text("series-version-in-use", &[("name", Arg::Text(name))])
+}
+
+/// Make another group the one used for this series.
+pub fn series_prefer_version(name: &str) -> String {
+    text("series-prefer-version", &[("name", Arg::Text(name))])
+}
+
+/// A downloaded chapter, after its state.
+pub fn chapter_state_downloaded() -> String {
+    text("chapter-state-downloaded", &[])
+}
+
+/// A chapter waiting to download.
+pub fn chapter_state_queued() -> String {
+    text("chapter-state-queued", &[])
+}
+
+/// A chapter waiting for Wi-Fi to download.
+pub fn chapter_state_wifi() -> String {
+    text("chapter-state-wifi", &[])
+}
+
+/// A chapter downloading.
+pub fn chapter_state_downloading(done: i64, total: i64) -> String {
+    text("chapter-state-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter that failed to download, with the reason.
+pub fn chapter_state_failed(reason: &str) -> String {
+    text("chapter-state-failed", &[("reason", Arg::Text(reason))])
+}
+
+/// A part-read chapter.
+pub fn chapter_state_page_of(page: i64, of: i64) -> String {
+    text("chapter-state-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+}
+
+/// A part-read chapter whose length isn't known.
+pub fn chapter_state_page(page: i64) -> String {
+    text("chapter-state-page", &[("page", Arg::Int(page))])
+}
+
+/// A read chapter.
+pub fn chapter_state_read() -> String {
+    text("chapter-state-read", &[])
+}
+
+/// A chapter that came out since you last looked.
+pub fn chapter_state_new() -> String {
+    text("chapter-state-new", &[])
+}
+
+/// Button: stop a chapter's download.
+pub fn chapter_download_stop() -> String {
+    text("chapter-download-stop", &[])
+}
+
+/// Button: try a failed chapter's download again.
+pub fn chapter_retry() -> String {
+    text("chapter-retry", &[])
+}
+
+/// Chapter menu item.
+pub fn chapter_download_delete() -> String {
+    text("chapter-download-delete", &[])
+}
+
+/// Download menu item.
+pub fn download_next(n: i64) -> String {
+    text("download-next", &[("n", Arg::Int(n))])
+}
+
+/// Download menu item.
+pub fn download_unread() -> String {
+    text("download-unread", &[])
+}
+
+/// Download menu item: a volume's chapters not yet downloaded.
+pub fn download_volume_count(volume: &str, n: i64) -> String {
+    text("download-volume-count", &[("volume", Arg::Text(volume)), ("n", Arg::Int(n))])
+}
+
+/// Download menu item: turns on choosing chapters in the list.
+pub fn download_choose() -> String {
+    text("download-choose", &[])
+}
+
+/// Download menu item.
+pub fn download_delete_series() -> String {
+    text("download-delete-series", &[])
+}
+
+/// The amber button in the Choose chapters bar.
+pub fn download_chapters(n: i64) -> String {
+    text("download-chapters", &[("n", Arg::Int(n))])
+}
+
+/// Line above that button.
+pub fn download_over_wifi() -> String {
+    text("download-over-wifi", &[])
+}
+
+/// Title of the question before reading a series again.
+pub fn read_again_title(title: &str) -> String {
+    text("read-again-title", &[("title", Arg::Text(title))])
+}
+
+/// What happens on each side.
+pub fn read_again_line() -> String {
+    text("read-again-line", &[])
+}
+
+/// The confirming button.
+pub fn read_again_confirm() -> String {
+    text("read-again-confirm", &[])
+}
+
+/// Title of the sheet that changes where a series' chapters come from.
+pub fn series_read_from_title() -> String {
+    text("series-read-from-title", &[])
+}
+
+/// While the sheet asks every source.
+pub fn series_read_from_asking() -> String {
+    text("series-read-from-asking", &[])
+}
+
+/// The sheet with no source that has the series.
+pub fn series_read_from_none_title() -> String {
+    text("series-read-from-none-title", &[])
+}
+
+/// Line under it.
+pub fn series_read_from_none_line() -> String {
+    text("series-read-from-none-line", &[])
+}
+
+/// A source's chapters, first on its line.
+pub fn series_read_from_chapters(latest: &str) -> String {
+    text("series-read-from-chapters", &[("latest", Arg::Text(latest))])
+}
+
+/// A source's chapters, after its kind on the line.
+pub fn series_read_from_chapters_later(latest: &str) -> String {
+    text("series-read-from-chapters-later", &[("latest", Arg::Text(latest))])
+}
+
+/// After a folder's chapters.
+pub fn series_read_from_on_device(device: &str) -> String {
+    text("series-read-from-on-device", &[("device", Arg::Text(device))])
+}
+
+/// Footnote of the Read from sheet.
+pub fn series_read_from_note() -> String {
+    text("series-read-from-note", &[])
+}
+
+/// Heading for trackers that don't track this series.
+pub fn series_not_tracked() -> String {
+    text("series-not-tracked", &[])
+}
+
+/// A tracker that isn't connected.
+pub fn series_tracker_connect() -> String {
+    text("series-tracker-connect", &[])
+}
+
+/// A tracker that has no such series.
+pub fn series_tracker_not_there() -> String {
+    text("series-tracker-not-there", &[])
+}
+
+/// A tracker looking for the series.
+pub fn series_tracker_looking() -> String {
+    text("series-tracker-looking", &[])
+}
+
+/// A tracker that is behind, and catches up on the next sync.
+pub fn series_tracker_behind(has: i64, gets: i64) -> String {
+    text("series-tracker-behind", &[("has", Arg::Int(has)), ("gets", Arg::Int(gets))])
+}
+
+/// A tracker ahead of Kaeri.
+pub fn series_tracker_ahead(has: i64) -> String {
+    text("series-tracker-ahead", &[("has", Arg::Int(has))])
+}
+
+/// A tracker's score out of ten.
+pub fn series_tracker_score(score: &str) -> String {
+    text("series-tracker-score", &[("score", Arg::Text(score))])
+}
+
+/// Menu item on a tracker that differs.
+pub fn series_tracker_keep_kaeri() -> String {
+    text("series-tracker-keep-kaeri", &[])
+}
+
+/// Menu item on a tracker that differs.
+pub fn series_tracker_take_theirs(tracker: &str) -> String {
+    text("series-tracker-take-theirs", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Under a tracker's guesses for the series.
+pub fn series_tracker_none_of_these() -> String {
+    text("series-tracker-none-of-these", &[])
+}
+
+/// AniList's list.
+pub fn read_list_reading() -> String {
+    text("read-list-reading", &[])
+}
+
+/// AniList's list.
+pub fn read_list_planning() -> String {
+    text("read-list-planning", &[])
+}
+
+/// AniList's list.
+pub fn read_list_completed() -> String {
+    text("read-list-completed", &[])
+}
+
+/// AniList's list.
+pub fn read_list_paused() -> String {
+    text("read-list-paused", &[])
+}
+
+/// AniList's list.
+pub fn read_list_dropped() -> String {
+    text("read-list-dropped", &[])
+}
+
+/// AniList's list.
+pub fn read_list_rereading() -> String {
+    text("read-list-rereading", &[])
+}
+
+/// Series in folders and servers that are on no list.
+pub fn read_list_your_files() -> String {
+    text("read-list-your-files", &[])
+}
+
+/// A choice.
+pub fn medium_watch() -> String {
+    text("medium-watch", &[])
+}
+
+/// A choice.
+pub fn medium_read() -> String {
+    text("medium-read", &[])
+}
+
+/// A choice.
+pub fn medium_both() -> String {
+    text("medium-both", &[])
+}
+
+/// Line under the Watch choice.
+pub fn medium_watch_line() -> String {
+    text("medium-watch-line", &[])
+}
+
+/// Line under the Read choice.
+pub fn medium_read_line() -> String {
+    text("medium-read-line", &[])
+}
+
+/// Line under the Both choice.
+pub fn medium_both_line() -> String {
+    text("medium-both-line", &[])
+}
+
+/// The answer, as the Settings row says it.
+pub fn medium_answer_watch() -> String {
+    text("medium-answer-watch", &[])
+}
+
+/// The answer, as the Settings row says it.
+pub fn medium_answer_read() -> String {
+    text("medium-answer-read", &[])
+}
+
+/// The answer, as the Settings row says it.
+pub fn medium_answer_both() -> String {
+    text("medium-answer-both", &[])
+}
+
+/// Title of the sheet and the toolbar button.
+pub fn sources_add_title() -> String {
+    text("sources-add-title", &[])
+}
+
+/// Line in the Add a source sheet.
+pub fn book_add_line() -> String {
+    text("book-add-line", &[])
+}
+
+/// A kind in the Add a source sheet.
+pub fn book_add_folder() -> String {
+    text("book-add-folder", &[])
+}
+
+/// Line under it.
+pub fn book_add_folder_line(device: &str) -> String {
+    text("book-add-folder-line", &[("device", Arg::Text(device))])
+}
+
+/// A kind in the Add a source sheet.
+pub fn book_add_server() -> String {
+    text("book-add-server", &[])
+}
+
+/// Line under it.
+pub fn book_add_server_line() -> String {
+    text("book-add-server-line", &[])
+}
+
+/// A kind in the Add a source sheet.
+pub fn book_add_store() -> String {
+    text("book-add-store", &[])
+}
+
+/// Line under it.
+pub fn book_add_store_line() -> String {
+    text("book-add-store-line", &[])
+}
+
+/// Title of the Add a server sheet.
+pub fn book_add_server_title() -> String {
+    text("book-add-server-title", &[])
+}
+
+/// The sheet's amber button.
+pub fn book_add_server_button() -> String {
+    text("book-add-server-button", &[])
+}
+
+/// What the address answered, before the sign-in.
+pub fn sources_found_server(kind: &str) -> String {
+    text("sources-found-server", &[("kind", Arg::Text(kind))])
+}
+
+/// What the server held once signed in, when it said how many series it lists.
+pub fn sources_found_server_series(kind: &str, n: i64) -> String {
+    text("sources-found-server-series", &[("kind", Arg::Text(kind)), ("n", Arg::Int(n))])
+}
+
+/// While the address is tried.
+pub fn book_server_looking() -> String {
+    text("book-server-looking", &[])
+}
+
+/// Line under the password.
+pub fn book_server_note() -> String {
+    text("book-server-note", &[])
+}
+
+/// Heading in Your sources.
+pub fn book_sources_folders() -> String {
+    text("book-sources-folders", &[])
+}
+
+/// Heading in Your sources.
+pub fn book_sources_servers() -> String {
+    text("book-sources-servers", &[])
+}
+
+/// Heading in Your sources.
+pub fn book_sources_plugins() -> String {
+    text("book-sources-plugins", &[])
+}
+
+/// Under the plugins, before a link to the plugin stores.
+pub fn book_sources_plugins_footer() -> String {
+    text("book-sources-plugins-footer", &[])
+}
+
+/// How many series a folder or server holds.
+pub fn book_sources_series(n: i64) -> String {
+    text("book-sources-series", &[("n", Arg::Int(n))])
+}
+
+/// A folder being looked through.
+pub fn book_sources_scanning(n: i64) -> String {
+    text("book-sources-scanning", &[("n", Arg::Int(n))])
+}
+
+/// A folder that can't be found, such as a drive that isn't plugged in.
+pub fn book_sources_missing() -> String {
+    text("book-sources-missing", &[])
+}
+
+/// A source that is turned off.
+pub fn book_sources_off() -> String {
+    text("book-sources-off", &[])
+}
+
+/// On a server's line.
+pub fn book_sources_progress_back() -> String {
+    text("book-sources-progress-back", &[])
+}
+
+/// A server's kind.
+pub fn book_sources_opds() -> String {
+    text("book-sources-opds", &[])
+}
+
+/// A plugin's store.
+pub fn book_sources_from_store(store: &str) -> String {
+    text("book-sources-from-store", &[("store", Arg::Text(store))])
+}
+
+/// A plugin's version.
+pub fn book_sources_version(version: &str) -> String {
+    text("book-sources-version", &[("version", Arg::Text(version))])
+}
+
+/// Button on a folder: series whose match needs a look.
+pub fn book_sources_check_matches(n: i64) -> String {
+    text("book-sources-check-matches", &[("n", Arg::Int(n))])
+}
+
+/// Title of the Check matches sheet.
+pub fn book_sources_check_matches_title() -> String {
+    text("book-sources-check-matches-title", &[])
+}
+
+/// A folder menu item: look through the folders again.
+pub fn book_sources_scan() -> String {
+    text("book-sources-scan", &[])
+}
+
+/// A server menu switch.
+pub fn book_sources_report_progress() -> String {
+    text("book-sources-report-progress", &[])
+}
+
+/// A server menu switch.
+pub fn book_sources_use() -> String {
+    text("book-sources-use", &[])
+}
+
+/// An address that answered but serves no books.
+pub fn book_sources_not_a_book_server() -> String {
+    text("book-sources-not-a-book-server", &[])
+}
+
+/// A folder name with no match.
+pub fn book_sources_no_match() -> String {
+    text("book-sources-no-match", &[])
+}
+
+/// Button: keep the series as Your files, unmatched.
+pub fn book_sources_keep() -> String {
+    text("book-sources-keep", &[])
+}
+
+/// Button: search for the match by hand.
+pub fn book_sources_find() -> String {
+    text("book-sources-find", &[])
+}
+
+/// Footnote of the Check matches sheet.
+pub fn book_sources_unmatched_note() -> String {
+    text("book-sources-unmatched-note", &[])
+}
+
+/// Accessibility label of the control that sets Shows or Reading in the Library and Search.
+pub fn library_scope_label() -> String {
+    text("library-scope-label", &[])
+}
+
+/// A side of that control.
+pub fn library_scope_shows() -> String {
+    text("library-scope-shows", &[])
+}
+
+/// A side of that control.
+pub fn library_scope_reading() -> String {
+    text("library-scope-reading", &[])
+}
+
+/// The reading library's order: as the engine sends it, most recently read first.
+pub fn read_sort_last_read() -> String {
+    text("read-sort-last-read", &[])
+}
+
+/// Accessibility value of the list menu: the list and how many series are on it.
+pub fn read_library_list_value(list: &str, n: i64) -> String {
+    text("read-library-list-value", &[("list", Arg::Text(list)), ("n", Arg::Int(n))])
+}
+
+/// A reading list with nothing on it. A Search button follows.
+pub fn read_library_empty(list: &str) -> String {
+    text("read-library-empty", &[("list", Arg::Text(list))])
+}
+
+/// Line under it.
+pub fn read_library_empty_line() -> String {
+    text("read-library-empty-line", &[])
+}
+
+/// Your files with nothing in it.
+pub fn read_library_files_empty_title() -> String {
+    text("read-library-files-empty-title", &[])
+}
+
+/// Line under it.
+pub fn read_library_files_empty_line() -> String {
+    text("read-library-files-empty-line", &[])
+}
+
+/// The button under it.
+pub fn read_library_files_add() -> String {
+    text("read-library-files-add", &[])
+}
+
+/// The search field's prompt while Search looks for reading.
+pub fn read_search_placeholder() -> String {
+    text("read-search-placeholder", &[])
+}
+
+/// The last row of reading's results with both media on: matches in the other scope.
+pub fn search_other_scope(n: i64, scope: &str) -> String {
+    text("search-other-scope", &[("n", Arg::Int(n)), ("scope", Arg::Text(scope))])
+}
+
+/// The button on that row, which switches the scope.
+pub fn search_show_them() -> String {
+    text("search-show-them", &[])
+}
+
+/// The line over browsing: what is shown, and where the list comes from.
+pub fn read_search_browse_line(what: &str) -> String {
+    text("read-search-browse-line", &[("what", Arg::Text(what))])
+}
+
+/// Over reading's results once every result is listed: how many series AniList found.
+pub fn read_search_total(n: i64) -> String {
+    text("read-search-total", &[("n", Arg::Int(n))])
+}
+
+/// Search couldn't ask AniList.
+pub fn read_search_failed() -> String {
+    text("read-search-failed", &[])
+}
+
+/// No results for what was typed.
+pub fn read_search_nothing(query: &str) -> String {
+    text("read-search-nothing", &[("query", Arg::Text(query))])
+}
+
+/// No results while browsing with filters.
+pub fn read_search_nothing_browse() -> String {
+    text("read-search-nothing-browse", &[])
+}
+
+/// Line under no results.
+pub fn read_search_nothing_line() -> String {
+    text("read-search-nothing-line", &[])
+}
+
+/// Line under no results with filters set. A Clear filters button follows.
+pub fn read_search_nothing_filters_line() -> String {
+    text("read-search-nothing-filters-line", &[])
+}
+
+/// The button under it.
+pub fn read_search_clear_filters() -> String {
+    text("read-search-clear-filters", &[])
+}
+
+/// A sort of reading's Search, AniList's.
+pub fn read_sort_popular() -> String {
+    text("read-sort-popular", &[])
+}
+
+/// A sort of reading's Search, AniList's.
+pub fn read_sort_trending() -> String {
+    text("read-sort-trending", &[])
+}
+
+/// A sort of reading's Search, AniList's.
+pub fn read_sort_score() -> String {
+    text("read-sort-score", &[])
+}
+
+/// A sort of reading's Search, AniList's.
+pub fn read_sort_newest() -> String {
+    text("read-sort-newest", &[])
+}
+
+/// A filter.
+pub fn read_filter_format() -> String {
+    text("read-filter-format", &[])
+}
+
+/// A filter.
+pub fn read_filter_origin() -> String {
+    text("read-filter-origin", &[])
+}
+
+/// A filter.
+pub fn read_filter_status() -> String {
+    text("read-filter-status", &[])
+}
+
+/// A filter.
+pub fn read_filter_genres() -> String {
+    text("read-filter-genres", &[])
+}
+
+/// Title of the iPhone's filters sheet.
+pub fn read_filter_title() -> String {
+    text("read-filter-title", &[])
+}
+
+/// Button in that sheet that clears every filter.
+pub fn read_filter_reset() -> String {
+    text("read-filter-reset", &[])
+}
+
+/// Accessibility value of a filter with nothing chosen.
+pub fn read_filter_any() -> String {
+    text("read-filter-any", &[])
+}
+
+/// A filter's name before its value, once set: "Origin: Korea".
+pub fn read_filter_set(name: &str) -> String {
+    text("read-filter-set", &[("name", Arg::Text(name))])
+}
+
+/// A filter with several values: the first, then how many more.
+pub fn read_filter_many(first: &str, more: i64) -> String {
+    text("read-filter-many", &[("first", Arg::Text(first)), ("more", Arg::Int(more))])
+}
+
+/// A genre left out.
+pub fn read_filter_not_genre(genre: &str) -> String {
+    text("read-filter-not-genre", &[("genre", Arg::Text(genre))])
+}
+
+/// How many genres are set.
+pub fn read_filter_genres_count(n: i64) -> String {
+    text("read-filter-genres-count", &[("n", Arg::Int(n))])
+}
+
+/// A genre's state: only series with it.
+pub fn read_filter_included() -> String {
+    text("read-filter-included", &[])
+}
+
+/// A genre's state: no series with it.
+pub fn read_filter_left_out() -> String {
+    text("read-filter-left-out", &[])
+}
+
+/// Over a first-run page's title: which page of how many.
+pub fn onboarding_step(step: i64, total: i64) -> String {
+    text("onboarding-step", &[("step", Arg::Int(step)), ("total", Arg::Int(total))])
+}
+
+/// Line under "Welcome to Kaeri" on the first page, naming both media.
+pub fn onboarding_welcome_line() -> String {
+    text("onboarding-welcome-line", &[])
+}
+
+/// Note under the welcome line.
+pub fn onboarding_welcome_note() -> String {
+    text("onboarding-welcome-note", &[])
+}
+
+/// Title of the page that asks what Kaeri is for, and of the sheet after the update.
+pub fn onboarding_medium_title() -> String {
+    text("onboarding-medium-title", &[])
+}
+
+/// Line under the title of the medium page.
+pub fn onboarding_medium_line() -> String {
+    text("onboarding-medium-line", &[])
+}
+
+/// Accessibility hint on Continue while nothing is chosen on the medium page.
+pub fn onboarding_medium_hint() -> String {
+    text("onboarding-medium-hint", &[])
+}
+
+/// Title of the first-run page that offers AniList.
+pub fn onboarding_lists_title() -> String {
+    text("onboarding-lists-title", &[])
+}
+
+/// Line on the AniList page after Watch.
+pub fn onboarding_lists_line_watch(tracker: &str) -> String {
+    text("onboarding-lists-line-watch", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Line on the AniList page after Read.
+pub fn onboarding_lists_line_read(tracker: &str) -> String {
+    text("onboarding-lists-line-read", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Line on the AniList page after Both.
+pub fn onboarding_lists_line_both(tracker: &str) -> String {
+    text("onboarding-lists-line-both", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Line under AniList's name on the first-run page.
+pub fn onboarding_lists_anilist_line() -> String {
+    text("onboarding-lists-anilist-line", &[])
+}
+
+/// Under AniList on the first-run page after Watch: the other trackers, for later.
+pub fn onboarding_lists_later_watch() -> String {
+    text("onboarding-lists-later-watch", &[])
+}
+
+/// Under AniList on the first-run page after Read: the other trackers, for later.
+pub fn onboarding_lists_later_read() -> String {
+    text("onboarding-lists-later-read", &[])
+}
+
+/// Under AniList on the first-run page after Both: the other trackers, for later.
+pub fn onboarding_lists_later_both() -> String {
+    text("onboarding-lists-later-both", &[])
+}
+
+/// The first-run page's main button: sign in to the tracker.
+pub fn onboarding_connect(tracker: &str) -> String {
+    text("onboarding-connect", &[("tracker", Arg::Text(tracker))])
+}
+
+/// Title of the last first-run page after Read or Both.
+pub fn onboarding_books_title() -> String {
+    text("onboarding-books-title", &[])
+}
+
+/// Line under the title of the books page.
+pub fn onboarding_books_line() -> String {
+    text("onboarding-books-line", &[])
+}
+
+/// Row on the books page: add a folder of books.
+pub fn onboarding_books_folder() -> String {
+    text("onboarding-books-folder", &[])
+}
+
+/// Line under Add a folder on the books page.
+pub fn onboarding_books_folder_line() -> String {
+    text("onboarding-books-folder-line", &[])
+}
+
+/// Row on the books page: add a book server.
+pub fn onboarding_books_server() -> String {
+    text("onboarding-books-server", &[])
+}
+
+/// Line under Add a server on the books page.
+pub fn onboarding_books_server_line() -> String {
+    text("onboarding-books-server-line", &[])
+}
+
+/// Heading over the invite field on the books page.
+pub fn onboarding_books_invite_heading() -> String {
+    text("onboarding-books-invite-heading", &[])
+}
+
+/// Placeholder of the invite field on the books page.
+pub fn onboarding_books_invite_placeholder() -> String {
+    text("onboarding-books-invite-placeholder", &[])
+}
+
+/// Line under the invite field: whose code a plugin is.
+pub fn onboarding_books_plugin_line() -> String {
+    text("onboarding-books-plugin-line", &[])
+}
+
+/// Title of the last first-run page after Both: where shows and books come from.
+pub fn onboarding_both_title() -> String {
+    text("onboarding-both-title", &[])
+}
+
+/// Line under the title of that page.
+pub fn onboarding_both_line() -> String {
+    text("onboarding-both-line", &[])
+}
+
+/// Heading over the shows' rows on that page.
+pub fn onboarding_both_shows() -> String {
+    text("onboarding-both-shows", &[])
+}
+
+/// Heading over the books' rows on that page.
+pub fn onboarding_both_books() -> String {
+    text("onboarding-both-books", &[])
+}
+
+/// Line under Add a folder in the shows' part, on a computer.
+pub fn onboarding_both_shows_folder_line(device: &str) -> String {
+    text("onboarding-both-shows-folder-line", &[("device", Arg::Text(device))])
+}
+
+/// Line under Add a server in the shows' part.
+pub fn onboarding_both_shows_server_line() -> String {
+    text("onboarding-both-shows-server-line", &[])
+}
+
+/// Accessibility value of a choice row: its place among the three.
+pub fn medium_choice_position(n: i64, total: i64) -> String {
+    text("medium-choice-position", &[("n", Arg::Int(n)), ("total", Arg::Int(total))])
+}
+
+/// Under the choices in the sheet.
+pub fn medium_change_later() -> String {
+    text("medium-change-later", &[])
+}
+
+/// Line of the sheet over Home after the update that brought reading.
+pub fn medium_update_line(device: &str) -> String {
+    text("medium-update-line", &[("device", Arg::Text(device))])
+}
+
+/// Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+pub fn medium_join_title_watch(devices: &str, n: i64) -> String {
+    text("medium-join-title-watch", &[("devices", Arg::Text(devices)), ("n", Arg::Int(n))])
+}
+
+/// Title of the sheet when the other devices answer Read.
+pub fn medium_join_title_read(devices: &str, n: i64) -> String {
+    text("medium-join-title-read", &[("devices", Arg::Text(devices)), ("n", Arg::Int(n))])
+}
+
+/// Title of the sheet when the other devices answer Both.
+pub fn medium_join_title_both(devices: &str, n: i64) -> String {
+    text("medium-join-title-both", &[("devices", Arg::Text(devices)), ("n", Arg::Int(n))])
+}
+
+/// Line of the sheet on joining.
+pub fn medium_join_line(device: &str) -> String {
+    text("medium-join-line", &[("device", Arg::Text(device))])
+}
+
+/// Title of the confirmation before watching is turned off.
+pub fn medium_off_title_watch() -> String {
+    text("medium-off-title-watch", &[])
+}
+
+/// Title of the confirmation before reading is turned off.
+pub fn medium_off_title_read() -> String {
+    text("medium-off-title-read", &[])
+}
+
+/// What turning watching off does.
+pub fn medium_off_watch_body(device: &str) -> String {
+    text("medium-off-watch-body", &[("device", Arg::Text(device))])
+}
+
+/// What turning reading off does.
+pub fn medium_off_read_body(device: &str) -> String {
+    text("medium-off-read-body", &[("device", Arg::Text(device))])
+}
+
+/// Switch in the confirmation, off by default.
+pub fn medium_off_delete_watch() -> String {
+    text("medium-off-delete-watch", &[])
+}
+
+/// Switch in the confirmation, off by default.
+pub fn medium_off_delete_read() -> String {
+    text("medium-off-delete-read", &[])
+}
+
+/// Under the switch: how much the downloads take.
+pub fn medium_off_delete_size(size: &str, device: &str) -> String {
+    text("medium-off-delete-size", &[("size", Arg::Text(size)), ("device", Arg::Text(device))])
+}
+
+/// The confirmation's main button.
+pub fn medium_off_confirm_watch() -> String {
+    text("medium-off-confirm-watch", &[])
+}
+
+/// The confirmation's main button.
+pub fn medium_off_confirm_read() -> String {
+    text("medium-off-confirm-read", &[])
+}
+
+/// Settings row and page: what Kaeri is for on this device.
+pub fn settings_kaeri_is_for() -> String {
+    text("settings-kaeri-is-for", &[])
+}
+
+/// Line under Kaeri is for on the Mac and iPad.
+pub fn settings_medium_note() -> String {
+    text("settings-medium-note", &[])
+}
+
+/// Under the choices on the iPhone's page.
+pub fn settings_medium_footer() -> String {
+    text("settings-medium-footer", &[])
+}
+
+/// Line under Open at.
+pub fn settings_open_at_note() -> String {
+    text("settings-open-at-note", &[])
+}
+
+/// Settings pane and group: reading.
+pub fn settings_group_reading() -> String {
+    text("settings-group-reading", &[])
+}
+
+/// Downloads group with both media on: shows.
+pub fn settings_group_shows() -> String {
+    text("settings-group-shows", &[])
+}
+
+/// The Reading pane's column beside it.
+pub fn settings_aside_reading() -> String {
+    text("settings-aside-reading", &[])
+}
+
+/// Group: how the reader opens each kind of book.
+pub fn settings_reader_defaults() -> String {
+    text("settings-reader-defaults", &[])
+}
+
+/// Under the reader defaults.
+pub fn settings_reader_defaults_footer() -> String {
+    text("settings-reader-defaults-footer", &[])
+}
+
+/// Row: manga's reader default.
+pub fn settings_reader_manga() -> String {
+    text("settings-reader-manga", &[])
+}
+
+/// Row: webtoons' reader default.
+pub fn settings_reader_webtoons() -> String {
+    text("settings-reader-webtoons", &[])
+}
+
+/// Line under Webtoons.
+pub fn settings_reader_webtoons_note() -> String {
+    text("settings-reader-webtoons-note", &[])
+}
+
+/// Row: light novels' reader default.
+pub fn settings_reader_novels() -> String {
+    text("settings-reader-novels", &[])
+}
+
+/// A reader default: pages turned right to left.
+pub fn settings_reader_rtl() -> String {
+    text("settings-reader-rtl", &[])
+}
+
+/// A reader default: pages turned left to right.
+pub fn settings_reader_ltr() -> String {
+    text("settings-reader-ltr", &[])
+}
+
+/// A reader default: one long strip.
+pub fn settings_reader_strip() -> String {
+    text("settings-reader-strip", &[])
+}
+
+/// A reader default for novels: pages.
+pub fn settings_reader_pages() -> String {
+    text("settings-reader-pages", &[])
+}
+
+/// A reader default for novels: one scrolling column.
+pub fn settings_reader_scrolled() -> String {
+    text("settings-reader-scrolled", &[])
+}
+
+/// Row: when a chapter counts as read.
+pub fn settings_counts_read() -> String {
+    text("settings-counts-read", &[])
+}
+
+/// Line under Counts as read.
+pub fn settings_counts_read_note() -> String {
+    text("settings-counts-read-note", &[])
+}
+
+/// Value of Counts as read: a short stay on the last page, or moving on past it.
+pub fn settings_counts_read_value() -> String {
+    text("settings-counts-read-value", &[])
+}
+
+/// Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+pub fn settings_counts_read_moving_on() -> String {
+    text("settings-counts-read-moving-on", &[])
+}
+
+/// Line under Counts as read when it is Moving on from it.
+pub fn settings_counts_read_moving_on_note() -> String {
+    text("settings-counts-read-moving-on-note", &[])
+}
+
+/// Value of Counts as read: only the person's own marks; the reader marks nothing.
+pub fn settings_counts_read_marked() -> String {
+    text("settings-counts-read-marked", &[])
+}
+
+/// Line under Counts as read when it is When you mark it.
+pub fn settings_counts_read_marked_note() -> String {
+    text("settings-counts-read-marked-note", &[])
+}
+
+/// Group: series settings that follow you to your other devices.
+pub fn settings_follow_group() -> String {
+    text("settings-follow-group", &[])
+}
+
+/// Row in that group.
+pub fn settings_follow_mode() -> String {
+    text("settings-follow-mode", &[])
+}
+
+/// Line under that row.
+pub fn settings_follow_mode_note() -> String {
+    text("settings-follow-mode-note", &[])
+}
+
+/// Under the group: what stays on this device.
+pub fn settings_follow_footer(device: &str) -> String {
+    text("settings-follow-footer", &[("device", Arg::Text(device))])
+}
+
+/// Line under Look in Series settings that follow you.
+pub fn settings_look_follows_note() -> String {
+    text("settings-look-follows-note", &[])
+}
+
+/// Value of New chapters in Downloads: the series on the Reading list.
+pub fn settings_new_chapters_reading() -> String {
+    text("settings-new-chapters-reading", &[])
+}
+
+/// Line under New chapters in Downloads.
+pub fn settings_new_chapters_note() -> String {
+    text("settings-new-chapters-note", &[])
+}
+
+/// Group in Accounts: how reading progress goes to the trackers.
+pub fn settings_progress_group() -> String {
+    text("settings-progress-group", &[])
+}
+
+/// Value of Send progress after: as each chapter counts as read.
+pub fn settings_progress_chapter() -> String {
+    text("settings-progress-chapter", &[])
+}
+
+/// Value of Send progress after: once, when the reader closes.
+pub fn settings_progress_close() -> String {
+    text("settings-progress-close", &[])
+}
+
+/// Value of When trackers disagree: the higher chapter wins.
+pub fn settings_disagree_furthest() -> String {
+    text("settings-disagree-furthest", &[])
+}
+
+/// Value of When trackers disagree: the newest change wins, even a lower chapter.
+pub fn settings_disagree_latest() -> String {
+    text("settings-disagree-latest", &[])
+}
+
+/// Line under When trackers disagree.
+pub fn settings_disagree_note() -> String {
+    text("settings-disagree-note", &[])
+}
+
+/// Line under Keep next chapters ready.
+pub fn settings_keep_chapters_ready_note() -> String {
+    text("settings-keep-chapters-ready-note", &[])
+}
+
+/// Line under Delete chapters after reading.
+pub fn settings_delete_after_reading_note() -> String {
+    text("settings-delete-after-reading-note", &[])
+}
+
+/// Line under New chapters.
+pub fn settings_chapter_notifications_note() -> String {
+    text("settings-chapter-notifications-note", &[])
+}
+
+/// Line under Downloads finished.
+pub fn settings_downloads_finished_note() -> String {
+    text("settings-downloads-finished-note", &[])
+}
+
+/// Under New chapters.
+pub fn settings_chapter_notifications_footer() -> String {
+    text("settings-chapter-notifications-footer", &[])
+}
+
+/// Credit under the trackers with reading on.
+pub fn accounts_mangaupdates_credit() -> String {
+    text("accounts-mangaupdates-credit", &[])
+}
+
+/// Placeholder of the user name field when signing in to MangaUpdates.
+pub fn accounts_username() -> String {
+    text("accounts-username", &[])
+}
+
+/// Beside the Reading heading in Downloads: how many chapters are kept and their size.
+pub fn read_downloads_total(n: i64, size: &str) -> String {
+    text("read-downloads-total", &[("n", Arg::Int(n)), ("size", Arg::Text(size))])
+}
+
+/// A series' line in Downloads while a chapter downloads.
+pub fn read_downloads_active(chapter: &str, done: i64, total: i64) -> String {
+    text("read-downloads-active", &[("chapter", Arg::Text(chapter)), ("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// After the chapter downloading: how many more wait.
+pub fn read_downloads_more_queued(n: i64) -> String {
+    text("read-downloads-more-queued", &[("n", Arg::Int(n))])
+}
+
+/// A series' line in Downloads when its chapters wait to start.
+pub fn read_downloads_queued(n: i64) -> String {
+    text("read-downloads-queued", &[("n", Arg::Int(n))])
+}
+
+/// A series' line in Downloads when a chapter failed, with the reason.
+pub fn read_downloads_failed(chapter: &str, reason: &str) -> String {
+    text("read-downloads-failed", &[("chapter", Arg::Text(chapter)), ("reason", Arg::Text(reason))])
+}
+
+/// A series' line in Downloads: how many chapters are kept.
+pub fn read_downloads_kept(n: i64) -> String {
+    text("read-downloads-kept", &[("n", Arg::Int(n))])
+}
+
+/// After the kept count: how many of them are read.
+pub fn read_downloads_read(n: i64) -> String {
+    text("read-downloads-read", &[("n", Arg::Int(n))])
+}
+
+/// Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+pub fn read_downloads_delete_read() -> String {
+    text("read-downloads-delete-read", &[])
 }
 
 /// Button that shows the season before.
@@ -13660,6 +16035,66 @@ pub fn settings_torrents_cellular() -> String {
     text("settings-torrents-cellular", &[])
 }
 
+/// Row: whether chapter downloads run on a mobile connection.
+pub fn settings_chapter_downloads_cellular() -> String {
+    text("settings-chapter-downloads-cellular", &[])
+}
+
+/// Row: keep the next chapters of what you read downloaded.
+pub fn settings_keep_chapters_ready() -> String {
+    text("settings-keep-chapters-ready", &[])
+}
+
+/// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+pub fn settings_delete_after_reading() -> String {
+    text("settings-delete-after-reading", &[])
+}
+
+/// Row: whether a series' reader mode, direction and colour follow you to your other devices.
+pub fn settings_series_choices_follow() -> String {
+    text("settings-series-choices-follow", &[])
+}
+
+/// Row in Downloads: which series' new chapters download by themselves.
+pub fn settings_new_chapters_download() -> String {
+    text("settings-new-chapters-download", &[])
+}
+
+/// Row: whether a series' own reader mode and direction follow you to your other devices.
+pub fn settings_mode_follows() -> String {
+    text("settings-mode-follows", &[])
+}
+
+/// Row: whether a series' own look (colour or greys) follows you to your other devices.
+pub fn settings_look_follows() -> String {
+    text("settings-look-follows", &[])
+}
+
+/// Row: when chapter progress goes to the reading trackers.
+pub fn settings_send_progress_after() -> String {
+    text("settings-send-progress-after", &[])
+}
+
+/// Row: which chapter progress wins when a tracker and this device disagree.
+pub fn settings_when_trackers_disagree() -> String {
+    text("settings-when-trackers-disagree", &[])
+}
+
+/// Row: whether a new chapter of a series on your Reading list sends a notification.
+pub fn settings_chapter_notifications() -> String {
+    text("settings-chapter-notifications", &[])
+}
+
+/// Row: whether the app sends a notification when the chapters it was downloading are all done.
+pub fn settings_downloads_finished() -> String {
+    text("settings-downloads-finished", &[])
+}
+
+/// Row: which Home the app opens at while it is for watching and reading.
+pub fn settings_open_at() -> String {
+    text("settings-open-at", &[])
+}
+
 /// Row: seeding after watching.
 pub fn settings_seed_after() -> String {
     text("settings-seed-after", &[])
@@ -14045,6 +16480,16 @@ pub fn settings_aside_accounts() -> String {
     text("settings-aside-accounts", &[])
 }
 
+/// Side note in Accounts when the app is for reading.
+pub fn settings_aside_accounts_read() -> String {
+    text("settings-aside-accounts-read", &[])
+}
+
+/// Side note in Accounts when the app is for watching and reading.
+pub fn settings_aside_accounts_both() -> String {
+    text("settings-aside-accounts-both", &[])
+}
+
 /// Today, inside a line such as "Thursday 16:30".
 pub fn widget_day_today() -> String {
     text("widget-day-today", &[])
@@ -14303,6 +16748,21 @@ pub fn settings_subs_styled_strip_detail() -> String {
 /// Button that restores the default subtitle style.
 pub fn settings_subs_reset() -> String {
     text("settings-subs-reset", &[])
+}
+
+/// Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+pub fn settings_opds_feed() -> String {
+    text("settings-opds-feed", &[])
+}
+
+/// Row: the password e-readers ask for before they browse the shared catalogue.
+pub fn settings_opds_password() -> String {
+    text("settings-opds-password", &[])
+}
+
+/// Row: the port the shared catalogue listens on. Empty picks a free one.
+pub fn settings_opds_port() -> String {
+    text("settings-opds-port", &[])
 }
 
 /// Title of the screen or section that lists sources.
@@ -17730,6 +20190,41 @@ pub fn accounts_welcome_detail(tracker: &str) -> String {
 /// Line under a tracker that brings in lists.
 pub fn accounts_brings_lists() -> String {
     text("accounts-brings-lists", &[])
+}
+
+/// Line under AniList when Kaeri is for reading: what signing in brings.
+pub fn accounts_brings_lists_read() -> String {
+    text("accounts-brings-lists-read", &[])
+}
+
+/// Line under AniList when Kaeri is for watching and reading.
+pub fn accounts_brings_lists_both() -> String {
+    text("accounts-brings-lists-both", &[])
+}
+
+/// Line under a tracker that is not signed in: what it keeps in step.
+pub fn accounts_tracker_lists() -> String {
+    text("accounts-tracker-lists", &[])
+}
+
+/// Line under MangaUpdates when it is not signed in.
+pub fn accounts_tracker_reading_lists() -> String {
+    text("accounts-tracker-reading-lists", &[])
+}
+
+/// Line under a tracker with both media on: it serves shows and reading.
+pub fn accounts_tracker_serves_both() -> String {
+    text("accounts-tracker-serves-both", &[])
+}
+
+/// Line under a tracker with both media on: it serves reading only.
+pub fn accounts_tracker_serves_reading() -> String {
+    text("accounts-tracker-serves-reading", &[])
+}
+
+/// Line under a tracker with both media on: it serves shows only.
+pub fn accounts_tracker_serves_shows() -> String {
+    text("accounts-tracker-serves-shows", &[])
 }
 
 /// Line under the accounts screen when the library needs a tracker.

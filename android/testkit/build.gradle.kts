@@ -8,8 +8,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.testkit"
-    // The TV app's tests read the scenes too.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
 }
 
 dependencies {

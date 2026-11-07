@@ -48,6 +48,14 @@ public final class AppStore {
     public let jobs: JobsModel
     public let notices: NoticesModel
     public let settings = SettingsModel()
+    /// The open reader: its session, pages and sheets.
+    public let reader = ReaderModel()
+    /// What Kaeri is for on this device: watch, read or both.
+    public let medium = MediumModel()
+    /// Reading's places.
+    public let reading = ReadingModel()
+    /// Folders, servers and plugins that books come from.
+    public let bookSources = BookSourcesModel()
     public let showSettings = ShowSettingsModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
@@ -154,6 +162,10 @@ public final class AppStore {
             return true
         }
         continued.send = { [weak self] command in self?.send(command) }
+        reader.send = { [weak self] command in self?.send(command) }
+        medium.send = { [weak self] command in self?.send(command) }
+        reading.send = { [weak self] command in self?.send(command) }
+        bookSources.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
@@ -303,6 +315,7 @@ public final class AppStore {
             }
         )
         phase = .running
+        reader.bookResource = { url in engine.bookResource(url: url) }
         attachTV(engine)
         // Typed-code pairing finds the device showing the code by DNS-SD.
         engine.setSyncNetwork(network: BonjourSyncNetwork())
@@ -312,6 +325,11 @@ public final class AppStore {
         early = []
         artwork.sendUnsent()
         sync.load()
+        // What Kaeri is for decides the places, so it is asked first; reading's sidebar count
+        // and its sources follow.
+        medium.load()
+        bookSources.load()
+        reading.loadUpdates()
     }
 
     /// The engine's sender for Play on TV, browsing the network with Bonjour; in the Fixtures
@@ -894,6 +912,10 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        reader.observe(event)
+        reading.observe(event)
+        bookSources.observe(event)
+        if case .medium(let view) = event { medium.apply(view) }
         sync.apply(event)
         if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }

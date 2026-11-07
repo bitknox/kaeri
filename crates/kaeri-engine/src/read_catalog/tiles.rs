@@ -1,0 +1,261 @@
+//! A book as a cover anywhere: its name in the person's title language, its kind, its status
+//! and, where they read it, where they are.
+
+use kaeri_core::{
+    books::{ChapterId, WorkId},
+    ids::AnilistId,
+    media::{MediaStatus, Medium},
+};
+use kaeri_meta::{KeptBook, Meta, anilist::books::Book};
+use kaeri_model::{
+    Msg, ReadingMsg,
+    reading::{self as words, SeriesAction, WorkTile},
+};
+use kaeri_store::Store;
+
+use super::chapters::{self, Read};
+
+pub fn work_of(id: AnilistId) -> WorkId {
+    WorkId::new(format!("a:{}", id.get()))
+}
+
+/// The AniList id behind a work's key, when it has one.
+pub fn anilist(work: &str) -> Option<AnilistId> {
+    kaeri_model::reading::anilist_of(&WorkId::new(work.to_owned()))
+}
+
+/// AniList's status as the model's key: `releasing`, `finished`, `hiatus`, `cancelled`,
+/// `not-yet`.
+pub fn status_key(status: Option<MediaStatus>) -> Option<&'static str> {
+    Some(match status? {
+        MediaStatus::Releasing => "releasing",
+        MediaStatus::Finished => "finished",
+        MediaStatus::Hiatus => "hiatus",
+        MediaStatus::Cancelled => "cancelled",
+        MediaStatus::NotYetReleased => "not-yet",
+        MediaStatus::Unknown => return None,
+    })
+}
+
+/// The words under a book: its kind, its status, and for a finished one how long it is.
+pub fn facts(book: &Book) -> Vec<Msg> {
+    let format = book.reading_format();
+    let origin = book.origin();
+    let mut out = vec![words::kind_words(
+        Some(format.as_str()),
+        book.medium(),
+        origin.as_ref().map(kaeri_core::media::Origin::code),
+    )];
+    if let Some(status) = status_key(book.status).and_then(words::status_words) {
+        out.push(status);
+    }
+    let done = matches!(book.status, Some(MediaStatus::Finished | MediaStatus::Cancelled));
+    if (done || book.medium() == kaeri_core::media::Medium::Novel)
+        && let Some(count) = words::count_words(book.medium(), book.chapters, book.volumes)
+    {
+        out.push(count);
+    }
+    out
+}
+
+/// A book's cover, with nothing of the person's reading on it.
+pub fn plain(meta: &Meta, book: &Book) -> WorkTile {
+    WorkTile {
+        work: work_of(book.id),
+        title: meta.titles().pick(&book.title).to_owned(),
+        medium: book.medium(),
+        cover: book.cover_image.best().map(str::to_owned),
+        format_label: Some(book.reading_format().as_str().to_owned()),
+        progress: None,
+        next: None,
+        new_chapter: false,
+        adult: book.adult(),
+        facts: facts(book),
+    }
+}
+
+/// A book's cover with where the person is in it: the page they stopped on, or the next
+/// chapter, and the dot when one came out that they have not read.
+pub fn reading(
+    meta: &Meta,
+    store: &Store,
+    sources: &crate::read_sources::BookSources,
+    book: &Book,
+) -> WorkTile {
+    let mut tile = plain(meta, book);
+    mark(&mut tile, store, sources);
+    tile
+}
+
+/// Put where the person is on a tile.
+pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::BookSources) {
+    let read = Read::of(store, tile.work.as_str());
+    let list = chapters::of_work(sources, store, &tile.work).map(|(_, _, list)| list);
+    let novel = tile.medium == Medium::Novel;
+    if let Some((chapter, page, of)) = &read.in_progress {
+        let label = number_of(list.as_deref(), chapter);
+        // The page count the reader saw, else the one the source lists.
+        let of = of.or_else(|| {
+            list.as_deref()
+                .and_then(|l| l.iter().find(|c| c.id == *chapter))
+                .and_then(|c| c.pages)
+        });
+        // A light novel reads in parts, so its place is a part and how far into it.
+        tile.next = Some(match page {
+            _ if novel => words::part_place(&label, words::part_percent(*page, of)),
+            Some(page) => words::chapter_page(&label, *page),
+            None => words::next_chapter(&label),
+        });
+        tile.progress = match (page, of) {
+            (Some(page), Some(of)) if of > 0 => Some((*page as f32 / of as f32).min(1.0)),
+            _ => None,
+        };
+    } else if let Some(list) = list.as_deref() {
+        // The dot always has its words: "Chapter 88 is new".
+        if let Some(new) = read.new_for_you(list) {
+            let number = new.number.clone().unwrap_or_else(|| new.label.clone());
+            tile.next = Some(words::unit_new(tile.medium, &number));
+            tile.new_chapter = true;
+        } else if let Some(next) = read.next(list) {
+            tile.next = Some(words::next_unit(
+                tile.medium,
+                next.number.as_deref().unwrap_or(&next.label),
+            ));
+        }
+    }
+}
+
+/// A Library cover's line: the chapter the person is at and the newest there is, "Chapter 41
+/// of 43", and for a light novel its volume and part, "Volume 6, part 5". Shorter than the
+/// other covers' words, which the track under the cover already says.
+pub fn library_line(
+    tile: &mut WorkTile,
+    store: &Store,
+    sources: &crate::read_sources::BookSources,
+) {
+    let Some((_, _, list)) = chapters::of_work(sources, store, &tile.work) else { return };
+    let read = Read::of(store, tile.work.as_str());
+    let at = read
+        .in_progress
+        .as_ref()
+        .and_then(|(id, _, _)| list.iter().find(|c| c.id == *id))
+        .or_else(|| read.next(&list))
+        .or_else(|| list.iter().rev().find(|c| read.is_read(&c.id)));
+    let Some(at) = at else { return };
+    let number = at.number.clone().unwrap_or_else(|| at.label.clone());
+    let line = if tile.medium == Medium::Novel {
+        match &at.volume {
+            Some(volume) => {
+                ReadingMsg::ReadingVolumePart { volume: volume.clone(), part: number }
+            }
+            None => ReadingMsg::ReadingNextPart { part: number },
+        }
+    } else {
+        match newest_number(&list) {
+            Some(of) => ReadingMsg::ReadingChapterOf { chapter: number, of },
+            None => return,
+        }
+    };
+    tile.next = Some(Msg::Reading(line));
+}
+
+/// The newest chapter's number as people read it: the highest of the numbered ones.
+fn newest_number(list: &[chapters::Kept]) -> Option<String> {
+    list.iter()
+        .filter_map(|c| {
+            let number = c.number.as_deref()?;
+            Some((number.parse::<f64>().ok()?, number))
+        })
+        .max_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|(_, n)| n.to_owned())
+}
+
+/// A chapter's number as a person reads it, from the list when it is there.
+pub fn number_of(list: Option<&[chapters::Kept]>, chapter: &str) -> String {
+    list.and_then(|l| l.iter().find(|c| c.id == chapter))
+        .and_then(|c| c.number.clone())
+        .unwrap_or_else(|| chapter.rsplit('/').next().unwrap_or(chapter).to_owned())
+}
+
+/// The series page's main button: the chapter in progress, the next one, Read again once
+/// everything is read, and No source when none of the person's sources has it.
+pub fn action(
+    store: &Store,
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    medium: kaeri_core::media::Medium,
+) -> SeriesAction {
+    if sources.edition_of(work, None).is_none() {
+        return SeriesAction::NoSource;
+    }
+    let read = Read::of(store, work.as_str());
+    let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
+    if let Some((chapter, page, of)) = read.in_progress.clone() {
+        let label = number_of(list.as_deref(), &chapter);
+        // The page count the reader saw, else the one the source lists, as the cover does.
+        let of = of.or_else(|| {
+            list.as_deref()
+                .and_then(|l| l.iter().find(|c| c.id == chapter))
+                .and_then(|c| c.pages)
+        });
+        let chapter = ChapterId::new(chapter);
+        return match (medium, page) {
+            (Medium::Novel, _) => SeriesAction::ContinuePart {
+                chapter,
+                label,
+                percent: words::part_percent(page, of),
+            },
+            (_, Some(page)) => {
+                SeriesAction::Continue { chapter, label, page: words::shown_page(page) }
+            }
+            (_, None) => SeriesAction::Read { chapter, label },
+        };
+    }
+    let Some(list) = list else {
+        // Not asked yet: the first chapter, until the source answers.
+        return read_action(medium, ChapterId::new("1"), "1".into());
+    };
+    match read.next(&list) {
+        Some(next) => read_action(
+            medium,
+            ChapterId::new(next.id.clone()),
+            next.number.clone().unwrap_or_else(|| next.label.clone()),
+        ),
+        None if list.is_empty() => SeriesAction::NoSource,
+        None => SeriesAction::ReadAgain,
+    }
+}
+
+/// Read a chapter not opened yet: "Read chapter 88", or "Read part 3" for a light novel.
+pub fn read_action(medium: Medium, chapter: ChapterId, label: String) -> SeriesAction {
+    match medium {
+        Medium::Novel => SeriesAction::ReadPart { chapter, label },
+        _ => SeriesAction::Read { chapter, label },
+    }
+}
+
+/// "On your Planning list", for Up next.
+pub fn on_planning() -> Msg {
+    Msg::Reading(ReadingMsg::ReadingOnPlanning)
+}
+
+/// The books kept for `works`, in the order asked; a local work and one not kept are left out.
+pub fn kept_of(meta: &Meta, works: &[String]) -> Vec<KeptBook> {
+    let ids: Vec<AnilistId> = works
+        .iter()
+        .filter_map(|w| kaeri_model::reading::anilist_of(&WorkId::new(w.clone())))
+        .collect();
+    meta.kept_books(&ids)
+}
+
+/// The AniList ids of `works` that nothing is kept of, or only something older than a day.
+pub fn missing(meta: &Meta, works: &[String], now: i64) -> Vec<AnilistId> {
+    let ids: Vec<AnilistId> = works
+        .iter()
+        .filter_map(|w| kaeri_model::reading::anilist_of(&WorkId::new(w.clone())))
+        .collect();
+    let kept = meta.kept_books(&ids);
+    ids.into_iter()
+        .filter(|id| !kept.iter().any(|k| k.book.id == *id && k.fresh(now)))
+        .collect()
+}

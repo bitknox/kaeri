@@ -413,6 +413,8 @@ pub enum Msg {
     NoticeSurpriseFailed,
     /// A plugin store's, a source's or a torrent's message: see [`StoreMsg`].
     Store(StoreMsg),
+    /// A message about reading manga and novels: see [`ReadingMsg`].
+    Reading(ReadingMsg),
     /// Text Kaeri does not own, shown as it is: a plugin's note, a tracker's error.
     Verbatim { text: String },
 }
@@ -622,6 +624,7 @@ impl Msg {
             Self::NoticeSurpriseOffline => "notice-surprise-offline",
             Self::NoticeSurpriseFailed => "notice-surprise-failed",
             Self::Store(msg) => msg.id(),
+            Self::Reading(msg) => msg.id(),
             Self::Verbatim { .. } => "verbatim",
         }
     }
@@ -830,6 +833,7 @@ impl Msg {
             Self::NoticeSurpriseOffline => Vec::new(),
             Self::NoticeSurpriseFailed => Vec::new(),
             Self::Store(msg) => msg.values(),
+            Self::Reading(msg) => msg.values(),
             Self::Verbatim { text } => vec![("text", Value::Text(text.clone()))],
         }
     }
@@ -838,6 +842,12 @@ impl Msg {
 impl From<StoreMsg> for Msg {
     fn from(msg: StoreMsg) -> Self {
         Self::Store(msg)
+    }
+}
+
+impl From<ReadingMsg> for Msg {
+    fn from(msg: ReadingMsg) -> Self {
+        Self::Reading(msg)
     }
 }
 
@@ -939,6 +949,8 @@ pub enum StoreMsg {
     PluginPublishFailed { plugin: String, reason: String },
     /// Error: a plugin to publish is no longer in the plugin folder.
     PluginMissingLocally { plugin: String },
+    /// Error: a book source cannot be published to a store whose server is too old to list book sources.
+    StoreTakesNoBooks { store: String },
     /// Error: an invite for another device cannot be made from a device that joined with the open link.
     StoreInviteNeedsLink { store: String },
     /// Error: the store sent an invite link that does not parse. The reason comes from the link parser.
@@ -1050,6 +1062,7 @@ impl StoreMsg {
             Self::PluginInstallFailed { .. } => "plugin-install-failed",
             Self::PluginPublishFailed { .. } => "plugin-publish-failed",
             Self::PluginMissingLocally { .. } => "plugin-missing-locally",
+            Self::StoreTakesNoBooks { .. } => "store-takes-no-books",
             Self::StoreInviteNeedsLink { .. } => "store-invite-needs-link",
             Self::StoreLinkMalformed { .. } => "store-link-malformed",
             Self::StoreLinkWrongKey => "store-link-wrong-key",
@@ -1132,6 +1145,7 @@ impl StoreMsg {
             Self::PluginInstallFailed { plugin, reason } => vec![("plugin", Value::Text(plugin.clone())), ("reason", Value::Text(reason.clone()))],
             Self::PluginPublishFailed { plugin, reason } => vec![("plugin", Value::Text(plugin.clone())), ("reason", Value::Text(reason.clone()))],
             Self::PluginMissingLocally { plugin } => vec![("plugin", Value::Text(plugin.clone()))],
+            Self::StoreTakesNoBooks { store } => vec![("store", Value::Text(store.clone()))],
             Self::StoreInviteNeedsLink { store } => vec![("store", Value::Text(store.clone()))],
             Self::StoreLinkMalformed { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::StoreLinkWrongKey => Vec::new(),
@@ -1161,6 +1175,530 @@ impl StoreMsg {
             Self::NoticePartyNotBuilt => Vec::new(),
             Self::SourcesDemoRemoved => Vec::new(),
             Self::StoresReadyDemoStays { store } => vec![("store", Value::Text(store.clone()))],
+        }
+    }
+}
+
+/// The messages of `i18n/en/engine-reading.ftl`, as [`Msg::Reading`] holds them.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadingMsg {
+    /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+    ReadingNextChapter { chapter: String },
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyMondays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyTuesdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyWednesdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyThursdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyFridays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallySaturdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallySundays,
+    /// Under a cover or on a series page: how often new chapters come out, in weeks.
+    ReadingAboutEveryWeeks { weeks: i64 },
+    /// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+    ReadingAlsoAShow,
+    /// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+    ReadingAlsoABook,
+    /// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+    ReadingSplitChapter { chapter: String, whole: String },
+    /// A notice over the page when a chapter opens where it was left. It offers Start over.
+    ReaderResumed { page: i64 },
+    /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+    ReaderBackToPage { page: i64 },
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+    ReaderMoved { chapter: String, page: i64, device: String },
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumber { chapter: String, page: i64, device: String },
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    ReaderDetectedRightToLeft,
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    ReaderDetectedLeftToRight,
+    /// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+    ReaderDetectedStrip,
+    /// Why a chapter or a list could not load: there is no connection.
+    ReadingFailedOffline,
+    /// Why a chapter or a list could not load: the source did not answer. The source is its name.
+    ReadingFailedSourceDown { source: String },
+    /// Why a chapter could not load: the source no longer has it.
+    ReadingFailedNotFound,
+    /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+    ReadingFailedBlocked { source: String, reason: String },
+    /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+    ReadingFailedParse { source: String },
+    /// Why one page did not load. The status is the server's HTTP status code, such as 404.
+    ReadingFailedPage { status: i64 },
+    /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+    ReadingFailedSignIn { what: String },
+    /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+    ReadingFailedFileMissing { path: String },
+    /// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+    ReadingFailedUnreadable { path: String, format: String },
+    /// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+    ReadingFailedUnsupported { kind: String },
+    /// Why a book could not open: it is copy-protected or encrypted.
+    ReadingFailedProtected,
+    /// Why a chapter could not be saved: the disk is full.
+    ReadingFailedDiskFull,
+    /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+    ReadingFailedWebview { version: i64 },
+    /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+    ReadingFailedNeedsNewer { world: String },
+    /// Why a reading request was refused: reading is not available in this build.
+    ReadingFailedOff,
+    /// Why something about reading failed, for any other reason. The reason is as it came.
+    ReadingFailedOther { reason: String },
+    /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+    ReadingKindManga,
+    /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+    ReadingKindManhwa,
+    /// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+    ReadingKindManhua,
+    /// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+    ReadingKindWebtoon,
+    /// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+    ReadingKindOneShot,
+    /// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+    ReadingKindLightNovel,
+    /// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+    ReadingKindNovel,
+    /// Under a cover or on a series page: new chapters are still coming out.
+    ReadingStatusReleasing,
+    /// Under a cover or on a series page: the story is complete.
+    ReadingStatusFinished,
+    /// Under a cover or on a series page: new chapters have stopped for a while.
+    ReadingStatusHiatus,
+    /// Under a cover or on a series page: the story was stopped before it ended.
+    ReadingStatusCancelled,
+    /// Under a cover or on a series page: the first chapter is not out yet.
+    ReadingStatusNotYet,
+    /// Under a cover or on a series page: how many chapters the series has.
+    ReadingChapters { count: i64 },
+    /// Under a cover or on a series page: how many volumes the series has.
+    ReadingVolumes { count: i64 },
+    /// Under a cover: the series is on the person's Planning list.
+    ReadingOnPlanning,
+    /// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+    ReadingSpotlightNewChapter,
+    /// Above the big picture at the top of reading's Home: the series the person was reading last.
+    ReadingSpotlightContinue,
+    /// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+    ReadingSpotlightUpNext,
+    /// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+    ReadingSpotlightPopular,
+    /// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+    ReadingOutToday { chapter: String },
+    /// Under the big picture on reading's Home: a chapter that came out today, with its title.
+    ReadingOutTodayTitled { chapter: String, title: String },
+    /// Under a cover or the big picture: the page the person stopped on in a chapter.
+    ReadingChapterPage { chapter: String, page: i64 },
+    /// Under a cover or the big picture: how far into a novel's chapter the person is.
+    ReadingChapterPercent { chapter: String, percent: i64 },
+    /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+    ReadingChapterNew { chapter: String },
+    /// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+    ReadingNextPart { part: String },
+    /// Under a cover or the big picture: how far into a light novel's part the person is.
+    ReadingPartPercent { part: String, percent: i64 },
+    /// Under a cover: a light novel's part came out that the person has not read.
+    ReadingPartNew { part: String },
+    /// Under a This week cell: a light novel's part that came out that day, with its own title.
+    ReadingPartTitled { part: String, title: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today.
+    ReadingPartOutToday { part: String },
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+    ReadingPartOutTodayTitled { part: String, title: String },
+    /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+    ReadingChapterOf { chapter: String, of: String },
+    /// Under a Library cover: the volume and part of a light novel the person is at.
+    ReadingVolumePart { volume: String, part: String },
+    /// A search filter: books from Japan.
+    ReadingOriginJapan,
+    /// A search filter: books from Korea.
+    ReadingOriginKorea,
+    /// A search filter: books from China.
+    ReadingOriginChina,
+    /// A search filter: books from Taiwan.
+    ReadingOriginTaiwan,
+    /// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+    ExportDeviceOther,
+    /// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+    ExportDeviceEink6,
+    /// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+    ExportDeviceEink7,
+    /// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+    ExportDeviceColourEink,
+    /// Send to e-reader: a device class, a colour tablet.
+    ExportDeviceTablet,
+    /// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+    ExportChapter { chapter: String },
+    /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+    ExportWaitsForWifi { n: i64 },
+    /// Under a This week cell: the chapter that came out that day, with its own title.
+    ReadingChapterTitled { chapter: String, title: String },
+    /// A chapter row's state: the person read it.
+    ReadingRowRead,
+    /// A chapter row's state: it came out since the person last read and is not read.
+    ReadingRowNew,
+    /// A chapter row's state: it is kept on this device to read offline.
+    ReadingRowDownloaded,
+    /// A chapter row's state: it is read from the source and nothing of it is on this device.
+    ReadingRowNotDownloaded,
+    /// A chapter row's state: a file in one of the person's folders, or one already on the device.
+    ReadingRowOnDevice,
+    /// A chapter row's state: it waits its turn to download.
+    ReadingRowQueued,
+    /// A chapter row's state: it waits to download until the device is on Wi-Fi.
+    ReadingRowWaitsWifi,
+    /// A chapter row's state while it downloads.
+    ReadingRowDownloading { done: i64, total: i64 },
+    /// A chapter row's state: the download failed. The reason follows as the next part.
+    ReadingRowFailed,
+    /// A chapter row's state: the page the person stopped on, of how many.
+    ReadingRowPageOf { page: i64, of: i64 },
+    /// A chapter row's state: the page the person stopped on, when the length isn't known.
+    ReadingRowPage { page: i64 },
+    /// A novel's chapter row: how far into it the person is.
+    ReadingRowPercent { percent: i64 },
+    /// A chapter row: how long its pages are, for a file on the device.
+    ReadingRowPages { n: i64 },
+    /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+    ReadingRowVersions { n: i64 },
+    /// A chapter row: when it was read or came out, under a minute ago.
+    ReadingAgoNow,
+    /// A chapter row: when it was read or came out, in minutes.
+    ReadingAgoMinutes { minutes: i64 },
+    /// A chapter row: when it was read or came out, earlier today.
+    ReadingAgoToday,
+    /// A chapter row: when it was read or came out, the day before today.
+    ReadingAgoYesterday,
+    /// A chapter row: when it was read or came out, in days, under a week.
+    ReadingAgoDays { days: i64 },
+    /// A chapter row: when it was read or came out, in weeks, under two months.
+    ReadingAgoWeeks { weeks: i64 },
+    /// A chapter row: when it was read or came out, in months, under a year.
+    ReadingAgoMonths { months: i64 },
+    /// A chapter row: when it was read or came out, in years.
+    ReadingAgoYears { years: i64 },
+    /// The tracker took the series off its list.
+    ReadingRemovedFrom { tracker: String },
+    /// The tracker's list did not hold the series, so there was nothing to remove.
+    ReadingRemovedNotThere { tracker: String },
+    /// The app never learned which of the tracker's entries this series is, so it asked nothing.
+    ReadingRemovedUnmatched { tracker: String },
+    /// The tracker could not take the series off. The reason follows.
+    ReadingRemovedFailed { tracker: String },
+    /// Why a removal failed: the tracker turned the sign-in away.
+    ReadingRemovedSignIn { tracker: String },
+    /// The source answered the search and has no series by the series' names.
+    ReadingMissNoSeries,
+    /// The source has failed every ask since this time of day, in the person's zone.
+    ReadingMissDownSince { time: String },
+    /// The source has failed every ask, since a time on another day or not known.
+    ReadingMissDown,
+    /// How many parts of a light novel are downloaded.
+    ReadingDlParts { count: i64 },
+    /// What the downloads take up on this device.
+    ReadingDlSize { size: Size },
+    /// How many of the downloaded chapters are read, which Delete read clears.
+    ReadingDlRead { count: i64 },
+    /// The chapter downloading now.
+    ReadingDlChapter { chapter: String },
+    /// How far the chapter downloading now has come.
+    ReadingDlPages { done: i64, total: i64 },
+    /// Chapters waiting their turn after the one downloading.
+    ReadingDlMoreQueued { count: i64 },
+    /// Chapters waiting their turn, none downloaded yet.
+    ReadingDlQueued { count: i64 },
+    /// Chapters that wait for Wi-Fi to download.
+    ReadingDlWaitsWifi,
+    /// A chapter that failed. The reason follows as the next part.
+    ReadingDlFailed { chapter: String },
+    /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+    ReadingEstimateSize { size: Size },
+    /// The chapters download only on Wi-Fi, as the settings say.
+    ReadingEstimateWifi,
+    /// The device is on mobile data, and the settings let chapters download on it.
+    ReadingEstimateMobile,
+    /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+    ReadingEstimateWaitsWifi,
+    /// The notification's title.
+    ReadingDownloadsDoneTitle,
+    /// The notification's text: one series' chapters are downloaded.
+    ReadingDownloadsDoneChapters { title: String, count: i64 },
+    /// The notification's text: one light novel's parts are downloaded.
+    ReadingDownloadsDoneParts { title: String, count: i64 },
+    /// The notification's text: chapters of several series are downloaded.
+    ReadingDownloadsDoneSeries { count: i64 },
+}
+
+impl ReadingMsg {
+    /// The catalogue id of the message.
+    pub fn id(&self) -> &'static str {
+        match self {
+            Self::ReadingNextChapter { .. } => "reading-next-chapter",
+            Self::ReadingUsuallyMondays => "reading-usually-mondays",
+            Self::ReadingUsuallyTuesdays => "reading-usually-tuesdays",
+            Self::ReadingUsuallyWednesdays => "reading-usually-wednesdays",
+            Self::ReadingUsuallyThursdays => "reading-usually-thursdays",
+            Self::ReadingUsuallyFridays => "reading-usually-fridays",
+            Self::ReadingUsuallySaturdays => "reading-usually-saturdays",
+            Self::ReadingUsuallySundays => "reading-usually-sundays",
+            Self::ReadingAboutEveryWeeks { .. } => "reading-about-every-weeks",
+            Self::ReadingAlsoAShow => "reading-also-a-show",
+            Self::ReadingAlsoABook => "reading-also-a-book",
+            Self::ReadingSplitChapter { .. } => "reading-split-chapter",
+            Self::ReaderResumed { .. } => "reader-resumed",
+            Self::ReaderBackToPage { .. } => "reader-back-to-page",
+            Self::ReaderMoved { .. } => "reader-moved",
+            Self::ReaderMovedNumber { .. } => "reader-moved-number",
+            Self::ReaderDetectedRightToLeft => "reader-detected-right-to-left",
+            Self::ReaderDetectedLeftToRight => "reader-detected-left-to-right",
+            Self::ReaderDetectedStrip => "reader-detected-strip",
+            Self::ReadingFailedOffline => "reading-failed-offline",
+            Self::ReadingFailedSourceDown { .. } => "reading-failed-source-down",
+            Self::ReadingFailedNotFound => "reading-failed-not-found",
+            Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
+            Self::ReadingFailedParse { .. } => "reading-failed-parse",
+            Self::ReadingFailedPage { .. } => "reading-failed-page",
+            Self::ReadingFailedSignIn { .. } => "reading-failed-sign-in",
+            Self::ReadingFailedFileMissing { .. } => "reading-failed-file-missing",
+            Self::ReadingFailedUnreadable { .. } => "reading-failed-unreadable",
+            Self::ReadingFailedUnsupported { .. } => "reading-failed-unsupported",
+            Self::ReadingFailedProtected => "reading-failed-protected",
+            Self::ReadingFailedDiskFull => "reading-failed-disk-full",
+            Self::ReadingFailedWebview { .. } => "reading-failed-webview",
+            Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
+            Self::ReadingFailedOff => "reading-failed-off",
+            Self::ReadingFailedOther { .. } => "reading-failed-other",
+            Self::ReadingKindManga => "reading-kind-manga",
+            Self::ReadingKindManhwa => "reading-kind-manhwa",
+            Self::ReadingKindManhua => "reading-kind-manhua",
+            Self::ReadingKindWebtoon => "reading-kind-webtoon",
+            Self::ReadingKindOneShot => "reading-kind-one-shot",
+            Self::ReadingKindLightNovel => "reading-kind-light-novel",
+            Self::ReadingKindNovel => "reading-kind-novel",
+            Self::ReadingStatusReleasing => "reading-status-releasing",
+            Self::ReadingStatusFinished => "reading-status-finished",
+            Self::ReadingStatusHiatus => "reading-status-hiatus",
+            Self::ReadingStatusCancelled => "reading-status-cancelled",
+            Self::ReadingStatusNotYet => "reading-status-not-yet",
+            Self::ReadingChapters { .. } => "reading-chapters",
+            Self::ReadingVolumes { .. } => "reading-volumes",
+            Self::ReadingOnPlanning => "reading-on-planning",
+            Self::ReadingSpotlightNewChapter => "reading-spotlight-new-chapter",
+            Self::ReadingSpotlightContinue => "reading-spotlight-continue",
+            Self::ReadingSpotlightUpNext => "reading-spotlight-up-next",
+            Self::ReadingSpotlightPopular => "reading-spotlight-popular",
+            Self::ReadingOutToday { .. } => "reading-out-today",
+            Self::ReadingOutTodayTitled { .. } => "reading-out-today-titled",
+            Self::ReadingChapterPage { .. } => "reading-chapter-page",
+            Self::ReadingChapterPercent { .. } => "reading-chapter-percent",
+            Self::ReadingChapterNew { .. } => "reading-chapter-new",
+            Self::ReadingNextPart { .. } => "reading-next-part",
+            Self::ReadingPartPercent { .. } => "reading-part-percent",
+            Self::ReadingPartNew { .. } => "reading-part-new",
+            Self::ReadingPartTitled { .. } => "reading-part-titled",
+            Self::ReadingPartOutToday { .. } => "reading-part-out-today",
+            Self::ReadingPartOutTodayTitled { .. } => "reading-part-out-today-titled",
+            Self::ReadingChapterOf { .. } => "reading-chapter-of",
+            Self::ReadingVolumePart { .. } => "reading-volume-part",
+            Self::ReadingOriginJapan => "reading-origin-japan",
+            Self::ReadingOriginKorea => "reading-origin-korea",
+            Self::ReadingOriginChina => "reading-origin-china",
+            Self::ReadingOriginTaiwan => "reading-origin-taiwan",
+            Self::ExportDeviceOther => "export-device-other",
+            Self::ExportDeviceEink6 => "export-device-eink-6",
+            Self::ExportDeviceEink7 => "export-device-eink-7",
+            Self::ExportDeviceColourEink => "export-device-colour-eink",
+            Self::ExportDeviceTablet => "export-device-tablet",
+            Self::ExportChapter { .. } => "export-chapter",
+            Self::ExportWaitsForWifi { .. } => "export-waits-for-wifi",
+            Self::ReadingChapterTitled { .. } => "reading-chapter-titled",
+            Self::ReadingRowRead => "reading-row-read",
+            Self::ReadingRowNew => "reading-row-new",
+            Self::ReadingRowDownloaded => "reading-row-downloaded",
+            Self::ReadingRowNotDownloaded => "reading-row-not-downloaded",
+            Self::ReadingRowOnDevice => "reading-row-on-device",
+            Self::ReadingRowQueued => "reading-row-queued",
+            Self::ReadingRowWaitsWifi => "reading-row-waits-wifi",
+            Self::ReadingRowDownloading { .. } => "reading-row-downloading",
+            Self::ReadingRowFailed => "reading-row-failed",
+            Self::ReadingRowPageOf { .. } => "reading-row-page-of",
+            Self::ReadingRowPage { .. } => "reading-row-page",
+            Self::ReadingRowPercent { .. } => "reading-row-percent",
+            Self::ReadingRowPages { .. } => "reading-row-pages",
+            Self::ReadingRowVersions { .. } => "reading-row-versions",
+            Self::ReadingAgoNow => "reading-ago-now",
+            Self::ReadingAgoMinutes { .. } => "reading-ago-minutes",
+            Self::ReadingAgoToday => "reading-ago-today",
+            Self::ReadingAgoYesterday => "reading-ago-yesterday",
+            Self::ReadingAgoDays { .. } => "reading-ago-days",
+            Self::ReadingAgoWeeks { .. } => "reading-ago-weeks",
+            Self::ReadingAgoMonths { .. } => "reading-ago-months",
+            Self::ReadingAgoYears { .. } => "reading-ago-years",
+            Self::ReadingRemovedFrom { .. } => "reading-removed-from",
+            Self::ReadingRemovedNotThere { .. } => "reading-removed-not-there",
+            Self::ReadingRemovedUnmatched { .. } => "reading-removed-unmatched",
+            Self::ReadingRemovedFailed { .. } => "reading-removed-failed",
+            Self::ReadingRemovedSignIn { .. } => "reading-removed-sign-in",
+            Self::ReadingMissNoSeries => "reading-miss-no-series",
+            Self::ReadingMissDownSince { .. } => "reading-miss-down-since",
+            Self::ReadingMissDown => "reading-miss-down",
+            Self::ReadingDlParts { .. } => "reading-dl-parts",
+            Self::ReadingDlSize { .. } => "reading-dl-size",
+            Self::ReadingDlRead { .. } => "reading-dl-read",
+            Self::ReadingDlChapter { .. } => "reading-dl-chapter",
+            Self::ReadingDlPages { .. } => "reading-dl-pages",
+            Self::ReadingDlMoreQueued { .. } => "reading-dl-more-queued",
+            Self::ReadingDlQueued { .. } => "reading-dl-queued",
+            Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
+            Self::ReadingDlFailed { .. } => "reading-dl-failed",
+            Self::ReadingEstimateSize { .. } => "reading-estimate-size",
+            Self::ReadingEstimateWifi => "reading-estimate-wifi",
+            Self::ReadingEstimateMobile => "reading-estimate-mobile",
+            Self::ReadingEstimateWaitsWifi => "reading-estimate-waits-wifi",
+            Self::ReadingDownloadsDoneTitle => "reading-downloads-done-title",
+            Self::ReadingDownloadsDoneChapters { .. } => "reading-downloads-done-chapters",
+            Self::ReadingDownloadsDoneParts { .. } => "reading-downloads-done-parts",
+            Self::ReadingDownloadsDoneSeries { .. } => "reading-downloads-done-series",
+        }
+    }
+
+    /// The message's arguments, by catalogue name.
+    pub fn values(&self) -> Vec<(&'static str, Value)> {
+        match self {
+            Self::ReadingNextChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingUsuallyMondays => Vec::new(),
+            Self::ReadingUsuallyTuesdays => Vec::new(),
+            Self::ReadingUsuallyWednesdays => Vec::new(),
+            Self::ReadingUsuallyThursdays => Vec::new(),
+            Self::ReadingUsuallyFridays => Vec::new(),
+            Self::ReadingUsuallySaturdays => Vec::new(),
+            Self::ReadingUsuallySundays => Vec::new(),
+            Self::ReadingAboutEveryWeeks { weeks } => vec![("weeks", Value::Int(*weeks))],
+            Self::ReadingAlsoAShow => Vec::new(),
+            Self::ReadingAlsoABook => Vec::new(),
+            Self::ReadingSplitChapter { chapter, whole } => vec![("chapter", Value::Text(chapter.clone())), ("whole", Value::Text(whole.clone()))],
+            Self::ReaderResumed { page } => vec![("page", Value::Int(*page))],
+            Self::ReaderBackToPage { page } => vec![("page", Value::Int(*page))],
+            Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderDetectedRightToLeft => Vec::new(),
+            Self::ReaderDetectedLeftToRight => Vec::new(),
+            Self::ReaderDetectedStrip => Vec::new(),
+            Self::ReadingFailedOffline => Vec::new(),
+            Self::ReadingFailedSourceDown { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedNotFound => Vec::new(),
+            Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
+            Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedPage { status } => vec![("status", Value::Int(*status))],
+            Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
+            Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],
+            Self::ReadingFailedUnsupported { kind } => vec![("kind", Value::Text(kind.clone()))],
+            Self::ReadingFailedProtected => Vec::new(),
+            Self::ReadingFailedDiskFull => Vec::new(),
+            Self::ReadingFailedWebview { version } => vec![("version", Value::Int(*version))],
+            Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
+            Self::ReadingFailedOff => Vec::new(),
+            Self::ReadingFailedOther { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::ReadingKindManga => Vec::new(),
+            Self::ReadingKindManhwa => Vec::new(),
+            Self::ReadingKindManhua => Vec::new(),
+            Self::ReadingKindWebtoon => Vec::new(),
+            Self::ReadingKindOneShot => Vec::new(),
+            Self::ReadingKindLightNovel => Vec::new(),
+            Self::ReadingKindNovel => Vec::new(),
+            Self::ReadingStatusReleasing => Vec::new(),
+            Self::ReadingStatusFinished => Vec::new(),
+            Self::ReadingStatusHiatus => Vec::new(),
+            Self::ReadingStatusCancelled => Vec::new(),
+            Self::ReadingStatusNotYet => Vec::new(),
+            Self::ReadingChapters { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingVolumes { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingOnPlanning => Vec::new(),
+            Self::ReadingSpotlightNewChapter => Vec::new(),
+            Self::ReadingSpotlightContinue => Vec::new(),
+            Self::ReadingSpotlightUpNext => Vec::new(),
+            Self::ReadingSpotlightPopular => Vec::new(),
+            Self::ReadingOutToday { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingOutTodayTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingChapterPage { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page))],
+            Self::ReadingChapterPercent { chapter, percent } => vec![("chapter", Value::Text(chapter.clone())), ("percent", Value::Int(*percent))],
+            Self::ReadingChapterNew { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingNextPart { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartPercent { part, percent } => vec![("part", Value::Text(part.clone())), ("percent", Value::Int(*percent))],
+            Self::ReadingPartNew { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingPartOutToday { part } => vec![("part", Value::Text(part.clone()))],
+            Self::ReadingPartOutTodayTitled { part, title } => vec![("part", Value::Text(part.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingChapterOf { chapter, of } => vec![("chapter", Value::Text(chapter.clone())), ("of", Value::Text(of.clone()))],
+            Self::ReadingVolumePart { volume, part } => vec![("volume", Value::Text(volume.clone())), ("part", Value::Text(part.clone()))],
+            Self::ReadingOriginJapan => Vec::new(),
+            Self::ReadingOriginKorea => Vec::new(),
+            Self::ReadingOriginChina => Vec::new(),
+            Self::ReadingOriginTaiwan => Vec::new(),
+            Self::ExportDeviceOther => Vec::new(),
+            Self::ExportDeviceEink6 => Vec::new(),
+            Self::ExportDeviceEink7 => Vec::new(),
+            Self::ExportDeviceColourEink => Vec::new(),
+            Self::ExportDeviceTablet => Vec::new(),
+            Self::ExportChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ExportWaitsForWifi { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingChapterTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
+            Self::ReadingRowRead => Vec::new(),
+            Self::ReadingRowNew => Vec::new(),
+            Self::ReadingRowDownloaded => Vec::new(),
+            Self::ReadingRowNotDownloaded => Vec::new(),
+            Self::ReadingRowOnDevice => Vec::new(),
+            Self::ReadingRowQueued => Vec::new(),
+            Self::ReadingRowWaitsWifi => Vec::new(),
+            Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
+            Self::ReadingRowFailed => Vec::new(),
+            Self::ReadingRowPageOf { page, of } => vec![("page", Value::Int(*page)), ("of", Value::Int(*of))],
+            Self::ReadingRowPage { page } => vec![("page", Value::Int(*page))],
+            Self::ReadingRowPercent { percent } => vec![("percent", Value::Int(*percent))],
+            Self::ReadingRowPages { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingRowVersions { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingAgoNow => Vec::new(),
+            Self::ReadingAgoMinutes { minutes } => vec![("minutes", Value::Int(*minutes))],
+            Self::ReadingAgoToday => Vec::new(),
+            Self::ReadingAgoYesterday => Vec::new(),
+            Self::ReadingAgoDays { days } => vec![("days", Value::Int(*days))],
+            Self::ReadingAgoWeeks { weeks } => vec![("weeks", Value::Int(*weeks))],
+            Self::ReadingAgoMonths { months } => vec![("months", Value::Int(*months))],
+            Self::ReadingAgoYears { years } => vec![("years", Value::Int(*years))],
+            Self::ReadingRemovedFrom { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedNotThere { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedUnmatched { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedFailed { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingRemovedSignIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
+            Self::ReadingMissNoSeries => Vec::new(),
+            Self::ReadingMissDownSince { time } => vec![("time", Value::Text(time.clone()))],
+            Self::ReadingMissDown => Vec::new(),
+            Self::ReadingDlParts { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlSize { size } => vec![("size", Value::Size(*size))],
+            Self::ReadingDlRead { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingDlPages { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
+            Self::ReadingDlMoreQueued { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlQueued { count } => vec![("count", Value::Int(*count))],
+            Self::ReadingDlWaitsWifi => Vec::new(),
+            Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
+            Self::ReadingEstimateWifi => Vec::new(),
+            Self::ReadingEstimateMobile => Vec::new(),
+            Self::ReadingEstimateWaitsWifi => Vec::new(),
+            Self::ReadingDownloadsDoneTitle => Vec::new(),
+            Self::ReadingDownloadsDoneChapters { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
+            Self::ReadingDownloadsDoneParts { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
+            Self::ReadingDownloadsDoneSeries { count } => vec![("count", Value::Int(*count))],
         }
     }
 }

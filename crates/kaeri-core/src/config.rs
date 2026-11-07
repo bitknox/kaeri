@@ -96,6 +96,8 @@ pub struct Config {
     pub subtitles: SubtitlesConfig,
     /// Whether a crash is kept on this device for a bug report.
     pub crash_reports: CrashReportsConfig,
+    /// Reading: what this device is for, and the reader's settings kept on it.
+    pub reading: ReadingConfig,
     /// Keybinding overrides, `action = "key"`. The help overlay is generated from the
     /// resolved map so it can never drift from what the keys actually do.
     pub keys: BTreeMap<String, String>,
@@ -533,12 +535,163 @@ pub struct NotificationsConfig {
     /// Let a native app notify you of each new episode of the shows you follow, from its
     /// background check. Off until you turn it on.
     pub episodes: bool,
+    /// The same for new chapters of the series you read. Off until you turn it on.
+    pub chapters: bool,
+    /// Let a native app say when the chapters it was downloading are all done. Off until you
+    /// turn it on.
+    pub downloads: bool,
 }
 
 impl Default for NotificationsConfig {
     fn default() -> Self {
-        Self { airing_digest: true, desktop: false, episodes: false }
+        Self {
+            airing_digest: true,
+            desktop: false,
+            episodes: false,
+            chapters: false,
+            downloads: false,
+        }
     }
+}
+
+/// Reading, per device. The reader's own settings sit in the medium tables under the names the
+/// model's `ReaderSettingKey` gives them (`direction = "rtl"`, `text_size = 1.1`): the ones that
+/// follow the person (mode, direction, colour, look, font) are shared settings, the rest are this
+/// device's geometry. An unset key is the reader's default.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ReadingConfig {
+    /// What this device is for: `watch`, `read` or `both`. Unset until the person answers.
+    pub kaeri_is_for: Option<String>,
+    /// For development in the terminal: turns reading on, which release builds leave off.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub dev: bool,
+    /// The one switch of earlier versions for whether a series' own choices follow the person
+    /// to their other devices. Read only where [`Self::mode_follows`] or [`Self::look_follows`]
+    /// is unset, and kept so an earlier version still reads the file.
+    pub series_choices_follow: bool,
+    /// Whether a series' own mode and direction follow the person to their other devices.
+    /// Unset takes `series_choices_follow`: read it through [`Self::mode_follows`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode_follows: Option<bool>,
+    /// Whether a series' own look (its colour) follows the person to their other devices.
+    /// Unset takes `series_choices_follow`: read it through [`Self::look_follows`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub look_follows: Option<bool>,
+    /// Download chapters on a cellular connection, not only on Wi-Fi.
+    pub downloads_on_cellular: bool,
+    /// The switch of earlier versions for keeping the next chapters downloaded. Read only where
+    /// [`Self::new_chapters`] is unset: on is [`NewChapters::Reading`], off is
+    /// [`NewChapters::Off`].
+    pub keep_chapters_ready: Option<bool>,
+    /// Which series' new chapters download by themselves. Unset takes `keep_chapters_ready`,
+    /// then the edition's own: read it through [`Self::new_chapters`].
+    #[serde(rename = "new_chapters", skip_serializing_if = "Option::is_none")]
+    pub new_chapters_choice: Option<NewChapters>,
+    /// How a webtoon opens when the series has no mode of its own.
+    pub webtoon: WebtoonConfig,
+    /// When chapter progress goes to the reading trackers.
+    pub send_progress_after: SendProgressAfter,
+    /// Which progress wins when a tracker and this device disagree.
+    pub when_trackers_disagree: WhenTrackersDisagree,
+    /// When the reader counts a chapter as read, for Continue, the read marks and the
+    /// trackers. Unset in an earlier version's file, which is the last page's rule it had.
+    pub counts_as_read: CountsAsRead,
+    /// Delete a downloaded chapter once it is read.
+    pub delete_after_reading: bool,
+    /// Which Home the app opens at while it is for both: `watch` or `read`.
+    pub open_at: String,
+    pub manga: BTreeMap<String, toml::Value>,
+    pub novel: BTreeMap<String, toml::Value>,
+    /// E-ink: `mode` (auto, on, off), `colour_panel` (the answer to "Is this a colour
+    /// screen?") and the refresh settings.
+    pub eink: BTreeMap<String, toml::Value>,
+    /// The OPDS feed this device serves to e-readers.
+    pub feed: FeedConfig,
+    /// E-readers of the person's own, beside the built-in device classes, by id.
+    pub export_profiles: BTreeMap<String, ExportProfileConfig>,
+}
+
+impl Default for ReadingConfig {
+    fn default() -> Self {
+        Self {
+            kaeri_is_for: None,
+            dev: false,
+            series_choices_follow: true,
+            mode_follows: None,
+            look_follows: None,
+            downloads_on_cellular: false,
+            keep_chapters_ready: None,
+            new_chapters_choice: None,
+            webtoon: WebtoonConfig::default(),
+            send_progress_after: SendProgressAfter::default(),
+            when_trackers_disagree: WhenTrackersDisagree::default(),
+            counts_as_read: CountsAsRead::default(),
+            delete_after_reading: false,
+            open_at: "watch".into(),
+            manga: BTreeMap::new(),
+            novel: BTreeMap::new(),
+            eink: BTreeMap::new(),
+            feed: FeedConfig::default(),
+            export_profiles: BTreeMap::new(),
+        }
+    }
+}
+
+impl ReadingConfig {
+    /// Whether a series' own mode and direction follow the person, with the file of an earlier
+    /// version read as its one switch said.
+    pub fn mode_follows(&self) -> bool {
+        self.mode_follows.unwrap_or(self.series_choices_follow)
+    }
+
+    /// Whether a series' own look follows the person, with the file of an earlier version read
+    /// as its one switch said.
+    pub fn look_follows(&self) -> bool {
+        self.look_follows.unwrap_or(self.series_choices_follow)
+    }
+
+    /// Which series' new chapters download by themselves: the choice, else the earlier
+    /// version's switch, else `edition_default` (the e-reader edition keeps them ready).
+    pub fn new_chapters(&self, edition_default: NewChapters) -> NewChapters {
+        self.new_chapters_choice
+            .or(self
+                .keep_chapters_ready
+                .map(|on| if on { NewChapters::Reading } else { NewChapters::Off }))
+            .unwrap_or(edition_default)
+    }
+}
+
+/// `[reading.webtoon]`: how a series in the webtoon format opens.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WebtoonConfig {
+    pub mode: WebtoonMode,
+}
+
+/// The OPDS feed: off until turned on.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FeedConfig {
+    pub on: bool,
+    /// Unset picks a free port.
+    pub port: Option<u16>,
+    /// Whether a password is set. The password itself is in the secure store, with the
+    /// trackers' tokens, never in this file; without one the feed does not start.
+    pub password_set: bool,
+}
+
+/// An e-reader the person described: what Send to e-reader prepares files for.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ExportProfileConfig {
+    pub name: String,
+    pub width: u32,
+    pub height: u32,
+    /// Whether the screen shows colour.
+    pub colour: bool,
+    /// What it opens: `fixed-epub`, `kepub`, `epub` and `cbz`. Empty takes `cbz`.
+    pub formats: Vec<String>,
 }
 
 /// The sources built into Kaeri, as opposed to the plugins people install.
@@ -579,6 +732,61 @@ macro_rules! choices {
     };
 }
 
+choices! {
+    /// How a webtoon opens when the series has no mode of its own.
+    WebtoonMode {
+        /// One long strip, scrolled.
+        #[default]
+        Strip => "strip",
+        /// Page by page.
+        Paged => "paged",
+    }
+}
+choices! {
+    /// Which series' new chapters download by themselves. A series being read also keeps its
+    /// next chapters ready.
+    NewChapters {
+        #[default]
+        Off => "off",
+        /// The series on the Reading list.
+        Reading => "reading",
+    }
+}
+choices! {
+    /// When chapter progress goes to the reading trackers.
+    SendProgressAfter {
+        /// As each chapter counts as read.
+        #[default]
+        Chapter => "chapter",
+        /// Once, with the furthest chapter, when the reader closes.
+        Close => "close",
+    }
+}
+choices! {
+    /// When the reader counts a chapter as read. A chapter marked read by hand is read
+    /// whichever rule is chosen.
+    CountsAsRead {
+        /// After a short stay on the last page, or on moving past it to the end or the next
+        /// chapter.
+        #[default]
+        LastPage => "last-page",
+        /// Only on moving past the last page: to the end of the chapter or the next one.
+        MovingOn => "moving-on",
+        /// Only when the person marks it read; the reader marks nothing.
+        Marked => "marked",
+    }
+}
+choices! {
+    /// Which chapter progress wins when a tracker and this device disagree. Status and score
+    /// always follow the latest change.
+    WhenTrackersDisagree {
+        /// The higher chapter, wherever it was read. Progress never goes back.
+        #[default]
+        Furthest => "furthest",
+        /// The newest change, here or on the tracker, even when it is lower.
+        Latest => "latest",
+    }
+}
 choices! {
     /// The typeface of subtitles.
     SubtitleFont {
@@ -1265,7 +1473,7 @@ impl Default for TrackersConfig {
             // on the Accounts screen, one sign-in away. Nothing is queued and nothing is
             // pulled until credentials exist, so local history still stands alone. Every
             // other tracker needs config anyway, and enabling rides along with that.
-            enabled: vec!["kitsu".into()],
+            enabled: vec!["kitsu".into(), "mangaupdates".into()],
             anilist: AniListAuthConfig::default(),
             mal: MalAuthConfig::default(),
             simkl: DeviceAuthConfig::default(),
@@ -1451,6 +1659,49 @@ mod tests {
     }
 
     #[test]
+    fn an_earlier_versions_reading_switches_feed_the_settings_that_replaced_them() {
+        // The one follow switch feeds both follows, and keeping chapters ready is the
+        // Reading list's new chapters.
+        let old = Config::parse(
+            "[reading]\nseries_choices_follow = false\nkeep_chapters_ready = true\n",
+        )
+        .unwrap();
+        assert!(!old.reading.mode_follows() && !old.reading.look_follows());
+        assert_eq!(old.reading.new_chapters(NewChapters::Off), NewChapters::Reading);
+        let off = Config::parse("[reading]\nkeep_chapters_ready = false\n").unwrap();
+        assert_eq!(off.reading.new_chapters(NewChapters::Reading), NewChapters::Off);
+        // Nothing set: on, and the edition's own.
+        let fresh = Config::parse("").unwrap();
+        assert!(fresh.reading.mode_follows() && fresh.reading.look_follows());
+        assert_eq!(fresh.reading.new_chapters(NewChapters::Reading), NewChapters::Reading);
+        assert_eq!(fresh.reading.webtoon.mode, WebtoonMode::Strip);
+        assert_eq!(fresh.reading.send_progress_after, SendProgressAfter::Chapter);
+        assert_eq!(fresh.reading.when_trackers_disagree, WhenTrackersDisagree::Furthest);
+        assert_eq!(fresh.reading.counts_as_read, CountsAsRead::LastPage, "as it always was");
+
+        // A new key wins over the old one, and each follow is its own.
+        let new = Config::parse(
+            "[reading]\nseries_choices_follow = true\nlook_follows = false\n\
+             keep_chapters_ready = true\nnew_chapters = \"off\"\n\
+             send_progress_after = \"close\"\nwhen_trackers_disagree = \"latest\"\n\
+             counts_as_read = \"moving-on\"\n\
+             [reading.webtoon]\nmode = \"paged\"\n",
+        )
+        .unwrap();
+        assert!(new.reading.mode_follows() && !new.reading.look_follows());
+        assert_eq!(new.reading.new_chapters(NewChapters::Reading), NewChapters::Off);
+        assert_eq!(new.reading.webtoon.mode, WebtoonMode::Paged);
+        assert_eq!(new.reading.send_progress_after, SendProgressAfter::Close);
+        assert_eq!(new.reading.when_trackers_disagree, WhenTrackersDisagree::Latest);
+        assert_eq!(new.reading.counts_as_read, CountsAsRead::MovingOn);
+        let text = toml::to_string(&new).unwrap();
+        assert!(unknown_keys(&text, &new).is_empty(), "every new key is known");
+        // An earlier version still reads the file: the old keys stay as they were.
+        assert!(text.contains("series_choices_follow = true"), "{text}");
+        assert!(text.contains("keep_chapters_ready = true"), "{text}");
+    }
+
+    #[test]
     fn a_config_that_still_has_the_removed_remote_source_keys_reads_fine() {
         let config = Config::parse(
             "[providers]\norder = [\"remote\", \"plugins\"]\nremote_url = \"https://api.example\"\n",
@@ -1603,7 +1854,7 @@ mod tests {
         // the Accounts screen out of the box — while sync stays inert until a sign-in,
         // which the enqueue and pull gates on `is_authenticated` guarantee.
         let cfg = Config::default();
-        assert_eq!(cfg.trackers.enabled, vec!["kitsu".to_string()]);
+        assert_eq!(cfg.trackers.enabled, vec!["kitsu".to_string(), "mangaupdates".to_string()]);
         assert!(!cfg.trackers.is_enabled("anilist"));
         assert!(cfg.trackers.is_enabled("kitsu"));
         // And it must validate without any [trackers.kitsu] section existing.

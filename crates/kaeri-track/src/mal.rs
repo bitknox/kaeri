@@ -25,7 +25,7 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, Tracker, WatchStatus},
+    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -228,6 +228,10 @@ pub struct MalTracker {
     client_id: String,
     http: reqwest::Client,
     mapping: std::sync::Arc<dyn IdMapping>,
+    /// Manga ids, when reading is kept: without them the manga list is not.
+    read_mapping: Option<std::sync::Arc<dyn crate::read::ReadMapping>>,
+    /// The API's address: MyAnimeList's, or a stand-in a test or a fixture build points at.
+    api: String,
     /// The pair, renewed before it runs out and kept in step with other processes: see
     /// [`crate::held`].
     held: Held,
@@ -244,8 +248,28 @@ impl MalTracker {
             client_id: client_id.into(),
             http,
             mapping,
+            read_mapping: None,
+            api: API.to_owned(),
             held: Held::new("mal", "myanimelist", tokens),
         }
+    }
+
+    /// Keep the manga list too, with the ids `mapping` knows.
+    #[must_use]
+    pub fn with_read_mapping(
+        mut self,
+        mapping: std::sync::Arc<dyn crate::read::ReadMapping>,
+    ) -> Self {
+        self.read_mapping = Some(mapping);
+        self
+    }
+
+    /// Ask a stand-in for the API at `api` (as `{api}/users/@me/mangalist`) instead of
+    /// MyAnimeList: for a test, which never reaches the real one.
+    #[must_use]
+    pub fn with_api(mut self, api: impl Into<String>) -> Self {
+        self.api = api.into().trim_end_matches('/').to_owned();
+        self
     }
 
     /// Kept in step with the other processes signed in through `store`: a pair one renews is
@@ -286,7 +310,133 @@ impl Tracker for MalTracker {
     }
 
     fn can_address(&self, op: &TrackOp) -> bool {
+        if op.is_reading() {
+            return self
+                .read_mapping
+                .as_ref()
+                .is_some_and(|m| m.mal_id(op.anilist_id()).is_some());
+        }
         self.mapping.mal_id(op.anilist_id()).is_some()
+    }
+
+    fn serves_reading(&self) -> bool {
+        self.read_mapping.is_some()
+    }
+
+    async fn pull_read_library(&self) -> Result<Vec<TrackedReadEntry>, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Vec::new()) };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let mut entries = Vec::new();
+        let mut next = Some(format!(
+            "{}/users/@me/mangalist?fields=list_status,media_type&limit=1000&nsfw=true",
+            self.api
+        ));
+        let mut pages = 0_u32;
+        while let Some(url) = next.take() {
+            pages += 1;
+            if pages > MAX_LIBRARY_PAGES {
+                tracing::warn!(
+                    pages,
+                    "myanimelist manga pagination did not terminate; stopping"
+                );
+                break;
+            }
+            if !url.starts_with(&self.api) {
+                tracing::warn!(url = %url, "myanimelist paged us off its own api; stopping");
+                break;
+            }
+            let response = self
+                .held
+                .send(self, &mut token, |t| self.http.get(&url).bearer_auth(t))
+                .await?;
+            let payload = crate::page_json(response, "mal", "myanimelist").await?;
+            for node in payload["data"].as_array().into_iter().flatten() {
+                let Some(mal_id) = node["node"]["id"].as_u64().map(|id| id as u32) else {
+                    continue;
+                };
+                // A manga the person never opened here has no id mapped back: skipped, as
+                // anime without a mapping is.
+                let Some(anilist_id) = mapping.anilist_for_mal(mal_id) else { continue };
+                let status = &node["list_status"];
+                let novel = matches!(
+                    node["node"]["media_type"].as_str(),
+                    Some("light_novel" | "novel")
+                );
+                entries.push(TrackedReadEntry {
+                    anilist_id,
+                    medium: if novel {
+                        kaeri_core::media::Medium::Novel
+                    } else {
+                        kaeri_core::media::Medium::Manga
+                    },
+                    chapters: status["num_chapters_read"].as_u64().unwrap_or(0) as u32,
+                    volumes: Some(status["num_volumes_read"].as_u64().unwrap_or(0) as u32),
+                    status: status_from_mal_read(
+                        status["status"].as_str().unwrap_or("reading"),
+                    ),
+                    rereading: status["is_rereading"].as_bool().unwrap_or(false),
+                    score: status["score"].as_f64().map(|s| s as f32).filter(|s| *s > 0.0),
+                });
+            }
+            next = payload["paging"]["next"].as_str().map(str::to_owned);
+        }
+        tracing::info!(count = entries.len(), "myanimelist manga list pulled");
+        Ok(entries)
+    }
+
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Vec::new()) };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let mut ignored = Vec::new();
+        for (anilist_id, fields) in read_fields(ops) {
+            let Some(mal_id) = mapping.mal_id(anilist_id) else {
+                tracing::warn!(
+                    anilist_id = anilist_id.get(),
+                    "no myanimelist manga id for this work; skipping it rather than stalling"
+                );
+                ignored.push(anilist_id);
+                continue;
+            };
+            let url = format!("{}/manga/{mal_id}/my_list_status", self.api);
+            let response = self
+                .held
+                .send(self, &mut token, |t| self.http.patch(&url).bearer_auth(t).form(&fields))
+                .await?;
+            if response.status() == reqwest::StatusCode::UNAUTHORIZED {
+                return Err(kaeri_core::Error::Auth("myanimelist rejected the token".into()));
+            }
+            if !response.status().is_success() {
+                let status = response.status();
+                let body = response.text().await.unwrap_or_default();
+                return Err(tracker_error(crate::said(status, &body)));
+            }
+        }
+        Ok(ignored)
+    }
+
+    async fn remove_read(
+        &self,
+        anilist_id: AnilistId,
+    ) -> Result<ReadRemoval, kaeri_core::Error> {
+        let Some(mal_id) = self.read_mapping.as_ref().and_then(|m| m.mal_id(anilist_id)) else {
+            return Ok(ReadRemoval::Unmatched);
+        };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let url = format!("{}/manga/{mal_id}/my_list_status", self.api);
+        let response =
+            self.held.send(self, &mut token, |t| self.http.delete(&url).bearer_auth(t)).await?;
+        match response.status() {
+            reqwest::StatusCode::UNAUTHORIZED => {
+                Err(kaeri_core::Error::Auth("myanimelist rejected the token".into()))
+            }
+            // MyAnimeList answers 404 for a title that is not on the list.
+            reqwest::StatusCode::NOT_FOUND => Ok(ReadRemoval::NotOnList),
+            status if status.is_success() => Ok(ReadRemoval::Removed),
+            status => {
+                let body = response.text().await.unwrap_or_default();
+                Err(tracker_error(crate::said(status, &body)))
+            }
+        }
     }
 
     async fn accept_credentials(
@@ -313,8 +463,10 @@ impl Tracker for MalTracker {
 
         let mut entries = Vec::new();
         // MAL paginates with an explicit `next` URL rather than page numbers.
-        let mut next =
-            Some(format!("{API}/users/@me/animelist?fields=list_status&limit=1000&nsfw=true"));
+        let mut next = Some(format!(
+            "{}/users/@me/animelist?fields=list_status&limit=1000&nsfw=true",
+            self.api
+        ));
 
         let mut pages = 0_u32;
         while let Some(url) = next.take() {
@@ -329,7 +481,7 @@ impl Tracker for MalTracker {
                 tracing::warn!(pages, "myanimelist pagination did not terminate; stopping");
                 break;
             }
-            if !url.starts_with(API) {
+            if !url.starts_with(&self.api) {
                 tracing::warn!(url = %url, "myanimelist paged us off its own api; stopping");
                 break;
             }
@@ -375,6 +527,10 @@ impl Tracker for MalTracker {
         // whichever fields are present, so three ops for one show are one request.
         let mut batched: Vec<(AnilistId, Vec<(&str, String)>)> = Vec::new();
         for op in ops {
+            // Reading waits in its own outbox and is never in a watching batch.
+            if op.is_reading() {
+                continue;
+            }
             let id = op.anilist_id();
             let slot = match batched.iter_mut().find(|(existing, _)| *existing == id) {
                 Some(slot) => slot,
@@ -397,6 +553,9 @@ impl Tracker for MalTracker {
                     slot.1.retain(|(k, _)| *k != "score");
                     slot.1.push(("score", score.round().clamp(0.0, 10.0).to_string()));
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => {}
             }
         }
 
@@ -415,7 +574,7 @@ impl Tracker for MalTracker {
                 );
                 continue;
             };
-            let url = format!("{API}/anime/{mal_id}/my_list_status");
+            let url = format!("{}/anime/{mal_id}/my_list_status", self.api);
             let response = self
                 .held
                 .send(self, &mut token, |t| self.http.patch(&url).bearer_auth(t).form(&fields))
@@ -432,6 +591,74 @@ impl Tracker for MalTracker {
         }
         Ok(())
     }
+}
+
+/// MyAnimeList's manga `status` values. A reread is `reading` with `is_rereading` set.
+pub const fn status_to_mal_read(status: WatchStatus) -> &'static str {
+    match status {
+        WatchStatus::Current | WatchStatus::Repeating => "reading",
+        WatchStatus::Planning => "plan_to_read",
+        WatchStatus::Completed => "completed",
+        WatchStatus::Paused => "on_hold",
+        WatchStatus::Dropped => "dropped",
+    }
+}
+
+pub fn status_from_mal_read(status: &str) -> WatchStatus {
+    match status {
+        "plan_to_read" => WatchStatus::Planning,
+        "completed" => WatchStatus::Completed,
+        "on_hold" => WatchStatus::Paused,
+        "dropped" => WatchStatus::Dropped,
+        _ => WatchStatus::Current,
+    }
+}
+
+/// A batch of reading ops as one form per work, keeping the highest chapters and volumes.
+fn read_fields(ops: &[TrackOp]) -> Vec<(AnilistId, Vec<(&'static str, String)>)> {
+    let mut batched: Vec<(AnilistId, Vec<(&'static str, String)>)> = Vec::new();
+    for op in ops.iter().filter(|op| op.is_reading()) {
+        let id = op.anilist_id();
+        let at = match batched.iter().position(|(existing, _)| *existing == id) {
+            Some(at) => at,
+            None => {
+                batched.push((id, Vec::new()));
+                batched.len() - 1
+            }
+        };
+        let fields = &mut batched[at].1;
+        let higher = |fields: &[(&str, String)], key: &str, value: u32| {
+            fields
+                .iter()
+                .find(|(k, _)| *k == key)
+                .and_then(|(_, v)| v.parse::<u32>().ok())
+                .map_or(value, |held| held.max(value))
+        };
+        match op {
+            TrackOp::SetReadProgress { chapter, volume, .. } => {
+                let chapters = higher(fields, "num_chapters_read", *chapter);
+                fields.retain(|(k, _)| *k != "num_chapters_read");
+                fields.push(("num_chapters_read", chapters.to_string()));
+                if let Some(volume) = volume {
+                    let volumes = higher(fields, "num_volumes_read", *volume);
+                    fields.retain(|(k, _)| *k != "num_volumes_read");
+                    fields.push(("num_volumes_read", volumes.to_string()));
+                }
+            }
+            TrackOp::SetReadStatus { status, rereading, .. } => {
+                fields.retain(|(k, _)| !matches!(*k, "status" | "is_rereading"));
+                fields.push(("status", status_to_mal_read(*status).to_owned()));
+                fields.push(("is_rereading", rereading.to_string()));
+            }
+            TrackOp::SetReadScore { score, .. } => {
+                fields.retain(|(k, _)| *k != "score");
+                fields.push(("score", score.round().clamp(0.0, 10.0).to_string()));
+            }
+            _ => {}
+        }
+    }
+    batched.retain(|(_, fields)| !fields.is_empty());
+    batched
 }
 
 fn tracker_error(message: String) -> kaeri_core::Error {

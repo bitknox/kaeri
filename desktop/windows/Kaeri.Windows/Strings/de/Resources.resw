@@ -4382,6 +4382,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} hat Folge {episode} nicht</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} hat Folge {episode} noch nicht. Es läuft über die nächste Quelle.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} hat nicht geantwortet</value>
   </data>
@@ -5890,9 +5893,6 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Neue Folgen</value>
-  </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Für Serien in deiner Liste „Wird geschaut“</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Eine Benachrichtigung, wenn eine Folge einer Serie erscheint, der du folgst: die Serie und die Folgennummer, nie der Folgentitel. Eine Serie kann ihre eigenen in den Einstellungen ausschalten.</value>

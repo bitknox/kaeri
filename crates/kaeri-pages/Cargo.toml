@@ -1,0 +1,36 @@
+[package]
+name = "kaeri-pages"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The reader's image pipeline: decode, colour check, crop, spreads, strip cuts, tone, resize, dither and the rainbow filter, as pure functions over buffers"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[features]
+# Generated test pages (zone plates, screentone pages, strips) for tests here and elsewhere.
+testing = []
+
+# Pure: no I/O, no runtime, no network and no other Kaeri crate, so the engine runs it on a
+# worker and a phone's build links it as it is. tools/check-boundaries.sh holds it to that.
+[dependencies]
+image = { workspace = true, features = ["gif"] }
+fast_image_resize.workspace = true
+rustfft.workspace = true
+realfft.workspace = true
+png.workspace = true
+jpeg-decoder.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+kaeri-pages = { path = ".", features = ["testing"] }
+
+[[example]]
+name = "timings"
+required-features = ["testing"]
+
+[lints]
+workspace = true

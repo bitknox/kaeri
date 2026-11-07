@@ -80,8 +80,11 @@ pub async fn run(
     // `syncplay.enabled` sends every play to the party: the terminal's way in, which the apps,
     // starting parties when asked, do without.
     options.every_play_a_party = true;
+    // Reading ships dark; `reading.dev` turns it on for development.
+    options.reading = config.reading.dev;
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
+    engine.send(network_at_launch());
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
@@ -411,6 +414,13 @@ fn setup_terminal() -> Result<Tui> {
 
 fn restore_terminal(terminal: &mut Tui) -> Result<()> {
     Ok(tui::terminal::restore(terminal.backend_mut())?)
+}
+
+/// What the terminal says of the network at launch: Wi-Fi. It has no network monitor, and a
+/// computer is rarely on a metered link. Until some front end says the network, the engine
+/// keeps what is kept to Wi-Fi waiting.
+pub(crate) fn network_at_launch() -> Command {
+    Command::NetworkPath { cellular: false, constrained: false, offline: false }
 }
 
 #[cfg(test)]

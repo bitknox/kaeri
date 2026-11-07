@@ -22,6 +22,7 @@ use kaeri_track::secret::{Backend, TokenStore};
 use crate::{
     engine::{FfiEngine, Opened, RemoteHome, runtime},
     host::{Adapter, FfiHost},
+    scene_books,
     start::{FfiDirs, FfiError, FfiStart, SecretsMode},
     testing,
 };
@@ -211,7 +212,78 @@ pub enum FfiScene {
     /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
     /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
     Profiles,
+    /// Reading on, a first launch: Watch, read or both is asked on page 2 of the first run,
+    /// nothing chosen.
+    ReadingFirstRun,
+    /// Reading on after an update: the config is there and has no answer, so one sheet over
+    /// Home asks, with Watch chosen.
+    ReadingUpdateSheet,
+    /// Reading on, this device set to Watch, and the account set to Read by Kim's iPad: the
+    /// question says so, with Read chosen.
+    ReadingJoinAsk,
+    /// Reading on and set to Both, with reading history: The Lantern Ferry (manga, a:900301)
+    /// chapter 13 at page 9 of 20 after 1 to 12 read, and The Glass Orchard (novel, a:900302)
+    /// part way into chapter 3. The engine answers Home with its empty shape until the
+    /// catalogue lands.
+    ReadingHome,
+    /// [`Self::ReadingHome`] with the manga's series choices: right to left, kept for the
+    /// series, and chapter 7 bookmarked.
+    ReadingSeries,
+    /// [`Self::ReadingHome`] for a right-to-left manga in the reader.
+    ReaderMangaRtl,
+    /// [`Self::ReadingHome`] with a strip series, Paper Kites Over Juniper Row (a:900303), set
+    /// to strip and part way down chapter 2.
+    ReaderStrip,
+    /// [`Self::ReadingHome`] for the novel in the reader, at its place in chapter 3.
+    ReaderNovel,
+    /// [`Self::ReadingHome`] with keeping chapters ready on and the Downloads screen filled:
+    /// the manga's chapter 14 downloaded, 15 downloading (6 of 20 pages) and 16 and 17 queued,
+    /// all three kept ready, the novel's chapter 4 downloaded, and the strip's chapter 2 failed
+    /// for being offline. The queue stays as seeded, the engine fetching nothing by itself.
+    ReadingDownloads,
+    /// [`Self::ReadingHome`] with the manga read further on Kim's iPad a minute ago: chapter 14
+    /// at page 5, for "Moved to where you were on Kim's iPad".
+    ReaderMoved,
+    /// Reading on and set to Read, e-ink on and the screen in greys.
+    EinkGrey,
+    /// Reading on and set to Read, e-ink on and the screen unsure: "Is this a colour screen?"
+    /// still to ask.
+    EinkKaleidoUnsure,
+    /// Reading as release builds have it: off, whatever the start says, with Both kept from a
+    /// Fixtures build. The medium is Watch and every reading command is refused.
+    ReadingDark,
 }
+
+/// The works the reading scenes use, made up like every fixture.
+pub const READING_MANGA: &str = "a:900301";
+pub const READING_NOVEL: &str = "a:900302";
+pub const READING_STRIP: &str = "a:900303";
+
+/// The works' series as their generated books are kept.
+const MANGA_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-lantern-ferry",
+    work: READING_MANGA,
+    name: "The Lantern Ferry",
+    medium: "manga",
+    format: "MANGA",
+    origin: Some("JP"),
+};
+const NOVEL_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-glass-orchard",
+    work: READING_NOVEL,
+    name: "The Glass Orchard",
+    medium: "novel",
+    format: "NOVEL",
+    origin: Some("JP"),
+};
+const STRIP_SERIES: scene_books::Series = scene_books::Series {
+    id: "fixture-paper-kites",
+    work: READING_STRIP,
+    name: "Paper Kites Over Juniper Row",
+    medium: "manga",
+    format: "MANGA",
+    origin: Some("KR"),
+};
 
 /// The magnet link [`FfiScene::LinkOpened`] opens: a made-up info hash whose name is
 /// `Hoshikuzu no Tabibito - 03 [1080p].mkv`. No swarm has it.
@@ -327,6 +399,26 @@ impl FfiScene {
     }
 
     /// How sync stands in the scene, for those that have it on.
+    /// Whether the scene turns reading on or off, whatever the start says.
+    fn reading(&self) -> Option<bool> {
+        match self {
+            Self::ReadingFirstRun
+            | Self::ReadingUpdateSheet
+            | Self::ReadingJoinAsk
+            | Self::ReadingHome
+            | Self::ReadingSeries
+            | Self::ReadingDownloads
+            | Self::ReaderMangaRtl
+            | Self::ReaderStrip
+            | Self::ReaderNovel
+            | Self::ReaderMoved
+            | Self::EinkGrey
+            | Self::EinkKaleidoUnsure => Some(true),
+            Self::ReadingDark => Some(false),
+            _ => None,
+        }
+    }
+
     fn sync(&self) -> Option<kaeri_engine::syncing::FixtureSync> {
         use kaeri_engine::syncing::FixtureSync;
         Some(match self {
@@ -394,6 +486,11 @@ impl FfiEngine {
         clock: Clock,
         home_world: bool,
     ) -> Result<Arc<Self>, FfiError> {
+        let mut start = start.clone();
+        if let Some(reading) = scene.reading() {
+            start.reading = reading;
+        }
+        let start = &start;
         if scene.signed_in() {
             sign_in_config(&dirs)?;
         }
@@ -409,6 +506,7 @@ impl FfiEngine {
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
+        seed_books(&opened.store, &opened.paths.data_dir, &scene, now);
         if let Some(sync) = scene.sync() {
             let tokens =
                 TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
@@ -429,7 +527,8 @@ impl FfiEngine {
                 .set("anilist", "fixture-anilist-token")
                 .map_err(|e| FfiError::engine(Msg::StartFailed { reason: e.to_string() }))?;
         }
-        let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths);
+        let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths)
+            .with_page_decoder(start.page_decoder.clone());
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
         let started = runtime.block_on(async {
@@ -714,6 +813,24 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
             .to_owned(),
         FfiScene::CrashSaved => crash_config(now),
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
+        FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),
+        FfiScene::ReadingJoinAsk => "[reading]\nkaeri_is_for = \"watch\"\n".to_owned(),
+        FfiScene::ReadingDownloads => {
+            "[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n".to_owned()
+        }
+        FfiScene::ReadingHome
+        | FfiScene::ReadingSeries
+        | FfiScene::ReaderMangaRtl
+        | FfiScene::ReaderStrip
+        | FfiScene::ReaderNovel
+        | FfiScene::ReaderMoved
+        | FfiScene::ReadingDark => "[reading]\nkaeri_is_for = \"both\"\n".to_owned(),
+        FfiScene::EinkGrey => "[reading]\nkaeri_is_for = \"read\"\n\n[reading.eink]\n\
+             mode = \"on\"\ncolour_panel = \"greys\"\n"
+            .to_owned(),
+        FfiScene::EinkKaleidoUnsure => {
+            "[reading]\nkaeri_is_for = \"read\"\n\n[reading.eink]\nmode = \"on\"\n".to_owned()
+        }
         _ => return Ok(()),
     };
     // A signed-in scene's file is there already, with tables of its own: add this scene's after them.
@@ -813,7 +930,20 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::CrashSaved
         | FfiScene::CrashHeld
         | FfiScene::StoreOwner
-        | FfiScene::StoreInvited => {}
+        | FfiScene::StoreInvited
+        | FfiScene::ReadingFirstRun
+        | FfiScene::ReadingUpdateSheet
+        | FfiScene::EinkGrey
+        | FfiScene::EinkKaleidoUnsure
+        | FfiScene::ReadingDark => {}
+        FfiScene::ReadingJoinAsk => seed_reading_join(store, now),
+        FfiScene::ReadingHome
+        | FfiScene::ReadingSeries
+        | FfiScene::ReadingDownloads
+        | FfiScene::ReaderMangaRtl
+        | FfiScene::ReaderStrip
+        | FfiScene::ReaderNovel
+        | FfiScene::ReaderMoved => seed_reading(store, scene, now),
         FfiScene::DemoPlayed => {
             seed::watched(store, kaeri_core::demo::DEMO_ANILIST_ID, 1, now - HOUR);
         }
@@ -872,6 +1002,270 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
             }
         }
     }
+}
+
+/// This device as sync names it in the reading scenes, and the iPad beside it.
+const READING_DEVICE: &str = "fixture-iphone";
+const READING_PEER: &str = "fixture-ipad";
+
+/// Sync on, with Kim's iPad in the group, and `bodies` as the iPad's ops from a minute ago.
+fn from_the_ipad(store: &Store, now: i64, bodies: Vec<kaeri_store::sync::OpBody>) {
+    use kaeri_store::sync::{Op, OpBody, stamp_of_secs};
+    let _ = store.sync_enable(READING_DEVICE);
+    let mut bodies = bodies;
+    bodies.insert(
+        0,
+        OpBody::DeviceAdd {
+            device: READING_PEER.into(),
+            name: "Kim's iPad".into(),
+            pubkey: "00".into(),
+        },
+    );
+    // Stamped after this device's own reads, which the store stamps by the wall clock: a scene
+    // clock in the past would make the iPad's reads the older ones.
+    let wall = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() as i64);
+    let base = stamp_of_secs((now - 60).max(wall + 1));
+    let ops = bodies
+        .into_iter()
+        .enumerate()
+        .map(|(i, body)| Op {
+            device: READING_PEER.into(),
+            seq: i as u64 + 1,
+            stamp: base + i as u64,
+            body,
+        })
+        .collect();
+    if let Err(e) = store.apply_ops(ops) {
+        tracing::warn!(error = %e, "the reading scene's sync was not seeded");
+    }
+}
+
+/// [`FfiScene::ReadingJoinAsk`]: the account set to Read by Kim's iPad.
+fn seed_reading_join(store: &Store, now: i64) {
+    from_the_ipad(
+        store,
+        now,
+        vec![kaeri_store::sync::OpBody::Reg {
+            kind: kaeri_store::sync::kinds::MEDIUM_ACCOUNT.into(),
+            key: "account".into(),
+            value: Some("read".into()),
+        }],
+    );
+}
+
+/// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
+/// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4.
+fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
+    if !matches!(
+        scene,
+        FfiScene::ReadingHome
+            | FfiScene::ReadingSeries
+            | FfiScene::ReaderMangaRtl
+            | FfiScene::ReaderStrip
+            | FfiScene::ReaderNovel
+            | FfiScene::ReaderMoved
+            | FfiScene::EinkGrey
+            | FfiScene::EinkKaleidoUnsure
+    ) {
+        return;
+    }
+    scene_books::comics(store, data_dir, &MANGA_SERIES, &[12, 13, 14, 15], 20, now);
+    scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
+    scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
+}
+
+/// Set once a home has its reading scene, so a later start on the same home keeps what the
+/// person changed since: the reader's settings for a series and the places reached.
+const READING_SEEDED: &str = "fixtures:reading:seeded";
+
+/// The reading history of [`FfiScene::ReadingHome`] and its kin, written on a home's first start
+/// only. The Fixtures apps start each launch in an empty home, so a launch shows the scene as
+/// it is drawn; an engine started again on the same home, after a restart or on a kept home,
+/// goes on from where the person left it.
+fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
+    use kaeri_store::reading::ReadEvent;
+    const DAY: i64 = 24 * 3_600;
+    if store.get_meta_i64(READING_SEEDED).ok().flatten().is_some() {
+        return;
+    }
+    if let Err(e) = store.set_meta_i64(READING_SEEDED, now) {
+        tracing::warn!(error = %e, "a reading scene's home was not marked as seeded");
+    }
+    let read = |work: &str, chapter: &str, at: i64, fill: &dyn Fn(&mut ReadEvent)| {
+        let mut event = ReadEvent::new(work, chapter, at);
+        fill(&mut event);
+        if let Err(e) = store.record_read(&event, Vec::new()) {
+            tracing::warn!(error = %e, "a reading scene's read was not seeded");
+        }
+    };
+    let _ = store.adopt_read(READING_MANGA, "12", None, now - 3 * DAY);
+    read(READING_MANGA, "13", now - 2 * 3_600, &|e| {
+        e.page = Some(9);
+        e.of_pages = Some(20);
+        e.source_id = Some("fixture-books".into());
+    });
+    read(READING_NOVEL, "3", now - DAY, &|e| {
+        e.novel_pos = Some("3/0.4.1/120".into());
+        // The reader keeps the page it laid out with the place: a third of the way in.
+        e.page = Some(16);
+        e.of_pages = Some(47);
+    });
+    seed_reading_catalog(store, now);
+    match scene {
+        FfiScene::ReadingSeries | FfiScene::ReaderMangaRtl => {
+            let _ =
+                store.set_series_setting(READING_MANGA, "direction", Some("rtl"), true, now);
+            if *scene == FfiScene::ReadingSeries {
+                let _ = store.set_bookmark(READING_MANGA, "7", true, now - DAY);
+            }
+        }
+        FfiScene::ReadingDownloads => seed_book_downloads(store, now),
+        FfiScene::ReaderStrip => {
+            let _ = store.set_series_setting(READING_STRIP, "mode", Some("strip"), true, now);
+            read(READING_STRIP, "2", now - 600, &|e| {
+                e.strip_image = Some(4);
+                e.strip_offset = Some(0.35);
+            });
+        }
+        FfiScene::ReaderMoved => from_the_ipad(
+            store,
+            now,
+            vec![kaeri_store::sync::OpBody::Read {
+                work: READING_MANGA.into(),
+                chapter: "14".into(),
+                page: Some(5),
+                of: Some(20),
+                strip_image: None,
+                strip_offset: None,
+                novel_pos: None,
+                completed: false,
+                source_id: Some("fixture-books".into()),
+                at: now - 60,
+                version_label: None,
+                queued_for: Vec::new(),
+                seen_unread: 0,
+            }],
+        ),
+        _ => {}
+    }
+}
+
+/// The queue of [`FfiScene::ReadingDownloads`], written as the engine writes it. The files are
+/// not there: the Downloads screen shows rows, and nothing opens them.
+fn seed_book_downloads(store: &Store, now: i64) {
+    use kaeri_store::book_downloads::BookDownloadAsk;
+    let ask = |work: &'static str, chapter: &'static str, keep_ready: bool| {
+        let ask = BookDownloadAsk {
+            work,
+            chapter,
+            source_id: "fixture-books",
+            version_label: None,
+            keep_ready,
+        };
+        if let Err(e) = store.queue_book_download(&ask, now - 600) {
+            tracing::warn!(error = %e, "a reading scene's download was not seeded");
+        }
+        store.book_download(work, chapter).ok().flatten().map(|row| row.id)
+    };
+    let warn = |e: kaeri_store::StoreError| {
+        tracing::warn!(error = %e, "a reading scene's download was not seeded");
+    };
+    // The titles the Downloads screen names the series by, as the catalogue keeps them.
+    for (work, medium, title) in [
+        (READING_MANGA, "manga", "The Lantern Ferry"),
+        (READING_NOVEL, "novel", "The Glass Orchard"),
+        (READING_STRIP, "manga", "Paper Kites Over Juniper Row"),
+    ] {
+        store.seed_book_work(work, medium, None, None, title, now).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_MANGA, "14", false) {
+        let path = "/data/book-downloads/a~3a900301/14.cbz";
+        store.book_download_done(id, path, Some(20), 9_400_000, now - 500).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_MANGA, "15", true) {
+        store.book_download_progress(id, 6, Some(20), now - 60).unwrap_or_else(warn);
+    }
+    ask(READING_MANGA, "16", true);
+    ask(READING_MANGA, "17", true);
+    if let Some(id) = ask(READING_NOVEL, "4", false) {
+        let path = "/data/book-downloads/a~3a900302/4.epub";
+        store.book_download_done(id, path, None, 1_200_000, now - 400).unwrap_or_else(warn);
+    }
+    if let Some(id) = ask(READING_STRIP, "2", false) {
+        store.book_download_failed(id, "offline", now - 300).unwrap_or_else(warn);
+    }
+}
+
+/// What reading's catalogue kept for [`FfiScene::ReadingHome`] and its kin: which folder series
+/// each work is, the chapters each listed last, how often they come out, and the reading lists.
+/// The books themselves come from the fake AniList.
+fn seed_reading_catalog(store: &Store, now: i64) {
+    use kaeri_store::book_catalog::BookRhythm;
+    const DAY: i64 = 24 * 3_600;
+    let warn = |e: kaeri_store::StoreError| {
+        tracing::warn!(error = %e, "a reading scene's catalogue was not seeded");
+    };
+    // In the chapter cache's own JSON, which the engine reads back.
+    let chapter = |n: i64, published: i64, seen_at: Option<i64>, title: Option<&str>| {
+        let optional = |v: Option<String>| v.unwrap_or_else(|| "null".into());
+        format!(
+            r#"{{"id":"{n}","source_ref":"c-{n}","label":"Chapter {n}","number":"{n}","title":{},"language":"en","published":{published},"seen_at":{}}}"#,
+            optional(title.map(|t| format!("\"{t}\""))),
+            optional(seen_at.map(|at| at.to_string())),
+        )
+    };
+    // The manga comes out weekly; chapter 15 two hours ago, seen on the last check.
+    let manga: Vec<_> = (1..=15)
+        .map(|n| {
+            let newest = n == 15;
+            let seen = newest.then_some(now - 3_600);
+            chapter(
+                n,
+                now - 2 * 3_600 - (15 - n) * 7 * DAY,
+                seen,
+                newest.then_some("The Far Shore"),
+            )
+        })
+        .collect();
+    // The novel, a part a month.
+    let novel: Vec<_> =
+        (1..=5).map(|n| chapter(n, now - DAY - (5 - n) * 30 * DAY, None, None)).collect();
+    // The strip, weekly, the newest three days ago.
+    let strip: Vec<_> =
+        (1..=8).map(|n| chapter(n, now - 3 * DAY - (8 - n) * 7 * DAY, None, None)).collect();
+    for (work, series, list) in [
+        (READING_MANGA, MANGA_SERIES.id, manga),
+        (READING_NOVEL, NOVEL_SERIES.id, novel),
+        (READING_STRIP, STRIP_SERIES.id, strip),
+    ] {
+        let _ = store
+            .set_book_match("folders", series, work, 100, true, false, now - 40 * DAY)
+            .map_err(warn);
+        let json = format!("[{}]", list.join(","));
+        let _ = store.put_book_chapters("folders", series, &json, now - 3_600).map_err(warn);
+    }
+    for (work, last) in [(READING_MANGA, now - 2 * 3_600), (READING_STRIP, now - 3 * DAY)] {
+        let rhythm = BookRhythm {
+            weekday: None,
+            every_days: Some(7),
+            last_published: Some(last),
+            checked_at: now - 3_600,
+        };
+        let _ = store.set_book_rhythm(work, &rhythm).map_err(warn);
+    }
+    for (work, status) in [
+        (READING_MANGA, "reading"),
+        (READING_STRIP, "reading"),
+        ("a:900304", "planning"),
+        ("a:900306", "planning"),
+        ("a:900307", "completed"),
+    ] {
+        let _ = store.set_read_status(work, Some(status), now - DAY).map_err(warn);
+    }
+    let _ =
+        store.set_meta_text("read:updates:checked", &(now - 3_600).to_string()).map_err(warn);
 }
 
 /// The profiles [`FfiScene::Profiles`] keeps, Alex last used.
@@ -1110,6 +1504,26 @@ mod tests {
         assert!(line(FINISHED).ends_with("Dub 8"), "{}", line(FINISHED));
         assert!(line(AIRING_NO_MAL).ends_with("Dub"), "{}", line(AIRING_NO_MAL));
         assert!(!line(ONA).contains("Dub"));
+    }
+
+    #[test]
+    fn the_reader_scenes_shelve_their_generated_books() {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let store = Store::open(dir.path().join("kaeri.db")).expect("a database");
+        seed_books(&store, dir.path(), &FfiScene::ReaderMangaRtl, 1_800_000_000);
+        let shelf = store.shelf(READING_MANGA).expect("the shelf");
+        assert_eq!(shelf.iter().map(|f| f.label.as_str()).collect::<Vec<_>>().len(), 4);
+        assert_eq!(store.shelf(READING_STRIP).expect("the strip's shelf").len(), 3);
+        let novel = store.shelf(READING_NOVEL).expect("the novel's shelf");
+        assert!(
+            novel.iter().all(|f| f.format == "epub" && std::path::Path::new(&f.path).is_file())
+        );
+        let kind = store.book_work_kind(READING_STRIP).expect("a kind").expect("a row");
+        assert_eq!(
+            (kind.origin.as_deref(), kind.title.as_deref()),
+            (Some("KR"), Some("Paper Kites Over Juniper Row"))
+        );
+        seed_books(&store, dir.path(), &FfiScene::Fresh, 1_800_000_000);
     }
 
     #[test]

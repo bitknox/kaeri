@@ -23,8 +23,7 @@ android {
     testOptions { unitTests.isIncludeAndroidResources = true }
 
     defaultConfig {
-        // The TV app plays here too, on Android 11 and on the 32-bit userspace most TV boxes run.
-        minSdk = KaeriSdk.TV_MIN
+        // The TV app plays here too, on the 32-bit userspace most TV boxes run.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
         if (native) {
             externalNativeBuild {

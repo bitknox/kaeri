@@ -6988,6 +6988,9 @@ player-start-miss-no-match = { $name } không có phim này
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } không có tập { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } chưa có tập { $episode }. Đang phát từ nguồn khác.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } không phản hồi
 
@@ -8473,9 +8476,6 @@ settings-artwork-detail = Ghi công trong phần ghi chú của ứng dụng
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Tập mới
-
-# Line under it.
-settings-new-episodes-detail = Cho các tựa trong danh sách Đang xem
 
 # Line explaining what a notification says.
 settings-notify-detail = Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.

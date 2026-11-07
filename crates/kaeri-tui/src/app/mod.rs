@@ -563,6 +563,9 @@ impl App {
             | Event::LicensedReturn(_)
             | Event::Server(_)
             | Event::Local(_) => {}
+            // Reading is not in the terminal yet.
+            Event::Reading(_) | Event::Reader(_) | Event::BookSources(_) | Event::Medium(_) => {
+            }
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.
             Event::UpNext(_) => {}

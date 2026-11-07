@@ -16,11 +16,13 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
+import android.os.Build
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
+import androidx.core.content.IntentCompat
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,18 +108,24 @@ class AppUpdates(private val app: KaeriApp, private val model: UpdateModel) : Up
     override fun startDownload(offer: UpdateOffer): Boolean {
         // The job's notification needs the permission, which is asked for the first time one does.
         app.notifier.wantPermission()
-        return UpdateJob.schedule(app, offer)
+        return UpdateDownload.start(app, offer)
     }
 
-    override fun stopDownload() = UpdateJob.cancel(app)
+    override fun stopDownload() = UpdateDownload.cancel(app)
 
-    override fun inspect(file: File): ApkFacts? = app.packageManager
-        .getPackageArchiveInfo(file.path, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
-        ?.facts()
+    override fun inspect(file: File): ApkFacts? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        app.packageManager.getPackageArchiveInfo(file.path, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        app.packageManager.getPackageArchiveInfo(file.path, PackageManager.GET_SIGNING_CERTIFICATES)
+    }?.facts()
 
-    override fun installed(): ApkFacts = app.packageManager
-        .getPackageInfo(app.packageName, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
-        .facts()
+    override fun installed(): ApkFacts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        app.packageManager.getPackageInfo(app.packageName, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        app.packageManager.getPackageInfo(app.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+    }.facts()
 
     /**
      * Write [file] into a session of Android's installer and commit it, with [UpdateReceiver] to
@@ -131,10 +139,12 @@ class AppUpdates(private val app: KaeriApp, private val model: UpdateModel) : Up
             setSize(file.length())
             setInstallReason(PackageManager.INSTALL_REASON_USER)
             // With UPDATE_PACKAGES_WITHOUT_USER_ACTION (the app flavour's manifest), Android lets an
-            // app that installed itself update itself without its dialog, from Android 12, which
-            // the app's minimum is past. Where it still wants the viewer to confirm, the session
-            // says so (STATUS_PENDING_USER_ACTION) and the dialog shows as before.
-            setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+            // app that installed itself update itself without its dialog, from Android 12. Where it
+            // still wants the viewer to confirm, as Android 11 always does, the session says so
+            // (STATUS_PENDING_USER_ACTION) and the dialog shows.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+            }
         }
         val id = try {
             installer.createSession(params)
@@ -281,7 +291,7 @@ class UpdateReceiver : BroadcastReceiver() {
                 if (app.appUpdates?.answers(id) == false) return
                 when (status) {
                     PackageInstaller.STATUS_PENDING_USER_ACTION ->
-                        intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)?.let { app.appUpdates?.confirm(it) }
+                        IntentCompat.getParcelableExtra(intent, Intent.EXTRA_INTENT, Intent::class.java)?.let { app.appUpdates?.confirm(it) }
                     PackageInstaller.STATUS_SUCCESS -> updates.installResult(InstallResult.Installed)
                     PackageInstaller.STATUS_FAILURE_ABORTED -> {
                         app.appUpdates?.unmark()

@@ -16,6 +16,7 @@
 //! to pass like any other torrent.
 
 pub mod ahead;
+pub mod books;
 pub mod commands;
 
 use std::{path::PathBuf, sync::Arc, time::Duration};

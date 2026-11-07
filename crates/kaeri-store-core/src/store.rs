@@ -18,7 +18,7 @@ use crate::{
     blobs::{BlobError, Blobs},
     crypto::{self, PublicKey, SigningKey},
     db::{Database, DbError, Dialect, Row, Statement},
-    inspect::{Inspector, differs},
+    inspect::{Inspector, disagrees},
     invite::Invite,
     manifest::{self, PluginInfo},
     protocol::{
@@ -305,6 +305,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             claimable: false,
             contact: self.contact().await.ok().flatten(),
             invite_choices: true,
+            books: true,
         }
     }
 
@@ -1228,7 +1229,8 @@ impl<D: Database, B: Blobs> Store<D, B> {
     pub async fn plugins(&self) -> Result<Vec<IndexEntry>, StoreError> {
         let rows = self
             .query(sql!(
-                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at
+                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at,
+                        kind, media
                  FROM plugins ORDER BY id"
             ))
             .await?;
@@ -1238,7 +1240,8 @@ impl<D: Database, B: Blobs> Store<D, B> {
     pub async fn plugin(&self, id: &str) -> Result<Option<IndexEntry>, StoreError> {
         let rows = self
             .query(sql!(
-                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at
+                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at,
+                        kind, media
                  FROM plugins WHERE id = ?1",
                 id
             ))
@@ -1262,7 +1265,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
                 "SELECT (SELECT value FROM meta WHERE key = 'sequence'),
                         (SELECT value FROM meta WHERE key = 'index_updated_at'),
                         p.id, p.name, p.version, p.allowed_hosts, p.translations, p.sha256,
-                        p.size, p.published_at
+                        p.size, p.published_at, p.kind, p.media
                  FROM (SELECT 1 AS anchor) AS a LEFT JOIN plugins p ON 1 = 1
                  ORDER BY p.id"
             ))
@@ -1305,8 +1308,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             Some(inspector) => {
                 let asked = inspector.inspect(wasm).await.map_err(StoreError::InvalidPlugin)?;
                 if let Ok(Some(carried)) = manifest::read(wasm)
-                    && let Some(problem) =
-                        differs(&carried, &asked.id, &asked.version, &asked.allowed_hosts)
+                    && let Some(problem) = disagrees(&carried, &asked)
                 {
                     return Err(StoreError::InvalidPlugin(format!(
                         "the plugin's manifest section disagrees with the plugin itself: {problem}"
@@ -1374,6 +1376,16 @@ impl<D: Database, B: Blobs> Store<D, B> {
                 info.version
             )));
         }
+        let books = match info.kind() {
+            manifest::KIND_SHOWS => false,
+            manifest::KIND_BOOKS => true,
+            other => {
+                return Err(StoreError::InvalidPlugin(format!(
+                    "the plugin says it is a source of {other:?}, and this store takes show \
+                     and book sources"
+                )));
+            }
+        };
 
         let entry = IndexEntry {
             id: info.id.clone(),
@@ -1395,8 +1407,22 @@ impl<D: Database, B: Blobs> Store<D, B> {
             },
             size: wasm.len() as u64,
             published_at: now,
+            kind: books.then(|| manifest::KIND_BOOKS.to_owned()),
+            // Only a book source has media; a show source's section has none to give.
+            media: if books { info.media.clone() } else { Vec::new() },
         };
         let previous = self.plugin(&entry.id).await?;
+        if let Some(previous) = &previous
+            && previous.kind() != entry.kind()
+        {
+            // Members installed it as one kind; an update must not turn it into the other.
+            return Err(StoreError::InvalidPlugin(format!(
+                "{} is published here as a source of {}; publish a source of {} under another id",
+                entry.id,
+                previous.kind(),
+                entry.kind()
+            )));
+        }
         if let Some(previous) = &previous
             && previous.version == entry.version
         {
@@ -1413,14 +1439,15 @@ impl<D: Database, B: Blobs> Store<D, B> {
         self.blobs.put(&key, wasm.to_vec()).await?;
         let mut statements = vec![sql!(
             "INSERT INTO plugins (id, name, version, allowed_hosts, translations, sha256,
-                                          size, published_at)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                                          size, published_at, kind, media)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
                      ON CONFLICT(id) DO UPDATE SET
                         name = excluded.name, version = excluded.version,
                         allowed_hosts = excluded.allowed_hosts,
                         translations = excluded.translations, sha256 = excluded.sha256,
-                        size = excluded.size, published_at = excluded.published_at
-                     WHERE plugins.version <> excluded.version",
+                        size = excluded.size, published_at = excluded.published_at,
+                        media = excluded.media
+                     WHERE plugins.version <> excluded.version AND plugins.kind = excluded.kind",
             entry.id.as_str(),
             entry.name.as_str(),
             entry.version.as_str(),
@@ -1428,7 +1455,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
             serde_json::to_string(&entry.translations).unwrap_or_else(|_| "[]".into()),
             entry.sha256.as_str(),
             entry.size,
-            entry.published_at
+            entry.published_at,
+            entry.kind(),
+            serde_json::to_string(&entry.media).unwrap_or_else(|_| "[]".into())
         )];
         statements.extend(bump_sequence(now));
         let changed = self.batch(statements).await?;
@@ -1744,5 +1773,8 @@ fn entry_from(row: &Row, at: usize) -> Result<IndexEntry, StoreError> {
         sha256: row.text(at + 5)?,
         size: row.int(at + 6)?.max(0) as u64,
         published_at: row.int(at + 7)?,
+        // `shows` is how the database keeps a show source; an entry leaves it out.
+        kind: Some(row.text(at + 8)?).filter(|kind| kind != manifest::KIND_SHOWS),
+        media: list(row.text(at + 9)?),
     })
 }

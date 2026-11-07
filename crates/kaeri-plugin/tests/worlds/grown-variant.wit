@@ -1,0 +1,27 @@
+// A host's copy of kaeri:books@1.0.0, cut down to the functions it checks, for
+// book_conformance.rs: `content` with one more case at the end.
+
+package kaeri:books@1.0.0;
+
+interface host {
+    record http-request { method: string, url: string, headers: list<tuple<string, string>>, body: option<list<u8>> }
+    record http-response { status: u16, headers: list<tuple<string, string>>, body: list<u8> }
+    variant host-error { denied(string), timeout, transport(string) }
+    fetch: func(req: http-request) -> result<http-response, host-error>;
+    fetch-many: func(reqs: list<http-request>) -> list<result<http-response, host-error>>;
+    log: func(level: string, msg: string);
+    regex-captures: func(pattern: string, haystack: string) -> list<list<string>>;
+    config-get: func(key: string) -> option<string>;
+}
+
+interface source {
+    record page { url: string, headers: list<tuple<string, string>>, width: option<u32>, height: option<u32> }
+    variant content { images(list<page>), text(string), archive(string) }
+    variant source-error { not-found, blocked(string), parse(string), other(string) }
+    chapter-content: func(series: string, chapter: string) -> result<content, source-error>;
+}
+
+world book-plugin {
+    import host;
+    export source;
+}

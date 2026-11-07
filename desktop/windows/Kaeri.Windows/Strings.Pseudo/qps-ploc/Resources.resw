@@ -683,6 +683,562 @@
     <value>[Çöüļðñ'ţ ŕéàçĥ {server}. Çĥéçķ ţĥé šéŕṽéŕ, öŕ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]</value>
     <comment>Message when a watch party's server could not be reached, in the lobby or when looking in.</comment>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</comment>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>[Ûšüàļļý Ṁöñðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ţüéšðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ŵéðñéšðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>[Ûšüàļļý Ţĥüŕšðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>[Ûšüàļļý Ƒŕîðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>[Ûšüàļļý Šàţüŕðàýš~~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>[Ûšüàļļý Šüñðàýš~~~~~]</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
+    <value>[Åƀöüţ éṽéŕý ŵééķ~~~~~]</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>[Åƀöüţ éṽéŕý {weeks} ŵééķš~~~~~~~]</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>[Åļšö à šĥöŵ~~~~]</value>
+    <comment>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>[Åļšö à ƀööķ~~~~]</value>
+    <comment>On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} ĝöéš ţö ţŕàçķéŕš àš {whole}.~~~~~~~~~~~]</value>
+    <comment>Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.</comment>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>[Ŕéšüɱéð àţ þàĝé {page}~~~~~~]</value>
+    <comment>A notice over the page when a chapter opens where it was left. It offers Start over.</comment>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>[Ɓàçķ ţö þàĝé {page}~~~~~]</value>
+    <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, þàĝé {page}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~]</value>
+    <comment>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.</comment>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>[Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>[Ļéƒţ ţö ŕîĝĥţ, ðéţéçţéð~~~~~~~]</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>[Ļöñĝ šţŕîþ, ðéţéçţéð~~~~~~]</value>
+    <comment>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</comment>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>[Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: there is no connection.</comment>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>[{source} îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source did not answer. The source is its name.</comment>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>[Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter could not load: the source no longer has it.</comment>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>[{source} ŕéƒüšéð ţĥé ŕéƣüéšţ. {reason}~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source refused. The reason comes from the source.</comment>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ {source} šéñţ. Îţš þļüĝîñ ɱàý ñééð àñ üþðàţé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</comment>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>[Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ {status}). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]</value>
+    <comment>Why one page did not load. The status is the server's HTTP status code, such as 404.</comment>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {what} àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]</value>
+    <comment>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</comment>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>[{path} îšñ'ţ ţĥéŕé àñýɱöŕé. Îƒ îţ'š öñ à ðŕîṽé, çöññéçţ îţ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.</comment>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>[{path} çöüļðñ'ţ ƀé ŕéàð àš {format}. Ţĥé ƒîļé ɱàý ƀé ðàɱàĝéð.~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</comment>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>[Ķàéŕî çàñ'ţ ŕéàð {kind} ƒîļéš.~~~~~~~~~]</value>
+    <comment>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</comment>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>[Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, šö Ķàéŕî çàñ'ţ öþéñ îţ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book could not open: it is copy-protected or encrypted.</comment>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>[Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter could not be saved: the disk is full.</comment>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>[Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ {version}. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</comment>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>[Ţĥîš þļüĝîñ ñééðš à ñéŵéŕ Ķàéŕî ({world}). Ûþðàţé Ķàéŕî ţö üšé îţ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.</comment>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>[Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~]</value>
+    <comment>Why a reading request was refused: reading is not available in this build.</comment>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>[Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. {reason}~~~~~~~~]</value>
+    <comment>Why something about reading failed, for any other reason. The reason is as it came.</comment>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>[Ṁàñĝà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</comment>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>[Ṁàñĥŵà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</comment>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>[Ṁàñĥüà~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</comment>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>[Ŵéƀţööñ~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</comment>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>[Öñé-šĥöţ~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</comment>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>[Ļîĝĥţ ñöṽéļ~~~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</comment>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>[Ñöṽéļ~~]</value>
+    <comment>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</comment>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>[Ŕéļéàšîñĝ~~~]</value>
+    <comment>Under a cover or on a series page: new chapters are still coming out.</comment>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>[Ƒîñîšĥéð~~~]</value>
+    <comment>Under a cover or on a series page: the story is complete.</comment>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>[Öñ ĥîàţüš~~~]</value>
+    <comment>Under a cover or on a series page: new chapters have stopped for a while.</comment>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>[Çàñçéļļéð~~~]</value>
+    <comment>Under a cover or on a series page: the story was stopped before it ended.</comment>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>[Ñöţ öüţ ýéţ~~~~]</value>
+    <comment>Under a cover or on a series page: the first chapter is not out yet.</comment>
+  </data>
+  <data name="ReadingChapters_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ~~~]</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš~~~~]</value>
+    <comment>Under a cover or on a series page: how many chapters the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_one" xml:space="preserve">
+    <value>[1 ṽöļüɱé~~~]</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>[{count} ṽöļüɱéš~~~~]</value>
+    <comment>Under a cover or on a series page: how many volumes the series has.</comment>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>[Öñ ýöüŕ Þļàññîñĝ ļîšţ~~~~~~~]</value>
+    <comment>Under a cover: the series is on the person's Planning list.</comment>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕ îñ à šéŕîéš ýöü ƒöļļöŵ~~~~~~~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</comment>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>[Çöñţîñüé ŕéàðîñĝ~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: the series the person was reading last.</comment>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>[Ûþ ñéẋţ ƒöŕ ýöü~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</comment>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>[Þöþüļàŕ, ŕéļéàšîñĝ ñöŵ~~~~~~~]</value>
+    <comment>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</comment>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} îš öüţ ţöðàý~~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</comment>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}, {title}, öüţ ţöðàý~~~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a chapter that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · þàĝé {page}~~~~~~~]</value>
+    <comment>Under a cover or the big picture: the page the person stopped on in a chapter.</comment>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {percent}%~~~~~~]</value>
+    <comment>Under a cover or the big picture: how far into a novel's chapter the person is.</comment>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} îš ñéŵ~~~~~~]</value>
+    <comment>Under a cover: a chapter came out that the person has not read. The chapter is its number.</comment>
+  </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>[Þàŕţ {part}~~~]</value>
+    <comment>Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.</comment>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>[Þàŕţ {part} · {percent}%~~~~~]</value>
+    <comment>Under a cover or the big picture: how far into a light novel's part the person is.</comment>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>[Þàŕţ {part} îš ñéŵ~~~~~]</value>
+    <comment>Under a cover: a light novel's part came out that the person has not read.</comment>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>[Þàŕţ {part} · {title}~~~~~]</value>
+    <comment>Under a This week cell: a light novel's part that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>[Þàŕţ {part} îš öüţ ţöðàý~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today.</comment>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>[Þàŕţ {part}, {title}, öüţ ţöðàý~~~~~~~~]</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} öƒ {of}~~~~~~]</value>
+    <comment>Under a Library cover: the chapter the person is at, and the newest chapter there is.</comment>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>[Ṽöļüɱé {volume}, þàŕţ {part}~~~~~~]</value>
+    <comment>Under a Library cover: the volume and part of a light novel the person is at.</comment>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>[Ĵàþàñ~~]</value>
+    <comment>A search filter: books from Japan.</comment>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>[Ķöŕéà~~]</value>
+    <comment>A search filter: books from Korea.</comment>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>[Çĥîñà~~]</value>
+    <comment>A search filter: books from China.</comment>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>[Ţàîŵàñ~~]</value>
+    <comment>A search filter: books from Taiwan.</comment>
+  </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>[Öţĥéŕ é-ŕéàðéŕ~~~~~]</value>
+    <comment>Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.</comment>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>[É-îñķ, 6 îñçĥ~~~~]</value>
+    <comment>Send to e-reader: a device class, a grey e-ink screen of about 6 inches.</comment>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>[É-îñķ, 7 îñçĥ~~~~]</value>
+    <comment>Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.</comment>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>[Çöļöüŕ é-îñķ, 7 îñçĥ~~~~~~]</value>
+    <comment>Send to e-reader: a device class, a colour e-ink screen of about 7 inches.</comment>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>[Ţàƀļéţ~~]</value>
+    <comment>Send to e-reader: a device class, a colour tablet.</comment>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</comment>
+  </data>
+  <data name="ExportWaitsForWifi_one" xml:space="preserve">
+    <value>[Öñé çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
+  </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {title}~~~~~~]</value>
+    <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>A chapter row's state: the person read it.</comment>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>[Ñéŵ~]</value>
+    <comment>A chapter row's state: it came out since the person last read and is not read.</comment>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð~~~]</value>
+    <comment>A chapter row's state: it is kept on this device to read offline.</comment>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>[Ñöţ ðöŵñļöàðéð~~~~~]</value>
+    <comment>A chapter row's state: it is read from the source and nothing of it is on this device.</comment>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>[Öñ ţĥîš ðéṽîçé~~~~~]</value>
+    <comment>A chapter row's state: a file in one of the person's folders, or one already on the device.</comment>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>[Ǫüéüéð~~]</value>
+    <comment>A chapter row's state: it waits its turn to download.</comment>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>[Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]</value>
+    <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
+    <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ðöŵñļöàð~~~~~~]</value>
+    <comment>A chapter row's state: the download failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>[Þàĝé {page} öƒ {of}~~~~~]</value>
+    <comment>A chapter row's state: the page the person stopped on, of how many.</comment>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>[Þàĝé {page}~~~]</value>
+    <comment>A chapter row's state: the page the person stopped on, when the length isn't known.</comment>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>[{percent}%~~]</value>
+    <comment>A novel's chapter row: how far into it the person is.</comment>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>[1 þàĝé~~]</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>[{n} þàĝéš~~~]</value>
+    <comment>A chapter row: how long its pages are, for a file on the device.</comment>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>[1 ṽéŕšîöñ~~~]</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>[{n} ṽéŕšîöñš~~~~]</value>
+    <comment>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</comment>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>[ĵüšţ ñöŵ~~~]</value>
+    <comment>A chapter row: when it was read or came out, under a minute ago.</comment>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>[{minutes} ɱîñ àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in minutes.</comment>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>[ţöðàý~~]</value>
+    <comment>A chapter row: when it was read or came out, earlier today.</comment>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>[ýéšţéŕðàý~~~]</value>
+    <comment>A chapter row: when it was read or came out, the day before today.</comment>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>[1 ðàý àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>[{days} ðàýš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in days, under a week.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>[1 ŵééķ àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>[{weeks} ŵééķš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in weeks, under two months.</comment>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>[1 ɱöñţĥ àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>[{months} ɱöñţĥš àĝö~~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in months, under a year.</comment>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>[1 ýéàŕ àĝö~~~]</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>[{years} ýéàŕš àĝö~~~~]</value>
+    <comment>A chapter row: when it was read or came out, in years.</comment>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>[Ŕéɱöṽéð ƒŕöɱ {tracker}~~~~~]</value>
+    <comment>The tracker took the series off its list.</comment>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>[Ŵàšñ'ţ öñ ýöüŕ {tracker} ļîšţ~~~~~~~]</value>
+    <comment>The tracker's list did not hold the series, so there was nothing to remove.</comment>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>[Ñöţ ɱàţçĥéð öñ {tracker}, šö ñöţĥîñĝ çĥàñĝéð ţĥéŕé~~~~~~~~~~~~~~]</value>
+    <comment>The app never learned which of the tracker's entries this series is, so it asked nothing.</comment>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>[Šţîļļ öñ ýöüŕ {tracker} ļîšţ~~~~~~~]</value>
+    <comment>The tracker could not take the series off. The reason follows.</comment>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {tracker} àĝàîñ, ţĥéñ ţŕý öñçé ɱöŕé.~~~~~~~~~~~~~]</value>
+    <comment>Why a removal failed: the tracker turned the sign-in away.</comment>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>[Ñö šéŕîéš ŵîţĥ ţĥîš ñàɱé~~~~~~~~]</value>
+    <comment>The source answered the search and has no series by the series' names.</comment>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>[Ñöţ àñšŵéŕîñĝ šîñçé {time}~~~~~~~]</value>
+    <comment>The source has failed every ask since this time of day, in the person's zone.</comment>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>[Ñöţ àñšŵéŕîñĝ~~~~]</value>
+    <comment>The source has failed every ask, since a time on another day or not known.</comment>
+  </data>
+  <data name="ReadingDlParts_one" xml:space="preserve">
+    <value>[1 þàŕţ~~]</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>[{count} þàŕţš~~~]</value>
+    <comment>How many parts of a light novel are downloaded.</comment>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>[{size}~]</value>
+    <comment>What the downloads take up on this device.</comment>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>[{count} ŕéàð~~~]</value>
+    <comment>How many of the downloaded chapters are read, which Delete read clears.</comment>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>The chapter downloading now.</comment>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>[{done} öƒ {total} þàĝéš~~~~~]</value>
+    <comment>How far the chapter downloading now has come.</comment>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>[{count} ɱöŕé ƣüéüéð~~~~~]</value>
+    <comment>Chapters waiting their turn after the one downloading.</comment>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>[{count} ƣüéüéð~~~]</value>
+    <comment>Chapters waiting their turn, none downloaded yet.</comment>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
+    <comment>Chapters that wait for Wi-Fi to download.</comment>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]</value>
+    <comment>A chapter that failed. The reason follows as the next part.</comment>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>[Åƀöüţ {size}~~~]</value>
+    <comment>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</comment>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>[öṽéŕ Ŵî-Ƒî~~~]</value>
+    <comment>The chapters download only on Wi-Fi, as the settings say.</comment>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>[öṽéŕ ɱöƀîļé ðàţà~~~~~]</value>
+    <comment>The device is on mobile data, and the settings let chapters download on it.</comment>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
+    <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>[Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]</value>
+    <comment>The notification's title.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
+    <value>[Å çĥàþţéŕ öƒ {title} îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]</value>
+    <comment>The notification's text: one series' chapters are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš öƒ {title} àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~]</value>
+    <comment>The notification's text: one series' chapters are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
+    <value>[Å þàŕţ öƒ {title} îš ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~]</value>
+    <comment>The notification's text: one light novel's parts are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>[{count} þàŕţš öƒ {title} àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~]</value>
+    <comment>The notification's text: one light novel's parts are downloaded.</comment>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>[Çĥàþţéŕš öƒ {count} šéŕîéš àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~~]</value>
+    <comment>The notification's text: chapters of several series are downloaded.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -886,6 +1442,10 @@
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>[{plugin} îš ñö ļöñĝéŕ îñ ţĥé þļüĝîñ ƒöļðéŕ.~~~~~~~~~~~~]</value>
     <comment>Error: a plugin to publish is no longer in the plugin folder.</comment>
+  </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>[{store} ðöéšñ'ţ ļîšţ ƀööķ šöüŕçéš ýéţ. Îţš öŵñéŕ çàñ üþðàţé ţĥé þļüĝîñ šţöŕé ţö àðð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error: a book source cannot be published to a store whose server is too old to list book sources.</comment>
   </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>[Ţĥîš ðéṽîçé ĵöîñéð {store} ŵîţĥ îţš ļîñķ. Þàšţé ţĥé šàɱé ļîñķ öñ ţĥé öţĥéŕ ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
@@ -5939,6 +6499,10 @@
     <value>[{name} ðöéšñ'ţ ĥàṽé éþîšöðé {episode}~~~~~~~~~]</value>
     <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>[{name} ðöéšñ'ţ ĥàṽé éþîšöðé {episode} ýéţ. Þļàýîñĝ ƒŕöɱ ţĥé ñéẋţ šöüŕçé.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.</comment>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>[{name} ðîðñ'ţ àñšŵéŕ~~~~~~]</value>
     <comment>Detail line when a source failed and the next is asked.</comment>
@@ -6671,6 +7235,1478 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>[Ṁöŕé îñ Šéţţîñĝš…~~~~~~]</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
+  </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>[Ļöàðîñĝ þàĝé {page}~~~~~]</value>
+    <comment>Under a page that is still loading after four seconds.</comment>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð þàĝé {page}~~~~~~~]</value>
+    <comment>Heading where a page could not be loaded.</comment>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>[Ţŕý àĝàîñ~~~]</value>
+    <comment>Button that loads a failed page again.</comment>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>[Çļöšé~~]</value>
+    <comment>Closes the reader and goes back to the series.</comment>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>[Ñéẋţ~~]</value>
+    <comment>Small heading above the next chapter on the page between chapters.</comment>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>[Ŕîĝĥţ ţö ļéƒţ~~~~]</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>[Ļéƒţ ţö ŕîĝĥţ~~~~]</value>
+    <comment>A reading mode, and a reading direction.</comment>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>[Šţŕîþ~~]</value>
+    <comment>A reading mode: one long scroll of images.</comment>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>[Šçŕééñ~~]</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>[Ŵîðţĥ~~]</value>
+    <comment>A choice for how a page is fitted.</comment>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>[Šéŕîƒ~~]</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>[Šàñš~~]</value>
+    <comment>A choice of typeface.</comment>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>[Þàþéŕ~~]</value>
+    <comment>A look for reading: warm paper.</comment>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>[Ļîĝĥţ~~]</value>
+    <comment>A look for reading: a light page.</comment>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>[Šéþîà~~]</value>
+    <comment>A look for reading: a brown page.</comment>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>[Ðàŕķ~~]</value>
+    <comment>A look for reading: a dark page.</comment>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>[Ñàŕŕöŵ~~]</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>[Ŵîðé~~]</value>
+    <comment>A choice of margins.</comment>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>[Åüţö~~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>[Öñé~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>[Ţŵö~]</value>
+    <comment>A choice for page layout.</comment>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>[Šþļîţ~~]</value>
+    <comment>A choice for wide pages: cut in two.</comment>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>[Ţüŕñ~~]</value>
+    <comment>A choice for wide pages: turned to fill the screen.</comment>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>[Ŵĥöļé~~]</value>
+    <comment>A choice for wide pages: shown whole.</comment>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>[Éðĝéš~~]</value>
+    <comment>A choice for the reader's tap zones: taps near the left and right edges turn the page.</comment>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>[Ĥàļṽéš~~]</value>
+    <comment>A choice for the reader's tap zones: the left and right halves turn the page.</comment>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>[Öƒƒ~]</value>
+    <comment>A choice for the reader's tap zones: taps do not turn the page.</comment>
+  </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>[Çĥàþţéŕš~~~]</value>
+    <comment>Button in the reader's controls that opens the chapters and the page grid.</comment>
+  </data>
+  <data name="ReaderPagesLeft_one" xml:space="preserve">
+    <value>[Öñé þàĝé ļéƒţ îñ ţĥîš çĥàþţéŕ~~~~~~~~~]</value>
+    <comment>Line in the margin of a novel's page.</comment>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>[{count} þàĝéš ļéƒţ îñ ţĥîš çĥàþţéŕ~~~~~~~~~]</value>
+    <comment>Line in the margin of a novel's page.</comment>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>[Ļöàðîñĝ çĥàþţéŕš~~~~~]</value>
+    <comment>Chapters sheet and the chapter list: the list is on its way.</comment>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>[Ţĥéɱé~~]</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>[Ɓļàçķ~~]</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>[Ŵĥîţé~~]</value>
+    <comment>Background choice.</comment>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>[Ýöü'ŕé çàüĝĥţ üþ~~~~~]</value>
+    <comment>Title of the end page when the series has no newer chapter.</comment>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>[Ñöñé~~]</value>
+    <comment>A choice for the gap between a strip's images: none at all.</comment>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>[Šɱàļļ~~]</value>
+    <comment>A choice for the gap between a strip's images: a small one.</comment>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>[Šýšţéɱ~~]</value>
+    <comment>Look choice that follows the system's light or dark.</comment>
+  </data>
+  <data name="NavWatch" xml:space="preserve">
+    <value>[Ŵàţçĥ~~]</value>
+    <comment>Sidebar and tab label: the shows' Home when both media are on.</comment>
+  </data>
+  <data name="NavRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>Sidebar and tab label: reading's Home.</comment>
+  </data>
+  <data name="NavUpdates" xml:space="preserve">
+    <value>[Ûþðàţéš~~~]</value>
+    <comment>Sidebar and tab label: new chapters from followed series.</comment>
+  </data>
+  <data name="HomeReadReleasing" xml:space="preserve">
+    <value>[Ŕéļéàšîñĝ ñöŵ~~~~]</value>
+    <comment>Shelf heading on Read: series releasing now.</comment>
+  </data>
+  <data name="HomeReadCheckedOnOpen" xml:space="preserve">
+    <value>[Çĥéçķéð ŵĥéñ ýöü öþéñ Ķàéŕî~~~~~~~~~]</value>
+    <comment>Line under the spotlight of a popular series, when the engine gives no line of its own.</comment>
+  </data>
+  <data name="HomeReadEnd" xml:space="preserve">
+    <value>[Ţĥàţ'š éṽéŕýţĥîñĝ ƒöŕ ñöŵ. Ûþðàţéš àñð Šéàŕçĥ ĥàṽé ţĥé ƒüļļ ļîšţš.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line at the end of Read, under the last shelf.</comment>
+  </data>
+  <data name="HomeReadNoSources" xml:space="preserve">
+    <value>[Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ƒŕöɱ Ĥöɱé.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line at the end of Read with no book sources yet. A button to add one follows it.</comment>
+  </data>
+  <data name="WeekUsually" xml:space="preserve">
+    <value>[Ûšüàļļý~~~]</value>
+    <comment>Under a day in Read's week: what usually comes out that day, when the time isn't known.</comment>
+  </data>
+  <data name="WeekNothingUsually" xml:space="preserve">
+    <value>[Ñöţĥîñĝ üšüàļļý~~~~~]</value>
+    <comment>Under a day in Read's week with nothing due.</comment>
+  </data>
+  <data name="UpdatesChecked" xml:space="preserve">
+    <value>[Çĥéçķéð {ago}~~~~]</value>
+    <comment>Line under Updates' title on iPhone and iPad.</comment>
+  </data>
+  <data name="ChapterUpdatesCheckedCaughtUp" xml:space="preserve">
+    <value>[Çĥéçķéð {ago} · šéŕîéš ýöü àŕé çàüĝĥţ üþ öñ~~~~~~~~~~~~~]</value>
+    <comment>Line above Updates on the Mac: when it checked, and which series it checks.</comment>
+  </data>
+  <data name="ChapterUpdatesChecking" xml:space="preserve">
+    <value>[Çĥéçķîñĝ ƒöŕ ñéŵ çĥàþţéŕš…~~~~~~~~]</value>
+    <comment>Line while Updates asks every followed series now.</comment>
+  </data>
+  <data name="UpdatesDownloadNew" xml:space="preserve">
+    <value>[Ðöŵñļöàð ñéŵ~~~~]</value>
+    <comment>Toolbar button: queue every unread chapter in Updates.</comment>
+  </data>
+  <data name="UpdatesEmptyTitle" xml:space="preserve">
+    <value>[Ñö ñéŵ çĥàþţéŕš~~~~~]</value>
+    <comment>Updates with nothing in it.</comment>
+  </data>
+  <data name="ChapterUpdatesEmptyLine" xml:space="preserve">
+    <value>[Ķàéŕî çĥéçķš šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ ţĥàţ ýöü àŕé çàüĝĥţ üþ öñ, à ƒéŵ ţîɱéš à ðàý.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Updates' empty title.</comment>
+  </data>
+  <data name="ChapterUpdatesToday" xml:space="preserve">
+    <value>[Ţöðàý~~]</value>
+    <comment>Day heading in Updates.</comment>
+  </data>
+  <data name="ChapterUpdatesYesterday" xml:space="preserve">
+    <value>[Ýéšţéŕðàý~~~]</value>
+    <comment>Day heading in Updates.</comment>
+  </data>
+  <data name="ChapterUpdatesVersions_one" xml:space="preserve">
+    <value>[1 ṽéŕšîöñ~~~]</value>
+    <comment>After a chapter on an Updates row, when several groups put it out.</comment>
+  </data>
+  <data name="ChapterUpdatesVersions_other" xml:space="preserve">
+    <value>[{n} ṽéŕšîöñš~~~~]</value>
+    <comment>After a chapter on an Updates row, when several groups put it out.</comment>
+  </data>
+  <data name="ChapterUpdatesOpenSeries" xml:space="preserve">
+    <value>[Öþéñ {title}~~~]</value>
+    <comment>Accessibility label on an Updates row's cover, which opens the series.</comment>
+  </data>
+  <data name="ChapterUpdatesOpenChapterHint" xml:space="preserve">
+    <value>[Öþéñš ţĥé çĥàþţéŕ~~~~~~]</value>
+    <comment>Accessibility hint on an Updates row.</comment>
+  </data>
+  <data name="ChapterUpdatesOpenSeriesMenu" xml:space="preserve">
+    <value>[Öþéñ šéŕîéš~~~~]</value>
+    <comment>Context menu item on an Updates row.</comment>
+  </data>
+  <data name="ActionReadChapter" xml:space="preserve">
+    <value>[Ŕéàð çĥàþţéŕ {n}~~~~~]</value>
+    <comment>The series page's main action, and the spotlight's.</comment>
+  </data>
+  <data name="ActionContinueChapter" xml:space="preserve">
+    <value>[Çöñţîñüé çĥàþţéŕ {n} · þàĝé {page}~~~~~~~~~~]</value>
+    <comment>The main action when a chapter is part read.</comment>
+  </data>
+  <data name="ActionContinuePart" xml:space="preserve">
+    <value>[Çöñţîñüé þàŕţ {n} · {percent}%~~~~~~~~]</value>
+    <comment>The main action for a light novel part, part read.</comment>
+  </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>[Çöñţîñüé þàŕţ {n}~~~~~~]</value>
+    <comment>The main action for a light novel part, part read, when how far is not known.</comment>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>[Ŕéàð þàŕţ {n}~~~~]</value>
+    <comment>The main action for a light novel part not opened yet.</comment>
+  </data>
+  <data name="ActionReadAgain" xml:space="preserve">
+    <value>[Ŕéàð àĝàîñ~~~]</value>
+    <comment>The main action when every chapter is read.</comment>
+  </data>
+  <data name="SeriesReadingFrom" xml:space="preserve">
+    <value>[Ŕéàðîñĝ ƒŕöɱ~~~~]</value>
+    <comment>Label of the source row on the series page.</comment>
+  </data>
+  <data name="SeriesChange" xml:space="preserve">
+    <value>[Çĥàñĝé~~]</value>
+    <comment>Button beside a row on the series page that opens its sheet.</comment>
+  </data>
+  <data name="SeriesSourcesMore_one" xml:space="preserve">
+    <value>[1 ɱöŕé~~]</value>
+    <comment>After the source's name: how many other sources have the series.</comment>
+  </data>
+  <data name="SeriesSourcesMore_other" xml:space="preserve">
+    <value>[{n} ɱöŕé~~~]</value>
+    <comment>After the source's name: how many other sources have the series.</comment>
+  </data>
+  <data name="SeriesTrackerAsk" xml:space="preserve">
+    <value>[Ŵĥîçĥ šéŕîéš îš ţĥîš? Çĥööšé~~~~~~~~~]</value>
+    <comment>Value of the trackers row while a tracker asks which series this is.</comment>
+  </data>
+  <data name="SeriesPreferredGroup" xml:space="preserve">
+    <value>[Ýöüŕ þŕéƒéŕŕéð ĝŕöüþ ĥéŕé~~~~~~~~]</value>
+    <comment>Value of the group row: the chosen group is used for this series.</comment>
+  </data>
+  <data name="SeriesTrackerChaptersOf_one" xml:space="preserve">
+    <value>[{n} öƒ {total} çĥàþţéŕ~~~~~~]</value>
+    <comment>A tracker's progress in chapters, with the total.</comment>
+  </data>
+  <data name="SeriesTrackerChaptersOf_other" xml:space="preserve">
+    <value>[{n} öƒ {total} çĥàþţéŕš~~~~~~]</value>
+    <comment>A tracker's progress in chapters, with the total.</comment>
+  </data>
+  <data name="SeriesTrackerChapters_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ~~~]</value>
+    <comment>A tracker's progress in chapters, total unknown.</comment>
+  </data>
+  <data name="SeriesTrackerChapters_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš~~~~]</value>
+    <comment>A tracker's progress in chapters, total unknown.</comment>
+  </data>
+  <data name="SeriesTrackerWithVolume" xml:space="preserve">
+    <value>[{chapters} · ṽöļüɱé {volume}~~~~~]</value>
+    <comment>A tracker's progress in chapters, then the volume.</comment>
+  </data>
+  <data name="SeriesTrackerVolumes" xml:space="preserve">
+    <value>[Ṽöļüɱé {volume} öƒ {total}~~~~~~]</value>
+    <comment>A light novel tracker's progress in volumes.</comment>
+  </data>
+  <data name="SeriesReadFromAnother" xml:space="preserve">
+    <value>[Ŕéàð ƒŕöɱ àñöţĥéŕ šöüŕçé~~~~~~~~]</value>
+    <comment>Main place when the source can't be read from.</comment>
+  </data>
+  <data name="SeriesScore" xml:space="preserve">
+    <value>[Šçöŕé…~~]</value>
+    <comment>Status menu item: a score submenu.</comment>
+  </data>
+  <data name="SeriesAddToList" xml:space="preserve">
+    <value>[Åðð ţö ļîšţ~~~~]</value>
+    <comment>Status menu's label before the series is on a list.</comment>
+  </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>[Ŕéɱöṽé ƒŕöɱ ļîšţš…~~~~~~]</value>
+    <comment>Last item of a series' list menu: take the series off every tracker's list. Asks first.</comment>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>[Ŕéɱöṽé {title} ƒŕöɱ ýöüŕ ļîšţš?~~~~~~~~~]</value>
+    <comment>Title of the question before a series is taken off the lists.</comment>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>[Îţ çöɱéš öƒƒ ýöüŕ ļîšţ öñ éàçĥ ţŕàçķéŕ ýöü ĥàṽé çöññéçţéð. Ýöüŕ þļàçé àñð ŕéàð çĥàþţéŕš šţàý îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line in that question.</comment>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>[Ýöüŕ ļîšţš~~~]</value>
+    <comment>Heading over what the removal came to, one line per tracker.</comment>
+  </data>
+  <data name="SeriesChosen_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ~~~]</value>
+    <comment>Title while choosing chapters on a phone: how many are chosen.</comment>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš~~~~]</value>
+    <comment>Title while choosing chapters on a phone: how many are chosen.</comment>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>[Åļļ üñŕéàð~~~]</value>
+    <comment>Button while choosing chapters on a phone: choose every unread chapter.</comment>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>[Ñöţ ƒöüñð îñ~~~~]</value>
+    <comment>Heading in Read from over the sources searched without finding the series.</comment>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>[Šéàŕçĥ ţĥéŕé~~~~]</value>
+    <comment>Button beside such a source: look for the series there by other words.</comment>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>[Šéàŕçĥ {source}~~~]</value>
+    <comment>Placeholder of the field that looks for the series in one source.</comment>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>[Šéàŕçĥ~~]</value>
+    <comment>Button that runs that search.</comment>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ƒöüñð ƀý ţĥéšé ŵöŕðš~~~~~~~~~]</value>
+    <comment>Under the field when the source found nothing by those words.</comment>
+  </data>
+  <data name="SeriesTracking" xml:space="preserve">
+    <value>[Ţŕàçķîñĝ~~~]</value>
+    <comment>The More menu: the Tracking sheet.</comment>
+  </data>
+  <data name="SeriesReadFromMenu" xml:space="preserve">
+    <value>[Çĥàñĝé šöüŕçé…~~~~~]</value>
+    <comment>The More menu: the Read from sheet.</comment>
+  </data>
+  <data name="SeriesReadAgainMenu" xml:space="preserve">
+    <value>[Ŕéàð àĝàîñ ƒŕöɱ ţĥé šţàŕţ…~~~~~~~~]</value>
+    <comment>The More menu: start again from chapter 1.</comment>
+  </data>
+  <data name="SeriesVolumes" xml:space="preserve">
+    <value>[Ṽöļüɱéš~~~]</value>
+    <comment>Heading of the chapter list when the series has volumes.</comment>
+  </data>
+  <data name="SeriesChapters" xml:space="preserve">
+    <value>[Çĥàþţéŕš~~~]</value>
+    <comment>Heading of the chapter list.</comment>
+  </data>
+  <data name="SeriesOrder" xml:space="preserve">
+    <value>[Öŕðéŕ~~]</value>
+    <comment>Accessibility label of the chapter order menu.</comment>
+  </data>
+  <data name="SeriesNewestFirst" xml:space="preserve">
+    <value>[Ñéŵéšţ ƒîŕšţ~~~~]</value>
+    <comment>Chapter order.</comment>
+  </data>
+  <data name="SeriesOldestFirst" xml:space="preserve">
+    <value>[Öļðéšţ ƒîŕšţ~~~~]</value>
+    <comment>Chapter order.</comment>
+  </data>
+  <data name="SeriesVolume" xml:space="preserve">
+    <value>[Ṽöļüɱé {n}~~~]</value>
+    <comment>A volume's heading in the chapter list.</comment>
+  </data>
+  <data name="SeriesNoVolume" xml:space="preserve">
+    <value>[Ñöţ îñ à ṽöļüɱé ýéţ~~~~~~]</value>
+    <comment>The heading for chapters that are in no volume yet.</comment>
+  </data>
+  <data name="SeriesChapterRange" xml:space="preserve">
+    <value>[çĥàþţéŕš {from} ţö {to}~~~~~~]</value>
+    <comment>After a volume's heading: which chapters it holds.</comment>
+  </data>
+  <data name="SeriesVolumeRead" xml:space="preserve">
+    <value>[ŕéàð~~]</value>
+    <comment>After a volume's heading when every chapter in it is read.</comment>
+  </data>
+  <data name="SeriesExpanded" xml:space="preserve">
+    <value>[Éẋþàñðéð~~~]</value>
+    <comment>Accessibility value of a volume heading.</comment>
+  </data>
+  <data name="SeriesCollapsed" xml:space="preserve">
+    <value>[Çöļļàþšéð~~~]</value>
+    <comment>Accessibility value of a volume heading.</comment>
+  </data>
+  <data name="SeriesNoChaptersTitle" xml:space="preserve">
+    <value>[Ñö çĥàþţéŕš îñ ţĥîš šöüŕçé ýéţ~~~~~~~~~]</value>
+    <comment>The chapter list when the source has none.</comment>
+  </data>
+  <data name="SeriesNoChaptersLine" xml:space="preserve">
+    <value>[Åñöţĥéŕ šöüŕçé ɱàý ĥàṽé ţĥéɱ.~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="SeriesChaptersFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð çĥàþţéŕš ƒŕöɱ {source}.~~~~~~~~~~]</value>
+    <comment>The chapter list when the source failed. Downloaded chapters are listed under it.</comment>
+  </data>
+  <data name="SeriesChapterNumber" xml:space="preserve">
+    <value>[Çĥàþţéŕ {n}~~~~]</value>
+    <comment>A chapter row's title.</comment>
+  </data>
+  <data name="SeriesBookmarked" xml:space="preserve">
+    <value>[Ɓööķɱàŕķéð~~~]</value>
+    <comment>Accessibility label of the bookmark mark on a chapter row.</comment>
+  </data>
+  <data name="SeriesMarkRead" xml:space="preserve">
+    <value>[Ṁàŕķ ŕéàð~~~]</value>
+    <comment>Chapter menu and swipe action.</comment>
+  </data>
+  <data name="SeriesMarkUnread" xml:space="preserve">
+    <value>[Ṁàŕķ üñŕéàð~~~~]</value>
+    <comment>Chapter menu and swipe action.</comment>
+  </data>
+  <data name="SeriesMarkReadUpTo" xml:space="preserve">
+    <value>[Ṁàŕķ ŕéàð üþ ţö ĥéŕé~~~~~~]</value>
+    <comment>Chapter menu item: every chapter before this one is read too.</comment>
+  </data>
+  <data name="SeriesDownload" xml:space="preserve">
+    <value>[Ðöŵñļöàð~~~]</value>
+    <comment>Chapter menu and swipe action.</comment>
+  </data>
+  <data name="SeriesReadChapterMenu" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>Chapter menu item: open the chapter in the reader.</comment>
+  </data>
+  <data name="SeriesBookmark" xml:space="preserve">
+    <value>[Ɓööķɱàŕķ~~~]</value>
+    <comment>Chapter menu item.</comment>
+  </data>
+  <data name="SeriesRemoveBookmark" xml:space="preserve">
+    <value>[Ŕéɱöṽé ƀööķɱàŕķ~~~~~]</value>
+    <comment>Chapter menu item.</comment>
+  </data>
+  <data name="SeriesVersions_one" xml:space="preserve">
+    <value>[1 ṽéŕšîöñ~~~]</value>
+    <comment>Menu of a chapter that several groups put out.</comment>
+  </data>
+  <data name="SeriesVersions_other" xml:space="preserve">
+    <value>[{n} ṽéŕšîöñš~~~~]</value>
+    <comment>Menu of a chapter that several groups put out.</comment>
+  </data>
+  <data name="SeriesVersionsLoading" xml:space="preserve">
+    <value>[Ļööķîñĝ ƒöŕ ṽéŕšîöñš…~~~~~~~]</value>
+    <comment>In that menu while the versions load.</comment>
+  </data>
+  <data name="SeriesVersionInUse" xml:space="preserve">
+    <value>[{name} îñ üšé~~~]</value>
+    <comment>The version in use, in that menu.</comment>
+  </data>
+  <data name="SeriesPreferVersion" xml:space="preserve">
+    <value>[Þŕéƒéŕ {name} ƒöŕ ţĥîš šéŕîéš~~~~~~~~]</value>
+    <comment>Make another group the one used for this series.</comment>
+  </data>
+  <data name="ChapterStateDownloaded" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð~~~]</value>
+    <comment>A downloaded chapter, after its state.</comment>
+  </data>
+  <data name="ChapterStateQueued" xml:space="preserve">
+    <value>[Ǫüéüéð~~]</value>
+    <comment>A chapter waiting to download.</comment>
+  </data>
+  <data name="ChapterStateWifi" xml:space="preserve">
+    <value>[Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]</value>
+    <comment>A chapter waiting for Wi-Fi to download.</comment>
+  </data>
+  <data name="ChapterStateDownloading" xml:space="preserve">
+    <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
+    <comment>A chapter downloading.</comment>
+  </data>
+  <data name="ChapterStateFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ðöŵñļöàð. {reason}~~~~~~~]</value>
+    <comment>A chapter that failed to download, with the reason.</comment>
+  </data>
+  <data name="ChapterStatePageOf" xml:space="preserve">
+    <value>[Þàĝé {page} öƒ {of}~~~~~]</value>
+    <comment>A part-read chapter.</comment>
+  </data>
+  <data name="ChapterStatePage" xml:space="preserve">
+    <value>[Þàĝé {page}~~~]</value>
+    <comment>A part-read chapter whose length isn't known.</comment>
+  </data>
+  <data name="ChapterStateRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>A read chapter.</comment>
+  </data>
+  <data name="ChapterStateNew" xml:space="preserve">
+    <value>[Ñéŵ~]</value>
+    <comment>A chapter that came out since you last looked.</comment>
+  </data>
+  <data name="ChapterDownloadStop" xml:space="preserve">
+    <value>[Šţöþ ðöŵñļöàð~~~~]</value>
+    <comment>Button: stop a chapter's download.</comment>
+  </data>
+  <data name="ChapterRetry" xml:space="preserve">
+    <value>[Ŕéţŕý~~]</value>
+    <comment>Button: try a failed chapter's download again.</comment>
+  </data>
+  <data name="ChapterDownloadDelete" xml:space="preserve">
+    <value>[Ðéļéţé ðöŵñļöàð~~~~~]</value>
+    <comment>Chapter menu item.</comment>
+  </data>
+  <data name="DownloadNext" xml:space="preserve">
+    <value>[Ñéẋţ {n} üñŕéàð~~~~~]</value>
+    <comment>Download menu item.</comment>
+  </data>
+  <data name="DownloadUnread" xml:space="preserve">
+    <value>[Éṽéŕý üñŕéàð çĥàþţéŕ~~~~~~]</value>
+    <comment>Download menu item.</comment>
+  </data>
+  <data name="DownloadVolumeCount_one" xml:space="preserve">
+    <value>[{volume} · 1 çĥàþţéŕ~~~~~]</value>
+    <comment>Download menu item: a volume's chapters not yet downloaded.</comment>
+  </data>
+  <data name="DownloadVolumeCount_other" xml:space="preserve">
+    <value>[{volume} · {n} çĥàþţéŕš~~~~~~]</value>
+    <comment>Download menu item: a volume's chapters not yet downloaded.</comment>
+  </data>
+  <data name="DownloadChoose" xml:space="preserve">
+    <value>[Çĥööšé çĥàþţéŕš…~~~~~]</value>
+    <comment>Download menu item: turns on choosing chapters in the list.</comment>
+  </data>
+  <data name="DownloadDeleteSeries" xml:space="preserve">
+    <value>[Ðéļéţé ðöŵñļöàðš öƒ ţĥîš šéŕîéš~~~~~~~~~~]</value>
+    <comment>Download menu item.</comment>
+  </data>
+  <data name="DownloadChapters_one" xml:space="preserve">
+    <value>[Ðöŵñļöàð 1 çĥàþţéŕ~~~~~~]</value>
+    <comment>The amber button in the Choose chapters bar.</comment>
+  </data>
+  <data name="DownloadChapters_other" xml:space="preserve">
+    <value>[Ðöŵñļöàð {n} çĥàþţéŕš~~~~~~~]</value>
+    <comment>The amber button in the Choose chapters bar.</comment>
+  </data>
+  <data name="DownloadOverWifi" xml:space="preserve">
+    <value>[Öṽéŕ Ŵî-Ƒî~~~]</value>
+    <comment>Line above that button.</comment>
+  </data>
+  <data name="ReadAgainTitle" xml:space="preserve">
+    <value>[Ŕéàð {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ?~~~~~~~~~]</value>
+    <comment>Title of the question before reading a series again.</comment>
+  </data>
+  <data name="ReadAgainLine" xml:space="preserve">
+    <value>[Ýöüŕ þļàçé ĝöéš ƀàçķ ţö çĥàþţéŕ 1 öñ àļļ ýöüŕ ðéṽîçéš. Çĥàþţéŕš šţàý ɱàŕķéð ŕéàð öñ ýöüŕ ţŕàçķéŕš, àñð ÅñîĻîšţ çöüñţš à ŕéŕéàð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>What happens on each side.</comment>
+  </data>
+  <data name="ReadAgainConfirm" xml:space="preserve">
+    <value>[Ŕéàð àĝàîñ~~~]</value>
+    <comment>The confirming button.</comment>
+  </data>
+  <data name="SeriesReadFromTitle" xml:space="preserve">
+    <value>[Ŕéàð ƒŕöɱ~~~]</value>
+    <comment>Title of the sheet that changes where a series' chapters come from.</comment>
+  </data>
+  <data name="SeriesReadFromAsking" xml:space="preserve">
+    <value>[Åšķîñĝ ýöüŕ šöüŕçéš…~~~~~~]</value>
+    <comment>While the sheet asks every source.</comment>
+  </data>
+  <data name="SeriesReadFromNoneTitle" xml:space="preserve">
+    <value>[Ñö šöüŕçé ĥàš ţĥîš šéŕîéš~~~~~~~~]</value>
+    <comment>The sheet with no source that has the series.</comment>
+  </data>
+  <data name="SeriesReadFromNoneLine" xml:space="preserve">
+    <value>[Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="SeriesReadFromChapters" xml:space="preserve">
+    <value>[Çĥàþţéŕš 1 ţö {latest}~~~~~~]</value>
+    <comment>A source's chapters, first on its line.</comment>
+  </data>
+  <data name="SeriesReadFromChaptersLater" xml:space="preserve">
+    <value>[çĥàþţéŕš 1 ţö {latest}~~~~~~]</value>
+    <comment>A source's chapters, after its kind on the line.</comment>
+  </data>
+  <data name="SeriesReadFromOnDevice" xml:space="preserve">
+    <value>[öñ ţĥîš {device}~~~~]</value>
+    <comment>After a folder's chapters.</comment>
+  </data>
+  <data name="SeriesReadFromNote" xml:space="preserve">
+    <value>[Ŕéàð ɱàŕķš ƀéļöñĝ ţö ţĥé šéŕîéš, šö ţĥéý çàŕŕý öṽéŕ ŵĥéñ ýöü çĥàñĝé. Ðöŵñļöàðš ƒŕöɱ ţĥé öļð šöüŕçé šţàý üñţîļ ýöü ðéļéţé ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footnote of the Read from sheet.</comment>
+  </data>
+  <data name="SeriesNotTracked" xml:space="preserve">
+    <value>[Ñöţ ţŕàçķéð ĥéŕé~~~~~]</value>
+    <comment>Heading for trackers that don't track this series.</comment>
+  </data>
+  <data name="SeriesTrackerConnect" xml:space="preserve">
+    <value>[Çöññéçţ îñ Šéţţîñĝš ţö ţŕàçķ ţĥîš šéŕîéš~~~~~~~~~~~~]</value>
+    <comment>A tracker that isn't connected.</comment>
+  </data>
+  <data name="SeriesTrackerNotThere" xml:space="preserve">
+    <value>[Ñö ɱàţçĥ öñ ţĥîš ţŕàçķéŕ~~~~~~~~]</value>
+    <comment>A tracker that has no such series.</comment>
+  </data>
+  <data name="SeriesTrackerLooking" xml:space="preserve">
+    <value>[Ļööķîñĝ ƒöŕ ţĥîš šéŕîéš…~~~~~~~~]</value>
+    <comment>A tracker looking for the series.</comment>
+  </data>
+  <data name="SeriesTrackerBehind" xml:space="preserve">
+    <value>[Ĥàš çĥàþţéŕ {has}. Ĝéţš {gets} öñ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~]</value>
+    <comment>A tracker that is behind, and catches up on the next sync.</comment>
+  </data>
+  <data name="SeriesTrackerAhead" xml:space="preserve">
+    <value>[Ĥàš çĥàþţéŕ {has}, ƒüŕţĥéŕ ţĥàñ Ķàéŕî.~~~~~~~~~~~]</value>
+    <comment>A tracker ahead of Kaeri.</comment>
+  </data>
+  <data name="SeriesTrackerScore" xml:space="preserve">
+    <value>[{score} / 10~~~]</value>
+    <comment>A tracker's score out of ten.</comment>
+  </data>
+  <data name="SeriesTrackerKeepKaeri" xml:space="preserve">
+    <value>[Ķééþ Ķàéŕî'š þļàçé~~~~~~]</value>
+    <comment>Menu item on a tracker that differs.</comment>
+  </data>
+  <data name="SeriesTrackerTakeTheirs" xml:space="preserve">
+    <value>[Ûšé {tracker}'š þļàçé~~~~~]</value>
+    <comment>Menu item on a tracker that differs.</comment>
+  </data>
+  <data name="SeriesTrackerNoneOfThese" xml:space="preserve">
+    <value>[Ñöñé öƒ ţĥéšé~~~~]</value>
+    <comment>Under a tracker's guesses for the series.</comment>
+  </data>
+  <data name="ReadListReading" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListPlanning" xml:space="preserve">
+    <value>[Þļàññîñĝ~~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListCompleted" xml:space="preserve">
+    <value>[Çöɱþļéţéð~~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListPaused" xml:space="preserve">
+    <value>[Þàüšéð~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListDropped" xml:space="preserve">
+    <value>[Ðŕöþþéð~~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListRereading" xml:space="preserve">
+    <value>[Ŕéŕéàðîñĝ~~~]</value>
+    <comment>AniList's list.</comment>
+  </data>
+  <data name="ReadListYourFiles" xml:space="preserve">
+    <value>[Ýöüŕ ƒîļéš~~~]</value>
+    <comment>Series in folders and servers that are on no list.</comment>
+  </data>
+  <data name="MediumWatch" xml:space="preserve">
+    <value>[Ŵàţçĥ~~]</value>
+    <comment>A choice.</comment>
+  </data>
+  <data name="MediumRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>A choice.</comment>
+  </data>
+  <data name="MediumBoth" xml:space="preserve">
+    <value>[Ɓöţĥ~~]</value>
+    <comment>A choice.</comment>
+  </data>
+  <data name="MediumWatchLine" xml:space="preserve">
+    <value>[Šĥöŵš àñð ƒîļɱš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~~~~]</value>
+    <comment>Line under the Watch choice.</comment>
+  </data>
+  <data name="MediumReadLine" xml:space="preserve">
+    <value>[Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the Read choice.</comment>
+  </data>
+  <data name="MediumBothLine" xml:space="preserve">
+    <value>[Ŵàţçĥîñĝ àñð ŕéàðîñĝ, éàçĥ îñ îţš öŵñ þļàçé~~~~~~~~~~~~~]</value>
+    <comment>Line under the Both choice.</comment>
+  </data>
+  <data name="MediumAnswerWatch" xml:space="preserve">
+    <value>[Ŵàţçĥîñĝ~~~]</value>
+    <comment>The answer, as the Settings row says it.</comment>
+  </data>
+  <data name="MediumAnswerRead" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>The answer, as the Settings row says it.</comment>
+  </data>
+  <data name="MediumAnswerBoth" xml:space="preserve">
+    <value>[Ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~]</value>
+    <comment>The answer, as the Settings row says it.</comment>
+  </data>
+  <data name="SourcesAddTitle" xml:space="preserve">
+    <value>[Åðð à šöüŕçé~~~~]</value>
+    <comment>Title of the sheet and the toolbar button.</comment>
+  </data>
+  <data name="BookAddLine" xml:space="preserve">
+    <value>[Ɓööķš ýöü àļŕéàðý ĥàṽé, öŕ þļüĝîñš ƒŕöɱ à šţöŕé ŵĥöšé öŵñéŕ îñṽîţéð ýöü.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line in the Add a source sheet.</comment>
+  </data>
+  <data name="BookAddFolder" xml:space="preserve">
+    <value>[Å ƒöļðéŕ~~~]</value>
+    <comment>A kind in the Add a source sheet.</comment>
+  </data>
+  <data name="BookAddFolderLine" xml:space="preserve">
+    <value>[ÇƁŽ, ÉÞÛƁ, ÞÐƑ àñð ƒöļðéŕš öƒ îɱàĝéš öñ ţĥîš {device} öŕ à ðŕîṽé~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookAddServer" xml:space="preserve">
+    <value>[Å šéŕṽéŕ~~~]</value>
+    <comment>A kind in the Add a source sheet.</comment>
+  </data>
+  <data name="BookAddServerLine" xml:space="preserve">
+    <value>[Ķöɱĝà, Ķàṽîţà öŕ àñ ÖÞÐŠ çàţàļöĝüé ýöü çàñ šîĝñ îñ ţö~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookAddStore" xml:space="preserve">
+    <value>[Å þļüĝîñ šţöŕé~~~~~]</value>
+    <comment>A kind in the Add a source sheet.</comment>
+  </data>
+  <data name="BookAddStoreLine" xml:space="preserve">
+    <value>[Þàšţé àñ îñṽîţé ƒŕöɱ ţĥé šţöŕé'š öŵñéŕ~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookAddServerTitle" xml:space="preserve">
+    <value>[Åðð à šéŕṽéŕ~~~~]</value>
+    <comment>Title of the Add a server sheet.</comment>
+  </data>
+  <data name="BookAddServerButton" xml:space="preserve">
+    <value>[Åðð šéŕṽéŕ~~~]</value>
+    <comment>The sheet's amber button.</comment>
+  </data>
+  <data name="SourcesFoundServer" xml:space="preserve">
+    <value>[Ƒöüñð à {kind} šéŕṽéŕ~~~~~~]</value>
+    <comment>What the address answered, before the sign-in.</comment>
+  </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>[Ƒöüñð à {kind} šéŕṽéŕ ŵîţĥ 1 šéŕîéš~~~~~~~~~~]</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>[Ƒöüñð à {kind} šéŕṽéŕ ŵîţĥ {n} šéŕîéš~~~~~~~~~~~]</value>
+    <comment>What the server held once signed in, when it said how many series it lists.</comment>
+  </data>
+  <data name="BookServerLooking" xml:space="preserve">
+    <value>[Ļööķîñĝ àţ ţĥîš àððŕéšš…~~~~~~~~]</value>
+    <comment>While the address is tried.</comment>
+  </data>
+  <data name="BookServerNote" xml:space="preserve">
+    <value>[Ķàéŕî šéñðš ýöüŕ ŕéàðîñĝ þŕöĝŕéšš ƀàçķ ţö ţĥîš šéŕṽéŕ. Ţĥé þàššŵöŕð šţàýš îñ ţĥé Ķéýçĥàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the password.</comment>
+  </data>
+  <data name="BookSourcesFolders" xml:space="preserve">
+    <value>[Ƒöļðéŕš~~~]</value>
+    <comment>Heading in Your sources.</comment>
+  </data>
+  <data name="BookSourcesServers" xml:space="preserve">
+    <value>[Šéŕṽéŕš~~~]</value>
+    <comment>Heading in Your sources.</comment>
+  </data>
+  <data name="BookSourcesPlugins" xml:space="preserve">
+    <value>[Þļüĝîñš~~~]</value>
+    <comment>Heading in Your sources.</comment>
+  </data>
+  <data name="BookSourcesPluginsFooter" xml:space="preserve">
+    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~]</value>
+    <comment>Under the plugins, before a link to the plugin stores.</comment>
+  </data>
+  <data name="BookSourcesSeries_one" xml:space="preserve">
+    <value>[1 šéŕîéš~~~]</value>
+    <comment>How many series a folder or server holds.</comment>
+  </data>
+  <data name="BookSourcesSeries_other" xml:space="preserve">
+    <value>[{n} šéŕîéš~~~]</value>
+    <comment>How many series a folder or server holds.</comment>
+  </data>
+  <data name="BookSourcesScanning" xml:space="preserve">
+    <value>[Ļööķîñĝ ţĥŕöüĝĥ · {n} ƒöüñð~~~~~~~~~]</value>
+    <comment>A folder being looked through.</comment>
+  </data>
+  <data name="BookSourcesMissing" xml:space="preserve">
+    <value>[Ñöţ ƒöüñð. Îš ţĥé ðŕîṽé çöññéçţéð?~~~~~~~~~~~]</value>
+    <comment>A folder that can't be found, such as a drive that isn't plugged in.</comment>
+  </data>
+  <data name="BookSourcesOff" xml:space="preserve">
+    <value>[Öƒƒ~]</value>
+    <comment>A source that is turned off.</comment>
+  </data>
+  <data name="BookSourcesProgressBack" xml:space="preserve">
+    <value>[þŕöĝŕéšš ĝöéš ƀàçķ ţö ţĥé šéŕṽéŕ~~~~~~~~~~]</value>
+    <comment>On a server's line.</comment>
+  </data>
+  <data name="BookSourcesOpds" xml:space="preserve">
+    <value>[ÖÞÐŠ çàţàļöĝüé~~~~~]</value>
+    <comment>A server's kind.</comment>
+  </data>
+  <data name="BookSourcesFromStore" xml:space="preserve">
+    <value>[Ƒŕöɱ {store}~~~]</value>
+    <comment>A plugin's store.</comment>
+  </data>
+  <data name="BookSourcesVersion" xml:space="preserve">
+    <value>[ṽéŕšîöñ {version}~~~~]</value>
+    <comment>A plugin's version.</comment>
+  </data>
+  <data name="BookSourcesCheckMatches" xml:space="preserve">
+    <value>[Çĥéçķ ɱàţçĥéš · {n}~~~~~~]</value>
+    <comment>Button on a folder: series whose match needs a look.</comment>
+  </data>
+  <data name="BookSourcesCheckMatchesTitle" xml:space="preserve">
+    <value>[Çĥéçķ ɱàţçĥéš~~~~]</value>
+    <comment>Title of the Check matches sheet.</comment>
+  </data>
+  <data name="BookSourcesScan" xml:space="preserve">
+    <value>[Ļööķ àĝàîñ~~~]</value>
+    <comment>A folder menu item: look through the folders again.</comment>
+  </data>
+  <data name="BookSourcesReportProgress" xml:space="preserve">
+    <value>[Šéñð þŕöĝŕéšš ţö ţĥé šéŕṽéŕ~~~~~~~~~]</value>
+    <comment>A server menu switch.</comment>
+  </data>
+  <data name="BookSourcesUse" xml:space="preserve">
+    <value>[Ûšé ţĥîš šéŕṽéŕ~~~~~]</value>
+    <comment>A server menu switch.</comment>
+  </data>
+  <data name="BookSourcesNotABookServer" xml:space="preserve">
+    <value>[Ţĥîš àððŕéšš àñšŵéŕš, ƀüţ ñöţ àš à ƀööķ šéŕṽéŕ.~~~~~~~~~~~~~~~]</value>
+    <comment>An address that answered but serves no books.</comment>
+  </data>
+  <data name="BookSourcesNoMatch" xml:space="preserve">
+    <value>[Ñö ɱàţçĥ~~~]</value>
+    <comment>A folder name with no match.</comment>
+  </data>
+  <data name="BookSourcesKeep" xml:space="preserve">
+    <value>[Ķééþ üñɱàţçĥéð~~~~~]</value>
+    <comment>Button: keep the series as Your files, unmatched.</comment>
+  </data>
+  <data name="BookSourcesFind" xml:space="preserve">
+    <value>[Ƒîñð~~]</value>
+    <comment>Button: search for the match by hand.</comment>
+  </data>
+  <data name="BookSourcesUnmatchedNote" xml:space="preserve">
+    <value>[Ûñɱàţçĥéð šéŕîéš šţîļļ ŕéàð ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĥàṽé ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footnote of the Check matches sheet.</comment>
+  </data>
+  <data name="LibraryScopeLabel" xml:space="preserve">
+    <value>[Šĥöŵš öŕ Ŕéàðîñĝ~~~~~]</value>
+    <comment>Accessibility label of the control that sets Shows or Reading in the Library and Search.</comment>
+  </data>
+  <data name="LibraryScopeShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>A side of that control.</comment>
+  </data>
+  <data name="LibraryScopeReading" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>A side of that control.</comment>
+  </data>
+  <data name="ReadSortLastRead" xml:space="preserve">
+    <value>[Ļàšţ ŕéàð~~~]</value>
+    <comment>The reading library's order: as the engine sends it, most recently read first.</comment>
+  </data>
+  <data name="ReadLibraryListValue_one" xml:space="preserve">
+    <value>[{list}, 1 šéŕîéš~~~~]</value>
+    <comment>Accessibility value of the list menu: the list and how many series are on it.</comment>
+  </data>
+  <data name="ReadLibraryListValue_other" xml:space="preserve">
+    <value>[{list}, {n} šéŕîéš~~~~~]</value>
+    <comment>Accessibility value of the list menu: the list and how many series are on it.</comment>
+  </data>
+  <data name="ReadLibraryEmpty" xml:space="preserve">
+    <value>[Ñöţĥîñĝ öñ {list} ýéţ~~~~~~]</value>
+    <comment>A reading list with nothing on it. A Search button follows.</comment>
+  </data>
+  <data name="ReadLibraryEmptyLine" xml:space="preserve">
+    <value>[Šéŕîéš ýöü àðð ƒŕöɱ Šéàŕçĥ öŕ à šéŕîéš þàĝé šĥöŵ ĥéŕé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="ReadLibraryFilesEmptyTitle" xml:space="preserve">
+    <value>[Ñöţĥîñĝ îñ ýöüŕ ƒîļéš ýéţ~~~~~~~~]</value>
+    <comment>Your files with nothing in it.</comment>
+  </data>
+  <data name="ReadLibraryFilesEmptyLine" xml:space="preserve">
+    <value>[Šéŕîéš îñ ýöüŕ ƒöļðéŕš àñð šéŕṽéŕš ţĥàţ àŕé öñ ñö ļîšţ šĥöŵ ĥéŕé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="ReadLibraryFilesAdd" xml:space="preserve">
+    <value>[Åðð à ƒöļðéŕ öŕ šéŕṽéŕ~~~~~~~]</value>
+    <comment>The button under it.</comment>
+  </data>
+  <data name="ReadSearchPlaceholder" xml:space="preserve">
+    <value>[Šéàŕçĥ ŕéàðîñĝ~~~~~]</value>
+    <comment>The search field's prompt while Search looks for reading.</comment>
+  </data>
+  <data name="SearchOtherScope_one" xml:space="preserve">
+    <value>[1 ɱàţçĥ îñ {scope}~~~~~]</value>
+    <comment>The last row of reading's results with both media on: matches in the other scope.</comment>
+  </data>
+  <data name="SearchOtherScope_other" xml:space="preserve">
+    <value>[{n} ɱàţçĥéš îñ {scope}~~~~~~]</value>
+    <comment>The last row of reading's results with both media on: matches in the other scope.</comment>
+  </data>
+  <data name="SearchShowThem" xml:space="preserve">
+    <value>[Šĥöŵ ţĥéɱ~~~]</value>
+    <comment>The button on that row, which switches the scope.</comment>
+  </data>
+  <data name="ReadSearchBrowseLine" xml:space="preserve">
+    <value>[{what} · ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
+    <comment>The line over browsing: what is shown, and where the list comes from.</comment>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>[1 šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>[{n} šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~~]</value>
+    <comment>Over reading's results once every result is listed: how many series AniList found.</comment>
+  </data>
+  <data name="ReadSearchFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šéàŕçĥ~~~~~]</value>
+    <comment>Search couldn't ask AniList.</comment>
+  </data>
+  <data name="ReadSearchNothing" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ {query}~~~~~~~]</value>
+    <comment>No results for what was typed.</comment>
+  </data>
+  <data name="ReadSearchNothingBrowse" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ɱàţçĥéš ţĥéšé ƒîļţéŕš~~~~~~~~~]</value>
+    <comment>No results while browsing with filters.</comment>
+  </data>
+  <data name="ReadSearchNothingLine" xml:space="preserve">
+    <value>[Ţŕý öţĥéŕ ŵöŕðš, öŕ à ţîţļé îñ àñöţĥéŕ ļàñĝüàĝé.~~~~~~~~~~~~~~~]</value>
+    <comment>Line under no results.</comment>
+  </data>
+  <data name="ReadSearchNothingFiltersLine" xml:space="preserve">
+    <value>[Ƒéŵéŕ ƒîļţéŕš ɱàý ƒîñð ɱöŕé.~~~~~~~~~]</value>
+    <comment>Line under no results with filters set. A Clear filters button follows.</comment>
+  </data>
+  <data name="ReadSearchClearFilters" xml:space="preserve">
+    <value>[Çļéàŕ ƒîļţéŕš~~~~]</value>
+    <comment>The button under it.</comment>
+  </data>
+  <data name="ReadSortPopular" xml:space="preserve">
+    <value>[Þöþüļàŕ~~~]</value>
+    <comment>A sort of reading's Search, AniList's.</comment>
+  </data>
+  <data name="ReadSortTrending" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ~~~]</value>
+    <comment>A sort of reading's Search, AniList's.</comment>
+  </data>
+  <data name="ReadSortScore" xml:space="preserve">
+    <value>[Šçöŕé~~]</value>
+    <comment>A sort of reading's Search, AniList's.</comment>
+  </data>
+  <data name="ReadSortNewest" xml:space="preserve">
+    <value>[Ñéŵéšţ~~]</value>
+    <comment>A sort of reading's Search, AniList's.</comment>
+  </data>
+  <data name="ReadFilterFormat" xml:space="preserve">
+    <value>[Ƒöŕɱàţ~~]</value>
+    <comment>A filter.</comment>
+  </data>
+  <data name="ReadFilterOrigin" xml:space="preserve">
+    <value>[Öŕîĝîñ~~]</value>
+    <comment>A filter.</comment>
+  </data>
+  <data name="ReadFilterStatus" xml:space="preserve">
+    <value>[Šţàţüš~~]</value>
+    <comment>A filter.</comment>
+  </data>
+  <data name="ReadFilterGenres" xml:space="preserve">
+    <value>[Ĝéñŕéš~~]</value>
+    <comment>A filter.</comment>
+  </data>
+  <data name="ReadFilterTitle" xml:space="preserve">
+    <value>[Ƒîļţéŕš~~~]</value>
+    <comment>Title of the iPhone's filters sheet.</comment>
+  </data>
+  <data name="ReadFilterReset" xml:space="preserve">
+    <value>[Ŕéšéţ~~]</value>
+    <comment>Button in that sheet that clears every filter.</comment>
+  </data>
+  <data name="ReadFilterAny" xml:space="preserve">
+    <value>[Åñý~]</value>
+    <comment>Accessibility value of a filter with nothing chosen.</comment>
+  </data>
+  <data name="ReadFilterSet" xml:space="preserve">
+    <value>[{name}:~~]</value>
+    <comment>A filter's name before its value, once set: "Origin: Korea".</comment>
+  </data>
+  <data name="ReadFilterMany" xml:space="preserve">
+    <value>[{first} àñð {more} ɱöŕé~~~~~]</value>
+    <comment>A filter with several values: the first, then how many more.</comment>
+  </data>
+  <data name="ReadFilterNotGenre" xml:space="preserve">
+    <value>[Ñöţ {genre}~~~]</value>
+    <comment>A genre left out.</comment>
+  </data>
+  <data name="ReadFilterGenresCount_one" xml:space="preserve">
+    <value>[1 ĝéñŕé~~~]</value>
+    <comment>How many genres are set.</comment>
+  </data>
+  <data name="ReadFilterGenresCount_other" xml:space="preserve">
+    <value>[{n} ĝéñŕéš~~~]</value>
+    <comment>How many genres are set.</comment>
+  </data>
+  <data name="ReadFilterIncluded" xml:space="preserve">
+    <value>[Îñçļüðéð~~~]</value>
+    <comment>A genre's state: only series with it.</comment>
+  </data>
+  <data name="ReadFilterLeftOut" xml:space="preserve">
+    <value>[Ļéƒţ öüţ~~~]</value>
+    <comment>A genre's state: no series with it.</comment>
+  </data>
+  <data name="OnboardingStep" xml:space="preserve">
+    <value>[{step} öƒ {total}~~~]</value>
+    <comment>Over a first-run page's title: which page of how many.</comment>
+  </data>
+  <data name="OnboardingWelcomeLine" xml:space="preserve">
+    <value>[Ķééþ ţŕàçķ öƒ ŵĥàţ ýöü ŵàţçĥ àñð ŕéàð, ƒŕöɱ ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under "Welcome to Kaeri" on the first page, naming both media.</comment>
+  </data>
+  <data name="OnboardingWelcomeNote" xml:space="preserve">
+    <value>[Ýöüŕ ļîšţš àñð þŕöĝŕéšš šţàý öñ ýöüŕ ðéṽîçéš. Ţŕàçķéŕš àñð šöüŕçéš àŕé ýöüŕš ţö àðð.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the welcome line.</comment>
+  </data>
+  <data name="OnboardingMediumTitle" xml:space="preserve">
+    <value>[Ŵàţçĥ, ŕéàð, öŕ ƀöţĥ?~~~~~~~]</value>
+    <comment>Title of the page that asks what Kaeri is for, and of the sheet after the update.</comment>
+  </data>
+  <data name="OnboardingMediumLine" xml:space="preserve">
+    <value>[Ķàéŕî šĥöŵš öñļý ŵĥàţ ýöü þîçķ. Ýöü çàñ çĥàñĝé îţ îñ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title of the medium page.</comment>
+  </data>
+  <data name="OnboardingMediumHint" xml:space="preserve">
+    <value>[Çĥööšé öñé öƒ ţĥé ţĥŕéé ƒîŕšţ~~~~~~~~~]</value>
+    <comment>Accessibility hint on Continue while nothing is chosen on the medium page.</comment>
+  </data>
+  <data name="OnboardingListsTitle" xml:space="preserve">
+    <value>[Ɓŕîñĝ îñ ýöüŕ ļîšţš~~~~~~]</value>
+    <comment>Title of the first-run page that offers AniList.</comment>
+  </data>
+  <data name="OnboardingListsLineWatch" xml:space="preserve">
+    <value>[Ķàéŕî ķééþš ýöüŕ ŵàţçĥîñĝ îñ šţéþ ŵîţĥ {tracker}.~~~~~~~~~~~~~]</value>
+    <comment>Line on the AniList page after Watch.</comment>
+  </data>
+  <data name="OnboardingListsLineRead" xml:space="preserve">
+    <value>[Ķàéŕî ķééþš ýöüŕ ŕéàðîñĝ îñ šţéþ ŵîţĥ {tracker}.~~~~~~~~~~~~~]</value>
+    <comment>Line on the AniList page after Read.</comment>
+  </data>
+  <data name="OnboardingListsLineBoth" xml:space="preserve">
+    <value>[Ķàéŕî ķééþš ýöüŕ ŕéàðîñĝ àñð ŵàţçĥîñĝ îñ šţéþ ŵîţĥ {tracker}.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on the AniList page after Both.</comment>
+  </data>
+  <data name="OnboardingListsAnilistLine" xml:space="preserve">
+    <value>[Ļîšţš, þŕöĝŕéšš àñð šüĝĝéšţîöñš~~~~~~~~~~]</value>
+    <comment>Line under AniList's name on the first-run page.</comment>
+  </data>
+  <data name="OnboardingListsLaterWatch" xml:space="preserve">
+    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under AniList on the first-run page after Watch: the other trackers, for later.</comment>
+  </data>
+  <data name="OnboardingListsLaterRead" xml:space="preserve">
+    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under AniList on the first-run page after Read: the other trackers, for later.</comment>
+  </data>
+  <data name="OnboardingListsLaterBoth" xml:space="preserve">
+    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under AniList on the first-run page after Both: the other trackers, for later.</comment>
+  </data>
+  <data name="OnboardingConnect" xml:space="preserve">
+    <value>[Çöññéçţ {tracker}~~~~]</value>
+    <comment>The first-run page's main button: sign in to the tracker.</comment>
+  </data>
+  <data name="OnboardingBooksTitle" xml:space="preserve">
+    <value>[Ŵĥéŕé ýöüŕ ƀööķš çöɱé ƒŕöɱ~~~~~~~~]</value>
+    <comment>Title of the last first-run page after Read or Both.</comment>
+  </data>
+  <data name="OnboardingBooksLine" xml:space="preserve">
+    <value>[Ķàéŕî çöɱéš ŵîţĥ ñö ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title of the books page.</comment>
+  </data>
+  <data name="OnboardingBooksFolder" xml:space="preserve">
+    <value>[Åðð à ƒöļðéŕ~~~~]</value>
+    <comment>Row on the books page: add a folder of books.</comment>
+  </data>
+  <data name="OnboardingBooksFolderLine" xml:space="preserve">
+    <value>[ÇƁŽ, ÉÞÛƁ, ÞÐƑ àñð ƒöļðéŕš öƒ îɱàĝéš~~~~~~~~~~~]</value>
+    <comment>Line under Add a folder on the books page.</comment>
+  </data>
+  <data name="OnboardingBooksServer" xml:space="preserve">
+    <value>[Åðð à šéŕṽéŕ~~~~]</value>
+    <comment>Row on the books page: add a book server.</comment>
+  </data>
+  <data name="OnboardingBooksServerLine" xml:space="preserve">
+    <value>[Ķöɱĝà, Ķàṽîţà öŕ àñ ÖÞÐŠ çàţàļöĝüé~~~~~~~~~~~]</value>
+    <comment>Line under Add a server on the books page.</comment>
+  </data>
+  <data name="OnboardingBooksInviteHeading" xml:space="preserve">
+    <value>[Þļüĝîñ šţöŕé îñṽîţé~~~~~~]</value>
+    <comment>Heading over the invite field on the books page.</comment>
+  </data>
+  <data name="OnboardingBooksInvitePlaceholder" xml:space="preserve">
+    <value>[Þàšţé àñ îñṽîţé~~~~~]</value>
+    <comment>Placeholder of the invite field on the books page.</comment>
+  </data>
+  <data name="OnboardingBooksPluginLine" xml:space="preserve">
+    <value>[Þļüĝîñš ŕüñ çöðé ƒŕöɱ þéöþļé ýöü ţŕüšţ. Öñļý ĵöîñ þļüĝîñ šţöŕéš ŵĥöšé öŵñéŕ ýöü ķñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the invite field: whose code a plugin is.</comment>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>[Ŵĥéŕé ýöüŕ šĥöŵš àñð ƀööķš çöɱé ƒŕöɱ~~~~~~~~~~~]</value>
+    <comment>Title of the last first-run page after Both: where shows and books come from.</comment>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>[Ķàéŕî çöɱéš ŵîţĥ ñö šĥöŵš öŕ ƀööķš. Åðð ŵĥàţ ýöü àļŕéàðý ĥàṽé, öŕ ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ àñ îñṽîţé ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title of that page.</comment>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>Heading over the shows' rows on that page.</comment>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>[Ɓööķš~~]</value>
+    <comment>Heading over the books' rows on that page.</comment>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>[Ṽîðéö ƒîļéš öñ ţĥîš {device}~~~~~~~]</value>
+    <comment>Line under Add a folder in the shows' part, on a computer.</comment>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>[Ýöüŕ Ĵéļļýƒîñ šéŕṽéŕ~~~~~~]</value>
+    <comment>Line under Add a server in the shows' part.</comment>
+  </data>
+  <data name="MediumChoicePosition" xml:space="preserve">
+    <value>[{n} öƒ {total}~~~]</value>
+    <comment>Accessibility value of a choice row: its place among the three.</comment>
+  </data>
+  <data name="MediumChangeLater" xml:space="preserve">
+    <value>[Ýöü çàñ çĥàñĝé îţ îñ Šéţţîñĝš.~~~~~~~~~]</value>
+    <comment>Under the choices in the sheet.</comment>
+  </data>
+  <data name="MediumUpdateLine" xml:space="preserve">
+    <value>[Ķàéŕî çàñ ñöŵ ŕéàð ɱàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš ƒŕöɱ ýöüŕ šöüŕçéš. Þîçķ ŵĥàţ Ķàéŕî îš ƒöŕ öñ ţĥîš {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line of the sheet over Home after the update that brought reading.</comment>
+  </data>
+  <data name="MediumJoinTitleWatch_one" xml:space="preserve">
+    <value>[{devices} îš šéţ ţö ŵàţçĥîñĝ~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.</comment>
+  </data>
+  <data name="MediumJoinTitleWatch_other" xml:space="preserve">
+    <value>[{devices} àŕé šéţ ţö ŵàţçĥîñĝ~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.</comment>
+  </data>
+  <data name="MediumJoinTitleRead_one" xml:space="preserve">
+    <value>[{devices} îš šéţ ţö ŕéàðîñĝ~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Read.</comment>
+  </data>
+  <data name="MediumJoinTitleRead_other" xml:space="preserve">
+    <value>[{devices} àŕé šéţ ţö ŕéàðîñĝ~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Read.</comment>
+  </data>
+  <data name="MediumJoinTitleBoth_one" xml:space="preserve">
+    <value>[{devices} îš šéţ ţö ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Both.</comment>
+  </data>
+  <data name="MediumJoinTitleBoth_other" xml:space="preserve">
+    <value>[{devices} àŕé šéţ ţö ŵàţçĥîñĝ àñð ŕéàðîñĝ~~~~~~~~~~~]</value>
+    <comment>Title of the sheet when the other devices answer Both.</comment>
+  </data>
+  <data name="MediumJoinLine" xml:space="preserve">
+    <value>[Þîçķ ŵĥàţ Ķàéŕî îš ƒöŕ öñ ţĥîš {device}. Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line of the sheet on joining.</comment>
+  </data>
+  <data name="MediumOffTitleWatch" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ ŵàţçĥîñĝ?~~~~~~]</value>
+    <comment>Title of the confirmation before watching is turned off.</comment>
+  </data>
+  <data name="MediumOffTitleRead" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ ŕéàðîñĝ?~~~~~~]</value>
+    <comment>Title of the confirmation before reading is turned off.</comment>
+  </data>
+  <data name="MediumOffWatchBody" xml:space="preserve">
+    <value>[Çàļéñðàŕ, Šéàšöñàļ, Ŵàţçĥ ţöĝéţĥéŕ àñð ýöüŕ šĥöŵš ļéàṽé Ķàéŕî öñ ţĥîš {device}. Ýöüŕ ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš šţàý, àñð çöɱé ƀàçķ îƒ ýöü ţüŕñ ŵàţçĥîñĝ öñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>What turning watching off does.</comment>
+  </data>
+  <data name="MediumOffReadBody" xml:space="preserve">
+    <value>[Ûþðàţéš àñð ýöüŕ ŕéàðîñĝ ļéàṽé Ķàéŕî öñ ţĥîš {device}. Ýöüŕ ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš šţàý, àñð çöɱé ƀàçķ îƒ ýöü ţüŕñ ŕéàðîñĝ öñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>What turning reading off does.</comment>
+  </data>
+  <data name="MediumOffDeleteWatch" xml:space="preserve">
+    <value>[Ðéļéţé ðöŵñļöàðéð éþîšöðéš~~~~~~~~]</value>
+    <comment>Switch in the confirmation, off by default.</comment>
+  </data>
+  <data name="MediumOffDeleteRead" xml:space="preserve">
+    <value>[Ðéļéţé ðöŵñļöàðéð çĥàþţéŕš~~~~~~~~]</value>
+    <comment>Switch in the confirmation, off by default.</comment>
+  </data>
+  <data name="MediumOffDeleteSize" xml:space="preserve">
+    <value>[{size} öñ ţĥîš {device}~~~~~]</value>
+    <comment>Under the switch: how much the downloads take.</comment>
+  </data>
+  <data name="MediumOffConfirmWatch" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ ŵàţçĥîñĝ~~~~~~]</value>
+    <comment>The confirmation's main button.</comment>
+  </data>
+  <data name="MediumOffConfirmRead" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ ŕéàðîñĝ~~~~~]</value>
+    <comment>The confirmation's main button.</comment>
+  </data>
+  <data name="SettingsKaeriIsFor" xml:space="preserve">
+    <value>[Ķàéŕî îš ƒöŕ~~~~]</value>
+    <comment>Settings row and page: what Kaeri is for on this device.</comment>
+  </data>
+  <data name="SettingsMediumNote" xml:space="preserve">
+    <value>[Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ~~~~~~~~~~]</value>
+    <comment>Line under Kaeri is for on the Mac and iPad.</comment>
+  </data>
+  <data name="SettingsMediumFooter" xml:space="preserve">
+    <value>[Éàçĥ ðéṽîçé ķééþš îţš öŵñ àñšŵéŕ. Ţüŕñîñĝ öñé öƒƒ ķééþš îţš ļîšţ, þŕöĝŕéšš àñð ðöŵñļöàðš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the choices on the iPhone's page.</comment>
+  </data>
+  <data name="SettingsOpenAtNote" xml:space="preserve">
+    <value>[Ŵĥîçĥ Ĥöɱé Ķàéŕî šţàŕţš öñ~~~~~~~~]</value>
+    <comment>Line under Open at.</comment>
+  </data>
+  <data name="SettingsGroupReading" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>Settings pane and group: reading.</comment>
+  </data>
+  <data name="SettingsGroupShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>Downloads group with both media on: shows.</comment>
+  </data>
+  <data name="SettingsAsideReading" xml:space="preserve">
+    <value>[Ŕéàðéŕ ðéƒàüļţš àŕé ŵĥéŕé éṽéŕý šéŕîéš šţàŕţš. Å šéŕîéš ýöü çĥàñĝé îñ ţĥé ŕéàðéŕ ķééþš îţš öŵñ çĥöîçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The Reading pane's column beside it.</comment>
+  </data>
+  <data name="SettingsReaderDefaults" xml:space="preserve">
+    <value>[Ŕéàðéŕ ðéƒàüļţš~~~~~]</value>
+    <comment>Group: how the reader opens each kind of book.</comment>
+  </data>
+  <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
+    <value>[Å šéŕîéš ýöü çĥàñĝé ķééþš îţš öŵñ ɱöðé, ðîŕéçţîöñ àñð ļööķ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the reader defaults.</comment>
+  </data>
+  <data name="SettingsReaderManga" xml:space="preserve">
+    <value>[Ṁàñĝà~~]</value>
+    <comment>Row: manga's reader default.</comment>
+  </data>
+  <data name="SettingsReaderWebtoons" xml:space="preserve">
+    <value>[Ŵéƀţööñš~~~]</value>
+    <comment>Row: webtoons' reader default.</comment>
+  </data>
+  <data name="SettingsReaderWebtoonsNote" xml:space="preserve">
+    <value>[Ŵéƀţööñš àļŵàýš öþéñ àš à ļöñĝ šţŕîþ~~~~~~~~~~~]</value>
+    <comment>Line under Webtoons.</comment>
+  </data>
+  <data name="SettingsReaderNovels" xml:space="preserve">
+    <value>[Ļîĝĥţ ñöṽéļš~~~~]</value>
+    <comment>Row: light novels' reader default.</comment>
+  </data>
+  <data name="SettingsReaderRtl" xml:space="preserve">
+    <value>[Þàĝéš, ŕîĝĥţ ţö ļéƒţ~~~~~~]</value>
+    <comment>A reader default: pages turned right to left.</comment>
+  </data>
+  <data name="SettingsReaderLtr" xml:space="preserve">
+    <value>[Þàĝéš, ļéƒţ ţö ŕîĝĥţ~~~~~~]</value>
+    <comment>A reader default: pages turned left to right.</comment>
+  </data>
+  <data name="SettingsReaderStrip" xml:space="preserve">
+    <value>[Ļöñĝ šţŕîþ~~~]</value>
+    <comment>A reader default: one long strip.</comment>
+  </data>
+  <data name="SettingsReaderPages" xml:space="preserve">
+    <value>[Þàĝéš~~]</value>
+    <comment>A reader default for novels: pages.</comment>
+  </data>
+  <data name="SettingsReaderScrolled" xml:space="preserve">
+    <value>[Šçŕöļļîñĝ~~~]</value>
+    <comment>A reader default for novels: one scrolling column.</comment>
+  </data>
+  <data name="SettingsCountsRead" xml:space="preserve">
+    <value>[Çöüñţš àš ŕéàð~~~~~]</value>
+    <comment>Row: when a chapter counts as read.</comment>
+  </data>
+  <data name="SettingsCountsReadNote" xml:space="preserve">
+    <value>[Å šĥöŕţ šţàý öñ ţĥé ļàšţ þàĝé, öŕ ɱöṽîñĝ öñ ţö ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Counts as read.</comment>
+  </data>
+  <data name="SettingsCountsReadValue" xml:space="preserve">
+    <value>[Åƒţéŕ ţĥé ļàšţ þàĝé~~~~~~]</value>
+    <comment>Value of Counts as read: a short stay on the last page, or moving on past it.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>[Ṁöṽîñĝ öñ ƒŕöɱ îţ~~~~~~]</value>
+    <comment>Value of Counts as read: only moving on past the last page, to the end or the next chapter.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>[Ţüŕñîñĝ þàšţ ţĥé ļàšţ þàĝé, öŕ öþéñîñĝ ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Counts as read when it is Moving on from it.</comment>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>[Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]</value>
+    <comment>Value of Counts as read: only the person's own marks; the reader marks nothing.</comment>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>[Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]</value>
+    <comment>Line under Counts as read when it is When you mark it.</comment>
+  </data>
+  <data name="SettingsFollowGroup" xml:space="preserve">
+    <value>[Šéŕîéš šéţţîñĝš ţĥàţ ƒöļļöŵ ýöü~~~~~~~~~~]</value>
+    <comment>Group: series settings that follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsFollowMode" xml:space="preserve">
+    <value>[Ṁöðé, ðîŕéçţîöñ àñð çöļöüŕ~~~~~~~~]</value>
+    <comment>Row in that group.</comment>
+  </data>
+  <data name="SettingsFollowModeNote" xml:space="preserve">
+    <value>[Å šéŕîéš ýöü çĥàñĝé ŕéàðš ţĥé šàɱé öñ ýöüŕ öţĥéŕ ðéṽîçéš~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that row.</comment>
+  </data>
+  <data name="SettingsFollowFooter" xml:space="preserve">
+    <value>[Ţéẋţ šîžé, ɱàŕĝîñš, ţàþ žöñéš àñð ŕéƒŕéšĥ šţàý öñ ţĥîš {device}.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the group: what stays on this device.</comment>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>[Çöļöüŕ öŕ ĝŕéýš~~~~~]</value>
+    <comment>Line under Look in Series settings that follow you.</comment>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>[Šéŕîéš öñ Ŕéàðîñĝ~~~~~~]</value>
+    <comment>Value of New chapters in Downloads: the series on the Reading list.</comment>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>[Å šéŕîéš ƀéîñĝ ŕéàð àļšö ķééþš îţš ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under New chapters in Downloads.</comment>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>[Þŕöĝŕéšš~~~]</value>
+    <comment>Group in Accounts: how reading progress goes to the trackers.</comment>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>[Å çĥàþţéŕ îš ŕéàð~~~~~~]</value>
+    <comment>Value of Send progress after: as each chapter counts as read.</comment>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>[Çļöšîñĝ ţĥé ŕéàðéŕ~~~~~~]</value>
+    <comment>Value of Send progress after: once, when the reader closes.</comment>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>[Ķééþ ţĥé ƒüŕţĥéšţ~~~~~~]</value>
+    <comment>Value of When trackers disagree: the higher chapter wins.</comment>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>[Ţĥé ļàţéšţ çĥàñĝé~~~~~~]</value>
+    <comment>Value of When trackers disagree: the newest change wins, even a lower chapter.</comment>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>[Šţàţüš àñð šçöŕé ƒöļļöŵ ţĥé ļàţéšţ çĥàñĝé~~~~~~~~~~~~~]</value>
+    <comment>Line under When trackers disagree.</comment>
+  </data>
+  <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
+    <value>[Ţĥé ñéẋţ çĥàþţéŕš öƒ šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Keep next chapters ready.</comment>
+  </data>
+  <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
+    <value>[Ɓööķɱàŕķéð çĥàþţéŕš àŕé ķéþţ~~~~~~~~~]</value>
+    <comment>Line under Delete chapters after reading.</comment>
+  </data>
+  <data name="SettingsChapterNotificationsNote" xml:space="preserve">
+    <value>[Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]</value>
+    <comment>Line under New chapters.</comment>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>[Ŵĥéñ ţĥé çĥàþţéŕš ðöŵñļöàðîñĝ àŕé àļļ ðöñé~~~~~~~~~~~~~]</value>
+    <comment>Line under Downloads finished.</comment>
+  </data>
+  <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
+    <value>[Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ţĥéý çàñ ƀé šîļéñçéð öñ ţĥéîŕ öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under New chapters.</comment>
+  </data>
+  <data name="AccountsMangaupdatesCredit" xml:space="preserve">
+    <value>[ṀàñĝàÛþðàţéš îš ŕéàçĥéð ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~]</value>
+    <comment>Credit under the trackers with reading on.</comment>
+  </data>
+  <data name="AccountsUsername" xml:space="preserve">
+    <value>[Ûšéŕ ñàɱé~~~]</value>
+    <comment>Placeholder of the user name field when signing in to MangaUpdates.</comment>
+  </data>
+  <data name="ReadDownloadsTotal_one" xml:space="preserve">
+    <value>[{n} çĥàþţéŕ · {size}~~~~~~]</value>
+    <comment>Beside the Reading heading in Downloads: how many chapters are kept and their size.</comment>
+  </data>
+  <data name="ReadDownloadsTotal_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš · {size}~~~~~~]</value>
+    <comment>Beside the Reading heading in Downloads: how many chapters are kept and their size.</comment>
+  </data>
+  <data name="ReadDownloadsActive" xml:space="preserve">
+    <value>[{chapter} · {done} öƒ {total} þàĝéš~~~~~~~]</value>
+    <comment>A series' line in Downloads while a chapter downloads.</comment>
+  </data>
+  <data name="ReadDownloadsMoreQueued" xml:space="preserve">
+    <value>[{n} ɱöŕé ƣüéüéð~~~~~]</value>
+    <comment>After the chapter downloading: how many more wait.</comment>
+  </data>
+  <data name="ReadDownloadsQueued_one" xml:space="preserve">
+    <value>[{n} çĥàþţéŕ ƣüéüéð~~~~~~]</value>
+    <comment>A series' line in Downloads when its chapters wait to start.</comment>
+  </data>
+  <data name="ReadDownloadsQueued_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš ƣüéüéð~~~~~~]</value>
+    <comment>A series' line in Downloads when its chapters wait to start.</comment>
+  </data>
+  <data name="ReadDownloadsFailed" xml:space="preserve">
+    <value>[{chapter} çöüļðñ'ţ ðöŵñļöàð. {reason}~~~~~~~~]</value>
+    <comment>A series' line in Downloads when a chapter failed, with the reason.</comment>
+  </data>
+  <data name="ReadDownloadsKept_one" xml:space="preserve">
+    <value>[{n} çĥàþţéŕ~~~~]</value>
+    <comment>A series' line in Downloads: how many chapters are kept.</comment>
+  </data>
+  <data name="ReadDownloadsKept_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš~~~~]</value>
+    <comment>A series' line in Downloads: how many chapters are kept.</comment>
+  </data>
+  <data name="ReadDownloadsRead" xml:space="preserve">
+    <value>[{n} ŕéàð~~~]</value>
+    <comment>After the kept count: how many of them are read.</comment>
+  </data>
+  <data name="ReadDownloadsDeleteRead" xml:space="preserve">
+    <value>[Ðéļéţé ŕéàð~~~~]</value>
+    <comment>Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.</comment>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>[Þŕéṽîöüš šéàšöñ~~~~~]</value>
@@ -7848,6 +9884,54 @@
     <value>[Ţöŕŕéñţš öñ ɱöƀîļé ðàţà~~~~~~~]</value>
     <comment>Row: torrents on a mobile connection.</comment>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>[Çĥàþţéŕ ðöŵñļöàðš öñ ɱöƀîļé ðàţà~~~~~~~~~~]</value>
+    <comment>Row: whether chapter downloads run on a mobile connection.</comment>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>[Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~~~~~~~]</value>
+    <comment>Row: keep the next chapters of what you read downloaded.</comment>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>[Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]</value>
+    <comment>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</comment>
+  </data>
+  <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
+    <value>[Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]</value>
+    <comment>Row: whether a series' reader mode, direction and colour follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕš~~~~]</value>
+    <comment>Row in Downloads: which series' new chapters download by themselves.</comment>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>[Ṁöðé àñð ðîŕéçţîöñ~~~~~~]</value>
+    <comment>Row: whether a series' own reader mode and direction follow you to your other devices.</comment>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>[Ļööķ~~]</value>
+    <comment>Row: whether a series' own look (colour or greys) follows you to your other devices.</comment>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>[Šéñð þŕöĝŕéšš àƒţéŕ~~~~~~]</value>
+    <comment>Row: when chapter progress goes to the reading trackers.</comment>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>[Ŵĥéñ ţŕàçķéŕš ðîšàĝŕéé~~~~~~~]</value>
+    <comment>Row: which chapter progress wins when a tracker and this device disagree.</comment>
+  </data>
+  <data name="SettingsChapterNotifications" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕš~~~~]</value>
+    <comment>Row: whether a new chapter of a series on your Reading list sends a notification.</comment>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>[Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]</value>
+    <comment>Row: whether the app sends a notification when the chapters it was downloading are all done.</comment>
+  </data>
+  <data name="SettingsOpenAt" xml:space="preserve">
+    <value>[Öþéñ àţ~~~]</value>
+    <comment>Row: which Home the app opens at while it is for watching and reading.</comment>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>[Šééð àƒţéŕ ŵàţçĥîñĝ~~~~~~]</value>
     <comment>Row: seeding after watching.</comment>
@@ -7929,7 +10013,7 @@
     <comment>Heading and row for notifications of new episodes.</comment>
   </data>
   <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>[Ƒöŕ šĥöŵš îñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~~]</value>
+    <value>[Šĥöŵš öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
@@ -8160,6 +10244,14 @@
     <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Side note in Accounts.</comment>
   </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Side note in Accounts when the app is for reading.</comment>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>[Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ àñð ŕéàðîñĝ ĥîšţöŕý šţàýš öñ ţĥîš ðéṽîçé ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Side note in Accounts when the app is for watching and reading.</comment>
+  </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>[ţöðàý~~]</value>
     <comment>Today, inside a line such as "Thursday 16:30".</comment>
@@ -8367,6 +10459,18 @@
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>[Ŕéšéţ šüƀţîţļé šţýļé~~~~~~]</value>
     <comment>Button that restores the default subtitle style.</comment>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>[Šĥàŕé öñ ţĥîš ñéţŵöŕķ~~~~~~~]</value>
+    <comment>Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.</comment>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>[Ƒééð þàššŵöŕð~~~~]</value>
+    <comment>Row: the password e-readers ask for before they browse the shared catalogue.</comment>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>[Ƒééð þöŕţ~~~]</value>
+    <comment>Row: the port the shared catalogue listens on. Empty picks a free one.</comment>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>[Šöüŕçéš~~~]</value>
@@ -11159,6 +13263,34 @@
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under a tracker that brings in lists.</comment>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under AniList when Kaeri is for reading: what signing in brings.</comment>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>[Ɓŕîñĝš îñ ýöüŕ ļîšţš àñð ƒîļļš Çöñţîñüé ŵîţĥ ŵĥàţ ýöü àŕé ŵàţçĥîñĝ àñð ŕéàðîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under AniList when Kaeri is for watching and reading.</comment>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>[Ļîšţš àñð þŕöĝŕéšš~~~~~~]</value>
+    <comment>Line under a tracker that is not signed in: what it keeps in step.</comment>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>[Ŕéàðîñĝ ļîšţš àñð þŕöĝŕéšš~~~~~~~~]</value>
+    <comment>Line under MangaUpdates when it is not signed in.</comment>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>[Šĥöŵš àñð ŕéàðîñĝ~~~~~~]</value>
+    <comment>Line under a tracker with both media on: it serves shows and reading.</comment>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>[Ŕéàðîñĝ~~~]</value>
+    <comment>Line under a tracker with both media on: it serves reading only.</comment>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>[Šĥöŵš~~]</value>
+    <comment>Line under a tracker with both media on: it serves shows only.</comment>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>[Ļîƀŕàŕý àñð šýñç ñééð ýöüŕ {tracker} àççöüñţ~~~~~~~~~~~~]</value>

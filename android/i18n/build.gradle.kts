@@ -8,6 +8,4 @@ plugins {
 
 android {
     namespace = "app.kaeri.i18n"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
 }

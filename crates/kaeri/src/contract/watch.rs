@@ -171,7 +171,8 @@ async fn syncing_now_sends_the_queue_then_pulls_the_library() {
     let job = h.send(Command::SyncNow);
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["Sync", "Sync", "JobDone"]);
+    // Sent, the watching list pulled, then the reading list pulled.
+    assert_eq!(names(&updates), ["Sync", "Sync", "Sync", "JobDone"]);
     let (sent, pulled) = (state(&updates[0]), state(&updates[1]));
     assert_eq!((sent.tracker.as_str(), sent.last.as_deref()), ("anilist", Some("sent 1")));
     assert_eq!(pulled.last.as_deref(), Some("pulled 3 titles"));

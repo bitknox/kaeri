@@ -7128,6 +7128,9 @@ player-start-miss-no-match = { $name } non ha questa serie
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } non ha l'episodio { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } non ha ancora l'episodio { $episode }. Riproduzione dalla fonte successiva.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } non ha risposto
 
@@ -8633,9 +8636,6 @@ settings-artwork-detail = Attribuzione nelle note dell'app
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Nuovi episodi
-
-# Line under it.
-settings-new-episodes-detail = Per le serie che guardi
 
 # Line explaining what a notification says.
 settings-notify-detail = Una notifica quando esce un episodio di una serie che segui: il titolo della serie e il numero dell'episodio, mai il suo titolo. Una serie può disattivarle nelle proprie impostazioni.

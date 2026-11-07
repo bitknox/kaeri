@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 14 and up run downloads and the update as user-initiated jobs. -->
+    <bool name="foreground_fallback">false</bool>
+</resources>
