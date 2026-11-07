@@ -221,6 +221,7 @@ fn home_ask(engine: &EngineState, services: &Services, refresh: bool) -> HomeAsk
         listed: downloads::ahead::listed(services),
         adult: engine.config.effective().meta.adult,
         now: services.clock.now(),
+        clock: services.clock.clone(),
         zone: services.clock.zone(),
         offline: engine.network.offline,
         refresh,
