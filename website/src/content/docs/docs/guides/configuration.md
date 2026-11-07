@@ -163,8 +163,8 @@ rich = false           # cover, progress bar and an AniList button; needs show_t
 
 [syncplay]
 server = ""            # host:port of a Syncplay server; none is set until you pick one
-room = "…"             # the room y joins
-name = "kaeri"     # the name the room sees
+room = "…"             # the room you join
+name = "kaeri"         # the name the room sees
 ```
 
 Presence is off until you turn it on, since it publishes what you watch to a third party.
