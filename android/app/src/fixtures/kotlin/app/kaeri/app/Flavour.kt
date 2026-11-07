@@ -286,7 +286,13 @@ internal object Flavour {
                 store.reading.series.first { it[work] != null }
                 store.reading.chapters.first { it[work] != null }
             } else if (store.medium.answer.reads) {
-                store.reading.home.first { it != null }
+                // What the reading screen on show loads first: Home, Updates or the library.
+                // Search and Settings load nothing of reading's until asked.
+                withTimeoutOrNull(8_000) {
+                    kotlinx.coroutines.flow.combine(store.reading.home, store.reading.updates, store.reading.lists) { home, updates, lists ->
+                        home != null || updates != null || lists.isNotEmpty()
+                    }.first { it }
+                }
             }
             // The sheet a shot asked for, opening.
             delay(if (intent.getStringExtra("series") != null) 1_200 else 300)
