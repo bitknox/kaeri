@@ -25,6 +25,8 @@ import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.model.DemoState
+import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.SubtitleStyle
 import app.kaeri.engine.model.SyncSignInStep
 import app.kaeri.engine.model.SurprisePool
@@ -230,6 +232,24 @@ class AppStore(
 
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
+
+    private val readers = java.util.concurrent.CopyOnWriteArrayList<(Event) -> Unit>()
+
+    /**
+     * Hear the reader's events and the e-ink profile, as they are applied, on the main thread:
+     * for the reader surface and the e-ink detection, which keep their own state. Every page
+     * landing comes through here, so a listener only notes it. Call what is returned to stop.
+     */
+    fun listenToReading(listener: (Event) -> Unit): () -> Unit {
+        readers += listener
+        return { readers -= listener }
+    }
+
+    /** The engine's server for a novel's files: called on the web view's request thread. */
+    fun bookResource(url: String): app.kaeri.engine.model.BookResource? = client?.engine?.bookResource(url)
+
+    /** The paginator script and stylesheet a novel's web view runs with. */
+    fun novelAssets(): app.kaeri.engine.model.NovelAssets = app.kaeri.engine.ffi.novelAssets()
 
     /** The engine named another profile to run: the app starts it again as that one. */
     var onProfileSwitch: ((String) -> Unit)? = null
@@ -1433,6 +1453,15 @@ class AppStore(
             is Event.UpcomingNotices -> coming.apply(event.v1)
             is Event.Update -> updates.apply(event.v1)
             is Event.Remote -> onRemote?.invoke(event.v1)
+
+            // The reader's own, and a reading load that failed where the reader or the e-ink
+            // profile shows it.
+            is Event.Reader -> readers.forEach { it(event) }
+            is Event.Reading -> when (val reading = event.v1) {
+                is ReadingEvent.Eink -> readers.forEach { it(event) }
+                is ReadingEvent.Failed -> if (reading.about == ReadingAbout.READER || reading.about == ReadingAbout.EINK) readers.forEach { it(event) }
+                else -> {}
+            }
 
             is Event.ArtworkReady -> artwork.ready(event.url, event.bytes)
             is Event.ImageFailed -> artwork.failed(event.url)

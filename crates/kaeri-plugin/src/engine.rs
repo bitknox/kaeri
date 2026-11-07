@@ -98,7 +98,7 @@ const PULLEY: &str = if cfg!(target_pointer_width = "32") { "pulley32" } else { 
 ///
 /// This is the deadline's granularity: a guest can overrun by up to one tick. 100ms keeps the
 /// ticker's cost negligible while making the overshoot invisible next to a 20-second budget.
-const EPOCH_TICK: Duration = Duration::from_millis(100);
+pub(crate) const EPOCH_TICK: Duration = Duration::from_millis(100);
 
 /// A table entry is a function reference. Tens of thousands is far more than a parser needs;
 /// millions would be a memory-exhaustion vector.
@@ -124,6 +124,35 @@ pub enum PluginError {
     /// app needs an update to use it.
     #[error("{path}: made for {world}, which needs a newer version of Kaeri")]
     NeedsNewerKaeri { path: String, world: String },
+    /// The plugin is a source of another kind than the one asked for: a book source where a
+    /// show source was wanted, or the reverse. Nothing is wrong with it.
+    #[error("{path}: a source of {kind}, not of {wanted}")]
+    OtherKind { path: String, kind: PluginKind, wanted: PluginKind },
+}
+
+/// What a plugin is a source of, from the plugin interface it was built for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PluginKind {
+    /// `kaeri:provider`: shows.
+    Shows,
+    /// `kaeri:books`: manga and novels.
+    Books,
+}
+
+impl PluginKind {
+    /// The name a store's index and a stamped manifest use: `shows` or `books`.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Shows => "shows",
+            Self::Books => "books",
+        }
+    }
+}
+
+impl std::fmt::Display for PluginKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
 }
 
 /// The major version of the plugin ABI this host speaks: the major of the WIT package in
@@ -135,26 +164,31 @@ pub const ABI_MAJOR: u64 = 3;
 enum AbiProblem {
     /// Built for an older major of the provider ABI: the version it names.
     Outdated(String),
-    /// Made for a newer Kaeri: the world it names, as `kaeri:books@1.0.0`.
+    /// Made for a newer Kaeri: the world it names, as `kaeri:books@2.0.0`.
     Newer(String),
+    /// Unusable for another reason, said in words.
+    Unusable(String),
 }
 
-/// Whether a component was built for this host's ABI, and why not when it was not.
+/// Which plugin world a component was built for, or why this host cannot link it.
 ///
-/// Read from the names the component imports and exports (`kaeri:provider/host@3.0.0`)
-/// before anything is linked, so a plugin for another version gets a clear answer instead of a
-/// linker error that names an interface nobody asked about. A `kaeri:` package other than
-/// `provider` is a world of a newer version, as is a later provider major.
-fn abi_problem(
+/// Read from the names the component imports and exports (`kaeri:provider/host@3.0.0`,
+/// `kaeri:books/source@1.0.0`) before anything is linked, so a plugin for another version gets
+/// a clear answer instead of a linker error that names an interface nobody asked about, and the
+/// kind of a plugin comes from the plugin itself. A `kaeri:` package this host does not know is
+/// a world of a newer version, as is a later major of one it does. A component that names no
+/// `kaeri:` interface at all is taken for a show source, and fails at the linker as before.
+fn world_of(
     component: &wasmtime::component::Component,
     engine: &wasmtime::Engine,
-) -> Option<AbiProblem> {
+) -> Result<PluginKind, AbiProblem> {
     let ty = component.component_type();
     let names = ty
         .imports(engine)
         .map(|(name, _)| name.to_owned())
         .chain(ty.exports(engine).map(|(name, _)| name.to_owned()));
     let mut outdated = None;
+    let (mut shows, mut books) = (false, false);
     for name in names {
         let Some(rest) = name.strip_prefix("kaeri:") else { continue };
         let package = rest.split(['/', '@']).next().unwrap_or_default();
@@ -166,12 +200,27 @@ fn abi_problem(
                 format!("kaeri:{package}@{version}")
             }
         };
-        if package != "provider" {
-            return Some(AbiProblem::Newer(world()));
+        let (kind, current) = match package {
+            "provider" => (PluginKind::Shows, ABI_MAJOR),
+            "books" => (PluginKind::Books, crate::books::BOOKS_ABI_MAJOR),
+            _ => return Err(AbiProblem::Newer(world())),
+        };
+        match kind {
+            PluginKind::Shows => shows = true,
+            PluginKind::Books => books = true,
         }
         match version.split('.').next().and_then(|m| m.parse::<u64>().ok()) {
-            Some(ABI_MAJOR) => {}
-            Some(major) if major > ABI_MAJOR => return Some(AbiProblem::Newer(world())),
+            Some(major) if major == current => {}
+            Some(major) if major > current => return Err(AbiProblem::Newer(world())),
+            // No book source was ever built for a major before 1.
+            _ if kind == PluginKind::Books => {
+                return Err(AbiProblem::Unusable(format!(
+                    "built for {}, an interface Kaeri never shipped; rebuild it against \
+                     kaeri:books@{}",
+                    world(),
+                    crate::books::BOOKS_ABI_MAJOR
+                )));
+            }
             _ => {
                 outdated.get_or_insert_with(|| {
                     if version.is_empty() { "unknown".to_owned() } else { version.to_owned() }
@@ -179,7 +228,18 @@ fn abi_problem(
             }
         }
     }
-    outdated.map(AbiProblem::Outdated)
+    if let Some(found) = outdated {
+        return Err(AbiProblem::Outdated(found));
+    }
+    match (shows, books) {
+        (true, true) => Err(AbiProblem::Unusable(
+            "speaks both the show source and the book source interface; a plugin is one or \
+             the other"
+                .into(),
+        )),
+        (false, true) => Ok(PluginKind::Books),
+        _ => Ok(PluginKind::Shows),
+    }
 }
 
 impl PluginError {
@@ -194,14 +254,14 @@ impl PluginError {
                 ProviderError::Parse(format!("plugin trapped: {message}"))
             }
             Self::Load { message, .. } => ProviderError::Other(message.clone()),
-            Self::OutdatedAbi { .. } | Self::NeedsNewerKaeri { .. } => {
-                ProviderError::Other(self.to_string())
-            }
+            Self::OutdatedAbi { .. }
+            | Self::NeedsNewerKaeri { .. }
+            | Self::OtherKind { .. } => ProviderError::Other(self.to_string()),
         }
     }
 
     /// Whether this looks like the deadline firing rather than a genuine fault.
-    fn from_call(plugin: &str, limit: Duration, error: &wasmtime::Error) -> Self {
+    pub(crate) fn from_call(plugin: &str, limit: Duration, error: &wasmtime::Error) -> Self {
         // Asked of the trap itself rather than of its rendered text. The `Debug` form includes
         // the wasm backtrace, and the symbols in it come from the guest's own name section —
         // so a plugin with a function called `interrupt_handler` could have a genuine fault
@@ -219,7 +279,7 @@ impl PluginError {
 /// The ceiling lives here rather than in a box because wasmtime borrows the limiter from the
 /// store's data — which is the right shape anyway: a guest's limits are part of its state.
 pub struct PluginState {
-    capabilities: Capabilities,
+    pub(crate) capabilities: Capabilities,
     ceiling: Ceiling,
     /// A WASI context that grants nothing — see the module docs. Built with no preopens, no
     /// environment, no stdio and no network, purely so a wasip2 component's standard library
@@ -503,12 +563,11 @@ impl PluginHost {
         self
     }
 
-    /// Compile a `.wasm` component and read its manifest.
-    ///
-    /// The manifest is read immediately because it declares `allowed-hosts`, and nothing can be
-    /// authorised until that is known.
-    pub async fn load(&self, path: impl AsRef<Path>) -> Result<LoadedPlugin, PluginError> {
-        let path = path.as_ref();
+    /// Compile a `.wasm` component and tell which plugin world it was built for.
+    async fn compile(
+        &self,
+        path: &Path,
+    ) -> Result<(wasmtime::component::Component, PluginKind), PluginError> {
         let display = path.display().to_string();
         let fail = |message: String| PluginError::Load { path: display.clone(), message };
 
@@ -523,23 +582,102 @@ impl PluginHost {
             .map_err(|e| fail(e.to_string()))?;
         tracing::info!(elapsed = ?started.elapsed(), plugin = %path.display(), "component compiled");
 
-        match abi_problem(&component, &self.engine) {
-            Some(AbiProblem::Outdated(found)) => {
-                return Err(PluginError::OutdatedAbi { path: display, found });
+        match world_of(&component, &self.engine) {
+            Ok(kind) => Ok((component, kind)),
+            Err(AbiProblem::Outdated(found)) => {
+                Err(PluginError::OutdatedAbi { path: display, found })
             }
-            Some(AbiProblem::Newer(world)) => {
-                return Err(PluginError::NeedsNewerKaeri { path: display, world });
+            Err(AbiProblem::Newer(world)) => {
+                Err(PluginError::NeedsNewerKaeri { path: display, world })
             }
-            None => {}
+            Err(AbiProblem::Unusable(message)) => Err(fail(message)),
         }
+    }
 
+    /// A linker for one plugin world: the empty WASI floor, then that world's `host`.
+    pub(crate) fn linker(
+        &self,
+        display: &str,
+        kind: PluginKind,
+    ) -> Result<wasmtime::component::Linker<PluginState>, PluginError> {
+        let fail = |e: wasmtime::Error| PluginError::Load {
+            path: display.to_owned(),
+            message: e.to_string(),
+        };
         let mut linker = wasmtime::component::Linker::new(&self.engine);
         // The empty WASI floor first — a wasip2 component's standard library links against it in
         // every language, and without it nothing instantiates. It grants nothing; see the module
         // docs for what is deliberately not in this linker.
-        wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|e| fail(e.to_string()))?;
-        Plugin::add_to_linker::<_, wasmtime::component::HasSelf<_>>(&mut linker, |state| state)
-            .map_err(|e| fail(e.to_string()))?;
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(fail)?;
+        match kind {
+            PluginKind::Shows => {
+                Plugin::add_to_linker::<_, wasmtime::component::HasSelf<_>>(
+                    &mut linker,
+                    |state| state,
+                )
+                .map_err(fail)?;
+            }
+            PluginKind::Books => crate::books::add_to_linker(&mut linker).map_err(fail)?,
+        }
+        Ok(linker)
+    }
+
+    /// Compile a `.wasm` show source and read its manifest.
+    ///
+    /// The manifest is read immediately because it declares `allowed-hosts`, and nothing can be
+    /// authorised until that is known. A book source is refused with
+    /// [`PluginError::OtherKind`] before it runs at all.
+    pub async fn load(&self, path: impl AsRef<Path>) -> Result<LoadedPlugin, PluginError> {
+        let path = path.as_ref();
+        let (component, kind) = self.compile(path).await?;
+        if kind != PluginKind::Shows {
+            return Err(PluginError::OtherKind {
+                path: path.display().to_string(),
+                kind,
+                wanted: PluginKind::Shows,
+            });
+        }
+        self.finish(path, component).await
+    }
+
+    /// Compile a `.wasm` book source and read its manifest. A show source is refused with
+    /// [`PluginError::OtherKind`] before it runs at all.
+    pub async fn load_book(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<crate::books::LoadedBookPlugin, PluginError> {
+        let path = path.as_ref();
+        let (component, kind) = self.compile(path).await?;
+        if kind != PluginKind::Books {
+            return Err(PluginError::OtherKind {
+                path: path.display().to_string(),
+                kind,
+                wanted: PluginKind::Books,
+            });
+        }
+        crate::books::LoadedBookPlugin::finish(self, path, component).await
+    }
+
+    /// Compile a `.wasm` component of either kind and read its manifest.
+    pub async fn load_any(&self, path: impl AsRef<Path>) -> Result<AnyPlugin, PluginError> {
+        let path = path.as_ref();
+        let (component, kind) = self.compile(path).await?;
+        match kind {
+            PluginKind::Shows => self.finish(path, component).await.map(AnyPlugin::Shows),
+            PluginKind::Books => crate::books::LoadedBookPlugin::finish(self, path, component)
+                .await
+                .map(AnyPlugin::Books),
+        }
+    }
+
+    async fn finish(
+        &self,
+        path: &Path,
+        component: wasmtime::component::Component,
+    ) -> Result<LoadedPlugin, PluginError> {
+        let display = path.display().to_string();
+        let fail = |message: String| PluginError::Load { path: display.clone(), message };
+        let linker = self.linker(&display, PluginKind::Shows)?;
 
         let plugin = LoadedPlugin {
             engine: self.engine.clone(),
@@ -567,38 +705,61 @@ impl PluginHost {
             .await
             .map_err(|e| fail(e.to_string()))?;
 
-        if manifest.id.trim().is_empty() {
-            return Err(fail("manifest has no id".into()));
-        }
-        if let Err(message) = refuse_reserved(&manifest.id) {
-            tracing::warn!(id = %manifest.id, file = %path.display(), "plugin refused: {message}");
-            return Err(fail(message));
-        }
-
+        self.check_id(path, &manifest.id, refuse_reserved)?;
         tracing::info!(
             id = %manifest.id,
             version = %manifest.version,
             hosts = ?manifest.allowed_hosts,
             "plugin loaded"
         );
-        // Settings are granted only when the manifest's id matches the file's own name.
-        //
-        // The id is asserted by the guest, and settings are where a user's API keys live — so
-        // handing a bucket over on the strength of that assertion alone means any `.wasm`
-        // dropped in the directory can name itself after a plugin the user trusts and be given
-        // its credentials. The filename is the one part of a plugin's identity the *user*
-        // controls, so agreement between the two is what unlocks the bucket. A mismatch is said
-        // out loud rather than silently ignored: a renamed file losing its settings would
-        // otherwise look like the plugin breaking for no reason.
+        let settings = self.settings_for(path, &manifest.id);
+        Ok(LoadedPlugin { manifest, settings, ..plugin })
+    }
+
+    /// Refuse a manifest with no id, or one `reserved` says is not a plugin's to take.
+    pub(crate) fn check_id(
+        &self,
+        path: &Path,
+        id: &str,
+        reserved: fn(&str) -> Result<(), String>,
+    ) -> Result<(), PluginError> {
+        let fail =
+            |message: String| PluginError::Load { path: path.display().to_string(), message };
+        if id.trim().is_empty() {
+            return Err(fail("manifest has no id".into()));
+        }
+        if let Err(message) = reserved(id) {
+            tracing::warn!(%id, file = %path.display(), "plugin refused: {message}");
+            return Err(fail(message));
+        }
+        Ok(())
+    }
+
+    /// The person's settings for the plugin at `path`, which calls itself `id`.
+    ///
+    /// Granted only when the manifest's id matches the file's own name.
+    ///
+    /// The id is asserted by the guest, and settings are where a user's API keys live, so
+    /// handing a bucket over on the strength of that assertion alone means any `.wasm`
+    /// dropped in the directory can name itself after a plugin the user trusts and be given
+    /// its credentials. The filename is the one part of a plugin's identity the *user*
+    /// controls, so agreement between the two is what unlocks the bucket. A mismatch is said
+    /// out loud rather than silently ignored: a renamed file losing its settings would
+    /// otherwise look like the plugin breaking for no reason.
+    pub(crate) fn settings_for(
+        &self,
+        path: &Path,
+        id: &str,
+    ) -> std::collections::BTreeMap<String, String> {
         let stem = path
             .file_stem()
             .map(|s| s.to_string_lossy().to_ascii_lowercase())
             .unwrap_or_default();
-        let claimed = manifest.id.trim().to_ascii_lowercase();
-        let settings = match self.settings.get(&manifest.id) {
+        let claimed = id.trim().to_ascii_lowercase();
+        match self.settings.get(id) {
             Some(_) if stem != claimed => {
                 tracing::warn!(
-                    id = %manifest.id,
+                    %id,
                     file = %path.display(),
                     "settings for this id exist but the file is not named after it; \
                      withholding them — rename the file to {}.wasm to grant them",
@@ -608,22 +769,28 @@ impl PluginHost {
             }
             Some(settings) => settings.clone(),
             None => Default::default(),
-        };
-        Ok(LoadedPlugin { manifest, settings, ..plugin })
+        }
     }
 
-    /// Every `*.wasm` in a directory, in a stable order.
-    ///
-    /// A missing directory yields an empty list rather than an error: having no plugins is the
-    /// normal case, not a failure.
-    pub async fn load_dir(
-        &self,
-        dir: impl AsRef<Path>,
-    ) -> Vec<Result<LoadedPlugin, PluginError>> {
-        let Ok(mut entries) = tokio::fs::read_dir(dir.as_ref()).await else {
+    pub(crate) fn engine(&self) -> &wasmtime::Engine {
+        &self.engine
+    }
+
+    pub(crate) fn limits(&self) -> Limits {
+        self.limits
+    }
+
+    pub(crate) fn http(&self) -> Option<crate::HttpClient> {
+        self.http.clone()
+    }
+
+    /// The `*.wasm` files in a directory, sorted, so source precedence never depends on
+    /// filesystem order. A missing directory has none: having no plugins is the normal case,
+    /// not a failure.
+    async fn wasm_files(dir: &Path) -> Vec<std::path::PathBuf> {
+        let Ok(mut entries) = tokio::fs::read_dir(dir).await else {
             return Vec::new();
         };
-
         let mut paths = Vec::new();
         while let Ok(Some(entry)) = entries.next_entry().await {
             let path = entry.path();
@@ -631,14 +798,56 @@ impl PluginHost {
                 paths.push(path);
             }
         }
-        // Sorted, so provider precedence never depends on filesystem order.
         paths.sort();
+        paths
+    }
 
-        let mut loaded = Vec::with_capacity(paths.len());
-        for path in paths {
+    /// Every `*.wasm` show source in a directory, in a stable order. A book source in it is a
+    /// [`PluginError::OtherKind`].
+    pub async fn load_dir(
+        &self,
+        dir: impl AsRef<Path>,
+    ) -> Vec<Result<LoadedPlugin, PluginError>> {
+        let mut loaded = Vec::new();
+        for path in Self::wasm_files(dir.as_ref()).await {
             loaded.push(self.load(&path).await);
         }
         loaded
+    }
+
+    /// Every `*.wasm` in a directory, of either kind, in a stable order.
+    pub async fn load_dir_any(
+        &self,
+        dir: impl AsRef<Path>,
+    ) -> Vec<Result<AnyPlugin, PluginError>> {
+        let mut loaded = Vec::new();
+        for path in Self::wasm_files(dir.as_ref()).await {
+            loaded.push(self.load_any(&path).await);
+        }
+        loaded
+    }
+}
+
+/// A loaded plugin of either kind.
+#[derive(Debug)]
+pub enum AnyPlugin {
+    Shows(LoadedPlugin),
+    Books(crate::books::LoadedBookPlugin),
+}
+
+impl AnyPlugin {
+    pub fn kind(&self) -> PluginKind {
+        match self {
+            Self::Shows(_) => PluginKind::Shows,
+            Self::Books(_) => PluginKind::Books,
+        }
+    }
+
+    pub fn id(&self) -> &str {
+        match self {
+            Self::Shows(plugin) => plugin.id(),
+            Self::Books(plugin) => plugin.id(),
+        }
     }
 }
 
@@ -688,20 +897,7 @@ impl LoadedPlugin {
 
     /// A store with this call's capabilities, ceilings and deadline.
     fn store(&self, capabilities: Capabilities) -> wasmtime::Store<PluginState> {
-        let mut store = wasmtime::Store::new(
-            &self.engine,
-            PluginState {
-                capabilities,
-                ceiling: Ceiling { memory_bytes: self.limits.memory_bytes },
-                wasi: empty_wasi(),
-                table: wasmtime::component::ResourceTable::new(),
-            },
-        );
-        store.limiter(|state| &mut state.ceiling);
-        // Ticks, not milliseconds — the deadline is counted in epoch increments.
-        let ticks = (self.limits.deadline.as_millis() / EPOCH_TICK.as_millis()).max(1) as u64;
-        store.set_epoch_deadline(ticks);
-        store
+        new_store(&self.engine, self.limits, capabilities)
     }
 
     /// Capabilities for a real call: the declared hosts, the shared client, the settings.
@@ -826,6 +1022,28 @@ impl LoadedPlugin {
             .await
             .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
     }
+}
+
+/// A store for one call, of either plugin world: its capabilities, ceilings and deadline.
+pub(crate) fn new_store(
+    engine: &wasmtime::Engine,
+    limits: Limits,
+    capabilities: Capabilities,
+) -> wasmtime::Store<PluginState> {
+    let mut store = wasmtime::Store::new(
+        engine,
+        PluginState {
+            capabilities,
+            ceiling: Ceiling { memory_bytes: limits.memory_bytes },
+            wasi: empty_wasi(),
+            table: wasmtime::component::ResourceTable::new(),
+        },
+    );
+    store.limiter(|state| &mut state.ceiling);
+    // Ticks, not milliseconds: the deadline is counted in epoch increments.
+    let ticks = (limits.deadline.as_millis() / EPOCH_TICK.as_millis()).max(1) as u64;
+    store.set_epoch_deadline(ticks);
+    store
 }
 
 /// A plugin may not take the id of the built-in demo source: the demo cannot be repointed.

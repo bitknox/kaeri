@@ -444,6 +444,10 @@ pub struct TitleDetail {
     /// [`Event::Detail`]: crate::event::Event::Detail
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub partial: bool,
+    /// "Also a book": the manga or novel the show was told from, or that tells it, only to
+    /// someone who both watches and reads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_medium: Option<crate::reading::CrossMediumRow>,
 }
 
 /// How a title's run reads, decided by the engine. The wording is the catalogue's, so every app

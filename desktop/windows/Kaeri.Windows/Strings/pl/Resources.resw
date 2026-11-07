@@ -4658,6 +4658,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} nie ma odcinka {episode}</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} nie ma jeszcze odcinka {episode}. Odtwarzanie z kolejnego źródło.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} nie odpowiedziało</value>
   </data>
@@ -6226,9 +6229,6 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nowe odcinki</value>
-  </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Dla tytułów z listy oglądanych</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</value>

@@ -34,6 +34,9 @@ const BEFORE_VERSIONS: &[&str] = &[
         size INTEGER NOT NULL, published_at INTEGER NOT NULL)",
     "INSERT INTO meta (key, value) VALUES ('name', 'From before versions')",
     "INSERT INTO members (id, name, role, joined_at) VALUES ('m1', 'Alex', 'owner', 1)",
+    "INSERT INTO plugins (id, name, version, allowed_hosts, translations, sha256, size,
+        published_at) VALUES ('example', 'Example', '1.0.0', '[\"api.example\"]', '[\"sub\"]',
+        'abc', 3, 1)",
 ];
 
 type TestStore = Store<Arc<dyn Database>, Box<dyn Blobs>>;
@@ -84,6 +87,12 @@ async fn a_store_from_before_versions_is_brought_up_to_date_and_keeps_everything
     store.set_contact("owner@store.example").await.unwrap();
     store.set_open(true).await.unwrap();
     assert_eq!(store.members().await.unwrap().len(), 2);
+    // A plugin published before book sources is a show source, and its entry says nothing new.
+    let plugins = store.plugins().await.unwrap();
+    assert_eq!(plugins.len(), 1);
+    assert_eq!(plugins[0].kind, None);
+    assert!(plugins[0].media.is_empty());
+    assert_eq!(plugins[0].allowed_hosts, ["api.example"]);
 }
 
 #[tokio::test]

@@ -52,6 +52,43 @@ macro_rules! numeric_id {
     };
 }
 
+/// [`numeric_id!`] for a service whose ids outgrow `u32`.
+macro_rules! numeric_id64 {
+    ($(#[$meta:meta])* $name:ident) => {
+        $(#[$meta])*
+        #[derive(
+            Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+        )]
+        #[serde(transparent)]
+        pub struct $name(pub u64);
+
+        impl $name {
+            pub const fn new(raw: u64) -> Self {
+                Self(raw)
+            }
+
+            pub const fn get(self) -> u64 {
+                self.0
+            }
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+
+        impl From<u64> for $name {
+            fn from(raw: u64) -> Self {
+                Self(raw)
+            }
+        }
+
+        #[cfg(feature = "ffi")]
+        uniffi::custom_newtype!($name, u64);
+    };
+}
+
 numeric_id! {
     /// AniList media id — the canonical key for a title throughout Kaeri.
     AnilistId
@@ -80,6 +117,22 @@ numeric_id! {
 numeric_id! {
     /// The Movie Database id.
     TmdbId
+}
+
+numeric_id! {
+    /// A MyAnimeList manga id. MyAnimeList numbers manga apart from anime, so the same number
+    /// names two different works: never a [`MalId`].
+    MalMangaId
+}
+
+numeric_id! {
+    /// A Kitsu manga id, numbered apart from Kitsu's anime: never a [`KitsuId`].
+    KitsuMangaId
+}
+
+numeric_id64! {
+    /// A MangaUpdates series id. Its ids outgrow 32 bits.
+    MangaUpdatesId
 }
 
 impl AnilistId {
@@ -181,6 +234,15 @@ mod tests {
         assert_eq!(anilist.get(), 154_587);
         assert_eq!(mal.get(), 52_991);
         assert_eq!(anilist.to_string(), "154587");
+    }
+
+    #[test]
+    fn manga_ids_keep_numbers_past_32_bits() {
+        let id = MangaUpdatesId::new(34_730_600_472);
+        assert_eq!(id.to_string(), "34730600472");
+        assert_eq!(serde_json::to_string(&id).unwrap(), "34730600472");
+        assert_eq!(MalMangaId::new(2).get(), 2);
+        assert_eq!(KitsuMangaId::from(3).get(), 3);
     }
 
     #[test]

@@ -4520,6 +4520,9 @@
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} no tiene el episodio {episode}</value>
   </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name} aún no tiene el episodio {episode}. Se reproduce desde otra fuente.</value>
+  </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name} no respondió</value>
   </data>
@@ -6058,9 +6061,6 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nuevos episodios</value>
-  </data>
-  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>Para series de tu lista Viendo</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Un aviso cuando sale un episodio de una serie que sigues: el nombre de la serie y el número del episodio, nunca el título del episodio. Una serie puede desactivarlo en sus ajustes.</value>

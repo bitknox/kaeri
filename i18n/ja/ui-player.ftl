@@ -14,6 +14,7 @@ player-start-place = { -source-pl } { $total } 件中 { $place } 件目
 player-start-pinned = この作品で選んだもの
 player-start-miss-no-match = { $name }にはこの作品がありません
 player-start-miss-no-episode = { $name }にはエピソード { $episode } がありません
+player-start-pin-missed = { $name }にはまだエピソード { $episode } がありません。次の{ -source }から再生します。
 player-start-miss-failed = { $name }から応答がありませんでした
 player-start-miss-timed-out = { $name }の応答に時間がかかりすぎました
 player-start-miss-skipped = { $name }をスキップしました

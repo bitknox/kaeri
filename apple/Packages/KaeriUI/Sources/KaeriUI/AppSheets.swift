@@ -28,6 +28,9 @@ struct AppSheets: ViewModifier {
             // An episode's discussion: a sheet, a side panel or a window.
             .modifier(DiscussionSheets())
             .modifier(FirstLaunchPresenter())
+            // What Kaeri is for: asked after the update or on joining, and the places kept in step.
+            .modifier(MediumAskPresenter())
+            .mediumPlaces()
             #if os(iOS)
             .modifier(ProfilePickerPresenter())
             #endif
@@ -36,6 +39,13 @@ struct AppSheets: ViewModifier {
             #if os(iOS)
             .sensoryFeedback(.impact(weight: .light), trigger: navigator.watchedByHand)
             #endif
+            // Add a source for books. Over the iPhone's Settings sheet, its Sources page shows it.
+            .sheet(item: Binding(
+                get: { navigator.phoneSettings == nil ? navigator.addBookSource : nil },
+                set: { navigator.addBookSource = $0 }
+            )) { step in
+                AddBookSourceSheet(start: step)
+            }
             .sheet(item: Binding<InviteItem?>(
                 get: { navigator.invite.map(InviteItem.init) },
                 set: { (item: InviteItem?) in navigator.invite = item?.link }

@@ -213,6 +213,7 @@ fn detail_from(
             })
             .collect(),
         partial: false,
+        other_medium: None,
     }
 }
 

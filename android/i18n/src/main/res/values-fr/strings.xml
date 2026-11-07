@@ -1792,6 +1792,7 @@
     <string name="player_start_pinned">Votre choix pour cette série</string>
     <string name="player_start_miss_no_match">%1$s n\'a pas cette série</string>
     <string name="player_start_miss_no_episode">%1$s n\'a pas l\'épisode %2$s</string>
+    <string name="player_start_pin_missed">%1$s n\'a pas encore l\'épisode %2$s. Lecture depuis la source suivante.</string>
     <string name="player_start_miss_failed">%1$s n\'a pas répondu</string>
     <string name="player_start_miss_timed_out">%1$s a mis trop de temps</string>
     <string name="player_start_miss_skipped">Vous avez ignoré %1$s</string>
@@ -2325,7 +2326,6 @@
     <string name="settings_artwork">Illustrations sous licence CC BY-NC</string>
     <string name="settings_artwork_detail">Attribution dans les mentions de l’application</string>
     <string name="settings_new_episodes">Nouveaux épisodes</string>
-    <string name="settings_new_episodes_detail">Pour les séries de votre liste En cours</string>
     <string name="settings_notify_detail">Une notification quand un épisode d’une série que vous suivez sort : la série et le numéro de l’épisode, jamais le titre de l’épisode. Une série peut désactiver ses propres notifications dans ses réglages.</string>
     <string name="settings_coming_up">À venir · 7 prochains jours</string>
     <string name="settings_system_notifications">Réglages des notifications</string>

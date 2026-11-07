@@ -31,6 +31,8 @@ default = ["desktop"]
 desktop = ["kaeri-engine/desktop", "party"]
 # Only the Discord presence of them, for the Mac app, whose player is libmpv in its own process.
 presence = ["kaeri-engine/presence"]
+# The OPDS feed (Send to e-reader's sibling): desktop builds only, the Mac beside `--no-default-features`.
+opds-feed = ["kaeri-engine/opds-feed"]
 # `FfiEngine::start_testing`: the engine on a fake AniList, the test kit's fixture source and a
 # client that cannot leave the machine, for the Swift package's tests. Never on in an app.
 testing = [
@@ -40,6 +42,8 @@ testing = [
     "dep:kaeri-providers",
     "dep:kaeri-track",
     "dep:kaeri-plugin-store",
+    "dep:image",
+    "dep:zip",
     "kaeri-remote?/testing",
     "kaeri-party?/testing",
     "kaeri-cast?/fake",
@@ -95,6 +99,9 @@ kaeri-meta = { workspace = true, optional = true }
 kaeri-testkit = { workspace = true, optional = true }
 kaeri-providers = { workspace = true, optional = true }
 kaeri-track = { workspace = true, optional = true }
+# The reading scenes' generated pages and books, behind `testing`.
+image = { workspace = true, optional = true }
+zip = { workspace = true, optional = true }
 # The plugin store scenes serve a store on loopback, as the contract tests do.
 kaeri-plugin-store = { workspace = true, optional = true }
 

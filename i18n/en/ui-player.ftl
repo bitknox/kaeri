@@ -61,6 +61,12 @@ player-start-miss-no-match = { $name } doesn't have this show
 # @arg episode: text
 player-start-miss-no-episode = { $name } doesn't have episode { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the
+# next source plays it.
+# @arg name: text
+# @arg episode: text
+player-start-pin-missed = { $name } doesn't have episode { $episode } yet. Playing from the next { -source }.
+
 # Detail line when a source failed and the next is asked.
 # @arg name: text
 player-start-miss-failed = { $name } didn't answer

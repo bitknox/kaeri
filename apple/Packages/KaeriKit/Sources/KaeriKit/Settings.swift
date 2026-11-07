@@ -25,6 +25,7 @@ extension SettingKey {
         case .motion, .autoNext, .skipOpening, .skipRecap, .findSkipTimes, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
              .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
              .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
+             .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading, .opdsFeed, .seriesChoicesFollow, .lookFollows, .chapterNotifications, .downloadsFinished,
              .episodeDiscussions, .commentImages, .hoverCards:
             true
         default:
@@ -77,6 +78,19 @@ extension SettingKey {
             [0, 5, 10, 15, 20, 30].map { SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : "\($0) s") }
         case .downloadQuality:
             ["standard", "higher"].map { SettingOption(value: .str($0), label: $0) }
+        case .openAt:
+            ["watch", "read"].map { SettingOption(value: .str($0), label: $0) }
+        // Reading's choices, by the names the config file uses, which the engine's rows say.
+        case .newChapters:
+            ["off", "reading"].map { SettingOption(value: .str($0), label: $0) }
+        case .webtoonMode:
+            ["strip", "paged"].map { SettingOption(value: .str($0), label: $0) }
+        case .sendProgressAfter:
+            ["chapter", "close"].map { SettingOption(value: .str($0), label: $0) }
+        case .whenTrackersDisagree:
+            ["furthest", "latest"].map { SettingOption(value: .str($0), label: $0) }
+        case .countsAsRead:
+            ["last-page", "moving-on", "marked"].map { SettingOption(value: .str($0), label: $0) }
         case .keepNextEpisodes:
             [0, 1, 2, 3, 5, 10].map {
                 SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : Wording.plural($0, "episode"))

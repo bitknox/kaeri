@@ -54,6 +54,10 @@ pub struct FolderReport {
     pub titles: Vec<u32>,
     /// Completed watches that arrived, for the tracker rules.
     pub watches: Vec<kaeri_store::sync::ReceivedWatch>,
+    /// Works whose reading changed, by WorkId: an open reader may move on.
+    pub works: Vec<String>,
+    /// Reads kept against an unread they had not seen, for the note on each device.
+    pub read_notes: Vec<kaeri_store::sync::ReadNote>,
     /// The group holds back from this device (its name is under `paused/`): the pass read and
     /// wrote nothing.
     pub paused: bool,
@@ -66,6 +70,8 @@ impl FolderReport {
         self.notes.extend(applied.notes);
         self.titles.extend(applied.titles);
         self.watches.extend(applied.watches);
+        self.works.extend(applied.works);
+        self.read_notes.extend(applied.read_notes);
     }
 }
 

@@ -251,6 +251,10 @@ impl Tracker for SimklTracker {
         let mut sent: Vec<(u32, AnilistId)> = Vec::new();
 
         for op in ops {
+            // Reading waits in its own outbox and is never in a watching batch.
+            if op.is_reading() {
+                continue;
+            }
             let (anilist_id, mal_id) = match op {
                 TrackOp::SetProgress { anilist_id, .. }
                 | TrackOp::SetStatus { anilist_id, .. }
@@ -266,6 +270,9 @@ impl Tracker for SimklTracker {
                     };
                     (*anilist_id, mal_id)
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => continue,
             };
             sent.push((mal_id, anilist_id));
 
@@ -293,6 +300,9 @@ impl Tracker for SimklTracker {
                         "rating": score.round() as u32,
                     }));
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => {}
             }
         }
 

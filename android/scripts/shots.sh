@@ -24,7 +24,7 @@
 # KAERI_KEEP_EMULATOR=1 (an emulator already running on its port is used and left running).
 # KAERI_EMULATOR_PORT names another port, for a second worktree's emulator beside the first:
 #
-#   phone      kaeri-phone-35-16k   the app's minimum, Android 15, with 16 KB pages   port 5560
+#   phone      kaeri-phone-35-16k   Android 15, with 16 KB pages                      port 5560
 #   phone-37   Medium_Phone_API_37.0    the newest, Android 17                              port 5566
 #   tablet     kaeri-tablet         1280 × 800 dp                                       port 5562
 #   fold       kaeri-fold           a foldable, unfolded                                port 5564
@@ -60,7 +60,7 @@ shift
 shots=("$@")
 (( ${#shots[@]} )) || shots=(watching)
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | app) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | eink-grey | eink-kaleido-unsure | app) ;; *) usage ;; esac
 done
 
 android="$(cd "$(dirname "$0")/.." && pwd)"

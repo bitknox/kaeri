@@ -3,16 +3,13 @@
 
 package app.kaeri.app
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.content.ContextCompat
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,8 +35,7 @@ class Notifier(private val context: Context) {
     }
 
     private val allowed: Boolean
-        get() = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
+        get() = NotificationPermission.granted(context)
 
     /** Post [title] and [body]; called on the engine's threads. */
     fun post(title: String, body: String) {

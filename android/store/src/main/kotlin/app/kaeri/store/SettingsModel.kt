@@ -60,6 +60,8 @@ object SettingsCatalog {
         SettingKey.SYNCPLAY, SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.ASK_WAS_OPENING, SettingKey.SHARE_SKIP_TIMES, SettingKey.SPOILER_PROTECTION,
         SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.TORRENTS_ON_CELLULAR, SettingKey.EPISODE_NOTIFICATIONS,
         SettingKey.ADULT_TITLES, SettingKey.EPISODE_DISCUSSIONS, SettingKey.COMMENT_IMAGES,
+        SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING, SettingKey.OPDS_FEED,
+        SettingKey.SERIES_CHOICES_FOLLOW, SettingKey.LOOK_FOLLOWS, SettingKey.CHAPTER_NOTIFICATIONS, SettingKey.DOWNLOADS_FINISHED,
     )
 
     /** The settings with two states, on and off, that a switch shows. */
@@ -89,6 +91,12 @@ object SettingsCatalog {
         SettingKey.DOWNLOAD_QUALITY -> listOf("standard", "higher").map { SettingOption(SettingValue.Str(it), it) }
         SettingKey.KEEP_NEXT_EPISODES -> listOf(0, 1, 2, 3, 5, 10)
             .map { SettingOption(SettingValue.Int(it.toLong()), if (it == 0) "off" else if (it == 1) "1 episode" else "$it episodes") }
+        SettingKey.NEW_CHAPTERS -> listOf("off", "reading").map { SettingOption(SettingValue.Str(it), it) }
+        SettingKey.WEBTOON_MODE -> listOf("strip", "paged").map { SettingOption(SettingValue.Str(it), it) }
+        SettingKey.SEND_PROGRESS_AFTER -> listOf("chapter", "close").map { SettingOption(SettingValue.Str(it), it) }
+        SettingKey.WHEN_TRACKERS_DISAGREE -> listOf("furthest", "latest").map { SettingOption(SettingValue.Str(it), it) }
+        SettingKey.COUNTS_AS_READ -> listOf("last-page", "moving-on", "marked").map { SettingOption(SettingValue.Str(it), it) }
+        SettingKey.OPEN_AT -> listOf("watch", "read").map { SettingOption(SettingValue.Str(it), it) }
         else -> if (isSwitch(key)) {
             listOf(SettingOption(SettingValue.Bool(false), "off"), SettingOption(SettingValue.Bool(true), "on"))
         } else {

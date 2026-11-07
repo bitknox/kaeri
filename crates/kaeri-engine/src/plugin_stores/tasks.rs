@@ -29,6 +29,9 @@ pub struct StoreTaskContext {
     host: Arc<dyn Host>,
     /// The local database, for telling the sync log which stores were joined and left.
     store: kaeri_store::Store,
+    /// Where an installed book source goes, while reading is available.
+    books: Option<crate::book_plugins::BookPlugins>,
+    book_sources: crate::read_sources::BookSources,
     tx: Outbox,
 }
 
@@ -179,6 +182,11 @@ impl StoreTaskContext {
         match self.stores.remove(&plugin).await {
             Ok(()) => {
                 self.registry.remove(&plugin);
+                // A book plugin stops being asked at once, with no restart.
+                if let Some(books) = &self.books {
+                    books.remove(&plugin);
+                }
+                self.book_sources.unload(&plugin);
                 // Titles on screen were listed with it: the engine lists them again.
                 let _ = self.tx.internal(crate::outbox::Internal::SourcesReordered);
                 self.send(Event::Providers(data::provider_rows(&self.registry, &self.stores)));
@@ -340,15 +348,36 @@ impl StoreTaskContext {
 
     /// Bring a just-installed plugin into the running chain, so it is usable without a restart.
     async fn load_installed(&self, name: &str, version: &str, path: &std::path::Path) {
-        if !sources::plugins_enabled(&self.config) {
+        let shows = sources::plugins_enabled(&self.config);
+        let unused = || {
             self.toast(Notice::info(Msg::Store(StoreMsg::PluginInstalledUnused {
                 plugin: name.to_owned(),
                 version: version.to_owned(),
-            })));
-            return;
+            })))
+        };
+        if !shows && self.books.is_none() {
+            return unused();
         }
-        match sources::load_plugin(&self.config, &self.http, &self.paths, path).await {
-            Ok(provider) => {
+        let loaded = sources::load_plugin(
+            &self.config,
+            &self.http,
+            &self.paths,
+            path,
+            self.books.is_some(),
+        )
+        .await;
+        match loaded {
+            Ok(sources::LoadedPlugin::Books(source)) => {
+                if let Some(books) = &self.books {
+                    books.put(source);
+                }
+                self.toast(Notice::info(Msg::Store(StoreMsg::PluginInstalled {
+                    plugin: name.to_owned(),
+                    version: version.to_owned(),
+                })));
+            }
+            Ok(sources::LoadedPlugin::Shows(_)) if !shows => unused(),
+            Ok(sources::LoadedPlugin::Shows(provider)) => {
                 // Only ever swaps a plugin for a plugin. Whatever the id, a store's download does
                 // not get to take a built-in source's place in the chain.
                 let id = provider.manifest().id.clone();
@@ -406,6 +435,8 @@ pub fn store_task<W, F>(
         paths: services.paths.clone(),
         host: services.host.clone(),
         store: services.store.clone(),
+        books: engine.reading.available.then(|| services.book_plugins.clone()),
+        book_sources: services.book_sources.clone(),
         tx: tx.clone(),
     };
     tokio::spawn(async move {

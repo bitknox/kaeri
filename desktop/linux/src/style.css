@@ -331,6 +331,17 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-arrow { min-width: 36px; min-height: 36px; padding: 0; color: var(--silk); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-rule); }
 .home-arrow:hover { background: var(--raised-selected); }
 .home-arrow:active { background: var(--rule); }
+
+/* Reading: a work's card, its track under the cover, the spotlight, the reader's ground. */
+progressbar.read-track { min-height: 3px; }
+progressbar.read-track trough { min-height: 3px; border-radius: 2px; background: var(--rule); }
+progressbar.read-track progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
+.read-card { padding: 2px; border-radius: 10px; }
+.read-card:hover { background: var(--raised-selected); }
+.read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
+.read-spotlight { padding: 12px 0 8px; }
+.reader-ground { background: var(--ground); }
+.strip-leaf { background: transparent; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }
 .home-week-time { font-size: 12px; font-weight: 600; color: var(--silk); }

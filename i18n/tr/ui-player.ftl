@@ -14,6 +14,7 @@ player-start-place = { $total } { -source } içinden { $place }
 player-start-pinned = Bu dizi için seçimin
 player-start-miss-no-match = { $name } bu diziye sahip değil
 player-start-miss-no-episode = { $name } bölüm { $episode } için yok
+player-start-pin-missed = { $name } henüz { $episode }. bölüme sahip değil. Başka bir { -source } ile oynatılıyor.
 player-start-miss-failed = { $name } yanıt vermedi
 player-start-miss-timed-out = { $name } çok uzun sürdü
 player-start-miss-skipped = { $name } atlandı

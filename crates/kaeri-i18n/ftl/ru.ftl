@@ -7198,6 +7198,9 @@ player-start-miss-no-match = У { $name } нет этого шоу
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = У { $name } нет серии { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = У { $name } пока нет серии { $episode }. Воспроизведение из следующего источник.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } не ответил
 
@@ -8713,9 +8716,6 @@ settings-artwork-detail = Указание авторства в разделе 
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Новые серии
-
-# Line under it.
-settings-new-episodes-detail = Для сериалов из списка «Смотрю»
 
 # Line explaining what a notification says.
 settings-notify-detail = Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.

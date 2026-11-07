@@ -27,6 +27,7 @@ mod party;
 mod player;
 mod portal;
 mod prefs;
+mod reading;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]

@@ -91,6 +91,8 @@ pub struct Engine {
     /// reports are read off its socket: not behind the commands waiting, nor held up by an
     /// engine winding down, which waits on the player for the episode's last position.
     hosted: Arc<HostedPlayers>,
+    /// The novels open in a web view, read by its scheme handler without the actor.
+    novels: Arc<crate::reading::novel::NovelBooks>,
     /// Jobs numbered so far, here as well as in the actor so [`Self::send`] can say at once
     /// which number the actor will announce. The actor numbers the jobs it starts on its own
     /// from the same count: see [`Jobs`].
@@ -216,18 +218,25 @@ impl Engine {
             app_clients,
             device_label,
             handheld,
+            phone,
             device_kind,
             language,
             sources: given,
             background,
             set_aside,
+            reading,
+            edition,
             #[cfg(feature = "testing")]
             parts,
             #[cfg(feature = "testing")]
             cloud_test,
             #[cfg(feature = "testing")]
             free_space,
+            #[cfg(feature = "testing")]
+            book_source,
         } = options;
+        // Read before anything is written: no config file is a new install.
+        let new_install = !paths.config_file.exists();
         if background.prune {
             // Old logs, stale covers and the player's leftovers, off the critical path.
             {
@@ -249,6 +258,8 @@ impl Engine {
         }
 
         let own_chain = given.is_none();
+        // Book source plugins, loaded by the same background load while reading is available.
+        let book_plugins = crate::book_plugins::BookPlugins::default();
         let (registry, plugins_loading) = match given {
             Some(registry) => (registry, None),
             None => {
@@ -263,6 +274,7 @@ impl Engine {
                     config.clone(),
                     http.clone(),
                     paths.clone(),
+                    reading.then(|| book_plugins.clone()),
                 );
                 (registry, Some(loading))
             }
@@ -287,7 +299,14 @@ impl Engine {
                     http.clone(),
                 );
                 let local = crate::local::Local::new(store.clone());
+                let book_sources = crate::read_sources::BookSources::new(
+                    store.clone(),
+                    kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
+                    http.plain().clone(),
+                    &paths,
+                );
                 Services {
+                    book_sources,
                     tokens: kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
                     syncing: Default::default(),
                     servers,
@@ -315,6 +334,8 @@ impl Engine {
                     fixture_route: parts.fixture_route,
                     party: Default::default(),
                     skip_find: Default::default(),
+                    book_plugins: Default::default(),
+                    novels: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
@@ -330,7 +351,7 @@ impl Engine {
         // The player a play opens, mpv's process or the one the front end hosts, and the app's
         // own sign-in clients, where signing in will read them (E6).
         // And what a store joined with an invite calls this device unless told otherwise.
-        let stores = services.stores.labelled(&device_label);
+        let stores = services.stores.labelled(&device_label).reading(reading);
         #[cfg(feature = "testing")]
         let room_for_prints = free_space;
         #[cfg(not(feature = "testing"))]
@@ -346,8 +367,13 @@ impl Engine {
             app_clients,
             stores,
             skip_find,
+            book_plugins,
             ..services
         };
+        #[cfg(feature = "testing")]
+        if let Some(source) = book_source {
+            services.book_sources.registry.put(source);
+        }
         #[cfg(feature = "testing")]
         if let Some(test) = cloud_test {
             services.syncing.cloud.use_test(test);
@@ -355,6 +381,7 @@ impl Engine {
         services.servers.join_chain(&services.registry, &config);
         services.local.put_source(&services.registry, &config.providers.order);
         let hosted = Arc::clone(&services.hosted);
+        let novels = Arc::clone(&services.novels);
         #[cfg(feature = "cast")]
         let casts = Arc::clone(&services.casts);
 
@@ -368,6 +395,22 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
+        state.config.set_phone(phone);
+        let account = {
+            use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
+            let store = &services.store;
+            store.sync_regs(MEDIUM_ACCOUNT).ok().and_then(|regs| {
+                let (key, value) = regs.into_iter().next()?;
+                Some((value, store.sync_reg_writer(MEDIUM_ACCOUNT, &key).ok().flatten()))
+            })
+        };
+        state.reading = crate::reading::ReadingState::at_launch(
+            reading,
+            edition,
+            state.config.effective().reading.kaeri_is_for.as_deref(),
+            account.as_ref().map(|(answer, writer)| (answer.as_str(), writer.clone())),
+            new_install,
+        );
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]
@@ -456,7 +499,7 @@ impl Engine {
         }
 
         crate::syncing::keep_syncing(&services, &inbox.sender());
-        for tracker in services.sync.initial_states() {
+        for tracker in services.sync.states_shown(state.reading.answer()) {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }
         // Home's first screen goes first: AniList's background work waits for it.
@@ -553,6 +596,7 @@ impl Engine {
             stops: stops_tx,
             jobs,
             hosted,
+            novels,
             #[cfg(feature = "cast")]
             casts,
             this_device,
@@ -560,6 +604,17 @@ impl Engine {
             sent: AtomicU64::new(0),
         };
         Ok((engine, EventStream { launch, checking, live }))
+    }
+
+    /// A web view's request for a file of the open novel: the scheme handler's answer, read on
+    /// the caller's thread. `None` for a URL that is no book's.
+    pub fn book_resource(&self, url: &str) -> Option<kaeri_model::reader::BookResource> {
+        self.novels.resource(url)
+    }
+
+    /// The open novels, for a scheme handler that keeps them apart from the engine.
+    pub fn novels(&self) -> Arc<crate::reading::novel::NovelBooks> {
+        Arc::clone(&self.novels)
     }
 
     /// Hand the engine a command, and say which job it starts, for work someone waits on.
@@ -1077,6 +1132,15 @@ impl Actor {
                 let tx = self.inbox.sender();
                 let said = handle_internal(message, &mut self.state, &self.services, &tx).await;
                 said.into_iter().for_each(|said| self.pass_on(said));
+                // Sends left waiting for Wi-Fi when the engine last stopped start again, each
+                // as a job of its own, as queued chapter downloads do.
+                if message == Internal::LetGo {
+                    for again in crate::export::held_sends(&self.state, &self.services) {
+                        let again = Command::Reading(again);
+                        let job = again.activity().map(|activity| (self.jobs.next(), activity));
+                        self.route(job, again);
+                    }
+                }
                 #[cfg(feature = "testing")]
                 if self.trace {
                     let _ = self.out.send(Out::Handled(message));
@@ -3227,6 +3291,1150 @@ mod tests {
                 SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId },
                 "Google's desktop client is no use without its secret"
             );
+        }
+    }
+
+    /// Chapter downloads through the commands the apps send, on a fake book source.
+    #[cfg(feature = "testing")]
+    mod book_downloads {
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        use async_trait::async_trait;
+        use kaeri_core::{
+            ProviderError,
+            books::{
+                BookHints, BookSourceKind, BookSourceManifest, ChapterContent, ChapterId,
+                PageRef, SeriesDetail, SeriesHit, SourceChapter, WorkId,
+            },
+            media::Medium,
+            traits::{BookSource, PageError},
+        };
+        use kaeri_model::reading::{
+            BookDownloadsView, ChapterDownloadState, DownloadPick, ReadingCommand,
+            ReadingEvent, ReadingFailure,
+        };
+
+        use super::*;
+
+        const WORK: &str = "a:900601";
+
+        /// A source whose second chapter waits for the test before its pages arrive.
+        struct Gated {
+            manifest: BookSourceManifest,
+            published: i64,
+            held: AtomicBool,
+        }
+
+        #[async_trait]
+        impl BookSource for Gated {
+            fn manifest(&self) -> &BookSourceManifest {
+                &self.manifest
+            }
+
+            async fn search(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SeriesHit>, ProviderError> {
+                Ok(Vec::new())
+            }
+
+            async fn series(
+                &self,
+                id: &str,
+                _: &BookHints,
+            ) -> Result<SeriesDetail, ProviderError> {
+                Ok(SeriesDetail::new(id, "The Lantern Ferry"))
+            }
+
+            async fn chapters(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SourceChapter>, ProviderError> {
+                Ok((1..=5)
+                    .map(|n| {
+                        let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
+                        chapter.published = Some(self.published);
+                        chapter
+                    })
+                    .collect())
+            }
+
+            async fn content(
+                &self,
+                _: &str,
+                chapter: &str,
+            ) -> Result<ChapterContent, ProviderError> {
+                Ok(ChapterContent::Images(
+                    (1..=2)
+                        .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
+                        .collect(),
+                ))
+            }
+
+            async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+                while self.held.load(Ordering::SeqCst) && page.url.contains("/2/") {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                let mut bytes = vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
+                bytes.extend_from_slice(&[0; 64]);
+                Ok(bytes)
+            }
+        }
+
+        /// The downloads the engine says once `done` accepts them, asked for again until then.
+        async fn downloads_until(
+            engine: &Engine,
+            events: &mut EventStream,
+            done: impl Fn(&BookDownloadsView) -> bool,
+        ) -> BookDownloadsView {
+            let mut last = None;
+            for _ in 0..500 {
+                engine.send(Command::Reading(ReadingCommand::LoadDownloads));
+                let batch = events.next_events().await;
+                for event in batch {
+                    if let Event::Reading(ReadingEvent::Downloads(view)) = event {
+                        if done(&view) {
+                            return view;
+                        }
+                        last = Some(view);
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            panic!("the downloads never came to it, the last being {last:?}");
+        }
+
+        fn states(view: &BookDownloadsView) -> Vec<(String, ChapterDownloadState)> {
+            let mut rows: Vec<_> = view
+                .rows
+                .iter()
+                .map(|r| (r.chapter.id.as_str().to_owned(), r.state.clone()))
+                .collect();
+            rows.sort_by(|a, b| a.0.cmp(&b.0));
+            rows
+        }
+
+        fn done_ids(view: &BookDownloadsView) -> Vec<String> {
+            states(view)
+                .into_iter()
+                .filter(|(_, s)| *s == ChapterDownloadState::Done)
+                .map(|(id, _)| id)
+                .collect()
+        }
+
+        /// Wait for the store to come to `done`: commands without an answer land in it.
+        async fn store_until(
+            store: &kaeri_store::Store,
+            done: impl Fn(&kaeri_store::Store) -> bool,
+        ) {
+            for _ in 0..500 {
+                if done(store) {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+            panic!("the store never came to it");
+        }
+
+        #[tokio::test]
+        async fn a_series_no_source_holds_lists_its_files_and_one_with_nothing_says_why() {
+            use kaeri_store::{
+                reading::ReadEvent,
+                shelf::{LocalSeries, ShelfFile},
+            };
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let books = dir.path().join("books");
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                let series = LocalSeries {
+                    id: "s1".into(),
+                    folder: books.display().to_string(),
+                    name: "The Lantern Keeper".into(),
+                    medium: "manga".into(),
+                    work: Some(WORK.into()),
+                    state: "matched".into(),
+                };
+                o.store.put_local_series(&series).unwrap();
+                for n in 1..=2 {
+                    let file = ShelfFile {
+                        path: books.join(format!("Chapter {n}.cbz")).display().to_string(),
+                        chapter: None,
+                        label: format!("Chapter {n}"),
+                        volume: None,
+                        number_milli: Some(n * 1000),
+                        format: "cbz".into(),
+                        pages: Some(19),
+                        comicinfo: None,
+                        source: None,
+                    };
+                    o.store.put_local_file("s1", &file, 1, 1).unwrap();
+                }
+                let mut read = ReadEvent::new(WORK, "1", kaeri_store::now() - 5);
+                read.completed = true;
+                o.store.record_read(&read, Vec::new()).unwrap();
+            })
+            .await;
+            events.launch().await;
+            let chapters = |events: Vec<Event>| {
+                events.into_iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
+                        Some((volumes, failure))
+                    }
+                    _ => None,
+                })
+            };
+
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: WorkId::new(WORK),
+                edition: None,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let (volumes, failure) = chapters(seen).unwrap();
+            assert_eq!(failure, None, "the files answer");
+            let rows: Vec<_> = volumes.iter().flat_map(|v| &v.chapters).collect();
+            let line = |n: usize| rows[n].line.iter().map(Msg::id).collect::<Vec<_>>();
+            assert_eq!(rows.len(), 2);
+            assert_eq!(line(0), ["reading-row-read", "reading-ago-now"]);
+            assert_eq!(line(1), ["reading-row-pages"], "a file says how long it is");
+
+            // Neither a source nor a file: the sheet hears why, not silence.
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: WorkId::new("a:900699"),
+                edition: None,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let (volumes, failure) = chapters(seen).unwrap();
+            assert!(volumes.is_empty());
+            assert_eq!(failure, Some(ReadingFailure::NotFound));
+        }
+
+        #[tokio::test]
+        async fn read_again_puts_a_series_on_rereading_and_its_undo_puts_the_list_back() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                o.store.adopt_read(WORK, "5", None, 1).unwrap();
+                o.store.set_read_status(WORK, Some("completed"), 1).unwrap();
+                kept = Some(o.store.clone());
+            })
+            .await;
+            events.launch().await;
+            let store = kept.unwrap();
+            let status = |store: &kaeri_store::Store| store.read_status(WORK).unwrap().0;
+            let read =
+                |store: &kaeri_store::Store| store.read_marks(WORK).unwrap().is_read("3");
+            assert!(read(&store));
+
+            engine
+                .send(Command::Reading(ReadingCommand::ReadAgain { work: WorkId::new(WORK) }));
+            store_until(&store, |s| status(s).as_deref() == Some("rereading")).await;
+            assert!(!read(&store), "fresh marks");
+
+            engine.send(Command::Reading(ReadingCommand::UndoReadAgain {
+                work: WorkId::new(WORK),
+            }));
+            store_until(&store, |s| status(s).as_deref() == Some("completed")).await;
+            assert!(read(&store), "the old marks are back");
+        }
+
+        #[tokio::test]
+        async fn download_cancel_delete_and_download_new_run_through_the_engine() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(true),
+            });
+            let held = Arc::clone(&source);
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            engine.send(network(false, false));
+            let work = WorkId::new(WORK);
+            let ids =
+                |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
+
+            // The list is kept, which is what Updates reads.
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: work.clone(),
+                edition: None,
+            }));
+            seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Chapters { .. }))
+            })
+            .await;
+            let none = downloads_until(&engine, &mut events, |_| true).await;
+            assert!(none.rows.is_empty());
+
+            // Three chapters asked for: the first lands, the second waits on its pages, the
+            // third is queued behind it.
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["1", "2", "3"]) },
+            }));
+            let view = downloads_until(&engine, &mut events, |v| {
+                let s = states(v);
+                s.len() == 3
+                    && s[0].1 == ChapterDownloadState::Done
+                    && matches!(s[1].1, ChapterDownloadState::Downloading { .. })
+                    && s[2].1 == ChapterDownloadState::Queued
+            })
+            .await;
+            assert_eq!(done_ids(&view), ["1"]);
+
+            // Cancelling the queued one leaves the finished and the fetching.
+            engine.send(Command::Reading(ReadingCommand::DownloadCancel {
+                work: work.clone(),
+                chapters: ids(&["3"]),
+            }));
+            let view = downloads_until(&engine, &mut events, |v| v.rows.len() == 2).await;
+            assert_eq!(states(&view)[0].0, "1");
+
+            // The second arrives; deleting the first removes its file and row.
+            held.held.store(false, Ordering::SeqCst);
+            let view =
+                downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2"]).await;
+            assert_eq!(view.meter.chapters, 2);
+            engine.send(Command::Reading(ReadingCommand::DownloadDelete {
+                work: work.clone(),
+                chapters: ids(&["1"]),
+            }));
+            let view = downloads_until(&engine, &mut events, |v| v.rows.len() == 1).await;
+            assert_eq!(done_ids(&view), ["2"]);
+
+            // What came out and is unread, queued in one go.
+            engine.send(Command::Reading(ReadingCommand::DownloadNew));
+            let view = downloads_until(&engine, &mut events, |v| done_ids(v).len() == 5).await;
+            assert_eq!(view.meter.chapters, 5);
+            engine.shutdown().await;
+        }
+
+        /// A made-up comic archive of `pages` generated pages.
+        fn comic_file(path: &std::path::Path, pages: u32) {
+            use kaeri_books::write::CbzWriter;
+            let mut w = CbzWriter::new(std::fs::File::create(path).unwrap(), None).unwrap();
+            for n in 0..pages {
+                let image = image::RgbImage::from_fn(200, 300, |x, y| {
+                    image::Rgb([(x ^ y) as u8, n as u8, (x * 3 + y) as u8])
+                });
+                let mut out = std::io::Cursor::new(Vec::new());
+                image.write_to(&mut out, image::ImageFormat::Png).unwrap();
+                w.add_page(&out.into_inner()).unwrap();
+            }
+            w.finish().unwrap();
+        }
+
+        async fn store_waits(what: &str, done: impl Fn() -> bool) {
+            for _ in 0..500 {
+                if done() {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            panic!("{what} never happened");
+        }
+
+        #[tokio::test]
+        async fn send_to_e_reader_runs_through_the_engine() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                for (chapter, pages) in [("1", 2), ("2", 2), ("3", 30)] {
+                    let path = dir.path().join(format!("{chapter}.cbz"));
+                    comic_file(&path, pages);
+                    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                        work: WORK,
+                        chapter,
+                        source_id: "shelf",
+                        version_label: None,
+                        keep_ready: false,
+                    };
+                    o.store.queue_book_download(&ask, now).unwrap();
+                    let id = o.store.book_downloads(Some(WORK)).unwrap().last().unwrap().id;
+                    o.store
+                        .book_download_done(
+                            id,
+                            &path.display().to_string(),
+                            Some(pages),
+                            10,
+                            now,
+                        )
+                        .unwrap();
+                }
+                kept = Some(o.store.clone());
+            })
+            .await;
+            let store = kept.unwrap();
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let ids =
+                |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
+
+            // The targets are engine data.
+            engine.send(Command::Reading(ReadingCommand::LoadExportTargets));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportTargets(_)))
+            })
+            .await;
+            let targets = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportTargets(t)) => Some(t.clone()),
+                    _ => None,
+                })
+                .unwrap();
+            assert!(targets.iter().any(|t| t.id == "kobo" && t.width_px == 1264));
+
+            // A send is a job: progress, then the files.
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["1", "2"]) },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }))
+            })
+            .await;
+            assert!(seen.iter().any(|e| matches!(e, Event::JobStarted { .. })));
+            assert!(seen.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportProgress { total: 4, .. })
+            )));
+            let files = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            assert_eq!(files.len(), 1);
+            assert!(
+                files[0].name.ends_with(".cbz")
+                    && std::path::Path::new(&files[0].path).exists()
+            );
+
+            // A send that is cancelled leaves no files and never says it is ready.
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: work.clone(),
+                pick: DownloadPick::Chapters { ids: ids(&["3"]) },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let mut all = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. }))
+            })
+            .await;
+            let job = all
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportProgress { job, .. }) => Some(*job),
+                    _ => None,
+                })
+                .unwrap();
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            all.extend(
+                seen_until(&mut events, |e| matches!(e, Event::JobDone(j) if *j == job)).await,
+            );
+            assert!(!all.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+            )));
+            assert!(!dir.path().join("data/exports").join(job.get().to_string()).exists());
+
+            // After sharing, the answer to where you stopped becomes a ReadAdopt.
+            engine.send(Command::Reading(ReadingCommand::Shared {
+                work: work.clone(),
+                chapters: ids(&["1", "2"]),
+                target: "kobo".into(),
+            }));
+            store_waits("the send being kept", || store.pending_sent(WORK).unwrap().is_some())
+                .await;
+            engine.send(Command::Reading(ReadingCommand::StoppedAt {
+                work: work.clone(),
+                chapter: Some(ChapterId::new("2")),
+                page: None,
+            }));
+            store_waits("the answer being kept", || {
+                store.read_marks(WORK).unwrap().is_read("2")
+            })
+            .await;
+            assert!(store.read_marks(WORK).unwrap().is_read("1"));
+            assert!(!store.read_marks(WORK).unwrap().is_read("3"));
+            assert!(store.pending_sent(WORK).unwrap().is_none());
+            engine.shutdown().await;
+        }
+
+        /// A source with real page images, whose second page of every chapter waits for the
+        /// test while `held`.
+        struct Pages {
+            manifest: BookSourceManifest,
+            held: AtomicBool,
+            fetched: std::sync::atomic::AtomicUsize,
+        }
+
+        impl Pages {
+            /// How many pages were fetched so far.
+            fn fetched(&self) -> usize {
+                self.fetched.load(Ordering::SeqCst)
+            }
+        }
+
+        #[async_trait]
+        impl BookSource for Pages {
+            fn manifest(&self) -> &BookSourceManifest {
+                &self.manifest
+            }
+
+            async fn search(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SeriesHit>, ProviderError> {
+                Ok(Vec::new())
+            }
+
+            async fn series(
+                &self,
+                id: &str,
+                _: &BookHints,
+            ) -> Result<SeriesDetail, ProviderError> {
+                Ok(SeriesDetail::new(id, "The Lantern Ferry"))
+            }
+
+            async fn chapters(
+                &self,
+                _: &str,
+                _: &BookHints,
+            ) -> Result<Vec<SourceChapter>, ProviderError> {
+                Ok((1..=3)
+                    .map(|n| {
+                        let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
+                        chapter.published = Some(kaeri_store::now() - 3_600);
+                        chapter
+                    })
+                    .collect())
+            }
+
+            async fn content(
+                &self,
+                _: &str,
+                chapter: &str,
+            ) -> Result<ChapterContent, ProviderError> {
+                Ok(ChapterContent::Images(
+                    (1..=2)
+                        .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
+                        .collect(),
+                ))
+            }
+
+            async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+                self.fetched.fetch_add(1, Ordering::SeqCst);
+                while self.held.load(Ordering::SeqCst) && page.url.ends_with("/2") {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                let image = image::RgbImage::from_fn(200, 300, |x, y| {
+                    image::Rgb([(x ^ y) as u8, 7, (x * 3 + y) as u8])
+                });
+                let mut out = std::io::Cursor::new(Vec::new());
+                image.write_to(&mut out, image::ImageFormat::Png).unwrap();
+                Ok(out.into_inner())
+            }
+        }
+
+        fn pages_source(held: bool) -> Arc<Pages> {
+            Arc::new(Pages {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                held: AtomicBool::new(held),
+                fetched: Default::default(),
+            })
+        }
+
+        /// Every folder under the exports and the downloads that a send or a download left.
+        fn leftovers(dir: &std::path::Path) -> Vec<String> {
+            let mut found = Vec::new();
+            for sub in ["data/exports", "data/book-downloads"] {
+                let Ok(entries) = std::fs::read_dir(dir.join(sub)) else { continue };
+                for entry in entries.flatten() {
+                    found.push(format!("{sub}/{}", entry.file_name().to_string_lossy()));
+                }
+            }
+            found
+        }
+
+        #[tokio::test]
+        async fn send_fetches_what_is_not_downloaded_and_stops_when_cancelled() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = pages_source(false);
+            let held = Arc::clone(&source);
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                // Chapter 1 is one the person downloaded.
+                let path = dir.path().join("downloaded-1.cbz");
+                comic_file(&path, 2);
+                let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                    work: WORK,
+                    chapter: "1",
+                    source_id: "shelf",
+                    version_label: None,
+                    keep_ready: false,
+                };
+                o.store.queue_book_download(&ask, now).unwrap();
+                let id = o.store.book_downloads(Some(WORK)).unwrap()[0].id;
+                o.store
+                    .book_download_done(id, &path.display().to_string(), Some(2), 10, now)
+                    .unwrap();
+                o.book_source = Some(source);
+                kept = Some(o.store.clone());
+            })
+            .await;
+            let store = kept.unwrap();
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let ids =
+                |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
+            let prepare = |list: &[&str]| {
+                Command::Reading(ReadingCommand::Prepare {
+                    work: work.clone(),
+                    pick: DownloadPick::Chapters { ids: ids(list) },
+                    target: "kobo".into(),
+                    format: kaeri_model::reading::ExportFormat::Cbz,
+                })
+            };
+
+            // One downloaded chapter and one not: both are sent, the second fetched for the
+            // send alone.
+            engine.send(network(false, false));
+            engine.send(prepare(&["1", "2"]));
+            let seen = seen_until(&mut events, |e| {
+                matches!(
+                    e,
+                    Event::Reading(
+                        ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. }
+                    )
+                )
+            })
+            .await;
+            let files = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("the send failed: {seen:?}"));
+            assert_eq!(files.len(), 1);
+            let book = kaeri_books::open(
+                std::path::Path::new(&files[0].path),
+                &kaeri_books::Limits::default(),
+            )
+            .unwrap();
+            let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+            assert_eq!(comic.pages().len(), 4);
+            // Progress covered the fetching and the preparing on one scale.
+            assert!(seen.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportProgress { total: 200, .. })
+            )));
+            // The fetched chapter is not a download, and no file of it is left.
+            let rows = store.book_downloads(Some(WORK)).unwrap();
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].chapter, "1");
+            let left = leftovers(dir.path());
+            assert!(
+                left.iter().all(|l| !l.ends_with("-fetch") && !l.contains("book-downloads")),
+                "{left:?}"
+            );
+
+            // Cancelled while the second chapter's pages are coming: nothing is sent, nothing
+            // is kept, and the fetch stops.
+            held.held.store(true, Ordering::SeqCst);
+            engine.send(prepare(&["1", "2", "3"]));
+            let mut all = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. }))
+            })
+            .await;
+            let job = all
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportProgress { job, .. }) => Some(*job),
+                    _ => None,
+                })
+                .unwrap();
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            held.held.store(false, Ordering::SeqCst);
+            all.extend(
+                seen_until(&mut events, |e| matches!(e, Event::JobDone(j) if *j == job)).await,
+            );
+            assert!(!all.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+            )));
+            let rows = store.book_downloads(Some(WORK)).unwrap();
+            assert_eq!(rows.len(), 1, "a send adds no downloads");
+            let left = leftovers(dir.path());
+            assert!(
+                left.iter().all(|l| !l.ends_with("-fetch") && !l.contains("book-downloads")),
+                "{left:?}"
+            );
+            engine.shutdown().await;
+        }
+
+        /// An engine for sending, with chapter 1 downloaded the first time it stands up on
+        /// `store`, and that store to look into.
+        async fn send_engine(
+            dir: &std::path::Path,
+            store: Option<kaeri_store::Store>,
+        ) -> (Engine, EventStream, kaeri_store::Store) {
+            let (engine, events, store, _) = launch_engine(dir, store).await;
+            (engine, events, store)
+        }
+
+        /// [`send_engine`], with its source too, to count what it fetched.
+        async fn launch_engine(
+            dir: &std::path::Path,
+            store: Option<kaeri_store::Store>,
+        ) -> (Engine, EventStream, kaeri_store::Store, Arc<Pages>) {
+            let host = Arc::new(QuietHost::in_dir(&dir.join("tokens")));
+            let source = pages_source(false);
+            let lent = Arc::clone(&source);
+            let mut kept = None;
+            let (engine, events) = engine_with(dir, host, |o| {
+                // Launch takes the sends left waiting as the app's launch does.
+                o.background.keep_next = true;
+                o.reading = true;
+                o.book_source = Some(lent);
+                if let Some(store) = store {
+                    o.store = store;
+                } else {
+                    let now = kaeri_store::now();
+                    o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                    o.store
+                        .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                        .unwrap();
+                    o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                    let path = dir.join("downloaded-1.cbz");
+                    comic_file(&path, 2);
+                    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                        work: WORK,
+                        chapter: "1",
+                        source_id: "shelf",
+                        version_label: None,
+                        keep_ready: false,
+                    };
+                    o.store.queue_book_download(&ask, now).unwrap();
+                    let id = o.store.book_downloads(Some(WORK)).unwrap()[0].id;
+                    o.store
+                        .book_download_done(id, &path.display().to_string(), Some(2), 10, now)
+                        .unwrap();
+                }
+                kept = Some(o.store.clone());
+            })
+            .await;
+            (engine, events, kept.unwrap(), source)
+        }
+
+        fn send_of(list: &[&str]) -> Command {
+            Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters {
+                    ids: list.iter().map(|c| ChapterId::new(*c)).collect(),
+                },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            })
+        }
+
+        fn network(cellular: bool, offline: bool) -> Command {
+            Command::NetworkPath { cellular, constrained: false, offline }
+        }
+
+        fn send_ended(e: &Event) -> bool {
+            matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+            )
+        }
+
+        /// The send that waits, and what it said, once it says so.
+        async fn waiting(events: &mut EventStream) -> (JobId, Vec<Event>) {
+            let seen = seen_until(events, |e| {
+                send_ended(e) || matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. }))
+            })
+            .await;
+            let job = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line }) => {
+                    assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+                    assert_eq!(
+                        *line,
+                        Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 })
+                    );
+                    Some(*job)
+                }
+                _ => None,
+            });
+            (job.unwrap_or_else(|| panic!("the send did not wait: {seen:?}")), seen)
+        }
+
+        /// How many pages the files of a finished send hold, by its job.
+        fn pages_sent(seen: &[Event]) -> Option<(JobId, usize)> {
+            seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                    let book = kaeri_books::open(
+                        std::path::Path::new(&files[0].path),
+                        &kaeri_books::Limits::default(),
+                    )
+                    .unwrap();
+                    let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+                    Some((*job, comic.pages().len()))
+                }
+                _ => None,
+            })
+        }
+
+        fn kept_waiting(store: &kaeri_store::Store) -> bool {
+            store.get_meta_text("export:held").unwrap().is_some()
+        }
+
+        /// Once a send is kept as waiting.
+        async fn until_kept(store: &kaeri_store::Store) {
+            for _ in 0..500 {
+                if kept_waiting(store) {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+            panic!("the send was never kept as waiting");
+        }
+
+        /// What the engine said up to a look at the downloads, asked for after what was sent.
+        async fn said_so_far(engine: &Engine, events: &mut EventStream) -> Vec<Event> {
+            engine.send(Command::Reading(ReadingCommand::LoadDownloads));
+            seen_until(events, |e| matches!(e, Event::Reading(ReadingEvent::Downloads(_))))
+                .await
+        }
+
+        fn said_waiting(e: &Event) -> bool {
+            matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. }))
+        }
+
+        #[tokio::test]
+        async fn at_launch_a_send_with_chapters_to_fetch_waits_for_the_network_to_be_said() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // Downloaded chapters need no network, so they go before anything says it.
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+
+            // One to fetch: nothing has said the network, which may be cellular, so the send
+            // waits, and says nothing about Wi-Fi yet.
+            engine.send(send_of(&["1", "2"]));
+            until_kept(&store).await;
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(!seen.iter().any(|e| send_ended(e) || said_waiting(e)), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+
+            // Cellular keeps it waiting, for Wi-Fi now.
+            engine.send(network(true, false));
+            let (job, seen) = waiting(&mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+
+            // Wi-Fi starts it, and it is sent whole.
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen), Some((job, 4)), "{seen:?}");
+            assert!(source.fetched() > 0);
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn at_launch_downloads_wait_for_the_network_to_be_said() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            let counted = |state: ChapterDownloadState| {
+                move |v: &BookDownloadsView| {
+                    states(v).iter().filter(|(_, s)| *s == state).count() == 2
+                }
+            };
+
+            // Nothing has said the network, which may be cellular: the chapters only queue.
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters {
+                    ids: ["2", "3"].iter().map(|c| ChapterId::new(*c)).collect(),
+                },
+            }));
+            downloads_until(&engine, &mut events, counted(ChapterDownloadState::Queued)).await;
+            assert_eq!(source.fetched(), 0);
+
+            // Cellular keeps them waiting, for Wi-Fi now.
+            engine.send(network(true, false));
+            downloads_until(&engine, &mut events, counted(ChapterDownloadState::WaitsForWifi))
+                .await;
+            assert_eq!(source.fetched(), 0);
+
+            // Wi-Fi starts them.
+            engine.send(network(false, false));
+            downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2", "3"]).await;
+            assert_eq!(source.fetched(), 4);
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn on_cellular_a_send_with_chapters_to_fetch_waits_for_wifi_and_goes_on() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // Downloaded chapters need no network: they go at once.
+            engine.send(network(true, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+
+            // One to fetch: the whole send waits for Wi-Fi, says so, and fails in no way.
+            engine.send(send_of(&["1", "2"]));
+            let (job, seen) = waiting(&mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert!(kept_waiting(&store), "kept, in case the engine stops");
+
+            // On Wi-Fi it goes on by itself, and is sent whole.
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen), Some((job, 4)), "{seen:?}");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn a_send_waiting_for_wifi_is_cancelled_and_leaves_nothing() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            let (job, _) = waiting(&mut events).await;
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            let seen =
+                seen_until(&mut events, |e| matches!(e, Event::JobDone(j) if *j == job)).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert!(!kept_waiting(&store));
+            let left = leftovers(dir.path());
+            assert!(left.iter().all(|l| !l.ends_with("-fetch")), "{left:?}");
+            assert_eq!(store.book_downloads(Some(WORK)).unwrap().len(), 1, "no download added");
+
+            // Wi-Fi coming back starts nothing.
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(seen.iter().filter(|e| send_ended(e)).count(), 1, "{seen:?}");
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn with_no_network_at_all_a_send_with_chapters_to_fetch_fails_as_offline() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            let offline = |seen: &[Event]| {
+                seen.iter().any(|e| {
+                    matches!(
+                        e,
+                        Event::Reading(ReadingEvent::Failed {
+                            failure: ReadingFailure::Offline,
+                            ..
+                        })
+                    )
+                })
+            };
+
+            engine.send(network(false, true));
+            engine.send(send_of(&["1", "2"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(offline(&seen), "{seen:?}");
+
+            // A send waiting for Wi-Fi fails the same way once the network is gone.
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.send(network(false, true));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(offline(&seen), "{seen:?}");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn a_send_left_waiting_starts_again_at_the_next_launch() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.shutdown().await;
+            assert!(kept_waiting(&store), "still kept after the engine stopped");
+
+            // The next launch asks for it again, as a job of its own. It waits until the
+            // network is said, and on Wi-Fi it is sent.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
+            let started = seen.iter().find_map(|e| match e {
+                Event::JobStarted { job, .. } => Some(*job),
+                _ => None,
+            });
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+            assert!(kept_waiting(&store));
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));
+            assert_eq!((Some(job), pages), (started, 4));
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[cfg(feature = "opds-feed")]
+        #[tokio::test]
+        async fn the_feed_password_is_kept_in_the_secure_store_not_the_config() {
+            use kaeri_core::settings::SettingValue;
+            use kaeri_model::settings::SettingKey;
+            use kaeri_track::{TokenStore, secret::Backend};
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+            const PASSWORD: &str = "made-up-feed-password";
+            let dir = tempfile::tempdir().unwrap();
+            // The file storage `KAERI_TOKEN_STORAGE=file` picks: a 0600 file under tokens/.
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let (engine, mut events) =
+                engine_with(dir.path(), host, |o| o.reading = true).await;
+            events.launch().await;
+            engine.send(Command::SetSetting {
+                key: SettingKey::OpdsPassword,
+                value: SettingValue::Str(PASSWORD.into()),
+            });
+            engine.send(Command::SetSetting {
+                key: SettingKey::OpdsFeed,
+                value: SettingValue::Bool(true),
+            });
+            let seen = seen_until(
+                &mut events,
+                |e| matches!(e, Event::Reading(ReadingEvent::Feed(v)) if v.on),
+            )
+            .await;
+            let view = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Feed(v)) if v.on => Some(v.clone()),
+                    _ => None,
+                })
+                .unwrap();
+            assert!(view.password_set);
+
+            // The store has it; the config file says only that one is set.
+            let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+            assert_eq!(tokens.get("opds-feed").unwrap(), PASSWORD);
+            let config = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
+            assert!(!config.contains(PASSWORD), "{config}");
+            assert!(config.contains("password_set = true"), "{config}");
+
+            // And the feed signs in with it.
+            for (password, status) in [(PASSWORD, "200"), ("wrong", "401")] {
+                use base64::Engine as _;
+                let auth = base64::engine::general_purpose::STANDARD
+                    .encode(format!("reader:{password}"));
+                let mut stream =
+                    tokio::net::TcpStream::connect(("127.0.0.1", view.port)).await.unwrap();
+                let request = format!(
+                    "GET /opds HTTP/1.1\r\nHost: feed.example\r\nAuthorization: Basic {auth}\r\nConnection: close\r\n\r\n"
+                );
+                stream.write_all(request.as_bytes()).await.unwrap();
+                let mut reply = String::new();
+                stream.read_to_string(&mut reply).await.unwrap();
+                assert!(reply.starts_with(&format!("HTTP/1.1 {status}")), "{reply}");
+            }
+
+            // Clearing it forgets it and stops the feed.
+            engine.send(Command::SetSetting {
+                key: SettingKey::OpdsPassword,
+                value: SettingValue::Str(String::new()),
+            });
+            seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::Feed(v)) if !v.on && !v.password_set)
+            })
+            .await;
+            // A store of its own, since this one remembers what it read.
+            let fresh = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+            assert!(fresh.get("opds-feed").is_err());
+            engine.shutdown().await;
         }
     }
 }

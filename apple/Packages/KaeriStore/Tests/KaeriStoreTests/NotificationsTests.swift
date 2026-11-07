@@ -213,6 +213,9 @@ private final class CountingCentre: NoticeCentre, @unchecked Sendable {
     }
     func cancel(_ identifiers: [String]) async { await quiet.cancel(identifiers) }
     func registerCategories() {}
+    func post(identifier: String, title: String, body: String) async {
+        await quiet.post(identifier: identifier, title: title, body: body)
+    }
 }
 
 private func ledger() -> NoticeLedger {

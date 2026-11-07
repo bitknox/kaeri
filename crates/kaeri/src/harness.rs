@@ -137,6 +137,8 @@ pub struct Options {
     /// How AniList's queued work is paced, or `None` for not at all: see
     /// [`kaeri_meta::Pacing`].
     pub pacing: Option<kaeri_meta::Pacing>,
+    /// Launch without saying the network, where the terminal says Wi-Fi as it starts.
+    pub network_unsaid: bool,
 }
 
 impl Default for Options {
@@ -156,6 +158,7 @@ impl Default for Options {
             digest: false,
             slow: Vec::new(),
             pacing: None,
+            network_unsaid: false,
         }
     }
 }
@@ -316,6 +319,9 @@ impl Harness {
         }
         let (engine, mut events) =
             Engine::start(start, host.clone()).await.expect("the engine starts");
+        if !options.network_unsaid {
+            engine.send(crate::tui::run::network_at_launch());
+        }
         // What launch says, applied as the loop applies it before its first frame: the stores,
         // the chain and the trackers on their rows.
         for update in events.launch().await {
@@ -677,6 +683,8 @@ impl Harness {
             Internal::SourcesReordered => self.trace.push("SourcesReordered"),
             // What it leads to, it says: keep next's rows on the queue.
             Internal::SourcesChanged | Internal::LetGo | Internal::SyncEffects => {}
+            // The TUI does not read: the reader's wakes come to nothing here.
+            Internal::Reader { .. } | Internal::ReadingSynced => {}
         }
     }
 
@@ -812,6 +820,10 @@ pub fn name(update: &Event) -> &'static str {
         Event::LicensedReturn(_) => "LicensedReturn",
         Event::Server(_) => "Server",
         Event::Local(_) => "Local",
+        Event::Reading(_) => "Reading",
+        Event::Reader(_) => "Reader",
+        Event::BookSources(_) => "BookSources",
+        Event::Medium(_) => "Medium",
         Event::RecentSearches(_) => "RecentSearches",
         Event::CalendarWindow { .. } => "CalendarWindow",
         Event::CalendarBackfill { .. } => "CalendarBackfill",
@@ -979,6 +991,10 @@ fn copy(update: &Event) -> Event {
         Event::LicensedReturn(back) => Event::LicensedReturn(back.clone()),
         Event::Server(event) => Event::Server(event.clone()),
         Event::Local(event) => Event::Local(event.clone()),
+        Event::Reading(event) => Event::Reading(event.clone()),
+        Event::Reader(event) => Event::Reader(event.clone()),
+        Event::BookSources(event) => Event::BookSources(event.clone()),
+        Event::Medium(event) => Event::Medium(event.clone()),
         Event::RecentSearches(recent) => Event::RecentSearches(recent.clone()),
         Event::CalendarWindow {
             anchor,

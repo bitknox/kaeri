@@ -3,6 +3,7 @@
 package app.kaeri.app
 
 import app.kaeri.i18n.Strings
+import app.kaeri.eink.EinkModel
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.core.SettingValue
@@ -59,6 +61,10 @@ import app.kaeri.widgets.WidgetHost
 import app.kaeri.widgets.Widgets
 
 class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
+    // Below Android 13 the chosen language is the app's own to apply: notifications, widgets and
+    // the engine's words read it from here.
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(app.kaeri.store.AppLanguage.wrap(base))
+
     /** Where the store's work runs: the main thread, for as long as the process. */
     private val scope = MainScope() + kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
         // A coroutine that fails in the store is logged; it does not take the process with it.
@@ -124,6 +130,9 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val notifier: Notifier by lazy { Notifier(this) }
 
+    /** The e-ink profile the engine makes from this device's facts, and the questions it leaves. */
+    val eink: EinkModel by lazy { EinkModel(store::send).also { it.bind(store) } }
+
     override val episodeNotifier: EpisodeNotifier by lazy { EpisodeNotifier(this) }
 
     /** What the home-screen widgets show, as the engine last made it. */
@@ -166,6 +175,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         super.onCreate()
         // Every process draws the widgets again when a record lands: the app's, and one started
         // for the background check alone.
+        // Do Not Disturb a reader left on when its process died goes at every start.
+        app.kaeri.reader.phone.QuietPhone(this).clearStale()
         widgetKeeper.follow(scope)
         scope.launch { Widgets.publishPreviews(this@KaeriApp) }
         // Whether a widget is placed, which keeps the background check, as the app starts.
@@ -213,6 +224,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
             }
         } else {
             store.start(launch, host(), prepare)
+        }
+        // The screen's facts before the first screen, and again for each engine started since.
+        scope.launch {
+            store.phase.filter { it == AppStore.Phase.Running }.collect { eink.sendFacts(this@KaeriApp, Flavour.wideColourGamut, Flavour.einkSupport) }
         }
         // A profile switched to: remembered, and the engine started again on it.
         store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }

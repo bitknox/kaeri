@@ -74,6 +74,8 @@ public struct StartingWalk: Equatable, Sendable {
     var missed: Missed?
     var resting: [String] = []
     var from: String?
+    /// The pinned source that did not have the episode, once another source answered.
+    var pinMissed: String?
     var attempt = 0
     var streams = 0
     var noVideo = false
@@ -127,6 +129,8 @@ public struct StartingWalk: Equatable, Sendable {
         case .sourceMissed(let name, let miss):
             missed = Missed(name: name, miss: miss)
             finish(.missed, title: Self.missLine(name: name, miss: miss, episode: episode), at: now)
+        case .pinMissed(let name):
+            pinMissed = name
         case .sourcesResting(let names):
             resting = names
             add(.resting, title: L.playerStartResting.prefixed(by: names.joined(separator: ", ")), at: now)
@@ -298,6 +302,7 @@ public struct StartingWalk: Equatable, Sendable {
         case .peers(let name):
             if let name { facts.append(L.playerStartFrom(name: name)) }
         case .opening, .buffering:
+            if let pinMissed { facts.append(L.playerStartPinMissed(name: pinMissed, episode: episode)) }
             if noVideo { facts.append(L.playerStartNoVideo) }
             if let peers {
                 facts.append(L.playerStartPeers(count: peers))

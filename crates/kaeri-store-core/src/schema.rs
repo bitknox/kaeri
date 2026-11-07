@@ -80,6 +80,12 @@ pub const MIGRATIONS: &[&[&str]] = &[
             SELECT id, used_by, used_at FROM invites
             WHERE used_at IS NOT NULL AND used_by IS NOT NULL",
     ],
+    // 4: book sources. A plugin's kind, `shows` or `books`, and a book source's media as a
+    // JSON list. Every plugin published before is a show source.
+    &[
+        "ALTER TABLE plugins ADD COLUMN kind TEXT NOT NULL DEFAULT 'shows'",
+        "ALTER TABLE plugins ADD COLUMN media TEXT NOT NULL DEFAULT '[]'",
+    ],
 ];
 
 /// The version this code takes a database to.

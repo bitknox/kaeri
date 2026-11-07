@@ -62,6 +62,8 @@ pub async fn preview(
         config.clone(),
         http.clone(),
         paths.clone(),
+        // A still frame of the show screens: no book sources.
+        None,
     );
     let plugin_note = plugins.await.ok().flatten();
     // As the file's too: a still frame shows a `--theme` as the saved choice, as it always has.

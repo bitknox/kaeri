@@ -529,6 +529,43 @@ pub fn user_library() -> String {
     )
 }
 
+/// The authenticated user's manga and novel lists, with only what a tracker sync reads: the
+/// entry's state and the title's id and format, so a pull costs one light request.
+pub const USER_READ_LIBRARY: &str = r"query ($userId: Int) {
+    MediaListCollection(userId: $userId, type: MANGA) {
+        lists {
+            entries {
+                id
+                status
+                progress
+                progressVolumes
+                score(format: POINT_10_DECIMAL)
+                updatedAt
+                media { id format }
+            }
+        }
+    }
+}";
+
+/// Write the chapters and volumes read, and the status and score, of one manga or novel.
+/// AniList refuses a fraction here in validation, so callers send whole numbers.
+pub const SAVE_READ_PROGRESS: &str = r"
+    mutation ($mediaId: Int, $progress: Int, $progressVolumes: Int, $status: MediaListStatus, $scoreRaw: Int) {
+        SaveMediaListEntry(mediaId: $mediaId, progress: $progress, progressVolumes: $progressVolumes, status: $status, scoreRaw: $scoreRaw) {
+            id
+            progress
+            progressVolumes
+            status
+        }
+    }
+";
+
+/// The signed-in viewer's list entry for one manga or novel, by its media id: the entry id a
+/// removal takes, or a null entry when it is not on their list.
+pub const READ_LIST_ENTRY: &str = r"query ($id: Int) {
+    Media(id: $id, type: MANGA) { mediaListEntry { id } }
+}";
+
 /// The signed-in user: their id, for library queries, and the title language they read AniList
 /// in, so a front end can put romaji, English or native first as they do there.
 pub const VIEWER: &str = r"query { Viewer { id name options { titleLanguage } } }";
@@ -728,6 +765,9 @@ mod tests {
             ("last_aired", LAST_AIRED.to_string()),
             ("aired_since", AIRED_SINCE.to_string()),
             ("user_library", user_library()),
+            ("user_read_library", USER_READ_LIBRARY.to_string()),
+            ("save_read_progress", SAVE_READ_PROGRESS.to_string()),
+            ("read_list_entry", READ_LIST_ENTRY.to_string()),
             ("viewer", VIEWER.to_string()),
             ("save_progress", SAVE_PROGRESS.to_string()),
             ("delete_entry", DELETE_ENTRY.to_string()),

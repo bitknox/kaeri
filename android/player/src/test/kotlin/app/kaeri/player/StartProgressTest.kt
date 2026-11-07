@@ -14,6 +14,15 @@ class StartProgressTest {
     private fun asking(place: UInt = 1u, total: UInt = 3u) = StartStep.AskingSource("Alpha", place, total, false)
 
     @Test
+    fun aPassedOverPinIsInTheFactsOnceTheStreamsAreFound() {
+        val found = StartStep.Found(1u, "Gamma", 1080u, app.kaeri.engine.core.Translation.SUB)
+        val p = start().heard(asking(), null, 0).heard(StartStep.PinMissed("Alpha"), null, 2_000)
+        assertNull(p.trail.firstOrNull { it.step is StartStep.Found })
+        val said = p.heard(found, Msg.StartOpeningStream, 2_000)
+        assertTrue(said.trail.any { it.step is StartStep.PinMissed })
+    }
+
+    @Test
     fun aLineStaysSixHundredMillisecondsBeforeTheNextOneReplacesIt() {
         val p = start()
             .heard(StartStep.LookingUpTitle, Msg.StartLookingUpTitle, 0)

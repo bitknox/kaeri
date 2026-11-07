@@ -6988,6 +6988,9 @@ player-start-miss-no-match = { $name } tidak punya serial ini
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } tidak punya episode { $episode }
 
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } belum punya episode { $episode }. Diputar dari sumber lain.
+
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } tidak merespons
 
@@ -8473,9 +8476,6 @@ settings-artwork-detail = Atribusi ada di pemberitahuan aplikasi
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Episode baru
-
-# Line under it.
-settings-new-episodes-detail = Untuk serial di daftar Menonton Anda
 
 # Line explaining what a notification says.
 settings-notify-detail = Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.

@@ -113,6 +113,9 @@ val LocalUserMarks = compositionLocalOf { UserMarks() }
 /** How faint an episode no source lists is drawn. */
 private const val UNSOURCED_ALPHA = 0.55f
 
+/** How wide, in pixels, a hidden still is drawn below Android 12, to stand for its 6 dp blur. */
+private const val SPOILER_SOFT_PIXELS = 12
+
 /** "24 min", from the row's duration. */
 internal fun minutes(context: Context, row: EpisodeRow): String? =
     row.durationSecs?.let { Strings.timeMinutes(context, maxOf(1, (it.toDouble() / 60).roundToInt())) }
@@ -362,11 +365,15 @@ internal fun EpisodeStill(entry: Entry, row: EpisodeRow, hidden: Boolean, unaire
             Crossfade(hidden, animationSpec = Motion.reveal(), label = "still") { blurred -> // i18n-skip
                 if (blurred) {
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
+                        // Below Android 12, which cannot blur, the still is drawn a few pixels wide
+                        // and spread, which hides as much.
                         ArtworkImage(
                             still,
                             plate = null,
                             maxPixelSize = 160,
-                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.15f; scaleY = 1.15f }.blur(6.dp),
+                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.15f; scaleY = 1.15f }
+                                .let { if (canBlur) it.blur(6.dp) else it },
+                            softenTo = if (canBlur) null else SPOILER_SOFT_PIXELS,
                         )
                         Icon(
                             Icons.Hidden,

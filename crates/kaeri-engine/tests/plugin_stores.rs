@@ -422,3 +422,94 @@ async fn an_invite_for_a_group_names_each_joiner_and_says_why_it_stopped() {
         Msg::Store(StoreMsg::StoreInviteUsedUp { owners: "Owner".into() })
     );
 }
+
+/// The reference book source, built.
+fn book_component() -> Option<PathBuf> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../plugins/example-books/target/wasm32-wasip2/release/kaeri_example_books_plugin.wasm",
+    );
+    if path.exists() {
+        Some(path)
+    } else if std::env::var_os("KAERI_REQUIRE_PLUGINS").is_some() {
+        panic!(
+            "{} is not built, and KAERI_REQUIRE_PLUGINS is set.\n  cargo build --release \
+             --target wasm32-wasip2 --manifest-path plugins/example-books/Cargo.toml",
+            path.display()
+        );
+    } else {
+        eprintln!("skipping: {} is not built.", path.display());
+        None
+    }
+}
+
+#[tokio::test]
+async fn a_book_source_is_published_and_installed_only_where_reading_is_available() {
+    use kaeri_core::media::Medium;
+    const BOOKS: &str = "example-books";
+    let Some(wasm) = book_component() else { return };
+    let root = tempfile::tempdir().unwrap();
+
+    let (listener, addr) = server::bind("127.0.0.1:0".parse().unwrap()).await.unwrap();
+    let base = format!("http://{addr}");
+    let store =
+        server::open(&Storage::Dir(root.path().join("store")), Some(&base), Some("Ours"))
+            .await
+            .unwrap();
+    let owner_invite = store.fresh_owner_invite(&base, server::now()).await.unwrap().unwrap();
+    let inspector = WasmInspector::new(kaeri_plugin::Limits::default(), None).unwrap();
+    let server = Arc::new(Server::new(
+        store,
+        Some(base.clone()),
+        Some(Box::new(inspector)),
+        None,
+        false,
+    ));
+    tokio::spawn(server::serve(listener, server, None, std::future::pending()));
+
+    // An owner who reads, with the book source dropped into their plugin directory.
+    let (owner_paths, owner) = stores(&root.path().join("owner"));
+    let owner = owner.reading(true);
+    std::fs::create_dir_all(owner_paths.plugin_dir()).unwrap();
+    std::fs::write(
+        owner_paths.plugin_dir().join(format!("{BOOKS}.wasm")),
+        std::fs::read(&wasm).unwrap(),
+    )
+    .unwrap();
+    let joined = owner.join(&owner_invite.link(), None).await.unwrap();
+    let local = owner.local_plugins(&joined.id).await.unwrap();
+    assert_eq!(local.len(), 1);
+    assert!(local[0].books);
+    assert_eq!(local[0].media, [Medium::Manga, Medium::Novel]);
+
+    let entry = owner.publish(&joined.id, BOOKS).await.unwrap();
+    assert!(entry.is_books(), "listed as a book source: {entry:?}");
+    assert_eq!(entry.media, ["manga", "novel"]);
+    let installed =
+        std::fs::read(owner_paths.plugin_dir().join(format!("{BOOKS}.wasm"))).unwrap();
+    let carried = kaeri_plugin_store::manifest::read(&installed).unwrap().unwrap();
+    assert!(carried.is_books(), "the stamp says what it is");
+
+    // A member on a device without reading: the store's book source is not there for them.
+    let invite = owner.invite(&joined.id, Some("Alex".into())).await.unwrap();
+    let (_, watcher) = stores(&root.path().join("watcher"));
+    watcher.join(&invite.link.0, None).await.unwrap();
+    assert!(watcher.rows().unwrap()[0].plugins.is_empty());
+    assert!(watcher.install(&joined.id, BOOKS).await.is_err());
+
+    // A member who reads sees it as a book source, installs it, and what landed loads as one.
+    let invite = owner.invite(&joined.id, Some("Sam".into())).await.unwrap();
+    let (reader_paths, reader) = stores(&root.path().join("reader"));
+    let reader = reader.reading(true);
+    reader.join(&invite.link.0, None).await.unwrap();
+    let rows = reader.rows().unwrap();
+    let listed = &rows[0].plugins[0];
+    assert!(listed.books);
+    assert_eq!(listed.media, [Medium::Manga, Medium::Novel]);
+    assert_eq!(listed.status, StorePluginStatus::Available);
+    let (_, path) = reader.install(&joined.id, BOOKS).await.unwrap();
+    assert_eq!(path, reader_paths.plugin_dir().join(format!("{BOOKS}.wasm")));
+    let host = kaeri_plugin::PluginHost::new(kaeri_plugin::Limits::default(), None).unwrap();
+    let loaded = host.load_book(&path).await.unwrap();
+    assert_eq!(loaded.id(), BOOKS);
+    assert_eq!(reader.rows().unwrap()[0].plugins[0].status, StorePluginStatus::Installed);
+}

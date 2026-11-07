@@ -1792,6 +1792,7 @@
     <string name="player_start_pinned">Tu elección para esta serie</string>
     <string name="player_start_miss_no_match">%1$s no tiene esta serie</string>
     <string name="player_start_miss_no_episode">%1$s no tiene el episodio %2$s</string>
+    <string name="player_start_pin_missed">%1$s aún no tiene el episodio %2$s. Se reproduce desde otra fuente.</string>
     <string name="player_start_miss_failed">%1$s no respondió</string>
     <string name="player_start_miss_timed_out">%1$s tardó demasiado</string>
     <string name="player_start_miss_skipped">Omitiste %1$s</string>
@@ -2325,7 +2326,6 @@
     <string name="settings_artwork">Arte bajo CC BY-NC</string>
     <string name="settings_artwork_detail">Atribución en los avisos de la app</string>
     <string name="settings_new_episodes">Nuevos episodios</string>
-    <string name="settings_new_episodes_detail">Para series de tu lista Viendo</string>
     <string name="settings_notify_detail">Un aviso cuando sale un episodio de una serie que sigues: el nombre de la serie y el número del episodio, nunca el título del episodio. Una serie puede desactivarlo en sus ajustes.</string>
     <string name="settings_coming_up">Próximamente · 7 días</string>
     <string name="settings_system_notifications">Ajustes de notificaciones</string>

@@ -31,6 +31,9 @@ pub async fn store_command(command: Subcommand, paths: &Paths) -> Result<()> {
         Subcommand::Plugin(PluginCommand::Stamp(args)) => {
             kaeri_store_server::stamp(&args, Some(&cache)).await.map(|info| {
                 println!("stamped {} {}", info.id, info.version);
+                if info.is_books() {
+                    println!("  a source of   books ({})", info.media.join(", "));
+                }
                 println!(
                     "  may contact   {}",
                     if info.allowed_hosts.is_empty() {

@@ -534,7 +534,9 @@ pub fn set_watched(
                 kaeri_core::traits::TrackOp::SetProgress { anilist_id: id, episode: reached };
             // Signed-in trackers only, like a finished episode: the default Kitsu
             // entry has no account behind it until someone signs in.
-            for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+            for tracker in
+                sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+            {
                 let _ = store.enqueue(tracker.id(), &op, now);
             }
         }

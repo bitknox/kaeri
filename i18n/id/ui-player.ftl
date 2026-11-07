@@ -14,6 +14,7 @@ player-start-place = { $place } dari { $total } { -source-pl }
 player-start-pinned = Pilihanmu untuk serial ini
 player-start-miss-no-match = { $name } tidak punya serial ini
 player-start-miss-no-episode = { $name } tidak punya episode { $episode }
+player-start-pin-missed = { $name } belum punya episode { $episode }. Diputar dari { -source } lain.
 player-start-miss-failed = { $name } tidak merespons
 player-start-miss-timed-out = { $name } terlalu lama
 player-start-miss-skipped = Kamu melewati { $name }

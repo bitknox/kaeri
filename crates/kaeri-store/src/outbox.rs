@@ -14,6 +14,8 @@
 
 use kaeri_core::{ids::AnilistId, traits::TrackOp};
 
+use rusqlite::OptionalExtension;
+
 use crate::{Result, Store, StoreError};
 
 /// Base delay for the retry backoff, in seconds.
@@ -74,6 +76,9 @@ impl Store {
         let anilist_id = op.anilist_id().get();
         let payload = serde_json::to_string(op)
             .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+        if op.is_reading() {
+            return self.enqueue_read(tracker_id, op, &payload, at);
+        }
 
         self.with_personal_tx(|tx| {
             if let TrackOp::SetProgress { episode, .. } = op {
@@ -122,6 +127,247 @@ impl Store {
                 rusqlite::params![tracker_id, &payload, anilist_id, at],
             )?;
             Ok(Some(tx.last_insert_rowid()))
+        })
+    }
+
+    /// Queue reading progress that takes a tracker's count down, when the person chose that the
+    /// latest change wins: whatever progress is queued for the title gives way to it.
+    pub fn requeue_read_progress(
+        &self,
+        tracker_id: &str,
+        op: &TrackOp,
+        at: i64,
+    ) -> Result<Option<i64>> {
+        if !matches!(op, TrackOp::SetReadProgress { .. })
+            || op.anilist_id().is_own()
+            || op.anilist_id() == kaeri_core::demo::DEMO_ANILIST_ID
+        {
+            return self.enqueue(tracker_id, op, at);
+        }
+        self.with_personal(|c| {
+            c.execute(
+                "DELETE FROM read_outbox
+                  WHERE tracker_id = ?1 AND anilist_id = ?2
+                    AND json_extract(op, '$.op') = 'set_read_progress'",
+                rusqlite::params![tracker_id, op.anilist_id().get()],
+            )?;
+            Ok(())
+        })?;
+        self.enqueue(tracker_id, op, at)
+    }
+
+    /// Queue a reading op in its own outbox. Chapters and volumes only move forward: a queued
+    /// progress takes the higher of each, and one that raises neither is dropped.
+    fn enqueue_read(
+        &self,
+        tracker_id: &str,
+        op: &TrackOp,
+        payload: &str,
+        at: i64,
+    ) -> Result<Option<i64>> {
+        let anilist_id = op.anilist_id().get();
+        self.with_personal_tx(|tx| {
+            if let TrackOp::SetReadProgress { anilist_id: id, chapter, volume } = op {
+                let existing: Option<(i64, String)> = tx
+                    .query_row(
+                        "SELECT id, op FROM read_outbox
+                          WHERE tracker_id = ?1 AND anilist_id = ?2
+                            AND json_extract(op, '$.op') = 'set_read_progress'
+                          LIMIT 1",
+                        rusqlite::params![tracker_id, anilist_id],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )
+                    .optional()?;
+                if let Some((existing_id, existing_json)) = existing {
+                    let pending: TrackOp = serde_json::from_str(&existing_json)
+                        .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+                    let (held_chapter, held_volume) = match pending {
+                        TrackOp::SetReadProgress { chapter, volume, .. } => (chapter, volume),
+                        _ => (0, None),
+                    };
+                    if *chapter <= held_chapter
+                        && volume.unwrap_or(0) <= held_volume.unwrap_or(0)
+                    {
+                        return Ok(None);
+                    }
+                    let merged = TrackOp::SetReadProgress {
+                        anilist_id: *id,
+                        chapter: (*chapter).max(held_chapter),
+                        volume: volume.max(&held_volume).or(held_volume),
+                    };
+                    let json = serde_json::to_string(&merged)
+                        .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
+                    tx.execute(
+                        "UPDATE read_outbox SET op = ?1 WHERE id = ?2",
+                        rusqlite::params![json, existing_id],
+                    )?;
+                    return Ok(Some(existing_id));
+                }
+            }
+            tx.execute(
+                "INSERT INTO read_outbox (tracker_id, op, anilist_id, created_at, next_retry)
+                 VALUES (?1, ?2, ?3, ?4, 0)",
+                rusqlite::params![tracker_id, payload, anilist_id, at],
+            )?;
+            Ok(Some(tx.last_insert_rowid()))
+        })
+    }
+
+    /// Drop every reading op still waiting for any tracker about one title: it came off the
+    /// lists, and a queued status or count would put it back. Says how many went.
+    pub fn forget_read_ops(&self, anilist_id: kaeri_core::ids::AnilistId) -> Result<usize> {
+        self.with_personal(|c| {
+            Ok(c.execute("DELETE FROM read_outbox WHERE anilist_id = ?1", [anilist_id.get()])?)
+        })
+    }
+
+    /// Reading ops waiting for a tracker, or for all of them.
+    pub fn read_outbox_depth(&self, tracker_id: Option<&str>) -> Result<u32> {
+        self.with_personal(|c| {
+            Ok(match tracker_id {
+                Some(t) => c.query_row(
+                    "SELECT COUNT(*) FROM read_outbox WHERE tracker_id = ?1",
+                    [t],
+                    |r| r.get(0),
+                )?,
+                None => c.query_row("SELECT COUNT(*) FROM read_outbox", [], |r| r.get(0))?,
+            })
+        })
+    }
+
+    /// The reading ops queued for a tracker, oldest first.
+    pub fn read_outbox(&self, tracker_id: &str) -> Result<Vec<TrackOp>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT op FROM read_outbox WHERE tracker_id = ?1 ORDER BY created_at, id",
+            )?;
+            let rows = stmt.query_map([tracker_id], |r| r.get::<_, String>(0))?;
+            let mut out = Vec::new();
+            for json in rows {
+                match serde_json::from_str(&json?) {
+                    Ok(op) => out.push(op),
+                    Err(e) => tracing::error!(error = %e, "an undecodable reading outbox row"),
+                }
+            }
+            Ok(out)
+        })
+    }
+
+    /// Reading ops due for sending, oldest first: [`Self::claim_ready`] for `read_outbox`.
+    pub fn claim_ready_read(
+        &self,
+        tracker_id: &str,
+        now: i64,
+        limit: u32,
+    ) -> Result<Vec<OutboxEntry>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT id, tracker_id, op, attempts, created_at
+                   FROM read_outbox
+                  WHERE tracker_id = ?1 AND next_retry <= ?2
+                  ORDER BY created_at ASC, id ASC
+                  LIMIT ?3",
+            )?;
+            let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
+                Ok((
+                    r.get::<_, i64>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, u32>(3)?,
+                    r.get::<_, i64>(4)?,
+                ))
+            })?;
+            let mut out = Vec::new();
+            let mut undecodable: Vec<i64> = Vec::new();
+            for row in rows {
+                let (id, tracker, json, attempts, created_at) = row?;
+                match serde_json::from_str(&json) {
+                    Ok(op) => out.push(OutboxEntry { id, tracker_id: tracker, op, attempts, created_at }),
+                    Err(e) => {
+                        tracing::error!(id, error = %e, "discarding an undecodable reading outbox row");
+                        undecodable.push(id);
+                    }
+                }
+            }
+            drop(stmt);
+            for id in undecodable {
+                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+            }
+            Ok(out)
+        })
+    }
+
+    /// Remove a reading op that was sent.
+    pub fn complete_read(&self, id: i64) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+            Ok(())
+        })
+    }
+
+    /// Record a failure of a reading op and schedule a retry, as [`Self::fail`] does.
+    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<()> {
+        self.with_personal(|c| {
+            let attempts = c
+                .query_row("SELECT attempts + 1 FROM read_outbox WHERE id = ?1", [id], |r| {
+                    r.get::<_, u32>(0)
+                })
+                .unwrap_or(1);
+            if attempts >= MAX_ATTEMPTS {
+                tracing::error!(id, attempts, %error, "giving up on a reading outbox operation");
+                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
+                return Ok(());
+            }
+            c.execute(
+                "UPDATE read_outbox
+                    SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
+                  WHERE id = ?5",
+                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Hold a reading op until it can be addressed or the tracker may be asked again at `until`.
+    /// With `None` it waits for [`Self::wake_deferred`], as a watching op waits for a mapping.
+    pub fn defer_read(&self, id: i64, reason: &str, until: Option<i64>) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute(
+                "UPDATE read_outbox SET next_retry = ?1, last_error = ?2 WHERE id = ?3",
+                rusqlite::params![until.unwrap_or(DEFERRED), reason, id],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Reading ops held for a mapping, for the Accounts screen.
+    pub fn read_outbox_deferred(&self, tracker_id: &str) -> Result<u32> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COUNT(*) FROM read_outbox WHERE tracker_id = ?1 AND next_retry = ?2",
+                rusqlite::params![tracker_id, DEFERRED],
+                |r| r.get(0),
+            )?)
+        })
+    }
+
+    /// The highest chapter queued for a work on a tracker, if any.
+    pub fn pending_read_progress(
+        &self,
+        tracker_id: &str,
+        anilist_id: AnilistId,
+    ) -> Result<Option<(u32, Option<u32>)>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT json_extract(op, '$.chapter'), json_extract(op, '$.volume')
+                   FROM read_outbox
+                  WHERE tracker_id = ?1 AND anilist_id = ?2
+                    AND json_extract(op, '$.op') = 'set_read_progress'
+                  LIMIT 1",
+                rusqlite::params![tracker_id, anilist_id.get()],
+                |r| Ok((r.get::<_, u32>(0)?, r.get::<_, Option<u32>>(1)?)),
+            )
+            .optional()?)
         })
     }
 
@@ -302,7 +548,11 @@ impl Store {
 /// [`Store::wake_deferred`] on a connection already held, so a mapping refresh can do it
 /// inside its own transaction.
 pub(crate) fn wake_deferred_in(c: &rusqlite::Connection) -> Result<usize> {
-    Ok(c.execute("UPDATE sync_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?)
+    let woken =
+        c.execute("UPDATE sync_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?;
+    // Reading's queue waits for the same news: a mapping that arrived.
+    c.execute("UPDATE read_outbox SET next_retry = 0 WHERE next_retry = ?1", [DEFERRED])?;
+    Ok(woken)
 }
 
 #[cfg(test)]
@@ -322,6 +572,28 @@ mod tests {
         let own = TrackOp::SetProgress { anilist_id: AnilistId::own(3), episode: 2 };
         assert_eq!(store.enqueue("anilist", &own, 0).unwrap(), None);
         assert!(store.enqueue("anilist", &progress(1), 0).unwrap().is_some());
+    }
+
+    #[test]
+    fn forgetting_a_title_drops_its_reading_ops_for_every_tracker_and_no_other() {
+        let store = Store::open_in_memory().unwrap();
+        let (gone, kept) = (AnilistId::new(900_401), AnilistId::new(900_402));
+        let read =
+            |id, chapter| TrackOp::SetReadProgress { anilist_id: id, chapter, volume: None };
+        let status = TrackOp::SetReadStatus {
+            anilist_id: gone,
+            status: WatchStatus::Current,
+            rereading: false,
+            at: 1,
+        };
+        for tracker in ["anilist", "mangaupdates"] {
+            store.enqueue(tracker, &read(gone, 4), 1).unwrap();
+            store.enqueue(tracker, &status, 1).unwrap();
+            store.enqueue(tracker, &read(kept, 2), 1).unwrap();
+        }
+        assert_eq!(store.forget_read_ops(gone).unwrap(), 4);
+        assert_eq!(store.read_outbox("anilist").unwrap(), [read(kept, 2)]);
+        assert_eq!(store.read_outbox_depth(None).unwrap(), 2);
     }
 
     #[test]
@@ -547,5 +819,34 @@ mod tests {
         for (expected, got) in ops.iter().zip(claimed.iter()) {
             assert_eq!(&got.op, expected);
         }
+    }
+
+    #[test]
+    fn reading_ops_wait_in_their_own_outbox_and_progress_only_rises() {
+        let store = Store::open_in_memory().unwrap();
+        let read = |chapter, volume| TrackOp::SetReadProgress {
+            anilist_id: HOSHIKUZU,
+            chapter,
+            volume,
+        };
+        store.enqueue("mal", &read(12, Some(2)), 0).unwrap();
+        assert_eq!(store.enqueue("mal", &read(10, Some(1)), 1).unwrap(), None);
+        store.enqueue("mal", &read(14, None), 2).unwrap();
+        store
+            .enqueue(
+                "mal",
+                &TrackOp::SetReadStatus {
+                    anilist_id: HOSHIKUZU,
+                    status: WatchStatus::Current,
+                    rereading: true,
+                    at: 3,
+                },
+                3,
+            )
+            .unwrap();
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
+        assert!(store.claim_ready("mal", 100, 10).unwrap().is_empty());
+        assert_eq!(store.read_outbox_depth(Some("mal")).unwrap(), 2);
+        assert_eq!(store.read_outbox("mal").unwrap()[0], read(14, Some(2)));
     }
 }

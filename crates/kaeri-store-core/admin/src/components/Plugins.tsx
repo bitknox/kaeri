@@ -7,6 +7,15 @@ import { Nagare } from './Nagare';
 import { Confirm, Facts, Row } from './Row';
 import { Section } from './Section';
 
+/** What a plugin is a source of, as its row says it. */
+export function sourceOf(plugin: IndexEntry): string {
+	if (plugin.kind !== 'books') return 'Shows';
+	const media = (plugin.media ?? []).map((medium) => MEDIA[medium] ?? medium);
+	return media.length ? `Books: ${media.join(', ')}` : 'Books';
+}
+
+const MEDIA: Record<string, string> = { manga: 'manga', novel: 'novels' };
+
 export function Plugins({
 	plugins,
 	act,
@@ -68,6 +77,7 @@ export function Plugins({
 						<h3>{plugin.name}</h3>
 						<Facts
 							items={[
+								['Source of', sourceOf(plugin)],
 								[
 									'May contact',
 									plugin.allowed_hosts.length ? (

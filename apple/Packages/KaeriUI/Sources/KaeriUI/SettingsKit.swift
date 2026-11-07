@@ -255,6 +255,22 @@ extension SettingKey {
         case .keepNextEpisodes: L.settingsKeepNext
         case .downloadsOnCellular: L.settingsDownloadCellular
         case .torrentsOnCellular: L.settingsTorrentsCellular
+        case .chapterDownloadsOnCellular: L.settingsChapterDownloadsCellular
+        case .keepChaptersReady: L.settingsKeepChaptersReady
+        case .deleteAfterReading: L.settingsDeleteAfterReading
+        case .opdsFeed: L.settingsOpdsFeed
+        case .opdsPassword: L.settingsOpdsPassword
+        case .opdsPort: L.settingsOpdsPort
+        case .seriesChoicesFollow: L.settingsModeFollows
+        case .lookFollows: L.settingsLookFollows
+        case .newChapters: L.settingsNewChaptersDownload
+        case .webtoonMode: L.settingsReaderWebtoons
+        case .sendProgressAfter: L.settingsSendProgressAfter
+        case .whenTrackersDisagree: L.settingsWhenTrackersDisagree
+        case .countsAsRead: L.settingsCountsRead
+        case .chapterNotifications: L.settingsChapterNotifications
+        case .downloadsFinished: L.settingsDownloadsFinished
+        case .openAt: L.settingsOpenAt
         case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel
         case .torrentsWhileCasting: L.castTorrentsLabel
@@ -331,6 +347,18 @@ extension SettingKey {
         case (_, "on"): return L.valueOn
         case (.upscaling, "natural · ArtCNN"): return L.settingsOptionNatural // i18n-skip: the engine's words
         case (.upscaling, "sharp · Anime4K"): return L.settingsOptionSharp // i18n-skip: the engine's words
+        case (.newChapters, "reading"): return L.settingsNewChaptersReading // i18n-skip: the engine's words
+        case (.webtoonMode, "strip"): return L.settingsReaderStrip // i18n-skip: the engine's words
+        case (.webtoonMode, "paged"): return L.settingsReaderPages // i18n-skip: the engine's words
+        case (.sendProgressAfter, "chapter"): return L.settingsProgressChapter // i18n-skip: the engine's words
+        case (.sendProgressAfter, "close"): return L.settingsProgressClose // i18n-skip: the engine's words
+        case (.whenTrackersDisagree, "furthest"): return L.settingsDisagreeFurthest // i18n-skip: the engine's words
+        case (.whenTrackersDisagree, "latest"): return L.settingsDisagreeLatest // i18n-skip: the engine's words
+        case (.countsAsRead, "last-page"): return L.settingsCountsReadValue // i18n-skip: the engine's words
+        case (.countsAsRead, "moving-on"): return L.settingsCountsReadMovingOn // i18n-skip: the engine's words
+        case (.countsAsRead, "marked"): return L.settingsCountsReadMarked // i18n-skip: the engine's words
+        case (.openAt, "watch"): return L.navWatch
+        case (.openAt, "read"): return L.navRead
         case (.downloadQuality, "standard"): return L.settingsOptionStandard
         case (.downloadQuality, "higher"): return L.settingsOptionHigher
         case (.theme, "adaptive"): return L.settingsOptionAdaptive

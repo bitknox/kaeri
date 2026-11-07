@@ -14,6 +14,7 @@ player-start-place = { $place } di { $total } { -source-pl }
 player-start-pinned = La tua scelta per questa serie
 player-start-miss-no-match = { $name } non ha questa serie
 player-start-miss-no-episode = { $name } non ha l'episodio { $episode }
+player-start-pin-missed = { $name } non ha ancora l'episodio { $episode }. Riproduzione dalla { -source } successiva.
 player-start-miss-failed = { $name } non ha risposto
 player-start-miss-timed-out = { $name } ha impiegato troppo tempo
 player-start-miss-skipped = Hai saltato { $name }

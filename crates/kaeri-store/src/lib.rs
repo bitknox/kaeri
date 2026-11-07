@@ -13,6 +13,9 @@
 
 pub mod airing_times;
 pub mod aniskip_outbox;
+pub mod book_catalog;
+pub mod book_downloads;
+pub mod book_sources;
 pub mod cache;
 pub mod dataset;
 pub mod download;
@@ -25,8 +28,10 @@ pub mod outbox;
 pub mod party_room;
 pub mod preference;
 pub mod profile;
+pub mod reading;
 pub mod schema;
 pub mod server_health;
+pub mod shelf;
 pub mod show_setting;
 pub mod skip_found;
 pub mod skip_mark;
