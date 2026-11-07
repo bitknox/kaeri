@@ -3,9 +3,12 @@
 package app.kaeri.ui.reading
 
 import androidx.compose.runtime.Composable
-import app.kaeri.engine.core.WorkId
+import androidx.compose.runtime.LaunchedEffect
 import app.kaeri.ui.AppActions
+import app.kaeri.ui.LocalAppStore
 
 @Composable
 internal fun ReadHomeScreen(actions: AppActions) {
+    val store = LocalAppStore.current
+    LaunchedEffect(Unit) { store.reading.loadHome() }
 }
