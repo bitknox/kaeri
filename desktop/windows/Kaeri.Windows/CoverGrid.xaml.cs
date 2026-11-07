@@ -20,7 +20,7 @@ public sealed partial class CoverGrid : UserControl
         set
         {
             if (value)
-                Items.Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = 16 };
+                Items.Layout = new StackLayout { Orientation = Orientation.Horizontal, Spacing = 0 };
         }
     }
 

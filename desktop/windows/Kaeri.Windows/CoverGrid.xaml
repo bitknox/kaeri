@@ -8,17 +8,19 @@
   <!-- A poster grid: covers 150 wide at 2:3, as many columns as fit with 16 between, the title in
        Zen Kaku 15/20 and one caption line in haze under each. The title keeps two lines
        whether it needs them or not, so every cell is one height and none is cut. -->
-  <ItemsView x:Name="Items" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="OnInvoked"
+  <!-- Each cell reaches 8 past its cover and words for the hover fill (HomeWording.HoverOutset),
+       and the grid reaches 8 past its place, so the covers line up with the page as before. -->
+  <ItemsView x:Name="Items" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="OnInvoked" Margin="-8"
              TabFocusNavigation="Once">
     <ItemsView.Layout>
-      <UniformGridLayout MinItemWidth="150" MinColumnSpacing="16" MinRowSpacing="20" ItemsJustification="Start" />
+      <UniformGridLayout MinItemWidth="166" MinColumnSpacing="0" MinRowSpacing="10" ItemsJustification="Start" />
     </ItemsView.Layout>
     <ItemsView.ItemTemplate>
       <DataTemplate x:DataType="local:CoverItem">
         <!-- The words are bound one way: a newer record of the same title changes them in the
              cell that stands, so nothing is made again. The menu is made as it opens. -->
         <ItemContainer AutomationProperties.Name="{x:Bind Name, Mode=OneWay}" CornerRadius="8" Tag="{x:Bind Id}" Loaded="OnCoverLoaded">
-          <StackPanel Width="150" Spacing="2" Padding="0,0,0,6">
+          <StackPanel Width="150" Spacing="2" Margin="8">
             <Grid Tag="cover" Width="150" Height="225" CornerRadius="{x:Bind local:Art.Corner(150)}" Background="{x:Bind Placeholder}" Margin="0,0,0,6">
               <Image Source="{x:Bind Cover, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" local:ArtFade.On="True" />
             </Grid>
