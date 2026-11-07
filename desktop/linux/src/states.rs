@@ -133,8 +133,8 @@ impl States {
         let show_downloads = gtk::Button::with_label(&t::state_offline_show_downloads());
         show_downloads.add_css_class("pill");
         show_downloads.set_halign(gtk::Align::Center);
-        show_downloads.set_action_name(Some("win.go"));
         show_downloads.set_action_target_value(Some(&"downloads".to_variant()));
+        show_downloads.set_action_name(Some("win.go"));
         let offline = adw::StatusPage::builder()
             .title(t::state_offline_title())
             .description(t::state_offline_detail())

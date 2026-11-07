@@ -1531,6 +1531,12 @@ title-linux-episode-watched = Episode { $episode } watched
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Nothing airs
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = List
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Downloaded chapters open without a connection.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Watch party status
 
@@ -1614,6 +1620,99 @@ discussion-like-named =
         [one] Like, one like
        *[other] Like, { $count } likes
     }
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Reader settings
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Opening the chapter
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = The next chapter isn't out yet
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = End of the series
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = The next chapter isn't downloaded
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = No next chapter in your sources yet
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Back to the series
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Couldn't open the chapter
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Reading mode
+
+linux-reader-fit = Fit
+
+linux-reader-crop-borders = Crop borders
+
+linux-reader-page-layout = Page layout
+
+linux-reader-background = Background
+
+linux-reader-look = Look
+
+linux-reader-font = Font
+
+linux-reader-text-size = Text size
+
+linux-reader-margins = Margins
+
+linux-reader-line-spacing = Line spacing
+
+linux-reader-justify = Justify text
+
+linux-reader-direction = Direction
+
+linux-reader-spreads = Wide pages
+
+linux-reader-strip-width = Strip width
+
+linux-reader-strip-gap = Image gap
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Height
+
+# Reading mode names.
+linux-reader-mode-paged = Paged
+
+linux-reader-mode-scrolled = Scroll
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Send to e-reader
+
+# Line under that title.
+linux-send-line = Pick the device. The next unread chapters are prepared as files that fit its screen.
+
+# Button that starts preparing the files.
+linux-send-prepare = Prepare files
+
+# Line while the files are prepared.
+linux-send-progress = Preparing { $done } of { $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Save to a folder
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Send to e-reader
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Novels can't open here
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox working.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Page { $page } of { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Pages
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
@@ -5431,6 +5530,27 @@ pad-button-left-stick = Left stick
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Right stick
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Turn the page
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Previous chapter
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Next chapter
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Show or hide the bar
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Reader settings
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Close the reader
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Reader
 
 # Checkbox of the close question.
 close-dont-ask = Don't ask again

@@ -4905,6 +4905,34 @@ object Strings {
     fun padButtonRightStick(context: Context): String =
         context.getString(R.string.pad_button_right_stick)
 
+    /** Controller help: the D-pad in the reader turns the page, the way the book reads. */
+    fun padHelpTurnPage(context: Context): String =
+        context.getString(R.string.pad_help_turn_page)
+
+    /** Controller help: the left shoulder button in the reader. */
+    fun padHelpPreviousChapter(context: Context): String =
+        context.getString(R.string.pad_help_previous_chapter)
+
+    /** Controller help: the right shoulder button in the reader. */
+    fun padHelpNextChapter(context: Context): String =
+        context.getString(R.string.pad_help_next_chapter)
+
+    /** Controller help: the A button in the reader shows or hides the bar with the title and settings. */
+    fun padHelpReaderBar(context: Context): String =
+        context.getString(R.string.pad_help_reader_bar)
+
+    /** Controller help: the menu button in the reader. */
+    fun padHelpReaderSettings(context: Context): String =
+        context.getString(R.string.pad_help_reader_settings)
+
+    /** Controller help: the B button in the reader. */
+    fun padHelpCloseReader(context: Context): String =
+        context.getString(R.string.pad_help_close_reader)
+
+    /** Heading in the controller help for the buttons in the reader. */
+    fun padHelpReader(context: Context): String =
+        context.getString(R.string.pad_help_reader)
+
     /** Checkbox of the close question. */
     fun closeDontAsk(context: Context): String =
         context.getString(R.string.close_dont_ask)

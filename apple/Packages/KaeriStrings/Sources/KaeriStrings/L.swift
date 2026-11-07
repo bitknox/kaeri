@@ -4855,6 +4855,27 @@ public enum L {
     /// Name of the controller's right stick, in the controller help.
     public static var padButtonRightStick: String { string("pad-button-right-stick", fallback: "Right stick") }
 
+    /// Controller help: the D-pad in the reader turns the page, the way the book reads.
+    public static var padHelpTurnPage: String { string("pad-help-turn-page", fallback: "Turn the page") }
+
+    /// Controller help: the left shoulder button in the reader.
+    public static var padHelpPreviousChapter: String { string("pad-help-previous-chapter", fallback: "Previous chapter") }
+
+    /// Controller help: the right shoulder button in the reader.
+    public static var padHelpNextChapter: String { string("pad-help-next-chapter", fallback: "Next chapter") }
+
+    /// Controller help: the A button in the reader shows or hides the bar with the title and settings.
+    public static var padHelpReaderBar: String { string("pad-help-reader-bar", fallback: "Show or hide the bar") }
+
+    /// Controller help: the menu button in the reader.
+    public static var padHelpReaderSettings: String { string("pad-help-reader-settings", fallback: "Reader settings") }
+
+    /// Controller help: the B button in the reader.
+    public static var padHelpCloseReader: String { string("pad-help-close-reader", fallback: "Close the reader") }
+
+    /// Heading in the controller help for the buttons in the reader.
+    public static var padHelpReader: String { string("pad-help-reader", fallback: "Reader") }
+
     /// Checkbox of the close question.
     public static var closeDontAsk: String { string("close-dont-ask", fallback: "Don't ask again") }
 

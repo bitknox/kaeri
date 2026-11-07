@@ -3763,6 +3763,34 @@
     <value>[Ŕîĝĥţ šţîçķ~~~~]</value>
     <comment>Name of the controller's right stick, in the controller help.</comment>
   </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>[Ţüŕñ ţĥé þàĝé~~~~]</value>
+    <comment>Controller help: the D-pad in the reader turns the page, the way the book reads.</comment>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>[Þŕéṽîöüš çĥàþţéŕ~~~~~]</value>
+    <comment>Controller help: the left shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>[Ñéẋţ çĥàþţéŕ~~~~]</value>
+    <comment>Controller help: the right shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>[Šĥöŵ öŕ ĥîðé ţĥé ƀàŕ~~~~~~]</value>
+    <comment>Controller help: the A button in the reader shows or hides the bar with the title and settings.</comment>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>[Ŕéàðéŕ šéţţîñĝš~~~~~]</value>
+    <comment>Controller help: the menu button in the reader.</comment>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>[Çļöšé ţĥé ŕéàðéŕ~~~~~]</value>
+    <comment>Controller help: the B button in the reader.</comment>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>[Ŕéàðéŕ~~]</value>
+    <comment>Heading in the controller help for the buttons in the reader.</comment>
+  </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>[Ðöñ'ţ àšķ àĝàîñ~~~~~]</value>
     <comment>Checkbox of the close question.</comment>

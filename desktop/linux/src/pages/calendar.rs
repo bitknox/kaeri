@@ -1076,8 +1076,8 @@ impl Page {
             entry.title,
             broadcast.spoken()
         ))]);
-        row.set_action_name(Some("win.open-title"));
         row.set_action_target_value(Some(&entry.id.get().to_variant()));
+        row.set_action_name(Some("win.open-title"));
         widgets::title_menu(&row, entry.id.get(), entry.list_status.is_none());
         row
     }
@@ -1126,8 +1126,8 @@ fn opens(cell: &gtk::Box, broadcast: &Broadcast) -> gtk::Widget {
     let button = gtk::Button::builder().child(cell).build();
     button.add_css_class("flat");
     button.add_css_class("broadcast");
-    button.set_action_name(Some("win.open-title"));
     button.set_action_target_value(Some(&id.to_variant()));
+    button.set_action_name(Some("win.open-title"));
     let tip = match broadcast.moved() {
         Some(moved) => format!("{}\n{moved}", entry.title),
         None => entry.title.clone(),

@@ -14,6 +14,8 @@ mod engine;
 mod fit;
 #[cfg(feature = "fixtures")]
 mod fixtures;
+#[cfg(feature = "fixtures")]
+mod fixtures_reading;
 mod flags;
 mod hub;
 mod matching;
@@ -27,8 +29,11 @@ mod party;
 mod player;
 mod portal;
 mod prefs;
+mod reading;
 mod say;
 mod shots;
+#[cfg(feature = "fixtures")]
+mod shots_reading;
 #[cfg(feature = "fixtures")]
 mod showcase;
 mod squeeze;

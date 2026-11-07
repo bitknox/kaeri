@@ -2350,6 +2350,16 @@ pub fn calendar_linux_day_empty() -> String {
     text("calendar-linux-day-empty", &[])
 }
 
+/// Accessible name of the reading Library's list menu, the button that says the list on screen.
+pub fn linux_read_library_list() -> String {
+    text("linux-read-library-list", &[])
+}
+
+/// Under No downloads on Downloads, Reading side.
+pub fn linux_read_downloads_empty() -> String {
+    text("linux-read-downloads-empty", &[])
+}
+
 /// Accessible label of the line that says how the watch party form is getting on.
 pub fn party_status() -> String {
     text("party-status", &[])
@@ -2468,6 +2478,171 @@ pub fn player_announce_undo(line: &str) -> String {
 /// Accessible name of a comment's like button: the word Like and how many likes it has.
 pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
+}
+
+/// Tooltip of the reader toolbar's settings button.
+pub fn linux_reader_settings_open() -> String {
+    text("linux-reader-settings-open", &[])
+}
+
+/// Line shown while a chapter opens, after the first moment.
+pub fn linux_reader_opening() -> String {
+    text("linux-reader-opening", &[])
+}
+
+/// End page heading when the next chapter is not out yet.
+pub fn linux_reader_end_not_out() -> String {
+    text("linux-reader-end-not-out", &[])
+}
+
+/// End page heading at the end of a finished series.
+pub fn linux_reader_end_finished() -> String {
+    text("linux-reader-end-finished", &[])
+}
+
+/// End page heading when the next chapter is not downloaded and the device is offline.
+pub fn linux_reader_end_offline() -> String {
+    text("linux-reader-end-offline", &[])
+}
+
+/// End page heading when no source has the next chapter.
+pub fn linux_reader_end_no_source() -> String {
+    text("linux-reader-end-no-source", &[])
+}
+
+/// Button on the end page that goes back to the series page.
+pub fn linux_reader_back_to_series() -> String {
+    text("linux-reader-back-to-series", &[])
+}
+
+/// Heading of the error when a chapter would not open.
+pub fn linux_reader_chapter_failed() -> String {
+    text("linux-reader-chapter-failed", &[])
+}
+
+/// Names of the reader settings in its popover.
+pub fn linux_reader_reading_mode() -> String {
+    text("linux-reader-reading-mode", &[])
+}
+
+pub fn linux_reader_fit() -> String {
+    text("linux-reader-fit", &[])
+}
+
+pub fn linux_reader_crop_borders() -> String {
+    text("linux-reader-crop-borders", &[])
+}
+
+pub fn linux_reader_page_layout() -> String {
+    text("linux-reader-page-layout", &[])
+}
+
+pub fn linux_reader_background() -> String {
+    text("linux-reader-background", &[])
+}
+
+pub fn linux_reader_look() -> String {
+    text("linux-reader-look", &[])
+}
+
+pub fn linux_reader_font() -> String {
+    text("linux-reader-font", &[])
+}
+
+pub fn linux_reader_text_size() -> String {
+    text("linux-reader-text-size", &[])
+}
+
+pub fn linux_reader_margins() -> String {
+    text("linux-reader-margins", &[])
+}
+
+pub fn linux_reader_line_spacing() -> String {
+    text("linux-reader-line-spacing", &[])
+}
+
+pub fn linux_reader_justify() -> String {
+    text("linux-reader-justify", &[])
+}
+
+pub fn linux_reader_direction() -> String {
+    text("linux-reader-direction", &[])
+}
+
+pub fn linux_reader_spreads() -> String {
+    text("linux-reader-spreads", &[])
+}
+
+pub fn linux_reader_strip_width() -> String {
+    text("linux-reader-strip-width", &[])
+}
+
+pub fn linux_reader_strip_gap() -> String {
+    text("linux-reader-strip-gap", &[])
+}
+
+/// The fit that fills the window's height.
+pub fn linux_reader_fit_height() -> String {
+    text("linux-reader-fit-height", &[])
+}
+
+/// Reading mode names.
+pub fn linux_reader_mode_paged() -> String {
+    text("linux-reader-mode-paged", &[])
+}
+
+pub fn linux_reader_mode_scrolled() -> String {
+    text("linux-reader-mode-scrolled", &[])
+}
+
+/// Title of the sheet that prepares chapters as files for an e-reader.
+pub fn linux_send_title() -> String {
+    text("linux-send-title", &[])
+}
+
+/// Line under that title.
+pub fn linux_send_line() -> String {
+    text("linux-send-line", &[])
+}
+
+/// Button that starts preparing the files.
+pub fn linux_send_prepare() -> String {
+    text("linux-send-prepare", &[])
+}
+
+/// Line while the files are prepared.
+pub fn linux_send_progress(done: i64, total: i64) -> String {
+    text("linux-send-progress", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Button that copies the prepared files to a folder the person picks.
+pub fn linux_send_save() -> String {
+    text("linux-send-save", &[])
+}
+
+/// Menu item of a series that opens that sheet.
+pub fn linux_send_menu() -> String {
+    text("linux-send-menu", &[])
+}
+
+/// Heading when the web view that shows a novel cannot start.
+pub fn linux_reader_novel_unavailable() -> String {
+    text("linux-reader-novel-unavailable", &[])
+}
+
+/// Line under it: what a novel needs on this computer.
+pub fn linux_reader_novel_needs_webkit() -> String {
+    text("linux-reader-novel-needs-webkit", &[])
+}
+
+/// The reader's scrubber as a screen reader says it: the page showing and how many there are.
+pub fn linux_reader_page_of(page: i64, pages: i64) -> String {
+    text("linux-reader-page-of", &[("page", Arg::Int(page)), ("pages", Arg::Int(pages))])
+}
+
+/// Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+pub fn linux_reader_pages() -> String {
+    text("linux-reader-pages", &[])
 }
 
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
@@ -8631,6 +8806,41 @@ pub fn pad_button_left_stick() -> String {
 /// Name of the controller's right stick, in the controller help.
 pub fn pad_button_right_stick() -> String {
     text("pad-button-right-stick", &[])
+}
+
+/// Controller help: the D-pad in the reader turns the page, the way the book reads.
+pub fn pad_help_turn_page() -> String {
+    text("pad-help-turn-page", &[])
+}
+
+/// Controller help: the left shoulder button in the reader.
+pub fn pad_help_previous_chapter() -> String {
+    text("pad-help-previous-chapter", &[])
+}
+
+/// Controller help: the right shoulder button in the reader.
+pub fn pad_help_next_chapter() -> String {
+    text("pad-help-next-chapter", &[])
+}
+
+/// Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pub fn pad_help_reader_bar() -> String {
+    text("pad-help-reader-bar", &[])
+}
+
+/// Controller help: the menu button in the reader.
+pub fn pad_help_reader_settings() -> String {
+    text("pad-help-reader-settings", &[])
+}
+
+/// Controller help: the B button in the reader.
+pub fn pad_help_close_reader() -> String {
+    text("pad-help-close-reader", &[])
+}
+
+/// Heading in the controller help for the buttons in the reader.
+pub fn pad_help_reader() -> String {
+    text("pad-help-reader", &[])
 }
 
 /// Checkbox of the close question.

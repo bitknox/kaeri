@@ -138535,6 +138535,18 @@
         }
       }
     },
+    "pad-help-close-reader" : {
+      "comment" : "Controller help: the B button in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close the reader"
+          }
+        }
+      }
+    },
     "pad-help-controls-shown" : {
       "comment" : "Heading in the controller help for the buttons while the player's controls are showing.",
       "extractionState" : "manual",
@@ -139291,6 +139303,18 @@
         }
       }
     },
+    "pad-help-next-chapter" : {
+      "comment" : "Controller help: the right shoulder button in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next chapter"
+          }
+        }
+      }
+    },
     "pad-help-next-section" : {
       "comment" : "Controller help: goes to the section after the current one.",
       "extractionState" : "manual",
@@ -139711,6 +139735,18 @@
         }
       }
     },
+    "pad-help-previous-chapter" : {
+      "comment" : "Controller help: the left shoulder button in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous chapter"
+          }
+        }
+      }
+    },
     "pad-help-previous-section" : {
       "comment" : "Controller help: goes to the section before the current one.",
       "extractionState" : "manual",
@@ -139791,6 +139827,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mục trước"
+          }
+        }
+      }
+    },
+    "pad-help-reader" : {
+      "comment" : "Heading in the controller help for the buttons in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader"
+          }
+        }
+      }
+    },
+    "pad-help-reader-bar" : {
+      "comment" : "Controller help: the A button in the reader shows or hides the bar with the title and settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide the bar"
+          }
+        }
+      }
+    },
+    "pad-help-reader-settings" : {
+      "comment" : "Controller help: the menu button in the reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reader settings"
           }
         }
       }
@@ -141431,6 +141503,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phụ đề và âm thanh"
+          }
+        }
+      }
+    },
+    "pad-help-turn-page" : {
+      "comment" : "Controller help: the D-pad in the reader turns the page, the way the book reads.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn the page"
           }
         }
       }

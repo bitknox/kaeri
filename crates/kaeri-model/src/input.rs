@@ -77,6 +77,8 @@ pub enum PadContext {
         /// A card over the video that takes A and B for itself.
         card: Option<PlayerCard>,
     },
+    /// The manga, strip or novel reader. With its settings open, the pad moves through them.
+    Reader { settings_open: bool },
 }
 
 /// The cards in the player whose buttons the pad answers.
@@ -107,6 +109,21 @@ pub enum PlayerFocus {
     Episodes,
 }
 
+/// What the reader does with a press.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReaderPad {
+    /// A page the way the D-pad points: left and right follow the book's reading direction,
+    /// up is back and down is on.
+    Turn(Direction),
+    /// The previous (`-1`) or next (`1`) chapter.
+    Chapter(i32),
+    /// Show or hide the reader's bar.
+    Bar,
+    Settings,
+    Close,
+}
+
 /// What a press means. The browse actions are the front end's to carry out; the player's seeking,
 /// pausing and skipping are the engine's commands.
 #[derive(Debug, Clone, PartialEq)]
@@ -133,6 +150,7 @@ pub enum PadAction {
     PlayPause,
     /// Hold for double speed while `true`, back to the speed it was at on release.
     HoldSpeed(bool),
+    Reader(ReaderPad),
 }
 
 /// The seconds a D-pad press seeks, and a shoulder button's.
@@ -163,6 +181,7 @@ pub fn pad_action(
     match context {
         PadContext::Browse => browse(button),
         PadContext::Player { controls_shown, card } => player(button, *controls_shown, *card),
+        PadContext::Reader { settings_open } => reader(button, *settings_open),
     }
 }
 
@@ -245,6 +264,31 @@ fn player(button: PadButton, shown: bool, card: Option<PlayerCard>) -> Option<Pa
     })
 }
 
+fn reader(button: PadButton, settings_open: bool) -> Option<PadAction> {
+    use PadButton as B;
+    if settings_open {
+        if let Some(direction) = direction(button) {
+            return Some(PadAction::Focus(direction));
+        }
+        return match button {
+            B::South => Some(PadAction::Activate),
+            B::East | B::Start => Some(PadAction::Back),
+            _ => None,
+        };
+    }
+    if let Some(direction) = direction(button) {
+        return Some(PadAction::Reader(ReaderPad::Turn(direction)));
+    }
+    Some(PadAction::Reader(match button {
+        B::South => ReaderPad::Bar,
+        B::East => ReaderPad::Close,
+        B::Start => ReaderPad::Settings,
+        B::LeftShoulder => ReaderPad::Chapter(-1),
+        B::RightShoulder => ReaderPad::Chapter(1),
+        _ => return None,
+    }))
+}
+
 /// The left stick as directions, with hysteresis so a stick resting near the edge does not
 /// flicker: a direction is pressed past [`Self::PRESS`] and released under [`Self::RELEASE`].
 #[derive(Debug, Default, Clone)]
@@ -295,6 +339,7 @@ fn describe(action: &PadAction, context: &PadContext) -> String {
         PadAction::Back => match context {
             PadContext::Player { controls_shown: true, .. } => t::pad_help_hide_controls(),
             PadContext::Player { .. } => t::pad_help_close_player(),
+            PadContext::Reader { .. } => t::pad_help_back(),
             PadContext::Browse => t::pad_help_back(),
         },
         PadAction::ItemMenu => t::pad_help_item_menu(),
@@ -325,6 +370,12 @@ fn describe(action: &PadAction, context: &PadContext) -> String {
         PadAction::Reveal(PlayerFocus::Episodes) => t::pad_help_show_episodes(),
         PadAction::PlayPause => t::pad_help_play_pause(),
         PadAction::HoldSpeed(_) => t::pad_help_hold_speed(),
+        PadAction::Reader(ReaderPad::Turn(_)) => t::pad_help_turn_page(),
+        PadAction::Reader(ReaderPad::Chapter(n)) if *n < 0 => t::pad_help_previous_chapter(),
+        PadAction::Reader(ReaderPad::Chapter(_)) => t::pad_help_next_chapter(),
+        PadAction::Reader(ReaderPad::Bar) => t::pad_help_reader_bar(),
+        PadAction::Reader(ReaderPad::Settings) => t::pad_help_reader_settings(),
+        PadAction::Reader(ReaderPad::Close) => t::pad_help_close_reader(),
     }
 }
 
@@ -337,6 +388,56 @@ mod tests {
 
     fn browse(button: PadButton) -> Option<PadAction> {
         pad_action(button, true, &PadContext::Browse, false)
+    }
+
+    #[test]
+    fn the_reader_turns_pages_changes_chapters_and_closes() {
+        let reading =
+            |b| pad_action(b, true, &PadContext::Reader { settings_open: false }, false);
+        for (button, direction) in [
+            (PadButton::DpadLeft, Direction::Left),
+            (PadButton::DpadRight, Direction::Right),
+            (PadButton::DpadUp, Direction::Up),
+            (PadButton::DpadDown, Direction::Down),
+        ] {
+            assert_eq!(reading(button), Some(PadAction::Reader(ReaderPad::Turn(direction))));
+        }
+        assert_eq!(reading(PadButton::South), Some(PadAction::Reader(ReaderPad::Bar)));
+        assert_eq!(reading(PadButton::East), Some(PadAction::Reader(ReaderPad::Close)));
+        assert_eq!(reading(PadButton::Start), Some(PadAction::Reader(ReaderPad::Settings)));
+        assert_eq!(
+            reading(PadButton::LeftShoulder),
+            Some(PadAction::Reader(ReaderPad::Chapter(-1)))
+        );
+        assert_eq!(
+            reading(PadButton::RightShoulder),
+            Some(PadAction::Reader(ReaderPad::Chapter(1)))
+        );
+        assert_eq!(reading(PadButton::Select), None);
+        let swapped = pad_action(
+            PadButton::South,
+            true,
+            &PadContext::Reader { settings_open: false },
+            true,
+        );
+        assert_eq!(swapped, Some(PadAction::Reader(ReaderPad::Close)));
+    }
+
+    #[test]
+    fn with_the_reader_settings_open_the_pad_moves_through_them() {
+        let open = |b| pad_action(b, true, &PadContext::Reader { settings_open: true }, false);
+        assert_eq!(open(PadButton::DpadDown), Some(PadAction::Focus(Direction::Down)));
+        assert_eq!(open(PadButton::South), Some(PadAction::Activate));
+        assert_eq!(open(PadButton::East), Some(PadAction::Back));
+        assert_eq!(open(PadButton::Start), Some(PadAction::Back));
+        assert_eq!(open(PadButton::LeftShoulder), None);
+    }
+
+    #[test]
+    fn the_reader_help_names_every_button_it_answers() {
+        let help = pad_help(&PadContext::Reader { settings_open: false });
+        assert_eq!(help.len(), 9);
+        assert!(help.iter().all(|(_, words)| !words.is_empty()));
     }
 
     #[test]

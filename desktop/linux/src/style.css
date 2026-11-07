@@ -48,7 +48,7 @@
 .state-dot { background: var(--water); border-radius: 999px; min-width: 8px; min-height: 8px; }
 
 /* A language's flag in the picker: corners 2 and a hairline in the faint rule, for white flags. */
-.language-flag { border-radius: 2px; overflow: hidden; }
+.language-flag { border-radius: 2px; }
 .language-flag-edge { border-radius: 2px; border: 1px solid var(--faint-rule); }
 
 /* Show titles in Zen Kaku Gothic New, sized relative so they follow the text scale. */
@@ -66,6 +66,7 @@ progressbar progress { background: var(--amber); }
 /* Covers and banners: flat placeholders in the cover's own colour until the art lands. */
 .cover { border-radius: 8px; }
 .cover.small { border-radius: 6px; }
+.cover-empty { border: 1px solid var(--rule); }
 .banner { border-radius: 12px; }
 .banner.flush { border-radius: 0; }
 .still { border-radius: 6px; }
@@ -331,6 +332,71 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-arrow { min-width: 36px; min-height: 36px; padding: 0; color: var(--silk); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-rule); }
 .home-arrow:hover { background: var(--raised-selected); }
 .home-arrow:active { background: var(--rule); }
+
+/* Reading: a work's card, its track under the cover, the spotlight, the reader's ground. */
+progressbar.read-track { min-height: 3px; }
+progressbar.read-track trough { min-height: 3px; border-radius: 2px; background: var(--rule); }
+progressbar.read-track progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
+.read-card { padding: 2px; border-radius: 10px; }
+.read-card:hover { background: var(--raised-selected); }
+.read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
+.read-spotlight { padding: 12px 0 8px; }
+.reader-ground { background: var(--ground); }
+.reader-black { background: #000; }
+.reader-white { background: #fff; }
+
+/* The reader's chrome (the reader board's Linux frames): a flat header over the page, and the
+   group at its foot on Raised with corners 14, its scrubber in silk and 34 px pill buttons. */
+.reader-head { background: none; box-shadow: none; }
+.reader-group {
+  background: var(--raised);
+  border-radius: 14px;
+  padding: 10px 8px 4px;
+  box-shadow: inset 0 0 0 1px alpha(currentColor, 0.08);
+}
+.reader-group button { min-width: 34px; min-height: 34px; padding: 0; border-radius: 17px; }
+.reader-scrub-row { min-height: 28px; padding: 0 8px; }
+.reader-group-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 14px; }
+.reader-group-line { font-size: 12px; color: var(--haze); }
+scale.reader-scrub { padding: 0; }
+scale.reader-scrub trough { min-height: 3px; border-radius: 2px; background: alpha(currentColor, 0.25); }
+scale.reader-scrub highlight { min-height: 3px; border-radius: 2px; background: currentColor; }
+scale.reader-scrub slider {
+  min-width: 14px; min-height: 14px; margin: -6px; border-radius: 7px;
+  background: currentColor; border: none; box-shadow: none; outline-color: alpha(currentColor, 0.4);
+}
+
+/* Paper, Light and Sepia put the chrome on Foundations' light tokens; Dark keeps the app's. */
+.reader-light {
+  --raised: #E3DFD4;
+  --raised-selected: #D6D1C4;
+  --faint-rule: #DAD5C9;
+  --rule: #C4BFB2;
+  --silk: #1E2033;
+  --haze: #4F546E;
+  --headerbar-fg-color: #1E2033;
+  --window-fg-color: #1E2033;
+  --card-bg-color: #E3DFD4;
+  --card-fg-color: #1E2033;
+  --popover-bg-color: #FCFAF4;
+  --popover-fg-color: #1E2033;
+  --view-bg-color: #FCFAF4;
+  --view-fg-color: #1E2033;
+  --border-color: #DAD5C9;
+  color: #1E2033;
+}
+.reader-light toggle:checked { color: var(--silk); background: #FCFAF4; }
+/* The header's buttons in a light look, as libadwaita draws them on a light header but on the
+   look's own Raised fill, so they read over a dark margin as well as over the page. */
+.reader-light .reader-head button.reader-back,
+.reader-light .reader-head windowcontrols > button { color: var(--silk); }
+.reader-light .reader-head button.reader-back { background-color: var(--raised); }
+.reader-light .reader-head button.reader-back:hover { background-color: var(--raised-selected); }
+.reader-light .reader-head button.reader-back:active { background-color: var(--rule); }
+.reader-light .reader-head windowcontrols > button > image { background-color: var(--raised); }
+.reader-light .reader-head windowcontrols > button:hover > image { background-color: var(--raised-selected); }
+.reader-light .reader-head windowcontrols > button:active > image { background-color: var(--rule); }
+.strip-leaf { background: transparent; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }
 .home-week-time { font-size: 12px; font-weight: 600; color: var(--silk); }
@@ -425,3 +491,16 @@ popover.ep-panel > contents { padding: 0; }
 .ep-foot { border-top: 1px solid var(--faint-rule); padding: 8px 12px 10px; }
 .ep-foot .ep-foot-title { font-size: 0.92em; }
 .ep-foot .ep-foot-text { color: #C9CAD6; font-size: 0.95em; margin-top: 2px; }
+
+/* The reader's Chapters popover: the chapter's name, the page grid with the open page ringed,
+   and the chapters with the open one on the selected fill. */
+.reader-chapters { padding: 14px 18px 18px; }
+.reader-chapters-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 17px; }
+gridview.reader-pages { background: none; }
+gridview.reader-pages > child { padding: 5px; border-radius: 8px; }
+.reader-thumb { border-radius: 8px; background: var(--raised); }
+.reader-thumb.open { outline: 2px solid var(--silk); outline-offset: -2px; }
+list.reader-chapter-list { background: none; }
+list.reader-chapter-list > row { border-radius: 8px; }
+.reader-chapter-list row.reader-here { background: var(--raised-selected); }
+.reader-chapter-list row.reader-read .title { color: var(--haze); }

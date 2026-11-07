@@ -158,8 +158,8 @@ pub fn fill(
         }
         let item = gtk::ListBoxRow::new();
         item.set_child(Some(&line));
-        item.set_action_name(Some("player.episode"));
         item.set_action_target_value(Some(&glib::Variant::from(episode.number.as_str())));
+        item.set_action_name(Some("player.episode"));
         item.update_property(&[gtk::accessible::Property::Label(&match &episode.title {
             Some(title) => [episode.label.as_str(), title.as_str()].join(" · "),
             None => episode.label.clone(),

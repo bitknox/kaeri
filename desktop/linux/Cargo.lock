@@ -3162,6 +3162,7 @@ dependencies = [
 name = "kaeri-testkit"
 version = "0.4.0"
 dependencies = [
+ "image",
  "jiff",
  "kaeri-core",
  "kaeri-meta",
@@ -3170,6 +3171,8 @@ dependencies = [
  "kaeri-store",
  "serde_json",
  "tokio",
+ "tracing",
+ "zip",
 ]
 
 [[package]]

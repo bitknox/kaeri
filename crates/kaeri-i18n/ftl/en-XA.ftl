@@ -1531,6 +1531,12 @@ title-linux-episode-watched = [Éþîšöðé { $episode } ŵàţçĥéð~~~~~~]
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = [Ñöţĥîñĝ àîŕš~~~~]
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = [Ļîšţ~~]
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = [Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = [Ŵàţçĥ þàŕţý šţàţüš~~~~~~]
 
@@ -1614,6 +1620,99 @@ discussion-like-named =
         [one] [Ļîķé, öñé ļîķé~~~~~]
        *[other] [Ļîķé, { $count } ļîķéš~~~~~]
     }
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = [Öþéñîñĝ ţĥé çĥàþţéŕ~~~~~~]
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = [Ţĥé ñéẋţ çĥàþţéŕ îšñ'ţ öüţ ýéţ~~~~~~~~~]
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = [Éñð öƒ ţĥé šéŕîéš~~~~~~]
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = [Ţĥé ñéẋţ çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð~~~~~~~~~~]
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = [Ñö ñéẋţ çĥàþţéŕ îñ ýöüŕ šöüŕçéš ýéţ~~~~~~~~~~~]
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = [Ɓàçķ ţö ţĥé šéŕîéš~~~~~~]
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = [Çöüļðñ'ţ öþéñ ţĥé çĥàþţéŕ~~~~~~~~]
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = [Ŕéàðîñĝ ɱöðé~~~~]
+
+linux-reader-fit = [Ƒîţ~]
+
+linux-reader-crop-borders = [Çŕöþ ƀöŕðéŕš~~~~]
+
+linux-reader-page-layout = [Þàĝé ļàýöüţ~~~~]
+
+linux-reader-background = [Ɓàçķĝŕöüñð~~~]
+
+linux-reader-look = [Ļööķ~~]
+
+linux-reader-font = [Ƒöñţ~~]
+
+linux-reader-text-size = [Ţéẋţ šîžé~~~]
+
+linux-reader-margins = [Ṁàŕĝîñš~~~]
+
+linux-reader-line-spacing = [Ļîñé šþàçîñĝ~~~~]
+
+linux-reader-justify = [Ĵüšţîƒý ţéẋţ~~~~]
+
+linux-reader-direction = [Ðîŕéçţîöñ~~~]
+
+linux-reader-spreads = [Ŵîðé þàĝéš~~~]
+
+linux-reader-strip-width = [Šţŕîþ ŵîðţĥ~~~~]
+
+linux-reader-strip-gap = [Îɱàĝé ĝàþ~~~]
+
+# The fit that fills the window's height.
+linux-reader-fit-height = [Ĥéîĝĥţ~~]
+
+# Reading mode names.
+linux-reader-mode-paged = [Þàĝéð~~]
+
+linux-reader-mode-scrolled = [Šçŕöļļ~~]
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Line under that title.
+linux-send-line = [Þîçķ ţĥé ðéṽîçé. Ţĥé ñéẋţ üñŕéàð çĥàþţéŕš àŕé þŕéþàŕéð àš ƒîļéš ţĥàţ ƒîţ îţš šçŕééñ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button that starts preparing the files.
+linux-send-prepare = [Þŕéþàŕé ƒîļéš~~~~]
+
+# Line while the files are prepared.
+linux-send-progress = [Þŕéþàŕîñĝ { $done } öƒ { $total }~~~~~~]
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = [Šàṽé ţö à ƒöļðéŕ~~~~~]
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = [Ñöṽéļš çàñ'ţ öþéñ ĥéŕé~~~~~~~]
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = [Ñöṽéļš ñééð ŴéƀĶîţĜŢĶ 6 ŵîţĥ îţš šàñðƀöẋ ŵöŕķîñĝ.~~~~~~~~~~~~~~~]
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = [Þàĝé { $page } öƒ { $pages }~~~~~]
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = [Þàĝéš~~]
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = [Þŕéṽîéŵ~~~]
@@ -5431,6 +5530,27 @@ pad-button-left-stick = [Ļéƒţ šţîçķ~~~]
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = [Ŕîĝĥţ šţîçķ~~~~]
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = [Ţüŕñ ţĥé þàĝé~~~~]
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = [Þŕéṽîöüš çĥàþţéŕ~~~~~]
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = [Ñéẋţ çĥàþţéŕ~~~~]
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = [Šĥöŵ öŕ ĥîðé ţĥé ƀàŕ~~~~~~]
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = [Ŕéàðéŕ šéţţîñĝš~~~~~]
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = [Çļöšé ţĥé ŕéàðéŕ~~~~~]
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = [Ŕéàðéŕ~~]
 
 # Checkbox of the close question.
 close-dont-ask = [Ðöñ'ţ àšķ àĝàîñ~~~~~]
