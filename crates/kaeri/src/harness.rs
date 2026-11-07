@@ -137,6 +137,8 @@ pub struct Options {
     /// How AniList's queued work is paced, or `None` for not at all: see
     /// [`kaeri_meta::Pacing`].
     pub pacing: Option<kaeri_meta::Pacing>,
+    /// Launch without saying the network, where the terminal says Wi-Fi as it starts.
+    pub network_unsaid: bool,
 }
 
 impl Default for Options {
@@ -156,6 +158,7 @@ impl Default for Options {
             digest: false,
             slow: Vec::new(),
             pacing: None,
+            network_unsaid: false,
         }
     }
 }
@@ -316,6 +319,9 @@ impl Harness {
         }
         let (engine, mut events) =
             Engine::start(start, host.clone()).await.expect("the engine starts");
+        if !options.network_unsaid {
+            engine.send(crate::tui::run::network_at_launch());
+        }
         // What launch says, applied as the loop applies it before its first frame: the stores,
         // the chain and the trackers on their rows.
         for update in events.launch().await {

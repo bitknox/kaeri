@@ -34,7 +34,8 @@
 //! them from.
 //!
 //! **What it waits for.** Nothing is topped up while downloads wait: off screen but for a
-//! downloads window, on cellular unless downloads may run there, or in Low Data Mode. And it
+//! downloads window, before the front end has said the network, on cellular unless downloads
+//! may run there, or in Low Data Mode. And it
 //! stops before the
 //! device would be full: what is free, less what the queue still has to fetch and an episode
 //! more, has to leave [`KEEP_FREE`]. It says so once, until there is room again.
@@ -304,10 +305,11 @@ fn top_up_shows(
 }
 
 /// Whether downloads wait now, as the torrent session is told: off screen but for a downloads
-/// window, on cellular unless downloads may run there, or in Low Data Mode.
+/// window, before the front end has said the network, on cellular unless downloads may run
+/// there, or in Low Data Mode.
 pub(crate) fn downloads_wait(engine: &EngineState) -> bool {
     let config = engine.config.effective();
-    crate::phases::gate_for(engine.phase, engine.network, config).hold.downloads
+    crate::phases::gate_for(engine.phase, engine.said_network(), config).hold.downloads
 }
 
 /// Whether `event`, from a playback, says the viewer finished its episode: it counts as watched
@@ -1181,10 +1183,13 @@ mod tests {
         };
         let (arrivals, _) = mpsc::unbounded_channel();
         let mut engine = EngineState::new(Config::default(), None, &paths, arrivals);
-        assert!(!downloads_wait(&engine), "on screen, on Wi-Fi");
+        assert!(downloads_wait(&engine), "the network not said yet");
         let cellular = Network { cellular: true, ..Network::default() };
-        engine.network = cellular;
+        (engine.network, engine.network_said) = (cellular, true);
         assert!(downloads_wait(&engine), "Wi-Fi only");
+        engine.network = Network::default();
+        assert!(!downloads_wait(&engine), "on screen, on Wi-Fi");
+        engine.network = cellular;
         engine.config.effective_mut().downloads.on_cellular = true;
         assert!(!downloads_wait(&engine), "downloads on cellular");
         engine.network = Network { constrained: true, ..Network::default() };

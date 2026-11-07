@@ -118,14 +118,15 @@ impl Setup {
         edition: AppEdition,
     ) -> Self {
         let reading = &config.reading;
-        let unsaid = network.is_none();
-        let network = network.unwrap_or_default();
-        let wifi = network.constrained || (network.cellular && !reading.downloads_on_cellular);
+        let waits = crate::phases::waits_for_wifi(network, reading.downloads_on_cellular);
+        // Before the network is said the rows only wait: nothing says it is for Wi-Fi yet.
+        let wifi = waits && network.is_some();
+        let offline = network.is_some_and(|n| n.offline);
         let away = matches!(phase, AppState::Background { .. });
         Self {
-            hold: unsaid || wifi || network.offline || away,
+            hold: waits || offline || away,
             wifi,
-            offline: network.offline,
+            offline,
             keep_ready: reading
                 .keep_chapters_ready
                 .unwrap_or(matches!(edition, AppEdition::ReadOnly)),
@@ -1009,7 +1010,7 @@ pub fn resume(engine: &crate::state::EngineState, services: &Services, tx: &Outb
     }
     let setup = Setup::of(
         engine.phase,
-        engine.network_said.then_some(engine.network),
+        engine.said_network(),
         engine.config.effective(),
         engine.reading.edition,
     );

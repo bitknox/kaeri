@@ -140,6 +140,11 @@ pub struct EngineState {
 }
 
 impl EngineState {
+    /// The network as the front end last said it, or `None` before it has said one.
+    pub fn said_network(&self) -> Option<crate::phases::Network> {
+        self.network_said.then_some(self.network)
+    }
+
     /// The engine side as it starts: on the config the app was launched with, and the file's,
     /// as given or as it is at `paths`. No torrent stack yet, and `arrivals` for it to report on
     /// when one is brought up.
