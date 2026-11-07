@@ -86,7 +86,7 @@ private struct SyncSheetHost: View {
     }
 }
 
-private extension SyncModel {
+extension SyncModel {
     func close() { sheet = nil }
 }
 

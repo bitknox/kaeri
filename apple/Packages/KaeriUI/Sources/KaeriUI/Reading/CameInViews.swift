@@ -55,6 +55,7 @@ struct CameInCard<Content: View>: View {
 struct FolderCameIn: View {
     let report: FolderReport
     let nothing: Bool
+    private var skippedCount: UInt32 { (report.unsupported + report.locked).reduce(0) { $0 + $1.count } }
     @State private var showFiles = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -74,11 +75,11 @@ struct FolderCameIn: View {
                            line: L.bookFolderFoundLine(path: report.path?.replacingOccurrences(of: NSHomeDirectory(), with: "~") ?? report.name, // i18n-skip
                                                        matched: Int(report.matched)))
             }
-            if report.skipped > 0 {
+            if skippedCount > 0 {
                 CameInCard {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(L.bookFolderUnsupported(count: Int(report.skipped)))
+                            Text(L.bookFolderUnsupported(count: Int(skippedCount)))
                                 .font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
                             Text(L.bookFolderUnsupportedLine(kinds: kinds))
                                 .font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)

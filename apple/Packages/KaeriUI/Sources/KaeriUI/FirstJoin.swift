@@ -57,11 +57,11 @@ struct FirstJoinPaired: View {
             if lookingShown && !staged { try? await Task.sleep(for: .milliseconds(300)) }
             ready = true
         }
-        .onChange(of: sync.setup) { _, setup in
-            if let setup, medium == nil { medium = setup.medium.map(KaeriIsFor.init) ?? nil }
+        .onChange(of: sync.setup?.device) { _, _ in
+            if medium == nil { medium = sync.setup?.medium }
         }
         .onAppear {
-            if medium == nil, let setup = sync.setup { medium = setup.medium.map(KaeriIsFor.init) ?? nil }
+            if medium == nil { medium = sync.setup?.medium }
         }
     }
 

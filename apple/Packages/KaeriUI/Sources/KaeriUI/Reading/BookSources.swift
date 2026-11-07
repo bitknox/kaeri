@@ -106,7 +106,7 @@ struct BookSourcesList: View {
                 SettingsGroup(title: nil) {
                     SettingsRow(title: L.sourcesDemoName, note: L.sourcesDemoBooksLine) {
                         Button(aboutDemo ? L.actionDone : L.sourcesDemoAbout) { aboutDemo.toggle() }
-                            .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12, raisedSurface: true))
+                            .buttonStyle(SecondaryCapsuleStyle(height: 24, raisedSurface: true, fontSize: 12))
                             .fixedSize()
                     }
                     if aboutDemo {
@@ -666,7 +666,6 @@ struct AddBookServerStep: View {
             }
             .transition(.opacity)
         }
-        _ = host
     }
 
     private var trimmedHost: String { KavitaLink(address)?.host ?? trimmed }
