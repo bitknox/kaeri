@@ -10,6 +10,7 @@ pub mod demo;
 pub mod health;
 pub mod mock;
 pub mod proxy;
+pub mod reading_demo;
 pub mod registry;
 pub mod resolve;
 pub mod torrent;
