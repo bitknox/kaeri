@@ -469,6 +469,17 @@ pub fn title_language(language: kaeri_meta::anilist::TitleLanguage) -> TitleLang
     }
 }
 
+/// Which form of a book's title to show, as the title language setting resolves now.
+pub fn title_form(titles: &kaeri_meta::titles::Titles) -> kaeri_store::shelf::TitleForm {
+    use kaeri_meta::anilist::TitleLanguage as L;
+    use kaeri_store::shelf::TitleForm;
+    match titles.language() {
+        L::Romaji => TitleForm::Romaji,
+        L::English => TitleForm::English,
+        L::Native => TitleForm::Native,
+    }
+}
+
 /// Date each row by AniList's schedule, where it has the episode: see [`EpisodeRow::airs_at`].
 /// Only whole numbers are dated; the schedule numbers episodes, and an "OVA" or a "12.5" is
 /// not one of them.

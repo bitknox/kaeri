@@ -83,6 +83,7 @@ pub(crate) fn series(
     store: &Store,
     rows: &[BookDownload],
     wifi: bool,
+    form: kaeri_store::shelf::TitleForm,
 ) -> (Vec<BookDownloadSeries>, u64, Kept) {
     let mut kept_all = Kept::default();
     let mut by_work: Vec<(&str, Vec<&BookDownload>)> = Vec::new();
@@ -104,7 +105,7 @@ pub(crate) fn series(
             .book_work_kind(work)
             .ok()
             .flatten()
-            .and_then(|kind| kind.title)
+            .and_then(|kind| kind.title_in(form))
             .unwrap_or_else(|| work.to_owned());
         let done: Vec<&&BookDownload> =
             list.iter().filter(|d| d.state == BookDownloadState::Done).collect();
