@@ -293,12 +293,19 @@ class BoardShots {
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_first_launch_anilist() = shoot("phone-first-launch-anilist", FRESH, firstLaunch = true) { open("Continue") }
+    fun phone_first_launch_anilist() = shoot("phone-first-launch-anilist", FRESH, firstLaunch = true) {
+        open("Continue")
+        compose.mainClock.advanceTimeBy(1_000)
+        open("No, start here")
+    }
 
     @Test
     @Config(qualifiers = PHONE)
     fun phone_first_launch_sources() = shoot("phone-first-launch-sources", FRESH, firstLaunch = true) {
         open("Continue")
+        compose.mainClock.advanceTimeBy(1_000)
+        // Page 2 asks about another device first.
+        open("No, start here")
         compose.mainClock.advanceTimeBy(1_000)
         open("Not now")
     }
