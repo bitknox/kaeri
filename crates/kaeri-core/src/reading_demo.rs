@@ -14,7 +14,7 @@
 //! hosts the comic reaches are [`crate::demo::DEMO_HOSTS`].
 
 use crate::{
-    books::{WorkId, WorkKey},
+    books::{ReadingHint, WorkId, WorkKey},
     media::Medium,
 };
 
@@ -134,6 +134,9 @@ pub struct DemoWork {
     pub synopsis: &'static str,
     /// A novel, read as text; else a comic, read as pages.
     pub novel: bool,
+    /// Which way its pages read, as its source says it: the reader opens that way unless the
+    /// series has a direction of its own. `None` for the story, which is text.
+    pub reading: Option<ReadingHint>,
     /// A cover bundled with the app, with its own credit. The comic's cover is its first page.
     pub cover_art: Option<DemoCoverArt>,
 }
@@ -151,6 +154,8 @@ pub const COMIC: DemoWork = DemoWork {
     synopsis: "A young witch and her cat try a potion. Its maker shares the comic under CC BY \
 4.0, and the demo reads it from Wikimedia Commons.",
     novel: false,
+    // A European comic: its pages and panels read left to right.
+    reading: Some(ReadingHint::LeftToRight),
     cover_art: None,
 };
 
@@ -167,6 +172,7 @@ pub const STORY: DemoWork = DemoWork {
     synopsis: "A woodcutter caught in a snowstorm. The story is in the public domain and comes \
 with the app.",
     novel: true,
+    reading: None,
     cover_art: Some(STORY_COVER),
 };
 
