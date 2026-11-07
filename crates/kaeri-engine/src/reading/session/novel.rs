@@ -266,8 +266,11 @@ impl Session {
         let slot = self.prepared.clone();
         let opening = self.opening(cx);
         let done = wake(cx.tx, self.id, ReaderWake::Prepared(generation));
+        // Opens can finish out of order: one for an older layout never replaces a newer one.
         let put = move |p: Prepared| {
-            if let Ok(mut s) = slot.lock() {
+            if let Ok(mut s) = slot.lock()
+                && s.as_ref().is_none_or(|(g, _)| *g < generation)
+            {
                 *s = Some((generation, p));
             }
             done();
@@ -323,13 +326,10 @@ impl Session {
         if generation != self.generation {
             return;
         }
-        let prepared = match self.prepared.lock() {
-            Ok(mut slot) => match slot.take() {
-                Some((g, p)) if g == generation => p,
-                _ => return,
-            },
-            Err(_) => return,
-        };
+        // Only this layout's open is taken; anything else in the slot is left as it is.
+        let taken =
+            self.prepared.lock().ok().and_then(|mut s| s.take_if(|(g, _)| *g == generation));
+        let Some((_, prepared)) = taken else { return };
         match prepared {
             Prepared::Failed(failure) => failed(cx, failure),
             Prepared::Pages(path) => {
