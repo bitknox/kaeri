@@ -4,7 +4,7 @@
 // the one before to find how far the content moved. Per step:
 //
 //   stalls        composed frames that did not move while the scroll was under way: a still
-//                 frame between two moving ones with no notch sent during the pause
+//                 frame between two that moved 3 px or more, with no notch sent during the pause
 //   largest jump  the most the page moved from one composed frame to the next, in px
 //   first move    from sending a notch that found the page still to the first frame that moved
 //   settle        from the last notch sent to the last frame that moved
@@ -135,9 +135,9 @@ static partial class ScreenMotion
         var md = new StringBuilder();
         md.AppendLine("## Screen motion");
         md.AppendLine();
-        md.AppendLine("Each composed frame of a strip of the page, matched against the one before. Stalls are still frames mid-scroll with no notch sent in the pause; unsure frames could not be matched (content changing in place).");
+        md.AppendLine("Composed frames of a strip of the page, as fast as the screen can be read (at 240 Hz about every second frame), each matched against the one before. Stalls are still frames mid-scroll with no notch sent in the pause; unsure frames could not be matched (content changing in place).");
         md.AppendLine();
-        md.AppendLine("| Step | Frames | Moved px | Stalls | Unsure | Largest jump px | Frame gap over 1.5 refreshes | First move ms | Slowest first move ms | Settle ms |");
+        md.AppendLine("| Step | Frames | Moved px | Stalls | Unsure | Largest jump px | Capture gaps over 1.5 refreshes | First move ms | Slowest first move ms | Settle ms |");
         md.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
         foreach (var f in filmed)
         {
@@ -164,7 +164,9 @@ static partial class ScreenMotion
                 var end = i;
                 while (end <= last && !moving[end])
                     end++;
-                if (!f.Sent.Any(w => w > f.At[i - 1] && w <= f.At[end]))
+                // The tail of a glide moves under a pixel a frame and rounds to still now and then:
+                // only a pause between frames that moved 3 px or more is a stall.
+                if (!f.Sent.Any(w => w > f.At[i - 1] && w <= f.At[end]) && Math.Abs(f.Shift[i - 1]) >= 3 && Math.Abs(f.Shift[end]) >= 3)
                     stalls += end - i;
                 i = end - 1;
             }

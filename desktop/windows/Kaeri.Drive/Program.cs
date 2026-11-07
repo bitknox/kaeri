@@ -188,9 +188,47 @@ sealed class Run(string name, Args options, string scene, string? media)
 
     public void Front()
     {
+        if (Native.GetForegroundWindow() == Hwnd)
+            return;
+        // A process in the background may not take the foreground; joined to the input of the
+        // window in front for a moment, it may. No keys are pressed for it.
+        var fg = Native.GetForegroundWindow();
+        var theirs = Native.GetWindowThreadProcessId(fg, out _);
+        var mine = Native.GetCurrentThreadId();
+        var joined = theirs != 0 && theirs != mine && Native.AttachThreadInput(mine, theirs, true);
+        Native.BringWindowToTop(Hwnd);
         Native.SetForegroundWindow(Hwnd);
+        if (joined)
+            Native.AttachThreadInput(mine, theirs, false);
         // Not Window.Focus(): UI Automation would move the keyboard focus to the window itself,
         // off the control that has it, and the player's keys would not reach the player.
+    }
+
+    /// <summary>
+    /// Stops the scenario before any input when the app's window is not in front: the pointer and
+    /// the keys would reach another program.
+    /// </summary>
+    public void Guard()
+    {
+        if (Ours(Native.GetForegroundWindow()))
+            return;
+        Front();
+        Thread.Sleep(300);
+        var fg = Native.GetForegroundWindow();
+        if (!Ours(fg))
+            throw new InvalidOperationException("another window is in front of the app; stopped before sending input");
+    }
+
+    /// <summary>Whether the app is in front, for a run of notches to stop sending when it is not.</summary>
+    public bool InFront => Ours(Native.GetForegroundWindow());
+
+    /// <summary>Whether <paramref name="window"/> is the app's: its main window, a menu or a flyout of it.</summary>
+    bool Ours(nint window)
+    {
+        if (window == Hwnd)
+            return true;
+        Native.GetWindowThreadProcessId(window, out var pid);
+        return process is { } p && pid == (uint)p.Id;
     }
 
     long? clicked;
@@ -201,6 +239,7 @@ sealed class Run(string name, Args options, string scene, string? media)
     /// </summary>
     public void Click(AutomationElement target)
     {
+        Guard();
         var r = target.BoundingRectangle;
         Mouse.MoveTo(new Point(r.Left + r.Width / 2, r.Top + r.Height / 2));
         Thread.Sleep(80);
@@ -211,6 +250,7 @@ sealed class Run(string name, Args options, string scene, string? media)
     /// <summary>Runs <paramref name="act"/> as a named step, then checks the app is still there and answering.</summary>
     public async Task Step(string label, Func<Task> act)
     {
+        Guard();
         Alive();
         clicked = null;
         var start = Stopwatch.GetTimestamp();
@@ -948,6 +988,24 @@ static partial class Native
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetForegroundWindow(nint hwnd);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetWindowThreadProcessId(nint hwnd, out uint pid);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AttachThreadInput(uint attach, uint to, [MarshalAs(UnmanagedType.Bool)] bool join);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool BringWindowToTop(nint hwnd);
+
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
