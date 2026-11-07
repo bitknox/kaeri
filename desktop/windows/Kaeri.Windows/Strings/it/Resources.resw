@@ -5726,6 +5726,9 @@
   <data name="ReaderEndRead" xml:space="preserve">
     <value>Letto</value>
   </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>Letto · aggiornati: {trackers}</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Prossimo</value>
   </data>

@@ -136,7 +136,6 @@ reader-paper-line = Las páginas cambian al instante y nada se mueve en el lecto
 reader-grid-page = Ir a la página { $page }
 reader-scrubber-in-chapter = Página del capítulo
 reader-failed-novel = No se pudo mostrar este capítulo
-reader-end-tracker = Leído · { $trackers } actualizado
 reader-end-tracker-offline = Leído · { $tracker } se actualiza al volver la conexión
 reader-end-none = Aún no hay capítulo { $chapter } en tus { -source-pl }
 reader-end-none-line = { -app-name } busca capítulos nuevos en segundo plano y los agrega a Novedades.

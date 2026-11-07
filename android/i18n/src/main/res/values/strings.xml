@@ -1323,8 +1323,6 @@
     <string name="reader_scrubber_in_chapter">Page in chapter</string>
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
-    <!-- Under the end of chapter line, naming the trackers the read went to. -->
-    <string name="reader_end_tracker">Read · %1$s updated</string>
     <!-- Under the end of chapter line when the phone is offline. -->
     <string name="reader_end_tracker_offline">Read · %1$s updates when you\'re back online</string>
     <!-- Title of the end page when no source has the next chapter. -->
@@ -4451,6 +4449,8 @@
     <string name="reader_close">Close</string>
     <!-- Under the top line of the page between chapters, once the chapter counts as read. -->
     <string name="reader_end_read">Read</string>
+    <!-- Under the end of chapter line, naming the trackers the read went to. -->
+    <string name="reader_end_tracker">Read · %1$s updated</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="reader_end_next">Next</string>
     <!-- A reading mode, and a reading direction. -->
@@ -4576,6 +4576,48 @@
     <string name="demo_story_row">Story · %1$s · %2$s</string>
     <!-- Primary action on the demo's series page. -->
     <string name="demo_read_chapter">Read chapter %1$s</string>
+    <!-- Page between chapters, under the tracker line: the server has the progress. -->
+    <string name="progress_server_saved">Saved to %1$s</string>
+    <!-- Same place, only after 600 ms without an answer. -->
+    <string name="progress_server_sending">Sending to %1$s…</string>
+    <!-- Same place, offline: the send waits in the queue. -->
+    <string name="progress_server_offline">Will send to %1$s when you’re back online</string>
+    <!-- Same place, the send failed for a reason that can pass. -->
+    <string name="progress_server_retrying">%1$s didn’t answer. Kaeri will try again.</string>
+    <!-- Same place, the server said no. Try again follows it. -->
+    <string name="progress_server_failed">Not saved to %1$s: %2$s.</string>
+    <!-- Reason: a Kavita key. -->
+    <string name="progress_why_key">the server refused the key</string>
+    <!-- Reason: a Komga or OPDS password. -->
+    <string name="progress_why_password">the server refused the password</string>
+    <!-- Reason. -->
+    <string name="progress_why_gone">this series isn’t on the server any more</string>
+    <!-- Reason, after a day of retries. -->
+    <string name="progress_why_gave_up">no answer for a day</string>
+    <!-- Your sources, the server's row, second line. -->
+    <string name="progress_row_saved">Progress saved %1$s</string>
+    <!-- The server's row, after 600 ms without an answer. -->
+    <plurals name="progress_row_sending">
+        <item quantity="one">Sending 1 chapter…</item>
+        <item quantity="other">Sending %1$d chapters…</item>
+    </plurals>
+    <!-- The server's row, offline. -->
+    <plurals name="progress_row_offline">
+        <item quantity="one">1 chapter will send when you’re back online</item>
+        <item quantity="other">%1$d chapters will send when you’re back online</item>
+    </plurals>
+    <!-- The server's row, the last try failed for a reason that can pass. -->
+    <plurals name="progress_row_retrying">
+        <item quantity="one">1 chapter waiting. Kaeri will try again.</item>
+        <item quantity="other">%1$d chapters waiting. Kaeri will try again.</item>
+    </plurals>
+    <!-- The server's row, the server said no. Try again sits beside it. -->
+    <plurals name="progress_row_failed">
+        <item quantity="one">1 chapter not saved: %2$s</item>
+        <item quantity="other">%1$d chapters not saved: %2$s</item>
+    </plurals>
+    <!-- The server's row, when Send progress to the server is off. -->
+    <string name="progress_row_off">Progress stays on this device</string>
     <!-- Sidebar and tab label: the shows' Home when both media are on. -->
     <string name="nav_watch">Watch</string>
     <!-- Sidebar and tab label: reading's Home. -->

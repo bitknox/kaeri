@@ -8051,6 +8051,9 @@ reader-close = Tutup
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Dibaca
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Dibaca · { $trackers } diperbarui
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Selanjutnya
 

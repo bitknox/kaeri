@@ -7396,6 +7396,10 @@
     <value>[Ŕéàð~~]</value>
     <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
   </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>[Ŕéàð · {trackers} üþðàţéð~~~~~~]</value>
+    <comment>Under the end of chapter line, naming the trackers the read went to.</comment>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>[Ñéẋţ~~]</value>
     <comment>Small heading above the next chapter on the page between chapters.</comment>
@@ -7639,6 +7643,82 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>[Ŕéàð çĥàþţéŕ {number}~~~~~]</value>
     <comment>Primary action on the demo's series page.</comment>
+  </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>[Šàṽéð ţö {server}~~~~]</value>
+    <comment>Page between chapters, under the tracker line: the server has the progress.</comment>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>[Šéñðîñĝ ţö {server}…~~~~~]</value>
+    <comment>Same place, only after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>[Ŵîļļ šéñð ţö {server} ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~]</value>
+    <comment>Same place, offline: the send waits in the queue.</comment>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>[{server} ðîðñ’ţ àñšŵéŕ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>Same place, the send failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>[Ñöţ šàṽéð ţö {server}: {reason}.~~~~~~~]</value>
+    <comment>Same place, the server said no. Try again follows it.</comment>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé ķéý~~~~~~~~]</value>
+    <comment>Reason: a Kavita key.</comment>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé þàššŵöŕð~~~~~~~~~~]</value>
+    <comment>Reason: a Komga or OPDS password.</comment>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>[ţĥîš šéŕîéš îšñ’ţ öñ ţĥé šéŕṽéŕ àñý ɱöŕé~~~~~~~~~~~~]</value>
+    <comment>Reason.</comment>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>[ñö àñšŵéŕ ƒöŕ à ðàý~~~~~~]</value>
+    <comment>Reason, after a day of retries.</comment>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>[Þŕöĝŕéšš šàṽéð {ago}~~~~~~]</value>
+    <comment>Your sources, the server's row, second line.</comment>
+  </data>
+  <data name="ProgressRowSending_one" xml:space="preserve">
+    <value>[Šéñðîñĝ 1 çĥàþţéŕ…~~~~~~]</value>
+    <comment>The server's row, after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>[Šéñðîñĝ {count} çĥàþţéŕš…~~~~~~~]</value>
+    <comment>The server's row, after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressRowOffline_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~]</value>
+    <comment>The server's row, offline.</comment>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~]</value>
+    <comment>The server's row, offline.</comment>
+  </data>
+  <data name="ProgressRowRetrying_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>The server's row, the last try failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~~]</value>
+    <comment>The server's row, the last try failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressRowFailed_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ñöţ šàṽéð: {reason}~~~~~~~~]</value>
+    <comment>The server's row, the server said no. Try again sits beside it.</comment>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ñöţ šàṽéð: {reason}~~~~~~~~~]</value>
+    <comment>The server's row, the server said no. Try again sits beside it.</comment>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>[Þŕöĝŕéšš šţàýš öñ ţĥîš ðéṽîçé~~~~~~~~~]</value>
+    <comment>The server's row, when Send progress to the server is off.</comment>
   </data>
   <data name="NavWatch" xml:space="preserve">
     <value>[Ŵàţçĥ~~]</value>

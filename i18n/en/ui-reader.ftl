@@ -20,6 +20,11 @@ reader-close = Close
 # @max 16
 reader-end-read = Read
 
+# Under the end of chapter line, naming the trackers the read went to.
+# @arg trackers: text
+# @max 60
+reader-end-tracker = Read · { $trackers } updated
+
 # Small heading above the next chapter on the page between chapters.
 # @max 16
 reader-end-next = Next

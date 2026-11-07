@@ -8306,6 +8306,9 @@ reader-close = Zamknij
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Przeczytano
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kolejny
 

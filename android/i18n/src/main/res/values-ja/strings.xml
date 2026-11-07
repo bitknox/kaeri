@@ -669,7 +669,6 @@
     <string name="reader_grid_page">%1$dページへ移動</string>
     <string name="reader_scrubber_in_chapter">章内のページ</string>
     <string name="reader_failed_novel">この章を表示できませんでした</string>
-    <string name="reader_end_tracker">既読 · %1$sを更新しました</string>
     <string name="reader_end_tracker_offline">既読 · %1$sはオンラインに戻ると更新されます</string>
     <string name="reader_end_none">第%1$s話はソースにまだありません</string>
     <string name="reader_end_none_line">Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。</string>
@@ -2234,6 +2233,7 @@
     <string name="reader_try_again">もう一度試す</string>
     <string name="reader_close">閉じる</string>
     <string name="reader_end_read">既読</string>
+    <string name="reader_end_tracker">既読 · %1$sを更新しました</string>
     <string name="reader_end_next">次の章</string>
     <string name="reader_mode_rtl">右から左</string>
     <string name="reader_mode_ltr">左から右</string>

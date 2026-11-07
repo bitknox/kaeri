@@ -40,3 +40,4 @@ reader-end-caught-up = Vous êtes à jour
 reader-gap-none = Aucun
 reader-gap-small = Petit
 reader-look-system = Système
+reader-end-tracker = Lu · { $trackers } à jour

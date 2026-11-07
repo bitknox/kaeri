@@ -2465,10 +2465,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line, naming the trackers the read went to. */
-    fun readerEndTracker(context: Context, trackers: String): String =
-        context.getString(R.string.reader_end_tracker, trackers)
-
     /** Under the end of chapter line when the phone is offline. */
     fun readerEndTrackerOffline(context: Context, tracker: String): String =
         context.getString(R.string.reader_end_tracker_offline, tracker)
@@ -8438,6 +8434,10 @@ object Strings {
     fun readerEndRead(context: Context): String =
         context.getString(R.string.reader_end_read)
 
+    /** Under the end of chapter line, naming the trackers the read went to. */
+    fun readerEndTracker(context: Context, trackers: String): String =
+        context.getString(R.string.reader_end_tracker, trackers)
+
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =
         context.getString(R.string.reader_end_next)
@@ -8669,6 +8669,66 @@ object Strings {
     /** Primary action on the demo's series page. */
     fun demoReadChapter(context: Context, number: String): String =
         context.getString(R.string.demo_read_chapter, number)
+
+    /** Page between chapters, under the tracker line: the server has the progress. */
+    fun progressServerSaved(context: Context, server: String): String =
+        context.getString(R.string.progress_server_saved, server)
+
+    /** Same place, only after 600 ms without an answer. */
+    fun progressServerSending(context: Context, server: String): String =
+        context.getString(R.string.progress_server_sending, server)
+
+    /** Same place, offline: the send waits in the queue. */
+    fun progressServerOffline(context: Context, server: String): String =
+        context.getString(R.string.progress_server_offline, server)
+
+    /** Same place, the send failed for a reason that can pass. */
+    fun progressServerRetrying(context: Context, server: String): String =
+        context.getString(R.string.progress_server_retrying, server)
+
+    /** Same place, the server said no. Try again follows it. */
+    fun progressServerFailed(context: Context, server: String, reason: String): String =
+        context.getString(R.string.progress_server_failed, server, reason)
+
+    /** Reason: a Kavita key. */
+    fun progressWhyKey(context: Context): String =
+        context.getString(R.string.progress_why_key)
+
+    /** Reason: a Komga or OPDS password. */
+    fun progressWhyPassword(context: Context): String =
+        context.getString(R.string.progress_why_password)
+
+    /** Reason. */
+    fun progressWhyGone(context: Context): String =
+        context.getString(R.string.progress_why_gone)
+
+    /** Reason, after a day of retries. */
+    fun progressWhyGaveUp(context: Context): String =
+        context.getString(R.string.progress_why_gave_up)
+
+    /** Your sources, the server's row, second line. */
+    fun progressRowSaved(context: Context, ago: String): String =
+        context.getString(R.string.progress_row_saved, ago)
+
+    /** The server's row, after 600 ms without an answer. */
+    fun progressRowSending(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_sending, count, count)
+
+    /** The server's row, offline. */
+    fun progressRowOffline(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_offline, count, count)
+
+    /** The server's row, the last try failed for a reason that can pass. */
+    fun progressRowRetrying(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_retrying, count, count)
+
+    /** The server's row, the server said no. Try again sits beside it. */
+    fun progressRowFailed(context: Context, count: Int, reason: String): String =
+        context.resources.getQuantityString(R.plurals.progress_row_failed, count, count, reason)
+
+    /** The server's row, when Send progress to the server is off. */
+    fun progressRowOff(context: Context): String =
+        context.getString(R.string.progress_row_off)
 
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =

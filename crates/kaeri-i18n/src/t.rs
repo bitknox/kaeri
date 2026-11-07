@@ -13080,6 +13080,11 @@ pub fn reader_end_read() -> String {
     text("reader-end-read", &[])
 }
 
+/// Under the end of chapter line, naming the trackers the read went to.
+pub fn reader_end_tracker(trackers: &str) -> String {
+    text("reader-end-tracker", &[("trackers", Arg::Text(trackers))])
+}
+
 /// Small heading above the next chapter on the page between chapters.
 pub fn reader_end_next() -> String {
     text("reader-end-next", &[])
@@ -13368,6 +13373,81 @@ pub fn demo_story_row(author: &str, licence: &str) -> String {
 /// Primary action on the demo's series page.
 pub fn demo_read_chapter(number: &str) -> String {
     text("demo-read-chapter", &[("number", Arg::Text(number))])
+}
+
+/// Page between chapters, under the tracker line: the server has the progress.
+pub fn progress_server_saved(server: &str) -> String {
+    text("progress-server-saved", &[("server", Arg::Text(server))])
+}
+
+/// Same place, only after 600 ms without an answer.
+pub fn progress_server_sending(server: &str) -> String {
+    text("progress-server-sending", &[("server", Arg::Text(server))])
+}
+
+/// Same place, offline: the send waits in the queue.
+pub fn progress_server_offline(server: &str) -> String {
+    text("progress-server-offline", &[("server", Arg::Text(server))])
+}
+
+/// Same place, the send failed for a reason that can pass.
+pub fn progress_server_retrying(server: &str) -> String {
+    text("progress-server-retrying", &[("server", Arg::Text(server))])
+}
+
+/// Same place, the server said no. Try again follows it.
+pub fn progress_server_failed(server: &str, reason: &str) -> String {
+    text("progress-server-failed", &[("server", Arg::Text(server)), ("reason", Arg::Text(reason))])
+}
+
+/// Reason: a Kavita key.
+pub fn progress_why_key() -> String {
+    text("progress-why-key", &[])
+}
+
+/// Reason: a Komga or OPDS password.
+pub fn progress_why_password() -> String {
+    text("progress-why-password", &[])
+}
+
+/// Reason.
+pub fn progress_why_gone() -> String {
+    text("progress-why-gone", &[])
+}
+
+/// Reason, after a day of retries.
+pub fn progress_why_gave_up() -> String {
+    text("progress-why-gave-up", &[])
+}
+
+/// Your sources, the server's row, second line.
+pub fn progress_row_saved(ago: &str) -> String {
+    text("progress-row-saved", &[("ago", Arg::Text(ago))])
+}
+
+/// The server's row, after 600 ms without an answer.
+pub fn progress_row_sending(count: i64) -> String {
+    text("progress-row-sending", &[("count", Arg::Int(count))])
+}
+
+/// The server's row, offline.
+pub fn progress_row_offline(count: i64) -> String {
+    text("progress-row-offline", &[("count", Arg::Int(count))])
+}
+
+/// The server's row, the last try failed for a reason that can pass.
+pub fn progress_row_retrying(count: i64) -> String {
+    text("progress-row-retrying", &[("count", Arg::Int(count))])
+}
+
+/// The server's row, the server said no. Try again sits beside it.
+pub fn progress_row_failed(count: i64, reason: &str) -> String {
+    text("progress-row-failed", &[("count", Arg::Int(count)), ("reason", Arg::Text(reason))])
+}
+
+/// The server's row, when Send progress to the server is off.
+pub fn progress_row_off() -> String {
+    text("progress-row-off", &[])
 }
 
 /// Sidebar and tab label: the shows' Home when both media are on.

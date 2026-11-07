@@ -138,7 +138,6 @@ reader-paper-line = Страницы листаются сразу, и в чит
 reader-grid-page = Перейти к странице { $page }
 reader-scrubber-in-chapter = Страница в главе
 reader-failed-novel = Не удалось показать эту главу
-reader-end-tracker = Прочитано · обновлено: { $trackers }
 reader-end-tracker-offline = Прочитано · { $tracker } обновится, когда вы вернётесь в сеть
 reader-end-none = Ни у одного { -source }а пока нет главы { $chapter }
 reader-end-none-line = { -app-name } проверяет новые главы в фоне и добавляет их в «Обновления».

@@ -8175,6 +8175,9 @@ reader-close = [Çļöšé~~]
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = [Ŕéàð~~]
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = [Ŕéàð · { $trackers } üþðàţéð~~~~~~]
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = [Ñéẋţ~~]
 
@@ -8360,6 +8363,67 @@ demo-story-row = [Šţöŕý · { $author } · { $licence }~~~~~~]
 
 # Primary action on the demo's series page.
 demo-read-chapter = [Ŕéàð çĥàþţéŕ { $number }~~~~~]
+
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = [Šàṽéð ţö { $server }~~~~]
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = [Šéñðîñĝ ţö { $server }…~~~~~]
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = [Ŵîļļ šéñð ţö { $server } ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~]
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = [{ $server } ðîðñ’ţ àñšŵéŕ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = [Ñöţ šàṽéð ţö { $server }: { $reason }.~~~~~~~]
+
+# Reason: a Kavita key.
+progress-why-key = [ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé ķéý~~~~~~~~]
+
+# Reason: a Komga or OPDS password.
+progress-why-password = [ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé þàššŵöŕð~~~~~~~~~~]
+
+# Reason.
+progress-why-gone = [ţĥîš šéŕîéš îšñ’ţ öñ ţĥé šéŕṽéŕ àñý ɱöŕé~~~~~~~~~~~~]
+
+# Reason, after a day of retries.
+progress-why-gave-up = [ñö àñšŵéŕ ƒöŕ à ðàý~~~~~~]
+
+# Your sources, the server's row, second line.
+progress-row-saved = [Þŕöĝŕéšš šàṽéð { $ago }~~~~~~]
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+        [one] [Šéñðîñĝ 1 çĥàþţéŕ…~~~~~~]
+       *[other] [Šéñðîñĝ { $count } çĥàþţéŕš…~~~~~~~]
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+        [one] [1 çĥàþţéŕ ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~]
+       *[other] [{ $count } çĥàþţéŕš ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~]
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+        [one] [1 çĥàþţéŕ ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]
+       *[other] [{ $count } çĥàþţéŕš ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~~]
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+        [one] [1 çĥàþţéŕ ñöţ šàṽéð: { $reason }~~~~~~~~]
+       *[other] [{ $count } çĥàþţéŕš ñöţ šàṽéð: { $reason }~~~~~~~~~]
+    }
+
+# The server's row, when Send progress to the server is off.
+progress-row-off = [Þŕöĝŕéšš šţàýš öñ ţĥîš ðéṽîçé~~~~~~~~~]
 
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = [Ŵàţçĥ~~]

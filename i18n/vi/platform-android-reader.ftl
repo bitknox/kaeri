@@ -132,7 +132,6 @@ reader-paper-line = Trang lật ngay và không gì trong trình đọc chuyển
 reader-grid-page = Đi tới trang { $page }
 reader-scrubber-in-chapter = Trang trong chương
 reader-failed-novel = Không hiển thị được chương này
-reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
 reader-end-tracker-offline = Đã đọc · { $tracker } sẽ cập nhật khi bạn có mạng lại
 reader-end-none = Chưa có chương { $chapter } trong { -source-pl } của bạn
 reader-end-none-line = { -app-name } kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.

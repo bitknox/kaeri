@@ -132,7 +132,6 @@ reader-paper-line = Halaman berganti seketika dan tidak ada yang bergerak di pem
 reader-grid-page = Ke halaman { $page }
 reader-scrubber-in-chapter = Halaman dalam bab
 reader-failed-novel = Bab ini tidak bisa ditampilkan
-reader-end-tracker = Dibaca · { $trackers } diperbarui
 reader-end-tracker-offline = Dibaca · { $tracker } diperbarui saat Anda kembali online
 reader-end-none = Belum ada bab { $chapter } di { -source-pl } Anda
 reader-end-none-line = { -app-name } memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.

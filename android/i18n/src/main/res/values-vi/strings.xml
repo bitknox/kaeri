@@ -669,7 +669,6 @@
     <string name="reader_grid_page">Đi tới trang %1$d</string>
     <string name="reader_scrubber_in_chapter">Trang trong chương</string>
     <string name="reader_failed_novel">Không hiển thị được chương này</string>
-    <string name="reader_end_tracker">Đã đọc · đã cập nhật %1$s</string>
     <string name="reader_end_tracker_offline">Đã đọc · %1$s sẽ cập nhật khi bạn có mạng lại</string>
     <string name="reader_end_none">Chưa có chương %1$s trong các nguồn của bạn</string>
     <string name="reader_end_none_line">Kaeri kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.</string>
@@ -2234,6 +2233,7 @@
     <string name="reader_try_again">Thử lại</string>
     <string name="reader_close">Đóng</string>
     <string name="reader_end_read">Đã đọc</string>
+    <string name="reader_end_tracker">Đã đọc · đã cập nhật %1$s</string>
     <string name="reader_end_next">Kế tiếp</string>
     <string name="reader_mode_rtl">Phải sang trái</string>
     <string name="reader_mode_ltr">Trái sang phải</string>

@@ -188315,6 +188315,274 @@
         }
       }
     },
+    "progress-row-failed" : {
+      "comment" : "The server's row, the server said no. Try again sits beside it. Argument 1: count (Int). Argument 2: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter not saved: %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters not saved: %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "progress-row-off" : {
+      "comment" : "The server's row, when Send progress to the server is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress stays on this device"
+          }
+        }
+      }
+    },
+    "progress-row-offline" : {
+      "comment" : "The server's row, offline. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter will send when you’re back online"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters will send when you’re back online"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "progress-row-retrying" : {
+      "comment" : "The server's row, the last try failed for a reason that can pass. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 chapter waiting. Kaeri will try again."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters waiting. Kaeri will try again."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "progress-row-saved" : {
+      "comment" : "Your sources, the server's row, second line. Argument 1: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress saved %1$@"
+          }
+        }
+      }
+    },
+    "progress-row-sending" : {
+      "comment" : "The server's row, after 600 ms without an answer. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Sending 1 chapter…"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Sending %1$lld chapters…"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "progress-server-failed" : {
+      "comment" : "Same place, the server said no. Try again follows it. Argument 1: server (Text). Argument 2: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not saved to %1$@: %2$@."
+          }
+        }
+      }
+    },
+    "progress-server-offline" : {
+      "comment" : "Same place, offline: the send waits in the queue. Argument 1: server (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Will send to %1$@ when you’re back online"
+          }
+        }
+      }
+    },
+    "progress-server-retrying" : {
+      "comment" : "Same place, the send failed for a reason that can pass. Argument 1: server (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn’t answer. Kaeri will try again."
+          }
+        }
+      }
+    },
+    "progress-server-saved" : {
+      "comment" : "Page between chapters, under the tracker line: the server has the progress. Argument 1: server (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved to %1$@"
+          }
+        }
+      }
+    },
+    "progress-server-sending" : {
+      "comment" : "Same place, only after 600 ms without an answer. Argument 1: server (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to %1$@…"
+          }
+        }
+      }
+    },
+    "progress-why-gave-up" : {
+      "comment" : "Reason, after a day of retries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no answer for a day"
+          }
+        }
+      }
+    },
+    "progress-why-gone" : {
+      "comment" : "Reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "this series isn’t on the server any more"
+          }
+        }
+      }
+    },
+    "progress-why-key" : {
+      "comment" : "Reason: a Kavita key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server refused the key"
+          }
+        }
+      }
+    },
+    "progress-why-password" : {
+      "comment" : "Reason: a Komga or OPDS password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server refused the password"
+          }
+        }
+      }
+    },
     "queue-episodes-left" : {
       "comment" : "Continue row subtitle. The show's title is cut first when the row is short. Argument 1: count (Int). Argument 2: title (Text).",
       "extractionState" : "manual",
@@ -199427,6 +199695,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã đọc"
+          }
+        }
+      }
+    },
+    "reader-end-tracker" : {
+      "comment" : "Under the end of chapter line, naming the trackers the read went to. Argument 1: trackers (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelesen · %1$@ aktualisiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read · %1$@ updated"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leído · %1$@ actualizado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lu · %1$@ à jour"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibaca · %1$@ diperbarui"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letto · aggiornati: %1$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "既読 · %1$@を更新しました"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeczytano · zaktualizowano: %1$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lido · %1$@ atualizado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано · обновлено: %1$@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läst · uppdaterat på %1$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okundu · %1$@ güncellendi"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã đọc · đã cập nhật %1$@"
           }
         }
       }

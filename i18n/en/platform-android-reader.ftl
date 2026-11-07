@@ -689,12 +689,6 @@ reader-scrubber-in-chapter = Page in chapter
 # @max 40
 reader-failed-novel = Couldn't show this chapter
 
-# Under the end of chapter line, naming the trackers the read went to.
-# @only android
-# @arg trackers: text
-# @max 60
-reader-end-tracker = Read · { $trackers } updated
-
 # Under the end of chapter line when the phone is offline.
 # @only android
 # @arg tracker: text

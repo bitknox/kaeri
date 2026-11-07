@@ -5540,6 +5540,9 @@
   <data name="ReaderEndRead" xml:space="preserve">
     <value>Okundu</value>
   </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>Okundu · {trackers} güncellendi</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Sonraki</value>
   </data>
