@@ -39,6 +39,6 @@ AniList, MyAnimeList, Kitsu, Simkl and Trakt are connected through their public 
 
 ## Contact
 
-To report something on this website, in the repository or in a release file, write to [legal@kaeri.app](mailto:legal@kaeri.app) with the address of what you are reporting and why. Every message is read, and the aim is to answer within seven days.
+To report something on this website, in the repository or in a release file, write to [legal@kaeri.app](mailto:legal@kaeri.app) with the address of what you are reporting and why. We read every message and aim to answer within seven days.
 
 Kaeri can't remove anything from a plugin store or a source run by someone else. Write to that store's owner, whose contact is on the store's page, or to the service that hosts it. Reports about the code on GitHub can also go through GitHub's own process.
