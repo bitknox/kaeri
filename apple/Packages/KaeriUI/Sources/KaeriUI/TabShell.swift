@@ -50,7 +50,8 @@ struct TabShell: View {
                 }
                 // On iPad the bar keeps the iPhone's set, so it never runs past its width; the
                 // sidebar has every place.
-                .customizationID("tab.\(place.id)") // i18n-skip: an id
+                // Named for the answer too, so a changed answer starts from its own bar set.
+                .customizationID("tab.\(place.answer).\(place.section.rawValue)") // i18n-skip: an id
                 .defaultVisibility(Self.barTabs(store.medium.answer).contains(place.section) ? .automatic : .hidden,
                                    for: .tabBar)
             }
