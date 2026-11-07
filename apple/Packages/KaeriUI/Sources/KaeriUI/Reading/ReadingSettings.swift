@@ -1,7 +1,7 @@
 // Reading's settings: the Reading pane (reader defaults per format, when a chapter counts as
 // read, which series settings follow you), the Reading group in Downloads, and New chapters in
-// Notifications, on the Mac and iPad panes and the iPhone's pages. E-readers have their own group
-// in a later change; the pane leaves the room under the others.
+// Notifications, on the Mac and iPad panes and the iPhone's pages. The E-readers group holds
+// Send to e-reader and, on the Mac, the OPDS feed.
 
 import KaeriDesign
 import KaeriKit
@@ -78,8 +78,23 @@ enum ReaderDefaultWords {
 /// The Reading pane: reader defaults, then what follows you.
 struct ReadingPane: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    /// The Mac's OPDS feed, opened from the E-readers group.
+    @State private var feedOpen = false
 
     var body: some View {
+        #if os(macOS)
+        if feedOpen {
+            FeedPane { feedOpen = false }
+        } else {
+            groups
+        }
+        #else
+        groups
+        #endif
+    }
+
+    @ViewBuilder private var groups: some View {
         SettingsGroup(title: L.settingsReaderDefaults, footnote: L.settingsReaderDefaultsFooter) {
             SettingsRow(title: L.settingsReaderManga) {
                 menu(current: ReaderDefaultWords.manga(store)?.label, label: L.settingsReaderManga) {
@@ -116,7 +131,39 @@ struct ReadingPane: View {
                 SettingSwitch(key: .lookFollows)
             }
         }
-        .task { store.reading.loadReaderDefaults() }
+        SettingsGroup(title: L.ereadersGroup) {
+            SettingsRow(title: L.ereadersSendRow) {
+                SendTargetMenu()
+            }
+            #if os(macOS)
+            SettingsRow(title: L.ereadersFeedRow) {
+                Button {
+                    feedOpen = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(store.reading.sending.feed?.on == true ? L.readerOn : L.readerOff)
+                            .font(.mac(13))
+                        Image(systemName: "chevron.right").font(.mac(10, weight: .semibold))
+                    }
+                    .foregroundStyle(.haze)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .pointerHover()
+                .accessibilityLabel(L.ereadersFeedRow)
+            }
+            #endif
+        }
+        .task {
+            store.reading.loadReaderDefaults()
+            store.reading.sending.loadTargets()
+            #if os(macOS)
+            store.reading.sending.loadFeed()
+            #endif
+        }
+        #if os(macOS)
+        .onLaunchSheet("feed", navigator) { feedOpen = true }
+        #endif
     }
 
     private func menu<Content: View>(current: String?, label: String, @ViewBuilder _ content: () -> Content) -> some View {
@@ -222,10 +269,29 @@ struct PhoneReadingPage: View {
             } footer: {
                 Text(L.settingsFollowFooter(device: Device.name))
             }
+            Section {
+                let sending = store.reading.sending
+                Picker(selection: Binding(
+                    get: { sending.defaultTarget?.id },
+                    set: { if let id = $0 { sending.choose(target: id) } }
+                )) {
+                    ForEach(sending.targets, id: \.id) { Text($0.name).tag(Optional($0.id)) }
+                } label: {
+                    Text(L.ereadersSendRow).font(.ui(17)).foregroundStyle(.silk)
+                }
+                .pickerStyle(.navigationLink)
+                .listRowBackground(Palette.raised)
+                .disabled(sending.targets.isEmpty)
+            } header: {
+                PhoneSectionHeader(L.ereadersGroup)
+            }
         }
         .navigationTitle(L.settingsGroupReading)
         .navigationBarTitleDisplayMode(.inline)
-        .task { store.reading.loadReaderDefaults() }
+        .task {
+            store.reading.loadReaderDefaults()
+            store.reading.sending.loadTargets()
+        }
     }
 }
 

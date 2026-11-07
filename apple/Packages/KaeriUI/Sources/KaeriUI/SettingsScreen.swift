@@ -237,7 +237,8 @@ struct SettingsResults: View {
     static let index: [(title: String, pane: SettingsPane)] = [
         (L.settingsKaeriIsFor, .general), (L.settingsOpenAt, .general),
         (L.settingsTitleLanguage, .general), (L.settingsLanguageApp, .general), (L.settingsAdult, .general),
-        (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.settingsChapterNotifications, .notifications),
+        (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.ereadersGroup, .reading), (L.ereadersSendRow, .reading),
+        (L.settingsChapterNotifications, .notifications),
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
         (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),

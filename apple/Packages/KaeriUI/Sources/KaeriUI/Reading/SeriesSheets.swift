@@ -9,11 +9,15 @@ import KaeriStrings
 import SwiftUI
 
 /// The frame both sheets share: the title with Cancel or Done, as the board draws them.
-private struct ReadSheetFrame<Content: View>: View {
+struct ReadSheetFrame<Content: View>: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
     let subtitle: String?
     let close: String
+    /// How tall the Mac sheet may grow before its content scrolls.
+    var tallest: CGFloat = 560
+    /// Held under the scrolling content on touch, where a long list would push it off screen.
+    var pinned: AnyView?
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -35,13 +39,18 @@ private struct ReadSheetFrame<Content: View>: View {
         }
         .padding(24)
         .sheetWidth(480)
-        .frame(minHeight: 280, maxHeight: 560)
+        .frame(minHeight: 280, maxHeight: tallest)
         .background(.raised)
         .closesOnEscape { dismiss() }
         #else
         NavigationStack {
             ScrollView { content().padding(.horizontal, 16).padding(.vertical, 8) }
                 .background(.raised)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if let pinned {
+                        pinned.padding(.horizontal, 16).padding(.vertical, 12).background(.raised)
+                    }
+                }
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -63,7 +72,7 @@ private struct ReadSheetFrame<Content: View>: View {
 }
 
 /// Rows in one raised group, with hairlines between them.
-private struct SheetRows<Content: View>: View {
+struct SheetRows<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -83,7 +92,7 @@ private struct SheetRows<Content: View>: View {
     }
 }
 
-private struct SheetHeading: View {
+struct SheetHeading: View {
     let text: String
 
     var body: some View {
@@ -97,7 +106,7 @@ private struct SheetHeading: View {
     }
 }
 
-private struct SheetNote: View {
+struct SheetNote: View {
     let text: String
 
     var body: some View {
