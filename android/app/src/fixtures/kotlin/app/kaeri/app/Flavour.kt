@@ -342,6 +342,13 @@ internal object Flavour {
 
     /** The reading scenes open their book in the reader, as the Read switch will. Reading-dark is the build with reading off: no reader to open. */
     private fun openReaderScene(intent: Intent) {
+        // Any work in any scene, such as the demo's story: read=<work>, eink=1 for the e-ink reader.
+        intent.getStringExtra("read")?.let { work ->
+            app.kaeri.reader.phone.ReaderLauncher.open(
+                app.kaeri.reader.phone.ReaderRequest(work, eink = intent.getStringExtra("eink") == "1"),
+            )
+            return
+        }
         val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
         val (work, eink) = when (scene) {
             FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED -> "a:900301" to false

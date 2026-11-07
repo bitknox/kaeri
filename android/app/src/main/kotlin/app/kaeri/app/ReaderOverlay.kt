@@ -262,6 +262,11 @@ private fun OpenReader(
             },
     ) {
         val close = { ReaderLauncher.close() }
+        // The demo's last page: the reader closes and Your sources opens with Add a source.
+        val addSource = {
+            ReaderLauncher.close()
+            store.cameIn.choose()
+        }
         if (request.eink) {
             val profile by einkModel.state.collectAsState()
             // The panel's questions come first when the engine is unsure of it.
@@ -278,7 +283,7 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close),
+                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close, onAddSource = addSource),
                 )
             }
         } else {
@@ -286,7 +291,7 @@ private fun OpenReader(
                 session = session,
                 state = state,
                 images = images,
-                actions = PhoneReaderActions(onClose = close),
+                actions = PhoneReaderActions(onClose = close, onAddSource = addSource),
                 quiet = quiet,
                 novel = { place, onControls ->
                     NovelScreen(

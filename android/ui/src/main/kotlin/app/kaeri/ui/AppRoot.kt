@@ -343,6 +343,13 @@ fun AppRoot(
         androidx.compose.runtime.LaunchedEffect(startPage) {
             startPage?.let(navigator::open)
         }
+        // Add a source from the demo's last page: Your sources, with the choice over it.
+        val choosing by store.cameIn.choosing.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(choosing) {
+            if (choosing && nav.currentBackStackEntry?.destination?.route != app.kaeri.ui.reading.BOOK_SOURCES_ROUTE) {
+                navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE)
+            }
+        }
         // The player comes up over whatever is on screen, and goes back to it as it closes.
         if (player != null) {
             androidx.compose.runtime.LaunchedEffect(player.presented) {

@@ -93,6 +93,22 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
     /** What to say once a form has closed, for 4 s, until [noticed]. */
     val notice: StateFlow<Notice?> = _notice.asStateFlow()
 
+    private val _choosing = MutableStateFlow(false)
+
+    /**
+     * Asked from outside Your sources (the demo's last page): Your sources opens with Add a
+     * source over it.
+     */
+    val choosing: StateFlow<Boolean> = _choosing.asStateFlow()
+
+    fun choose() {
+        _choosing.value = true
+    }
+
+    fun chose() {
+        _choosing.value = false
+    }
+
     /** A look at a server: the address as asked, and whether a password went with it. */
     data class Asked(val address: String, val withPassword: Boolean)
 

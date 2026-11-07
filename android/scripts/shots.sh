@@ -36,7 +36,7 @@
 #
 # KAERI_SHOTS_FONT_SCALE=2.0 sets the system's font size for the run (back to 1.0 after).
 #
-# Reading's scenes (reading-first-run, reading-update-sheet, reading-join-ask, reading-home,
+# Reading's scenes (reading-first-run, reading-demo, reading-update-sheet, reading-join-ask, reading-home,
 # reading-series, reading-downloads) take medium=<read|watch|both>, a series' page as
 # page=read/series/a%3A900301 (home/series/… with medium=read), and series=<sheet> for a sheet or
 # menu on it (chapter, read-from, send, choose, status and so on):
@@ -67,7 +67,7 @@ shift
 shots=("$@")
 (( ${#shots[@]} )) || shots=(watching)
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | eink-grey | eink-kaleido-unsure | app) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-demo | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | eink-grey | eink-kaleido-unsure | app) ;; *) usage ;; esac
 done
 
 android="$(cd "$(dirname "$0")/.." && pwd)"

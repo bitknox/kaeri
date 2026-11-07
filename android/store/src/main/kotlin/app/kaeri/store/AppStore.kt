@@ -1498,6 +1498,7 @@ class AppStore(
                     is ReaderEvent.ProgressSent -> serverLines.sent(said.chapter, said.server, said.host, said.result)
                     is ReaderEvent.ChapterRead -> serverLines.chapterRead(said.work, said.chapter)
                     is ReaderEvent.Closed -> serverLines.clear()
+                    is ReaderEvent.Opened -> readerHosts[said.v1.work] = said.v1.progressHost
                     else -> {}
                 }
                 readers.forEach { it(event) }
@@ -1689,7 +1690,19 @@ class AppStore(
      * The host [work]'s progress goes to: the book server its edition in use reads from, when that
      * server is on and takes progress. Null otherwise, and then the page shows no Sending.
      */
+    /** Each opened work's progress host, as the engine said when the reader opened it. */
+    private val readerHosts = java.util.concurrent.ConcurrentHashMap<WorkId, java.util.Optional<String>>()
+
+    private operator fun MutableMap<WorkId, java.util.Optional<String>>.set(work: WorkId, host: String?) {
+        put(work, java.util.Optional.ofNullable(host))
+    }
+
+    /**
+     * The host progress for [work] goes to: what the engine said when the reader opened it, or
+     * else the server of the edition the series page showed.
+     */
     private fun progressHost(work: WorkId): String? {
+        readerHosts[work]?.let { return it.orElse(null) }
         val source = reading.series.value[work]?.edition?.sourceId ?: return null
         val server = bookSources.view.value?.servers?.firstOrNull { it.id == source && it.reportProgress && !it.off } ?: return null
         return runCatching { java.net.URI(server.address).host }.getOrNull() ?: server.address

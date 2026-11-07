@@ -415,6 +415,21 @@ async fn the_reader_hears_what_became_of_the_chapter_it_read() {
     assert_eq!(row.progress_problem, Some(WriteBackProblem::NotSetToReceive));
 }
 
+#[tokio::test]
+async fn the_reader_knows_the_host_progress_goes_to_before_a_chapter_is_read() {
+    let kit = kit(Flavour::Kavita).await;
+    assert_eq!(kit.sources.progress_host(&kit.work()).as_deref(), Some("127.0.0.1"));
+    // A work from no server, and a server set not to receive, name no host.
+    assert_eq!(kit.sources.progress_host(&WorkId::new("work-from-nowhere")), None);
+    kit.store()
+        .put_book_server(&BookServer {
+            report_progress: false,
+            ..kit.store().book_server("k").unwrap().unwrap()
+        })
+        .unwrap();
+    assert_eq!(kit.sources.progress_host(&kit.work()), None);
+}
+
 #[test]
 fn the_waits_are_30_s_2_min_10_min_then_hourly() {
     let waits: Vec<i64> = (1..=6).map(retry_in).collect();

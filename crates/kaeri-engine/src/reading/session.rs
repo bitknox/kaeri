@@ -656,6 +656,7 @@ impl Session {
                 .map(|c| c.row(&marks)),
             settings: Some(cx.settings_view(self.medium, Some(&self.work))),
             demo_credit: self.demo.clone(),
+            progress_host: cx.services.book_sources.progress_host(&self.work),
         }
     }
 

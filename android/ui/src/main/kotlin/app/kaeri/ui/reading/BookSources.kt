@@ -174,16 +174,17 @@ internal fun folderLine(folder: BookFolderRow): String {
  * looks again in 30 minutes" for one that showed none.
  */
 @Composable
-internal fun serverLine(server: BookServerRow, justAdded: Boolean): String {
+internal fun serverLine(server: BookServerRow, justAdded: Boolean, progressShown: Boolean = false): String {
     val context = LocalContext.current
     if (server.empty) return Strings.sourceRowServerEmpty(context, serverKindWords(server.kind))
     if (justAdded) return Strings.sourceRowServer(context, serverKindWords(server.kind), server.series.toInt(), server.libraries.toInt())
     return listOfNotNull(
         serverKindWords(server.kind),
-        server.address.takeIf { it != server.name },
+        server.address.takeIf { it != server.name && !progressShown },
         Strings.bookSourcesSeries(context, server.series.toInt()),
         if (server.off) Strings.bookSourcesOff(context) else null,
-        if (server.reportProgress) Strings.bookSourcesProgressBack(context) else null,
+        // The second line says what became of the progress, so the first doesn't promise it.
+        if (server.reportProgress && !progressShown) Strings.bookSourcesProgressBack(context) else null,
     ).joinToString(" · ") // i18n-skip
 }
 
@@ -224,6 +225,13 @@ internal fun BookSourcesScreen(title: String) {
     val store = LocalAppStore.current
     val view by store.bookSources.view.collectAsStateWithLifecycle()
     var adding by rememberSaveable { mutableStateOf(false) }
+    val choosing by store.cameIn.choosing.collectAsStateWithLifecycle()
+    LaunchedEffect(choosing) {
+        if (choosing) {
+            adding = true
+            store.cameIn.chose()
+        }
+    }
     // With nothing added, the empty state's own button is the one Add.
     val empty = view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
     ScreenFrame(
@@ -392,11 +400,12 @@ private fun FolderRow(place: Place, folder: BookFolderRow) {
 @Composable
 private fun ServerRow(place: Place, server: BookServerRow, justAdded: Boolean) {
     val store = LocalAppStore.current
+    val lines by store.rowLines.lines.collectAsStateWithLifecycle()
     ServerProgressRow(
         server,
         place,
         server.name,
-        serverLine(server, justAdded),
+        serverLine(server, justAdded, progressShown = lines[server.id] != null),
         note = if (server.signedOut) stringResource(R.string.servers_row_signed_out) else null,
         leading = if (server.signedOut) ({ Icon(Icons.Problem, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }) else ({ CameInTile(CameInGlyphs.Server) }),
         trailing = {

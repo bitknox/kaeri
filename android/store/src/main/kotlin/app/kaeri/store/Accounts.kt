@@ -227,6 +227,7 @@ class AccountsModel(private val clock: () -> Long = { System.currentTimeMillis()
             "kitsu" -> "Kitsu"
             "simkl" -> "Simkl"
             "trakt" -> "Trakt"
+            "mangaupdates" -> "MangaUpdates"
             else -> tracker.replaceFirstChar { it.uppercase() }
         }
 
