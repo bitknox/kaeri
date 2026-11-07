@@ -372,11 +372,17 @@ extension ReadingMsg {
         case .readingNextPart(let part): L.readingNextPart(part: part)
         case .readingPartPercent(let part, let percent): L.readingPartPercent(part: part, percent: Int(percent))
         case .readingPartNew(let part): L.readingPartNew(part: part)
+        case .readingLabelPercent(let label, let percent): L.readingLabelPercent(label: label, percent: Int(percent))
+        case .readingLabelNew(let label): L.readingLabelNew(label: label)
         case .readingPartTitled(let part, let title): L.readingPartTitled(part: part, title: title)
+        case .readingLabelTitled(let label, let title): L.readingLabelTitled(label: label, title: title)
         case .readingPartOutToday(let part): L.readingPartOutToday(part: part)
+        case .readingLabelOutToday(let label): L.readingLabelOutToday(label: label)
         case .readingPartOutTodayTitled(let part, let title): L.readingPartOutTodayTitled(part: part, title: title)
+        case .readingLabelOutTodayTitled(let label, let title): L.readingLabelOutTodayTitled(label: label, title: title)
         case .readingChapterOf(let chapter, let of): L.readingChapterOf(chapter: chapter, of: of)
         case .readingVolumePart(let volume, let part): L.readingVolumePart(volume: volume, part: part)
+        case .readingVolumeLabel(let volume, let label): L.readingVolumeLabel(volume: volume, label: label)
         case .readingOriginJapan: L.readingOriginJapan
         case .readingOriginKorea: L.readingOriginKorea
         case .readingOriginChina: L.readingOriginChina
@@ -402,6 +408,8 @@ extension ReadingMsg {
         case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
         case .readingRowPage(let page): L.readingRowPage(page: Int(page))
         case .readingRowPercent(let percent): L.readingRowPercent(percent: Int(percent))
+        case .readingRowOpened: L.readingRowOpened
+        case .readingRowBookmarked: L.readingRowBookmarked
         case .readingRowPages(let n): L.readingRowPages(n: Int(n))
         case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
         case .readingAgoNow: L.readingAgoNow

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.SettingsView
+import app.kaeri.store.reads
 import app.kaeri.store.AppStore
 
 /**
@@ -38,8 +40,9 @@ class EpisodeAlerts(private val context: Context, private val store: AppStore, p
     fun set(on: Boolean) {
         if (on) _refused.value = false
         store.setSwitch(KEY, on)
-        val switchedOn = store.settings.view.value?.notifySwitchedOn ?: 0u
-        NewEpisodesSchedule.set(context, Wanted.of(on, switchedOn, widgets.value == true).checks)
+        val view = store.settings.view.value
+        val switchedOn = view?.notifySwitchedOn ?: 0u
+        NewEpisodesSchedule.set(context, Wanted.of(on, switchedOn, widgets.value == true, view?.let(::chapters) == true).checks)
     }
 
     /** They could not go on, or stay on: the permission declined, or notifications blocked. */
@@ -58,7 +61,7 @@ class EpisodeAlerts(private val context: Context, private val store: AppStore, p
         val view = store.settings.view.value
         when {
             placed -> NewEpisodesSchedule.set(context, true)
-            view != null -> NewEpisodesSchedule.set(context, Wanted.of(store.settings.isOn(KEY, view), view.notifySwitchedOn, false).checks)
+            view != null -> NewEpisodesSchedule.set(context, Wanted.of(store.settings.isOn(KEY, view), view.notifySwitchedOn, false, chapters(view)).checks)
         }
     }
 
@@ -70,7 +73,10 @@ class EpisodeAlerts(private val context: Context, private val store: AppStore, p
     fun follow(scope: CoroutineScope) {
         scope.launch {
             store.settings.view.filterNotNull()
-                .combine(widgets) { view, placed -> Wanted.of(store.settings.isOn(KEY, view), view.notifySwitchedOn, placed == true) }
+                .combine(widgets) { view, placed -> view to placed }
+                .combine(store.medium.view) { (view, placed), _ ->
+                    Wanted.of(store.settings.isOn(KEY, view), view.notifySwitchedOn, placed == true, chapters(view))
+                }
                 .distinctUntilChanged()
                 .collect { wanted ->
                     if (wanted.setting && !notifier.canPost) refuse() else NewEpisodesSchedule.set(context, wanted.checks)
@@ -78,19 +84,24 @@ class EpisodeAlerts(private val context: Context, private val store: AppStore, p
         }
     }
 
+    /** Whether New chapters notifies: the person reads, and the setting is on. */
+    private fun chapters(view: SettingsView): Boolean =
+        store.medium.answer.reads && store.settings.isOn(SettingKey.CHAPTER_NOTIFICATIONS, view)
+
     /**
-     * What keeps the periodic check: the switch, the shows switched on for themselves, and the
-     * widgets placed.
+     * What keeps the periodic check: the switch, the shows switched on for themselves, the
+     * widgets placed, and New chapters while the person reads.
      */
-    data class Wanted(val setting: Boolean, val switchedOn: Boolean, val widgets: Boolean = false) {
-        /** Whether anything notifies: the setting, or a show of its own. */
-        val notifies: Boolean get() = setting || switchedOn
+    data class Wanted(val setting: Boolean, val switchedOn: Boolean, val widgets: Boolean = false, val chapters: Boolean = false) {
+        /** Whether anything notifies: the setting, a show of its own, or New chapters. */
+        val notifies: Boolean get() = setting || switchedOn || chapters
 
         /** Whether the periodic check runs: anything notifies, or a widget's record wants keeping. */
         val checks: Boolean get() = notifies || widgets
 
         companion object {
-            fun of(setting: Boolean, switchedOn: UInt, widgets: Boolean = false): Wanted = Wanted(setting, switchedOn > 0u, widgets)
+            fun of(setting: Boolean, switchedOn: UInt, widgets: Boolean = false, chapters: Boolean = false): Wanted =
+                Wanted(setting, switchedOn > 0u, widgets, chapters)
         }
     }
 

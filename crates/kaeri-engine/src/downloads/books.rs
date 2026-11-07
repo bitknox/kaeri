@@ -306,12 +306,12 @@ impl BookDownloads {
                 .or_insert_with(|| store.read_marks(&d.work).unwrap_or_default())
                 .is_read(&d.chapter);
             let bookmarked = store.bookmarks(&d.work).unwrap_or_default().contains(&d.chapter);
-            let title = store
-                .book_work_kind(&d.work)
-                .ok()
-                .flatten()
-                .and_then(|kind| kind.title)
-                .unwrap_or_else(|| d.work.clone());
+            let kind = store.book_work_kind(&d.work).ok().flatten();
+            let medium = kind
+                .as_ref()
+                .and_then(|kind| kaeri_core::media::Medium::parse(&kind.medium))
+                .unwrap_or(kaeri_core::media::Medium::Manga);
+            let title = kind.and_then(|kind| kind.title).unwrap_or_else(|| d.work.clone());
             let state = state_of(d, wifi);
             let mut chapter = chapter_row(d, read, bookmarked);
             // A download row carries no dates, so the clock plays no part in its words.
@@ -319,6 +319,7 @@ impl BookDownloads {
             chapter.line = crate::read_catalog::rows::line(
                 &shown_as,
                 crate::read_catalog::rows::Kept::Source,
+                medium,
                 0,
                 &jiff::tz::TimeZone::UTC,
             );

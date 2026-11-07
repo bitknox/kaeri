@@ -22,6 +22,8 @@ pub enum Action {
     Refresh,
     ForceResync,
     ToggleTranslation,
+    /// Watch, read or both: what Kaeri is for on this computer.
+    ChooseMedium,
     JumpSection(u8),
     FocusSearch,
     ShowAccounts,
@@ -146,6 +148,7 @@ impl Action {
         Self::Refresh,
         Self::ForceResync,
         Self::ToggleTranslation,
+        Self::ChooseMedium,
         Self::FocusSearch,
         Self::ShowAccounts,
         Self::ShowConflicts,
@@ -233,6 +236,7 @@ impl Action {
             Self::Refresh => t::keys_action_refresh(),
             Self::ForceResync => t::keys_action_force_resync(),
             Self::ToggleTranslation => t::keys_action_toggle_translation(),
+            Self::ChooseMedium => t::settings_kaeri_is_for(),
             // Named for the section, in the rail's order, so the palette can offer each one.
             Self::JumpSection(1) => t::keys_action_jump_continue(),
             Self::JumpSection(2) => t::keys_action_jump_calendar(),
@@ -352,6 +356,7 @@ impl Action {
             | Self::Refresh
             | Self::ForceResync
             | Self::ToggleTranslation
+            | Self::ChooseMedium
             | Self::JumpSection(_)
             | Self::FocusSearch
             | Self::ShowAccounts

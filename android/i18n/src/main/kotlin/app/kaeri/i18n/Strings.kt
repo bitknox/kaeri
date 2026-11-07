@@ -889,17 +889,37 @@ object Strings {
     fun readingPartNew(context: Context, part: String): String =
         context.getString(R.string.reading_part_new, part)
 
+    /** Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it. */
+    fun readingLabelPercent(context: Context, label: String, percent: Int): String =
+        context.getString(R.string.reading_label_percent, label, percent)
+
+    /** Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelNew(context: Context, label: String): String =
+        context.getString(R.string.reading_label_new, label)
+
     /** Under a This week cell: a light novel's part that came out that day, with its own title. */
     fun readingPartTitled(context: Context, part: String, title: String): String =
         context.getString(R.string.reading_part_titled, part, title)
+
+    /** Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelTitled(context: Context, label: String, title: String): String =
+        context.getString(R.string.reading_label_titled, label, title)
 
     /** Under the big picture on reading's Home: a light novel's part that came out today. */
     fun readingPartOutToday(context: Context, part: String): String =
         context.getString(R.string.reading_part_out_today, part)
 
+    /** Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelOutToday(context: Context, label: String): String =
+        context.getString(R.string.reading_label_out_today, label)
+
     /** Under the big picture on reading's Home: a light novel's part that came out today, with its title. */
     fun readingPartOutTodayTitled(context: Context, part: String, title: String): String =
         context.getString(R.string.reading_part_out_today_titled, part, title)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelOutTodayTitled(context: Context, label: String, title: String): String =
+        context.getString(R.string.reading_label_out_today_titled, label, title)
 
     /** Under a Library cover: the chapter the person is at, and the newest chapter there is. */
     fun readingChapterOf(context: Context, chapter: String, of: String): String =
@@ -908,6 +928,10 @@ object Strings {
     /** Under a Library cover: the volume and part of a light novel the person is at. */
     fun readingVolumePart(context: Context, volume: String, part: String): String =
         context.getString(R.string.reading_volume_part, volume, part)
+
+    /** Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5"). */
+    fun readingVolumeLabel(context: Context, volume: String, label: String): String =
+        context.getString(R.string.reading_volume_label, volume, label)
 
     /** A search filter: books from Japan. */
     fun readingOriginJapan(context: Context): String =
@@ -1008,6 +1032,14 @@ object Strings {
     /** A novel's chapter row: how far into it the person is. */
     fun readingRowPercent(context: Context, percent: Int): String =
         context.getString(R.string.reading_row_percent, percent)
+
+    /** A novel's chapter row: the person opened it, and how far in is too little to say as a percent. */
+    fun readingRowOpened(context: Context): String =
+        context.getString(R.string.reading_row_opened)
+
+    /** A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared. */
+    fun readingRowBookmarked(context: Context): String =
+        context.getString(R.string.reading_row_bookmarked)
 
     /** A chapter row: how long its pages are, for a file on the device. */
     fun readingRowPages(context: Context, n: Int): String =
@@ -2588,6 +2620,94 @@ object Strings {
     /** Heading on the Paper mode page above the parts it changes. */
     fun readerPaperParts(context: Context): String =
         context.getString(R.string.reader_paper_parts)
+
+    /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
+    fun readHomeOfflineLine(context: Context): String =
+        context.getString(R.string.read_home_offline_line)
+
+    /** Name of the notification channel for new chapters, shown in the system's settings. */
+    fun channelChaptersName(context: Context): String =
+        context.getString(R.string.channel_chapters_name)
+
+    /** What the new chapters channel is for, shown in the system's settings. */
+    fun channelChaptersDescription(context: Context): String =
+        context.getString(R.string.channel_chapters_description)
+
+    /** Name of the notification channel that says chapter downloads are done, shown in the system's settings. */
+    fun channelDownloadsFinishedName(context: Context): String =
+        context.getString(R.string.channel_downloads_finished_name)
+
+    /** What the downloads finished channel is for, shown in the system's settings. */
+    fun channelDownloadsFinishedDescription(context: Context): String =
+        context.getString(R.string.channel_downloads_finished_description)
+
+    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
+    fun notifChapterNew(context: Context, chapter: String): String =
+        context.getString(R.string.notif_chapter_new, chapter)
+
+    /** Notification, new chapters: the line under the series' title when one series has several. */
+    fun notifChaptersNew(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
+
+    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
+    fun notifChapterHidden(context: Context): String =
+        context.getString(R.string.notif_chapter_hidden)
+
+    /** Notification, new chapter: the action that opens the reader on the chapter. */
+    fun notifChapterRead(context: Context): String =
+        context.getString(R.string.notif_chapter_read)
+
+    /** The download notification while only chapters download. */
+    fun downloadsNoticeChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.downloads_notice_chapters, count, count)
+
+    /** On a series page whose source failed, under the cause: the chapters downloaded before still open. */
+    fun readSeriesDownloadedOpen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
+
+    /** Downloads' empty line for a person who only reads, under "No downloads". */
+    fun readDownloadsEmptyDetail(context: Context): String =
+        context.getString(R.string.read_downloads_empty_detail)
+
+    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
+    fun readDownloadsEmptyBoth(context: Context): String =
+        context.getString(R.string.read_downloads_empty_both)
+
+    /** Line under Notifications in the Settings list: chapter notifications are on. */
+    fun settingsSummaryChaptersOn(context: Context): String =
+        context.getString(R.string.settings_summary_chapters_on)
+
+    /** Line under Notifications in the Settings list: chapter notifications are off. */
+    fun settingsSummaryChaptersOff(context: Context): String =
+        context.getString(R.string.settings_summary_chapters_off)
+
+    /** Part of the line under Sources in the Settings list: how many book folders there are. */
+    fun settingsSummaryBookFolders(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_folders, n, n)
+
+    /** Part of the line under Sources in the Settings list: how many book servers there are. */
+    fun settingsSummaryBookServers(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_servers, n, n)
+
+    /** Part of the line under Sources in the Settings list: how many plugins there are for books. */
+    fun settingsSummaryBookPlugins(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_summary_book_plugins, n, n)
+
+    /** Row in Settings' Sources with both media on, and the title of its page: the sources for books. */
+    fun settingsBookSources(context: Context): String =
+        context.getString(R.string.settings_book_sources)
+
+    /** Line over the Check matches list: how many series of the folders were matched, and how many need a look. */
+    fun bookMatchesLine(context: Context, matched: Int, n: Int): String =
+        context.resources.getQuantityString(R.plurals.book_matches_line, n, matched, n)
+
+    /** The folder picker could not be opened, or the folder could not be kept. */
+    fun bookFolderFailed(context: Context): String =
+        context.getString(R.string.book_folder_failed)
+
+    /** Under the sign-in fields of Add a server for books: progress goes back, and where the password is kept on Android. */
+    fun bookServerNoteDevice(context: Context): String =
+        context.getString(R.string.book_server_note_device)
 
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
@@ -8649,6 +8769,18 @@ object Strings {
     /** The main action for a light novel part not opened yet. */
     fun actionReadPart(context: Context, n: String): String =
         context.getString(R.string.action_read_part, n)
+
+    /** The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. */
+    fun actionContinueNamed(context: Context, label: String, percent: Int): String =
+        context.getString(R.string.action_continue_named, label, percent)
+
+    /** The main action for a light novel part, part read, named in the source's own words, when how far is not known. */
+    fun actionContinueNamedPlain(context: Context, label: String): String =
+        context.getString(R.string.action_continue_named_plain, label)
+
+    /** The main action for a light novel part not opened yet, named in the source's own words. */
+    fun actionReadNamed(context: Context, label: String): String =
+        context.getString(R.string.action_read_named, label)
 
     /** The main action when every chapter is read. */
     fun actionReadAgain(context: Context): String =
