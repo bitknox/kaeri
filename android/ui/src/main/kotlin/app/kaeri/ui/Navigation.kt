@@ -139,8 +139,13 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(settingsRoute(pane)) { launchSingleTop = true }
     }
 
+    /** The destination the last page pushed with [open] was opened from: Downloads puts its medium first. */
+    var openedFrom: Destination? by mutableStateOf(null)
+        private set
+
     /** Push the page at [route] over whatever is on screen. */
     fun open(route: String) {
+        nav.currentBackStackEntry?.destinationOf()?.let { openedFrom = it }
         nav.navigate(route) { launchSingleTop = true }
     }
 }

@@ -1,6 +1,8 @@
 // Downloads (AndroidDownloads): the queue by title, each title with its cover, how many episodes
 // and how much they take, and each episode with where it stands and the one thing to do with it;
 // the watched episodes still seeding; and, in the bar, what the downloads take and what is free.
+// With Read or Both, reading's chapters by series too (fig 46): with Both one section per medium
+// with its total, Reading first when the person came from Read.
 
 package app.kaeri.ui
 
@@ -69,6 +71,9 @@ import app.kaeri.store.DownloadGroup
 import app.kaeri.store.DownloadsModel
 import app.kaeri.store.Wording
 import app.kaeri.store.bytesOnDisk
+import app.kaeri.store.reads
+import app.kaeri.store.text
+import app.kaeri.store.watches
 import app.kaeri.i18n.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
@@ -79,7 +84,7 @@ internal const val DOWNLOADS_ROUTE = "downloads"
 
 /** The Downloads screen's route. */
 internal fun NavGraphBuilder.downloadPages(actions: AppActions) {
-    composable(DOWNLOADS_ROUTE) { DownloadsScreen() }
+    composable(DOWNLOADS_ROUTE) { DownloadsScreen(actions) }
 }
 
 /** The bytes free where downloads are kept: Kaeri's own space on the device. */
@@ -98,11 +103,22 @@ internal fun storageWords(context: Context, used: Long, free: Long?): String =
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DownloadsScreen() {
+internal fun DownloadsScreen(actions: AppActions = AppActions()) {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
-    val rows by store.downloads.rows.collectAsStateWithLifecycle()
-    val seeding by store.downloads.seeding.collectAsStateWithLifecycle()
+    val isFor = kaeriIsFor()
+    val reads = isFor.reads
+    val watches = isFor.watches
+    val reading by store.reading.downloads.collectAsStateWithLifecycle()
+    LaunchedEffect(reads) { if (reads) store.reading.loadDownloads() }
+    // The series Send to e-reader is open for, from a series' long press, with its downloaded chapters.
+    var send by remember { mutableStateOf<Pair<app.kaeri.engine.core.WorkId, List<app.kaeri.engine.core.ChapterId>>?>(null) }
+    val allRows by store.downloads.rows.collectAsStateWithLifecycle()
+    val allSeeding by store.downloads.seeding.collectAsStateWithLifecycle()
+    // With Read alone, the shows' downloads stay out of sight.
+    val rows = if (watches) allRows else emptyList()
+    val seeding = if (watches) allSeeding else emptyList()
+    val readSeries = if (reads) reading?.series.orEmpty() else emptyList()
     val titles by store.titles.entries.collectAsStateWithLifecycle()
     val episodes by store.titles.episodes.collectAsStateWithLifecycle()
     val loaded by store.downloads.loaded.collectAsStateWithLifecycle()
@@ -125,7 +141,7 @@ internal fun DownloadsScreen() {
                     Column(Modifier.padding(start = 4.dp)) {
                         Text(stringResource(R.string.downloads_title), style = MaterialTheme.typography.titleLarge)
                         Text(
-                            storageWords(LocalContext.current, store.downloads.bytes(rows), free),
+                            storageWords(LocalContext.current, store.downloads.bytes(rows) + (if (reads) reading?.meter?.used?.toLong() ?: 0L else 0L), free),
                             style = MaterialTheme.typography.labelMedium.tabular(),
                             color = colors.onSurfaceVariant,
                         )
@@ -170,11 +186,13 @@ internal fun DownloadsScreen() {
     ) { padding ->
         // Before the first answer, nothing for 600 ms and then the rows' places; never the empty
         // state ahead of the answer (A6).
-        if (!loaded && rows.isEmpty()) {
+        val watchWaits = watches && !loaded && rows.isEmpty()
+        val readWaits = reads && reading == null
+        if ((watchWaits || !watches) && (readWaits || !reads) && readSeries.isEmpty()) {
             Column(Modifier.padding(top = padding.calculateTopPadding())) { AfterWait { DownloadPlaceholders() } }
             return@Scaffold
         }
-        if (rows.isEmpty() && seeding.isEmpty()) {
+        if (rows.isEmpty() && seeding.isEmpty() && readSeries.isEmpty()) {
             Column(
                 Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -182,7 +200,12 @@ internal fun DownloadsScreen() {
             ) {
                 app.kaeri.design.Nagare(cell = 5)
                 Text(stringResource(R.string.downloads_empty_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
-                SheetText(stringResource(R.string.downloads_empty_detail), Modifier.padding(top = 4.dp))
+                val detail = when {
+                    !reads -> stringResource(R.string.downloads_empty_detail)
+                    !watches -> stringResource(R.string.read_downloads_empty_detail)
+                    else -> stringResource(R.string.read_downloads_empty_both)
+                }
+                SheetText(detail, Modifier.padding(top = 4.dp))
             }
             return@Scaffold
         }
@@ -192,6 +215,26 @@ internal fun DownloadsScreen() {
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 48.dp),
         ) {
+            // With Both each medium has its own section and total; Reading comes first from Read.
+            val both = reads && watches
+            val readFirst = !watches || navigator.openedFrom == Destination.Read
+            val readingSection: () -> Unit = {
+                reading?.takeIf { readSeries.isNotEmpty() }?.let { view ->
+                    readingDownloads(view, divided = !readFirst && (groups.isNotEmpty() || seeding.isNotEmpty())) { work, chapters -> send = work to chapters }
+                }
+            }
+            if (readFirst) readingSection()
+            if (both && (groups.isNotEmpty() || seeding.isNotEmpty())) {
+                item(key = "shows-heading", contentType = "section") {
+                    Box(itemMotion()) {
+                        SectionHeading(
+                            stringResource(R.string.settings_group_shows),
+                            pluralStringResource(R.plurals.downloads_group_summary, rows.size, rows.size, Wording.bytes(LocalContext.current, store.downloads.bytes(rows))),
+                            divided = readFirst && readSeries.isNotEmpty(),
+                        )
+                    }
+                }
+            }
             // Rows come and go on standard, every item with the rest (motion-android.md's list
             // insert and remove), so a cancelled or cleared download never leaves a gap that snaps.
             groups.forEachIndexed { index, group ->
@@ -217,7 +260,129 @@ internal fun DownloadsScreen() {
                     Box(itemMotion()) { SettingsFootnote(stringResource(R.string.downloads_seeding_note)) }
                 }
             }
+            if (!readFirst) readingSection()
         }
+        }
+    }
+    send?.let { (work, chapters) ->
+        app.kaeri.ui.reading.SendToEreaderSheet(work, chapters, actions) { send = null }
+    }
+}
+
+/** A medium's heading in Downloads with Both: "Reading" and its total beside it, as the rows add up. */
+@Composable
+private fun SectionHeading(title: String, total: String, divided: Boolean) {
+    Column {
+        if (divided) HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp).semantics(mergeDescendants = true) { heading() },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            Text(total, style = MaterialTheme.typography.bodyMedium.tabular(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/**
+ * Reading's section: its heading with the total, then one row per series with its line and, while
+ * bytes move, the ring.
+ */
+private fun androidx.compose.foundation.lazy.LazyListScope.readingDownloads(
+    view: app.kaeri.engine.model.BookDownloadsView,
+    divided: Boolean,
+    onSend: (app.kaeri.engine.core.WorkId, List<app.kaeri.engine.core.ChapterId>) -> Unit,
+) {
+    item(key = "reading-heading", contentType = "section") {
+        val context = LocalContext.current
+        // The engine's total, which counts the rows below; the meter's while it sends none.
+        val total = view.total.takeIf { it.isNotEmpty() }?.joinToString(" · ") { it.text(context) } // i18n-skip
+            ?: Strings.readDownloadsTotal(context, view.meter.chapters.toInt(), Wording.bytes(context, view.meter.used.toLong()))
+        Box(itemMotion()) { SectionHeading(stringResource(R.string.settings_group_reading), total, divided) }
+    }
+    items(view.series, key = { "read-${it.work}" }, contentType = { "read-series" }) { series ->
+        Box(itemMotion()) {
+            ReadSeriesDownload(series, view.rows.filter { it.work == series.work }, onSend)
+        }
+    }
+}
+
+/**
+ * A series in Downloads: its cover, its title, its line ("6 chapters · 214 MB · 9 read"), a
+ * failure with its cause and Retry, Delete read once chapters are read, the ring while a chapter
+ * downloads; a long press offers Send to e-reader and deleting its downloads.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ReadSeriesDownload(
+    series: app.kaeri.engine.model.BookDownloadSeries,
+    rows: List<app.kaeri.engine.model.BookDownloadRow>,
+    onSend: (app.kaeri.engine.core.WorkId, List<app.kaeri.engine.core.ChapterId>) -> Unit,
+) {
+    val store = LocalAppStore.current
+    val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val colors = MaterialTheme.colorScheme
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var menu by remember { mutableStateOf(false) }
+    val done = rows.filter { it.state == app.kaeri.engine.model.ChapterDownloadState.Done }.map { it.chapter.id }
+    val moving = rows.filter { it.state !is app.kaeri.engine.model.ChapterDownloadState.Done && it.state !is app.kaeri.engine.model.ChapterDownloadState.Failed }.map { it.chapter.id }
+    val failed = series.failed.isNotEmpty()
+    val line = series.line.joinToString(" · ") { it.text(context) } // i18n-skip
+    Box {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .combinedClickable(
+                    onClick = { navigator.openSeries(series.work, "downloads") },
+                    onLongClickLabel = stringResource(R.string.action_more),
+                    onLongClick = {
+                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        menu = true
+                    },
+                )
+                .padding(start = 16.dp, end = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            app.kaeri.ui.reading.ReadCover(series.cover, 40.dp, Modifier.sharedWork(Shared.Cover, series.work, from = "downloads"))
+            Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                Text(series.title, style = ShowTitle.row)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Top) {
+                    if (failed) Icon(Icons.Problem, contentDescription = null, tint = app.kaeri.design.ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(16.dp))
+                    Text(line, style = MaterialTheme.typography.bodyMedium.tabular(), color = if (failed) colors.onSurface else colors.onSurfaceVariant)
+                }
+            }
+            val progress = series.progress
+            when {
+                progress != null && moving.isNotEmpty() -> app.kaeri.ui.reading.ChapterRing(progress, stringResource(R.string.chapter_download_stop)) {
+                    store.reading.cancelDownloads(series.work, moving)
+                }
+                failed -> QuietButton(stringResource(R.string.chapter_retry)) {
+                    store.reading.download(series.work, app.kaeri.engine.model.DownloadPick.Chapters(series.failed))
+                }
+                series.read > 0u -> QuietButton(stringResource(R.string.read_downloads_delete_read)) { store.reading.deleteRead(series.work) }
+            }
+        }
+        Menu(expanded = menu, onDismissRequest = { menu = false }) {
+            if (done.isNotEmpty()) {
+                DropdownMenuItem(text = { Text(Strings.sendEreaderTitle(context)) }, onClick = {
+                    menu = false
+                    onSend(series.work, done)
+                })
+            }
+            if (series.read > 0u) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.read_downloads_delete_read)) }, onClick = {
+                    menu = false
+                    store.reading.deleteRead(series.work)
+                })
+            }
+            DropdownMenuItem(text = { Text(stringResource(R.string.download_delete_series)) }, onClick = {
+                menu = false
+                store.reading.deleteDownloads(series.work, rows.map { it.chapter.id })
+            })
         }
     }
 }
