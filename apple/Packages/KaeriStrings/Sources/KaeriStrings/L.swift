@@ -9062,6 +9062,260 @@ public enum L {
     /// Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
     public static var readDownloadsDeleteRead: String { string("read-downloads-delete-read", fallback: "Delete read") }
 
+    /// Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+    public static var sendTitle: String { string("send-title", fallback: "Send to e-reader") }
+
+    /// Heading over the e-readers to choose from in the Send to e-reader sheet.
+    public static var sendFor: String { string("send-for", fallback: "For") }
+
+    /// Heading over what is being sent in the Send to e-reader sheet.
+    public static var sendWhat: String { string("send-what", fallback: "What") }
+
+    /// Row in the Send to e-reader sheet: the chapters being sent.
+    public static var sendChapters: String { string("send-chapters", fallback: "Chapters") }
+
+    /// The chapters being sent when there is one: its number or label.
+    public static func sendChaptersOne(chapter: String) -> String {
+        Self.format("send-chapters-one", fallback: "%1$@", chapter)
+    }
+
+    /// The chapters being sent when there are several, from the first to the last.
+    public static func sendChaptersRange(first: String, last: String) -> String {
+        Self.format("send-chapters-range", fallback: "%1$@ to %2$@", first, last)
+    }
+
+    /// Row in the Send to e-reader sheet: how big the files will be.
+    public static var sendSize: String { string("send-size", fallback: "Size") }
+
+    /// The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+    public static func sendSizeAbout(size: String) -> String {
+        Self.format("send-size-about", fallback: "About %1$@", size)
+    }
+
+    /// Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+    public static var sendNoPlace: String { string("send-no-place", fallback: "Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.") }
+
+    /// The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+    public static var sendPrepare: String { string("send-prepare", fallback: "Prepare and share") }
+
+    /// While the files are made: which chapter of how many. The ring beside it shows how far along.
+    public static func sendPreparing(done: Int, total: Int) -> String {
+        Self.format("send-preparing", fallback: "Preparing %1$lld of %2$lld chapters", done, total)
+    }
+
+    /// Under the progress of a send to a device: what the pages are made for.
+    public static func sendSizedFor(device: String) -> String {
+        Self.format("send-sized-for", fallback: "Pages are sized for %1$@", device)
+    }
+
+    /// Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+    public static func sendInParts(size: String) -> String {
+        Self.format("send-in-parts", fallback: "Over %1$@, so the files go in parts.", size)
+    }
+
+    /// A send that failed on one chapter. The cause is the sentence that says why.
+    public static func sendFailedChapter(chapter: String, cause: String) -> String {
+        Self.format("send-failed-chapter", fallback: "Couldn't prepare chapter %1$@. %2$@", chapter, cause)
+    }
+
+    /// A send that failed before or after its chapters. The cause is the sentence that says why.
+    public static func sendFailed(cause: String) -> String {
+        Self.format("send-failed", fallback: "Couldn't prepare the files. %1$@", cause)
+    }
+
+    /// Text of the Send sheet's Size row while the size is still being worked out.
+    public static var sendSizeWorking: String { string("send-size-working", fallback: "Working it out") }
+
+    /// Spoken value of the Chapters row in the Send sheet while its list is open.
+    public static var sendChaptersOpen: String { string("send-chapters-open", fallback: "Open") }
+
+    /// Spoken value of the Chapters row in the Send sheet while its list is closed.
+    public static var sendChaptersClosed: String { string("send-chapters-closed", fallback: "Closed") }
+
+    /// Spoken value of the ring in a send under way. Already a number from 0 to 100.
+    public static func sendProgressSpoken(percent: Int) -> String {
+        Self.format("send-progress-spoken", fallback: "%1$lld percent", percent)
+    }
+
+    /// Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+    public static var sendChapterAction: String { string("send-chapter-action", fallback: "Send to e-reader") }
+
+    /// Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+    public static func sendPartsOver(size: String) -> String {
+        Self.format("send-parts-over", fallback: "in parts over %1$@", size)
+    }
+
+    /// While a send waits for the network and the person can stop it. The engine's own line comes first.
+    public static var sendWaitingCancel: String { string("send-waiting-cancel", fallback: "Cancel send") }
+
+    /// When the files are ready, over the button that opens the share sheet. The count is how many files.
+    public static func sendReady(n: Int) -> String {
+        Self.format("send-ready", fallback: "%1$lld files are ready.", n)
+    }
+
+    /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+    public static var sendShareAgain: String { string("send-share-again", fallback: "Share again") }
+
+    /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+    public static func sendBanner(device: String) -> String {
+        Self.format("send-banner", fallback: "Sending to %1$@", device)
+    }
+
+    /// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+    public static var sendFormatFixedEpub: String { string("send-format-fixed-epub", fallback: "Fixed-layout EPUB") }
+
+    /// The format of the files an e-reader is sent: the Kobo form of EPUB.
+    public static var sendFormatKepub: String { string("send-format-kepub", fallback: "KEPUB") }
+
+    /// The format of the files an e-reader is sent: a plain EPUB.
+    public static var sendFormatEpub: String { string("send-format-epub", fallback: "EPUB") }
+
+    /// The format of the files an e-reader is sent: a comic book archive.
+    public static var sendFormatCbz: String { string("send-format-cbz", fallback: "CBZ") }
+
+    /// Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+    public static func sendTargetLine(format: String, width: String, height: String) -> String {
+        Self.format("send-target-line", fallback: "%1$@ · %2$@ × %3$@", format, width, height)
+    }
+
+    /// Title of the sheet that asks where you stopped reading on the e-reader.
+    public static var stopTitle: String { string("stop-title", fallback: "Where did you stop?") }
+
+    /// Note on a series page after chapters were sent: opens the question.
+    public static func stopNote(device: String) -> String {
+        Self.format("stop-note", fallback: "You sent chapters to %1$@. Where did you stop?", device)
+    }
+
+    /// Button in that note.
+    public static var stopNoteAction: String { string("stop-note-action", fallback: "Set my place") }
+
+    /// First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+    public static func stopSentOne(chapter: String, device: String, date: String) -> String {
+        Self.format("stop-sent-one", fallback: "Chapter %1$@ went to %2$@ on %3$@.", chapter, device, date)
+    }
+
+    /// First line of the sheet when several chapters were sent, from the first to the last.
+    public static func stopSentRange(first: String, last: String, device: String, date: String) -> String {
+        Self.format("stop-sent-range", fallback: "Chapters %1$@ to %2$@ went to %3$@ on %4$@.", first, last, device, date)
+    }
+
+    /// Switch in the sheet: the last chapter sent was read to its end.
+    public static func stopFinished(chapter: String) -> String {
+        Self.format("stop-finished", fallback: "I finished chapter %1$@", chapter)
+    }
+
+    /// The main button of the sheet: keeps the chapter chosen as the place.
+    public static var stopSet: String { string("stop-set", fallback: "Set my place") }
+
+    /// The other button of the sheet: leaves the place as it is, with the place named.
+    public static func stopKeep(chapter: String, page: Int) -> String {
+        Self.format("stop-keep", fallback: "Keep chapter %1$@ · page %2$lld", chapter, page)
+    }
+
+    /// The other button of the sheet when the place is not a page.
+    public static var stopKeepPlain: String { string("stop-keep-plain", fallback: "Keep my place") }
+
+    /// Heading of the E-readers group in the Reading settings.
+    public static var ereadersGroup: String { string("ereaders-group", fallback: "E-readers") }
+
+    /// Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+    public static var ereadersSendRow: String { string("ereaders-send-row", fallback: "Send to e-reader") }
+
+    /// Row in the E-readers group that opens the feed settings. The value is On or Off.
+    public static var ereadersFeedRow: String { string("ereaders-feed-row", fallback: "OPDS feed") }
+
+    /// Line under the Share on this network switch.
+    public static var opdsShareNote: String { string("opds-share-note", fallback: "An OPDS catalogue e-readers at home can browse") }
+
+    /// Footnote under the feed settings.
+    public static func opdsFooter(device: String) -> String {
+        Self.format("opds-footer", fallback: "Only while Kaeri is open on this %1$@. Progress on those e-readers stays there.", device)
+    }
+
+    /// Row in the feed settings: the web address e-readers are given, with a button that copies it.
+    public static var opdsAddress: String { string("opds-address", fallback: "Address") }
+
+    /// Shown in place of the address while the feed is off or has no password.
+    public static var opdsAddressOff: String { string("opds-address-off", fallback: "Turn the feed on to get its address.") }
+
+    /// Row in the feed settings: the password e-readers ask for.
+    public static var opdsPassword: String { string("opds-password", fallback: "Password") }
+
+    /// Line under the password row.
+    public static var opdsPasswordNote: String { string("opds-password-note", fallback: "E-readers ask for it once") }
+
+    /// Button in the feed settings that makes a new password. The e-readers ask for the new one.
+    public static var opdsNewPassword: String { string("opds-new-password", fallback: "New password") }
+
+    /// Row in the feed settings: the port the feed listens on.
+    public static var opdsPort: String { string("opds-port", fallback: "Port") }
+
+    /// Line under the port row when it is empty.
+    public static var opdsPortNote: String { string("opds-port-note", fallback: "Leave it empty to pick a free port, or use 1024 to 65535") }
+
+    /// Line under the port row when the port asked for was taken and another is used.
+    public static func opdsPortMoved(wanted: Int, port: Int) -> String {
+        Self.format("opds-port-moved", fallback: "Port %1$lld was busy, so the feed uses %2$lld.", wanted, port)
+    }
+
+    /// Heading of the group that picks what the feed shares.
+    public static var opdsShares: String { string("opds-shares", fallback: "What it shares") }
+
+    /// Row in What it shares: the chapters downloaded on this device.
+    public static var opdsShareDownloads: String { string("opds-share-downloads", fallback: "Downloads") }
+
+    /// Line under that row.
+    public static func opdsShareDownloadsCount(n: Int) -> String {
+        Self.format("opds-share-downloads-count", fallback: "%1$lld chapters", n)
+    }
+
+    /// Row in What it shares: the series in the manga and comic folders.
+    public static var opdsShareManga: String { string("opds-share-manga", fallback: "Manga folder") }
+
+    /// Row in What it shares: the series in the novel folders.
+    public static var opdsShareNovels: String { string("opds-share-novels", fallback: "Novel folder") }
+
+    /// Line under a folder row.
+    public static func opdsShareSeriesCount(n: Int) -> String {
+        Self.format("opds-share-series-count", fallback: "%1$lld series", n)
+    }
+
+    /// Heading of the list of e-readers that fetched files from the feed.
+    public static var opdsFetchedBy: String { string("opds-fetched-by", fallback: "Fetched by") }
+
+    /// Line when no e-reader has fetched anything since the feed started.
+    public static var opdsFetchedNone: String { string("opds-fetched-none", fallback: "No e-reader has fetched anything yet.") }
+
+    /// Shown in place of the address while the feed is switched on and starting to listen.
+    public static var opdsStarting: String { string("opds-starting", fallback: "Starting…") }
+
+    /// Shown in place of the address while the feed is on but the Mac is on no local network.
+    public static var opdsPausedNone: String { string("opds-paused-none", fallback: "Paused. This Mac isn't on a local network.") }
+
+    /// Shown in place of the address while the feed is on but the only connection goes through a VPN.
+    public static var opdsPausedVpn: String { string("opds-paused-vpn", fallback: "Paused. This Mac is only connected through a VPN.") }
+
+    /// Title of the question before a new feed password is made.
+    public static var opdsNewPasswordTitle: String { string("opds-new-password-title", fallback: "Make a new password?") }
+
+    /// Text of that question.
+    public static var opdsNewPasswordWarning: String { string("opds-new-password-warning", fallback: "E-readers that already use the feed stop working until you type the new password into each one.") }
+
+    /// Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+    public static func opdsFetchedTime(time: String) -> String {
+        Self.format("opds-fetched-time", fallback: "Last asked %1$@", time)
+    }
+
+    /// Line under an e-reader in that list: how many files it took.
+    public static func opdsFetchedFiles(n: Int) -> String {
+        Self.format("opds-fetched-files", fallback: "%1$lld files", n)
+    }
+
+    /// Name for an e-reader that did not give one.
+    public static func opdsReaderUnnamed(address: String) -> String {
+        Self.format("opds-reader-unnamed", fallback: "E-reader at %1$@", address)
+    }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 

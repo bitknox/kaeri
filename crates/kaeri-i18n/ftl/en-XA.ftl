@@ -9174,6 +9174,230 @@ read-downloads-read = [{ $n } ŕéàð~~~]
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = [Ðéļéţé ŕéàð~~~~]
 
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = [Ƒöŕ~]
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = [Ŵĥàţ~~]
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = [Çĥàþţéŕš~~~]
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = [{ $chapter }~]
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = [{ $first } ţö { $last }~~~]
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = [Šîžé~~]
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = [Åƀöüţ { $size }~~~]
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = [Ķàéŕî çàñ'ţ šéé ýöüŕ þļàçé öñ ţĥîš é-ŕéàðéŕ. Ŵĥéñ ýöü çöɱé ƀàçķ, ţĥé šéŕîéš þàĝé àšķš ŵĥéŕé ýöü šţöþþéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = [Þŕéþàŕé àñð šĥàŕé~~~~~~]
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] [Þŕéþàŕîñĝ ţĥé çĥàþţéŕ~~~~~~~]
+       *[other] [Þŕéþàŕîñĝ { $done } öƒ { $total } çĥàþţéŕš~~~~~~~~~]
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = [Þàĝéš àŕé šîžéð ƒöŕ { $device }~~~~~~~]
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = [Öṽéŕ { $size }, šö ţĥé ƒîļéš ĝö îñ þàŕţš.~~~~~~~~~~~]
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = [Çöüļðñ'ţ þŕéþàŕé çĥàþţéŕ { $chapter }. { $cause }~~~~~~~~~~]
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = [Çöüļðñ'ţ þŕéþàŕé ţĥé ƒîļéš. { $cause }~~~~~~~~~~]
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = [Ŵöŕķîñĝ îţ öüţ~~~~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = [Öþéñ~~]
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = [Çļöšéð~~]
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = [{ $percent } þéŕçéñţ~~~~]
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = [îñ þàŕţš öṽéŕ { $size }~~~~~~]
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = [Çàñçéļ šéñð~~~~]
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] [Öñé ƒîļé îš ŕéàðý.~~~~~~]
+       *[other] [{ $n } ƒîļéš àŕé ŕéàðý.~~~~~~]
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = [Šĥàŕé àĝàîñ~~~~]
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = [Ƒîẋéð-ļàýöüţ ÉÞÛƁ~~~~~~]
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = [ĶÉÞÛƁ~~]
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = [ÉÞÛƁ~~]
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = [ÇƁŽ~]
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = [{ $format } · { $width } × { $height }~~~~~]
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = [Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~]
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = [Ýöü šéñţ çĥàþţéŕš ţö { $device }. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~]
+
+# Button in that note.
+stop-note-action = [Šéţ ɱý þļàçé~~~~]
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~]
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = [Çĥàþţéŕš { $first } ţö { $last } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~~~]
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = [Î ƒîñîšĥéð çĥàþţéŕ { $chapter }~~~~~~~]
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = [Šéţ ɱý þļàçé~~~~]
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = [Ķééþ çĥàþţéŕ { $chapter } · þàĝé { $page }~~~~~~~~~]
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = [Ķééþ ɱý þļàçé~~~~]
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = [É-ŕéàðéŕš~~~]
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = [ÖÞÐŠ ƒééð~~~]
+
+# Line under the Share on this network switch.
+opds-share-note = [Åñ ÖÞÐŠ çàţàļöĝüé é-ŕéàðéŕš àţ ĥöɱé çàñ ƀŕöŵšé~~~~~~~~~~~~~~]
+
+# Footnote under the feed settings.
+opds-footer = [Öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš { $device }. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = [Åððŕéšš~~~]
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = [Ţüŕñ ţĥé ƒééð öñ ţö ĝéţ îţš àððŕéšš.~~~~~~~~~~~]
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = [Þàššŵöŕð~~~]
+
+# Line under the password row.
+opds-password-note = [É-ŕéàðéŕš àšķ ƒöŕ îţ öñçé~~~~~~~~]
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = [Ñéŵ þàššŵöŕð~~~~]
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = [Þöŕţ~~]
+
+# Line under the port row when it is empty.
+opds-port-note = [Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = [Þöŕţ { $wanted } ŵàš ƀüšý, šö ţĥé ƒééð üšéš { $port }.~~~~~~~~~~~~]
+
+# Heading of the group that picks what the feed shares.
+opds-shares = [Ŵĥàţ îţ šĥàŕéš~~~~~]
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = [Ðöŵñļöàðš~~~]
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] [Öñé çĥàþţéŕ~~~~]
+       *[other] [{ $n } çĥàþţéŕš~~~~]
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = [Ṁàñĝà ƒöļðéŕ~~~~]
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = [Ñöṽéļ ƒöļðéŕ~~~~]
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] [Öñé šéŕîéš~~~]
+       *[other] [{ $n } šéŕîéš~~~]
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = [Ƒéţçĥéð ƀý~~~]
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = [Ñö é-ŕéàðéŕ ĥàš ƒéţçĥéð àñýţĥîñĝ ýéţ.~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = [Šţàŕţîñĝ…~~~]
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = [Þàüšéð. Ţĥîš Ṁàç îšñ'ţ öñ à ļöçàļ ñéţŵöŕķ.~~~~~~~~~~~~~]
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = [Þàüšéð. Ţĥîš Ṁàç îš öñļý çöññéçţéð ţĥŕöüĝĥ à ṼÞÑ.~~~~~~~~~~~~~~~]
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = [Ṁàķé à ñéŵ þàššŵöŕð?~~~~~~]
+
+# Text of that question.
+opds-new-password-warning = [É-ŕéàðéŕš ţĥàţ àļŕéàðý üšé ţĥé ƒééð šţöþ ŵöŕķîñĝ üñţîļ ýöü ţýþé ţĥé ñéŵ þàššŵöŕð îñţö éàçĥ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = [Ļàšţ àšķéð { $time }~~~~~]
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] [Öñé ƒîļé~~~]
+       *[other] [{ $n } ƒîļéš~~~]
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = [É-ŕéàðéŕ àţ { $address }~~~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 

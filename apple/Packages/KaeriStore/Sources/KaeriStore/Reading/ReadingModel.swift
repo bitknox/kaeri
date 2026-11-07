@@ -113,7 +113,11 @@ public final class ReadingModel {
     public private(set) var readerDefaults: [Medium: ReaderSettingsView] = [:]
     /// What reading's search filters choose from, fixed in the engine.
     public let filters: ReadFilters = readFilters()
-    @ObservationIgnored var send: ((Command) -> Void)?
+    /// Send to e-reader and the feed.
+    public let sending = SendModel()
+    @ObservationIgnored var send: ((Command) -> Void)? {
+        didSet { sending.command = send }
+    }
 
     public init() {}
 
@@ -283,6 +287,7 @@ public final class ReadingModel {
             readerDefaults[view.medium] = view
         }
         guard case .reading(let event) = event else { return }
+        sending.apply(event)
         apply(event)
     }
 

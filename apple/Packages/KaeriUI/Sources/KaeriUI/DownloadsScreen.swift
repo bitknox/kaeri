@@ -46,6 +46,7 @@ struct DownloadsScreen: View {
                                 .padding(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 0))
                         }
                         #endif
+                        SendStatusRows(work: nil)
                         if !books.isEmpty {
                             ReadDownloadsSection(headed: both)
                         }

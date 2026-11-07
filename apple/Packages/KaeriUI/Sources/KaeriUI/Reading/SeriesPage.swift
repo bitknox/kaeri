@@ -137,6 +137,7 @@ struct SeriesPage: View {
                     } else {
                         PhoneSeriesHeader(series: series, choosing: $choosing)
                     }
+                    if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
                     SeriesChapters(series: series, chapters: store.reading.chapters[work],
                                    choosing: $choosing, newestFirst: $newestFirst)
                         .padding(.top, wide ? 32 : 24)
@@ -150,19 +151,17 @@ struct SeriesPage: View {
             }
             .padding(.horizontal, wide ? 24 : 16)
             .padding(.top, wide ? 8 : 0)
-            .padding(.bottom, Device.isMac && choosing != nil ? 120 : 32)
+            .padding(.bottom, 32)
             .frame(maxWidth: 1_120, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .scrollIndicators(.automatic)
         .background(.ground)
-        #if os(iOS)
         // The list insets above the bar and fades under it, as a bottom toolbar does.
         .safeAreaBar(edge: .bottom) { chooseBar(series) }
+        #if os(iOS)
         // Choosing is a mode of its own: its bar takes the tab bar's place, as in Photos.
         .toolbar(choosing == nil ? .automatic : .hidden, for: .tabBar)
-        #else
-        .overlay(alignment: .bottom) { chooseBar(series) }
         #endif
         .animation(.standard, value: choosing == nil)
         .task(id: work) {
@@ -173,6 +172,26 @@ struct SeriesPage: View {
         .onLaunchSheet("read-from", navigator) { // i18n-skip: a shot's sheet name
             navigator.seriesSheet = .source(work)
             Task { await store.bookSources.stageMissShot(work: work) }
+        }
+        // Shots: Send to e-reader with the first three chapters, and Where did you stop after a send.
+        .task {
+            let name = navigator.launchSheet
+            guard name == "send" || name == "stopped" else { return } // i18n-skip: a shot's sheet name
+            for _ in 0..<50 where store.reading.chapters[work] == nil || store.reading.sending.targets.isEmpty {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            let ids = Array((store.reading.chapters[work]?.volumes.flatMap(\.chapters) ?? []).prefix(3).map(\.id))
+            if name == "stopped", let target = store.reading.sending.defaultTarget { // i18n-skip: a shot's sheet name
+                store.reading.sending.stageShared(work: work, chapters: ids, target: target.id)
+                for _ in 0..<50 where store.reading.series[work]?.askWhereStopped == nil {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
+                navigator.seriesSheet = .stopped(work)
+            } else {
+                navigator.seriesSheet = .send(work, chapters: ids)
+            }
+            try? await Task.sleep(for: .milliseconds(500))
+            navigator.launchSheet = nil
         }
         .task {
             // Every unread chapter chosen, as Download's Choose chapters starts.
@@ -193,6 +212,9 @@ struct SeriesPage: View {
             case .source: ReadFromSheet(work: work)
             case .tracking: SeriesTrackingSheet(work: work)
             case .readAgain: EmptyView()
+            case .send(_, let chapters): SendSheet(request: SendRequest(work: work, chapters: chapters))
+            case .stopped:
+                if let sent = series?.askWhereStopped { StoppedSheet(work: work, sent: sent) }
             }
         }
         .confirmationDialog(
@@ -251,7 +273,7 @@ enum SeriesChoosing {
 extension SeriesSheet {
     var work: String {
         switch self {
-        case .source(let work), .tracking(let work), .readAgain(let work): work
+        case .source(let work), .tracking(let work), .readAgain(let work), .send(let work, _), .stopped(let work): work
         }
     }
 }
@@ -628,6 +650,11 @@ private struct SeriesPanel: View {
                     navigator.seriesSheet = .source(series.work)
                 }
             }
+            if let sent = series.askWhereStopped {
+                rule
+                row(label: L.sendTitle, value: L.stopNote(device: SendWords.device(sent.target, store)),
+                    action: L.stopNoteAction) { navigator.seriesSheet = .stopped(series.work) }
+            }
             if store.medium.both, let other = series.otherMedium {
                 rule
                 Button {
@@ -653,7 +680,10 @@ private struct SeriesPanel: View {
                 .pointerHover()
             }
         }
-        .task(id: series.work) { store.bookSources.loadForWork(series.work) }
+        .task(id: series.work) {
+            store.bookSources.loadForWork(series.work)
+            store.reading.sending.loadTargets()
+        }
     }
 
     private var rule: some View {
@@ -834,6 +864,7 @@ private struct SeriesChapters: View {
 /// The ring shows only while bytes move, and stops the download when pressed.
 private struct ChapterRowView: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let series: SeriesView
     let row: ChapterRow
     let preferred: String?
@@ -918,6 +949,7 @@ private struct ChapterRowView: View {
                     .tint(Palette.raised)
             }
         }
+        .accessibilityAction(named: L.sendChapterAction) { navigator.seriesSheet = .send(series.work, chapters: [row.id]) }
         #endif
     }
 }
@@ -925,6 +957,7 @@ private struct ChapterRowView: View {
 /// A chapter's menu: read it, mark it, download it, bookmark it, and its versions last.
 private struct ChapterMenu: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let series: SeriesView
     let row: ChapterRow
 
@@ -946,6 +979,7 @@ private struct ChapterMenu: View {
         default:
             Button(L.chapterDownloadStop) { store.reading.cancelDownloads(series.work, chapters: [row.id]) }
         }
+        Button(L.sendTitle) { navigator.seriesSheet = .send(series.work, chapters: [row.id]) }
         Button(row.bookmarked ? L.seriesRemoveBookmark : L.seriesBookmark) {
             store.reading.bookmark(series.work, chapter: row.id, on: !row.bookmarked)
         }
@@ -988,6 +1022,7 @@ private struct ChapterVersionsMenu: View {
 /// desktop and in the navigation bar on touch.
 private struct ChooseChaptersBar: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let series: SeriesView
     let chosen: Set<String>
     let done: () -> Void
@@ -998,18 +1033,12 @@ private struct ChooseChaptersBar: View {
         let height: CGFloat = Device.isMac ? 30 : 44
         VStack(spacing: 10) {
             if !chosen.isEmpty, !line.isEmpty {
-                // Plain words above the capsule on touch, where the bar's scroll edge keeps them
-                // readable. The Mac's bar floats over the list, so its words keep a glass of their own.
+                // Plain words above the capsule: the bar's scroll edge keeps them readable.
                 Text(line)
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                     .monospacedDigit()
                     .lineLimit(1)
-                    #if os(macOS)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .chromeGlass(in: .capsule)
-                    #endif
                     .transition(.opacity)
             }
             HStack(spacing: 8) {
@@ -1020,6 +1049,21 @@ private struct ChooseChaptersBar: View {
                 Button(L.seriesMarkRead) {
                     store.reading.markRead(series.work, chapters: Array(chosen), read: true)
                     done()
+                }
+                .buttonStyle(SecondaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 15))
+                .fixedSize()
+                .disabled(chosen.isEmpty)
+                Button {
+                    navigator.seriesSheet = .send(series.work, chapters: Array(chosen))
+                    done()
+                } label: {
+                    #if os(macOS)
+                    Text(L.sendTitle)
+                    #else
+                    Image(systemName: "paperplane")
+                        .font(.ui(15, weight: .semibold))
+                        .accessibilityLabel(L.sendTitle)
+                    #endif
                 }
                 .buttonStyle(SecondaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 15))
                 .fixedSize()
