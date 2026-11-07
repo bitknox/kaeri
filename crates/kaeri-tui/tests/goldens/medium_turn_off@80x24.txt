@@ -7,13 +7,13 @@ Kaeri                                                  plugins ●  ·  anilist 
 ▌ Kaeri is for
 ────────────────────────────────────────────────────────────────────────────────
   Turn off reading?
-  Updates and your reading leave Kaeri on this computer. Your list, progre…
+  Updates and your reading leave Kaeri on this computer. Your list,
+  progress and downloads stay, and come back if you turn reading on again.
 
   [ ] Delete downloaded chapters
+      412 MB on this computer
 ▌ Turn off reading
 
-   │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-   │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -42,19 +42,23 @@ r08 c00-01 fg=rule bg=ground
 r08 c02-18 fg=text-dim bg=ground
 r08 c19-79 fg=rule bg=ground
 r09 c00-01 fg=rule bg=ground
-r09 c02-74 fg=text-dim bg=ground
-r09 c75-79 fg=rule bg=ground
-r10 c00-79 fg=rule bg=ground
-r11 c00-01 fg=rule bg=ground
-r11 c02-31 fg=text-dim bg=ground
-r11 c32-79 fg=rule bg=ground
-r12 c00-00 fg=obi bg=ground
-r12 c01-01 fg=rule bg=ground
-r12 c02-17 fg=text bg=ground mod=BOLD
-r12 c18-79 fg=rule bg=ground
-r13 c00-79 fg=rule bg=ground
-r14 c00-79 fg=rule
-r15 c00-79 fg=rule
+r09 c02-66 fg=text-dim bg=ground
+r09 c67-79 fg=rule bg=ground
+r10 c00-01 fg=rule bg=ground
+r10 c02-73 fg=text-dim bg=ground
+r10 c74-79 fg=rule bg=ground
+r11 c00-79 fg=rule bg=ground
+r12 c00-01 fg=rule bg=ground
+r12 c02-31 fg=text-dim bg=ground
+r12 c32-79 fg=rule bg=ground
+r13 c00-01 fg=rule bg=ground
+r13 c02-28 fg=text-dim bg=ground
+r13 c29-79 fg=rule bg=ground
+r14 c00-00 fg=obi bg=ground
+r14 c01-01 fg=rule bg=ground
+r14 c02-17 fg=text bg=ground mod=BOLD
+r14 c18-79 fg=rule bg=ground
+r15 c00-79 fg=rule bg=ground
 r16 c00-79 fg=rule
 r17 c00-79 fg=rule
 r18 c00-79 fg=rule

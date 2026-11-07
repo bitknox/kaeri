@@ -334,7 +334,7 @@ fn time_left(secs: u64) -> String {
 }
 
 /// A byte count at human scale, in the units the catalogue names (`700 MB`, `1.4 GB`).
-fn bytes_text(bytes: u64) -> String {
+pub(super) fn bytes_text(bytes: u64) -> String {
     let size = Size::of(bytes);
     let number = format!("{:.*}", usize::from(size.decimals), size.value);
     match size.unit {

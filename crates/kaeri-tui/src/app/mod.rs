@@ -189,6 +189,8 @@ pub struct App {
     medium_ask: Option<kaeri_model::medium::MediumAsk>,
     /// The medium being turned off, while its confirmation is open.
     medium_off: Option<medium::MediumOff>,
+    /// What the chapter downloads take, as the engine last said.
+    book_bytes: u64,
     /// The last question put to the person, so one is not asked again once closed.
     medium_asked: Option<kaeri_model::medium::MediumAsk>,
     /// The crash reports saved on this device, newest first, for Report a bug. The host fills it.
@@ -469,6 +471,7 @@ impl App {
             medium: None,
             medium_ask: None,
             medium_off: None,
+            book_bytes: 0,
             medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
@@ -578,6 +581,9 @@ impl App {
             | Event::Local(_) => {}
             // The terminal has no reader: reading's own events are not drawn here. What Kaeri is
             // for is, and the engine relays reading's sync ops without them.
+            Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(view)) => {
+                self.take_book_downloads(view.meter.used)
+            }
             Event::Reading(_) | Event::Reader(_) | Event::BookSources(_) => {}
             Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),

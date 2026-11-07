@@ -109,6 +109,9 @@ impl App {
             return;
         }
         let now = self.medium.as_ref().map_or(KaeriIsFor::Watch, |view| view.answer);
+        // The size of the chapters, for the confirmation that may follow.
+        self.commands
+            .push(Command::Reading(kaeri_model::reading::ReadingCommand::LoadDownloads));
         self.cursors.overlay.selected = CHOICES.iter().position(|c| *c == now).unwrap_or(0);
         self.medium_ask = None;
         self.nav.open_overlay(Overlay::Medium);
@@ -142,6 +145,31 @@ impl App {
     /// The medium being turned off, while its confirmation is open.
     pub fn medium_off(&self) -> Option<&MediumOff> {
         self.medium_off.as_ref()
+    }
+
+    /// What the downloads of the medium being turned off take on this computer: the queue's
+    /// files for watching, the chapters the engine last said for reading.
+    pub fn medium_off_bytes(&self) -> u64 {
+        match &self.medium_off {
+            Some(off) if off.watching => self
+                .downloads
+                .iter()
+                .map(|row| {
+                    if row.state == kaeri_model::downloads::DownloadState::Done {
+                        row.total.max(row.downloaded)
+                    } else {
+                        row.downloaded
+                    }
+                })
+                .sum(),
+            Some(_) => self.book_bytes,
+            None => 0,
+        }
+    }
+
+    /// The chapter downloads' size, from the engine's word on them.
+    pub(super) fn take_book_downloads(&mut self, used: u64) {
+        self.book_bytes = used;
     }
 
     /// Enter in the confirmation: the switch flips, or the medium is turned off.
@@ -288,6 +316,34 @@ mod tests {
         a.cursors.overlay.selected = 1;
         a.handle(Action::Open, 10);
         assert_eq!(a.medium_off().map(|o| o.watching), Some(true));
+    }
+
+    #[test]
+    fn the_confirmation_knows_what_each_medium_s_downloads_take() {
+        use kaeri_model::reading::{BookDownloadsView, ReadingEvent, StorageMeter};
+        let mut a = app();
+        a.apply(Event::Medium(view(KaeriIsFor::Both, None)));
+        a.apply(Event::Reading(ReadingEvent::Downloads(BookDownloadsView {
+            meter: StorageMeter { used: 5_000, ..Default::default() },
+            ..Default::default()
+        })));
+        a.handle(Action::ChooseMedium, 10);
+        // The chapters are asked for when the choice opens.
+        assert!(
+            a.take_commands().contains(&Command::Reading(
+                kaeri_model::reading::ReadingCommand::LoadDownloads
+            ))
+        );
+        a.cursors.overlay.selected = 0;
+        a.handle(Action::Open, 10);
+        assert_eq!(a.medium_off_bytes(), 5_000);
+        a.handle(Action::Back, 10);
+        // Watching off counts the queue's files.
+        a.handle(Action::ChooseMedium, 10);
+        a.cursors.overlay.selected = 1;
+        a.handle(Action::Open, 10);
+        assert_eq!(a.medium_off().map(|o| o.watching), Some(true));
+        assert_eq!(a.medium_off_bytes(), 0);
     }
 
     #[test]

@@ -3246,6 +3246,15 @@ fn settings_kaeri_is_for(s: &mut Screen) {
 fn medium_turn_off(s: &mut Screen) {
     settled_on(s, 1);
     s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+    s.apply(Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(
+        kaeri_model::reading::BookDownloadsView {
+            meter: kaeri_model::reading::StorageMeter {
+                used: 412_000_000,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )));
     s.act(Action::ChooseMedium);
     // From Both up to Watch, which turns reading off.
     s.act(Action::Up);
