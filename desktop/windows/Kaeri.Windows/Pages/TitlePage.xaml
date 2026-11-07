@@ -12,7 +12,7 @@
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
-  <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" SizeChanged="OnSizeChanged">
+  <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" SizeChanged="OnSizeChanged" k:SmoothWheel.On="True">
     <local:StateHost x:Name="State">
     <Grid x:Name="Body">
       <!-- The banner across the content, up to 360 high, the ground over its lower part. -->

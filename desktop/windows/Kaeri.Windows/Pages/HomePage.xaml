@@ -3,6 +3,7 @@
     x:Class="Kaeri.Windows.Pages.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:k="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
     xmlns:s="using:Kaeri.App"
     Background="{ThemeResource GroundBrush}" KeyboardAcceleratorPlacementMode="Hidden">
@@ -36,7 +37,7 @@
     <!-- The whole page scrolls as one column: the spotlight, then the engine's sections in the
          engine's order, then the closing line. -->
     <local:StateHost x:Name="State" Grid.Row="1">
-      <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" IsTabStop="False">
+      <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" IsTabStop="False" k:SmoothWheel.On="True">
         <StackPanel x:Name="Column" Padding="0,8,36,48" HorizontalAlignment="Stretch" XYFocusKeyboardNavigation="Enabled">
           <local:HomeSpotlight x:Name="Spot" />
           <StackPanel x:Name="Shelves" />

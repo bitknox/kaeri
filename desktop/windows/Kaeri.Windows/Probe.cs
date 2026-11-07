@@ -29,18 +29,20 @@ static class Probe
     /// <summary>Whether this run records, known before Start: pages made with the window register their scrollers first.</summary>
     static readonly bool On = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KAERI_PROBE_DIR"));
 
-    /// <summary>The page scrollers watched, by the name offsets.csv gives them, with the offsets last written.</summary>
-    static readonly List<(WeakReference<Microsoft.UI.Xaml.Controls.ScrollViewer> Scroller, string Name, double[] Last)> scrollers = [];
+    /// <summary>The page scrollers watched, by the name offsets.csv gives them, how to read where they show, and the offsets last written.</summary>
+    static readonly List<(WeakReference<Microsoft.UI.Xaml.Controls.ScrollViewer> Scroller, string Name, Func<(double Vertical, double Horizontal)> Shown, double[] Last)> scrollers = [];
 
     /// <summary>
-    /// Writes <paramref name="scroller"/>'s offsets to offsets.csv on every frame they changed, as
-    /// <paramref name="name"/>. The driver turns them into stalls, jumps and delays.
+    /// Writes where <paramref name="scroller"/> shows its content to offsets.csv on every frame it
+    /// changed, as <paramref name="name"/>: its offsets, less what a glide on the compositor has still
+    /// to go (<paramref name="shown"/>, as the glide computes it). The driver turns them into stalls,
+    /// jumps and delays; the screen's own frames are in its screen motion table.
     /// </summary>
-    public static void Watch(Microsoft.UI.Xaml.Controls.ScrollViewer scroller, string name)
+    public static void Watch(Microsoft.UI.Xaml.Controls.ScrollViewer scroller, string name, Func<(double Vertical, double Horizontal)> shown)
     {
         if (!On || scrollers.Any(s => s.Scroller.TryGetTarget(out var known) && known == scroller))
             return;
-        scrollers.Add((new(scroller), name, [double.NaN, double.NaN]));
+        scrollers.Add((new(scroller), name, shown, [double.NaN, double.NaN]));
     }
 
     /// <summary>Each wheel notch the window hears, handled or not, as a mark: "wheel" and its delta.</summary>
@@ -84,7 +86,7 @@ static class Probe
                 Frames.Append(now).Append('\n');
             for (var i = scrollers.Count - 1; i >= 0; i--)
             {
-                var (scroller, name, last) = scrollers[i];
+                var (scroller, name, shown, last) = scrollers[i];
                 if (!scroller.TryGetTarget(out var s))
                 {
                     scrollers.RemoveAt(i);
@@ -92,7 +94,7 @@ static class Probe
                 }
                 if (s.XamlRoot is null)
                     continue;
-                double v = s.VerticalOffset, h = s.HorizontalOffset;
+                var (v, h) = shown();
                 if (v == last[0] && h == last[1])
                     continue;
                 last[0] = v;

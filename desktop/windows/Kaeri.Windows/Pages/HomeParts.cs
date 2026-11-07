@@ -287,7 +287,10 @@ sealed partial class HomeShelf : Grid
                 passing = false;
                 // Shift with the wheel down goes on along the strip, as everywhere in Windows.
                 var by = point.IsHorizontalMouseWheel ? point.MouseWheelDelta : -point.MouseWheelDelta;
-                heading = Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
+                // A mouse's notches glide along the strip as the page's do (Smooth scrolling).
+                if (SmoothWheel.Sideways(inner, e, by))
+                    return;
+                heading =Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
                 inner.ChangeView(heading, null, null, false);
                 return;
             }
