@@ -31,6 +31,7 @@ use kaeri_model::{
     stores::Secret,
 };
 use kaeri_store::{Store, book_downloads::BookDownloadState};
+#[cfg(not(test))]
 use network_interface::{Addr, NetworkInterface, NetworkInterfaceConfig};
 use serde::{Deserialize, Serialize};
 use tokio::{
