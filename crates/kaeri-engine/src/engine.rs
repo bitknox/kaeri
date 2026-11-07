@@ -3892,6 +3892,121 @@ mod tests {
             engine.shutdown().await;
         }
 
+        #[tokio::test]
+        async fn on_cellular_a_send_takes_only_downloads_and_fetches_again_on_wifi() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let mut kept = None;
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                // Chapter 1 is one the person downloaded.
+                let path = dir.path().join("downloaded-1.cbz");
+                comic_file(&path, 2);
+                let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                    work: WORK,
+                    chapter: "1",
+                    source_id: "shelf",
+                    version_label: None,
+                    keep_ready: false,
+                };
+                o.store.queue_book_download(&ask, now).unwrap();
+                let id = o.store.book_downloads(Some(WORK)).unwrap()[0].id;
+                o.store
+                    .book_download_done(id, &path.display().to_string(), Some(2), 10, now)
+                    .unwrap();
+                o.book_source = Some(pages_source(false));
+                kept = Some(o.store.clone());
+            })
+            .await;
+            let store = kept.unwrap();
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let prepare = |list: &[&str]| {
+                Command::Reading(ReadingCommand::Prepare {
+                    work: work.clone(),
+                    pick: DownloadPick::Chapters {
+                        ids: list.iter().map(|c| ChapterId::new(*c)).collect(),
+                    },
+                    target: "kobo".into(),
+                    format: kaeri_model::reading::ExportFormat::Cbz,
+                })
+            };
+            let ended = |e: &Event| {
+                matches!(
+                    e,
+                    Event::Reading(
+                        ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. }
+                    )
+                )
+            };
+            let pages_sent = |seen: &[Event]| {
+                seen.iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        let book = kaeri_books::open(
+                            std::path::Path::new(&files[0].path),
+                            &kaeri_books::Limits::default(),
+                        )
+                        .unwrap();
+                        let kaeri_books::Book::Comic(comic) = book else {
+                            panic!("not a comic")
+                        };
+                        Some(comic.pages().len())
+                    }
+                    _ => None,
+                })
+            };
+
+            // On cellular, with downloads kept to Wi-Fi (the default), a downloaded chapter is
+            // still sent: it needs no network.
+            engine.send(Command::NetworkPath {
+                cellular: true,
+                constrained: false,
+                offline: false,
+            });
+            engine.send(prepare(&["1"]));
+            let seen = seen_until(&mut events, ended).await;
+            assert_eq!(pages_sent(&seen), Some(2), "{seen:?}");
+
+            // One that needs fetching waits for Wi-Fi: the send stops before any page is
+            // fetched, says so, and leaves nothing behind.
+            engine.send(prepare(&["1", "2"]));
+            let seen = seen_until(&mut events, ended).await;
+            assert!(
+                seen.iter().any(|e| matches!(
+                    e,
+                    Event::Reading(ReadingEvent::Failed {
+                        failure: kaeri_model::reading::ReadingFailure::Offline,
+                        ..
+                    })
+                )),
+                "{seen:?}"
+            );
+            assert!(!seen.iter().any(|e| matches!(
+                e,
+                Event::Reading(ReadingEvent::ExportProgress { total, .. }) if *total > 0
+            )));
+            assert_eq!(store.book_downloads(Some(WORK)).unwrap().len(), 1);
+            let left = leftovers(dir.path());
+            assert!(left.iter().all(|l| !l.ends_with("-fetch")), "{left:?}");
+
+            // Back on Wi-Fi, the same send fetches what it lacks.
+            engine.send(Command::NetworkPath {
+                cellular: false,
+                constrained: false,
+                offline: false,
+            });
+            engine.send(prepare(&["1", "2"]));
+            let seen = seen_until(&mut events, ended).await;
+            assert_eq!(pages_sent(&seen), Some(4), "{seen:?}");
+            engine.shutdown().await;
+        }
+
         #[cfg(feature = "opds-feed")]
         #[tokio::test]
         async fn the_feed_password_is_kept_in_the_secure_store_not_the_config() {
