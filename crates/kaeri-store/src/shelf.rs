@@ -227,16 +227,41 @@ impl Store {
     }
 }
 
-/// The first title of a `titles` column: a JSON list of strings, or of objects with a `title`.
+/// The first title of a `titles` column: a JSON list of strings, or of objects with a `title`,
+/// or the catalogue's own object, whose English title comes first, then romaji, then native.
 fn first_title(titles: &str) -> Option<String> {
     let value: serde_json::Value = serde_json::from_str(titles).ok()?;
-    let first = value.as_array()?.first()?;
-    first.as_str().or_else(|| first.get("title").and_then(|t| t.as_str())).map(str::to_owned)
+    if let Some(list) = value.as_array() {
+        let first = list.first()?;
+        return first
+            .as_str()
+            .or_else(|| first.get("title").and_then(|t| t.as_str()))
+            .map(str::to_owned);
+    }
+    ["english", "romaji", "native"]
+        .into_iter()
+        .filter_map(|key| value.get(key).and_then(|t| t.as_str()))
+        .find(|title| !title.is_empty())
+        .map(str::to_owned)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_work_kind_is_titled_from_a_list_or_the_catalogue_object() {
+        assert_eq!(first_title(r#"["Tide Lantern"]"#).as_deref(), Some("Tide Lantern"));
+        assert_eq!(
+            first_title(r#"{"romaji":"Shiokaze","english":null,"native":null}"#).as_deref(),
+            Some("Shiokaze"),
+        );
+        assert_eq!(
+            first_title(r#"{"romaji":"Shiokaze","english":"Sea Breeze"}"#).as_deref(),
+            Some("Sea Breeze"),
+        );
+        assert_eq!(first_title("{}"), None);
+    }
 
     #[test]
     fn a_work_reads_from_its_folder_files_and_its_downloads() {
