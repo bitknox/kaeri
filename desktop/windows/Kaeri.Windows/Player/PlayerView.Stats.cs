@@ -215,7 +215,7 @@ public sealed partial class PlayerView
         var narrow = width < StatsNarrow;
         StatsLayer.HorizontalAlignment = narrow ? HorizontalAlignment.Stretch : HorizontalAlignment.Right;
         StatsLayer.Width = narrow ? double.NaN : 400;
-        var side = narrow ? 12 : 16;
+        var side = narrow ? 12 : 24;
         StatsLayer.Margin = new Thickness(narrow ? side : 0, StatsTop, side, 0);
         // mpv's subtitles: 38 px a line at 720 high with its 22 px margin, scaled to the height.
         var band = Math.Max(BottomBar.ActualHeight, height * 0.17);

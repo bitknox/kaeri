@@ -695,6 +695,8 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     assert_eq!(next.chapters, 2);
     assert_eq!(next.bytes, (3 + 40) * page, "an unknown length is the usual length here");
     assert_eq!(msg_ids(&next.line), ["reading-estimate-size", "reading-estimate-mobile"]);
+    // A send of the same chapters takes chapter 1 as it is here, and the rest as estimated.
+    assert_eq!(next.all_bytes, done.bytes + (3 + 40) * page);
 
     kit.setup(Setup { hold: true, wifi: true, wifi_only: true, ..Setup::default() });
     let waiting = kit.queue.estimate(kit.store(), &work, pick, &rows, Some("shelf"));
@@ -702,6 +704,7 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     let none = DownloadPick::Chapters { ids: ids(&["1"]) };
     let nothing = kit.queue.estimate(kit.store(), &work, none, &rows, Some("shelf"));
     assert_eq!((nothing.chapters, nothing.bytes, nothing.line.len()), (0, 0, 0));
+    assert_eq!(nothing.all_bytes, done.bytes, "a downloaded chapter still has its size");
 }
 
 #[tokio::test]

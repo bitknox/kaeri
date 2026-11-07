@@ -704,20 +704,38 @@ reading-part-percent = [Þàŕţ { $part } · { $percent }%~~~~~]
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = [Þàŕţ { $part } îš ñéŵ~~~~~]
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = [{ $label } · { $percent }%~~~]
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = [{ $label } îš ñéŵ~~~]
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = [Þàŕţ { $part } · { $title }~~~~~]
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = [{ $label } · { $title }~~~]
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = [Þàŕţ { $part } îš öüţ ţöðàý~~~~~~~]
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = [{ $label } îš öüţ ţöðàý~~~~~]
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = [Þàŕţ { $part }, { $title }, öüţ ţöðàý~~~~~~~~]
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = [{ $label }, { $title }, öüţ ţöðàý~~~~~~]
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = [Çĥàþţéŕ { $chapter } öƒ { $of }~~~~~~]
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = [Ṽöļüɱé { $volume }, þàŕţ { $part }~~~~~~]
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = [Ṽöļüɱé { $volume }, { $label }~~~~~]
 
 # A search filter: books from Japan.
 reading-origin-japan = [Ĵàþàñ~~]
@@ -797,6 +815,12 @@ reading-row-page = [Þàĝé { $page }~~~]
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = [{ $percent }%~~]
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = [Öþéñéð~~]
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = [Ɓööķɱàŕķéð~~~]
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1188,6 +1212,9 @@ stores-ready-demo-stays = [{ $store } îš ŕéàðý. Ţĥé ðéɱö šţàý�
 
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀàçķ ţö Ķàéŕî.~~~~~~~~~~~~~~]
+
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = [Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
@@ -4697,6 +4724,18 @@ tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çö
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
+
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
+
+# Line under the title of that page.
+tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš àŕé ŕéàð îñ ţĥé Ķàéŕî àþþš, àñð ýöüŕ ŕéàðîñĝ šţàýš îñ šţéþ ţĥŕöüĝĥ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàéŕî îš ƒöŕ.~~~~~~~~~~~~]
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = [{ $key } ţö çĥàñĝé~~~~]
 
 # Title of the about page.
 about-title = [Åƀöüţ~~]
@@ -8403,6 +8442,15 @@ action-continue-part-plain = [Çöñţîñüé þàŕţ { $n }~~~~~~]
 
 # The main action for a light novel part not opened yet.
 action-read-part = [Ŕéàð þàŕţ { $n }~~~~]
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = [Çöñţîñüé { $label } · { $percent }%~~~~~~]
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = [Çöñţîñüé { $label }~~~~]
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = [Ŕéàð { $label }~~~]
 
 # The main action when every chapter is read.
 action-read-again = [Ŕéàð àĝàîñ~~~]

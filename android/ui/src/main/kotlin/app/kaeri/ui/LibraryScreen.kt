@@ -1,5 +1,6 @@
 // The Library: Downloads, the tracker's lists as chips with their counts, the covers of the one
-// chosen; or, signed out, where the lists come from.
+// chosen; or, signed out, where the lists come from. Reading's lists are in reading/ReadLibrary.kt;
+// with Both, a Shows or Reading control sits first.
 
 package app.kaeri.ui
 
@@ -55,6 +56,10 @@ import app.kaeri.store.latestAired
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.LibrarySegment
 import app.kaeri.engine.model.SurprisePool
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.ui.reading.ReadLibraryScreen
+import app.kaeri.ui.reading.ReadPlaces
+import app.kaeri.ui.reading.ScopeControl
 import app.kaeri.i18n.R
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
@@ -74,6 +79,18 @@ internal fun storageLine(context: Context, bytes: Long): String =
 
 @Composable
 fun LibraryScreen(actions: AppActions) {
+    // Reading's lists with Read alone, or with Both once Reading is chosen in the control.
+    val isFor = kaeriIsFor()
+    if (isFor == KaeriIsFor.READ || (isFor == KaeriIsFor.BOTH && ReadPlaces.libraryReading)) {
+        ReadLibraryScreen(actions)
+        return
+    }
+    ShowsLibrary(actions, scope = isFor == KaeriIsFor.BOTH)
+}
+
+/** The shows' Library; with Both, the Shows or Reading control sits first. */
+@Composable
+private fun ShowsLibrary(actions: AppActions, scope: Boolean) {
     val store = LocalAppStore.current
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val titles by store.titles.entries.collectAsStateWithLifecycle()
@@ -124,6 +141,7 @@ fun LibraryScreen(actions: AppActions) {
     ) { padding ->
         if (signedOut) {
             Column(Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize()) {
+                if (scope) ScopeControl(reading = false, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) { ReadPlaces.libraryReading = it }
                 DownloadsRow(storageLine(LocalContext.current, store.downloads.bytes(downloads)))
                 SignedOutLibrary(actions, Modifier.weight(1f))
             }
@@ -143,6 +161,11 @@ fun LibraryScreen(actions: AppActions) {
         PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding(), bottom = 24.dp)) {
             // Every item moves with the rest, the rows above the posters too, so switching lists
             // never slides a poster over a line that snapped into place.
+            if (scope) {
+                item(span = { GridItemSpan(maxLineSpan) }, key = "scope", contentType = "scope") {
+                    ScopeControl(reading = false, modifier = itemMotion().padding(vertical = 4.dp)) { ReadPlaces.libraryReading = it }
+                }
+            }
             item(span = { GridItemSpan(maxLineSpan) }, key = "downloads", contentType = "downloads") {
                 DownloadsRow(storageLine(LocalContext.current, store.downloads.bytes(downloads)), inset = false, modifier = itemMotion())
             }
@@ -192,7 +215,7 @@ private fun hasNew(entry: Entry): Boolean {
 
 /** The Downloads row, which opens the Downloads page (A2), with what they take on this device. */
 @Composable
-private fun DownloadsRow(detail: String, inset: Boolean = true, modifier: Modifier = Modifier) {
+internal fun DownloadsRow(detail: String, inset: Boolean = true, modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
     Row(
         modifier

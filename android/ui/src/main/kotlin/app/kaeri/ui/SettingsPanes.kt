@@ -27,6 +27,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import app.kaeri.store.reads
+import app.kaeri.ui.reading.chapterNoticesRow
+import app.kaeri.ui.reading.downloadsFinishedRow
+import app.kaeri.store.watches
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -157,12 +161,11 @@ internal fun NotificationsPane(actions: AppActions) {
     val refused = app?.refused?.collectAsStateWithLifecycle()?.value == true
     val week by store.coming.week.collectAsStateWithLifecycle()
     var opened by remember { mutableStateOf<AnilistId?>(null) }
-    LaunchedEffect(Unit) { store.loadComing() }
+    val answer = kaeriIsFor()
+    LaunchedEffect(answer.watches) { if (answer.watches) store.loadComing() }
     Pane {
-        SettingsGroup(
-            footer = stringResource(R.string.settings_notify_permission_note),
-            rows = listOf(
-                { place ->
+        // One group: New chapters with reading on, New episodes with watching on, then Downloads finished.
+        val episodes: @Composable (Place) -> Unit = { place ->
                     SwitchRow(
                         place = place,
                         title = stringResource(R.string.settings_new_episodes),
@@ -173,10 +176,20 @@ internal fun NotificationsPane(actions: AppActions) {
                         ).joinToString("\n"),
                         enabled = SettingsCatalog.editable(row),
                     ) { on -> app?.turn?.invoke(on) ?: store.setSwitch(key, on) }
-                },
+        }
+        SettingsGroup(
+            footer = listOfNotNull(
+                if (answer.reads) stringResource(R.string.settings_chapter_notifications_footer) else null,
+                // The system asks for the permission from Android 13; before that there is nothing to ask.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) stringResource(R.string.settings_notify_permission_note) else null,
+            ).joinToString(" "), // i18n-skip
+            rows = listOfNotNull(
+                if (answer.reads) chapterNoticesRow else null,
+                if (answer.watches) episodes else null,
+                if (answer.reads) downloadsFinishedRow else null,
             ),
         )
-        week?.let { week ->
+        if (answer.watches) week?.let { week ->
             SettingsGroup(
                 title = stringResource(R.string.settings_coming_up),
                 footer = ComingModel.footer(LocalContext.current, week),
@@ -254,7 +267,12 @@ private fun ComingRow(place: Place, episode: UpcomingNotice, onClick: () -> Unit
 /** How titles read and which are listed: nothing here is about playing an episode. */
 @Composable
 internal fun GeneralPane() {
+    val answer = kaeriIsFor()
     Pane {
+        // Which Home the app starts on, with both media on.
+        if (answer == app.kaeri.engine.model.KaeriIsFor.BOTH) {
+            SettingsGroup(rows = listOf(app.kaeri.ui.reading.openAtRow))
+        }
         SettingsGroup(
             title = stringResource(R.string.settings_language_app),
             rows = listOf({ place -> LanguageRow(place) }),
@@ -512,9 +530,15 @@ internal fun DownloadsPane(actions: AppActions) {
     val view by store.settings.view.collectAsStateWithLifecycle()
     val downloads by store.downloads.rows.collectAsStateWithLifecycle()
     val torrents = store.settings.isOn(SettingKey.TORRENTS, view)
+    val answer = kaeriIsFor()
+    val chapters by store.reading.downloads.collectAsStateWithLifecycle()
+    LaunchedEffect(answer.reads) { if (answer.reads) store.reading.loadDownloads() }
     Pane {
         val free = freeBytes()
-        val used = store.downloads.bytes(downloads)
+        // The folder is shared: the storage row counts episodes and chapters together.
+        val used = (if (answer.watches) store.downloads.bytes(downloads) else 0L) +
+            (if (answer.reads) chapters?.meter?.used?.toLong() ?: 0L else 0L)
+        val count = (if (answer.watches) downloads.size else 0) + (if (answer.reads) chapters?.rows?.size ?: 0 else 0)
         SettingsGroup(
             rows = listOf(
                 { place -> StorageRow(place, used, free) },
@@ -523,14 +547,21 @@ internal fun DownloadsPane(actions: AppActions) {
                     InfoRow(
                         place,
                         stringResource(R.string.downloads_title),
-                        if (downloads.isEmpty()) stringResource(R.string.settings_none_yet) else pluralStringResource(R.plurals.settings_downloads_count, downloads.size, downloads.size),
+                        if (count == 0) stringResource(R.string.settings_none_yet) else pluralStringResource(R.plurals.settings_downloads_count, count, count),
                         onClick = { navigator.open(DOWNLOADS_ROUTE) },
                     )
                 },
             ),
         )
-        SettingsGroup(
-            title = stringResource(R.string.settings_new_downloads),
+        // A group per medium with both on; with one, its rows under New downloads.
+        if (answer.reads) {
+            SettingsGroup(
+                title = stringResource(if (answer.watches) R.string.settings_group_reading else R.string.settings_new_downloads),
+                rows = app.kaeri.ui.reading.readingDownloadRows(),
+            )
+        }
+        if (answer.watches) SettingsGroup(
+            title = stringResource(if (answer.reads) R.string.settings_group_shows else R.string.settings_new_downloads),
             rows = listOfNotNull(
                 @Composable { place: Place -> SettingMenu(place, SettingKey.DOWNLOAD_QUALITY, stringResource(R.string.settings_quality)) },
                 { place -> SettingMenu(place, SettingKey.KEEP_NEXT_EPISODES, stringResource(R.string.settings_keep_next), note = stringResource(R.string.settings_keep_next_detail)) },
@@ -584,6 +615,14 @@ private fun WifiOnlyRow(place: Place) {
 
 @Composable
 internal fun SourcesPane(actions: AppActions) {
+    val answer = kaeriIsFor()
+    // Reading alone: the book sources are the pane.
+    if (!answer.watches) {
+        var adding by rememberSaveable { mutableStateOf(false) }
+        Pane { app.kaeri.ui.reading.BookSourcesList(onAdd = { adding = true }) }
+        if (adding) app.kaeri.ui.reading.AddSourceSheet { adding = false }
+        return
+    }
     val store = LocalAppStore.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val providers by store.providers.rows.collectAsStateWithLifecycle()
@@ -603,8 +642,8 @@ internal fun SourcesPane(actions: AppActions) {
     val cellular = remember { context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TELEPHONY) }
     Pane {
         SettingsGroup(
-            rows = listOf(
-                { place ->
+            rows = listOfNotNull(
+                @Composable { place: Place ->
                     val navigator = LocalNavigator.current
                     InfoRow(place, stringResource(R.string.sources_order), pluralStringResource(R.plurals.settings_summary_sources, providers.size, providers.size).takeIf { providersLoaded }, onClick = { navigator.open(PROVIDERS_ROUTE) })
                 },
@@ -622,6 +661,18 @@ internal fun SourcesPane(actions: AppActions) {
                         onClick = { navigator.open(STORES_ROUTE) },
                     )
                 },
+                // With both media on, the books' sources are a page of their own.
+                if (answer.reads) @Composable { place: Place ->
+                    val navigator = LocalNavigator.current
+                    val books by store.bookSources.view.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) { store.bookSources.load() }
+                    InfoRow(
+                        place,
+                        stringResource(R.string.settings_book_sources),
+                        app.kaeri.ui.reading.bookSourcesSummary(context, books),
+                        onClick = { navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE) },
+                    )
+                } else null,
             ),
         )
         SettingsGroup(
@@ -735,8 +786,15 @@ internal fun AccountsPane(actions: AppActions) {
     val context = LocalContext.current
     val anilist = trackers["anilist"]
     val storage = trackers.values.firstNotNullOfOrNull { it.storage }
-    /** The tracker's own sign-in: Kitsu's sheet, the browser or a code for the rest. */
-    val signIn = { tracker: String -> if (tracker == "kitsu") sheets.kitsu = true else store.connect(tracker) }
+    val answer = kaeriIsFor()
+    /** The tracker's own sign-in: Kitsu's or MangaUpdates' sheet, the browser or a code for the rest. */
+    val signIn = { tracker: String ->
+        when (tracker) {
+            "kitsu" -> sheets.kitsu = true
+            "mangaupdates" -> sheets.mangaUpdates = true
+            else -> store.connect(tracker)
+        }
+    }
     Pane {
         SettingsGroup(
             title = "AniList", // i18n-skip
@@ -764,13 +822,14 @@ internal fun AccountsPane(actions: AppActions) {
                     InfoRow(
                         place,
                         "AniList", // i18n-skip
-                        stringResource(R.string.accounts_brings_lists),
+                        app.kaeri.ui.reading.anilistBrings(answer),
                         trailing = { SignInButton(stringResource(R.string.accounts_sign_in), busy = store.accounts.isWorking(working, "anilist")) { signIn("anilist") } },
                     )
                 })
             },
         )
-        SettingsGroup(
+        // Discussions are about episodes: with reading alone they are gone.
+        if (answer.watches) SettingsGroup(
             title = stringResource(R.string.discussion_settings_group),
             rows = listOf(
                 { place -> SettingSwitch(place, SettingKey.EPISODE_DISCUSSIONS, stringResource(R.string.settings_discussions_label), note = stringResource(R.string.settings_discussions_note)) },
@@ -779,8 +838,12 @@ internal fun AccountsPane(actions: AppActions) {
         )
         SettingsGroup(
             title = stringResource(R.string.accounts_other_trackers),
-            footer = stringResource(if (storage?.contains("file", ignoreCase = true) == true) R.string.accounts_tokens_file else R.string.accounts_tokens_keystore),
-            rows = AccountsModel.order.drop(1).map { tracker ->
+            // Where tokens are kept, and with reading on, MangaUpdates' credit.
+            footer = listOfNotNull(
+                stringResource(if (storage?.contains("file", ignoreCase = true) == true) R.string.accounts_tokens_file else R.string.accounts_tokens_keystore),
+                if (answer.reads) stringResource(R.string.accounts_mangaupdates_credit) else null,
+            ).joinToString(" "), // i18n-skip
+            rows = app.kaeri.ui.reading.otherTrackers(answer).map { tracker ->
                 @Composable { place: Place ->
                     val state = trackers[tracker]
                     val connected = state?.connected == true
@@ -792,13 +855,19 @@ internal fun AccountsPane(actions: AppActions) {
                     }
                     InfoRow(
                         place,
-                        AccountsModel.name(tracker),
-                        if (connected) AccountWords.status(state, syncedAt, working).text else stringResource(R.string.accounts_state_signed_out),
+                        app.kaeri.ui.reading.trackerName(tracker),
+                        when {
+                            connected -> AccountWords.status(state, syncedAt, working).text
+                            // With reading on, what it serves or keeps in step.
+                            answer.reads -> app.kaeri.ui.reading.trackerLine(tracker, answer)
+                            else -> stringResource(R.string.accounts_state_signed_out)
+                        },
                         trailing = button,
                     )
                 }
             },
         )
+        if (answer.reads) app.kaeri.ui.reading.ProgressGroup()
     }
     if (reviewing) ConflictsSheet { reviewing = false }
 }

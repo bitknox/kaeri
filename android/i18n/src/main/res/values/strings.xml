@@ -475,16 +475,28 @@
     <string name="reading_part_percent">Part %1$s · %2$d%%</string>
     <!-- Under a cover: a light novel's part came out that the person has not read. -->
     <string name="reading_part_new">Part %1$s is new</string>
+    <!-- Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it. -->
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <!-- Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_new">%1$s is new</string>
     <!-- Under a This week cell: a light novel's part that came out that day, with its own title. -->
     <string name="reading_part_titled">Part %1$s · %2$s</string>
+    <!-- Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <!-- Under the big picture on reading's Home: a light novel's part that came out today. -->
     <string name="reading_part_out_today">Part %1$s is out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_out_today">%1$s is out today</string>
     <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title. -->
     <string name="reading_part_out_today_titled">Part %1$s, %2$s, out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_out_today_titled">%1$s, %2$s, out today</string>
     <!-- Under a Library cover: the chapter the person is at, and the newest chapter there is. -->
     <string name="reading_chapter_of">Chapter %1$s of %2$s</string>
     <!-- Under a Library cover: the volume and part of a light novel the person is at. -->
     <string name="reading_volume_part">Volume %1$s, part %2$s</string>
+    <!-- Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5"). -->
+    <string name="reading_volume_label">Volume %1$s, %2$s</string>
     <!-- A search filter: books from Japan. -->
     <string name="reading_origin_japan">Japan</string>
     <!-- A search filter: books from Korea. -->
@@ -538,6 +550,10 @@
     <string name="reading_row_page">Page %1$d</string>
     <!-- A novel's chapter row: how far into it the person is. -->
     <string name="reading_row_percent">%1$d%%</string>
+    <!-- A novel's chapter row: the person opened it, and how far in is too little to say as a percent. -->
+    <string name="reading_row_opened">Opened</string>
+    <!-- A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared. -->
+    <string name="reading_row_bookmarked">Bookmarked</string>
     <!-- A chapter row: how long its pages are, for a file on the device. -->
     <plurals name="reading_row_pages">
         <item quantity="one">1 page</item>
@@ -803,6 +819,8 @@
     <string name="stores_ready_demo_stays">%1$s is ready. The demo stays last in Your sources.</string>
     <!-- The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves. -->
     <string name="cloud_loopback_done">You can close this tab and go back to Kaeri.</string>
+    <!-- The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device. -->
+    <string name="sync_device_removed">This device was removed from sync on another device. Join again to sync it.</string>
     <!-- Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList. -->
     <string name="notice_signed_in">Signed in to %1$s.</string>
     <!-- Toast after a sign-in succeeded and the token went into the system keychain. -->
@@ -1389,6 +1407,71 @@
     <string name="reader_sources_title">Read this chapter from</string>
     <!-- Heading on the Paper mode page above the parts it changes. -->
     <string name="reader_paper_parts">What it changes</string>
+    <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
+    <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
+    <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
+    <string name="channel_chapters_name">New chapters</string>
+    <!-- What the new chapters channel is for, shown in the system's settings. -->
+    <string name="channel_chapters_description">When a series on your Reading list has a new chapter.</string>
+    <!-- Name of the notification channel that says chapter downloads are done, shown in the system's settings. -->
+    <string name="channel_downloads_finished_name">Downloads finished</string>
+    <!-- What the downloads finished channel is for, shown in the system's settings. -->
+    <string name="channel_downloads_finished_description">When the chapters you asked to download are all done.</string>
+    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
+    <string name="notif_chapter_new">%1$s is new.</string>
+    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
+    <plurals name="notif_chapters_new">
+        <item quantity="one">One new chapter</item>
+        <item quantity="other">%1$d new chapters</item>
+    </plurals>
+    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
+    <string name="notif_chapter_hidden">New chapter</string>
+    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
+    <string name="notif_chapter_read">Read</string>
+    <!-- The download notification while only chapters download. -->
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Downloading one chapter</item>
+        <item quantity="other">Downloading %1$d chapters</item>
+    </plurals>
+    <!-- On a series page whose source failed, under the cause: the chapters downloaded before still open. -->
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">One downloaded chapter still opens.</item>
+        <item quantity="other">%1$d downloaded chapters still open.</item>
+    </plurals>
+    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
+    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
+    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
+    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
+    <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
+    <string name="settings_summary_chapters_on">New chapters on</string>
+    <!-- Line under Notifications in the Settings list: chapter notifications are off. -->
+    <string name="settings_summary_chapters_off">New chapters off</string>
+    <!-- Part of the line under Sources in the Settings list: how many book folders there are. -->
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">1 folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
+    <!-- Part of the line under Sources in the Settings list: how many book servers there are. -->
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">1 server</item>
+        <item quantity="other">%1$d servers</item>
+    </plurals>
+    <!-- Part of the line under Sources in the Settings list: how many plugins there are for books. -->
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">1 plugin</item>
+        <item quantity="other">%1$d plugins</item>
+    </plurals>
+    <!-- Row in Settings' Sources with both media on, and the title of its page: the sources for books. -->
+    <string name="settings_book_sources">Book sources</string>
+    <!-- Line over the Check matches list: how many series of the folders were matched, and how many need a look. -->
+    <plurals name="book_matches_line">
+        <item quantity="one">Kaeri matched %1$d by their details. This one needs a look.</item>
+        <item quantity="other">Kaeri matched %1$d by their details. These %2$d need a look.</item>
+    </plurals>
+    <!-- The folder picker could not be opened, or the folder could not be kept. -->
+    <string name="book_folder_failed">That folder couldn\'t be added. Try another one.</string>
+    <!-- Under the sign-in fields of Add a server for books: progress goes back, and where the password is kept on Android. -->
+    <string name="book_server_note_device">Kaeri sends your reading progress back to this server. The password stays on this device.</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->
@@ -4548,6 +4631,12 @@
     <string name="action_continue_part_plain">Continue part %1$s</string>
     <!-- The main action for a light novel part not opened yet. -->
     <string name="action_read_part">Read part %1$s</string>
+    <!-- The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. -->
+    <string name="action_continue_named">Continue %1$s · %2$d%%</string>
+    <!-- The main action for a light novel part, part read, named in the source's own words, when how far is not known. -->
+    <string name="action_continue_named_plain">Continue %1$s</string>
+    <!-- The main action for a light novel part not opened yet, named in the source's own words. -->
+    <string name="action_read_named">Read %1$s</string>
     <!-- The main action when every chapter is read. -->
     <string name="action_read_again">Read again</string>
     <!-- Label of the source row on the series page. -->

@@ -101,7 +101,7 @@ sealed class FixMatchDialog
                 parts.Add(T.EpisodesCount(episodes));
             var detail = T.MatchChoiceLine(string.Join(" · ", parts), choice.Confidence);
             var line = new StackPanel { Spacing = 0, Opacity = choice.Fits ? 1 : 0.6, HorizontalAlignment = HorizontalAlignment.Left };
-            line.Children.Add(Ui.Text(choice.Title, "BodyStrongTextBlockStyle", wrap: false));
+            line.Children.Add(Ui.Text(choice.Title, "ShowTitleStyle", wrap: false));
             line.Children.Add(Ui.Text(detail, "HazeCaptionStyle", wrap: false));
             if (!choice.Fits)
                 line.Children.Add(Ui.Text(T.LibraryFixCountMismatch(choice.Episodes ?? 0, group.Files), "HazeCaptionStyle", wrap: false));

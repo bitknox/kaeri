@@ -36,6 +36,7 @@ static class Feel
     /// </summary>
     public static async Task Film(Run run, string label, Func<Task> act, Func<Task>? aim = null, int longestMs = 4000, string? note = null, bool wheel = false)
     {
+        run.Guard();
         dir = Path.Combine(run.Options.Out, run.Name);
         Directory.CreateDirectory(dir);
         if (aim is not null)
@@ -119,6 +120,7 @@ static class Feel
     /// </summary>
     public static async Task Kept(Run run, string label, Func<Task> trip)
     {
+        run.Guard();
         dir = Path.Combine(run.Options.Out, run.Name);
         Directory.CreateDirectory(dir);
         var aside = new Point(run.Window.BoundingRectangle.Left + 8, run.Window.BoundingRectangle.Bottom - 8);

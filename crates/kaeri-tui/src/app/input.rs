@@ -56,6 +56,13 @@ impl App {
 
     /// Handle an action. Returns work for the caller to perform asynchronously.
     pub fn handle(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
+        let task = self.handle_action(action, visible_rows);
+        // A question the engine is holding waits for the screen to be free of other overlays.
+        self.open_medium_ask();
+        task
+    }
+
+    fn handle_action(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
         // Why a typed `G` went nowhere stays in the status line until the next key, and Esc
         // then only lets go of it.
         if self.go_error.take().is_some() && action == Action::Back {
@@ -313,6 +320,7 @@ impl App {
             Action::Refresh if self.in_episodes() => return self.refresh_episodes(),
             Action::Refresh => return self.refresh_section(),
             Action::ToggleTranslation => return self.toggle_translation(),
+            Action::ChooseMedium => self.choose_medium(),
             _ => self.works_elsewhere(action),
         }
         None

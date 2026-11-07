@@ -184,6 +184,9 @@ public sealed partial class PlayerView : UserControl
     /// <summary>True while the player is on screen: from Open, and no longer once it starts fading away.</summary>
     public bool Showing => shown;
 
+    /// <summary>While the player closes from the mini player.</summary>
+    public bool Closing { get; private set; }
+
     bool shown;
 
     /// <summary>What the last close left on screen to clear once its fade is over, or at the next open.</summary>
@@ -297,7 +300,13 @@ public sealed partial class PlayerView : UserControl
         ShowPointer();
         ClosePreview();
         if (mini)
+        {
+            // The window leaves the mini player as the player closes, and so does not go back to
+            // full screen on the way.
+            Closing = true;
             MiniRequested?.Invoke(false);
+            Closing = false;
+        }
         SetMini(false);
         still.Reset();
         click.Stop();
@@ -915,7 +924,7 @@ public sealed partial class PlayerView : UserControl
             var from = AlertCard.ActualWidth;
             back.Text = text;
             back.Measure(new global::Windows.Foundation.Size(480, double.PositiveInfinity));
-            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right;
+            var to = back.DesiredSize.Width + AlertCard.Padding.Left + AlertCard.Padding.Right + AlertCard.BorderThickness.Left + AlertCard.BorderThickness.Right;
             Motion.Crossfade(front, back);
             var leaving = front;
             alertFront = front = back;
@@ -2986,8 +2995,6 @@ public sealed partial class PlayerView : UserControl
         ShowTvButton();
         Elapsed.Visibility = Remaining.Visibility = VolumeButton.Visibility = SettingsButton.Visibility = big;
         Corner.Visibility = big;
-        ShowTitle.FontSize = on ? 14 : 18;
-        ShowTitle.LineHeight = on ? 20 : 24;
         EpisodeTitle.Visibility = big;
         TopBar.Padding = on ? new Thickness(12, 6, 140, 6) : new Thickness(8, 8, 148, 8);
         MiniIcon.Glyph = on ? "\uE73F" : "\uE8A7";

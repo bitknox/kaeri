@@ -120,6 +120,21 @@ impl Store {
         self.with_personal(|c| Ok(set_meta(c, "enabled", "0")?))
     }
 
+    /// Start over as `device_id`, a new id, with sync off: for a device its group removed, whose
+    /// old id the group keeps removed for good. Everything held stays, and the old id's ops stay
+    /// in the log; [`Self::sync_enable`] with the new id then makes today's history and choices
+    /// that id's first ops, as on a device new to sync.
+    pub fn sync_new_device(&self, device_id: &str) -> Result<()> {
+        self.with_personal_tx(|tx| {
+            set_meta(tx, "device", device_id)?;
+            set_meta(tx, "enabled", "0")?;
+            // The new id's ops count from one, as the others expect of a device new to them.
+            set_meta(tx, "seq", "0")?;
+            tx.execute("DELETE FROM sync_meta WHERE key = 'backfilled'", [])?;
+            Ok(())
+        })
+    }
+
     /// Write an op for a change made in `tx`. `None` when sync is off.
     pub(crate) fn emit(&self, tx: &Transaction<'_>, body: OpBody) -> Result<Option<Op>> {
         let Some(device) = device(tx)? else { return Ok(None) };

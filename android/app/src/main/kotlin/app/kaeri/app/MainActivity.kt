@@ -29,7 +29,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import app.kaeri.app.tv.CastService
@@ -57,6 +59,7 @@ import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.reader.phone.ReaderLauncher
+import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.phone.SettingsPane
 import app.kaeri.store.AppLanguage
 
@@ -219,6 +222,10 @@ class MainActivity : ComponentActivity() {
                 permit = ::permitNotifications,
                 openSystemSettings = ::openNotificationSettings,
             ),
+            openReader = { work, chapter, cover, from ->
+                ReaderLauncher.open(ReaderRequest(work, chapter, eink = app.eink.state.value.eink, cover = cover, from = from))
+            },
+            shareFiles = { files, then -> shareExport(files); then() },
         )
         // Play on TV from the player: the episode and where it is, which the TV starts from.
         val player = PlayerFrame(app.player) {
@@ -234,7 +241,7 @@ class MainActivity : ComponentActivity() {
         }
         traced("setContent") { setContent {
             KaeriTheme {
-                AppRoot(
+                ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
                     actions = actions,
@@ -246,8 +253,7 @@ class MainActivity : ComponentActivity() {
                     links = linkFlow,
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
-                )
-                ReaderOverlay(app.store, app.eink)
+                ) }
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()
@@ -280,16 +286,39 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * While the app is in front, ask for the download job whenever an episode waits or runs: a
+     * Send to e-reader: hand the prepared files to the share sheet, where the person picks the app
+     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail).
+     */
+    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>) {
+        val uris = files.mapNotNull { file ->
+            runCatching {
+                androidx.core.content.FileProvider.getUriForFile(this, "$packageName.exports", java.io.File(file.path), file.name)
+            }.onFailure { Log.w(KaeriApp.TAG, "an export could not be shared", it) }.getOrNull()
+        }
+        if (uris.isEmpty()) return
+        val send = if (uris.size == 1) {
+            Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris.first())
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        }
+        send.type = if (files.all { it.name.endsWith(".cbz") }) "application/vnd.comicbook+zip" else "application/epub+zip"
+        send.clipData = android.content.ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
+        send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(send, null))
+    }
+
+    /**
+     * While the app is in front, ask for the download job whenever an episode or a chapter waits or runs: a
      * user-initiated job is asked for from a screen the person is using.
      */
     private fun keepDownloadsRunning() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                app.store.downloads.rows.collect { rows ->
+                combine(app.store.downloads.rows, app.store.reading.downloads, ::Pair).collect { (rows, books) ->
                     val wifiOnly = !app.store.settings.isOn(SettingKey.DOWNLOADS_ON_CELLULAR)
-                    if (DownloadsModel.busy(rows)) app.notifier.wantPermission()
-                    Downloads.ensure(this@MainActivity, rows, wifiOnly)
+                    val chapters = chaptersBusy(books)
+                    if (DownloadsModel.busy(rows) || chapters > 0) app.notifier.wantPermission()
+                    Downloads.ensure(this@MainActivity, rows, wifiOnly, chapters)
                 }
             }
         }
@@ -305,7 +334,9 @@ class MainActivity : ComponentActivity() {
         intent.action = null
         links.trySend(link)
         // A notification's action leaves its notification up; following it takes it away.
-        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let(app.episodeNotifier::dismiss)
+        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let { tag ->
+            if (ReadingNotifier.isChapters(tag)) app.readingNotifier.dismiss(tag) else app.episodeNotifier.dismiss(tag)
+        }
         ContinueShortcut.shortcutOf(link)?.let { ShortcutManagerCompat.reportShortcutUsed(this, it) }
         return true
     }

@@ -1289,6 +1289,8 @@ pub(crate) async fn handle_internal(
             let mut cx = reader.cx(config, services, tx);
             reader.wake(&mut cx, session, wake);
         }
+        // A TV keeps reading entries in its log for the other devices and acts on none of them.
+        Internal::ReadingSynced if !engine.reading.takes_synced_reading() => {}
         Internal::ReadingSynced => {
             let EngineState { config, reader, .. } = engine;
             let mut cx = reader.cx(config, services, tx);

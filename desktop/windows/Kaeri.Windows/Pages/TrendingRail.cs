@@ -41,7 +41,8 @@ sealed class TrendingRail : StackPanel
     public TrendingRail(Action<TrendPeriod> seeAll)
     {
         this.seeAll = seeAll;
-        Spacing = 8;
+        // 12 under the heading, as under every section heading.
+        Spacing = 12;
         period = ctx.Known.TrendingRemembered ?? TrendPeriod.Today;
         var head = new Grid { ColumnSpacing = 8 };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });

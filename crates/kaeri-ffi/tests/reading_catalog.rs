@@ -478,3 +478,97 @@ fn search_without_the_demo_is_anilist_alone() {
     assert!(found.is_empty(), "{found:?}");
     engine.shutdown();
 }
+
+/// Reads until a full series page (not the partial header) and its chapters have both come.
+fn whole_series(
+    engine: &Arc<FfiEngine>,
+    work: &str,
+) -> (SeriesView, Vec<kaeri_model::reading::ChapterRow>) {
+    engine.send(Command::Reading(ReadingCommand::LoadSeries {
+        work: kaeri_core::books::WorkId::new(work),
+    }));
+    let mut read = Vec::new();
+    let done = |read: &[Event]| {
+        let chapters = read
+            .iter()
+            .any(|event| matches!(event, Event::Reading(ReadingEvent::Chapters { .. })));
+        let page = read.iter().any(
+            |event| matches!(event, Event::Reading(ReadingEvent::Series(view)) if !view.partial),
+        );
+        chapters && page
+    };
+    while !done(&read) {
+        read.extend(read_until(engine, |event| {
+            matches!(
+                event,
+                Event::Reading(ReadingEvent::Series(_) | ReadingEvent::Chapters { .. })
+            )
+        }));
+    }
+    let page = read
+        .iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Series(view)) if !view.partial => {
+                Some((**view).clone())
+            }
+            _ => None,
+        })
+        .unwrap();
+    let rows = read
+        .iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, .. }) => {
+                Some(volumes.iter().flat_map(|v| v.chapters.clone()).collect())
+            }
+            _ => None,
+        })
+        .unwrap();
+    (page, rows)
+}
+
+#[test]
+fn a_novels_button_and_cover_name_its_part_as_its_row_does() {
+    let (_root, engine) = start(FfiScene::ReadingHome);
+    let (page, rows) = whole_series(&engine, "a:900302");
+    let home = whole_home(&engine, false);
+    let SeriesAction::ContinuePart { chapter, named, percent, .. } = &page.action else {
+        panic!("a novel continues a part: {:?}", page.action)
+    };
+    let row = rows.iter().find(|r| r.id == *chapter).expect("the part's row");
+    // The button names the part with the row's own words, never a noun of its own.
+    assert_eq!(named.as_deref(), Some(row.label.as_str()), "{row:?}");
+    // And the row says the same percent the button does.
+    let said =
+        percent.map(|p| Msg::Reading(ReadingMsg::ReadingRowPercent { percent: i64::from(p) }));
+    assert_eq!(row.line.first(), said.as_ref(), "{:?}", row.line);
+    // Continue's cover names it the same way.
+    let tile = home.continue_reading.iter().find(|t| t.work.0 == "a:900302").unwrap();
+    let cover = tile.next.as_ref().expect("the cover's line").english();
+    assert!(cover.starts_with(&row.label), "{cover} against {}", row.label);
+    engine.shutdown();
+}
+
+#[test]
+fn updates_asked_first_get_their_covers_and_medium_without_home() {
+    let (_root, engine) = start(FfiScene::ReadingHome);
+    // Nothing else asked yet, as after a notification opens Updates in a fresh process: the
+    // view comes at once, then again once the books behind it are kept.
+    engine.send(Command::Reading(ReadingCommand::LoadUpdates));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Updates(view))
+            if !view.days.is_empty() && view.days.iter().flat_map(|d| &d.rows).all(|r| r.tile.cover.is_some()))
+    });
+    let updates = read
+        .iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Updates(view)) => Some(view.clone()),
+            _ => None,
+        })
+        .unwrap();
+    let rows: Vec<_> = updates.days.iter().flat_map(|d| &d.rows).collect();
+    assert!(rows.iter().all(|r| r.tile.cover.is_some()), "{rows:?}");
+    engine.shutdown();
+}

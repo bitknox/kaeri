@@ -465,6 +465,10 @@ scenarios! {
     home_native,
     home_long,
     home_first_run,
+    home_reading_only,
+    medium_first_run,
+    medium_turn_off,
+    settings_kaeri_is_for,
     home_offline,
     home_next_section,
     home_not_found,
@@ -3201,4 +3205,59 @@ fn add_profile(s: &mut Screen) {
     s.press(&["enter"]);
     s.type_text("Alex");
     s.press(&["enter", "j"]);
+}
+
+fn medium_view(
+    answer: kaeri_model::medium::KaeriIsFor,
+    ask: Option<kaeri_model::medium::MediumAsk>,
+) -> Event {
+    Event::Medium(kaeri_model::medium::MediumView {
+        answer,
+        edition: kaeri_model::medium::AppEdition::Full,
+        fixed: false,
+        reading_available: true,
+        ask,
+        account: None,
+    })
+}
+
+/// Home on a computer set to reading alone: the page that says reading is in the apps.
+fn home_reading_only(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Read, None));
+}
+
+/// The first run's second question, nothing chosen and no way to skip it.
+fn medium_first_run(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(
+        kaeri_model::medium::KaeriIsFor::Watch,
+        Some(kaeri_model::medium::MediumAsk::FirstRun),
+    ));
+}
+
+/// Settings with the line that says what Kaeri is for.
+fn settings_kaeri_is_for(s: &mut Screen) {
+    settled_on(s, 9);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+}
+
+/// Turning reading off on a computer set to both: the confirmation, downloads kept by default.
+fn medium_turn_off(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+    s.apply(Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(
+        kaeri_model::reading::BookDownloadsView {
+            meter: kaeri_model::reading::StorageMeter {
+                used: 412_000_000,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )));
+    s.act(Action::ChooseMedium);
+    // From Both up to Watch, which turns reading off.
+    s.act(Action::Up);
+    s.act(Action::Up);
+    s.act(Action::Open);
 }

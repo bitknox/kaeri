@@ -12,6 +12,15 @@ namespace Kaeri.Windows;
 /// </summary>
 sealed class Art(Func<Command, ulong?> send)
 {
+    /// <summary>
+    /// A cover's or a still's corner for its width, as the Mac's cover rule has it: 6 up to 40
+    /// wide, else 8. The spotlight's wide banner rounds at 16 and is not a cover.
+    /// </summary>
+    public static double Radius(double width) => width <= 40 ? 6 : 8;
+
+    /// <summary><see cref="Radius"/> as a corner, for XAML's x:Bind and for code.</summary>
+    public static Microsoft.UI.Xaml.CornerRadius Corner(double width) => new(Radius(width));
+
     readonly Dictionary<string, ImageSource> ready = [];
     readonly Dictionary<string, List<Action<ImageSource>>> waiting = [];
     readonly Dictionary<string, List<Action<byte[]>>> raw = [];

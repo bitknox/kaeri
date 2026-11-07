@@ -194,5 +194,15 @@
         <receiver
             android:name=".UpdateReceiver"
             android:exported="false" />
+        <!-- Send to e-reader: the prepared files, handed to the share sheet. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.exports"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/export_paths" />
+        </provider>
     </application>
 </manifest>

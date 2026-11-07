@@ -593,24 +593,35 @@ impl Home {
             let chapter = match out_at {
                 Some(_) => newest_chapter.map(|c| {
                     let number = c.number.clone().unwrap_or_else(|| c.label.clone());
-                    Msg::Reading(match (c.own_title(), novel) {
-                        (Some(title), false) => ReadingMsg::ReadingChapterTitled {
+                    let named = words::part_named(&c.label, c.number.as_deref());
+                    Msg::Reading(match (c.own_title(), novel, named) {
+                        (Some(title), false, _) => ReadingMsg::ReadingChapterTitled {
                             chapter: number,
                             title: title.to_owned(),
                         },
-                        (Some(title), true) => ReadingMsg::ReadingPartTitled {
+                        (Some(title), true, Some(label)) => {
+                            ReadingMsg::ReadingLabelTitled { label, title: title.to_owned() }
+                        }
+                        (Some(title), true, None) => ReadingMsg::ReadingPartTitled {
                             part: number,
                             title: title.to_owned(),
                         },
-                        (None, _) => return words::next_unit(kept.book.medium(), &number),
+                        (None, _, named) => {
+                            return words::next_unit(
+                                kept.book.medium(),
+                                &number,
+                                named.as_deref(),
+                            );
+                        }
                     })
                 }),
-                // Only expected: the chapter after the newest, when that is a confident guess.
-                None => rhythm
-                    .as_ref()
-                    .zip(list.as_deref())
-                    .and_then(|(r, l)| expected_next(r, l, days[index].day))
-                    .map(|n| words::next_unit(kept.book.medium(), &n)),
+                // Only expected: the chapter after the newest, when that is a confident guess,
+                // named the way the source names the ones before it.
+                None => rhythm.as_ref().zip(list.as_deref()).and_then(|(r, l)| {
+                    let n = expected_next(r, l, days[index].day)?;
+                    let named = named_like(l, &n);
+                    Some(words::next_unit(kept.book.medium(), &n, named.as_deref()))
+                }),
             };
             days[index].entries.push(ReadWeekEntry { tile, out_at, usually, chapter });
         }
@@ -664,24 +675,42 @@ impl Home {
             let number = next.number.clone().unwrap_or_else(|| next.label.clone());
             let medium = kept.book.medium();
             let today_out = next.out_at().is_some_and(|at| at >= today);
-            let line = match (next.own_title(), today_out, medium == Medium::Novel) {
-                (Some(title), true, false) => ReadingMsg::ReadingOutTodayTitled {
-                    chapter: number,
-                    title: title.to_owned(),
-                },
-                (Some(title), true, true) => ReadingMsg::ReadingPartOutTodayTitled {
-                    part: number,
-                    title: title.to_owned(),
-                },
-                (None, true, false) => ReadingMsg::ReadingOutToday { chapter: number },
-                (None, true, true) => ReadingMsg::ReadingPartOutToday { part: number },
-                (_, false, false) => ReadingMsg::ReadingChapterNew { chapter: number },
-                (_, false, true) => ReadingMsg::ReadingPartNew { part: number },
-            };
+            // A light novel's part goes by the source's own name for it where it has one, as
+            // the button below and its row do.
+            let named = words::part_named(&next.label, next.number.as_deref())
+                .filter(|_| medium == Medium::Novel);
+            let line =
+                match (next.own_title(), today_out, medium == Medium::Novel, named.clone()) {
+                    (Some(title), true, false, _) => ReadingMsg::ReadingOutTodayTitled {
+                        chapter: number,
+                        title: title.to_owned(),
+                    },
+                    (Some(title), true, true, Some(label)) => {
+                        ReadingMsg::ReadingLabelOutTodayTitled {
+                            label,
+                            title: title.to_owned(),
+                        }
+                    }
+                    (Some(title), true, true, None) => ReadingMsg::ReadingPartOutTodayTitled {
+                        part: number,
+                        title: title.to_owned(),
+                    },
+                    (None, true, false, _) => ReadingMsg::ReadingOutToday { chapter: number },
+                    (None, true, true, Some(label)) => {
+                        ReadingMsg::ReadingLabelOutToday { label }
+                    }
+                    (None, true, true, None) => {
+                        ReadingMsg::ReadingPartOutToday { part: number }
+                    }
+                    (_, false, false, _) => ReadingMsg::ReadingChapterNew { chapter: number },
+                    (_, false, true, Some(label)) => ReadingMsg::ReadingLabelNew { label },
+                    (_, false, true, None) => ReadingMsg::ReadingPartNew { part: number },
+                };
             let action = tiles::read_action(
                 medium,
                 ChapterId::new(next.id.clone()),
                 next.number.clone().unwrap_or_else(|| next.label.clone()),
+                named,
             );
             return Some(self.spot(
                 kept,
@@ -777,6 +806,20 @@ impl Home {
         Some(tiles::action(&self.store, &self.sources, &work, book.medium()))
             .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
+}
+
+/// The source's name for a part not listed yet, numbered `number`, after the way it names the
+/// newest it lists: "Chapter 13" after "Chapter 12". None when it names them by number alone.
+fn named_like(list: &[chapters::Kept], number: &str) -> Option<String> {
+    let newest = list
+        .iter()
+        .filter_map(|c| Some((c.number.as_deref()?.parse::<f64>().ok()?, c)))
+        .max_by(|a, b| a.0.total_cmp(&b.0))?
+        .1;
+    let at = newest.number.as_deref()?;
+    let named = words::part_named(&newest.label, Some(at))?;
+    let (before, after) = named.rsplit_once(at)?;
+    Some(format!("{before}{number}{after}"))
 }
 
 /// The chapter a series' rhythm says comes out on `due`: the one after its newest, when that

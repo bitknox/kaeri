@@ -84,6 +84,8 @@ pub fn apply_effects(
                     let _ = tx.send(Event::Medium(engine.reading.view()));
                 }
             }
+            kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF
+                if engine.reading.ignores_synced(&kind) => {}
             kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF => {
                 services.book_sources.apply_effect(&kind, &key, value.as_deref());
             }

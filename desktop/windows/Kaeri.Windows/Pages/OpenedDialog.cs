@@ -302,7 +302,7 @@ sealed class OpenedDialog
         {
             var pick = new Button { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left };
             var line = new StackPanel();
-            line.Children.Add(Ui.Text(entry.Title, wrap: false));
+            line.Children.Add(Ui.Text(entry.Title, "ShowTitleStyle", wrap: false));
             if (Wording.CoverCaption(entry) is { Length: > 0 } caption)
                 line.Children.Add(Ui.Text(caption, "HazeCaptionStyle", wrap: false));
             pick.Content = line;
