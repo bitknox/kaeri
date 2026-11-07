@@ -13,8 +13,8 @@ pub(crate) use novel::SOURCE;
 use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
-    books::{ChapterId, ReadingHint, WorkId},
-    config::{CountsAsRead, SendProgressAfter, WebtoonMode},
+    books::{ChapterId, WorkId},
+    config::{CountsAsRead, SendProgressAfter},
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -37,7 +37,7 @@ use tokio::time::Instant;
 use super::{
     eink,
     pages::{Laid, OpenJob, Pages, PeekJob, Plan, Shared},
-    settings::{self, Layers, Screen},
+    settings::{self, Layers, Screen, SourceWord},
     shelf::{self, ShelfChapter},
 };
 use crate::{
@@ -75,13 +75,29 @@ impl Cx<'_> {
     }
 
     fn layers(&self, medium: Medium, work: Option<&str>) -> Layers {
-        Layers::read(
+        let layers = Layers::read(
             &self.services.store,
             &self.config.effective().reading,
             medium,
             work,
             self.screen,
-        )
+        );
+        match work {
+            Some(work) => layers.with_source(self.source_word(&WorkId::new(work))),
+            None => layers,
+        }
+    }
+
+    /// What the series' source and the catalogue say of how it reads.
+    fn source_word(&self, work: &WorkId) -> SourceWord {
+        let kind = self.services.store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says it itself: opened before its page was ever loaded, its source was
+        // never asked.
+        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == *work);
+        SourceWord {
+            hint: self.services.book_sources.hint_of(work).or_else(|| demo?.reading),
+            webtoon: kind.as_ref().is_some_and(BookWorkKind::webtoon),
+        }
     }
 
     pub fn settings_view(&self, medium: Medium, work: Option<&WorkId>) -> ReaderSettingsView {
@@ -152,8 +168,6 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
-    /// The Webtoons default, for a webtoon with no mode of its own.
-    webtoon: Option<WebtoonMode>,
     /// The catalogue says no more chapters are coming.
     ended: bool,
     /// The next chapter's first page was asked of the worker.
@@ -182,8 +196,6 @@ pub struct Session {
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
     demo: Option<kaeri_model::sources::DemoWorkInfo>,
-    /// Which way the source says the pages read, for a series with no direction of its own.
-    hint: Option<kaeri_core::books::ReadingHint>,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -466,13 +478,6 @@ impl Reader {
             // A kept place in a long strip comes back to the same spot in its image.
             _ => ReadPlace { strip, ..place(&work, &chapters[index].id, Some(page)) },
         };
-        // The catalogue's word comes before the pages' shape: a webtoon (tagged a long strip,
-        // or from Korea or China) opens as the Webtoons default says, unless the series has a
-        // mode of its own.
-        let webtoon = (!layers.series_has(Key::Mode)
-            && medium == Medium::Manga
-            && kind.as_ref().is_some_and(BookWorkKind::webtoon))
-        .then(|| cx.config.effective().reading.webtoon.mode);
         let ended = kind.as_ref().is_some_and(BookWorkKind::ended);
         let demo = cx
             .services
@@ -508,7 +513,6 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
-            webtoon,
             peeked: false,
             back_to: None,
             moved_back: None,
@@ -524,7 +528,6 @@ impl Reader {
             restore,
             prepared: Arc::default(),
             novel_resumed: false,
-            hint: demo_work.and_then(|w| w.reading),
         };
         let pages = self.pages(cx);
         session.lay_out(cx, &pages, page);
@@ -757,10 +760,10 @@ impl Session {
             ..Look::default()
         };
         let layout = l.word(Key::PageLayout);
-        let strip = match self.webtoon {
-            Some(mode) if !l.series_has(Key::Mode) => mode == WebtoonMode::Strip,
-            _ => l.word(Key::Mode) == "strip",
-        };
+        // The layers give the mode and direction in order: the person's own choice for the
+        // series, its source's word (a webtoon opens as the Webtoons default), the reader's kept
+        // guess, then the medium. Where the source said, the book's shape is not guessed from.
+        let strip = l.word(Key::Mode) == "strip";
         let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
             target: Target {
@@ -782,19 +785,13 @@ impl Session {
             } else {
                 ReaderMode::Paged
             },
-            // The series' own direction, else the source's word, else the medium's default.
-            direction: match self.hint {
-                Some(ReadingHint::LeftToRight) if !l.series_has(Key::Direction) => {
-                    ReadDirection::LeftToRight
-                }
-                Some(ReadingHint::RightToLeft) if !l.series_has(Key::Direction) => {
-                    ReadDirection::RightToLeft
-                }
-                _ if l.word(Key::Direction) == "ltr" => ReadDirection::LeftToRight,
-                _ => ReadDirection::RightToLeft,
+            direction: if l.word(Key::Direction) == "ltr" {
+                ReadDirection::LeftToRight
+            } else {
+                ReadDirection::RightToLeft
             },
-            guess_mode: self.webtoon.is_none() && !l.series_has(Key::Mode),
-            guess_direction: !l.series_has(Key::Direction),
+            guess_mode: !l.series_has(Key::Mode) && !l.sourced(Key::Mode),
+            guess_direction: !l.series_has(Key::Direction) && !l.sourced(Key::Direction),
         }
     }
 
@@ -1353,6 +1350,7 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod hints;
     mod novels;
 
     const WORK: &str = "a:4242";
@@ -1793,7 +1791,7 @@ mod tests {
         h.send(ReaderCommand::Close { session });
 
         // Paged for webtoons, and the series opens paged: the default is read at each open.
-        h.config.effective_mut().reading.webtoon.mode = WebtoonMode::Paged;
+        h.config.effective_mut().reading.webtoon.mode = kaeri_core::config::WebtoonMode::Paged;
         let (view, _, _) = h.open(OpenAt::Resume).await;
         assert_eq!(view.mode, ReaderMode::Paged);
         let session = h.session();

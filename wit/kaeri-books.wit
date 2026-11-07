@@ -140,8 +140,9 @@ interface source {
         genres: list<string>,
         format: option<string>,
         origin: option<string>,
-        /// How the pages read: `rtl`, `ltr` or `strip`. One step in the reader's guess of its
-        /// mode, after the person's own choice for the series and the book's own metadata.
+        /// How the pages read: `rtl`, `ltr`, `vertical` (pages one under another) or `strip`
+        /// (one long strip, a webtoon). The reader takes it after the person's own choice for
+        /// the series and before its own guess from the book.
         reading-hint: option<string>,
         /// BCP 47 tags of the languages this series has here.
         languages: list<string>,

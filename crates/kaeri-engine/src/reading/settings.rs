@@ -1,13 +1,16 @@
 //! The reader's settings and where each value comes from.
 //!
-//! A value is looked for in layers: the series' own choice (synced, this device only, or the
-//! reader's guess), then the medium's value in `config.toml` (`[reading.manga]`,
+//! A value is looked for in layers: the series' own choice (synced, or this device only), then
+//! what its source and the catalogue say of how it reads (the mode and direction of a comic),
+//! then the reader's guess, then the medium's value in `config.toml` (`[reading.manga]`,
 //! `[reading.novel]`; the choices among them sync as shared keys), then the default. The e-ink
 //! refresh settings are the device's, in `[reading.eink]`, whatever the medium.
 
 use std::collections::BTreeMap;
 
-use kaeri_core::{config::ReadingConfig, media::Medium, settings::SettingValue};
+use kaeri_core::{
+    books::ReadingHint, config::ReadingConfig, media::Medium, settings::SettingValue,
+};
 use kaeri_model::{
     eink::{EinkMatch, EinkPanel, EinkProfile},
     reader::{ReaderSettingKey as Key, ReaderSettingRow, ReaderValue, SettingScope},
@@ -179,12 +182,24 @@ pub fn to_setting(value: &ReaderValue) -> SettingValue {
     }
 }
 
+/// What a series' source and the catalogue say of how its pages read. It comes after the
+/// person's own choice for the series and before the reader's guess from the book.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SourceWord {
+    /// The source's reading hint.
+    pub hint: Option<ReadingHint>,
+    /// The catalogue counts the series a webtoon: tagged a long strip, or from Korea, China or
+    /// Taiwan.
+    pub webtoon: bool,
+}
+
 /// Everything the layers say, read once for a sheet or a session.
 #[derive(Debug, Clone)]
 pub struct Layers {
     pub medium: Medium,
     pub screen: Screen,
     series: Vec<SeriesSetting>,
+    source: SourceWord,
     config: ReadingConfig,
 }
 
@@ -204,7 +219,34 @@ impl Layers {
                 })
             })
             .unwrap_or_default();
-        Self { medium, screen, series, config: config.clone() }
+        Self { medium, screen, series, source: SourceWord::default(), config: config.clone() }
+    }
+
+    /// The layers with what the series' source and the catalogue say of it.
+    pub fn with_source(mut self, source: SourceWord) -> Self {
+        self.source = source;
+        self
+    }
+
+    /// The source's or the catalogue's value for `key`: a comic's mode and direction only. A
+    /// strip, said by either, opens as the Webtoons default.
+    fn source_value(&self, key: Key) -> Option<ReaderValue> {
+        if self.medium != Medium::Manga {
+            return None;
+        }
+        let hint = self.source.hint;
+        match key {
+            Key::Mode if hint == Some(ReadingHint::Strip) || self.source.webtoon => {
+                Some(choice(self.config.webtoon.mode.name()))
+            }
+            Key::Mode if hint == Some(ReadingHint::Vertical) => Some(choice("vertical")),
+            Key::Direction => match hint? {
+                ReadingHint::RightToLeft => Some(choice("rtl")),
+                ReadingHint::LeftToRight => Some(choice("ltr")),
+                ReadingHint::Vertical | ReadingHint::Strip => None,
+            },
+            _ => None,
+        }
     }
 
     /// One setting's row: its value and where the value comes from.
@@ -212,12 +254,11 @@ impl Layers {
         let series = key
             .series_scope()
             .and_then(|_| self.series.iter().find(|s| s.setting == key.name()));
+        let chosen = series.filter(|s| s.scope != "auto");
         let medium = map(&self.config, key, self.medium).get(key.name()).and_then(from_toml);
-        let (value, scope, detected, overridden) = match (series, medium) {
-            (Some(s), _) if s.scope == "auto" => {
-                (ReaderValue::decode(&s.value), SettingScope::Series, true, false)
-            }
-            (Some(s), _) => {
+        let source = if chosen.is_none() { self.source_value(key) } else { None };
+        let (value, scope, detected, overridden) = match (chosen, source, series, medium) {
+            (Some(s), ..) => {
                 let scope = if s.scope == "series" {
                     SettingScope::Series
                 } else {
@@ -225,8 +266,13 @@ impl Layers {
                 };
                 (ReaderValue::decode(&s.value), scope, false, true)
             }
-            (None, Some(value)) => (value, key.home_scope(), false, false),
-            (None, None) => {
+            // Said by the series' details: "Detected from the series details".
+            (None, Some(value), ..) => (value, SettingScope::Series, true, false),
+            (None, None, Some(s), _) => {
+                (ReaderValue::decode(&s.value), SettingScope::Series, true, false)
+            }
+            (None, None, None, Some(value)) => (value, key.home_scope(), false, false),
+            (None, None, None, None) => {
                 (default_for(key, self.medium, self.screen), key.home_scope(), false, false)
             }
         };
@@ -265,6 +311,13 @@ impl Layers {
     /// Whether the series has a value of its own, chosen or guessed.
     pub fn series_has(&self, key: Key) -> bool {
         self.series.iter().any(|s| s.setting == key.name())
+    }
+
+    /// Whether the value comes from the series' source or the catalogue, not the person or the
+    /// reader's guess: the reader then guesses nothing.
+    pub fn sourced(&self, key: Key) -> bool {
+        let chosen = self.series.iter().any(|s| s.setting == key.name() && s.scope != "auto");
+        !chosen && self.source_value(key).is_some()
     }
 
     /// The rows the sheet shows on this screen.

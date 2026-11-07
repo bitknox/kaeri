@@ -27,8 +27,8 @@ use kaeri_books::{
 use kaeri_bookserver::{Kind, Server};
 use kaeri_core::{
     books::{
-        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, SeriesDetail,
-        SeriesHit, SourceChapter, WorkKey, normalise_name,
+        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, ReadingHint,
+        SeriesDetail, SeriesHit, SourceChapter, WorkKey, normalise_name,
     },
     error::ProviderError,
     media::Medium,
@@ -58,6 +58,12 @@ pub use added::RECHECK;
 /// The id the folders answer to in the registry.
 pub const FOLDERS: &str = "folders";
 const META_ORDER: &str = "reading.book_order";
+/// How long a source's word on how a series reads is kept before it is asked again.
+const HINT_KEPT: i64 = 7 * 24 * 3600;
+/// When a source could not say, how long until it is asked again.
+const HINT_RETRY: i64 = 3600;
+/// How long a chapter list waits for the source's word on how the series reads.
+const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
 const META_OFF: &str = "reading.book_off";
 /// How long a removed folder can be taken back.
 const UNDO_SECONDS: u64 = 8;
@@ -1240,6 +1246,38 @@ impl BookSources {
         order.into_iter().find_map(|id| refs.iter().find(|(source, _)| *source == id).cloned())
     }
 
+    /// How the source a work is read from says its pages read, as last kept.
+    pub(crate) fn hint_of(&self, work: &WorkId) -> Option<ReadingHint> {
+        let (source, series) = self.edition_of(work, None)?;
+        let (hint, _) = self.store.book_series_hint(&source, &series).ok().flatten()?;
+        hint.as_deref().and_then(ReadingHint::parse)
+    }
+
+    /// Ask the source how a series reads, unless it was asked lately, and keep the answer.
+    async fn learn_hint(&self, source: &str, series: &str, now: i64) {
+        let kept = self.store.book_series_hint(source, series).ok().flatten();
+        if kept.as_ref().is_some_and(|(_, at)| now - at < HINT_KEPT) {
+            return;
+        }
+        let hints = BookHints::default();
+        let asked = self.registry.series(source, series, &hints, now);
+        let (hint, at) = match tokio::time::timeout(HINT_WAIT, asked).await {
+            Ok(Ok(detail)) => (detail.reading_hint.map(ReadingHint::as_str), now),
+            // Asked again within the hour, keeping what it said before.
+            outcome => {
+                if let Ok(Err(error)) = outcome {
+                    tracing::debug!(source, %error, "a series' reading hint was not read");
+                }
+                let before = kept.as_ref().and_then(|(hint, _)| hint.as_deref());
+                let hint = before.and_then(ReadingHint::parse).map(ReadingHint::as_str);
+                (hint, now - HINT_KEPT + HINT_RETRY)
+            }
+        };
+        if let Err(error) = self.store.put_book_series_hint(source, series, hint, at) {
+            tracing::warn!(%error, "a series' reading hint was not kept");
+        }
+    }
+
     /// A work's chapters from its edition, grouped by volume, with the person's reading marked.
     pub async fn chapters(
         &self,
@@ -1249,11 +1287,14 @@ impl BookSources {
     ) -> Result<(Option<BookEditionRow>, Vec<VolumeGroup>), ReadingFailure> {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
-        let chapters = self
-            .registry
-            .chapters(&source, &series, &BookHints::default(), now)
-            .await
-            .map_err(|e| failure(&source, &e))?;
+        // The source's word on how the series reads comes with its chapters, so the reader has
+        // it before the first page.
+        let hints = BookHints::default();
+        let (chapters, ()) = tokio::join!(
+            self.registry.chapters(&source, &series, &hints, now),
+            self.learn_hint(&source, &series, now),
+        );
+        let chapters = chapters.map_err(|e| failure(&source, &e))?;
         crate::read_catalog::chapters::keep(&self.store, &source, &series, &chapters, now);
         let restarts = restarts_per_volume(&chapters);
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self

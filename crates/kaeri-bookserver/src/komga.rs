@@ -309,7 +309,9 @@ impl KomgaSource {
         detail.reading_hint = match series.metadata.reading_direction.as_str() {
             "RIGHT_TO_LEFT" => Some(ReadingHint::RightToLeft),
             "LEFT_TO_RIGHT" => Some(ReadingHint::LeftToRight),
-            "WEBTOON" | "VERTICAL" => Some(ReadingHint::Strip),
+            // Komga's vertical turns page by page downwards; its webtoon is one long strip.
+            "VERTICAL" => Some(ReadingHint::Vertical),
+            "WEBTOON" => Some(ReadingHint::Strip),
             _ => None,
         };
         if series.metadata.reading_direction == "WEBTOON" {
@@ -492,5 +494,32 @@ impl BookSource for KomgaSource {
 
     async fn fetch_page(&self, page: &PageRef) -> std::result::Result<Vec<u8>, PageError> {
         crate::fetch_with(&self.http, page).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hinted(direction: &str) -> (Option<ReadingHint>, Option<ReadingFormat>) {
+        let series: Series = serde_json::from_value(serde_json::json!({
+            "id": "s1",
+            "name": "Lantern Keeper",
+            "metadata": { "readingDirection": direction },
+        }))
+        .unwrap();
+        let detail = KomgaSource::detail(series);
+        (detail.reading_hint, detail.format)
+    }
+
+    /// Every direction Komga keeps for a series becomes the hint the reader opens with.
+    #[test]
+    fn each_reading_direction_komga_keeps_is_a_hint() {
+        assert_eq!(hinted("RIGHT_TO_LEFT"), (Some(ReadingHint::RightToLeft), None));
+        assert_eq!(hinted("LEFT_TO_RIGHT"), (Some(ReadingHint::LeftToRight), None));
+        assert_eq!(hinted("VERTICAL"), (Some(ReadingHint::Vertical), None));
+        assert_eq!(hinted("WEBTOON"), (Some(ReadingHint::Strip), Some(ReadingFormat::Webtoon)));
+        // Unset in Komga: the series says nothing, and the reader guesses.
+        assert_eq!(hinted(""), (None, None));
     }
 }
