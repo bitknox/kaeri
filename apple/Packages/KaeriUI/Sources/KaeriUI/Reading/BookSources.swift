@@ -118,14 +118,24 @@ struct BookSourcesList: View {
         }
         .task { store.bookSources.load() }
         .sheet(isPresented: $matchesShown) { CheckMatchesSheet() }
-        // Shots: the add-server sheet with a server found, and with it added and its series counted.
-        .onLaunchSheet("add-book-server", navigator) { // i18n-skip: a shot's sheet name
-            AddBookServerStep.shot = .found
-            navigator.addBookSource = .server
-        }
-        .onLaunchSheet("add-book-server-added", navigator) { // i18n-skip: a shot's sheet name
-            AddBookServerStep.shot = .added
-            navigator.addBookSource = .server
+        .folderCameInSheet(store)
+        .overlay(alignment: .bottom) { CameInNotice() }
+        .refreshable { store.bookSources.scan() }
+        // Shots: a prelaunch state's sheet, staged with nothing asked of a real server.
+        .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
+            guard let scene = PrelaunchScene.named() else { return }
+            switch scene {
+            case .folder, .folderNothing:
+                store.cameIn.stage(scene)
+            case .inviteJoined, .pluginsInstalled, .storeOther, .storeEmpty, .storeUnreachable:
+                store.cameIn.stage(scene)
+                navigator.invite = ""
+            case .afterwards:
+                store.cameIn.stage(scene)
+            default:
+                AddBookServerStep.shot = scene
+                navigator.addBookSource = .server
+            }
         }
     }
 
@@ -414,35 +424,55 @@ enum BookFolders {
     }
 }
 
-/// Add a server: the address is tried as it is typed, and what was found is said before the
-/// sign-in. Add server is the sheet's one amber action.
-private struct AddBookServerStep: View {
+/// A pasted Kavita OPDS link: `https://host/api/opds/{key}`. The key signs in, so no password is
+/// asked, and only its last four characters are ever shown.
+struct KavitaLink {
+    let host: String
+    let last4: String
+
+    init?(_ address: String) {
+        let text = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: text), let host = url.host,
+              url.scheme == "http" || url.scheme == "https" else { return nil }
+        let parts = url.path.split(separator: "/").map(String.init)
+        guard let at = parts.firstIndex(of: "opds"), at >= 1, parts[at - 1] == "api",
+              parts.indices.contains(at + 1), parts[at + 1].count >= 4 else { return nil }
+        self.host = host
+        self.last4 = String(parts[at + 1].suffix(4))
+    }
+}
+
+/// Add a server: the address, a Kavita link or a user and password, looked at as they are typed;
+/// what it holds is said before anything is added (its libraries, to pick), and why nothing
+/// came in when nothing did. Add server is the sheet's one amber action.
+struct AddBookServerStep: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var address = ""
     @State private var user = ""
     @State private var password = ""
-    @State private var slow = false
+    @State private var reportProgress = true
+    @State private var unticked: Set<String> = []
     @State private var staged = false
     @FocusState private var focus: Field?
 
     private enum Field { case address, user, password }
 
-    enum Shot { case found, added }
     /// For shots: the sheet opens in this state, with nothing asked of a real server.
-    @MainActor static var shot: Shot?
+    @MainActor static var shot: PrelaunchScene?
 
-    private func stage(_ shot: Shot) {
+    private func stage(_ scene: PrelaunchScene) {
         staged = true
-        address = "books.home.example" // i18n-skip: a made-up host
-        user = "reader" // i18n-skip: a made-up name
-        password = "example-password" // i18n-skip: a made-up password
-        store.bookSources.stageServerShot(address: address, added: shot == .added)
+        address = scene == .kavitaLink || scene == .found || scene == .wrongKey || scene == .looking
+            ? "https://books.home.example/api/opds/9c1e7a2b4d5f3f9a" // i18n-skip: a made-up link
+            : "books.home.example" // i18n-skip: a made-up host
+        if KavitaLink(address) == nil { user = "reader"; password = "example-password" } // i18n-skip: made up
+        store.cameIn.stage(scene)
     }
 
     var body: some View {
         #if os(iOS)
-        // On touch, a sheet's header holds Cancel, the title and the action, as Read from does.
         NavigationStack {
             ScrollView { form.padding(.horizontal, 20).padding(.vertical, 12) }
                 .scrollBounceBehavior(.basedOnSize)
@@ -450,13 +480,12 @@ private struct AddBookServerStep: View {
                 .navigationTitle(L.bookAddServerTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    if store.bookSources.added == nil {
-                        ToolbarItem(placement: .cancellationAction) { Button(L.actionCancel) { dismiss() } }
-                    }
+                    ToolbarItem(placement: .cancellationAction) { Button(L.actionCancel) { dismiss() } }
                     ToolbarItem(placement: .confirmationAction) { action.disabled(actionOff) }
                 }
         }
         .presentationBackground(.raised)
+        .modifier(lifecycle)
         #else
         VStack(alignment: .leading, spacing: 0) {
             Text(L.bookAddServerTitle)
@@ -466,143 +495,237 @@ private struct AddBookServerStep: View {
             form.padding(.top, 16)
             HStack(spacing: 10) {
                 Spacer()
-                if store.bookSources.added == nil {
-                    Button(L.actionCancel) { dismiss() }
-                        .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, raisedSurface: true, fontSize: buttonFont))
-                        .keyboardShortcut(.cancelAction)
-                }
+                Button(L.actionCancel) { dismiss() }
+                    .buttonStyle(SecondaryCapsuleStyle(height: 28, raisedSurface: true, fontSize: 13))
+                    .keyboardShortcut(.cancelAction)
                 action
-                    .buttonStyle(PrimaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
+                    .buttonStyle(PrimaryCapsuleStyle(height: 28, fontSize: 13))
                     .keyboardShortcut(.defaultAction)
                     .disabled(actionOff)
             }
             .padding(.top, 22)
         }
+        .modifier(lifecycle)
         #endif
     }
 
-    /// Done once added, Try again after a failed look, else Add server.
+    private var outcome: CameIn? { store.cameIn.outcome }
+
+    /// What a look found, when it found something to add, or an empty catalogue that can be added.
+    private var found: ServerFound? {
+        switch outcome {
+        case .found(let found)?: found
+        case .empty(.emptyCatalogue(let found))?: found
+        default: nil
+        }
+    }
+
+    private var failed: Bool {
+        guard case .empty(let why)? = outcome else { return false }
+        if case .emptyCatalogue = why { return false }
+        return true
+    }
+
+    /// Try again after a failed look, else Add server.
     @ViewBuilder
     private var action: some View {
-        let sources = store.bookSources
-        if sources.added != nil {
-            Button(L.actionDone) { dismiss() }
-        } else if sources.checked == nil, sources.failed != nil {
-            Button(L.actionTryAgain) { sources.checkServer(trimmed) }
+        if failed {
+            Button(L.actionTryAgain) { look() }
         } else {
             Button(L.bookAddServerButton) { add() }
         }
     }
 
     private var actionOff: Bool {
-        let sources = store.bookSources
-        guard sources.added == nil, !(sources.checked == nil && sources.failed != nil) else { return false }
-        return sources.checked == nil || user.isEmpty || password.isEmpty || sources.checking
+        if failed { return false }
+        guard let found else { return true }
+        return !found.libraries.isEmpty && found.libraries.allSatisfy { unticked.contains($0.id) }
+    }
+
+    private var lifecycle: ServerStepLifecycle {
+        ServerStepLifecycle(
+            address: address, user: user, password: password, staged: staged,
+            onAppear: {
+                store.cameIn.reset()
+                if let shot = Self.shot { Self.shot = nil; stage(shot) } else { focus = .address }
+            },
+            look: look,
+            added: { dismiss() })
+    }
+
+    private var ready: Bool {
+        if KavitaLink(address) != nil { return true }
+        return !trimmed.isEmpty && !user.isEmpty && !password.isEmpty
+    }
+
+    private var trimmed: String { address.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private func look() {
+        guard ready, !staged else { return }
+        if KavitaLink(address) != nil {
+            store.cameIn.probe(address: trimmed, user: nil, password: nil)
+        } else {
+            store.cameIn.probe(address: trimmed, user: user, password: password)
+        }
+    }
+
+    private func add() {
+        guard let found else { return }
+        let all = found.libraries.map(\.id)
+        let picked = all.filter { !unticked.contains($0) }
+        store.cameIn.addServer(found, libraries: picked.count == all.count ? [] : picked, reportProgress: reportProgress)
     }
 
     private var form: some View {
-        let sources = store.bookSources
+        let link = KavitaLink(address)
         return VStack(alignment: .leading, spacing: 0) {
-            label(L.serversAddress)
-            field(L.serversAddress, text: $address, prompt: "books.home.example", focus: .address) // i18n-skip
+            label(L.bookServerAddress)
+            addressField(link)
                 .padding(.top, 6)
-            if let checked = sources.checked, checked.address == address.trimmingCharacters(in: .whitespaces) {
-                HStack(spacing: 6) {
-                    // Found is a success: a silk check. Water is only for new.
-                    Image(systemName: "checkmark")
-                        .font(.plat(mac: 11, touch: 13, weight: .semibold))
-                        .accessibilityHidden(true)
-                    // Once signed in, how many series it lists, when the server said for sure.
-                    if let added = sources.added, added.kind == checked.kind, let series = added.series {
-                        Text(L.sourcesFoundServerSeries(kind: BookServerWords.kind(checked.kind), n: Int(series)))
-                    } else {
-                        Text(L.sourcesFoundServer(kind: BookServerWords.kind(checked.kind)))
+            if address.isEmpty {
+                note(L.bookServerAddressHint).padding(.top, 8)
+            } else if link != nil {
+                note(L.bookServerKavitaKey).padding(.top, 8)
+                note(L.bookServerKeyKept(store: "the Keychain")).padding(.top, 4) // i18n-skip: the system's name for it
+            } else {
+                label(L.bookServerUsername).padding(.top, 16)
+                field(L.bookServerUsername, text: $user, focus: .user).padding(.top, 6)
+                label(L.bookServerPassword).padding(.top, 12)
+                field(L.bookServerPassword, text: $password, focus: .password, secure: true).padding(.top, 6)
+                    .onSubmit { look() }
+            }
+            result.padding(.top, 14)
+        }
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .standard, value: store.cameIn.slow)
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .standard, value: outcome)
+    }
+
+    /// The answer, crossfading in place: the waiting line after 600 ms, what was found, or why not.
+    @ViewBuilder
+    private var result: some View {
+        let host = found?.host ?? trimmedHost
+        if store.cameIn.looking, store.cameIn.slow {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L.bookServerLooking).foregroundStyle(.haze)
+            }
+            .font(.plat(mac: 12, touch: 15))
+            .transition(.opacity)
+        } else if case .found(let found)? = outcome {
+            VStack(alignment: .leading, spacing: 12) {
+                CameInNote(kind: .found,
+                           title: L.bookServerFoundTitle(series: Int(found.series ?? 0), libraries: found.libraries.count),
+                           line: L.bookServerFoundLine(kind: BookServerWords.kind(found.kind), host: found.host))
+                if !found.libraries.isEmpty { libraries(found) }
+                progressSwitch(host: found.host)
+            }
+            .transition(.opacity)
+        } else if case .empty(let why)? = outcome {
+            Group {
+                switch why {
+                case .unreachable(let host):
+                    CameInNote(kind: .failed, title: L.bookServerErrUnreachable(host: host), line: L.bookServerErrUnreachableLine)
+                case .wrongPassword(let host, let kind):
+                    CameInNote(kind: .failed, title: L.bookServerErrPassword(host: host),
+                               line: L.bookServerErrPasswordLine(kind: BookServerWords.kind(kind)))
+                case .wrongKey(let host):
+                    CameInNote(kind: .failed, title: L.bookServerErrKey(host: host), line: L.bookServerErrKeyLine)
+                case .notABookServer:
+                    CameInNote(kind: .failed, title: L.bookSourcesNotABookServer, line: L.bookServerNotBooksLine)
+                case .emptyCatalogue(let found):
+                    VStack(alignment: .leading, spacing: 6) {
+                        CameInNote(kind: .info, title: L.bookServerEmpty(host: found.host), line: L.bookServerEmptyLine)
+                        note(L.bookServerEmptyRecheck).padding(.leading, 20)
+                    }
+                default:
+                    EmptyView()
+                }
+            }
+            .transition(.opacity)
+        }
+        _ = host
+    }
+
+    private var trimmedHost: String { KavitaLink(address)?.host ?? trimmed }
+
+    /// One row per library, ticked by default.
+    private func libraries(_ found: ServerFound) -> some View {
+        CameInCard {
+            ForEach(Array(found.libraries.enumerated()), id: \.element.id) { index, library in
+                if index > 0 { Rectangle().fill(Palette.faintRule).frame(height: 1).padding(.leading, 12) }
+                Toggle(isOn: Binding(
+                    get: { !unticked.contains(library.id) },
+                    set: { on in if on { unticked.remove(library.id) } else { unticked.insert(library.id) } }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(library.name).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
+                        if let series = library.series {
+                            Text(L.bookServerLibraryLine(series: Int(series)))
+                                .font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)
+                        }
                     }
                 }
-                .font(.plat(mac: 12, touch: 15))
-                .foregroundStyle(.silk)
-                .padding(.top, 8)
-                label(L.serversUser).padding(.top, 16)
-                field(L.serversUser, text: $user, prompt: nil, focus: .user).padding(.top, 6)
-                label(L.serversPassword).padding(.top, 12)
-                field(L.serversPassword, text: $password, prompt: nil, focus: .password, secure: true).padding(.top, 6)
-                    .onSubmit { add() }
-                Text(L.bookServerNote)
-                    .font(.plat(mac: 12, touch: 13))
-                    .foregroundStyle(.haze)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 10)
-            } else if sources.checking, slow {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text(L.bookServerLooking).foregroundStyle(.haze)
-                }
-                .font(.plat(mac: 12, touch: 15))
-                .padding(.top, 8)
+                #if os(macOS)
+                .toggleStyle(.checkbox)
+                #endif
+                .tint(.amber)
+                .padding(.horizontal, 12).padding(.vertical, 8)
             }
-            if let failed = sources.failed {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.vermilion).font(.ui(11))
-                        .accessibilityHidden(true)
-                    Text(BookServerWords.failure(failed.failure))
-                        .foregroundStyle(.silk)
+        }
+    }
+
+    private func progressSwitch(host: String) -> some View {
+        CameInCard {
+            Toggle(isOn: $reportProgress) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.bookServerSyncProgress).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk)
+                    Text(L.bookServerSyncProgressLine(host: host))
+                        .font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.plat(mac: 12, touch: 15))
-                .padding(.top, 10)
-                .accessibilityElement(children: .combine)
             }
-        }
-        .animation(.standard, value: sources.checked?.address)
-        .onAppear {
-            // A server added before is not this one.
-            sources.resetServerSheet()
-            if let shot = Self.shot {
-                Self.shot = nil
-                stage(shot)
-            } else {
-                focus = .address
-            }
-        }
-        .task(id: address) {
-            // Tried as it is typed, once the typing pauses.
-            guard !trimmed.isEmpty, !staged else { return }
-            try? await Task.sleep(for: .milliseconds(500))
-            guard !Task.isCancelled else { return }
-            sources.checkServer(trimmed)
-        }
-        .task(id: sources.checking) {
-            slow = false
-            guard sources.checking else { return }
-            try? await Task.sleep(for: .milliseconds(600))
-            slow = sources.checking
-        }
-        // Added: gone at once, unless there is a count of its series to say first, with Done.
-        .onChange(of: sources.added?.id) { _, id in
-            if id != nil, sources.added?.series == nil { dismiss() }
+            .toggleStyle(.switch)
+            .tint(.silk)
+            .padding(.horizontal, 12).padding(.vertical, 10)
         }
     }
-
-    private var trimmed: String { address.trimmingCharacters(in: .whitespaces) }
-
-    private func add() {
-        guard store.bookSources.checked != nil, !user.isEmpty, !password.isEmpty else { return }
-        store.bookSources.signIn(address: trimmed, user: user, password: password)
-    }
-
-    private var buttonHeight: CGFloat { Device.isMac ? 28 : 48 }
-    private var buttonFont: CGFloat { Device.isMac ? 13 : 17 }
 
     private func label(_ text: String) -> some View {
         Text(text).font(.plat(mac: 12, touch: 13)).foregroundStyle(.haze)
     }
 
-    private func field(_ title: String, text: Binding<String>, prompt: String?, focus which: Field, secure: Bool = false) -> some View {
+    private func note(_ text: String) -> some View {
+        Text(text).font(.plat(mac: 12, touch: 13)).foregroundStyle(.haze).fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// The address, with a "Key ••••3f9a" chip inside it for a Kavita link.
+    private func addressField(_ link: KavitaLink?) -> some View {
+        HStack(spacing: 8) {
+            field(L.bookServerAddress, text: $address, focus: .address, bare: true)
+            if let link {
+                HStack(spacing: 4) {
+                    Image(systemName: "key").font(.ui(11))
+                    Text(L.bookServerKey(last: link.last4)).font(.system(size: Device.isMac ? 12 : 14, design: .monospaced))
+                }
+                .foregroundStyle(.silk)
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(Palette.raised, in: .rect(cornerRadius: 6))
+                .fixedSize()
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: Device.isMac ? 32 : 48)
+        .background(.ground, in: .rect(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassRule, lineWidth: 1))
+    }
+
+    private func field(_ title: String, text: Binding<String>, focus which: Field, secure: Bool = false, bare: Bool = false) -> some View {
         Group {
             if secure {
                 SecureField(title, text: text)
             } else {
-                TextField(title, text: text, prompt: prompt.map { Text($0).foregroundStyle(.haze) })
+                TextField(title, text: text, prompt: Text(which == .address ? "books.home.example" : "").foregroundStyle(.haze)) // i18n-skip
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .keyboardType(which == .address ? .URL : .default)
@@ -613,11 +736,49 @@ private struct AddBookServerStep: View {
         .font(.plat(mac: 13, touch: 17))
         .autocorrectionDisabled()
         .focused($focus, equals: which)
-        .padding(.horizontal, 12)
-        .frame(height: Device.isMac ? 32 : 48)
-        .background(.ground, in: .rect(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassRule, lineWidth: 1))
+        .modifier(FieldBox(bare: bare))
         .labelsHidden()
+    }
+}
+
+private struct FieldBox: ViewModifier {
+    let bare: Bool
+    func body(content: Content) -> some View {
+        if bare {
+            content
+        } else {
+            content
+                .padding(.horizontal, 12)
+                .frame(height: Device.isMac ? 32 : 48)
+                .background(.ground, in: .rect(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassRule, lineWidth: 1))
+        }
+    }
+}
+
+/// The server sheet's timing: a look 500 ms after the typing pauses, and gone once added.
+private struct ServerStepLifecycle: ViewModifier {
+    @Environment(AppStore.self) private var store
+    let address: String
+    let user: String
+    let password: String
+    let staged: Bool
+    let onAppear: () -> Void
+    let look: () -> Void
+    let added: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear(perform: onAppear)
+            .task(id: address + "\u{0}" + user + "\u{0}" + password) {
+                guard !staged else { return }
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                look()
+            }
+            .onChange(of: store.cameIn.outcome) { _, outcome in
+                if case .serverAdded? = outcome { added() }
+            }
     }
 }
 
