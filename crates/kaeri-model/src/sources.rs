@@ -396,7 +396,7 @@ pub struct DemoWorkInfo {
     /// The chapter's own title.
     pub chapter: String,
     pub author: String,
-    /// "CC BY 4.0"; `None` for a work in the public domain.
+    /// "CC BY 4.0", or "Public domain" for the story.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub licence: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -436,7 +436,7 @@ impl DemoWorkInfo {
             series: work.series.into(),
             chapter: work.chapter.into(),
             author: work.author.into(),
-            licence: work.licence.map(Into::into),
+            licence: Some(work.licence.unwrap_or("Public domain").into()),
             licence_url: work.licence_url.map(Into::into),
             maker_url: work.maker_url.into(),
             file_page_url: work.file_page_url.map(Into::into),
@@ -841,5 +841,13 @@ mod section_tests {
             placed.iter().position(|e| e == "disk") < placed.iter().position(|e| e == "alpha"),
             "{placed:?}"
         );
+    }
+
+    #[test]
+    fn every_reading_demo_work_names_its_licence() {
+        let info = reading_demo_info();
+        assert_eq!(info.works.len(), 2);
+        assert!(info.works.iter().all(|w| w.licence.as_deref().is_some_and(|l| !l.is_empty())));
+        assert!(info.works.iter().any(|w| w.licence.as_deref() == Some("Public domain")));
     }
 }
