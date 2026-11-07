@@ -407,6 +407,14 @@
     <string name="reading_failed_off">Reading isn\'t available in this version of Kaeri.</string>
     <!-- Why something about reading failed, for any other reason. The reason is as it came. -->
     <string name="reading_failed_other">Something went wrong. %1$s</string>
+    <!-- Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again. -->
+    <string name="reading_failed_send_too_large">%1$s is %3$s, and %2$s takes files up to %4$s. Send fewer chapters at a time and try again.</string>
+    <!-- Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again. -->
+    <string name="reading_failed_send_missing">%1$s is missing %2$s, so it wasn\'t sent. Try again.</string>
+    <!-- Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again. -->
+    <string name="reading_failed_send_encoding">%2$s in %1$s has the wrong text encoding, so it wasn\'t sent. Try again.</string>
+    <!-- Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again. -->
+    <string name="reading_failed_send_malformed">%2$s in %1$s isn\'t valid, so it wasn\'t sent. Try again.</string>
     <!-- Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan. -->
     <string name="reading_kind_manga">Manga</string>
     <!-- Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea. -->

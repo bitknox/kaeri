@@ -636,6 +636,8 @@ extension ReadingFailure {
         case .needsNewerKaeri(let world): .readingFailedNeedsNewer(world: world)
         case .readingOff: .readingFailedOff
         case .other(let reason): .readingFailedOther(reason: reason)
+        // The send checks carry sizes, which the engine puts at human scale.
+        case .sendTooLarge, .sendCheck: readingFailureMsg(failure: self)
         }
         return msg.text
     }

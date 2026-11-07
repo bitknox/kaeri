@@ -765,6 +765,22 @@ object Strings {
     fun readingFailedOther(context: Context, reason: String): String =
         context.getString(R.string.reading_failed_other, reason)
 
+    /** Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again. */
+    fun readingFailedSendTooLarge(context: Context, file: String, target: String, size: String, limit: String): String =
+        context.getString(R.string.reading_failed_send_too_large, file, target, size, limit)
+
+    /** Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again. */
+    fun readingFailedSendMissing(context: Context, file: String, part: String): String =
+        context.getString(R.string.reading_failed_send_missing, file, part)
+
+    /** Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again. */
+    fun readingFailedSendEncoding(context: Context, file: String, part: String): String =
+        context.getString(R.string.reading_failed_send_encoding, file, part)
+
+    /** Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again. */
+    fun readingFailedSendMalformed(context: Context, file: String, part: String): String =
+        context.getString(R.string.reading_failed_send_malformed, file, part)
+
     /** Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan. */
     fun readingKindManga(context: Context): String =
         context.getString(R.string.reading_kind_manga)

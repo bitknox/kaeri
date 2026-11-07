@@ -827,6 +827,22 @@
     <value>[Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. {reason}~~~~~~~~]</value>
     <comment>Why something about reading failed, for any other reason. The reason is as it came.</comment>
   </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>[{file} îš {size}, àñð {target} ţàķéš ƒîļéš üþ ţö {limit}. Šéñð ƒéŵéŕ çĥàþţéŕš àţ à ţîɱé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.</comment>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>[{file} îš ɱîššîñĝ {part}, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~]</value>
+    <comment>Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.</comment>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>[{part} îñ {file} ĥàš ţĥé ŵŕöñĝ ţéẋţ éñçöðîñĝ, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.</comment>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>[{part} îñ {file} îšñ'ţ ṽàļîð, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.</comment>
+  </data>
   <data name="ReadingKindManga" xml:space="preserve">
     <value>[Ṁàñĝà~~]</value>
     <comment>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</comment>

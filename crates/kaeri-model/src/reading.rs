@@ -888,8 +888,40 @@ pub enum ReadingFailure {
 }
 
 impl ReadingFailure {
+    /// A file Send to e-reader wrote is bigger than the target takes. `file` is the file's
+    /// name, `target` the e-reader's, and the sizes are in bytes.
+    SendTooLarge {
+        file: String,
+        target: String,
+        bytes: u64,
+        limit: u64,
+    },
+    /// A file Send to e-reader wrote failed its check before sending. `part` is the path inside
+    /// the file that failed, such as `OEBPS/content.opf`.
+    SendCheck {
+        file: String,
+        part: String,
+        problem: SendProblem,
+    },
+}
+
+/// What the check before a send found wrong with a part of the file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SendProblem {
+    /// The part is not in the file.
+    Missing,
+    /// The part does not declare UTF-8, or is not UTF-8.
+    NotUtf8,
+    /// The part is there but is not what the format requires.
+    Malformed,
     pub fn msg(&self) -> Msg {
-        Msg::Reading(match self {
+        Msg::Reading(self.reading_msg())
+    }
+
+    /// The failure's message, as the reading messages it is one of.
+    pub fn reading_msg(&self) -> ReadingMsg {
+        match self {
             Self::Offline => ReadingMsg::ReadingFailedOffline,
             Self::SourceDown { source } => {
                 ReadingMsg::ReadingFailedSourceDown { source: source.clone() }
@@ -926,13 +958,42 @@ impl ReadingFailure {
             }
             Self::ReadingOff => ReadingMsg::ReadingFailedOff,
             Self::Other { reason } => ReadingMsg::ReadingFailedOther { reason: reason.clone() },
-        })
+            Self::SendTooLarge { file, target, bytes, limit } => {
+                ReadingMsg::ReadingFailedSendTooLarge {
+                    file: file.clone(),
+                    target: target.clone(),
+                    size: crate::msg_text::Size::of(*bytes),
+                    limit: crate::msg_text::Size::of(*limit),
+                }
+            }
+            Self::SendCheck { file, part, problem } => match problem {
+                SendProblem::Missing => ReadingMsg::ReadingFailedSendMissing {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+                SendProblem::NotUtf8 => ReadingMsg::ReadingFailedSendEncoding {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+                SendProblem::Malformed => ReadingMsg::ReadingFailedSendMalformed {
+                    file: file.clone(),
+                    part: part.clone(),
+                },
+            },
+        }
     }
 }
 
 /// Which part of which screen a failure belongs to, so it shows in place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+/// [`ReadingFailure::reading_msg`] for a front end, so an app says a failure in the engine's
+/// words, with sizes at human scale.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn reading_failure_msg(failure: ReadingFailure) -> ReadingMsg {
+    failure.reading_msg()
+}
+
 pub enum ReadingAbout {
     Home,
     Updates,

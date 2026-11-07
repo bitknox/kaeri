@@ -340,6 +340,10 @@ extension ReadingMsg {
         case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
         case .readingFailedOff: L.readingFailedOff
         case .readingFailedOther(let reason): L.readingFailedOther(reason: reason)
+        case .readingFailedSendTooLarge(let file, let target, let size, let limit): L.readingFailedSendTooLarge(file: file, target: target, size: sizeText(size), limit: sizeText(limit))
+        case .readingFailedSendMissing(let file, let part): L.readingFailedSendMissing(file: file, part: part)
+        case .readingFailedSendEncoding(let file, let part): L.readingFailedSendEncoding(file: file, part: part)
+        case .readingFailedSendMalformed(let file, let part): L.readingFailedSendMalformed(file: file, part: part)
         case .readingKindManga: L.readingKindManga
         case .readingKindManhwa: L.readingKindManhwa
         case .readingKindManhua: L.readingKindManhua

@@ -603,6 +603,18 @@ reading-failed-off = Reading isn't available in this version of Kaeri.
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = Something went wrong. { $reason }
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } is { $size }, and { $target } takes files up to { $limit }. Send fewer chapters at a time and try again.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } is missing { $part }, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } in { $file } has the wrong text encoding, so it wasn't sent. Try again.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } in { $file } isn't valid, so it wasn't sent. Try again.
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = Manga
 

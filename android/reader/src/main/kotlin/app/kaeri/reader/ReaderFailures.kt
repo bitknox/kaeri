@@ -6,6 +6,7 @@ package app.kaeri.reader
 import android.content.Context
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingMsg
+import app.kaeri.engine.model.readingFailureMsg
 import app.kaeri.store.text
 
 /** The message for this failure. */
@@ -26,6 +27,8 @@ fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(reason)
+    // The send checks carry sizes, which the engine puts at human scale.
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(this)
 }
 
 /** This failure in the person's language. */
