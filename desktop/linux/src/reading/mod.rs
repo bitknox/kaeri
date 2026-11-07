@@ -539,10 +539,17 @@ pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
         SeriesAction::Continue { chapter, label, page } => {
             Some((chapter.clone(), t::action_continue_chapter(label, i64::from(*page))))
         }
-        SeriesAction::ContinuePart { chapter, label, .. } => {
+        // A part goes by the source's own name for it where it has one, as its row does.
+        SeriesAction::ContinuePart { chapter, named: Some(named), .. } => {
+            Some((chapter.clone(), t::action_continue_named_plain(named)))
+        }
+        SeriesAction::ContinuePart { chapter, label, named: None, .. } => {
             Some((chapter.clone(), t::action_continue_part_plain(label)))
         }
-        SeriesAction::ReadPart { chapter, label } => {
+        SeriesAction::ReadPart { chapter, named: Some(named), .. } => {
+            Some((chapter.clone(), t::action_read_named(named)))
+        }
+        SeriesAction::ReadPart { chapter, label, named: None } => {
             Some((chapter.clone(), t::action_read_part(label)))
         }
         SeriesAction::ReadAgain | SeriesAction::NoSource => None,

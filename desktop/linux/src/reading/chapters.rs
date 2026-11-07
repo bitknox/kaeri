@@ -7,7 +7,7 @@
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
-    rc::{Rc, Weak},
+    rc::Rc,
 };
 
 use adw::prelude::*;
@@ -43,6 +43,9 @@ pub struct Here {
     pub files: HashMap<u32, PageFile>,
 }
 
+/// Where the popover sends what is picked.
+type Asker = Rc<dyn Fn(Ask)>;
+
 pub struct Chapters {
     pub popover: gtk::Popover,
     title: gtk::Label,
@@ -57,7 +60,7 @@ pub struct Chapters {
     files: RefCell<HashMap<u32, PageFile>>,
     /// Thumbnails waiting for their page, by page.
     waiting: RefCell<HashMap<u32, Vec<glib::WeakRef<gtk::Picture>>>>,
-    ask: RefCell<Option<Rc<dyn Fn(Ask)>>>,
+    ask: RefCell<Option<Asker>>,
 }
 
 impl Chapters {
@@ -176,7 +179,7 @@ impl Chapters {
         this
     }
 
-    pub fn set_ask(&self, ask: Rc<dyn Fn(Ask)>) {
+    pub fn set_ask(&self, ask: Asker) {
         self.ask.replace(Some(ask));
     }
 
@@ -364,7 +367,8 @@ impl Chapters {
         }
         if here {
             row.add_css_class("reader-here");
-            row.update_state(&[gtk::accessible::State::Selected(Some(true))]);
+            row.upcast_ref::<gtk::Widget>()
+                .update_state(&[gtk::accessible::State::Selected(Some(true))]);
         }
         if chapter.new_chapter && !read {
             let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);

@@ -1727,7 +1727,8 @@ fn strip_target(heights: &[i32], spacing: i32, index: usize, offset: Option<f32>
     let into = offset
         .zip(heights.get(index))
         .map_or(0.0, |(o, h)| f64::from(o.clamp(0.0, 1.0)) * f64::from(*h));
-    f64::from(above) + into
+    // Whole pixels: the offset comes as an f32, and 0.35 of an image is not 0.35 in f64.
+    (f64::from(above) + into).round()
 }
 
 #[cfg(test)]
