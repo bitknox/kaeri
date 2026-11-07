@@ -173,6 +173,8 @@ pub(super) fn render_overlay(
         Overlay::OpenLink => open_link_rows(app, link_width(area.width)),
         Overlay::PublishPick => publish_rows(app),
         Overlay::BugReport => bug_report_rows(app),
+        Overlay::Medium => medium_rows(app, text_width(area)).0,
+        Overlay::MediumOff => medium_off_rows(app, text_width(area)).0,
         Overlay::FirstRun => vec![
             (String::new(), t::onboarding_demo_heading()),
             (String::new(), t::onboarding_demo_detail()),
@@ -194,6 +196,12 @@ pub(super) fn render_overlay(
     let selected = match overlay {
         // The plugin overlay explains before it offers, so its choices start below the facts.
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
+        Overlay::Medium => {
+            Some(medium_rows(app, text_width(area)).1 + app.cursors.overlay.selected)
+        }
+        Overlay::MediumOff => {
+            medium_off_rows(app, text_width(area)).1.get(app.cursors.overlay.selected).copied()
+        }
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
         _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
@@ -545,6 +553,105 @@ fn log_rows(app: &App) -> Vec<(String, String)> {
             (count, format!("{}  {}", marker, row.text))
         })
         .collect()
+}
+
+/// The question of what Kaeri is for: what it is about, then the three answers. Also how many rows
+/// come before the answers, which are the ones that can be picked.
+/// The width a wrapped line of a question's text has.
+fn text_width(area: Rect) -> usize {
+    area.width.saturating_sub(8) as usize
+}
+
+/// `text` as rows of its own, wrapped to `width`.
+fn wrapped(text: &str, width: usize) -> impl Iterator<Item = (String, String)> {
+    crate::widgets::wrap(text, width.max(10), 6).into_iter().map(|line| (String::new(), line))
+}
+
+fn medium_rows(app: &App, width: usize) -> (Vec<(String, String)>, usize) {
+    use crate::app::medium::{CHOICES, choice_line, choice_word};
+    use kaeri_model::medium::MediumAsk;
+    let device = t::sync_tui_kind();
+    let mut rows = Vec::new();
+    match app.medium_question() {
+        Some(MediumAsk::Updated) => {
+            rows.extend(wrapped(&t::medium_update_line(&device), width));
+        }
+        Some(MediumAsk::Joined { devices, answer }) => {
+            let names = devices.join(", ");
+            let n = devices.len() as i64;
+            rows.push((
+                String::new(),
+                match answer {
+                    kaeri_model::medium::KaeriIsFor::Watch => {
+                        t::medium_join_title_watch(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Read => {
+                        t::medium_join_title_read(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Both => {
+                        t::medium_join_title_both(&names, n)
+                    }
+                },
+            ));
+            rows.extend(wrapped(&t::medium_join_line(&device), width));
+        }
+        Some(MediumAsk::FirstRun) | None => {
+            rows.extend(wrapped(&t::onboarding_medium_line(), width));
+        }
+    }
+    rows.push((String::new(), String::new()));
+    let facts = rows.len();
+    for answer in CHOICES {
+        rows.push((
+            String::new(),
+            format!("{}  ·  {}", choice_word(answer), choice_line(answer)),
+        ));
+    }
+    rows.push((String::new(), String::new()));
+    rows.push((String::new(), t::medium_change_later()));
+    (rows, facts)
+}
+
+/// The confirmation before a medium is turned off: what happens, the switch for its downloads and
+/// the button. Also the rows of the two that can be picked.
+fn medium_off_rows(app: &App, width: usize) -> (Vec<(String, String)>, [usize; 2]) {
+    let device = t::sync_tui_kind();
+    let Some(off) = app.medium_off() else {
+        return (Vec::new(), [0, 0]);
+    };
+    let (title, body, delete, confirm) = if off.watching {
+        (
+            t::medium_off_title_watch(),
+            t::medium_off_watch_body(&device),
+            t::medium_off_delete_watch(),
+            t::medium_off_confirm_watch(),
+        )
+    } else {
+        (
+            t::medium_off_title_read(),
+            t::medium_off_read_body(&device),
+            t::medium_off_delete_read(),
+            t::medium_off_confirm_read(),
+        )
+    };
+    let mark = if off.delete { "[x]" } else { "[ ]" };
+    let mut rows = vec![(String::new(), title)];
+    rows.extend(wrapped(&body, width));
+    rows.push((String::new(), String::new()));
+    let switch = rows.len();
+    rows.push((String::new(), format!("{mark} {delete}")));
+    // Under the switch, as in the apps: what the downloads take, once it is known.
+    let bytes = app.medium_off_bytes();
+    if bytes > 0 {
+        let size = super::downloads::bytes_text(bytes);
+        rows.push((
+            String::new(),
+            format!("    {}", t::medium_off_delete_size(&size, &device)),
+        ));
+    }
+    let button = rows.len();
+    rows.push((String::new(), confirm));
+    (rows, [switch, button])
 }
 
 #[cfg(test)]

@@ -1,0 +1,152 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │    Kaeri is for                Watching and reading  I to change
+  ▤  Calendar               │
+  ▦  Seasonal               │
+  /  Search                 │  Appearance  ──────────────────────────────────────────────────────────────────────────
+  ▥  Library                │  ▌ Theme                       Adaptive
+  ↓  Downloads              │    Motion                      On
+  ◇  Sources                │    Titles                      AniList's choice
+  ◎  Accounts               │    Play trailers               Always
+▌ ≡  Settings               │
+  ⇄  Together               │  Playback  ────────────────────────────────────────────────────────────────────────────
+                            │    Audio                       Subbed
+                            │    Quality                     1080p
+                            │    Subtitles                   eng
+                            │    Counts as watched at        85%
+                            │    Auto-play next              On
+                            │    Skip opening automatically  On
+                            │    Skip recaps automatically   Off
+                            │    Ask about skips by hand     On
+                            │    Share skips with AniSkip    Off
+                            │    Skip filler automatically   Off
+                            │    Mark opening and ending     On
+                            │    Show skip button            On
+                            │    Start in full screen        Off
+                            │    Upscaling                   Natural · ArtCNN
+                            │    Player interface            Kaeri
+                            │    Night mode                  Off
+                            │    Size                        100%
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                  d devices   ←→ change   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c33-44 fg=text-dim
+r02 c61-80 fg=text
+r02 c83-93 fg=text-dim
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r05 c02-02 fg=text-dim
+r05 c05-10 fg=text-dim
+r05 c28-28 fg=rule
+r05 c31-40 fg=text
+r05 c43-116 fg=rule
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c31-31 fg=obi
+r06 c33-37 fg=text
+r06 c61-68 fg=text mod=BOLD
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c33-38 fg=text-dim
+r07 c61-62 fg=text
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-38 fg=text-dim
+r08 c61-76 fg=text
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r09 c33-45 fg=text-dim
+r09 c61-66 fg=text
+r10 c00-00 fg=text-dim
+r10 c02-02 fg=text
+r10 c05-12 fg=text mod=BOLD
+r10 c28-28 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c31-38 fg=text
+r11 c41-116 fg=rule
+r12 c28-28 fg=rule
+r12 c33-37 fg=text-dim
+r12 c61-66 fg=text
+r13 c28-28 fg=rule
+r13 c33-39 fg=text-dim
+r13 c61-65 fg=text
+r14 c28-28 fg=rule
+r14 c33-41 fg=text-dim
+r14 c61-63 fg=text
+r15 c28-28 fg=rule
+r15 c33-52 fg=text-dim
+r15 c61-63 fg=text
+r16 c28-28 fg=rule
+r16 c33-46 fg=text-dim
+r16 c61-62 fg=text
+r17 c28-28 fg=rule
+r17 c33-58 fg=text-dim
+r17 c61-62 fg=text
+r18 c28-28 fg=rule
+r18 c33-57 fg=text-dim
+r18 c61-63 fg=text
+r19 c28-28 fg=rule
+r19 c33-55 fg=text-dim
+r19 c61-62 fg=text
+r20 c28-28 fg=rule
+r20 c33-56 fg=text-dim
+r20 c61-63 fg=text
+r21 c28-28 fg=rule
+r21 c33-57 fg=text-dim
+r21 c61-63 fg=text
+r22 c28-28 fg=rule
+r22 c33-55 fg=text-dim
+r22 c61-62 fg=text
+r23 c28-28 fg=rule
+r23 c33-48 fg=text-dim
+r23 c61-62 fg=text
+r24 c28-28 fg=rule
+r24 c33-52 fg=text-dim
+r24 c61-63 fg=text
+r25 c28-28 fg=rule
+r25 c33-41 fg=text-dim
+r25 c61-76 fg=text
+r26 c28-28 fg=rule
+r26 c33-48 fg=text-dim
+r26 c61-65 fg=text
+r27 c28-28 fg=rule
+r27 c33-42 fg=text-dim
+r27 c61-63 fg=text
+r28 c28-28 fg=rule
+r28 c33-36 fg=text-dim
+r28 c61-64 fg=text
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c90-90 fg=text
+r33 c91-101 fg=text-dim
+r33 c102-103 fg=text
+r33 c104-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

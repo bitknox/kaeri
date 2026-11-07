@@ -32,6 +32,7 @@ impl Keymap {
             bind(Binding::plain(Char('r')), A::Refresh);
             bind(Binding::plain(Char('R')), A::ForceResync);
             bind(Binding::plain(Char('t')), A::ToggleTranslation);
+            bind(Binding::plain(Char('I')), A::ChooseMedium);
             bind(Binding::plain(Char('/')), A::FocusSearch);
             bind(Binding::ctrl(Char('f')), A::FilterSearch);
             // Surprise me, on Search's browse and on Planning, and Another on the page it opened.

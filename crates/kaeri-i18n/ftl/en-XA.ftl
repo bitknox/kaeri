@@ -4725,6 +4725,18 @@ tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çö
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
+
+# Line under the title of that page.
+tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš àŕé ŕéàð îñ ţĥé Ķàéŕî àþþš, àñð ýöüŕ ŕéàðîñĝ šţàýš îñ šţéþ ţĥŕöüĝĥ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàéŕî îš ƒöŕ.~~~~~~~~~~~~]
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = [{ $key } ţö çĥàñĝé~~~~]
+
 # Title of the about page.
 about-title = [Åƀöüţ~~]
 
