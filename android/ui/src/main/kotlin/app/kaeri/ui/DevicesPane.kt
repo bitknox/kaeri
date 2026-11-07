@@ -354,9 +354,12 @@ private fun RecoveryKeyRow(status: SyncStatus) {
     )
 }
 
-/** What the sheet over the Devices page is, when one is open. */
+/**
+ * What the sheet over the Devices page is, when one is open. First run's join page uses them for
+ * a restore; [paired] says whether a pairing's success sheet shows, which the join page draws itself.
+ */
 @Composable
-private fun DevicesSheets() {
+internal fun DevicesSheets(paired: Boolean = true) {
     val store = LocalAppStore.current
     val sheet by store.sync.sheet.collectAsStateWithLifecycle()
     val key by store.sync.recoveryKey.collectAsStateWithLifecycle()
@@ -387,7 +390,7 @@ private fun DevicesSheets() {
     // The key of a set-up shows in that set-up's sheet; any other shows full screen.
     if (!(keyInSheet && setUpSheets)) key?.let { RecoveryKeyDialog(it) }
     val copied by store.sync.copied.collectAsStateWithLifecycle()
-    copied?.let { PairOkSheet(it) }
+    if (paired) copied?.let { PairOkSheet(it) }
 }
 
 /** The Settings row's value: Sync off, Synced 2 min ago, or Couldn't sync. */

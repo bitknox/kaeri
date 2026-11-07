@@ -165,14 +165,17 @@ private fun PhoneSettingsList(actions: AppActions) {
 private fun PhonePane(pane: SettingsPane, actions: AppActions) {
     val navigator = LocalNavigator.current
     ScreenFrame(title = stringResource(pane.titleRes), onBack = navigator::back) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = padding.calculateTopPadding(), bottom = 48.dp)
-                .padding(horizontal = 16.dp),
-        ) {
-            PaneContent(pane, actions)
+        // Your sources: pulling down looks again at servers that showed no series.
+        app.kaeri.ui.reading.BookSourcesRefresh(pane == SettingsPane.Sources, Modifier.padding(top = padding.calculateTopPadding())) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 48.dp)
+                    .padding(horizontal = 16.dp),
+            ) {
+                PaneContent(pane, actions)
+            }
         }
     }
 }
@@ -409,13 +412,15 @@ private fun TabletSettings(start: SettingsPane, actions: AppActions) {
                             Box(Modifier.height(64.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
                                 Text(stringResource(shown.titleRes), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                             }
-                            Column(
-                                Modifier
-                                    .fillMaxSize()
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(top = 8.dp, bottom = 52.dp),
-                            ) {
-                                PaneContent(shown, actions)
+                            app.kaeri.ui.reading.BookSourcesRefresh(shown == SettingsPane.Sources) {
+                                Column(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(top = 8.dp, bottom = 52.dp),
+                                ) {
+                                    PaneContent(shown, actions)
+                                }
                             }
                         }
                         if (aside) {

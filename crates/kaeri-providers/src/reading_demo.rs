@@ -254,6 +254,7 @@ impl BookSource for ReadingDemo {
             cover: work.cover().map(Into::into),
             authors: vec![work.author.into()],
             format: Some(if work.novel { ReadingFormat::Novel } else { ReadingFormat::Manga }),
+            reading_hint: work.reading,
             languages: vec!["en".into()],
             ..SeriesDetail::new(work.id, work.series)
         })

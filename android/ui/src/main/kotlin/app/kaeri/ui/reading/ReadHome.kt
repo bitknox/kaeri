@@ -152,6 +152,7 @@ internal fun ReadHomeScreen(actions: AppActions) {
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val user = trackers.values.firstOrNull { it.connected }?.user
     LaunchedEffect(Unit) { store.reading.loadHome() }
+    DemoLaunchHost(actions)
 
     val view = home
     val failure = failures[ReadingAbout.HOME]
@@ -269,12 +270,16 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
     val hide = rememberHide(gone)
     val yours = heldPlaceholders(ReadHomePart.YOURS in home.pending)
     val discovery = heldPlaceholders(ReadHomePart.DISCOVERY in home.pending || ReadHomePart.BECAUSE in home.pending)
+    // While the demo is the only thing to read, its own spotlight and end, as the demo's board draws them.
+    val demo by store.demo.collectAsStateWithLifecycle()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
         // The spotlight changes in place, a crossfade when its series or case moves.
         item(key = "spotlight", contentType = "spotlight") {
             val tile = home.spotlight?.takeUnless { it.work in goneSet }
             val spot = home.spot
-            Box(itemMotion()) {
+            if (demo.onlyBooks) {
+                Box(itemMotion()) { DemoHomeSpotlight(actions, Modifier.padding(top = 8.dp)) }
+            } else Box(itemMotion()) {
                 AnimatedContent(
                     targetState = if (tile != null && spot != null) tile to spot else null,
                     contentKey = { it?.let { (t, s) -> t.work to s.case } },
@@ -307,7 +312,9 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
                 }
             }
         }
-        if (home.releasing.isNotEmpty()) {
+        // Discovery stays away while only the demo is on: nothing there could be read yet.
+        val discover = !demo.onlyBooks
+        if (discover && home.releasing.isNotEmpty()) {
             item(key = "releasing", contentType = "shelf") {
                 Box(itemMotion()) {
                     TileShelf(Strings.homeReadReleasing(context), home.releasing, "read-releasing", Strings.homeSearch(context)) {
@@ -318,13 +325,13 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
             }
         }
         val because = home.becauseTitle
-        if (because != null && home.because.isNotEmpty()) {
+        if (discover && because != null && home.because.isNotEmpty()) {
             item(key = "because", contentType = "shelf") {
                 Box(itemMotion()) { TileShelf(Strings.homeBecause(context, because), home.because, "read-because") }
             }
         }
         val genre = home.genre
-        if (genre != null && home.genreShelf.isNotEmpty()) {
+        if (discover && genre != null && home.genreShelf.isNotEmpty()) {
             item(key = "genre", contentType = "shelf") {
                 Box(itemMotion()) {
                     TileShelf(Strings.homeMoreGenre(context, genre), home.genreShelf, "read-genre", Strings.homeSearch(context)) {
@@ -335,12 +342,14 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
             }
         }
         // What is still on its way, held in place below what has arrived.
-        if (discovery) {
+        if (discover && discovery) {
             item(key = "discovery-pending", contentType = "pending") {
                 Box(itemMotion()) { Column { ShelfPlaceholder(); ShelfPlaceholder() } }
             }
         }
-        home.end?.let { end ->
+        if (demo.onlyBooks) {
+            item(key = "end", contentType = "end") { Box(itemMotion()) { DemoHomeEnd() } }
+        } else home.end?.let { end ->
             item(key = "end", contentType = "end") { Box(itemMotion()) { ReadEndLine(end) } }
         }
     }

@@ -13,7 +13,7 @@ pub(crate) use novel::SOURCE;
 use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
-    books::{ChapterId, WorkId},
+    books::{ChapterId, ReadingHint, WorkId},
     config::{CountsAsRead, SendProgressAfter, WebtoonMode},
     ids::AnilistId,
     media::Medium,
@@ -182,6 +182,8 @@ pub struct Session {
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
     demo: Option<kaeri_model::sources::DemoWorkInfo>,
+    /// Which way the source says the pages read, for a series with no direction of its own.
+    hint: Option<kaeri_core::books::ReadingHint>,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -424,9 +426,9 @@ impl Reader {
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
-        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
+        let demo_work = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
         let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
-            _ if demo.is_some() => demo.map_or(Medium::Manga, |w| w.medium()),
+            _ if demo_work.is_some() => demo_work.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
             (Some(other), _) if other != "manga" && other != "comic" => {
@@ -484,7 +486,11 @@ impl Reader {
             id,
             work,
             medium,
-            title: kind.and_then(|k| k.title_in(form)).unwrap_or_default(),
+            // The demo's works are never fetched from the catalogue: their series names them.
+            title: kind
+                .and_then(|k| k.title_in(form))
+                .or_else(|| demo_work.map(|w| w.series.to_owned()))
+                .unwrap_or_default(),
             ended,
             chapters,
             at: index,
@@ -518,6 +524,7 @@ impl Reader {
             restore,
             prepared: Arc::default(),
             novel_resumed: false,
+            hint: demo_work.and_then(|w| w.reading),
         };
         let pages = self.pages(cx);
         session.lay_out(cx, &pages, page);
@@ -684,6 +691,7 @@ impl Session {
                 .map(|c| c.row(&marks)),
             settings: Some(cx.settings_view(self.medium, Some(&self.work))),
             demo_credit: self.demo.clone(),
+            progress_host: cx.services.book_sources.progress_host(&self.work),
         }
     }
 
@@ -774,10 +782,16 @@ impl Session {
             } else {
                 ReaderMode::Paged
             },
-            direction: if l.word(Key::Direction) == "ltr" {
-                ReadDirection::LeftToRight
-            } else {
-                ReadDirection::RightToLeft
+            // The series' own direction, else the source's word, else the medium's default.
+            direction: match self.hint {
+                Some(ReadingHint::LeftToRight) if !l.series_has(Key::Direction) => {
+                    ReadDirection::LeftToRight
+                }
+                Some(ReadingHint::RightToLeft) if !l.series_has(Key::Direction) => {
+                    ReadDirection::RightToLeft
+                }
+                _ if l.word(Key::Direction) == "ltr" => ReadDirection::LeftToRight,
+                _ => ReadDirection::RightToLeft,
             },
             guess_mode: self.webtoon.is_none() && !l.series_has(Key::Mode),
             guess_direction: !l.series_has(Key::Direction),
@@ -1581,7 +1595,15 @@ mod tests {
 
         /// Open at `at` and wait for the view and its leaves.
         async fn open(&mut self, at: OpenAt) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
-            let work = WorkId::new(WORK);
+            self.open_work(WorkId::new(WORK), at).await
+        }
+
+        /// As [`Self::open`], for another work than [`WORK`].
+        async fn open_work(
+            &mut self,
+            work: WorkId,
+            at: OpenAt,
+        ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
             self.send(ReaderCommand::Open { work, chapter: None, at, surface: surface() });
             let view = self
                 .until(|e| match e {

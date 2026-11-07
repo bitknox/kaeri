@@ -662,6 +662,31 @@ async fn a_vertical_book_opens_vertical_and_reads_right_to_left() {
     assert!(text(&sheet).contains("vertical-rl"), "{}", text(&sheet));
 }
 
+/// The demo's comic, never fetched from the catalogue, opens under its series' name and reads
+/// left to right, as its source says: it is a European comic, not a manga.
+#[tokio::test(start_paused = true)]
+async fn the_demo_comic_opens_under_its_name_and_reads_left_to_right() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+    h.services.book_sources.registry.put(Arc::new(PictureSource(BookSourceManifest {
+        id: "pictures".into(),
+        name: "Pictures".into(),
+        version: "1".into(),
+        kind: BookSourceKind::Plugin,
+        media: vec![Medium::Manga],
+        languages: vec!["en".into()],
+        allowed_hosts: Vec::new(),
+        capabilities: Vec::new(),
+    })));
+    let comic = kaeri_core::reading_demo::COMIC.work_id();
+    h.services
+        .store
+        .set_book_match("pictures", "series-1", comic.as_str(), 90, true, false, 1)
+        .unwrap();
+    let (view, _, _) = h.open_work(comic, OpenAt::Start).await;
+    assert_eq!(view.title, "Pepper&Carrot");
+    assert_eq!(view.direction, kaeri_model::reader::ReadDirection::LeftToRight);
+}
+
 /// Two chapters opened one after the other can finish out of order: the first one's open,
 /// finishing last, must not take the place of the second one's, which still opens.
 #[tokio::test(start_paused = true)]

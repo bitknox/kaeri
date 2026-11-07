@@ -597,6 +597,11 @@ pub struct ReaderView {
     /// David Revoy. Licensed CC BY 4.0.", and its end says how to add your own books.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub demo_credit: Option<crate::sources::DemoWorkInfo>,
+    /// The host of the book server the work's chapters come from, when it receives progress:
+    /// the page between chapters keeps room for "Saved to books.home.example" from the start.
+    /// `None` for a work from no server, or one set not to receive.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub progress_host: Option<String>,
 }
 
 /// How a text's lines run.

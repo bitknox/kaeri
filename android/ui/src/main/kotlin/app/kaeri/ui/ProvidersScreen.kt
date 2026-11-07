@@ -612,8 +612,9 @@ internal fun ProviderScreen(id: String, actions: AppActions) {
     var updating by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val info = row?.let { ProviderInfo(it, context) }
-    if (info?.isDemo == true) {
-        DemoAbout(info.name)
+    // The demo's page also with Read alone, where the demo is a book source and no provider row.
+    if (info?.isDemo == true || id == "demo") { // i18n-skip
+        DemoAbout(info?.name ?: stringResource(R.string.sources_demo_name))
         return
     }
     ScreenFrame(title = info?.name ?: stringResource(R.string.sources_fallback_title), subtitle = info?.let { if (it.isPlugin && it.row.origin is ProviderOrigin.Store) stringResource(R.string.sources_origin_from, it.origin) else it.origin }, onBack = navigator::back) { padding ->

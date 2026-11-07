@@ -155,6 +155,8 @@ class PhoneReaderActions(
     val onClose: () -> Unit,
     val onSeries: () -> Unit = onClose,
     val onDownloads: () -> Unit = onClose,
+    /** Add a source, from the end of the demo. */
+    val onAddSource: () -> Unit = onClose,
 )
 
 /** The setting [key]'s current choice name, or null. */
@@ -243,6 +245,18 @@ fun PhoneReader(
     val accessibility = remember { context.getSystemService(AccessibilityManager::class.java) }
     val exploring = accessibility?.isTouchExplorationEnabled == true
     val shown = chrome || exploring
+    // A demo work opens with the chrome and its credit held for 3 s; the credit returns with the
+    // chrome on every tap.
+    val demo = view?.demoCredit
+    // The pager reports the first page as a turn; that report must not take the held chrome away.
+    var demoOpening by remember { mutableStateOf(false) }
+    LaunchedEffect(demo != null, view?.chapter?.id) {
+        if (demo == null) return@LaunchedEffect
+        demoOpening = true
+        chrome = true
+        delay(DEMO_CREDIT_HOLD_MILLIS)
+        chrome = false
+    }
 
     SystemBars(context, shown, light)
 
@@ -383,7 +397,10 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, onBack = { place.ended = false })
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                            place.ended = false
+                            place.go(0)
+                        })
                     }
                 }
                 strip && view != null && (state.leaves.isNotEmpty() || state.previous != null) -> {
@@ -397,7 +414,7 @@ fun PhoneReader(
                         onMissing = session::needPage,
                         onRetry = { session.retry(it.toUInt()) },
                         onJumped = session::jumped,
-                        footer = { PhoneEndPage(state, session, actions, images) },
+                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover) },
                         divider = { next -> StripDivider(state, next) },
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
@@ -414,12 +431,14 @@ fun PhoneReader(
                     onControls = { chrome = !chrome },
                     onShown = { leaf, how ->
                         session.shown(leaf, how)
-                        if (how != TurnHow.JUMP) chrome = false
+                        if (how != TurnHow.JUMP) {
+                            if (demoOpening) demoOpening = false else chrome = false
+                        }
                     },
                     onMissing = session::needPage,
                     onRetry = { session.retry(it.toUInt()) },
                     onJumped = session::jumped,
-                    endPage = { PhoneEndPage(state, session, actions, images) },
+                    endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover) },
                     motion = fades,
                 )
             }
@@ -462,6 +481,18 @@ fun PhoneReader(
                 }
                 // The page under the thumb while the scrubber is dragged, 96 dp wide above the group.
                 if (shown && !novelOpen && !strip) ScrubPreview(session, state, images, scrub, fades)
+                // A demo work's credit, at the top centre with the chrome; not over its end card.
+                val onEnd = state.leaves.getOrNull(pager.leaf)?.endPage == true || place.ended
+                AnimatedVisibility(
+                    visible = demo != null && shown && sheet == Sheet.None && !onEnd,
+                    enter = if (fades) fadeIn(Motion.reveal()) else EnterTransition.None,
+                    exit = if (fades) fadeOut(Motion.reveal()) else ExitTransition.None,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                ) {
+                    val held = remember { mutableStateOf(demo) }
+                    if (demo != null) held.value = demo
+                    held.value?.let { CreditCapsule(it) }
+                }
             }
 
             // At rest a novel's only line: the pages left in the chapter, in the bottom margin.
@@ -911,6 +942,8 @@ private fun NovelEndPage(
     images: PageImages,
     direction: ReadDirection,
     onBack: () -> Unit,
+    cover: (@Composable (Modifier) -> Unit)?,
+    onFirstPage: () -> Unit,
 ) {
     val density = LocalDensity.current
     val far = with(density) { 80.dp.toPx() }
@@ -936,7 +969,7 @@ private fun NovelEndPage(
             )
         },
     ) {
-        PhoneEndPage(state, session, actions, images)
+        PhoneEndPage(state, session, actions, images, onFirstPage = onFirstPage, cover = cover)
     }
 }
 
@@ -1190,3 +1223,30 @@ private fun ChapterFailed(
 /** The setting [key]'s amount, or null. */
 internal fun ReaderState.amount(key: ReaderSettingKey): Double? =
     (settings?.rows?.firstOrNull { it.key == key }?.value as? ReaderValue.Amount)?.value
+
+/** How long a demo work's credit stays with the chrome after the reader opens. */
+internal const val DEMO_CREDIT_HOLD_MILLIS = 3_000L
+
+/**
+ * A demo work's credit: a pill 32 dp tall under the status bar, the info glyph and "series ·
+ * author · licence" in 13 sp. The licence travels with the work, as CC BY asks.
+ */
+@Composable
+private fun CreditCapsule(demo: app.kaeri.engine.model.DemoWorkInfo) {
+    val context = LocalContext.current
+    val words = demo.licence?.let { Strings.readerDemoCredit(context, demo.series, demo.author, it) } ?: demo.credit
+    Row(
+        Modifier
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(top = 12.dp, start = 16.dp, end = 16.dp)
+            .heightIn(min = 32.dp)
+            .background(Chrome.plate.copy(alpha = 0.94f), RoundedCornerShape(16.dp))
+            .border(1.dp, Chrome.rule, RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        GlyphIcon(Glyph.Info, Chrome.faint, size = 13.dp)
+        Text(words, color = Chrome.text, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
+}

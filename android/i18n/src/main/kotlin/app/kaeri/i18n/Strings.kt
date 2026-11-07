@@ -1945,6 +1945,30 @@ object Strings {
     fun castSettingsTorrentsNote(context: Context): String =
         context.getString(R.string.cast_settings_torrents_note)
 
+    /** Where Android keeps a Kavita key, filling { $store } in "Kaeri keeps the key in … and shows only its last four characters." */
+    fun bookServerKeystoreAndroid(context: Context): String =
+        context.getString(R.string.book_server_keystore_android)
+
+    /** Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters. */
+    fun storeInviteChip(context: Context, last: String): String =
+        context.getString(R.string.store_invite_chip, last)
+
+    /** How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts". */
+    fun storePluginHosts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_plugin_hosts, count, count)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Watch. */
+    fun joinMediumLineWatch(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_watch, device)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Both. */
+    fun joinMediumLineBoth(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_both, device)
+
+    /** Join page, paired view: where this device keeps a book server's key, filling $store in "kept in { $store }". */
+    fun joinKeyStore(context: Context): String =
+        context.getString(R.string.join_key_store)
+
     /** Under the failed page's reason on a phone: turning on skips the missing page. */
     fun readerPageFailedSwipe(context: Context): String =
         context.getString(R.string.reader_page_failed_swipe)

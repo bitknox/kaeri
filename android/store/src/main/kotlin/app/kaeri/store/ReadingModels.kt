@@ -11,6 +11,7 @@ import app.kaeri.engine.model.BookDownloadsView
 import app.kaeri.engine.model.BookEditionRow
 import app.kaeri.engine.model.BookServerFailure
 import app.kaeri.engine.model.BookServerKind
+import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
@@ -468,6 +469,9 @@ sealed interface ServerAnswer {
 
 /** The book sources: folders, servers and plugins, the Add a server sheet, and Read from's editions. */
 class BookSourcesModel(private val send: (Command) -> Unit) {
+    /** Told the servers each time the view changes, for their progress lines. */
+    internal var onServers: (List<BookServerRow>) -> Unit = {}
+
     private val _view = MutableStateFlow<BookSourcesView?>(null)
     val view: StateFlow<BookSourcesView?> = _view.asStateFlow()
 
@@ -498,6 +502,7 @@ class BookSourcesModel(private val send: (Command) -> Unit) {
     fun scan() = books(BookSourceCommand.Scan)
     fun removeServer(id: String) = books(BookSourceCommand.RemoveServer(id))
     fun setOff(id: String, off: Boolean) = books(BookSourceCommand.SetOff(id, off))
+    fun retryProgress(id: String) = books(BookSourceCommand.RetryProgress(id))
     fun setReportProgress(id: String, on: Boolean) = books(BookSourceCommand.SetReportProgress(id, on))
     fun setOrder(ids: List<String>) = books(BookSourceCommand.SetOrder(ids))
     fun findMatch(group: String, query: String) = books(BookSourceCommand.FindMatch(group, query))
@@ -547,7 +552,10 @@ class BookSourcesModel(private val send: (Command) -> Unit) {
 
     internal fun apply(event: BookSourceEvent) {
         when (event) {
-            is BookSourceEvent.View -> _view.value = event.v1
+            is BookSourceEvent.View -> {
+                _view.value = event.v1
+                onServers(event.v1.servers)
+            }
             is BookSourceEvent.Matches -> _matches.update { it + (event.group to event.choices) }
             is BookSourceEvent.ServerChecked -> {
                 _server.value = ServerAnswer.Checked(event.address, event.kind, event.name, event.version)

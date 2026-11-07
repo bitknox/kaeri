@@ -68,7 +68,7 @@ internal object Chrome {
     val paper = Color(0xFFEFE9DC)
 }
 
-internal enum class Glyph { Close, List, Back, Check, Warning, Chevron, Search }
+internal enum class Glyph { Close, List, Back, Check, Warning, Chevron, Search, Info }
 
 /** A line glyph in [colour], 24 dp by default, drawn from the board's paths. */
 @Composable
@@ -125,6 +125,11 @@ internal fun GlyphIcon(glyph: Glyph, colour: Color, modifier: Modifier = Modifie
                 drawPath(path, colour, style = stroke)
                 line(p(12f, 10f), p(12f, 14f))
                 drawCircle(colour, radius = 1f * s, center = p(12f, 16.8f))
+            }
+            Glyph.Info -> {
+                drawCircle(colour, radius = 9f * s, center = p(12f, 12f), style = stroke)
+                line(p(12f, 11f), p(12f, 16.5f))
+                drawCircle(colour, radius = 1.1f * s, center = p(12f, 7.6f))
             }
             Glyph.Search -> {
                 drawCircle(colour, radius = 5.5f * s, center = p(11f, 11f), style = stroke)

@@ -56,6 +56,7 @@ class TvActivity : ComponentActivity() {
             if (start.update) openUpdate()
             start.signIn?.let(::openSignIn)
             start.settings?.let(::goSettings)
+            if (start.joinStore) openJoinStore()
         }
         setContent {
             TvTheme {

@@ -61,6 +61,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
     FixtureScene.PROFILES -> FfiScene.Profiles
     FixtureScene.READING_FIRST_RUN -> FfiScene.ReadingFirstRun
+    FixtureScene.READING_DEMO -> FfiScene.ReadingDemo
     FixtureScene.READING_UPDATE_SHEET -> FfiScene.ReadingUpdateSheet
     FixtureScene.READING_JOIN_ASK -> FfiScene.ReadingJoinAsk
     FixtureScene.READING_HOME -> FfiScene.ReadingHome

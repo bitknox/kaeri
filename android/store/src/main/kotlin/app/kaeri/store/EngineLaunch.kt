@@ -297,6 +297,9 @@ enum class FixtureScene {
     /** A first launch with reading on: Watch, read or both on page 2. */
     READING_FIRST_RUN,
 
+    /** Reading on and set to Read with the demo on and nothing else: the demo's own places. */
+    READING_DEMO,
+
     /** Reading on after an update: one sheet over Home asks, Watch chosen. */
     READING_UPDATE_SHEET,
 
