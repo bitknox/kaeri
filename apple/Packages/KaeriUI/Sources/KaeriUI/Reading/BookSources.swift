@@ -137,6 +137,7 @@ struct BookSourcesList: View {
         .folderCameInSheet(store)
         .refreshable { store.bookSources.scan() }
         // Shots: a prelaunch state's sheet, staged with nothing asked of a real server.
+        .onLaunchSheet("demo-about", navigator) { aboutDemo = true } // i18n-skip: a shot's sheet name
         .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
             guard let scene = PrelaunchScene.named() else { return }
             switch scene {

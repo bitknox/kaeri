@@ -217,7 +217,12 @@ public final class Navigator {
         launchSourceKey = route.source
         libraryReading = route.reading
         searchReading = route.reading
-        if let work = route.work {
+        if var work = route.work {
+            // Shots: the reading demo's works by name, since their ids are hashes.
+            if work == "demo-comic" || work == "demo-story",
+               let demo = readingDemoInfo().works.first(where: { $0.id == (work == "demo-comic" ? "pepper-carrot" : "kwaidan") }) {
+                work = demo.work
+            }
             #if os(macOS)
             seriesOnMac = work
             #else
