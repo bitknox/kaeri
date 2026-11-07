@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Screenshots of the Fixtures app, for comparing with the design boards.
 #
-#   apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [shot…]
+#   apple/scripts/shots.sh <mac|iphone|ipad> [--allow-fallback] [--landscape] [shot…]
 #
 # A shot is a scene, and optionally a screen: watching (Continue filled, signed in; the default),
 # sourceless (watching with no source set up), unsure (watching with a source ahead that cannot
@@ -61,6 +61,11 @@
 # KAERI_LAUNCH_ARGS adds launch arguments to every iPhone or iPad shot, split on spaces:
 # KAERI_LAUNCH_ARGS="-AppleLanguages (en-XA)" shoots the pseudo-locale.
 #
+# A Mac shot brings the window to the front before it is taken. When the capture still fell back
+# to AppKit's own drawing (a locked screen, or no picture from the window server), which leaves out
+# Liquid Glass, the script prints a warning and exits 1 after the last shot. --allow-fallback
+# accepts such shots (before the device or after it). Run under `caffeinate -u` to avoid it.
+#
 # KAERI_DERIVED_DATA picks where xcodebuild builds, apple/.derived unless it says otherwise.
 set -euo pipefail
 # Bash 4.4 and newer only. macOS's own /bin/bash is 3.2.
@@ -77,13 +82,16 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-found-undo player-found-panel player-found-panel-paused)
 
 usage() {
-  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together>[:<section|key=value>]|player|player-<state>]…" >&2
+  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--allow-fallback] [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together>[:<section|key=value>]|player|player-<state>]…" >&2
   exit 2
 }
 
+allow_fallback=0
+if [[ "${1:-}" == --allow-fallback ]]; then allow_fallback=1; shift; fi
 device="${1:-}"
 case "$device" in mac | iphone | ipad) ;; *) usage ;; esac
 shift
+if [[ "${1:-}" == --allow-fallback ]]; then allow_fallback=1; shift; fi
 orientation=portrait
 if [[ "${1:-}" == --landscape ]]; then
   [[ "$device" != mac ]] || usage
@@ -188,30 +196,39 @@ done
 
 if [[ "$device" == mac ]]; then
   "$apple/scripts/engine.sh" testing macos
+  # The harness prints KAERI_CAPTURE_FELL_BACK when AppKit drew a window itself.
+  fellback="$(mktemp)"
+  trap 'rm -f "$fellback"' EXIT
+  harness() {
+    (cd "$apple/Packages/KaeriDev" && "$@") 2>&1 | tee -a "$fellback"
+  }
   for shot in "${shots[@]}"; do
     if [[ "$shot" == player-start-* ]]; then
       parts=()
       while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
-      (cd "$apple/Packages/KaeriDev" &&
+      harness env \
         KAERI_START_STATE="${parts[0]}" KAERI_START_AT="${parts[1]}" KAERI_START_DETAILS="${parts[2]}" \
         KAERI_START_CHOOSE="${parts[3]}" swift run KaeriDev --scene playing --player-shot start-fixture \
-          --snapshot "$out/mac-$shot.png")
+          --snapshot "$out/mac-$shot.png"
       continue
     fi
     if [[ "$shot" == player-* ]]; then
       pointed=()
       [[ -z "${KAERI_POINTED:-}" ]] || pointed=(-KaeriPlayerPointer "$KAERI_POINTED")
-      (cd "$apple/Packages/KaeriDev" &&
-        swift run KaeriDev --scene playing --player-shot "${shot#player-}" ${pointed[@]+"${pointed[@]}"} \
-          --snapshot "$out/mac-$shot.png")
+      harness swift run KaeriDev --scene playing --player-shot "${shot#player-}" ${pointed[@]+"${pointed[@]}"} \
+        --snapshot "$out/mac-$shot.png"
       continue
     fi
     args=()
     while IFS= read -r arg; do args+=("$arg"); done < <(arguments "$shot")
     # The harness takes the scene as --scene, and passes the rest to the app.
-    (cd "$apple/Packages/KaeriDev" &&
-      swift run KaeriDev --scene "${shot%%:*}" "${args[@]:2}" --snapshot "$out/mac-$(name "$shot").png")
+    harness swift run KaeriDev --scene "${shot%%:*}" "${args[@]:2}" --snapshot "$out/mac-$(name "$shot").png"
   done
+  if grep -q '^KAERI_CAPTURE_FELL_BACK' "$fellback"; then
+    echo "WARNING: $(grep -c '^KAERI_CAPTURE_FELL_BACK' "$fellback") capture(s) fell back to AppKit drawing and lost Liquid Glass." >&2
+    echo "Unlock the screen or run under 'caffeinate -u', then retake the shots." >&2
+    if (( allow_fallback )); then echo "--allow-fallback given: keeping them." >&2; else exit 1; fi
+  fi
   exit 0
 fi
 

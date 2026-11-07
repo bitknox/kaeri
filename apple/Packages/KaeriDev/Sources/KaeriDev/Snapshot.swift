@@ -60,6 +60,7 @@ enum Snapshot {
     /// glass.
     @MainActor
     static func write(_ window: NSWindow, to url: URL) throws {
+        bringToFront(window)
         // A locked screen's window server composites every window blank: AppKit draws it then.
         if !screenLocked, let image = composited(window).flatMap({ withSheets($0, of: window) }), image.width > 1 {
             let bitmap = NSBitmapImageRep(cgImage: image)
@@ -70,7 +71,21 @@ enum Snapshot {
             try png.write(to: url)
             return
         }
+        // shots.sh looks for this marker line and fails the run unless told to allow it.
+        let reason = screenLocked ? "the screen is locked" : "the window server gave no picture"
+        print("KAERI_CAPTURE_FELL_BACK: \(reason); AppKit drew the window, so Liquid Glass is missing")
         try drawn(window, to: url)
+    }
+
+    /// `window` in front of the other windows and key, without activating the app, so a capture
+    /// shows it focused (switches in their accent, not grey) and the window server has it on top.
+    /// The app stays out of the way of whatever the person is using.
+    @MainActor
+    static func bringToFront(_ window: NSWindow) {
+        if window.isMiniaturized { window.deminiaturize(nil) }
+        window.orderFrontRegardless()
+        window.makeKey()
+        window.displayIfNeeded()
     }
 
     /// `image` of `window` with the sheet over it, that sheet's own, and the popovers riding on
