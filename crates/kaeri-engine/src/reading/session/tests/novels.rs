@@ -501,6 +501,8 @@ async fn a_chapter_read_in_the_reader_is_told_to_its_book_server() {
                 last_seen: None,
             })
             .unwrap();
+        // As the launch does once it lets go of background work.
+        h.services.book_sources.start_write_back(crate::clock::Clock::default());
         let (view, novel) = h.open_novel(OpenAt::Start).await;
         assert_eq!(novel.spine.len(), 1);
         let chapter = view.chapter.id.as_str().to_owned();

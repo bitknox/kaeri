@@ -217,6 +217,8 @@ pub struct BookSources {
     /// The OPDS feed, on the desktop builds.
     #[cfg(feature = "opds-feed")]
     pub feed: crate::export::feed::Feed,
+    /// Reading progress waiting for book servers: see [`crate::write_back`].
+    pub write_back: crate::write_back::WriteBack,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -249,6 +251,7 @@ impl BookSources {
             exports: crate::export::Exports::new(paths.data_dir.join("exports")),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
+            write_back: crate::write_back::WriteBack::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -322,6 +325,24 @@ impl BookSources {
             .entry(id.to_owned())
             .or_default()
             .clone()
+    }
+
+    /// How `server` refuses a sign-in it no longer takes: a password for a Basic sign-in, a key
+    /// or token otherwise.
+    pub(crate) fn refusal_of(
+        &self,
+        server: &str,
+    ) -> kaeri_model::book_sources::WriteBackProblem {
+        use kaeri_model::book_sources::WriteBackProblem as P;
+        match self.tokens.get(&secret_key(server)) {
+            Ok(credential) if credential.starts_with("basic:") => P::RefusedPassword,
+            _ => P::RefusedKey,
+        }
+    }
+
+    /// Ask `server` once more after it refused the sign-in.
+    pub(crate) fn forget_refusal(&self, server: &str) {
+        self.flag(server).store(false, Ordering::Relaxed);
     }
 
     fn put_server(&self, server: &BookServer) {
@@ -453,6 +474,8 @@ impl BookSources {
             .unwrap_or_default()
             .into_iter()
             .filter_map(|s| {
+                let (pending, sending, saved_at, problem, problem_at) =
+                    self.write_back_row(&s.id, s.report_progress);
                 Some(BookServerRow {
                     kind: kind_of(Kind::parse(&s.kind)?),
                     off: self.registry.is_off(&s.id),
@@ -462,6 +485,11 @@ impl BookSources {
                     series: 0,
                     report_progress: s.report_progress,
                     signed_out: s.signed_out,
+                    progress_pending: pending,
+                    progress_sending: sending,
+                    progress_saved_at: saved_at,
+                    progress_problem: problem,
+                    progress_problem_at: problem_at,
                 })
             })
             .collect();
@@ -635,6 +663,7 @@ pub fn command(
             let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
         }
     };
+    this.write_back.set_publisher(Arc::new(publish.clone()));
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
@@ -736,6 +765,13 @@ pub fn command(
                 let _ =
                     this.store.put_book_server(&BookServer { report_progress: on, ..server });
             }
+            if !on {
+                this.drop_progress(&id);
+            }
+            publish();
+        }
+        BookSourceCommand::RetryProgress { id } => {
+            this.retry_progress(&id, now);
             publish();
         }
         BookSourceCommand::SetOrder { ids } => {
@@ -1121,40 +1157,6 @@ impl BookSources {
             })
             .await
             .map_err(|e| failure(&opened.source_id, &e))
-    }
-
-    /// Tell the source a chapter was read or taken back, when the person allows it for that
-    /// server. A failure is for the log: the mark itself is kept.
-    pub fn report(&self, work: &WorkId, chapters: Vec<ChapterId>, read: bool, now: i64) {
-        let this = self.clone();
-        let work = work.clone();
-        tokio::spawn(async move {
-            let Some((source, series)) = this.edition_of(&work, None) else { return };
-            let allowed = this
-                .store
-                .book_server(&source)
-                .ok()
-                .flatten()
-                .is_some_and(|s| s.report_progress);
-            if !allowed {
-                return;
-            }
-            let Ok(listed) =
-                this.registry.chapters(&source, &series, &BookHints::default(), now).await
-            else {
-                return;
-            };
-            let restarts = restarts_per_volume(&listed);
-            for chapter in listed.iter().filter(|c| chapters.contains(&c.key(restarts).id())) {
-                if let Err(e) = this
-                    .registry
-                    .report_progress(&source, &series, &chapter.id, read, now)
-                    .await
-                {
-                    tracing::info!(error = %e, "a server was not told what was read");
-                }
-            }
-        });
     }
 }
 

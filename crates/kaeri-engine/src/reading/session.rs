@@ -1045,7 +1045,7 @@ impl Session {
         }
         // A book server the person lets Kaeri write to hears of it now, as a mark from the
         // series page does: it is their own library, not a tracker.
-        cx.services.book_sources.report(&self.work, vec![chapter.clone()], true, at);
+        cx.services.book_sources.report_read(&self.work, &chapter, at, cx.tx);
         self.dirty = false;
         let _ = cx.tx.send(Event::ProgressQueued);
         cx.send(ReaderEvent::ChapterRead { work: self.work.clone(), chapter, trackers });

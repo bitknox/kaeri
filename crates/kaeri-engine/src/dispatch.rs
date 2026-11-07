@@ -718,6 +718,7 @@ pub(crate) fn dispatch(
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
+            services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
@@ -1234,6 +1235,9 @@ pub(crate) async fn handle_internal(
         Internal::LetGo => {
             ahead::let_go(engine, services, tx);
             crate::downloads::books::launched(engine, services, tx);
+            if engine.reading.available {
+                services.book_sources.start_write_back(services.clock.clone());
+            }
             crate::export::apply_feed(engine, services, tx);
         }
         Internal::Reader { session, wake } => {

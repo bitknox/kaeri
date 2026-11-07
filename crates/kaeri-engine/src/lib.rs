@@ -160,6 +160,7 @@ pub mod tracking;
 pub mod upcoming;
 pub mod updates;
 pub mod widgets;
+pub mod write_back;
 
 /// Now, in seconds since the Unix epoch, by the system clock: what the work dates and ages
 /// things by.
