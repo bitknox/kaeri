@@ -266,6 +266,7 @@ extension SettingKey {
         case .whenTrackersDisagree: L.settingsWhenTrackersDisagree
         case .countsAsRead: L.settingsCountsRead
         case .chapterNotifications: L.settingsChapterNotifications
+        case .downloadsFinished: L.settingsDownloadsFinished
         case .openAt: L.settingsOpenAt
         case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel

@@ -261,6 +261,8 @@ struct PhoneSettingsRoot: View {
                 }
                 if store.medium.reads {
                     link(.reading, L.settingsGroupReading, "book", value: ReaderDefaultWords.manga(store)?.label ?? "")
+                        // Asked as the root draws, so its value is there before the page is opened.
+                        .task { if store.reading.readerDefaults[.manga] == nil { store.reading.loadReaderDefaults() } }
                 }
                 link(.downloads, L.navDownloads, "arrow.down.to.line", value: Wording.bytes(downloadedBytes))
                 link(.notifications, L.settingsGroupNotifications, "bell", value: notificationsOn ? L.valueOn : L.valueOff)

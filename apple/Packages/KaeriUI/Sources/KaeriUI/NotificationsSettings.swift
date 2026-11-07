@@ -92,6 +92,23 @@ enum NoticeWords {
 }
 
 /// The New episodes switch: on asks for permission the first time; declined, it stays off.
+/// The Downloads finished switch: on asks for permission first, as New episodes does.
+struct DownloadsFinishedToggle<Label: View>: View {
+    @Environment(AppStore.self) private var store
+    @ViewBuilder let label: Label
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { store.settings.isOn(.downloadsFinished) },
+            set: { on in Task { await store.setDownloadsFinished(on) } }
+        )) {
+            label
+        }
+        .tint(.amber)
+        .disabled(store.settings.row(.downloadsFinished) == nil)
+    }
+}
+
 struct EpisodeNoticesToggle<Label: View>: View {
     @Environment(AppStore.self) private var store
     @ViewBuilder let label: Label
@@ -167,6 +184,7 @@ struct NotificationsPane: View {
         SettingsGroup(footnote: footnote) {
             if store.medium.reads {
                 ChapterNoticesRow()
+                DownloadsFinishedRow()
             }
             if store.medium.watches {
                 SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
@@ -181,12 +199,9 @@ struct NotificationsPane: View {
         }
     }
 
-    /// The chapters' own channel, then what the system allows.
+    /// What the system allows. Apple has no channels, so chapters have no line of their own.
     private var footnote: String {
-        var lines: [String] = []
-        if store.medium.reads { lines.append(L.settingsChapterNotificationsFooter) }
-        if store.medium.watches { lines.append(NoticeWords.permission) }
-        return lines.joined(separator: " ") // i18n-skip
+        NoticeWords.permission
     }
 
     @ViewBuilder
@@ -371,6 +386,10 @@ struct PhoneNotificationsPage: View {
             Section {
                 if store.medium.reads {
                     PhoneSettingSwitch(key: .chapterNotifications, note: L.settingsChapterNotificationsNote)
+                    DownloadsFinishedToggle {
+                        PhoneRowTitle(title: SettingKey.downloadsFinished.title, note: L.settingsDownloadsFinishedNote)
+                    }
+                    .listRowBackground(Palette.raised)
                 }
                 if store.medium.watches {
                     EpisodeNoticesToggle {
@@ -394,14 +413,13 @@ struct PhoneNotificationsPage: View {
         }
     }
 
-    /// The chapters' own channel, the shows that set their own, and what the system allows.
+    /// The shows that set their own, and what the system allows.
     private func footer(_ overrides: Int) -> String {
         var lines: [String] = []
-        if store.medium.reads { lines.append(L.settingsChapterNotificationsFooter) }
-        if store.medium.watches {
-            if overrides > 0 { lines.append("\(NoticeWords.overridden(overrides)).") } // i18n-skip
-            lines.append(NoticeWords.permission)
+        if store.medium.watches, overrides > 0 {
+            lines.append("\(NoticeWords.overridden(overrides)).") // i18n-skip
         }
+        lines.append(NoticeWords.permission)
         return lines.joined(separator: " ") // i18n-skip
     }
 

@@ -32,6 +32,8 @@ public protocol NoticeCentre: Sendable {
     func cancel(_ identifiers: [String]) async
     /// Say what the notifications' actions are: once, before any is scheduled.
     func registerCategories()
+    /// Post a plain notification now, replacing one with its identifier: Downloads finished.
+    func post(identifier: String, title: String, body: String) async
 }
 
 /// The system's centre.
@@ -98,6 +100,15 @@ public struct SystemNoticeCentre: NoticeCentre {
         centre.setNotificationCategories(Self.categories())
     }
 
+    public func post(identifier: String, title: String, body: String) async {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.threadIdentifier = "downloads" // i18n-skip: an identifier
+        content.sound = .default
+        try? await centre.add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil))
+    }
+
     /// The two kinds, by their actions: caught up, Play and Mark watched; behind, Play alone.
     /// Play brings the app forward; Mark watched runs in the background. Hidden previews say
     /// "New episode", and a group "3 more new episodes".
@@ -137,6 +148,9 @@ public final class QuietNoticeCentre: NoticeCentre, @unchecked Sendable {
     private var scheduled: [String: PlannedNotice] = [:]
     private var order: [String] = []
     private var asked = 0
+    private var posted: [String] = []
+    /// What was posted at once, by identifier, in order.
+    public var postedNow: [String] { lock.withLock { posted } }
 
     /// - Parameters:
     ///   - permission: what the centre says before it is asked.
@@ -182,6 +196,10 @@ public final class QuietNoticeCentre: NoticeCentre, @unchecked Sendable {
     }
 
     public func registerCategories() {}
+
+    public func post(identifier: String, title: String, body: String) async {
+        lock.withLock { posted.append(identifier) }
+    }
 }
 
 /// The pictures notifications carry, staged as files for the centre to take.

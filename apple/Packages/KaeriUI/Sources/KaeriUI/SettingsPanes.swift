@@ -518,7 +518,8 @@ struct TrackerRow: View {
         let state = store.accounts.tracker(tracker)
         SettingsRow(
             title: AccountsModel.name(tracker),
-            note: state?.connected == true ? AccountWords.status(state!, store.accounts) : AccountWords.keeps(tracker)
+            note: state?.connected == true ? AccountWords.status(state!, store.accounts)
+                : store.medium.both ? AccountWords.serves(tracker) : AccountWords.keeps(tracker)
         ) {
             Group {
                 if state?.connected == true {
@@ -582,8 +583,8 @@ enum AccountWords {
         tracker == "mangaupdates" ? L.accountsTrackerReadingLists : L.accountsTrackerLists
     }
 
-    /// What a tracker serves, on a phone with both media on: MangaUpdates reading, Simkl and
-    /// Trakt shows, the rest both.
+    /// What a tracker serves, with both media on: MangaUpdates reading, Simkl and Trakt shows,
+    /// the rest both.
     static func serves(_ tracker: String) -> String {
         switch tracker {
         case "mangaupdates": L.accountsTrackerServesReading

@@ -137,6 +137,8 @@ struct ReadingPane: View {
 /// Downloads' Reading group: over cellular on touch, which new chapters download, deleting
 /// after reading.
 struct ReadingDownloadsGroup: View {
+    @Environment(AppStore.self) private var store
+
     var body: some View {
         SettingsGroup(title: L.settingsGroupReading) {
             #if os(iOS)
@@ -144,7 +146,7 @@ struct ReadingDownloadsGroup: View {
                 SettingSwitch(key: .chapterDownloadsOnCellular)
             }
             #endif
-            SettingsRow(title: SettingKey.newChapters.title, note: L.settingsNewChaptersNote) {
+            SettingsRow(title: SettingKey.newChapters.title, note: NewChaptersNote.text(store)) {
                 SettingMenu(key: .newChapters)
             }
             SettingsRow(title: SettingKey.deleteAfterReading.title, note: L.settingsDeleteAfterReadingNote) {
@@ -154,11 +156,22 @@ struct ReadingDownloadsGroup: View {
     }
 }
 
-/// Notifications' New chapters row. The group's footnote says chapters have their own channel.
+/// Notifications' New chapters row.
 struct ChapterNoticesRow: View {
     var body: some View {
         SettingsRow(title: SettingKey.chapterNotifications.title, note: L.settingsChapterNotificationsNote) {
             SettingSwitch(key: .chapterNotifications)
+        }
+    }
+}
+
+/// Notifications' Downloads finished row.
+struct DownloadsFinishedRow: View {
+    var body: some View {
+        SettingsRow(title: SettingKey.downloadsFinished.title, note: L.settingsDownloadsFinishedNote) {
+            DownloadsFinishedToggle { Text(SettingKey.downloadsFinished.title) }
+                .toggleStyle(.switch)
+                .labelsHidden()
         }
     }
 }
@@ -236,13 +249,21 @@ struct PhoneReadingDownloadsSection: View {
     @ViewBuilder
     private var rows: some View {
         PhoneSettingSwitch(key: .chapterDownloadsOnCellular)
-        PhoneSettingPicker(key: .newChapters, note: L.settingsNewChaptersNote)
+        PhoneSettingPicker(key: .newChapters, note: NewChaptersNote.text(store))
         PhoneSettingSwitch(key: .deleteAfterReading, note: L.settingsDeleteAfterReadingNote)
     }
 }
 #endif
 
 /// Counts as read's note says what the chosen rule does.
+/// New chapters' line, only under the choice it describes: Off needs none.
+enum NewChaptersNote {
+    @MainActor
+    static func text(_ store: AppStore) -> String? {
+        store.settings.row(.newChapters)?.value == "reading" ? L.settingsNewChaptersNote : nil // i18n-skip: the engine's words
+    }
+}
+
 enum CountsAsReadNote {
     @MainActor
     static func text(_ store: AppStore) -> String {
