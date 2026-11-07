@@ -41,9 +41,9 @@ Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and o
 
 <br>
 
-Kaeri browses AniList with no account, plays episodes in mpv, keeps your history on your
-device and syncs it to AniList, MyAnimeList, Kitsu, Simkl and Trakt. It is free, open source and
-non-commercial.
+Kaeri browses AniList without an account, plays episodes in mpv and keeps your history on your
+device. Connect AniList, MyAnimeList, Kitsu, Simkl or Trakt and your progress syncs there too.
+There is no Kaeri account to make. The project is free, open source and non-commercial.
 
 <table>
   <tr>
@@ -74,7 +74,7 @@ non-commercial.
 Also in the apps:
 
 - Skip the opening, and start the next episode from the credits.
-- Pick sub or dub once and each show remembers.
+- Pick subbed or dubbed once and each show remembers it.
 - Watch with friends in sync, on Mac, iPhone, iPad, Windows, Linux and in the terminal.
 - New-episode alerts, off until you turn them on for a show.
 - Home screen widgets, and Live Activities and Handoff on Apple devices.
@@ -85,7 +85,8 @@ The [features page](https://kaeri.app/features/) lists every feature and which a
 
 Each app is built with its platform's toolkit: SwiftUI on Apple, Jetpack Compose on Android,
 WinUI 3 on Windows, GTK 4 on Linux and Ratatui in the terminal. They share one engine, written in
-Rust.
+Rust. Five front ends are more work than one cross-platform shell, but it means the Mac app has a
+real menu bar and the TV app is built for a remote.
 
 <table>
   <tr>
@@ -120,7 +121,7 @@ Rust.
 ### The player
 
 Episodes play in mpv, upscaled by ArtCNN or Anime4K, with a skip button for the opening and Up
-Next at the end. The player menu has the episodes, sources, sub or dub, upscaling and tracks.
+Next at the end. The player menu has the episodes, sources, subbed or dubbed, upscaling and tracks.
 
 <img src="assets/screenshots/player-menu.webp" width="884" alt="The subtitles menu inside the player: tracks, then style choices such as size and outline">
 
@@ -142,7 +143,7 @@ terminals with image support.
 
 Every release on the [releases page](https://github.com/bitknox/kaeri/releases/latest) has the
 apps and the terminal app. Each file has a `.sha256` beside it. The apps are not in the App Store
-or on Google Play, so each one needs a one-time step the first time you open it. The
+or on Google Play, so each one needs one extra step the first time you open it. The
 [installation guide](https://kaeri.app/docs/getting-started/installation/) has the full steps.
 
 | Platform | File | First open |
@@ -239,7 +240,7 @@ cargo clippy --workspace --all-targets
   [docs/desktop-linux-app.md](docs/desktop-linux-app.md).
 - Plugins: `rustup target add wasm32-wasip2`, then see [docs/plugins.md](docs/plugins.md).
 - The website: `cd website && bun run dev`.
-- Claude Code setup and efficient workflows: [docs/claude-code.md](docs/claude-code.md).
+- Claude Code setup: [docs/claude-code.md](docs/claude-code.md).
 - Accessibility: what each app supports and how to report a barrier is in
   [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
