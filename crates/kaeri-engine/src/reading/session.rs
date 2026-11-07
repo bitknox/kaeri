@@ -1980,7 +1980,9 @@ mod tests {
         assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
         let session = h.session();
         h.send(ReaderCommand::Close { session });
-        drop(h);
+        // The first folder stays: the store still lists its files beside the second's, and
+        // either may be the chapter opened.
+        let Harness { _dir: _first_folder, .. } = h;
 
         // Started again on the same store.
         let mut h = harness(Store::open(&db).unwrap());
