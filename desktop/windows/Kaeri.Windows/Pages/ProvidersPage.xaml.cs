@@ -220,7 +220,7 @@ public sealed partial class ProvidersPage : Page
             var list = new ListView { SelectionMode = ListViewSelectionMode.None, IsItemClickEnabled = true, Margin = new Thickness(-12, 0, 0, 0) };
             list.ItemClick += (_, e) =>
             {
-                if (e.ClickedItem is ListViewItem { Tag: ValueTuple<Type, object> go })
+                if (Ui.ClickedRow(list, e.ClickedItem) is { Tag: ValueTuple<Type, object> go })
                     ctx.Window.Push(go.Item1, go.Item2 is "" ? null : go.Item2);
             };
             return list;
