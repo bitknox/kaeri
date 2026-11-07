@@ -6394,6 +6394,210 @@ public static partial class T
     /// <summary>Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.</summary>
     public static string ReadDownloadsDeleteRead => Get("ReadDownloadsDeleteRead");
 
+    /// <summary>Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.</summary>
+    public static string SendTitle => Get("SendTitle");
+
+    /// <summary>Heading over the e-readers to choose from in the Send to e-reader sheet.</summary>
+    public static string SendFor => Get("SendFor");
+
+    /// <summary>Heading over what is being sent in the Send to e-reader sheet.</summary>
+    public static string SendWhat => Get("SendWhat");
+
+    /// <summary>Row in the Send to e-reader sheet: the chapters being sent.</summary>
+    public static string SendChapters => Get("SendChapters");
+
+    /// <summary>The chapters being sent when there is one: its number or label.</summary>
+    public static string SendChaptersOne(string chapter) => Fill(Get("SendChaptersOne"), ("chapter", chapter));
+
+    /// <summary>The chapters being sent when there are several, from the first to the last.</summary>
+    public static string SendChaptersRange(string first, string last) => Fill(Get("SendChaptersRange"), ("first", first), ("last", last));
+
+    /// <summary>Row in the Send to e-reader sheet: how big the files will be.</summary>
+    public static string SendSize => Get("SendSize");
+
+    /// <summary>The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.</summary>
+    public static string SendSizeAbout(string size) => Fill(Get("SendSizeAbout"), ("size", size));
+
+    /// <summary>Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.</summary>
+    public static string SendNoPlace => Get("SendNoPlace");
+
+    /// <summary>The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.</summary>
+    public static string SendPrepare => Get("SendPrepare");
+
+    /// <summary>While the files are made: which chapter of how many. The ring beside it shows how far along.</summary>
+    public static string SendPreparing(long done, long total) => Fill(GetPlural("SendPreparing", total), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the progress of a send to a device: what the pages are made for.</summary>
+    public static string SendSizedFor(string device) => Fill(Get("SendSizedFor"), ("device", device));
+
+    /// <summary>Under the size in the Send sheet when the files are over what the e-reader takes in one file.</summary>
+    public static string SendInParts(string size) => Fill(Get("SendInParts"), ("size", size));
+
+    /// <summary>A send that failed on one chapter. The cause is the sentence that says why.</summary>
+    public static string SendFailedChapter(string chapter, string cause) => Fill(Get("SendFailedChapter"), ("chapter", chapter), ("cause", cause));
+
+    /// <summary>A send that failed before or after its chapters. The cause is the sentence that says why.</summary>
+    public static string SendFailed(string cause) => Fill(Get("SendFailed"), ("cause", cause));
+
+    /// <summary>Text of the Send sheet's Size row while the size is still being worked out.</summary>
+    public static string SendSizeWorking => Get("SendSizeWorking");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is open.</summary>
+    public static string SendChaptersOpen => Get("SendChaptersOpen");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is closed.</summary>
+    public static string SendChaptersClosed => Get("SendChaptersClosed");
+
+    /// <summary>Spoken value of the ring in a send under way. Already a number from 0 to 100.</summary>
+    public static string SendProgressSpoken(long percent) => Fill(Get("SendProgressSpoken"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken action on a chapter row of a series: sends that chapter to an e-reader.</summary>
+    public static string SendChapterAction => Get("SendChapterAction");
+
+    /// <summary>Under an e-reader in the sheet when it takes files in parts: the size where a file is split.</summary>
+    public static string SendPartsOver(string size) => Fill(Get("SendPartsOver"), ("size", size));
+
+    /// <summary>While a send waits for the network and the person can stop it. The engine's own line comes first.</summary>
+    public static string SendWaitingCancel => Get("SendWaitingCancel");
+
+    /// <summary>When the files are ready, over the button that opens the share sheet. The count is how many files.</summary>
+    public static string SendReady(long n) => Fill(GetPlural("SendReady", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
+    public static string SendShareAgain => Get("SendShareAgain");
+
+    /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
+    public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
+
+    /// <summary>The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.</summary>
+    public static string SendFormatFixedEpub => Get("SendFormatFixedEpub");
+
+    /// <summary>The format of the files an e-reader is sent: the Kobo form of EPUB.</summary>
+    public static string SendFormatKepub => Get("SendFormatKepub");
+
+    /// <summary>The format of the files an e-reader is sent: a plain EPUB.</summary>
+    public static string SendFormatEpub => Get("SendFormatEpub");
+
+    /// <summary>The format of the files an e-reader is sent: a comic book archive.</summary>
+    public static string SendFormatCbz => Get("SendFormatCbz");
+
+    /// <summary>Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.</summary>
+    public static string SendTargetLine(string format, string width, string height) => Fill(Get("SendTargetLine"), ("format", format), ("width", width), ("height", height));
+
+    /// <summary>Title of the sheet that asks where you stopped reading on the e-reader.</summary>
+    public static string StopTitle => Get("StopTitle");
+
+    /// <summary>Note on a series page after chapters were sent: opens the question.</summary>
+    public static string StopNote(string device) => Fill(Get("StopNote"), ("device", device));
+
+    /// <summary>Button in that note.</summary>
+    public static string StopNoteAction => Get("StopNoteAction");
+
+    /// <summary>First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").</summary>
+    public static string StopSentOne(string chapter, string device, string date) => Fill(Get("StopSentOne"), ("chapter", chapter), ("device", device), ("date", date));
+
+    /// <summary>First line of the sheet when several chapters were sent, from the first to the last.</summary>
+    public static string StopSentRange(string first, string last, string device, string date) => Fill(Get("StopSentRange"), ("first", first), ("last", last), ("device", device), ("date", date));
+
+    /// <summary>Switch in the sheet: the last chapter sent was read to its end.</summary>
+    public static string StopFinished(string chapter) => Fill(Get("StopFinished"), ("chapter", chapter));
+
+    /// <summary>The main button of the sheet: keeps the chapter chosen as the place.</summary>
+    public static string StopSet => Get("StopSet");
+
+    /// <summary>The other button of the sheet: leaves the place as it is, with the place named.</summary>
+    public static string StopKeep(string chapter, long page) => Fill(Get("StopKeep"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The other button of the sheet when the place is not a page.</summary>
+    public static string StopKeepPlain => Get("StopKeepPlain");
+
+    /// <summary>Heading of the E-readers group in the Reading settings.</summary>
+    public static string EreadersGroup => Get("EreadersGroup");
+
+    /// <summary>Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.</summary>
+    public static string EreadersSendRow => Get("EreadersSendRow");
+
+    /// <summary>Row in the E-readers group that opens the feed settings. The value is On or Off.</summary>
+    public static string EreadersFeedRow => Get("EreadersFeedRow");
+
+    /// <summary>Line under the Share on this network switch.</summary>
+    public static string OpdsShareNote => Get("OpdsShareNote");
+
+    /// <summary>Footnote under the feed settings.</summary>
+    public static string OpdsFooter(string device) => Fill(Get("OpdsFooter"), ("device", device));
+
+    /// <summary>Row in the feed settings: the web address e-readers are given, with a button that copies it.</summary>
+    public static string OpdsAddress => Get("OpdsAddress");
+
+    /// <summary>Shown in place of the address while the feed is off or has no password.</summary>
+    public static string OpdsAddressOff => Get("OpdsAddressOff");
+
+    /// <summary>Row in the feed settings: the password e-readers ask for.</summary>
+    public static string OpdsPassword => Get("OpdsPassword");
+
+    /// <summary>Line under the password row.</summary>
+    public static string OpdsPasswordNote => Get("OpdsPasswordNote");
+
+    /// <summary>Button in the feed settings that makes a new password. The e-readers ask for the new one.</summary>
+    public static string OpdsNewPassword => Get("OpdsNewPassword");
+
+    /// <summary>Row in the feed settings: the port the feed listens on.</summary>
+    public static string OpdsPort => Get("OpdsPort");
+
+    /// <summary>Line under the port row when it is empty.</summary>
+    public static string OpdsPortNote => Get("OpdsPortNote");
+
+    /// <summary>Line under the port row when the port asked for was taken and another is used.</summary>
+    public static string OpdsPortMoved(long wanted, long port) => Fill(Get("OpdsPortMoved"), ("wanted", wanted.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("port", port.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the group that picks what the feed shares.</summary>
+    public static string OpdsShares => Get("OpdsShares");
+
+    /// <summary>Row in What it shares: the chapters downloaded on this device.</summary>
+    public static string OpdsShareDownloads => Get("OpdsShareDownloads");
+
+    /// <summary>Line under that row.</summary>
+    public static string OpdsShareDownloadsCount(long n) => Fill(GetPlural("OpdsShareDownloadsCount", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Row in What it shares: the series in the manga and comic folders.</summary>
+    public static string OpdsShareManga => Get("OpdsShareManga");
+
+    /// <summary>Row in What it shares: the series in the novel folders.</summary>
+    public static string OpdsShareNovels => Get("OpdsShareNovels");
+
+    /// <summary>Line under a folder row.</summary>
+    public static string OpdsShareSeriesCount(long n) => Fill(GetPlural("OpdsShareSeriesCount", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the list of e-readers that fetched files from the feed.</summary>
+    public static string OpdsFetchedBy => Get("OpdsFetchedBy");
+
+    /// <summary>Line when no e-reader has fetched anything since the feed started.</summary>
+    public static string OpdsFetchedNone => Get("OpdsFetchedNone");
+
+    /// <summary>Shown in place of the address while the feed is switched on and starting to listen.</summary>
+    public static string OpdsStarting => Get("OpdsStarting");
+
+    /// <summary>Shown in place of the address while the feed is on but the Mac is on no local network.</summary>
+    public static string OpdsPausedNone => Get("OpdsPausedNone");
+
+    /// <summary>Shown in place of the address while the feed is on but the only connection goes through a VPN.</summary>
+    public static string OpdsPausedVpn => Get("OpdsPausedVpn");
+
+    /// <summary>Title of the question before a new feed password is made.</summary>
+    public static string OpdsNewPasswordTitle => Get("OpdsNewPasswordTitle");
+
+    /// <summary>Text of that question.</summary>
+    public static string OpdsNewPasswordWarning => Get("OpdsNewPasswordWarning");
+
+    /// <summary>Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.</summary>
+    public static string OpdsFetchedTime(string time) => Fill(Get("OpdsFetchedTime"), ("time", time));
+
+    /// <summary>Line under an e-reader in that list: how many files it took.</summary>
+    public static string OpdsFetchedFiles(long n) => Fill(GetPlural("OpdsFetchedFiles", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name for an e-reader that did not give one.</summary>
+    public static string OpdsReaderUnnamed(string address) => Fill(Get("OpdsReaderUnnamed"), ("address", address));
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -12804,6 +13008,79 @@ public static partial class T
         ["ReadDownloadsKept_other"] = "{n} chapters",
         ["ReadDownloadsRead"] = "{n} read",
         ["ReadDownloadsDeleteRead"] = "Delete read",
+        ["SendTitle"] = "Send to e-reader",
+        ["SendFor"] = "For",
+        ["SendWhat"] = "What",
+        ["SendChapters"] = "Chapters",
+        ["SendChaptersOne"] = "{chapter}",
+        ["SendChaptersRange"] = "{first} to {last}",
+        ["SendSize"] = "Size",
+        ["SendSizeAbout"] = "About {size}",
+        ["SendNoPlace"] = "Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.",
+        ["SendPrepare"] = "Prepare and share",
+        ["SendPreparing_one"] = "Preparing the chapter",
+        ["SendPreparing_other"] = "Preparing {done} of {total} chapters",
+        ["SendSizedFor"] = "Pages are sized for {device}",
+        ["SendInParts"] = "Over {size}, so the files go in parts.",
+        ["SendFailedChapter"] = "Couldn't prepare chapter {chapter}. {cause}",
+        ["SendFailed"] = "Couldn't prepare the files. {cause}",
+        ["SendSizeWorking"] = "Working it out",
+        ["SendChaptersOpen"] = "Open",
+        ["SendChaptersClosed"] = "Closed",
+        ["SendProgressSpoken"] = "{percent} percent",
+        ["SendChapterAction"] = "Send to e-reader",
+        ["SendPartsOver"] = "in parts over {size}",
+        ["SendWaitingCancel"] = "Cancel send",
+        ["SendReady_one"] = "One file is ready.",
+        ["SendReady_other"] = "{n} files are ready.",
+        ["SendShareAgain"] = "Share again",
+        ["SendBanner"] = "Sending to {device}",
+        ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
+        ["SendFormatKepub"] = "KEPUB",
+        ["SendFormatEpub"] = "EPUB",
+        ["SendFormatCbz"] = "CBZ",
+        ["SendTargetLine"] = "{format} · {width} × {height}",
+        ["StopTitle"] = "Where did you stop?",
+        ["StopNote"] = "You sent chapters to {device}. Where did you stop?",
+        ["StopNoteAction"] = "Set my place",
+        ["StopSentOne"] = "Chapter {chapter} went to {device} on {date}.",
+        ["StopSentRange"] = "Chapters {first} to {last} went to {device} on {date}.",
+        ["StopFinished"] = "I finished chapter {chapter}",
+        ["StopSet"] = "Set my place",
+        ["StopKeep"] = "Keep chapter {chapter} · page {page}",
+        ["StopKeepPlain"] = "Keep my place",
+        ["EreadersGroup"] = "E-readers",
+        ["EreadersSendRow"] = "Send to e-reader",
+        ["EreadersFeedRow"] = "OPDS feed",
+        ["OpdsShareNote"] = "An OPDS catalogue e-readers at home can browse",
+        ["OpdsFooter"] = "Only while Kaeri is open on this {device}. Progress on those e-readers stays there.",
+        ["OpdsAddress"] = "Address",
+        ["OpdsAddressOff"] = "Turn the feed on to get its address.",
+        ["OpdsPassword"] = "Password",
+        ["OpdsPasswordNote"] = "E-readers ask for it once",
+        ["OpdsNewPassword"] = "New password",
+        ["OpdsPort"] = "Port",
+        ["OpdsPortNote"] = "Leave it empty to pick a free port, or use 1024 to 65535",
+        ["OpdsPortMoved"] = "Port {wanted} was busy, so the feed uses {port}.",
+        ["OpdsShares"] = "What it shares",
+        ["OpdsShareDownloads"] = "Downloads",
+        ["OpdsShareDownloadsCount_one"] = "One chapter",
+        ["OpdsShareDownloadsCount_other"] = "{n} chapters",
+        ["OpdsShareManga"] = "Manga folder",
+        ["OpdsShareNovels"] = "Novel folder",
+        ["OpdsShareSeriesCount_one"] = "One series",
+        ["OpdsShareSeriesCount_other"] = "{n} series",
+        ["OpdsFetchedBy"] = "Fetched by",
+        ["OpdsFetchedNone"] = "No e-reader has fetched anything yet.",
+        ["OpdsStarting"] = "Starting…",
+        ["OpdsPausedNone"] = "Paused. This Mac isn't on a local network.",
+        ["OpdsPausedVpn"] = "Paused. This Mac is only connected through a VPN.",
+        ["OpdsNewPasswordTitle"] = "Make a new password?",
+        ["OpdsNewPasswordWarning"] = "E-readers that already use the feed stop working until you type the new password into each one.",
+        ["OpdsFetchedTime"] = "Last asked {time}",
+        ["OpdsFetchedFiles_one"] = "One file",
+        ["OpdsFetchedFiles_other"] = "{n} files",
+        ["OpdsReaderUnnamed"] = "E-reader at {address}",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

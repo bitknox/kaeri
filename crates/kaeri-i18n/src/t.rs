@@ -14820,6 +14820,346 @@ pub fn read_downloads_delete_read() -> String {
     text("read-downloads-delete-read", &[])
 }
 
+/// Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+pub fn send_title() -> String {
+    text("send-title", &[])
+}
+
+/// Heading over the e-readers to choose from in the Send to e-reader sheet.
+pub fn send_for() -> String {
+    text("send-for", &[])
+}
+
+/// Heading over what is being sent in the Send to e-reader sheet.
+pub fn send_what() -> String {
+    text("send-what", &[])
+}
+
+/// Row in the Send to e-reader sheet: the chapters being sent.
+pub fn send_chapters() -> String {
+    text("send-chapters", &[])
+}
+
+/// The chapters being sent when there is one: its number or label.
+pub fn send_chapters_one(chapter: &str) -> String {
+    text("send-chapters-one", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The chapters being sent when there are several, from the first to the last.
+pub fn send_chapters_range(first: &str, last: &str) -> String {
+    text("send-chapters-range", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// Row in the Send to e-reader sheet: how big the files will be.
+pub fn send_size() -> String {
+    text("send-size", &[])
+}
+
+/// The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+pub fn send_size_about(size: &str) -> String {
+    text("send-size-about", &[("size", Arg::Text(size))])
+}
+
+/// Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+pub fn send_no_place() -> String {
+    text("send-no-place", &[])
+}
+
+/// The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+pub fn send_prepare() -> String {
+    text("send-prepare", &[])
+}
+
+/// While the files are made: which chapter of how many. The ring beside it shows how far along.
+pub fn send_preparing(done: i64, total: i64) -> String {
+    text("send-preparing", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Under the progress of a send to a device: what the pages are made for.
+pub fn send_sized_for(device: &str) -> String {
+    text("send-sized-for", &[("device", Arg::Text(device))])
+}
+
+/// Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+pub fn send_in_parts(size: &str) -> String {
+    text("send-in-parts", &[("size", Arg::Text(size))])
+}
+
+/// A send that failed on one chapter. The cause is the sentence that says why.
+pub fn send_failed_chapter(chapter: &str, cause: &str) -> String {
+    text("send-failed-chapter", &[("chapter", Arg::Text(chapter)), ("cause", Arg::Text(cause))])
+}
+
+/// A send that failed before or after its chapters. The cause is the sentence that says why.
+pub fn send_failed(cause: &str) -> String {
+    text("send-failed", &[("cause", Arg::Text(cause))])
+}
+
+/// Text of the Send sheet's Size row while the size is still being worked out.
+pub fn send_size_working() -> String {
+    text("send-size-working", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is open.
+pub fn send_chapters_open() -> String {
+    text("send-chapters-open", &[])
+}
+
+/// Spoken value of the Chapters row in the Send sheet while its list is closed.
+pub fn send_chapters_closed() -> String {
+    text("send-chapters-closed", &[])
+}
+
+/// Spoken value of the ring in a send under way. Already a number from 0 to 100.
+pub fn send_progress_spoken(percent: i64) -> String {
+    text("send-progress-spoken", &[("percent", Arg::Int(percent))])
+}
+
+/// Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+pub fn send_chapter_action() -> String {
+    text("send-chapter-action", &[])
+}
+
+/// Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+pub fn send_parts_over(size: &str) -> String {
+    text("send-parts-over", &[("size", Arg::Text(size))])
+}
+
+/// While a send waits for the network and the person can stop it. The engine's own line comes first.
+pub fn send_waiting_cancel() -> String {
+    text("send-waiting-cancel", &[])
+}
+
+/// When the files are ready, over the button that opens the share sheet. The count is how many files.
+pub fn send_ready(n: i64) -> String {
+    text("send-ready", &[("n", Arg::Int(n))])
+}
+
+/// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+pub fn send_share_again() -> String {
+    text("send-share-again", &[])
+}
+
+/// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+pub fn send_banner(device: &str) -> String {
+    text("send-banner", &[("device", Arg::Text(device))])
+}
+
+/// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+pub fn send_format_fixed_epub() -> String {
+    text("send-format-fixed-epub", &[])
+}
+
+/// The format of the files an e-reader is sent: the Kobo form of EPUB.
+pub fn send_format_kepub() -> String {
+    text("send-format-kepub", &[])
+}
+
+/// The format of the files an e-reader is sent: a plain EPUB.
+pub fn send_format_epub() -> String {
+    text("send-format-epub", &[])
+}
+
+/// The format of the files an e-reader is sent: a comic book archive.
+pub fn send_format_cbz() -> String {
+    text("send-format-cbz", &[])
+}
+
+/// Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+pub fn send_target_line(format: &str, width: &str, height: &str) -> String {
+    text("send-target-line", &[("format", Arg::Text(format)), ("width", Arg::Text(width)), ("height", Arg::Text(height))])
+}
+
+/// Title of the sheet that asks where you stopped reading on the e-reader.
+pub fn stop_title() -> String {
+    text("stop-title", &[])
+}
+
+/// Note on a series page after chapters were sent: opens the question.
+pub fn stop_note(device: &str) -> String {
+    text("stop-note", &[("device", Arg::Text(device))])
+}
+
+/// Button in that note.
+pub fn stop_note_action() -> String {
+    text("stop-note-action", &[])
+}
+
+/// First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+pub fn stop_sent_one(chapter: &str, device: &str, date: &str) -> String {
+    text("stop-sent-one", &[("chapter", Arg::Text(chapter)), ("device", Arg::Text(device)), ("date", Arg::Text(date))])
+}
+
+/// First line of the sheet when several chapters were sent, from the first to the last.
+pub fn stop_sent_range(first: &str, last: &str, device: &str, date: &str) -> String {
+    text("stop-sent-range", &[("first", Arg::Text(first)), ("last", Arg::Text(last)), ("device", Arg::Text(device)), ("date", Arg::Text(date))])
+}
+
+/// Switch in the sheet: the last chapter sent was read to its end.
+pub fn stop_finished(chapter: &str) -> String {
+    text("stop-finished", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The main button of the sheet: keeps the chapter chosen as the place.
+pub fn stop_set() -> String {
+    text("stop-set", &[])
+}
+
+/// The other button of the sheet: leaves the place as it is, with the place named.
+pub fn stop_keep(chapter: &str, page: i64) -> String {
+    text("stop-keep", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+}
+
+/// The other button of the sheet when the place is not a page.
+pub fn stop_keep_plain() -> String {
+    text("stop-keep-plain", &[])
+}
+
+/// Heading of the E-readers group in the Reading settings.
+pub fn ereaders_group() -> String {
+    text("ereaders-group", &[])
+}
+
+/// Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+pub fn ereaders_send_row() -> String {
+    text("ereaders-send-row", &[])
+}
+
+/// Row in the E-readers group that opens the feed settings. The value is On or Off.
+pub fn ereaders_feed_row() -> String {
+    text("ereaders-feed-row", &[])
+}
+
+/// Line under the Share on this network switch.
+pub fn opds_share_note() -> String {
+    text("opds-share-note", &[])
+}
+
+/// Footnote under the feed settings.
+pub fn opds_footer(device: &str) -> String {
+    text("opds-footer", &[("device", Arg::Text(device))])
+}
+
+/// Row in the feed settings: the web address e-readers are given, with a button that copies it.
+pub fn opds_address() -> String {
+    text("opds-address", &[])
+}
+
+/// Shown in place of the address while the feed is off or has no password.
+pub fn opds_address_off() -> String {
+    text("opds-address-off", &[])
+}
+
+/// Row in the feed settings: the password e-readers ask for.
+pub fn opds_password() -> String {
+    text("opds-password", &[])
+}
+
+/// Line under the password row.
+pub fn opds_password_note() -> String {
+    text("opds-password-note", &[])
+}
+
+/// Button in the feed settings that makes a new password. The e-readers ask for the new one.
+pub fn opds_new_password() -> String {
+    text("opds-new-password", &[])
+}
+
+/// Row in the feed settings: the port the feed listens on.
+pub fn opds_port() -> String {
+    text("opds-port", &[])
+}
+
+/// Line under the port row when it is empty.
+pub fn opds_port_note() -> String {
+    text("opds-port-note", &[])
+}
+
+/// Line under the port row when the port asked for was taken and another is used.
+pub fn opds_port_moved(wanted: i64, port: i64) -> String {
+    text("opds-port-moved", &[("wanted", Arg::Int(wanted)), ("port", Arg::Int(port))])
+}
+
+/// Heading of the group that picks what the feed shares.
+pub fn opds_shares() -> String {
+    text("opds-shares", &[])
+}
+
+/// Row in What it shares: the chapters downloaded on this device.
+pub fn opds_share_downloads() -> String {
+    text("opds-share-downloads", &[])
+}
+
+/// Line under that row.
+pub fn opds_share_downloads_count(n: i64) -> String {
+    text("opds-share-downloads-count", &[("n", Arg::Int(n))])
+}
+
+/// Row in What it shares: the series in the manga and comic folders.
+pub fn opds_share_manga() -> String {
+    text("opds-share-manga", &[])
+}
+
+/// Row in What it shares: the series in the novel folders.
+pub fn opds_share_novels() -> String {
+    text("opds-share-novels", &[])
+}
+
+/// Line under a folder row.
+pub fn opds_share_series_count(n: i64) -> String {
+    text("opds-share-series-count", &[("n", Arg::Int(n))])
+}
+
+/// Heading of the list of e-readers that fetched files from the feed.
+pub fn opds_fetched_by() -> String {
+    text("opds-fetched-by", &[])
+}
+
+/// Line when no e-reader has fetched anything since the feed started.
+pub fn opds_fetched_none() -> String {
+    text("opds-fetched-none", &[])
+}
+
+/// Shown in place of the address while the feed is switched on and starting to listen.
+pub fn opds_starting() -> String {
+    text("opds-starting", &[])
+}
+
+/// Shown in place of the address while the feed is on but the Mac is on no local network.
+pub fn opds_paused_none() -> String {
+    text("opds-paused-none", &[])
+}
+
+/// Shown in place of the address while the feed is on but the only connection goes through a VPN.
+pub fn opds_paused_vpn() -> String {
+    text("opds-paused-vpn", &[])
+}
+
+/// Title of the question before a new feed password is made.
+pub fn opds_new_password_title() -> String {
+    text("opds-new-password-title", &[])
+}
+
+/// Text of that question.
+pub fn opds_new_password_warning() -> String {
+    text("opds-new-password-warning", &[])
+}
+
+/// Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+pub fn opds_fetched_time(time: &str) -> String {
+    text("opds-fetched-time", &[("time", Arg::Text(time))])
+}
+
+/// Line under an e-reader in that list: how many files it took.
+pub fn opds_fetched_files(n: i64) -> String {
+    text("opds-fetched-files", &[("n", Arg::Int(n))])
+}
+
+/// Name for an e-reader that did not give one.
+pub fn opds_reader_unnamed(address: &str) -> String {
+    text("opds-reader-unnamed", &[("address", Arg::Text(address))])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])

@@ -27,7 +27,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU32, Ordering},
     },
     time::{Duration, Instant},
 };
@@ -123,9 +123,25 @@ pub(crate) fn handles(command: &ReadingCommand) -> bool {
             | ReadingCommand::CancelPrepare { .. }
             | ReadingCommand::Shared { .. }
             | ReadingCommand::StoppedAt { .. }
+            | ReadingCommand::SetSendTarget { .. }
             | ReadingCommand::LoadFeed
             | ReadingCommand::SetFeed { .. }
+            | ReadingCommand::SetFeedShare { .. }
     )
+}
+
+/// The targets the apps list, the one last sent to marked.
+fn targets_of(engine: &EngineState) -> Vec<kaeri_model::reading::ExportTarget> {
+    let reading = &engine.config.effective().reading;
+    let chosen = reading.send_target.as_deref();
+    profiles::all(reading)
+        .iter()
+        .map(|p| {
+            let mut target = p.target();
+            target.chosen = chosen == Some(target.id.as_str());
+            target
+        })
+        .collect()
 }
 
 fn fail(about: ReadingAbout, failure: ReadingFailure, tx: &Outbox) {
@@ -147,11 +163,19 @@ pub(crate) fn command(
     let sources = &services.book_sources;
     match command {
         ReadingCommand::LoadExportTargets => {
-            let targets = profiles::all(&engine.config.effective().reading)
-                .iter()
-                .map(profiles::Profile::target)
-                .collect();
-            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets)));
+            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
+        }
+        ReadingCommand::SetSendTarget { target } => {
+            use kaeri_core::settings::SettingValue;
+            if let Err(e) = engine.config.write(
+                &services.paths,
+                &["reading"],
+                "send_target",
+                SettingValue::Str(target),
+            ) {
+                tracing::warn!(error = %e, "the send target was not kept");
+            }
+            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
         }
         ReadingCommand::Prepare { work, pick, target, format } => {
             prepare_files(engine, services, work, pick, &target, format, job, tx);
@@ -186,6 +210,9 @@ pub(crate) fn command(
         }
         ReadingCommand::SetFeed { on, password } => {
             set_feed(engine, services, on, password.map(|p| p.0), tx);
+        }
+        ReadingCommand::SetFeedShare { shelf, on } => {
+            set_feed_share(engine, services, shelf, on, tx)
         }
         _ => {}
     }
@@ -297,13 +324,20 @@ fn prepare_files(
         let tx = send.lent.tx.clone();
         let result = send.run().await;
         send.exports.end(send.id);
+        let chapter = send.told.failing_chapter();
         match result {
             Ok(files) => {
                 let _ =
                     tx.send(Event::Reading(ReadingEvent::ExportReady { job: send.id, files }));
             }
             Err(prepare::Stop::Cancelled) => {}
-            Err(prepare::Stop::Failed(failure)) => fail(about, failure, &tx),
+            Err(prepare::Stop::Failed(failure)) => {
+                let _ = tx.send(Event::Reading(ReadingEvent::ExportFailed {
+                    job: send.id,
+                    chapter,
+                    failure,
+                }));
+            }
         }
     });
 }
@@ -313,11 +347,31 @@ struct Told {
     tx: Outbox,
     job: JobId,
     last: Mutex<Instant>,
+    /// Chapters gathered so far, and how many there are to gather.
+    gathered: AtomicU32,
+    of: AtomicU32,
+    /// The chapter being fetched, for a failure to name.
+    current: Mutex<Option<String>>,
 }
 
 impl Told {
     fn new(tx: Outbox, job: JobId) -> Arc<Self> {
-        Arc::new(Self { tx, job, last: Mutex::new(Instant::now() - Duration::from_secs(1)) })
+        Arc::new(Self {
+            tx,
+            job,
+            last: Mutex::new(Instant::now() - Duration::from_secs(1)),
+            gathered: AtomicU32::new(0),
+            of: AtomicU32::new(0),
+            current: Mutex::new(None),
+        })
+    }
+
+    fn chapter(&self, label: Option<String>) {
+        *self.current.lock().unwrap_or_else(|e| e.into_inner()) = label;
+    }
+
+    fn failing_chapter(&self) -> Option<String> {
+        self.current.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     fn tell(&self, done: u32, total: u32) {
@@ -330,6 +384,8 @@ impl Told {
             job: self.job,
             done,
             total,
+            chapters_done: self.gathered.load(Ordering::Relaxed),
+            chapters: self.of.load(Ordering::Relaxed),
         }));
     }
 }
@@ -425,6 +481,9 @@ impl OneSend {
         if asked_all_downloaded {
             // Nothing to fetch, so nothing to ask a source.
             let chapters = chosen(store, self.work.as_str(), &self.pick);
+            let n = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
+            self.told.of.store(n, Ordering::Relaxed);
+            self.told.gathered.store(n, Ordering::Relaxed);
             return Ok((chapters, 0));
         }
         let now = self.lent.clock.now();
@@ -443,6 +502,7 @@ impl OneSend {
         let total = fetch_count.saturating_mul(2 * FETCH_WEIGHT);
         let mut chapters = Vec::with_capacity(wanted.len());
         let mut fetched = 0u32;
+        self.told.of.store(u32::try_from(wanted.len()).unwrap_or(u32::MAX), Ordering::Relaxed);
         for want in &wanted {
             if self.cancel.load(Ordering::Relaxed) {
                 return Err(prepare::Stop::Cancelled);
@@ -451,8 +511,10 @@ impl OneSend {
             let label = row.number.clone().unwrap_or_else(|| row.label.clone());
             if let Some(path) = downloaded.get(want.chapter.as_str()) {
                 chapters.push(prepare::Chapter { label, path: path.clone() });
+                self.told.gathered.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
+            self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing).await?;
             std::fs::create_dir_all(temp).map_err(|_| {
@@ -488,6 +550,8 @@ impl OneSend {
                 }
             };
             chapters.push(prepare::Chapter { label, path: file.path });
+            self.told.gathered.fetch_add(1, Ordering::Relaxed);
+            self.told.chapter(None);
             fetched += 1;
         }
         Ok((chapters, fetch_count))
@@ -593,11 +657,46 @@ fn password_of(services: &Services) -> Option<String> {
 }
 
 #[cfg(feature = "opds-feed")]
-fn feed_view(_engine: &EngineState, services: &Services) -> FeedView {
-    services
-        .book_sources
-        .feed
-        .view(password_of(services).is_some(), services.book_sources.store())
+fn feed_view(engine: &EngineState, services: &Services) -> FeedView {
+    services.book_sources.feed.view(
+        password_of(services),
+        services.book_sources.store(),
+        &engine.config.effective().reading.feed,
+    )
+}
+
+#[cfg(feature = "opds-feed")]
+fn set_feed_share(
+    engine: &mut EngineState,
+    services: &Services,
+    shelf: kaeri_model::reading::FeedShelf,
+    on: bool,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue;
+    use kaeri_model::reading::FeedShelf;
+    let key = match shelf {
+        FeedShelf::Downloads => "share_downloads",
+        FeedShelf::MangaFolders => "share_manga",
+        FeedShelf::NovelFolders => "share_novels",
+    };
+    if let Err(e) =
+        engine.config.write(&services.paths, &["reading", "feed"], key, SettingValue::Bool(on))
+    {
+        tracing::warn!(error = %e, "the feed shelf was not kept");
+    }
+    apply_feed(engine, services, tx);
+}
+
+#[cfg(not(feature = "opds-feed"))]
+fn set_feed_share(
+    _: &mut EngineState,
+    _: &Services,
+    _: kaeri_model::reading::FeedShelf,
+    _: bool,
+    tx: &Outbox,
+) {
+    let _ = tx.send(Event::Reading(ReadingEvent::Feed(FeedView::default())));
 }
 
 #[cfg(not(feature = "opds-feed"))]

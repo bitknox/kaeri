@@ -3305,6 +3305,7 @@ dependencies = [
  "kaeri-sync",
  "kaeri-testkit",
  "kaeri-track",
+ "network-interface",
  "open",
  "rand 0.10.3",
  "reqwest 0.13.1",

@@ -800,6 +800,12 @@ pub struct ExportTarget {
     /// The same for a novel.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub novel_formats: Vec<ExportFormat>,
+    /// Files over the device's limit are written in parts, near 195 MB each.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub split: bool,
+    /// The target last sent to on this device.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chosen: bool,
 }
 
 /// A prepared file, ready for the share sheet. Large exports come in parts near 195 MB.
@@ -828,6 +834,65 @@ pub struct FeedView {
     /// Books the feed serves.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub serving: u32,
+    /// The password e-readers ask for, for the pane to show and copy. It is a secret: its
+    /// debug form is redacted, and no front end writes it to a log.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub password: Option<crate::stores::Secret>,
+    /// What the feed can share, each with whether it does and how much is on that shelf.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub shares: Vec<FeedShare>,
+    /// The e-readers that fetched from the feed since it started, the latest first.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub clients: Vec<FeedClient>,
+    /// Why the feed is not listening although it is on, when it is not.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pause: Option<FeedPause>,
+}
+
+/// Why a feed that is on does not listen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FeedPause {
+    /// The Mac is on no local network.
+    NoNetwork,
+    /// The only route is a VPN, so the feed would be reachable from outside the home.
+    VpnOnly,
+}
+
+/// A shelf the feed may share.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FeedShelf {
+    /// The chapters downloaded on this computer.
+    Downloads,
+    /// The series in the manga and comic folders.
+    MangaFolders,
+    /// The series in the novel folders.
+    NovelFolders,
+}
+
+/// One shelf of the feed: shared or not, and what it holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FeedShare {
+    pub shelf: FeedShelf,
+    pub on: bool,
+    /// Chapters on the downloads shelf, series on the folder shelves.
+    pub count: u32,
+}
+
+/// An e-reader that fetched from the feed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FeedClient {
+    /// What the e-reader called itself, from its user agent; empty when it did not.
+    pub name: String,
+    /// Where it asked from on the network.
+    pub address: String,
+    /// Unix seconds of its last request.
+    pub last: i64,
+    /// Files it has fetched.
+    pub files: u32,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1280,10 +1345,19 @@ pub enum ReadingCommand {
         chapter: Option<ChapterId>,
         page: Option<u32>,
     },
+    /// Keeps the e-reader the Send sheet starts on, on this device only.
+    SetSendTarget {
+        target: String,
+    },
     LoadFeed,
     SetFeed {
         on: bool,
         password: Option<Secret>,
+    },
+    /// Shares a shelf of the feed or stops sharing it; answered with [`ReadingEvent::Feed`].
+    SetFeedShare {
+        shelf: FeedShelf,
+        on: bool,
     },
     /// Android sends this before its first screen: [`ReadingEvent::Eink`].
     DeviceFacts {
@@ -1328,10 +1402,13 @@ impl ReadingCommand {
             | Self::DownloadDeleteRead { .. }
             | Self::EstimateDownload { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
-            Self::LoadExportTargets | Self::Prepare { .. } | Self::CancelPrepare { .. } => {
-                ReadingAbout::Export
+            Self::LoadExportTargets
+            | Self::Prepare { .. }
+            | Self::CancelPrepare { .. }
+            | Self::SetSendTarget { .. } => ReadingAbout::Export,
+            Self::LoadFeed | Self::SetFeed { .. } | Self::SetFeedShare { .. } => {
+                ReadingAbout::Feed
             }
-            Self::LoadFeed | Self::SetFeed { .. } => ReadingAbout::Feed,
             Self::DeviceFacts { .. } | Self::AnswerEink { .. } => ReadingAbout::Eink,
         }
     }
@@ -1411,6 +1488,16 @@ pub enum ReadingEvent {
         job: JobId,
         done: u32,
         total: u32,
+        /// Chapters gathered so far, of `chapters`: what the screen says as "3 of 12". Zero
+        /// `chapters` means the send does not know yet.
+        chapters_done: u32,
+        chapters: u32,
+    },
+    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    ExportFailed {
+        job: JobId,
+        chapter: Option<String>,
+        failure: ReadingFailure,
     },
     ExportReady {
         job: JobId,
