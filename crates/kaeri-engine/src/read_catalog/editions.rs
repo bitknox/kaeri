@@ -17,7 +17,7 @@ use kaeri_core::{
 };
 use kaeri_model::{
     Msg, ReadingMsg,
-    book_sources::{BookSourceCommand, BookSourceEvent, SourceMiss, SourceSeriesChoice},
+    book_sources::{BookSourceCommand, BookSourceEvent, EditionMiss, SourceSeriesChoice},
     event::Event,
 };
 
@@ -32,7 +32,7 @@ pub(crate) const ASKED_FOR: i64 = 10 * 60;
 
 /// The misses kept per work, each with when it was found.
 #[derive(Debug, Default)]
-pub(crate) struct Misses(HashMap<String, Vec<(i64, SourceMiss)>>);
+pub(crate) struct Misses(HashMap<String, Vec<(i64, EditionMiss)>>);
 
 /// A Read from command.
 pub(crate) fn command(kit: &Kit, ask: Ask, command: BookSourceCommand, tx: &Outbox) {
@@ -166,10 +166,10 @@ async fn ask_one(kit: &Kit, source: &str, work: &WorkId, names: &[String], now: 
 }
 
 /// The misses still standing for `work`: fresh, and from sources that still lack it.
-fn kept_misses(kit: &Kit, work: &WorkId, wanted: &[String], now: i64) -> Vec<SourceMiss> {
+fn kept_misses(kit: &Kit, work: &WorkId, wanted: &[String], now: i64) -> Vec<EditionMiss> {
     let kept = kit.sources.catalog.misses.lock().unwrap_or_else(|e| e.into_inner());
     let Some(list) = kept.0.get(work.as_str()) else { return Vec::new() };
-    let mut out: Vec<SourceMiss> = list
+    let mut out: Vec<EditionMiss> = list
         .iter()
         .filter(|(at, miss)| now - at < ASKED_FOR && wanted.contains(&miss.source_id))
         .map(|(_, miss)| miss.clone())
@@ -178,7 +178,7 @@ fn kept_misses(kit: &Kit, work: &WorkId, wanted: &[String], now: i64) -> Vec<Sou
     out
 }
 
-fn keep_miss(kit: &Kit, work: &WorkId, miss: Option<SourceMiss>, source: &str, now: i64) {
+fn keep_miss(kit: &Kit, work: &WorkId, miss: Option<EditionMiss>, source: &str, now: i64) {
     let mut kept = kit.sources.catalog.misses.lock().unwrap_or_else(|e| e.into_inner());
     let list = kept.0.entry(work.as_str().to_owned()).or_default();
     list.retain(|(at, m)| m.source_id != source && now - at < ASKED_FOR);
@@ -195,7 +195,7 @@ fn send_for_work(
     kit: &Kit,
     work: &WorkId,
     asking: bool,
-    missing: Vec<SourceMiss>,
+    missing: Vec<EditionMiss>,
     tx: &Outbox,
 ) {
     let editions = kit.sources.editions(work);
@@ -235,7 +235,7 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         while let Some((source, answer)) = asking.next().await {
             let miss = match answer {
                 Answer::Found => None,
-                Answer::Missed(reason) => Some(SourceMiss {
+                Answer::Missed(reason) => Some(EditionMiss {
                     source_name: source_name(&kit, &source),
                     source_id: source.clone(),
                     reason,
@@ -469,7 +469,7 @@ mod tests {
     /// The Read from answers until one says every source has answered.
     async fn answers(
         rx: &mut mpsc::UnboundedReceiver<Event>,
-    ) -> Vec<(Vec<String>, bool, Vec<SourceMiss>)> {
+    ) -> Vec<(Vec<String>, bool, Vec<EditionMiss>)> {
         let mut out = Vec::new();
         loop {
             let event = tokio::time::timeout(Duration::from_secs(5), rx.recv())
@@ -492,7 +492,7 @@ mod tests {
         }
     }
 
-    fn reasons(missing: &[SourceMiss]) -> Vec<(&str, &str)> {
+    fn reasons(missing: &[EditionMiss]) -> Vec<(&str, &str)> {
         missing.iter().map(|m| (m.source_id.as_str(), m.reason.id())).collect()
     }
 

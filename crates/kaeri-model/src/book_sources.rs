@@ -276,7 +276,7 @@ pub enum BookSourceEvent {
         asking: bool,
         /// "Not found in": the sources searched without a match, in the person's order.
         #[cfg_attr(feature = "ffi", uniffi(default))]
-        missing: Vec<SourceMiss>,
+        missing: Vec<EditionMiss>,
     },
     /// What one source found for "Search there". `failure` when it could not be asked.
     SourceSeries {
@@ -291,7 +291,7 @@ pub enum BookSourceEvent {
 /// A source that was searched for a work and has no series for it.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
-pub struct SourceMiss {
+pub struct EditionMiss {
     pub source_id: String,
     pub source_name: String,
     /// Why: "No series with this name", "Not answering since 10:12".
