@@ -297,7 +297,9 @@ mod tests {
 
     #[test]
     fn a_work_kind_is_titled_from_a_list_or_the_catalogue_object() {
-        let first_title = |titles: &str| BookTitles::parse(titles).pick(TitleForm::English).map(str::to_owned);
+        let first_title = |titles: &str| {
+            BookTitles::parse(titles).pick(TitleForm::English).map(str::to_owned)
+        };
         assert_eq!(first_title(r#"["Tide Lantern"]"#).as_deref(), Some("Tide Lantern"));
         assert_eq!(
             first_title(r#"{"romaji":"Shiokaze","english":null,"native":null}"#).as_deref(),
