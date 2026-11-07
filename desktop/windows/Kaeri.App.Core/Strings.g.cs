@@ -5956,8 +5956,20 @@ public static partial class T
     /// <summary>Line under Counts as read.</summary>
     public static string SettingsCountsReadNote => Get("SettingsCountsReadNote");
 
-    /// <summary>Value of Counts as read.</summary>
+    /// <summary>Value of Counts as read: a short stay on the last page, or moving on past it.</summary>
     public static string SettingsCountsReadValue => Get("SettingsCountsReadValue");
+
+    /// <summary>Value of Counts as read: only moving on past the last page, to the end or the next chapter.</summary>
+    public static string SettingsCountsReadMovingOn => Get("SettingsCountsReadMovingOn");
+
+    /// <summary>Line under Counts as read when it is Moving on from it.</summary>
+    public static string SettingsCountsReadMovingOnNote => Get("SettingsCountsReadMovingOnNote");
+
+    /// <summary>Value of Counts as read: only the person's own marks; the reader marks nothing.</summary>
+    public static string SettingsCountsReadMarked => Get("SettingsCountsReadMarked");
+
+    /// <summary>Line under Counts as read when it is When you mark it.</summary>
+    public static string SettingsCountsReadMarkedNote => Get("SettingsCountsReadMarkedNote");
 
     /// <summary>Group: series settings that follow you to your other devices.</summary>
     public static string SettingsFollowGroup => Get("SettingsFollowGroup");
@@ -12066,6 +12078,10 @@ public static partial class T
         ["SettingsCountsRead"] = "Counts as read",
         ["SettingsCountsReadNote"] = "A short stay on the last page, or moving on to the next chapter",
         ["SettingsCountsReadValue"] = "After the last page",
+        ["SettingsCountsReadMovingOn"] = "Moving on from it",
+        ["SettingsCountsReadMovingOnNote"] = "Turning past the last page, or opening the next chapter",
+        ["SettingsCountsReadMarked"] = "When you mark it",
+        ["SettingsCountsReadMarkedNote"] = "Continue and your trackers follow your marks",
         ["SettingsFollowGroup"] = "Series settings that follow you",
         ["SettingsFollowMode"] = "Mode, direction and colour",
         ["SettingsFollowModeNote"] = "A series you change reads the same on your other devices",

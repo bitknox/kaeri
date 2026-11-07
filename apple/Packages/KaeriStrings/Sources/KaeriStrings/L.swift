@@ -8776,8 +8776,20 @@ public enum L {
     /// Line under Counts as read.
     public static var settingsCountsReadNote: String { string("settings-counts-read-note", fallback: "A short stay on the last page, or moving on to the next chapter") }
 
-    /// Value of Counts as read.
+    /// Value of Counts as read: a short stay on the last page, or moving on past it.
     public static var settingsCountsReadValue: String { string("settings-counts-read-value", fallback: "After the last page") }
+
+    /// Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+    public static var settingsCountsReadMovingOn: String { string("settings-counts-read-moving-on", fallback: "Moving on from it") }
+
+    /// Line under Counts as read when it is Moving on from it.
+    public static var settingsCountsReadMovingOnNote: String { string("settings-counts-read-moving-on-note", fallback: "Turning past the last page, or opening the next chapter") }
+
+    /// Value of Counts as read: only the person's own marks; the reader marks nothing.
+    public static var settingsCountsReadMarked: String { string("settings-counts-read-marked", fallback: "When you mark it") }
+
+    /// Line under Counts as read when it is When you mark it.
+    public static var settingsCountsReadMarkedNote: String { string("settings-counts-read-marked-note", fallback: "Continue and your trackers follow your marks") }
 
     /// Group: series settings that follow you to your other devices.
     public static var settingsFollowGroup: String { string("settings-follow-group", fallback: "Series settings that follow you") }

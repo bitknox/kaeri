@@ -6,9 +6,10 @@
 
 use kaeri_core::{
     config::{
-        Config, NewChapters, SendProgressAfter, StyledSubtitles, SubtitleBackground,
-        SubtitleColour, SubtitleEdge, SubtitleFont, SubtitleThickness, SubtitlesConfig,
-        ThemeMode, TitleChoice, TrailerAutoplay, WebtoonMode, WhenTrackersDisagree,
+        Config, CountsAsRead, NewChapters, SendProgressAfter, StyledSubtitles,
+        SubtitleBackground, SubtitleColour, SubtitleEdge, SubtitleFont, SubtitleThickness,
+        SubtitlesConfig, ThemeMode, TitleChoice, TrailerAutoplay, WebtoonMode,
+        WhenTrackersDisagree,
     },
     media::Translation,
     settings::SettingValue,
@@ -123,6 +124,10 @@ pub enum SettingKey {
     /// Which chapter progress wins when a tracker and this device disagree: `furthest` or
     /// `latest`. Status and score always follow the latest change.
     WhenTrackersDisagree,
+    /// When the reader counts a chapter as read, which Continue, the read marks and the
+    /// trackers follow: `last-page` (a short stay on it, or moving past it), `moving-on` (only
+    /// moving past it) or `marked` (only the person's own marks).
+    CountsAsRead,
     /// Whether the app notifies of new chapters in the series on the Reading list, on its own
     /// channel. Off by default; the check runs only while reading is on.
     ChapterNotifications,
@@ -253,7 +258,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 29] = [
+    pub const NATIVE_ROWS: [Self; 30] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -284,6 +289,7 @@ impl SettingKey {
         Self::WebtoonMode,
         Self::SendProgressAfter,
         Self::WhenTrackersDisagree,
+        Self::CountsAsRead,
     ];
 
     /// Where the file keeps it: the containing table, as the dotted path
@@ -363,6 +369,7 @@ impl SettingKey {
             Self::WebtoonMode => (&["reading", "webtoon"], "mode"),
             Self::SendProgressAfter => (&["reading"], "send_progress_after"),
             Self::WhenTrackersDisagree => (&["reading"], "when_trackers_disagree"),
+            Self::CountsAsRead => (&["reading"], "counts_as_read"),
             Self::ChapterNotifications => (&["notifications"], "chapters"),
             Self::OpenAt => (&["reading"], "open_at"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
@@ -511,6 +518,7 @@ impl SettingKey {
             Self::WhenTrackersDisagree => {
                 to.reading.when_trackers_disagree = from.reading.when_trackers_disagree;
             }
+            Self::CountsAsRead => to.reading.counts_as_read = from.reading.counts_as_read,
             Self::ChapterNotifications => {
                 to.notifications.chapters = from.notifications.chapters;
             }
@@ -580,7 +588,10 @@ impl SettingKey {
             | Self::KeepChaptersReady
             | Self::NewChapters
             | Self::DeleteAfterReading => "downloads",
-            Self::SeriesChoicesFollow | Self::LookFollows | Self::WebtoonMode => "reading",
+            Self::SeriesChoicesFollow
+            | Self::LookFollows
+            | Self::WebtoonMode
+            | Self::CountsAsRead => "reading",
             Self::SendProgressAfter | Self::WhenTrackersDisagree => "accounts",
             Self::Torrents
             | Self::TorrentProxy
@@ -668,6 +679,7 @@ impl SettingKey {
             Self::WebtoonMode => "webtoons",
             Self::SendProgressAfter => "send progress after",
             Self::WhenTrackersDisagree => "when trackers disagree",
+            Self::CountsAsRead => "counts as read",
             Self::ChapterNotifications => "new chapter notifications",
             Self::OpenAt => "open at",
             Self::TorrentsOnCellular => "torrents on cellular",
@@ -1051,6 +1063,9 @@ pub fn step(
             effective.reading.when_trackers_disagree,
             delta,
         )),
+        SettingKey::CountsAsRead => {
+            V::Str(stepped(CountsAsRead::ALL, effective.reading.counts_as_read, delta))
+        }
         SettingKey::ChapterNotifications => V::Bool(!effective.notifications.chapters),
         SettingKey::OpenAt => {
             const LADDER: [&str; 2] = ["watch", "read"];
@@ -1275,6 +1290,10 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             let Some(choice) = WhenTrackersDisagree::from_name(name) else { return false };
             config.reading.when_trackers_disagree = choice;
         }
+        (SettingKey::CountsAsRead, V::Str(name)) => {
+            let Some(choice) = CountsAsRead::from_name(name) else { return false };
+            config.reading.counts_as_read = choice;
+        }
         (SettingKey::ChapterNotifications, V::Bool(on)) => config.notifications.chapters = *on,
         (SettingKey::OpenAt, V::Str(name)) => {
             if !matches!(name.as_str(), "watch" | "read") {
@@ -1477,6 +1496,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::WhenTrackersDisagree => {
             effective.reading.when_trackers_disagree.name().into()
         }
+        SettingKey::CountsAsRead => effective.reading.counts_as_read.name().into(),
         SettingKey::ChapterNotifications => on_off(effective.notifications.chapters),
         SettingKey::OpenAt => effective.reading.open_at.clone(),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
@@ -1628,6 +1648,7 @@ fn ladder_value(effective: &Config, key: SettingKey) -> Option<SettingValue> {
         S::WhenTrackersDisagree => {
             V::Str(effective.reading.when_trackers_disagree.name().into())
         }
+        S::CountsAsRead => V::Str(effective.reading.counts_as_read.name().into()),
         S::Trailers => V::Str(effective.theme.trailers.name().into()),
         S::SeedRatio => V::Float(seeding.ratio),
         S::SeedHours => V::Int(i64::from(seeding.hours)),
@@ -1744,7 +1765,8 @@ named!(
     NewChapters,
     WebtoonMode,
     SendProgressAfter,
-    WhenTrackersDisagree
+    WhenTrackersDisagree,
+    CountsAsRead
 );
 
 /// Step to the next value in an ascending ladder, clamping at both ends.
@@ -1939,6 +1961,7 @@ mod tests {
                 (SettingKey::WebtoonMode, "strip"),
                 (SettingKey::SendProgressAfter, "chapter"),
                 (SettingKey::WhenTrackersDisagree, "furthest"),
+                (SettingKey::CountsAsRead, "last-page"),
             ]
         );
         assert!(view.rows.iter().all(|row| !SettingKey::NATIVE_ROWS.contains(&row.key)));
@@ -2014,6 +2037,11 @@ mod tests {
             step_to(&config, SettingKey::WhenTrackersDisagree),
             Some(SettingValue::Str("latest".into()))
         );
+        assert_eq!(
+            step_to(&config, SettingKey::CountsAsRead),
+            Some(SettingValue::Str("moving-on".into()))
+        );
+        assert!(kaeri_core::shared_settings::is_shared(&["reading"], "counts_as_read"));
         assert_eq!(SettingKey::WebtoonMode.path(), Some((&["reading", "webtoon"][..], "mode")));
         assert!(kaeri_core::shared_settings::is_shared(&["reading", "webtoon"], "mode"));
     }

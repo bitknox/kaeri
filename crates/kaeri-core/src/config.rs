@@ -585,6 +585,9 @@ pub struct ReadingConfig {
     pub send_progress_after: SendProgressAfter,
     /// Which progress wins when a tracker and this device disagree.
     pub when_trackers_disagree: WhenTrackersDisagree,
+    /// When the reader counts a chapter as read, for Continue, the read marks and the
+    /// trackers. Unset in an earlier version's file, which is the last page's rule it had.
+    pub counts_as_read: CountsAsRead,
     /// Delete a downloaded chapter once it is read.
     pub delete_after_reading: bool,
     /// Which Home the app opens at while it is for both: `watch` or `read`.
@@ -612,6 +615,7 @@ impl Default for ReadingConfig {
             webtoon: WebtoonConfig::default(),
             send_progress_after: SendProgressAfter::default(),
             when_trackers_disagree: WhenTrackersDisagree::default(),
+            counts_as_read: CountsAsRead::default(),
             delete_after_reading: false,
             open_at: "watch".into(),
             manga: BTreeMap::new(),
@@ -728,6 +732,20 @@ choices! {
         Chapter => "chapter",
         /// Once, with the furthest chapter, when the reader closes.
         Close => "close",
+    }
+}
+choices! {
+    /// When the reader counts a chapter as read. A chapter marked read by hand is read
+    /// whichever rule is chosen.
+    CountsAsRead {
+        /// After a short stay on the last page, or on moving past it to the end or the next
+        /// chapter.
+        #[default]
+        LastPage => "last-page",
+        /// Only on moving past the last page: to the end of the chapter or the next one.
+        MovingOn => "moving-on",
+        /// Only when the person marks it read; the reader marks nothing.
+        Marked => "marked",
     }
 }
 choices! {
@@ -1631,12 +1649,14 @@ mod tests {
         assert_eq!(fresh.reading.webtoon.mode, WebtoonMode::Strip);
         assert_eq!(fresh.reading.send_progress_after, SendProgressAfter::Chapter);
         assert_eq!(fresh.reading.when_trackers_disagree, WhenTrackersDisagree::Furthest);
+        assert_eq!(fresh.reading.counts_as_read, CountsAsRead::LastPage, "as it always was");
 
         // A new key wins over the old one, and each follow is its own.
         let new = Config::parse(
             "[reading]\nseries_choices_follow = true\nlook_follows = false\n\
              keep_chapters_ready = true\nnew_chapters = \"off\"\n\
              send_progress_after = \"close\"\nwhen_trackers_disagree = \"latest\"\n\
+             counts_as_read = \"moving-on\"\n\
              [reading.webtoon]\nmode = \"paged\"\n",
         )
         .unwrap();
@@ -1645,6 +1665,7 @@ mod tests {
         assert_eq!(new.reading.webtoon.mode, WebtoonMode::Paged);
         assert_eq!(new.reading.send_progress_after, SendProgressAfter::Close);
         assert_eq!(new.reading.when_trackers_disagree, WhenTrackersDisagree::Latest);
+        assert_eq!(new.reading.counts_as_read, CountsAsRead::MovingOn);
         let text = toml::to_string(&new).unwrap();
         assert!(unknown_keys(&text, &new).is_empty(), "every new key is known");
         // An earlier version still reads the file: the old keys stay as they were.

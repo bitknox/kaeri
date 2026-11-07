@@ -193291,6 +193291,54 @@
         }
       }
     },
+    "settings-counts-read-marked" : {
+      "comment" : "Value of Counts as read: only the person's own marks; the reader marks nothing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you mark it"
+          }
+        }
+      }
+    },
+    "settings-counts-read-marked-note" : {
+      "comment" : "Line under Counts as read when it is When you mark it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue and your trackers follow your marks"
+          }
+        }
+      }
+    },
+    "settings-counts-read-moving-on" : {
+      "comment" : "Value of Counts as read: only moving on past the last page, to the end or the next chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving on from it"
+          }
+        }
+      }
+    },
+    "settings-counts-read-moving-on-note" : {
+      "comment" : "Line under Counts as read when it is Moving on from it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning past the last page, or opening the next chapter"
+          }
+        }
+      }
+    },
     "settings-counts-read-note" : {
       "comment" : "Line under Counts as read.",
       "extractionState" : "manual",
@@ -193304,7 +193352,7 @@
       }
     },
     "settings-counts-read-value" : {
-      "comment" : "Value of Counts as read.",
+      "comment" : "Value of Counts as read: a short stay on the last page, or moving on past it.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

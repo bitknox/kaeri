@@ -8262,7 +8262,23 @@
   </data>
   <data name="SettingsCountsReadValue" xml:space="preserve">
     <value>[Åƒţéŕ ţĥé ļàšţ þàĝé~~~~~~]</value>
-    <comment>Value of Counts as read.</comment>
+    <comment>Value of Counts as read: a short stay on the last page, or moving on past it.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>[Ṁöṽîñĝ öñ ƒŕöɱ îţ~~~~~~]</value>
+    <comment>Value of Counts as read: only moving on past the last page, to the end or the next chapter.</comment>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>[Ţüŕñîñĝ þàšţ ţĥé ļàšţ þàĝé, öŕ öþéñîñĝ ţĥé ñéẋţ çĥàþţéŕ~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Counts as read when it is Moving on from it.</comment>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>[Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]</value>
+    <comment>Value of Counts as read: only the person's own marks; the reader marks nothing.</comment>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>[Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]</value>
+    <comment>Line under Counts as read when it is When you mark it.</comment>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>[Šéŕîéš šéţţîñĝš ţĥàţ ƒöļļöŵ ýöü~~~~~~~~~~]</value>

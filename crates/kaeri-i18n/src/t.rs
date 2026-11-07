@@ -14205,9 +14205,29 @@ pub fn settings_counts_read_note() -> String {
     text("settings-counts-read-note", &[])
 }
 
-/// Value of Counts as read.
+/// Value of Counts as read: a short stay on the last page, or moving on past it.
 pub fn settings_counts_read_value() -> String {
     text("settings-counts-read-value", &[])
+}
+
+/// Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+pub fn settings_counts_read_moving_on() -> String {
+    text("settings-counts-read-moving-on", &[])
+}
+
+/// Line under Counts as read when it is Moving on from it.
+pub fn settings_counts_read_moving_on_note() -> String {
+    text("settings-counts-read-moving-on-note", &[])
+}
+
+/// Value of Counts as read: only the person's own marks; the reader marks nothing.
+pub fn settings_counts_read_marked() -> String {
+    text("settings-counts-read-marked", &[])
+}
+
+/// Line under Counts as read when it is When you mark it.
+pub fn settings_counts_read_marked_note() -> String {
+    text("settings-counts-read-marked-note", &[])
 }
 
 /// Group: series settings that follow you to your other devices.

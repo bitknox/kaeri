@@ -545,7 +545,7 @@ impl Session {
         let last_doc = pos.spine >= open.last_linear;
         if pages > 0 && page >= pages {
             // The end page: read at once.
-            self.chapter_read(cx);
+            self.chapter_read(cx, super::Reached::MovedOn);
             self.say_end_page(cx);
             return;
         }
