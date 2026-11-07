@@ -220,7 +220,9 @@ internal fun DownloadsScreen(actions: AppActions = AppActions()) {
             val readFirst = !watches || navigator.openedFrom == Destination.Read
             val readingSection: () -> Unit = {
                 reading?.takeIf { readSeries.isNotEmpty() }?.let { view ->
-                    readingDownloads(view, divided = !readFirst && (groups.isNotEmpty() || seeding.isNotEmpty())) { work, chapters -> send = work to chapters }
+                    readingDownloads(view, divided = !readFirst && (groups.isNotEmpty() || seeding.isNotEmpty()), actions = actions, showSends = send == null) { work, chapters ->
+                        send = work to chapters
+                    }
                 }
             }
             if (readFirst) readingSection()
@@ -286,12 +288,14 @@ private fun SectionHeading(title: String, total: String, divided: Boolean) {
 }
 
 /**
- * Reading's section: its heading with the total, then one row per series with its line and, while
- * bytes move, the ring.
+ * Reading's section: its heading with the total, the sends going on when [showSends], then one row
+ * per series with its line and, while bytes move, the ring.
  */
 private fun androidx.compose.foundation.lazy.LazyListScope.readingDownloads(
     view: app.kaeri.engine.model.BookDownloadsView,
     divided: Boolean,
+    actions: AppActions,
+    showSends: Boolean,
     onSend: (app.kaeri.engine.core.WorkId, List<app.kaeri.engine.core.ChapterId>) -> Unit,
 ) {
     item(key = "reading-heading", contentType = "section") {
@@ -300,6 +304,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.readingDownloads(
         val total = view.total.takeIf { it.isNotEmpty() }?.joinToString(" · ") { it.text(context) } // i18n-skip
             ?: Strings.readDownloadsTotal(context, view.meter.chapters.toInt(), Wording.bytes(context, view.meter.used.toLong()))
         Box(itemMotion()) { SectionHeading(stringResource(R.string.settings_group_reading), total, divided) }
+    }
+    // Every send under way, held for Wi-Fi, ready or failed, while no Send sheet covers them.
+    if (showSends) {
+        item(key = "reading-sends", contentType = "sends") {
+            Box(itemMotion()) {
+                app.kaeri.ui.reading.SendStatusRows(null, actions, Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp))
+            }
+        }
     }
     items(view.series, key = { "read-${it.work}" }, contentType = { "read-series" }) { series ->
         Box(itemMotion()) {
@@ -368,7 +380,7 @@ private fun ReadSeriesDownload(
         }
         Menu(expanded = menu, onDismissRequest = { menu = false }) {
             if (done.isNotEmpty()) {
-                DropdownMenuItem(text = { Text(Strings.sendEreaderTitle(context)) }, onClick = {
+                DropdownMenuItem(text = { Text(Strings.sendTitle(context)) }, onClick = {
                     menu = false
                     onSend(series.work, done)
                 })

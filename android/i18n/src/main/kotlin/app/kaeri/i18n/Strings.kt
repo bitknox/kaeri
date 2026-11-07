@@ -873,17 +873,37 @@ object Strings {
     fun readingPartNew(context: Context, part: String): String =
         context.getString(R.string.reading_part_new, part)
 
+    /** Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it. */
+    fun readingLabelPercent(context: Context, label: String, percent: Int): String =
+        context.getString(R.string.reading_label_percent, label, percent)
+
+    /** Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelNew(context: Context, label: String): String =
+        context.getString(R.string.reading_label_new, label)
+
     /** Under a This week cell: a light novel's part that came out that day, with its own title. */
     fun readingPartTitled(context: Context, part: String, title: String): String =
         context.getString(R.string.reading_part_titled, part, title)
+
+    /** Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelTitled(context: Context, label: String, title: String): String =
+        context.getString(R.string.reading_label_titled, label, title)
 
     /** Under the big picture on reading's Home: a light novel's part that came out today. */
     fun readingPartOutToday(context: Context, part: String): String =
         context.getString(R.string.reading_part_out_today, part)
 
+    /** Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelOutToday(context: Context, label: String): String =
+        context.getString(R.string.reading_label_out_today, label)
+
     /** Under the big picture on reading's Home: a light novel's part that came out today, with its title. */
     fun readingPartOutTodayTitled(context: Context, part: String, title: String): String =
         context.getString(R.string.reading_part_out_today_titled, part, title)
+
+    /** Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4"). */
+    fun readingLabelOutTodayTitled(context: Context, label: String, title: String): String =
+        context.getString(R.string.reading_label_out_today_titled, label, title)
 
     /** Under a Library cover: the chapter the person is at, and the newest chapter there is. */
     fun readingChapterOf(context: Context, chapter: String, of: String): String =
@@ -892,6 +912,10 @@ object Strings {
     /** Under a Library cover: the volume and part of a light novel the person is at. */
     fun readingVolumePart(context: Context, volume: String, part: String): String =
         context.getString(R.string.reading_volume_part, volume, part)
+
+    /** Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5"). */
+    fun readingVolumeLabel(context: Context, volume: String, label: String): String =
+        context.getString(R.string.reading_volume_label, volume, label)
 
     /** A search filter: books from Japan. */
     fun readingOriginJapan(context: Context): String =
@@ -988,6 +1012,14 @@ object Strings {
     /** A novel's chapter row: how far into it the person is. */
     fun readingRowPercent(context: Context, percent: Int): String =
         context.getString(R.string.reading_row_percent, percent)
+
+    /** A novel's chapter row: the person opened it, and how far in is too little to say as a percent. */
+    fun readingRowOpened(context: Context): String =
+        context.getString(R.string.reading_row_opened)
+
+    /** A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared. */
+    fun readingRowBookmarked(context: Context): String =
+        context.getString(R.string.reading_row_bookmarked)
 
     /** A chapter row: how long its pages are, for a file on the device. */
     fun readingRowPages(context: Context, n: Int): String =
@@ -2604,94 +2636,6 @@ object Strings {
     /** The download notification while only chapters download. */
     fun downloadsNoticeChapters(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.downloads_notice_chapters, count, count)
-
-    /** Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. */
-    fun sendEreaderTitle(context: Context): String =
-        context.getString(R.string.send_ereader_title)
-
-    /** Heading over the e-readers to prepare the files for. */
-    fun sendEreaderFor(context: Context): String =
-        context.getString(R.string.send_ereader_for)
-
-    /** Heading over what is sent: which chapters. */
-    fun sendEreaderWhat(context: Context): String =
-        context.getString(R.string.send_ereader_what)
-
-    /** The chapters sent, as a span of their numbers: "41 to 43". */
-    fun sendEreaderRange(context: Context, from: String, to: String): String =
-        context.getString(R.string.send_ereader_range, from, to)
-
-    /** An e-reader's screen size in pixels, beside the file format it gets: "1264 × 1680". */
-    fun sendEreaderScreen(context: Context, width: Int, height: Int): String =
-        context.getString(R.string.send_ereader_screen, width, height)
-
-    /** A file format for e-readers: an EPUB whose pages keep a fixed layout, for comics. */
-    fun sendEreaderFormatFixedEpub(context: Context): String =
-        context.getString(R.string.send_ereader_format_fixed_epub)
-
-    /** The EPUB format made for Kobo e-readers. Kobo is a product name: keep it as it is. */
-    fun sendEreaderFormatKepub(context: Context): String =
-        context.getString(R.string.send_ereader_format_kepub)
-
-    /** The plain EPUB e-book format. Keep as it is unless your language writes it otherwise. */
-    fun sendEreaderFormatEpub(context: Context): String =
-        context.getString(R.string.send_ereader_format_epub)
-
-    /** The comic book archive format. Keep as it is unless your language writes it otherwise. */
-    fun sendEreaderFormatCbz(context: Context): String =
-        context.getString(R.string.send_ereader_format_cbz)
-
-    /** Line in the sheet before preparing: reading progress on the e-reader never comes back to the app. */
-    fun sendEreaderCantSee(context: Context): String =
-        context.getString(R.string.send_ereader_cant_see)
-
-    /** The sheet's one main button: make the files, then open the share sheet with them. */
-    fun sendEreaderPrepare(context: Context): String =
-        context.getString(R.string.send_ereader_prepare)
-
-    /** Beside the progress ring while the files are made. */
-    fun sendEreaderPreparing(context: Context, done: Int, total: Int): String =
-        context.resources.getQuantityString(R.plurals.send_ereader_preparing, total, done, total)
-
-    /** Under the progress while the files are made: they are fitted to the chosen e-reader's screen. */
-    fun sendEreaderSized(context: Context, device: String): String =
-        context.getString(R.string.send_ereader_sized, device)
-
-    /** Heading when the files could not be made. The cause follows on its own line. */
-    fun sendEreaderFailed(context: Context): String =
-        context.getString(R.string.send_ereader_failed)
-
-    /** Title of the sheet that asks how far the person read on the e-reader. Also the button that opens it. */
-    fun sendEreaderWhereStop(context: Context): String =
-        context.getString(R.string.send_ereader_where_stop)
-
-    /** On the series page after a send: which e-reader the chapters went to and on which day. */
-    fun sendEreaderSent(context: Context, device: String, date: String): String =
-        context.getString(R.string.send_ereader_sent, device, date)
-
-    /** On the series page after a send, under where the chapters went. */
-    fun sendEreaderCantSeeThere(context: Context): String =
-        context.getString(R.string.send_ereader_cant_see_there)
-
-    /** Line at the top of Where did you stop: how many chapters went to which e-reader, and when. */
-    fun sendEreaderWent(context: Context, n: Int, device: String, date: String): String =
-        context.resources.getQuantityString(R.plurals.send_ereader_went, n, n, device, date)
-
-    /** Switch in Where did you stop: the chosen chapter was read to its end. The chapter is the source's own label, such as "Chapter 43" or "Part 5". */
-    fun sendEreaderFinished(context: Context, chapter: String): String =
-        context.getString(R.string.send_ereader_finished, chapter)
-
-    /** The main button of Where did you stop: move the place to the chosen chapter. */
-    fun sendEreaderSetPlace(context: Context): String =
-        context.getString(R.string.send_ereader_set_place)
-
-    /** Text button in Where did you stop that leaves the place as it is, naming it. */
-    fun sendEreaderKeepChapter(context: Context, n: String, page: Int): String =
-        context.getString(R.string.send_ereader_keep_chapter, n, page)
-
-    /** Text button in Where did you stop that leaves the place as it is. */
-    fun sendEreaderKeep(context: Context): String =
-        context.getString(R.string.send_ereader_keep)
 
     /** On a series page whose source failed, under the cause: the chapters downloaded before still open. */
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
@@ -8629,6 +8573,18 @@ object Strings {
     /** The main action for a light novel part not opened yet. */
     fun actionReadPart(context: Context, n: String): String =
         context.getString(R.string.action_read_part, n)
+
+    /** The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. */
+    fun actionContinueNamed(context: Context, label: String, percent: Int): String =
+        context.getString(R.string.action_continue_named, label, percent)
+
+    /** The main action for a light novel part, part read, named in the source's own words, when how far is not known. */
+    fun actionContinueNamedPlain(context: Context, label: String): String =
+        context.getString(R.string.action_continue_named_plain, label)
+
+    /** The main action for a light novel part not opened yet, named in the source's own words. */
+    fun actionReadNamed(context: Context, label: String): String =
+        context.getString(R.string.action_read_named, label)
 
     /** The main action when every chapter is read. */
     fun actionReadAgain(context: Context): String =

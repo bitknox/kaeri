@@ -8,6 +8,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
 import app.kaeri.ui.reading.SeriesShots
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.robolectric.annotation.Config
 
@@ -68,10 +69,41 @@ class ReadSeriesShots : ReadingShotHarness() {
             it.networkPath(cellular = true, constrained = false)
             SeriesShots.open = "send"
         },
-        act = { compose.onNodeWithText(Strings.sendEreaderPrepare(compose.activity)).performClick() },
+        act = { compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick() },
         acted = { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } },
         ready = loaded(MANGA),
     )
+
+    /**
+     * Closing the sheet on a send held for Wi-Fi leaves it held: it goes on by itself as the sheet
+     * says, and the page shows it with Cancel send. Only that stops it.
+     */
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_send_held_after_close() {
+        shoot(
+            "phone-read-series-send-held",
+            FixtureScene.READING_SERIES,
+            Destination.Read,
+            page = page(MANGA),
+            screen = true,
+            then = {
+                it.networkPath(cellular = true, constrained = false)
+                SeriesShots.open = "send"
+            },
+            act = {
+                compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick()
+                pump("the send held for Wi-Fi") { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } }
+                compose.onNodeWithText(Strings.actionClose(compose.activity)).performClick()
+            },
+            acted = { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } },
+            ready = loaded(MANGA),
+        )
+        val held = requireNotNull(store).export.jobs.value.values
+        assertTrue("the send is still held: $held", held.singleOrNull() is ExportJob.Waiting)
+        compose.onNodeWithText(Strings.sendPrepare(compose.activity)).assertDoesNotExist()
+        compose.onNodeWithText(Strings.sendWaitingCancel(compose.activity)).assertExists()
+    }
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
@@ -118,6 +150,32 @@ class ReadSeriesShots : ReadingShotHarness() {
     fun tablet_read_downloads() = shoot("tablet-read-downloads", FixtureScene.READING_DOWNLOADS, Destination.Read, page = DOWNLOADS_ROUTE) {
         it.reading.downloads.value != null
     }
+
+    // Large text: the page, the chapter sheet and the send sheet at 130% and 200%.
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 1.3f)
+    fun phone_read_series_text_130() = series("phone-read-series-text-130")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 2.0f)
+    fun phone_read_series_text_200() = series("phone-read-series-text-200")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 1.3f)
+    fun phone_read_series_chapter_text_130() = series("phone-read-series-chapter-text-130", open = "chapter")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 2.0f)
+    fun phone_read_series_chapter_text_200() = series("phone-read-series-chapter-text-200", open = "chapter")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 1.3f)
+    fun phone_read_series_send_text_130() = series("phone-read-series-send-text-130", open = "send")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 2.0f)
+    fun phone_read_series_send_text_200() = series("phone-read-series-send-text-200", open = "send")
 
     private companion object {
         const val MANGA = "a:900301"

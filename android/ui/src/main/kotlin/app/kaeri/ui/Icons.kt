@@ -67,6 +67,13 @@ internal object Icons {
     val Updates = stroked("Updates", BELL, "M10 21.5 H14")
     val UpdatesSelected = filled("UpdatesSelected", "$BELL M9.5 20.5 H14.5 A2.5 2.5 0 0 1 9.5 20.5 Z", emptyList())
 
+    private const val HOUSE = "M3.75 10.8 L12 4.2 L20.25 10.8 V20.25 H3.75 Z"
+    private const val DOOR = "M9.75 20.25 V14.7 H14.25 V20.25"
+
+    /** Home with Read alone: a house, as the board draws it, since the play mark is the Watch's. */
+    val House = stroked("House", HOUSE, DOOR)
+    val HouseSelected = filled("HouseSelected", HOUSE, listOf(DOOR), markStroke = 2f)
+
     private const val SCREEN = "M5 4.5 H19 A2 2 0 0 1 21 6.5 V14.5 A2 2 0 0 1 19 16.5 H5 A2 2 0 0 1 3 14.5 V6.5 A2 2 0 0 1 5 4.5 Z"
 
     /** Watch, beside Read: a screen on its stand. */
@@ -106,6 +113,15 @@ internal object Icons {
         "M8.8 15.5 C10.6 14.2 13.4 14.2 15.2 15.5",
         "M12 19 V19.01",
         "M4 3 L20 21",
+    )
+
+    /** Wi-Fi: the signal's arcs, whole. A send held until the network allows. */
+    val Wifi = stroked(
+        "Wifi",
+        "M2.5 8.5 C8 3.8 16 3.8 21.5 8.5",
+        "M5.5 12 C9.2 8.9 14.8 8.9 18.5 12",
+        "M8.8 15.5 C10.6 14.2 13.4 14.2 15.2 15.5",
+        "M12 19 V19.01",
     )
 
     /** Something failed: the warning triangle, in vermilion where it is used. */

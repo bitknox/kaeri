@@ -580,15 +580,47 @@ class BookSourcesModel(private val send: (Command) -> Unit) {
     private fun books(command: BookSourceCommand) = send(Command.BookSources(command))
 }
 
-/** One Send to e-reader: preparing, waiting for Wi-Fi, or ready to share. */
+/**
+ * One Send to e-reader: preparing, waiting for Wi-Fi, ready to share, or failed. A send outlives
+ * the sheet that asked for it: closing the sheet leaves it going, and the series page and
+ * Downloads show it until it is shared or put away.
+ */
 sealed interface ExportJob {
     val job: ULong
     val work: WorkId
 
-    data class Preparing(override val job: ULong, override val work: WorkId, val done: UInt, val total: UInt) : ExportJob
-    data class Waiting(override val job: ULong, override val work: WorkId, val target: String, val line: Msg) : ExportJob
-    data class Ready(override val job: ULong, override val work: WorkId, val target: String, val chapters: List<ChapterId>, val files: List<ExportFile>) : ExportJob
-    data class Failed(override val job: ULong, override val work: WorkId, val failure: ReadingFailure) : ExportJob
+    /** The e-reader it is for, by id. */
+    val target: String
+
+    /** [done] of [total] steps, and [chaptersDone] of [chapters] gathered; zero [chapters] while the engine has not said. */
+    data class Preparing(
+        override val job: ULong,
+        override val work: WorkId,
+        override val target: String,
+        val done: UInt,
+        val total: UInt,
+        val chaptersDone: UInt = 0u,
+        val chapters: UInt = 0u,
+    ) : ExportJob {
+        /** How far, from 0 to 1, or `null` before the engine says. */
+        val fraction: Float? get() = if (total > 0u) (done.toFloat() / total.toFloat()).coerceIn(0f, 1f) else null
+    }
+
+    /** Held for Wi-Fi: goes on by itself once the network allows; [line] says why. */
+    data class Waiting(override val job: ULong, override val work: WorkId, override val target: String, val line: Msg) : ExportJob
+    data class Ready(override val job: ULong, override val work: WorkId, override val target: String, val chapters: List<ChapterId>, val files: List<ExportFile>) : ExportJob
+
+    /** [chapter] is the one it could not prepare, when it was one. */
+    data class Failed(
+        override val job: ULong,
+        override val work: WorkId,
+        override val target: String,
+        val failure: ReadingFailure,
+        val chapter: String? = null,
+    ) : ExportJob
+
+    /** Still going: preparing or held for Wi-Fi. */
+    val running: Boolean get() = this is Preparing || this is Waiting
 }
 
 /** Send to e-reader: the devices to prepare for, and each send under way or ready to share. */
@@ -596,9 +628,14 @@ class ExportModel(private val send: (Command) -> ULong?) {
     private val _targets = MutableStateFlow<List<ExportTarget>>(emptyList())
     val targets: StateFlow<List<ExportTarget>> = _targets.asStateFlow()
 
+    private val _chosen = MutableStateFlow<String?>(null)
+
+    /** The e-reader the sheet starts on: the one last sent to on this device, as the engine keeps it. */
+    val chosen: StateFlow<String?> = _chosen.asStateFlow()
+
     private val _jobs = MutableStateFlow<Map<ULong, ExportJob>>(emptyMap())
 
-    /** The sends this session started, by job. */
+    /** The sends this session knows of, by job: those it started and any held across a restart. */
     val jobs: StateFlow<Map<ULong, ExportJob>> = _jobs.asStateFlow()
 
     /** What each job was asked to send, for its Ready and the Shared it reports. */
@@ -608,44 +645,69 @@ class ExportModel(private val send: (Command) -> ULong?) {
         send(Command.Reading(ReadingCommand.LoadExportTargets))
     }
 
+    /** Keep [target] as the e-reader the sheet starts on next time. */
+    fun choose(target: String) {
+        if (_chosen.value == target) return
+        _chosen.value = target
+        send(Command.Reading(ReadingCommand.SetSendTarget(target)))
+    }
+
     /** Prepare [chapters] of [work] for [target] in [format]; the job, or `null` without an engine. */
     fun prepare(work: WorkId, chapters: List<ChapterId>, target: String, format: ExportFormat): ULong? {
+        choose(target)
         val job = send(Command.Reading(ReadingCommand.Prepare(work, DownloadPick.Chapters(chapters), target, format))) ?: return null
         asked[job] = Triple(work, target, chapters)
-        _jobs.update { it + (job to ExportJob.Preparing(job, work, 0u, chapters.size.toUInt())) }
+        _jobs.update { it + (job to ExportJob.Preparing(job, work, target, 0u, chapters.size.toUInt())) }
         return job
     }
 
+    /** Stop a send that is going, held ones too, which the engine then forgets for the next launch. */
     fun cancel(job: ULong) {
         send(Command.Reading(ReadingCommand.CancelPrepare(job)))
         forget(job)
     }
 
-    /** The files went to the share sheet: the engine keeps where they went for "Where did you stop?". */
+    /** Jobs whose files went to the share sheet, told to the engine once each. */
+    private val told = mutableSetOf<ULong>()
+
+    /**
+     * The files went to the share sheet: the engine keeps where they went for "Where did you
+     * stop?", once. The send stays, so Share again can open the sheet again, until it is put away.
+     */
     fun shared(job: ULong) {
         val ready = _jobs.value[job] as? ExportJob.Ready ?: return
+        if (!told.add(job)) return
         send(Command.Reading(ReadingCommand.Shared(ready.work, ready.chapters, ready.target)))
-        forget(job)
     }
 
+    /** Whether [job]'s files went to the share sheet already. */
+    fun wasShared(job: ULong): Boolean = job in told
+
+    /** Put away a send that has ended, ready or failed. */
     fun forget(job: ULong) {
         asked -= job
+        told -= job
         _jobs.update { it - job }
     }
 
     /** A job ended in the engine without its own answer: it failed, or was stopped. */
     internal fun ended(job: ULong, failure: ReadingFailure?) {
         val held = _jobs.value[job] ?: return
-        if (held is ExportJob.Ready) return
-        if (failure == null) forget(job) else _jobs.update { it + (job to ExportJob.Failed(job, held.work, failure)) }
+        if (held is ExportJob.Ready || held is ExportJob.Failed) return
+        if (failure == null) forget(job) else _jobs.update { it + (job to ExportJob.Failed(job, held.work, held.target, failure)) }
     }
 
     internal fun apply(event: ReadingEvent) {
         when (event) {
-            is ReadingEvent.ExportTargets -> _targets.value = event.v1
+            is ReadingEvent.ExportTargets -> {
+                _targets.value = event.v1
+                event.v1.firstOrNull { it.chosen }?.let { _chosen.value = it.id }
+            }
             is ReadingEvent.ExportProgress -> {
-                val work = asked[event.job]?.first ?: return
-                _jobs.update { it + (event.job to ExportJob.Preparing(event.job, work, event.done, event.total)) }
+                val (work, target) = asked[event.job] ?: return
+                _jobs.update {
+                    it + (event.job to ExportJob.Preparing(event.job, work, target, event.done, event.total, event.chaptersDone, event.chapters))
+                }
             }
             is ReadingEvent.ExportWaiting -> {
                 if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, emptyList())
@@ -654,6 +716,10 @@ class ExportModel(private val send: (Command) -> ULong?) {
             is ReadingEvent.ExportReady -> {
                 val (work, target, chapters) = asked[event.job] ?: return
                 _jobs.update { it + (event.job to ExportJob.Ready(event.job, work, target, chapters, event.files)) }
+            }
+            is ReadingEvent.ExportFailed -> {
+                val (work, target) = asked[event.job] ?: return
+                _jobs.update { it + (event.job to ExportJob.Failed(event.job, work, target, event.failure, event.chapter)) }
             }
             else -> {}
         }

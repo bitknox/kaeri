@@ -138,7 +138,11 @@ internal fun ChapterSheet(
                 }
                 else -> SheetAction(Strings.chapterDownloadStop(context)) { then { store.reading.cancelDownloads(work, listOf(row.id)) } }
             }
-            SheetAction(Strings.sendEreaderTitle(context)) {
+            // A bookmark keeps the chapter when read downloads are cleared.
+            SheetAction(if (row.bookmarked) Strings.seriesRemoveBookmark(context) else Strings.seriesBookmark(context)) {
+                then { store.reading.bookmark(work, row.id, !row.bookmarked) }
+            }
+            SheetAction(Strings.sendChapterAction(context)) {
                 onDismiss()
                 onSend(listOf(row.id))
             }
@@ -720,7 +724,7 @@ internal fun DownloadMenu(
         )
         if (downloaded.isNotEmpty()) {
             DropdownMenuItem(
-                text = { Text(Strings.sendEreaderTitle(context)) },
+                text = { Text(Strings.sendTitle(context)) },
                 onClick = {
                     onDismiss()
                     onSend(downloaded.map { it.id })

@@ -272,9 +272,18 @@ internal fun WorkTile.factsLine(context: Context): String = facts.joinToString("
 internal fun actionWords(context: Context, action: SeriesAction?): String? = when (action) {
     is SeriesAction.Read -> Strings.actionReadChapter(context, action.label)
     is SeriesAction.Continue -> Strings.actionContinueChapter(context, action.label, action.page.toInt())
-    is SeriesAction.ContinuePart -> action.percent?.takeIf { it > 0u }?.let { Strings.actionContinuePart(context, action.label, it.toInt()) }
-        ?: Strings.actionContinuePartPlain(context, action.label)
-    is SeriesAction.ReadPart -> Strings.actionReadPart(context, action.label)
+    // A part goes by the source's own name for it where it has one, as its row does.
+    is SeriesAction.ContinuePart -> {
+        val percent = action.percent?.takeIf { it > 0u }?.toInt()
+        val named = action.named
+        when {
+            named != null && percent != null -> Strings.actionContinueNamed(context, named, percent)
+            named != null -> Strings.actionContinueNamedPlain(context, named)
+            percent != null -> Strings.actionContinuePart(context, action.label, percent)
+            else -> Strings.actionContinuePartPlain(context, action.label)
+        }
+    }
+    is SeriesAction.ReadPart -> action.named?.let { Strings.actionReadNamed(context, it) } ?: Strings.actionReadPart(context, action.label)
     SeriesAction.ReadAgain -> Strings.actionReadAgain(context)
     SeriesAction.NoSource, null -> null
 }

@@ -1489,7 +1489,7 @@ class AppStore(
                     else -> reading.apply(said)
                 }
                 is ReadingEvent.ExportTargets, is ReadingEvent.ExportProgress, is ReadingEvent.ExportReady,
-                is ReadingEvent.ExportWaiting -> export.apply(said)
+                is ReadingEvent.ExportWaiting, is ReadingEvent.ExportFailed -> export.apply(said)
                 else -> reading.apply(said)
             }
             is Event.Medium -> {

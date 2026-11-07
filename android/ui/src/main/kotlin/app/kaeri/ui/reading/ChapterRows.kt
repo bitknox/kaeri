@@ -74,16 +74,7 @@ import app.kaeri.ui.WaterDot
 /** The words the series page and its sheets say, from what the engine sends. */
 internal object SeriesWords {
     /** The main action: "Read chapter 88", "Continue chapter 41 · page 8", "Continue part 5 · 34%"; null with no source. */
-    fun action(context: Context, action: SeriesAction?): String? = when (action) {
-        is SeriesAction.Read -> Strings.actionReadChapter(context, action.label)
-        // The page as the engine sends it: already counted from 1.
-        is SeriesAction.Continue -> Strings.actionContinueChapter(context, action.label, action.page.toInt())
-        is SeriesAction.ContinuePart -> action.percent?.takeIf { it > 0u }?.let { Strings.actionContinuePart(context, action.label, it.toInt()) }
-            ?: Strings.actionContinuePartPlain(context, action.label)
-        is SeriesAction.ReadPart -> Strings.actionReadPart(context, action.label)
-        is SeriesAction.ReadAgain -> context.getString(R.string.action_read_again)
-        is SeriesAction.NoSource, null -> null
-    }
+    fun action(context: Context, action: SeriesAction?): String? = actionWords(context, action)
 
     /** A tracker's name as a person writes it, reading's trackers among them. */
     fun tracker(id: String): String = when (id) {
@@ -169,10 +160,16 @@ internal object SeriesWords {
  * stroke, in a 48 dp target that stops the download.
  */
 @Composable
-internal fun ChapterRing(fraction: Float, label: String, onStop: () -> Unit) {
+internal fun ChapterRing(fraction: Float, label: String, state: String? = null, onStop: () -> Unit) {
     val silk = MaterialTheme.colorScheme.onSurface
     val rule = MaterialTheme.colorScheme.outlineVariant
-    IconButton(onClick = onStop, modifier = Modifier.semantics { contentDescription = label }) {
+    IconButton(
+        onClick = onStop,
+        modifier = Modifier.semantics {
+            contentDescription = label
+            if (state != null) stateDescription = state
+        },
+    ) {
         Canvas(Modifier.size(22.dp)) {
             val stroke = 2.dp.toPx()
             val inset = stroke / 2
@@ -268,12 +265,9 @@ internal fun ChapterRowItem(
             row.download is ChapterDownloadState.Downloading -> {
                 val moving = row.download as ChapterDownloadState.Downloading
                 val fraction = if (moving.total > 0u) moving.done.toFloat() / moving.total.toFloat() else 0f
-                ChapterRing(fraction, stringResource(R.string.chapter_download_stop), onStop)
+                ChapterRing(fraction, stringResource(R.string.chapter_download_stop), onStop = onStop)
             }
             failed -> FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(end = 12.dp)) { Text(stringResource(R.string.chapter_retry)) }
-            row.bookmarked -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                Text("", Modifier.semantics { stateDescription = context.getString(R.string.series_bookmarked) })
-            }
         }
     }
 }

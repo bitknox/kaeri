@@ -467,16 +467,28 @@
     <string name="reading_part_percent">Part %1$s · %2$d%%</string>
     <!-- Under a cover: a light novel's part came out that the person has not read. -->
     <string name="reading_part_new">Part %1$s is new</string>
+    <!-- Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it. -->
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <!-- Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_new">%1$s is new</string>
     <!-- Under a This week cell: a light novel's part that came out that day, with its own title. -->
     <string name="reading_part_titled">Part %1$s · %2$s</string>
+    <!-- Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <!-- Under the big picture on reading's Home: a light novel's part that came out today. -->
     <string name="reading_part_out_today">Part %1$s is out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_out_today">%1$s is out today</string>
     <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title. -->
     <string name="reading_part_out_today_titled">Part %1$s, %2$s, out today</string>
+    <!-- Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4"). -->
+    <string name="reading_label_out_today_titled">%1$s, %2$s, out today</string>
     <!-- Under a Library cover: the chapter the person is at, and the newest chapter there is. -->
     <string name="reading_chapter_of">Chapter %1$s of %2$s</string>
     <!-- Under a Library cover: the volume and part of a light novel the person is at. -->
     <string name="reading_volume_part">Volume %1$s, part %2$s</string>
+    <!-- Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5"). -->
+    <string name="reading_volume_label">Volume %1$s, %2$s</string>
     <!-- A search filter: books from Japan. -->
     <string name="reading_origin_japan">Japan</string>
     <!-- A search filter: books from Korea. -->
@@ -528,6 +540,10 @@
     <string name="reading_row_page">Page %1$d</string>
     <!-- A novel's chapter row: how far into it the person is. -->
     <string name="reading_row_percent">%1$d%%</string>
+    <!-- A novel's chapter row: the person opened it, and how far in is too little to say as a percent. -->
+    <string name="reading_row_opened">Opened</string>
+    <!-- A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared. -->
+    <string name="reading_row_bookmarked">Bookmarked</string>
     <!-- A chapter row: how long its pages are, for a file on the device. -->
     <plurals name="reading_row_pages">
         <item quantity="one">1 page</item>
@@ -1405,56 +1421,6 @@
         <item quantity="one">Downloading one chapter</item>
         <item quantity="other">Downloading %1$d chapters</item>
     </plurals>
-    <!-- Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. -->
-    <string name="send_ereader_title">Send to e-reader</string>
-    <!-- Heading over the e-readers to prepare the files for. -->
-    <string name="send_ereader_for">For</string>
-    <!-- Heading over what is sent: which chapters. -->
-    <string name="send_ereader_what">What</string>
-    <!-- The chapters sent, as a span of their numbers: "41 to 43". -->
-    <string name="send_ereader_range">%1$s to %2$s</string>
-    <!-- An e-reader's screen size in pixels, beside the file format it gets: "1264 × 1680". -->
-    <string name="send_ereader_screen">%1$d × %2$d</string>
-    <!-- A file format for e-readers: an EPUB whose pages keep a fixed layout, for comics. -->
-    <string name="send_ereader_format_fixed_epub">Fixed-layout EPUB</string>
-    <!-- The EPUB format made for Kobo e-readers. Kobo is a product name: keep it as it is. -->
-    <string name="send_ereader_format_kepub">Kobo EPUB</string>
-    <!-- The plain EPUB e-book format. Keep as it is unless your language writes it otherwise. -->
-    <string name="send_ereader_format_epub">EPUB</string>
-    <!-- The comic book archive format. Keep as it is unless your language writes it otherwise. -->
-    <string name="send_ereader_format_cbz">CBZ</string>
-    <!-- Line in the sheet before preparing: reading progress on the e-reader never comes back to the app. -->
-    <string name="send_ereader_cant_see">Kaeri can\'t see your place on this e-reader. When you come back, the series page asks where you stopped.</string>
-    <!-- The sheet's one main button: make the files, then open the share sheet with them. -->
-    <string name="send_ereader_prepare">Prepare and share</string>
-    <!-- Beside the progress ring while the files are made. -->
-    <plurals name="send_ereader_preparing">
-        <item quantity="one">Preparing the chapter</item>
-        <item quantity="other">Preparing %1$d of %2$d chapters</item>
-    </plurals>
-    <!-- Under the progress while the files are made: they are fitted to the chosen e-reader's screen. -->
-    <string name="send_ereader_sized">Pages are sized for the %1$s screen</string>
-    <!-- Heading when the files could not be made. The cause follows on its own line. -->
-    <string name="send_ereader_failed">Couldn\'t prepare these chapters.</string>
-    <!-- Title of the sheet that asks how far the person read on the e-reader. Also the button that opens it. -->
-    <string name="send_ereader_where_stop">Where did you stop?</string>
-    <!-- On the series page after a send: which e-reader the chapters went to and on which day. -->
-    <string name="send_ereader_sent">Sent to %1$s on %2$s</string>
-    <!-- On the series page after a send, under where the chapters went. -->
-    <string name="send_ereader_cant_see_there">Kaeri can\'t see your place there.</string>
-    <!-- Line at the top of Where did you stop: how many chapters went to which e-reader, and when. -->
-    <plurals name="send_ereader_went">
-        <item quantity="one">One chapter went to %2$s on %3$s.</item>
-        <item quantity="other">%1$d chapters went to %2$s on %3$s.</item>
-    </plurals>
-    <!-- Switch in Where did you stop: the chosen chapter was read to its end. The chapter is the source's own label, such as "Chapter 43" or "Part 5". -->
-    <string name="send_ereader_finished">I finished %1$s</string>
-    <!-- The main button of Where did you stop: move the place to the chosen chapter. -->
-    <string name="send_ereader_set_place">Set my place</string>
-    <!-- Text button in Where did you stop that leaves the place as it is, naming it. -->
-    <string name="send_ereader_keep_chapter">Keep chapter %1$s · page %2$d</string>
-    <!-- Text button in Where did you stop that leaves the place as it is. -->
-    <string name="send_ereader_keep">Keep my place</string>
     <!-- On a series page whose source failed, under the cause: the chapters downloaded before still open. -->
     <plurals name="read_series_downloaded_open">
         <item quantity="one">One downloaded chapter still opens.</item>
@@ -4559,6 +4525,12 @@
     <string name="action_continue_part_plain">Continue part %1$s</string>
     <!-- The main action for a light novel part not opened yet. -->
     <string name="action_read_part">Read part %1$s</string>
+    <!-- The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. -->
+    <string name="action_continue_named">Continue %1$s · %2$d%%</string>
+    <!-- The main action for a light novel part, part read, named in the source's own words, when how far is not known. -->
+    <string name="action_continue_named_plain">Continue %1$s</string>
+    <!-- The main action for a light novel part not opened yet, named in the source's own words. -->
+    <string name="action_read_named">Read %1$s</string>
     <!-- The main action when every chapter is read. -->
     <string name="action_read_again">Read again</string>
     <!-- Label of the source row on the series page. -->

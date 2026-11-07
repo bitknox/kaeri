@@ -277,6 +277,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     if (series.askWhereStopped != null) {
                         WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
                     }
+                    // A send keeps its row here once its sheet is closed, until it is shared or put away.
+                    if (sheet !is SeriesSheet.Send) SendStatusRows(work, actions, Modifier.padding(top = 16.dp))
                 }
                 val list: LazyListScope.() -> Unit = {
                     seriesChapters(
@@ -575,8 +577,10 @@ private fun LazyListScope.seriesChapters(
     onReadFrom: () -> Unit,
 ) {
     val novel = series.medium == Medium.NOVEL
+    // "Volumes" only over a novel's volumes; a list with none is its chapters.
+    val byVolume = novel && chapters?.volumes.orEmpty().any { it.volume != null }
     if (chosen == null) {
-        item(key = "chapters-heading") { ChaptersHeading(novel, newestFirst, onOrder) }
+        item(key = "chapters-heading") { ChaptersHeading(byVolume, newestFirst, onOrder) }
     }
     if (chapters == null) {
         items(4, key = { "placeholder-$it" }) {
@@ -672,9 +676,9 @@ private fun ChapterItem(
     }
 }
 
-/** "Chapters" or "Volumes", with the order at the end: Newest first or Oldest first. */
+/** "Chapters", or "Volumes" over a novel's volumes, with the order at the end: Newest first or Oldest first. */
 @Composable
-private fun ChaptersHeading(novel: Boolean, newestFirst: Boolean, onOrder: (Boolean) -> Unit) {
+private fun ChaptersHeading(volumes: Boolean, newestFirst: Boolean, onOrder: (Boolean) -> Unit) {
     val context = LocalContext.current
     var open by remember { mutableStateOf(false) }
     Row(
@@ -682,7 +686,7 @@ private fun ChaptersHeading(novel: Boolean, newestFirst: Boolean, onOrder: (Bool
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            if (novel) Strings.seriesVolumes(context) else Strings.seriesChapters(context),
+            if (volumes) Strings.seriesVolumes(context) else Strings.seriesChapters(context),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.weight(1f).semantics { heading() },
         )
