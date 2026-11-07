@@ -23,7 +23,8 @@ object PrelaunchDemo {
             // First run's books page, with Try it now: the demo is offered, not yet on.
             "p2-01", "p2-02" -> store.sync.join.startAt(FirstRunPage.SOURCES)
             else -> {
-                if (!store.demo.value.on) store.addDemo()
+                // Asked even when on: the engine says the demo's state again, now for reading.
+                store.addDemo()
                 when (state) {
                     "p2-03" -> store.reading.loadHome(refresh = true)
                     "p2-08" -> store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = SEARCH))

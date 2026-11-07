@@ -58,8 +58,10 @@ class PrelaunchDemoShots : ReadingShotHarness() {
     private fun snap(name: String, state: String, start: Destination = Destination.Home, page: String? = null, ready: (AppStore) -> Boolean) {
         val store = AppStore(scope)
         this.store = store
-        store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(FixtureScene.READING_FIRST_RUN), EngineHome.override(home)), AppHost(MemorySecrets()))
         val first = state == "p2-01" || state == "p2-02"
+        // First run on reading's first-run scene; the demo's places on the demo's own scene.
+        val scene = if (first) FixtureScene.READING_FIRST_RUN else FixtureScene.READING_DEMO
+        store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(scene), EngineHome.override(home)), AppHost(MemorySecrets()))
         compose.runOnUiThread { WindowCompat.setDecorFitsSystemWindows(compose.activity.window, false) }
         compose.setContent {
             KaeriTheme {
@@ -121,7 +123,7 @@ class PrelaunchDemoShots : ReadingShotHarness() {
                 assumeTrue("the engine names no work for the demo's comic", work != null)
                 snap(name, "p2-04", page = seriesRoute(Destination.Home, requireNotNull(work))) { it.reading.series.value[work]?.demoWork != null }
             }
-            "07" -> snap(name, "p2-07", page = providerRoute("demo")) { s -> s.demo.value.reading && s.providers.rows.value.any { it.id == "demo" } }
+            "07" -> snap(name, "p2-07", page = providerRoute("demo")) { it.demo.value.reading }
             "08" -> snap(name, "p2-08", start = Destination.Search) {
                 it.demo.value.onlyBooks && !it.reading.search.value.loading && it.reading.search.value.query.text == PrelaunchDemo.SEARCH
             }

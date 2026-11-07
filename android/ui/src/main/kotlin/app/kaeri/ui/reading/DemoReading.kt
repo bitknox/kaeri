@@ -27,15 +27,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,7 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.heading
@@ -56,9 +56,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -137,58 +138,11 @@ internal fun DemoLaunchHost(actions: AppActions) {
 
 // Covers
 
-/**
- * A demo work's cover: its art where the engine has it, else a plate in the work's own colours
- * with its title over its maker, as a title page sets them. Below 56 the plate keeps only its
- * colours, since the words would not read.
- */
+/** A demo work's cover, from the engine's demo cache, on the ground's raised plate while it comes. */
 @Composable
 internal fun DemoCover(work: DemoWorkInfo?, width: Dp, modifier: Modifier = Modifier, radius: Dp = if (width >= 100.dp) 8.dp else 6.dp) {
-    val shape = RoundedCornerShape(radius)
-    val art = work?.coverArt
-    Box(modifier.size(width, width * 1.5f).clip(shape)) {
-        if (art != null) {
-            ArtworkImage(art, plate = null, maxPixelSize = pixels(width * 1.5f), modifier = Modifier.fillMaxSize())
-        } else {
-            DemoPlate(work, width)
-        }
-    }
-}
-
-/** The plate under a demo cover with no art: the comic at night, the story in pale paper. */
-@Composable
-private fun DemoPlate(work: DemoWorkInfo?, width: Dp) {
-    val story = work?.novel == true
-    val top = if (story) Color(0xFFDCE4E1) else Color(0xFF2B3466)
-    val bottom = if (story) Color(0xFF9DB2AE) else Color(0xFF171B33)
-    val ink = if (story) Color(0xFF26302F) else ObiSilk.Silk
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(top, bottom))),
-    ) {
-        if (work == null || width < 56.dp) return@Box
-        val scale = width.value / 120f
-        // Titles break between words, never inside one: the longest word sets the size.
-        val title = work.series.uppercase()
-        val longest = title.split(' ').maxOf { it.length }.coerceAtLeast(1)
-        val size = minOf(17f * scale, (width.value - 20f * scale) / (longest * 0.7f))
-        Text(
-            title,
-            style = ShowTitle.caption.copy(fontSize = size.sp, lineHeight = (size * 1.15f).sp, letterSpacing = (size * 0.035f).sp),
-            color = ink,
-            textAlign = TextAlign.Center,
-            maxLines = 3,
-            modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = (10 * scale).dp).padding(top = (14 * scale).dp),
-        )
-        Text(
-            work.author.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = (7 * scale).sp, lineHeight = (9 * scale).sp, letterSpacing = (1.4 * scale).sp),
-            color = ink.copy(alpha = 0.8f),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = (10 * scale).dp),
-        )
+    Box(modifier.size(width, width * 1.5f).clip(RoundedCornerShape(radius))) {
+        ArtworkImage(work?.coverArt, plate = ObiSilk.RaisedSelected, maxPixelSize = pixels(width * 1.5f), modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -216,17 +170,27 @@ internal fun DemoHomeSpotlight(actions: AppActions, modifier: Modifier = Modifie
             .clip(RoundedCornerShape(if (wide) 14.dp else 20.dp))
             .then(if (work != null) Modifier.clickable { navigator.openSeries(work, "read-spotlight") } else Modifier),
     ) {
-        val art = comic.coverArt
-        if (art != null) {
-            ArtworkImage(art, plate = null, maxPixelSize = pixels(maxWidth), modifier = Modifier.fillMaxSize().then(key?.let { Modifier.readerZoomSource(it) } ?: Modifier))
-        } else {
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF2B3466), Color(0xFF1C2140)))))
-            DemoCover(comic, maxHeight * 0.62f, Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 20.dp))
+        // The cover is the comic's first page, three panels on white paper. The first panel alone
+        // fills the spotlight, so no paper margin or gutter shows.
+        val page = maxOf(maxWidth / 0.95f, maxHeight / 0.44f)
+        Box(Modifier.fillMaxSize().then(key?.let { Modifier.readerZoomSource(it) } ?: Modifier)) {
+            ArtworkImage(
+                comic.coverArt,
+                plate = ObiSilk.RaisedSelected,
+                maxPixelSize = pixels(page * 1.5f),
+                modifier = Modifier.layout { measurable, constraints ->
+                    val width = page.roundToPx()
+                    val placeable = measurable.measure(Constraints.fixed(width, width * 3 / 2))
+                    layout(constraints.maxWidth, constraints.maxHeight) {
+                        placeable.place((constraints.maxWidth - width) / 2, constraints.maxHeight / 2 - (width * 0.28f).toInt())
+                    }
+                },
+            )
         }
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(0f to ObiSilk.Ground.copy(alpha = 0f), 0.45f to ObiSilk.Ground.copy(alpha = 0.35f), 1f to ObiSilk.Ground.copy(alpha = 0.9f))),
+                .background(Brush.verticalGradient(0f to ObiSilk.Ground.copy(alpha = 0.15f), 0.4f to ObiSilk.Ground.copy(alpha = 0.55f), 1f to ObiSilk.Ground.copy(alpha = 0.92f))),
         )
         val inset = if (wide) 28.dp else 18.dp
         Column(
@@ -247,7 +211,14 @@ internal fun DemoHomeSpotlight(actions: AppActions, modifier: Modifier = Modifie
                 modifier = Modifier.padding(top = 4.dp, bottom = 6.dp).semantics { heading() },
             )
             comic.blurb?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk.copy(alpha = 0.85f), maxLines = 2, modifier = Modifier.padding(bottom = 14.dp))
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ObiSilk.Silk.copy(alpha = 0.85f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(bottom = 14.dp),
+                )
             }
             if (work != null) {
                 Button(
@@ -321,7 +292,7 @@ internal fun DemoSeriesBody(series: SeriesView, demo: DemoWorkInfo, actions: App
         if (!wide) DemoReadButton(number, read, Modifier.padding(top = 16.dp))
         SettingsGroup(
             title = Strings.demoChapters(context),
-            modifier = Modifier.padding(top = 24.dp),
+            modifier = Modifier.padding(top = 10.dp),
             rows = listOf({ place ->
                 InfoRow(
                     place,
@@ -337,7 +308,7 @@ internal fun DemoSeriesBody(series: SeriesView, demo: DemoWorkInfo, actions: App
         if (other != null && otherWork != null) {
             SettingsGroup(
                 title = Strings.demoAlso(context),
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = 6.dp),
                 rows = listOf({ place ->
                     InfoRow(
                         place,
@@ -484,6 +455,6 @@ internal fun DemoSearchNote(modifier: Modifier = Modifier) {
         Strings.searchDemoOnlyBooks(context),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.padding(vertical = 12.dp),
+        modifier = modifier.padding(top = 4.dp, bottom = 12.dp),
     )
 }

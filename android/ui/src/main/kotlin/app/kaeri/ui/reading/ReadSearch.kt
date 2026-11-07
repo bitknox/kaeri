@@ -215,7 +215,8 @@ internal fun ReadSearchScreen(startText: String? = null) {
                     moreItem(search)
                     // Once every match is listed, how many there are: the count matches the rows.
                     val total = search.total
-                    if (!search.hasMore && total != null) {
+                    // Not for the demo's works alone: they are no AniList count.
+                    if (!search.hasMore && total != null && !search.tiles.all { it.fromDemo }) {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "total", contentType = "line") {
                             Column(itemMotion()) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -300,15 +301,10 @@ private fun ResultRow(tile: WorkTile) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The demo's works say Demo, Reads now; a work with no art keeps its own plate.
-            val demoWork = if (tile.fromDemo) readingDemo.works.firstOrNull { it.workId == tile.work } else null
-            if (demoWork != null && tile.cover == null) {
-                DemoCover(demoWork, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-search"), radius = 4.dp)
-            } else {
-                ReadCover(tile.cover, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-search"))
-            }
+            ReadCover(tile.cover, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-search"))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(tile.title, style = ShowTitle.row.copy(fontWeight = FontWeight.SemiBold), color = colors.onSurface)
+                // The demo's works say Demo, Reads now.
                 val facts = if (tile.fromDemo) Strings.searchDemoReads(context) else tile.factsLine(context)
                 if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             }

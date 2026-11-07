@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -49,6 +50,7 @@ import app.kaeri.engine.ffi.demoInfo
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.Command
 import app.kaeri.i18n.R
+import app.kaeri.i18n.Strings
 import app.kaeri.ui.reading.DemoCover
 import app.kaeri.ui.reading.DemoIconTile
 import app.kaeri.ui.reading.DemoLaunch
@@ -182,7 +184,12 @@ private fun BooksDemoAbout(watching: Boolean) {
     val colors = MaterialTheme.colorScheme
     val licence = stringResource(R.string.sources_demo_link_licence)
     val licenceLink: @Composable (String?) -> Unit = { url ->
-        if (url != null) TextButton(onClick = { uri.openUri(url) }) { Text(licence, style = MaterialTheme.typography.bodyLarge) }
+        // Haze, as the board draws it: Remove demo's page has no amber action.
+        if (url != null) {
+            TextButton(onClick = { uri.openUri(url) }, colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurfaceVariant)) {
+                Text(licence, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
     }
     ScreenFrame(title = stringResource(R.string.sources_demo_about), onBack = navigator::back) { padding ->
         Column(
@@ -208,7 +215,11 @@ private fun BooksDemoAbout(watching: Boolean) {
                         InfoRow(
                             place,
                             work.series,
-                            demoCredit(context, work),
+                            listOfNotNull(
+                                demoCredit(context, work),
+                                // The story's cover is a 1904 frontispiece, credited under the story.
+                                work.coverCredit?.let { Strings.demoCreditCover(context, it.title, it.artist, it.year.toString()) },
+                            ).joinToString("\n"), // i18n-skip
                             leading = { DemoCover(work, 36.dp, radius = 4.dp) },
                             trailing = { if (!work.novel) licenceLink(work.licenceUrl) },
                         )
