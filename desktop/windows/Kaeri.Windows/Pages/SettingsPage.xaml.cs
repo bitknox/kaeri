@@ -603,6 +603,9 @@ public sealed partial class SettingsPage : Page
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
                         Cards.Children.Add(HideChatCard());
                     }
+                    // Beside Motion: how the mouse wheel moves a page.
+                    if (pane.Name == "playback" && group == "picture")
+                        Cards.Children.Add(SmoothScrollingCard());
                     if (pane.Name == "downloads" && group == "files")
                         Cards.Children.Add(WhenClosingCard());
                 }
@@ -789,6 +792,15 @@ public sealed partial class SettingsPage : Page
     };
 
     /// <summary>A row as Windows 11 Settings draws one: the Toolkit's SettingsCard.</summary>
+    /// <summary>Smooth scrolling: the app's own setting, kept on this device. Off, the wheel moves pages as Windows does.</summary>
+    static SettingsCard SmoothScrollingCard()
+    {
+        var toggle = new ToggleSwitch { IsOn = SmoothScrolling.On, OnContent = "", OffContent = "", MinWidth = 0 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsSmoothScrolling);
+        toggle.Toggled += (_, _) => SmoothScrolling.Set(toggle.IsOn);
+        return CardFrame(T.SettingsSmoothScrolling, T.SettingsSmoothScrollingDetail, toggle);
+    }
+
     /// <summary>Hide chat in watch parties: the app's own setting, kept on this device.</summary>
     static SettingsCard HideChatCard()
     {
@@ -1463,7 +1475,7 @@ public sealed partial class SettingsPage : Page
             string[] own = p.Name switch
             {
                 "general" => [T.SettingsLanguageApp, T.SettingsHiddenTitles],
-                "playback" => [T.SettingsClearSkips, T.SettingsHideChat],
+                "playback" => [T.SettingsClearSkips, T.SettingsHideChat, T.SettingsSmoothScrolling],
                 "downloads" => [T.DownloadsBackgroundTitle],
                 "sources" => [T.TorrentsProxyRoute],
                 "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll],

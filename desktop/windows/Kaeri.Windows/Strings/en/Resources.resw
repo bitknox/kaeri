@@ -1607,6 +1607,14 @@
     <value>Motion</value>
     <comment>Setting: whether the app animates.</comment>
   </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Smooth scrolling</value>
+    <comment>Setting: a mouse wheel glides the page into place rather than moving it in steps.</comment>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Each turn of the mouse wheel glides the page into place. Touchpads and touch scroll as before.</value>
+    <comment>Under the Smooth scrolling switch.</comment>
+  </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Start in full screen</value>
     <comment>Setting: the player opens fullscreen.</comment>

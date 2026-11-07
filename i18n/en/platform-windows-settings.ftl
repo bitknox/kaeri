@@ -47,6 +47,14 @@ settings-theme = Theme
 # @only windows
 settings-motion = Motion
 
+# Setting: a mouse wheel glides the page into place rather than moving it in steps.
+# @only windows
+settings-smooth-scrolling = Smooth scrolling
+
+# Under the Smooth scrolling switch.
+# @only windows
+settings-smooth-scrolling-detail = Each turn of the mouse wheel glides the page into place. Touchpads and touch scroll as before.
+
 # Setting: the player opens fullscreen.
 # @only windows
 settings-start-fullscreen = Start in full screen
