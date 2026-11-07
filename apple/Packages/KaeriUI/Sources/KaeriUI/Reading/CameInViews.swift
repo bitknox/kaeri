@@ -329,6 +329,10 @@ struct CameInNotice: View {
                         .accessibilityAddTraits(.updatesFrequently)
                 }
             }
+            .onChange(of: store.sync.joinedFrom, initial: true) { _, device in
+                guard let device else { return }
+                show(L.firstJoinSyncing(device: device))
+            }
             .onChange(of: store.cameIn.outcome, initial: true) { _, outcome in
                 let said: String? = {
                     switch outcome {
@@ -338,11 +342,15 @@ struct CameInNotice: View {
                     }
                 }()
                 guard let said else { return }
-                Task {
-                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .standard) { text = said }
-                    try? await Task.sleep(for: .seconds(4))
-                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .standard) { text = nil }
-                }
+                show(said)
             }
+    }
+
+    private func show(_ said: String) {
+        Task {
+            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .standard) { text = said }
+            try? await Task.sleep(for: .seconds(4))
+            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .standard) { text = nil }
+        }
     }
 }

@@ -138,6 +138,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
+        if let scene = PrelaunchScene.named() {
+            store.cameIn.stage(scene)
+            store.sync.stage(prelaunch: scene)
+        }
         if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil { _ = await store.reader.stage() }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is

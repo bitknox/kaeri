@@ -240,10 +240,13 @@ private struct ReadSpotlightView: View {
         .frame(width: width, height: width * 9 / 16)
     }
 
+    /// Whether the series is the demo's, which says so over its title and Reads, with no tracker.
+    private var demo: Bool { store.reading.series[tile.work]?.demo != nil }
+
     private func text(beside: Bool) -> some View {
         let other = store.reading.series[tile.work].flatMap { ReadSeriesWords.otherTitle($0.titles, shown: tile.title) }
         return VStack(alignment: .leading, spacing: 0) {
-            Text(spot.label.text)
+            Text(demo ? L.homeSpotlightDemo : spot.label.text)
                 .font(.ui(layout.spotLabel, weight: .medium))
                 .foregroundStyle(.haze)
                 .accessibilityAddTraits(.isHeader)
@@ -360,7 +363,7 @@ private struct ReadSpotlightView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "book").font(.ui(layout.button.font < 15 ? 12 : 15)).accessibilityHidden(true)
-                    Text(words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
+                    Text(demo ? L.homeSpotlightRead : words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
@@ -561,6 +564,7 @@ private struct ReadWeekCell: View {
 
 /// The closing line: Updates and Search as links, or Add a source while there is none.
 private struct ReadHomeEndLine: View {
+    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let end: ReadHomeEnd
 
@@ -570,7 +574,7 @@ private struct ReadHomeEndLine: View {
             case .everything:
                 Text(L.homeReadEnd)
             case .noSources:
-                Text(L.homeReadNoSources)
+                Text(store.demo.state.onlyBooks ? L.homeDemoOnlyBooks : L.homeReadNoSources)
                 Button(L.sourcesAddTitle) { navigator.addBookSource = .choose }
                     .buttonStyle(SecondaryCapsuleStyle(height: 40, fontSize: 15))
                     .pointerHover()

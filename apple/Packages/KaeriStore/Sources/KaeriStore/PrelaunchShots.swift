@@ -106,16 +106,41 @@ extension CameInModel {
 }
 
 extension SyncModel {
-    /// Stage a piece 3 state's setup: what the other device brings.
+    /// Stage a piece 3 state: the code page's invite, the pairing, and what the other device brings.
     public func stage(prelaunch scene: PrelaunchScene) {
         guard scene.isJoin else { return }
         let device = "Kim’s iPhone"
-        stage(setup: JoinedSetup(
+        let setup = JoinedSetup(
             device: "kim-phone", deviceName: device, medium: .read,
             stores: [SyncStoreOffer(address: "shelf.kim.example", name: "Kim’s shelf", inviteFrom: "kim-phone")],
             servers: [SyncBookServerOffer(from: "kim-phone", id: "s1", kind: .kavita, name: "Books", host: PrelaunchFixtures.host,
                                           address: "https://\(PrelaunchFixtures.host)", user: nil, keyLast4: "3f9a",
                                           libraries: ["Manga", "Comics"], added: false)],
-            signedIn: ["anilist", "mangaupdates"], folders: 2, answered: [.medium, .lists]))
+            signedIn: ["anilist", "mangaupdates"], folders: 2, answered: [.medium, .lists])
+        switch scene {
+        case .joinCode, .joinNothing:
+            staged = true
+            stage(invite: SyncInviteView(code: "482913", port: 51_742, until: .now.addingTimeInterval(540)))
+        case .joinExpired:
+            staged = true
+            stage(invite: SyncInviteView(code: "482913", port: 51_742, until: .now.addingTimeInterval(-5)))
+        case .joinArriving:
+            staged = true
+            stage(pair: .paired(device))
+        case .joinPaired:
+            stage(setup: setup)
+            stage(pair: .paired(device))
+        case .joinRefused:
+            stage(setup: setup, refused: "Kim’s shelf")
+            stage(pair: .paired(device))
+        case .joinOther:
+            staged = true
+            sheet = .pairEnter
+        case .joinHome:
+            staged = true
+            joinedFrom = device
+        default:
+            staged = true
+        }
     }
 }

@@ -14,6 +14,7 @@ struct BookSourcesList: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @State private var matchesShown = false
+    @State private var aboutDemo = false
 
     var body: some View {
         let view = store.bookSources.view
@@ -56,7 +57,7 @@ struct BookSourcesList: View {
             if let view, !view.servers.isEmpty {
                 SettingsGroup(title: L.bookSourcesServers) {
                     ForEach(view.servers, id: \.id) { server in
-                        SettingsRow(title: server.name, note: Self.serverLine(server)) {
+                        SettingsRow(title: server.name, note: Self.serverLine(server, justAdded: store.cameIn.justAdded.contains(server.id))) {
                             HStack(spacing: 8) {
                                 if server.signedOut {
                                     Label(L.serversRowSignedOut, systemImage: "exclamationmark.triangle.fill")
@@ -101,6 +102,21 @@ struct BookSourcesList: View {
                     }
                 }
             }
+            if store.demo.state.reading {
+                SettingsGroup(title: nil) {
+                    SettingsRow(title: L.sourcesDemoName, note: L.sourcesDemoBooksLine) {
+                        Button(aboutDemo ? L.actionDone : L.sourcesDemoAbout) { aboutDemo.toggle() }
+                            .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12, raisedSurface: true))
+                            .fixedSize()
+                    }
+                    if aboutDemo {
+                        DemoBooksAbout()
+                            .padding(.horizontal, 14).padding(.vertical, 12)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.standard, value: aboutDemo)
+            }
             if !store.bookSources.isEmpty {
                 HStack(spacing: 4) {
                     Text(L.bookSourcesPluginsFooter)
@@ -119,7 +135,6 @@ struct BookSourcesList: View {
         .task { store.bookSources.load() }
         .sheet(isPresented: $matchesShown) { CheckMatchesSheet() }
         .folderCameInSheet(store)
-        .overlay(alignment: .bottom) { CameInNotice() }
         .refreshable { store.bookSources.scan() }
         // Shots: a prelaunch state's sheet, staged with nothing asked of a real server.
         .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
@@ -141,6 +156,10 @@ struct BookSourcesList: View {
 
     /// "~/Books/Manga · 64 series", or what a scan or a missing drive says.
     static func folderLine(_ folder: BookFolderRow) -> String {
+        if folder.skipped > 0, case .done = folder.scan, let path = folder.path {
+            return L.sourceRowFolder(path: path.replacingOccurrences(of: NSHomeDirectory(), with: "~"), // i18n-skip
+                                     series: Int(folder.series), skipped: Int(folder.skipped))
+        }
         var parts: [String] = []
         if let path = folder.path { parts.append(path.replacingOccurrences(of: NSHomeDirectory(), with: "~")) } // i18n-skip
         switch folder.scan {
@@ -152,7 +171,11 @@ struct BookSourcesList: View {
     }
 
     /// "Kavita · 212 series · progress goes back to the server".
-    static func serverLine(_ server: BookServerRow) -> String {
+    static func serverLine(_ server: BookServerRow, justAdded: Bool = false) -> String {
+        if server.empty { return L.sourceRowServerEmpty(kind: BookServerWords.kind(server.kind)) }
+        if justAdded {
+            return L.sourceRowServer(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
+        }
         var parts = [BookServerWords.kind(server.kind)]
         if server.name != server.address { parts.append(server.address) }
         parts.append(L.bookSourcesSeries(n: Int(server.series)))
@@ -163,10 +186,8 @@ struct BookSourcesList: View {
 
     /// "From Kim's store · reading · version 1.4".
     static func pluginLine(_ plugin: BookPluginRow) -> String {
-        var parts: [String] = []
-        if let store = plugin.store { parts.append(L.bookSourcesFromStore(store: store)) }
-        parts.append(L.bookSourcesVersion(version: plugin.version))
-        return parts.joined(separator: " · ") // i18n-skip
+        guard let store = plugin.store else { return L.bookSourcesVersion(version: plugin.version) }
+        return L.sourceRowPlugin(store: store, medium: L.mediumAnswerRead.lowercased(), version: plugin.version)
     }
 }
 
@@ -461,6 +482,8 @@ struct AddBookServerStep: View {
 
     /// For shots: the sheet opens in this state, with nothing asked of a real server.
     @MainActor static var shot: PrelaunchScene?
+    /// A pasted Kavita link the sheet opens with, looked at as soon as it is up.
+    @MainActor static var prefill: String?
 
     private func stage(_ scene: PrelaunchScene) {
         staged = true
@@ -547,7 +570,7 @@ struct AddBookServerStep: View {
             address: address, user: user, password: password, staged: staged,
             onAppear: {
                 store.cameIn.reset()
-                if let shot = Self.shot { Self.shot = nil; stage(shot) } else { focus = .address }
+                if let shot = Self.shot { Self.shot = nil; stage(shot) } else if let link = Self.prefill { Self.prefill = nil; address = link } else { focus = .address }
             },
             look: look,
             added: { dismiss() })

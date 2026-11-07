@@ -202,6 +202,11 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
     let rhythm = kit.store.book_rhythm(work.as_str()).ok().flatten();
     let medium = kept.as_ref().map_or_else(|| local_medium(kit, work), |k| k.book.medium());
     let action = tiles::action(&kit.store, &kit.sources, work, medium);
+    let demo = kit
+        .sources
+        .edition_of(work, None)
+        .filter(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID)
+        .and_then(|(_, series)| kaeri_core::reading_demo::work(&series));
     let mut view = SeriesView {
         work: work.clone(),
         medium,
@@ -234,6 +239,12 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         year: None,
         adult: false,
         recommended: Vec::new(),
+        demo: demo.map(kaeri_model::sources::DemoWorkInfo::of),
+        demo_other: demo
+            .and_then(|this| {
+                kaeri_core::reading_demo::WORKS.iter().find(|other| other.id != this.id)
+            })
+            .map(|other| kit.sources.demo_work_id(other)),
         partial,
     };
     if let Some(kept) = kept {

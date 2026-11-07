@@ -26,9 +26,6 @@ public final class DemoModel {
     /// The comic and the story, by what they are.
     public var comic: DemoWorkInfo? { reading.works.first { !$0.novel } }
     public var story: DemoWorkInfo? { reading.works.first(where: \.novel) }
-
-    /// Whether a work id is one of the demo's.
-    public func isDemoWork(_ id: String) -> Bool { reading.works.contains { id.hasSuffix($0.id) } }
 }
 
 /// The crash reports: the saved ones, the ones the system still holds, and the one to mention.

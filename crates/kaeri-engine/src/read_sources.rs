@@ -1107,6 +1107,18 @@ impl BookSources {
         tiles
     }
 
+    /// The work id a demo work is read under: its match once it has been listed, else the key an
+    /// unmatched series of its name and medium gets.
+    pub(crate) fn demo_work_id(&self, work: &kaeri_core::reading_demo::DemoWork) -> WorkId {
+        match self.store.book_match(kaeri_core::demo::DEMO_SOURCE_ID, work.id) {
+            Ok(Some(found)) => WorkId::new(found),
+            _ => {
+                let medium = if work.novel { Medium::Novel } else { Medium::Manga };
+                WorkId::new(WorkKey::local(medium, work.series).to_string())
+            }
+        }
+    }
+
     /// Which source and series reference a work is read from: the chosen edition, the person's
     /// preference, or the first source in their order that holds it.
     pub(crate) fn edition_of(

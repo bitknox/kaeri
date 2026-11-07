@@ -93,6 +93,11 @@ fn each_scene_asks_its_own_question() {
     assert_eq!(medium(&engine).ask, Some(MediumAsk::FirstRun));
     engine.shutdown();
 
+    let (_root, engine) = start(FfiScene::ReadingDemo);
+    let view = medium(&engine);
+    assert_eq!((view.ask, view.answer), (None, KaeriIsFor::Read));
+    engine.shutdown();
+
     let (_root, engine) = start(FfiScene::ReadingUpdateSheet);
     let view = medium(&engine);
     assert_eq!((view.ask, view.answer), (Some(MediumAsk::Updated), KaeriIsFor::Watch));

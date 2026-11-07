@@ -11,7 +11,7 @@
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
 # pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>>,
-# sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
+# prelaunch=<state> (a reading prelaunch state, see PrelaunchScene), sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
 # Chromecast built in (FixtureCasts.swift lists the scenes), day=<days after today>, the calendar opened on
 # that day, for one with broadcasts, mine=1 the calendar on My list,
@@ -162,6 +162,7 @@ arguments() {
       sheet=*) printf '%s\n' -KaeriSheet "${screen#sheet=}" ;;
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;
       sync=*) printf '%s\n' -KaeriSync "${screen#sync=}" ;;
+      prelaunch=*) printf '%s\n' -KaeriPrelaunch "${screen#prelaunch=}" ;;
       cast=*) printf '%s\n' -KaeriCast "${screen#cast=}" ;;
       reader=*) printf '%s\n' -KaeriReader "${screen#reader=}" ;;
       medium=*) printf '%s\n' -KaeriMedium "${screen#medium=}" ;;

@@ -186,11 +186,45 @@ struct ReaderEndPage: View {
     let theme: ReaderTheme
     let size: CGSize
     @Environment(\.readerClose) private var closeReader
+    @Environment(Navigator.self) private var navigator
 
     var body: some View {
+        if model.view?.demoCredit != nil {
+            demoEnd
+        } else {
+            standard
+        }
+    }
+
+    /// The end of the demo: what it was, the way to add a source, and back to page 1.
+    private var demoEnd: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: 0)
+            Text(L.readerDemoEnd).font(.ui(24, weight: .semibold)).foregroundStyle(theme.silk)
+            Text(L.readerDemoEndLine).font(.ui(15)).foregroundStyle(theme.haze).padding(.top, 6)
+            Spacer(minLength: 0)
+            Button(L.readerDemoAddSource) {
+                closeReader()
+                navigator.addBookSource = .choose
+            }
+            .buttonStyle(ReaderAmberStyle(theme: theme))
+            Button(L.readerDemoAgain) { model.requestJump(0) }
+                .buttonStyle(ReaderPillStyle(theme: theme))
+                .padding(.top, 12)
+            Button(L.readerBackToSeries) { closeReader() }
+                .buttonStyle(ReaderPillStyle(theme: theme))
+                .padding(.top, 12)
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 72)
+        .frame(width: size.width, height: size.height, alignment: .leading)
+        .background(theme.page)
+    }
+
+    private var standard: some View {
         let chapter = model.view?.chapter.label ?? ""
         let next = model.end?.next ?? model.view?.next
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 0)
             Text(L.readerEndOfChapter(chapter: chapter)).font(.ui(24, weight: .semibold)).foregroundStyle(theme.silk)
             Text(model.read ? L.readerEndRead : L.readerEndNotRead).font(.ui(15)).foregroundStyle(theme.haze)

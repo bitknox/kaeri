@@ -432,6 +432,8 @@ public final class BookSourcesModel {
     public func addFolder(_ folder: FolderRef) { send?(.bookSources(.addFolder(folder: folder))) }
     public func removeFolder(_ id: String) { send?(.bookSources(.removeFolder(id: id))) }
     public func scan() { send?(.bookSources(.scan)) }
+    /// The books page shows with the demo on: fetch its first pages ahead.
+    public func prefetchDemo() { send?(.bookSources(.prefetchDemo)) }
     public func removeServer(_ id: String) { send?(.bookSources(.removeServer(id: id))) }
     public func setOff(_ id: String, off: Bool) { send?(.bookSources(.setOff(id: id, off: off))) }
     public func setReportProgress(_ id: String, on: Bool) { send?(.bookSources(.setReportProgress(id: id, on: on))) }
