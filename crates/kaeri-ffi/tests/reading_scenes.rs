@@ -234,6 +234,9 @@ fn the_reader_scenes_have_generated_books_to_open() {
         })
         .expect("opened");
     assert_eq!((opened.chapter.id.as_str(), opened.mode), ("2", ReaderMode::Strip));
+    // The kept place inside the strip's image comes back with the start.
+    let at = kaeri_model::reader::StripPos { image: 4, offset: 0.35 };
+    assert_eq!((opened.start.page, opened.start.strip), (Some(4), Some(at)));
 
     let novel = open_reader(FfiScene::ReaderNovel, "a:900302");
     assert!(
