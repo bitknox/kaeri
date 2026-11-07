@@ -488,13 +488,34 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
 }
 
-/// A source whose chapters are pictures, three pages each, fetched through the source.
-struct PictureSource(BookSourceManifest);
+/// A source whose chapters are pictures, three pages each, fetched through the source. With
+/// `made`, the source makes each page's bytes itself (a plugin built for the
+/// `book-plugin-with-pages` world), its own id standing where an address would.
+struct PictureSource {
+    manifest: BookSourceManifest,
+    made: bool,
+}
+
+impl PictureSource {
+    fn new(made: bool) -> Self {
+        let manifest = BookSourceManifest {
+            id: "pictures".into(),
+            name: "Pictures".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Plugin,
+            media: vec![Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        Self { manifest, made }
+    }
+}
 
 #[async_trait]
 impl kaeri_core::traits::BookSource for PictureSource {
     fn manifest(&self) -> &BookSourceManifest {
-        &self.0
+        &self.manifest
     }
 
     async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
@@ -513,13 +534,17 @@ impl kaeri_core::traits::BookSource for PictureSource {
         Ok(vec![SourceChapter::new("c1", "1")])
     }
 
-    async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+    async fn content(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<ChapterContent, ProviderError> {
+        use kaeri_core::books::PageRef;
         Ok(ChapterContent::Images(
             (1..=3)
-                .map(|n| {
-                    kaeri_core::books::PageRef::new(format!(
-                        "https://pages.example/{chapter}/{n}"
-                    ))
+                .map(|n| match self.made {
+                    true => PageRef::made(series, chapter, format!("{chapter}-{n}")),
+                    false => PageRef::new(format!("https://pages.example/{chapter}/{n}")),
                 })
                 .collect(),
         ))
@@ -529,6 +554,9 @@ impl kaeri_core::traits::BookSource for PictureSource {
         &self,
         page: &kaeri_core::books::PageRef,
     ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        // A made page reaches its source with the chapter it belongs to.
+        let made = page.made.as_ref().map(|m| (m.series.as_str(), m.chapter.as_str()));
+        assert_eq!(made, self.made.then_some(("series-1", "c1")), "{page:?}");
         let shade = page.url.bytes().last().unwrap_or(b'1');
         let picture = image::GrayImage::from_pixel(300, 450, image::Luma([shade]));
         let mut png = Vec::new();
@@ -537,24 +565,21 @@ impl kaeri_core::traits::BookSource for PictureSource {
     }
 }
 
-/// A chapter of pictures from a source, with nothing on the shelf, opens in the page reader.
+/// A chapter of pictures from a source, with nothing on the shelf, opens in the page reader:
+/// pages it names by address and pages it makes itself alike.
 #[tokio::test(start_paused = true)]
 async fn a_sources_chapter_of_pictures_opens_as_pages() {
-    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
-    h.services.book_sources.registry.put(Arc::new(PictureSource(BookSourceManifest {
-        id: "pictures".into(),
-        name: "Pictures".into(),
-        version: "1".into(),
-        kind: BookSourceKind::Plugin,
-        media: vec![Medium::Manga],
-        languages: vec!["en".into()],
-        allowed_hosts: Vec::new(),
-        capabilities: Vec::new(),
-    })));
-    h.services.store.set_book_match("pictures", "series-1", WORK, 90, true, false, 1).unwrap();
-    let (view, leaves, _) = h.open(OpenAt::Start).await;
-    assert_eq!(view.medium, Medium::Manga);
-    assert_eq!(leaves.len(), 4, "three pages and the end page");
+    for made in [false, true] {
+        let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+        h.services.book_sources.registry.put(Arc::new(PictureSource::new(made)));
+        h.services
+            .store
+            .set_book_match("pictures", "series-1", WORK, 90, true, false, 1)
+            .unwrap();
+        let (view, leaves, _) = h.open(OpenAt::Start).await;
+        assert_eq!(view.medium, Medium::Manga, "made: {made}");
+        assert_eq!(leaves.len(), 4, "three pages and the end page, made: {made}");
+    }
 }
 
 /// The server a chapter came from, when the person lets Kaeri write progress to it, is told
@@ -667,16 +692,7 @@ async fn a_vertical_book_opens_vertical_and_reads_right_to_left() {
 #[tokio::test(start_paused = true)]
 async fn the_demo_comic_opens_under_its_name_and_reads_left_to_right() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
-    h.services.book_sources.registry.put(Arc::new(PictureSource(BookSourceManifest {
-        id: "pictures".into(),
-        name: "Pictures".into(),
-        version: "1".into(),
-        kind: BookSourceKind::Plugin,
-        media: vec![Medium::Manga],
-        languages: vec!["en".into()],
-        allowed_hosts: Vec::new(),
-        capabilities: Vec::new(),
-    })));
+    h.services.book_sources.registry.put(Arc::new(PictureSource::new(false)));
     let comic = kaeri_core::reading_demo::COMIC.work_id();
     h.services
         .store
