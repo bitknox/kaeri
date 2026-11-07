@@ -33,6 +33,10 @@
 //   expires   seconds the `code` sheet's code has left, 0 for one already expired
 //   day       days after today the calendar opens on, for a day with broadcasts: the fixtures'
 //             own day has none
+//   medium    read, watch or both: what Kaeri is for, chosen as Settings would once the engine is up
+//             (the reading scenes); page=read/series/a%3A900301 opens a series' page over Read
+//   series    a sheet or menu the series' page opens once it has loaded: chapter, read-from,
+//             tracking, read-again, send, where-stop, choose, status or download
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
@@ -57,6 +61,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.model.DeviceCodePrompt
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.store.reads
 import app.kaeri.engine.model.DiscussionState
 import app.kaeri.engine.model.Event
 import app.kaeri.store.EngineEpisodeCheck
@@ -229,6 +235,7 @@ internal object Flavour {
      * screen: what announceReady waits on besides the store. True with no scene asked for.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        if (!reachedReading(intent, store)) return false
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false
             FixtureParty.listen(app)
@@ -260,6 +267,29 @@ internal object Flavour {
             while (!store.tv.reached(scene)) delay(50)
             // The sheet's own animation in.
             delay(700)
+            true
+        } ?: false
+    }
+
+    /**
+     * The reading extras done: the medium asked for chosen, a series' page asked for loaded, and
+     * reading's Home or Updates there when they are on screen. True with none asked for.
+     */
+    private suspend fun reachedReading(intent: Intent, store: AppStore): Boolean {
+        val medium = intent.getStringExtra("medium")?.let { named -> KaeriIsFor.entries.firstOrNull { it.name.equals(named, ignoreCase = true) } }
+        val work = intent.getStringExtra(MainActivity.PAGE)?.substringAfter("/series/", "")?.takeIf { it.isNotEmpty() }?.let(android.net.Uri::decode)
+        val reading = intent.getStringExtra("scene")?.let(FixtureScene::named)?.name?.startsWith("READING") == true
+        if (medium == null && work == null && !reading) return true
+        return withTimeoutOrNull(60_000) {
+            if (medium != null) store.medium.view.first { it?.answer == medium }
+            if (work != null) {
+                store.reading.series.first { it[work] != null }
+                store.reading.chapters.first { it[work] != null }
+            } else if (store.medium.answer.reads) {
+                store.reading.home.first { it != null }
+            }
+            // The sheet a shot asked for, opening.
+            delay(if (intent.getStringExtra("series") != null) 1_200 else 300)
             true
         } ?: false
     }
@@ -324,6 +354,11 @@ internal object Flavour {
         if (marked) return
         marked = true
         openReaderScene(intent)
+        intent.getStringExtra("medium")?.let { named ->
+            KaeriIsFor.entries.firstOrNull { it.name.equals(named, ignoreCase = true) }?.let(store.medium::chooseAtLaunch)
+                ?: Log.w(KaeriApp.TAG, "medium takes read, watch or both, not $named")
+        }
+        intent.getStringExtra("series")?.let { app.kaeri.ui.reading.SeriesShots.open = it }
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)
         intent.getStringExtra("widgets")?.let { pinWidgets(context, it) }
         intent.getStringExtra("check")?.toLongOrNull()?.let { delay ->

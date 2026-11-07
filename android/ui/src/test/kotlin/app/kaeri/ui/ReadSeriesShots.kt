@@ -65,7 +65,7 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
-    fun phone_read_downloads() = shoot("phone-read-downloads", FixtureScene.READING_SERIES, Destination.Read, page = DOWNLOADS_ROUTE) {
+    fun phone_read_downloads() = shoot("phone-read-downloads", FixtureScene.READING_DOWNLOADS, Destination.Read, page = DOWNLOADS_ROUTE) {
         it.reading.downloads.value != null
     }
 
@@ -89,7 +89,7 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     @Test
     @Config(qualifiers = ReadingShotHarness.TABLET)
-    fun tablet_read_downloads() = shoot("tablet-read-downloads", FixtureScene.READING_SERIES, Destination.Read, page = DOWNLOADS_ROUTE) {
+    fun tablet_read_downloads() = shoot("tablet-read-downloads", FixtureScene.READING_DOWNLOADS, Destination.Read, page = DOWNLOADS_ROUTE) {
         it.reading.downloads.value != null
     }
 

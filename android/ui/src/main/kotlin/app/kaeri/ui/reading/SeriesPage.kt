@@ -94,8 +94,12 @@ import app.kaeri.ui.kaeriIsFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
 
-/** What the screenshots open on the series page once it has loaded: a sheet or menu by name. */
-internal object SeriesShots {
+/**
+ * What the screenshots open on the series page once it has loaded: a sheet or menu by name
+ * (chapter, read-from, tracking, read-again, send, where-stop, choose, status, download), set by
+ * the JVM shots and the Fixtures app's `series` extra.
+ */
+object SeriesShots {
     var open by mutableStateOf<String?>(null)
 }
 

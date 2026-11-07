@@ -95,6 +95,16 @@ class MediumModel(private val send: (Command) -> Unit) {
 
     fun load() = send(Command.Medium(MediumCommand.Load))
 
+    /** A Fixtures launch's choice, made as Settings would: now, or once the first view is there. */
+    fun chooseAtLaunch(answer: KaeriIsFor) {
+        val view = _view.value
+        if (view == null) {
+            launchChoice = answer
+        } else if (choosable && view.answer != answer) {
+            choose(answer)
+        }
+    }
+
     fun choose(answer: KaeriIsFor, deleteDownloads: Boolean = false) =
         send(Command.Medium(MediumCommand.Choose(answer, deleteDownloads)))
 
