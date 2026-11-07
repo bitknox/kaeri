@@ -2400,6 +2400,122 @@ pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
 }
 
+/// Tooltip of the reader toolbar's settings button.
+pub fn linux_reader_settings_open() -> String {
+    text("linux-reader-settings-open", &[])
+}
+
+/// Line shown while a chapter opens, after the first moment.
+pub fn linux_reader_opening() -> String {
+    text("linux-reader-opening", &[])
+}
+
+/// End page heading when the next chapter is not out yet.
+pub fn linux_reader_end_not_out() -> String {
+    text("linux-reader-end-not-out", &[])
+}
+
+/// End page heading at the end of a finished series.
+pub fn linux_reader_end_finished() -> String {
+    text("linux-reader-end-finished", &[])
+}
+
+/// End page heading when the next chapter is not downloaded and the device is offline.
+pub fn linux_reader_end_offline() -> String {
+    text("linux-reader-end-offline", &[])
+}
+
+/// End page heading when no source has the next chapter.
+pub fn linux_reader_end_no_source() -> String {
+    text("linux-reader-end-no-source", &[])
+}
+
+/// Button on the end page that goes back to the series page.
+pub fn linux_reader_back_to_series() -> String {
+    text("linux-reader-back-to-series", &[])
+}
+
+/// Heading of the error when a chapter would not open.
+pub fn linux_reader_chapter_failed() -> String {
+    text("linux-reader-chapter-failed", &[])
+}
+
+/// Names of the reader settings in its popover.
+pub fn linux_reader_reading_mode() -> String {
+    text("linux-reader-reading-mode", &[])
+}
+
+pub fn linux_reader_fit() -> String {
+    text("linux-reader-fit", &[])
+}
+
+pub fn linux_reader_background() -> String {
+    text("linux-reader-background", &[])
+}
+
+pub fn linux_reader_look() -> String {
+    text("linux-reader-look", &[])
+}
+
+pub fn linux_reader_font() -> String {
+    text("linux-reader-font", &[])
+}
+
+pub fn linux_reader_text_size() -> String {
+    text("linux-reader-text-size", &[])
+}
+
+pub fn linux_reader_margins() -> String {
+    text("linux-reader-margins", &[])
+}
+
+pub fn linux_reader_line_spacing() -> String {
+    text("linux-reader-line-spacing", &[])
+}
+
+pub fn linux_reader_justify() -> String {
+    text("linux-reader-justify", &[])
+}
+
+/// Reading mode names.
+pub fn linux_reader_mode_paged() -> String {
+    text("linux-reader-mode-paged", &[])
+}
+
+pub fn linux_reader_mode_scrolled() -> String {
+    text("linux-reader-mode-scrolled", &[])
+}
+
+/// Title of the sheet that prepares chapters as files for an e-reader.
+pub fn linux_send_title() -> String {
+    text("linux-send-title", &[])
+}
+
+/// Line under that title.
+pub fn linux_send_line() -> String {
+    text("linux-send-line", &[])
+}
+
+/// Button that starts preparing the files.
+pub fn linux_send_prepare() -> String {
+    text("linux-send-prepare", &[])
+}
+
+/// Line while the files are prepared.
+pub fn linux_send_progress(done: i64, total: i64) -> String {
+    text("linux-send-progress", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// Button that copies the prepared files to a folder the person picks.
+pub fn linux_send_save() -> String {
+    text("linux-send-save", &[])
+}
+
+/// Menu item of a series that opens that sheet.
+pub fn linux_send_menu() -> String {
+    text("linux-send-menu", &[])
+}
+
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 pub fn settings_preview() -> String {
     text("settings-preview", &[])

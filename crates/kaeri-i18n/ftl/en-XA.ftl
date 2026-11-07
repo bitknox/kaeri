@@ -1573,6 +1573,72 @@ discussion-like-named =
        *[other] [Ļîķé, { $count } ļîķéš~~~~~]
     }
 
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = [Öþéñîñĝ ţĥé çĥàþţéŕ~~~~~~]
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = [Ţĥé ñéẋţ çĥàþţéŕ îšñ'ţ öüţ ýéţ~~~~~~~~~]
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = [Éñð öƒ ţĥé šéŕîéš~~~~~~]
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = [Ţĥé ñéẋţ çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð~~~~~~~~~~]
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = [Ñö ñéẋţ çĥàþţéŕ îñ ýöüŕ šöüŕçéš ýéţ~~~~~~~~~~~]
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = [Ɓàçķ ţö ţĥé šéŕîéš~~~~~~]
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = [Çöüļðñ'ţ öþéñ ţĥé çĥàþţéŕ~~~~~~~~]
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = [Ŕéàðîñĝ ɱöðé~~~~]
+
+linux-reader-fit = [Ƒîţ~]
+
+linux-reader-background = [Ɓàçķĝŕöüñð~~~]
+
+linux-reader-look = [Ļööķ~~]
+
+linux-reader-font = [Ƒöñţ~~]
+
+linux-reader-text-size = [Ţéẋţ šîžé~~~]
+
+linux-reader-margins = [Ṁàŕĝîñš~~~]
+
+linux-reader-line-spacing = [Ļîñé šþàçîñĝ~~~~]
+
+linux-reader-justify = [Ĵüšţîƒý ţéẋţ~~~~]
+
+# Reading mode names.
+linux-reader-mode-paged = [Þàĝéð~~]
+
+linux-reader-mode-scrolled = [Šçŕöļļ~~]
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
+# Line under that title.
+linux-send-line = [Þîçķ ţĥé ðéṽîçé. Ţĥé ñéẋţ üñŕéàð çĥàþţéŕš àŕé þŕéþàŕéð àš ƒîļéš ţĥàţ ƒîţ îţš šçŕééñ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button that starts preparing the files.
+linux-send-prepare = [Þŕéþàŕé ƒîļéš~~~~]
+
+# Line while the files are prepared.
+linux-send-progress = [Þŕéþàŕîñĝ { $done } öƒ { $total }~~~~~~]
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = [Šàṽé ţö à ƒöļðéŕ~~~~~]
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = [Šéñð ţö é-ŕéàðéŕ~~~~~]
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = [Þŕéṽîéŵ~~~]
 

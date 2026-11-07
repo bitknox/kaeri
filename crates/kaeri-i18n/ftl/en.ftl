@@ -1573,6 +1573,72 @@ discussion-like-named =
        *[other] Like, { $count } likes
     }
 
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Reader settings
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Opening the chapter
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = The next chapter isn't out yet
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = End of the series
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = The next chapter isn't downloaded
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = No next chapter in your sources yet
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Back to the series
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Couldn't open the chapter
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Reading mode
+
+linux-reader-fit = Fit
+
+linux-reader-background = Background
+
+linux-reader-look = Look
+
+linux-reader-font = Font
+
+linux-reader-text-size = Text size
+
+linux-reader-margins = Margins
+
+linux-reader-line-spacing = Line spacing
+
+linux-reader-justify = Justify text
+
+# Reading mode names.
+linux-reader-mode-paged = Paged
+
+linux-reader-mode-scrolled = Scroll
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Send to e-reader
+
+# Line under that title.
+linux-send-line = Pick the device. The next unread chapters are prepared as files that fit its screen.
+
+# Button that starts preparing the files.
+linux-send-prepare = Prepare files
+
+# Line while the files are prepared.
+linux-send-progress = Preparing { $done } of { $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Save to a folder
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Send to e-reader
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
 
