@@ -22,7 +22,7 @@ settings-coming-up-switched-off = { $count ->
     [many] { $names } sont désactivés dans leurs propres réglages.
    *[other] { $names } sont désactivés dans leurs propres réglages.
  }
-settings-coming-up-opens = Une série ouvre ses réglages.
+settings-coming-up-opens = Touchez une série pour ouvrir ses réglages.
 torrents-proxy-as = avec le compte { $user }
 title-facts-aired = Diffusion { $dates }
 title-facts-airing = En cours depuis le { $date }
@@ -147,7 +147,7 @@ settings-titles-note-english-missing = { $title } n’a pas de titre anglais sur
 settings-titles-note-english = Titres anglais tels qu’AniList les donne, et romaji quand il n’y en a pas.
 settings-titles-note-romaji = Titres japonais en lettres latines, tels qu’AniList les donne.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Partage au mieux sur cet { -device } : il ne fonctionne que pendant que { -app-name } est ouvert.
+settings-seeding-best-effort = Cet { -device } ne partage que lorsque { -app-name } est ouvert.
 settings-downloads-count = { $count ->
     [one] Un épisode
     [many] { $count } épisodes
@@ -166,7 +166,7 @@ settings-typefaces-value = Roboto Flex et Zen Kaku Gothic New, sous licence SIL 
 settings-libraries-value = JNA et AndroidX, sous licence Apache 2.0
 settings-report-bug-value = Ouvre GitHub dans votre navigateur
 downloads-storage-share-description = Les téléchargements occupent { $size }
-settings-aside-notifications = Une notification quand un épisode d’une série que vous suivez sort : le titre de la série et le numéro de l’épisode, jamais son nom. Une série peut désactiver les siennes dans ses réglages.
+settings-aside-notifications = Une notification quand un épisode d’une série que vous suivez sort : le titre de la série et le numéro de l’épisode, jamais son nom. Vous pouvez désactiver les notifications d’une série dans ses réglages.
 settings-aside-downloads = Les téléchargements restent dans l’espace propre à { -app-name } sur cet { -device }, que les autres applications ne peuvent pas lire. Supprimer l’application les efface.
 settings-aside-sources = Les { -source-pl } sont essayées dans l’ordre, de haut en bas. Une série peut garder sa propre { -source }, choisie depuis sa page.
 settings-upscaling-description = La même image fixe, la moitié gauche à l’original 480p, la moitié droite avec { $mode }

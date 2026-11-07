@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s yayını okumaya başlamadı. Bu cihazda bir VPN ya da güvenlik duvarı engel oluyor olabilir.</string>
     <string name="notice_cast_refused">%1$s bu yayını oynatmanın bütün yollarını denedi ama hiçbirini başaramadı. Başka bir kaynak deneyin.</string>
     <string name="notice_cast_taken_over">Başka bir cihaz %1$s üzerinde bir şey başlattı, bu yüzden yayınlama durdu.</string>
-    <string name="notice_cast_not_same_network">Bu cihaz, %1$s ile aynı ağda değil ya da VPN üzerinden bağlanıyor. Yayınlamak için ikisinin de aynı ağda olması gerekir.</string>
+    <string name="notice_cast_not_same_network">Bu cihaz, %1$s ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.</string>
     <string name="notice_cast_lost">%1$s ile bağlantı koptu, bu yüzden yayınlama durdu.</string>
     <string name="notice_cast_no_device">Seçilen TV artık ağda değil.</string>
     <string name="notice_cast_unavailable">Bu Kaeri sürümü TV\'lere yayınlamayı desteklemiyor.</string>
@@ -121,13 +121,13 @@
     <string name="notice_match_reset_failed">Eşleşme sıfırlanamadı. %1$s</string>
     <string name="notice_match_save_failed">Bu eşleşme kaydedilemedi. %1$s</string>
     <string name="notice_match_did_not_stick">Bu eşleşme tutmadı. Bu kaynak değişmiş olabilir. Eşleşmeyi yeniden seçmeyi deneyin.</string>
-    <string name="notice_source_search_empty">“%1$s” için sonuç bulunamadı. Farklı bir arama deneyin.</string>
+    <string name="notice_source_search_empty">“%1$s” için bir şey bulunamadı. Farklı bir arama deneyin.</string>
     <string name="match_ruled_out_format">Farklı biçim</string>
     <string name="match_ruled_out_episodes">Bu başlıktan daha fazla bölüm var</string>
     <string name="match_ruled_out_year">Farklı yıl</string>
     <string name="match_search_timed_out">Yanıt vermesi çok uzun sürdü.</string>
     <string name="match_search_source_off">Açık değil.</string>
-    <string name="notice_source_pinned">%1$s bu başlık için kullanılacak.</string>
+    <string name="notice_source_pinned">Bu başlık artık %1$s üzerinden oynatılır.</string>
     <string name="notice_source_automatic">Otomatik kaynak seçimine dönüldü.</string>
     <string name="notice_source_choice_failed">Bu seçim kaydedilemedi. %1$s</string>
     <string name="notice_no_source_could_list">Hiçbir kaynak bu diziyi listeleyemedi: %1$s</string>
@@ -199,9 +199,9 @@
     <string name="reader_back_to_page">%1$d. sayfaya dön</string>
     <string name="reader_moved">%1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
     <string name="reader_moved_number">Bölüm %1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
-    <string name="reader_detected_right_to_left">Sağdan sola, algılandı</string>
-    <string name="reader_detected_left_to_right">Soldan sağa, algılandı</string>
-    <string name="reader_detected_strip">Uzun şerit, algılandı</string>
+    <string name="reader_detected_right_to_left">Sağdan sola gibi görünüyor</string>
+    <string name="reader_detected_left_to_right">Soldan sağa gibi görünüyor</string>
+    <string name="reader_detected_strip">Uzun şerit gibi görünüyor</string>
     <string name="reading_failed_offline">Çevrimdışısınız. İndirilen bölümler yine de açılır.</string>
     <string name="reading_failed_source_down">%1$s yanıt vermiyor. Daha sonra tekrar deneyin.</string>
     <string name="reading_failed_not_found">Bu kaynak artık bunu içermiyor. Başka bir kaynak deneyin.</string>
@@ -416,10 +416,10 @@
     <string name="store_admin_missing">%1$s yönetici sayfasına sahip değil. Sunucusu daha eski olabilir.</string>
     <string name="store_admin_link_foreign">%1$s başka bir adresi gösteren bir yönetici bağlantısı gönderdi.</string>
     <string name="store_open_join_unsupported">%1$s sunucusu daha eski, bu yüzden bağlantıyla kimse katılamaz. Önce güncelleyin.</string>
-    <string name="source_switched_off">%1$s kapatıldı. Bölüm ararken atlanır.</string>
+    <string name="source_switched_off">%1$s kapalı. Kaeri bölüm ararken onu atlar.</string>
     <string name="source_switched_on">%1$s açıldı.</string>
     <string name="plugin_not_loaded">%1$s yüklenmedi. Kaynaklar altında kurulu olduğunu kontrol edin.</string>
-    <string name="release_pinned">%1$s bu başlık için kullanılacak.</string>
+    <string name="release_pinned">Bu başlıkta artık %1$s kullanılıyor.</string>
     <string name="notice_choice_not_saved">Bu seçim kaydedilemedi. %1$s</string>
     <string name="torrent_proxy_waiting">Proxy denetimi başarısız oldu. Torrent\'ler denetim geçilince başlar.</string>
     <string name="torrent_proxy_unchecked">Torrent\'ler proxy denetimi geçilince başlar.</string>
@@ -449,8 +449,8 @@
     <string name="notice_sign_in_stopped">Oturum açma tamamlanmadan durdu: %1$s. Yeniden deneyin. %2$s</string>
     <string name="notice_token_exchange_failed">Jeton alınamadı: %1$s. Yeniden oturum açmayı deneyin. %2$s</string>
     <string name="notice_browser_not_opened">Oturum açma için tarayıcı açılamadı. Bir tarayıcının kurulu olup olmadığını denetleyin ve yeniden deneyin. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Bunu bekleyen bir oturum açma işlemi yok (%1$s). Oturum açmayı yeniden başlatın.</string>
-    <string name="notice_sign_in_wrong_request">Bu oturum açma (%1$s) bu istekten dönmedi. Oturum açmayı yeniden başlatın.</string>
+    <string name="notice_sign_in_not_waiting">%1$s hizmetinden bir oturum açma yanıtı geldi, ama onu bekleyen bir oturum açma yoktu. Oturum açmayı yeniden başlatın.</string>
+    <string name="notice_sign_in_wrong_request">%1$s hizmetinden gelen oturum açma yanıtı istekle eşleşmiyor. Oturum açmayı yeniden başlatın.</string>
     <string name="notice_sign_in_no_token">Oturum açma (%1$s) jetonsuz döndü. Yeniden deneyin.</string>
     <string name="notice_mal_client_missing_build">MyAnimeList oturumu tamamlanamadı: bu derlemede bunun için bir istemci yok.</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsu oturumu Hesaplar ekranından açılır.</string>
@@ -486,7 +486,7 @@
     </plurals>
     <string name="notice_update_available">%1$s çıktı. Kurmak için kaeri --update komutunu çalıştırın.</string>
     <string name="cause_proxy_needs_address">Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</string>
-    <string name="cause_proxy_address_unusable">Vekil sunucunun adresi denetim için kullanılamıyor.</string>
+    <string name="cause_proxy_address_unusable">Vekil sunucu denetimi bu adresi kullanamıyor.</string>
     <string name="cause_server_unreachable">Sunucuya ulaşılamadı.</string>
     <string name="legal_hosts_no_content">Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.</string>
     <string name="notice_saved">Kaydedildi: %1$s.</string>
@@ -494,12 +494,12 @@
     <string name="notice_title_load_failed">Bu başlık yüklenemedi. Bağlantınızı denetleyin ve yeniden deneyin.</string>
     <string name="notice_playback_failed">Oynatma başarısız oldu. Başka bir kaynak deneyin.</string>
     <string name="notice_engine_fault">Kaeri içinde bir sorun oluştu. Uygulama çalışmaya devam etti, ama bir ekran donmuş görünüyorsa çıkıp uygulamayı yeniden açın.</string>
-    <string name="notice_database_set_aside">Veritabanı bozulduğu için Kaeri yenisini başlattı. Eski dosya %1$s konumunda saklanıyor. takip hizmetlerinde tutulanlar bir sonraki eşitlemede geri gelir.</string>
+    <string name="notice_database_set_aside">Veritabanı bozulmuştu, bu yüzden Kaeri yenisini başlattı. Eski dosya %1$s konumunda saklanıyor. takip hizmetlerinizde tutulanlar bir sonraki eşitlemede geri gelir.</string>
     <string name="start_failed_folder">Kaeri %1$s klasörünü oluşturamadı. Diskte yer olduğunu ve klasöre yazılabildiğini denetleyin, sonra yeniden deneyin. %2$s</string>
     <string name="start_failed_config">Yapılandırma dosyası (%1$s) Kaeri için kullanılamayan bir ayar içeriyor: %2$s. Ayarı düzeltin ya da kaldırın, sonra yeniden deneyin.</string>
     <string name="config_reset_failed">Ayarları sıfırlamak için yapılandırma dosyası (%1$s) kenara taşınamadı. %2$s</string>
     <string name="start_failed_database">Kaeri veritabanı dosyasını açamadı (%1$s). Bu klasörde başka bir Kaeri uygulaması açıksa onu kapatıp yeniden deneyin. %2$s</string>
-    <string name="start_failed_network">Kaeri, config.toml dosyasındaki ağ ayarlarıyla ağ bağlantısını kuramadı. %1$s</string>
+    <string name="start_failed_network">Kaeri, config.toml dosyasındaki ağ ayarlarıyla bağlanamadı. Ayarları kontrol edip yeniden deneyin. %1$s</string>
     <string name="start_failed">Kaeri başlatılamadı. Çıkın ve yeniden açın. %1$s</string>
     <string name="start_failed_remote">Uzaktan kumanda başlatılamadı. %1$s</string>
     <string name="start_failed_player">Oynatıcı başlatılamadı. %1$s</string>
@@ -512,8 +512,8 @@
     <string name="crash_notice_tv">Kaeri bir sorun nedeniyle kapandı. Ayarlar, Hakkında bölümünden bildirebilirsiniz.</string>
     <string name="notice_surprise_empty_filters">Bu filtrelere uyan başlık yok.</string>
     <string name="notice_surprise_empty_planning">Planlama boş.</string>
-    <string name="notice_surprise_offline">Çevrimdışısınız. Arama seçimleri için AniList gerekir.</string>
-    <string name="notice_surprise_failed">Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.</string>
+    <string name="notice_surprise_offline">Çevrimdışısınız. Beni şaşırt, başlık seçmek için AniList\'e ihtiyaç duyar.</string>
+    <string name="notice_surprise_failed">Başlık seçmek için AniList\'e ulaşılamadı. Biraz sonra yeniden deneyin.</string>
     <string name="account_button_named">%1$s, hesaplar ve ayarlar</string>
     <string name="calendar_empty_mine_ahead">Listenizdeki hiçbir şey önümüzdeki 4 hafta yayınlanmıyor.</string>
     <string name="calendar_floor_line">Takvim en fazla 3 ay geriye gider.</string>
@@ -526,7 +526,7 @@
     <string name="calendar_show_all_airing">Yayındaki tüm dizileri göster</string>
     <string name="calendar_now_label">Şimdi, %1$s</string>
     <string name="settings_discussions_label">Bölüm tartışmaları</string>
-    <string name="settings_discussions_note">İzlediğiniz bölümlerin AniList forum konusundaki yorumlarını okur.</string>
+    <string name="settings_discussions_note">İzlediğiniz bölümlerin AniList forum konusundaki yorumlarını okuyabilirsiniz.</string>
     <string name="settings_discussion_images_label">Yorumlardaki resimleri yükle</string>
     <string name="settings_discussion_images_note">Her resim, onu barındıran siteden yüklenir ve bu site IP adresinizi görür.</string>
     <string name="discussion_waiting">AniList için bekleniyor · %1$s</string>
@@ -563,7 +563,7 @@
     <string name="cast_settings_tvs">Chromecast özellikli TV\'leri göster</string>
     <string name="cast_settings_tvs_note">Bunlar TV\'de oynat ekranında Chromecast başlığı altında görünür. Bölümü bu cihaz onlara gönderir.</string>
     <string name="cast_settings_torrents">Yayın sırasında torrentler</string>
-    <string name="cast_settings_torrents_note">Chromecast özellikli bir TV\'nin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu cihaz gönderir.</string>
+    <string name="cast_settings_torrents_note">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu cihaz gönderir.</string>
     <string name="reader_page_failed_swipe">Onsuz ilerlemek için kaydırın.</string>
     <string name="reader_skip_page">Sayfayı atla</string>
     <string name="reader_page_of">Sayfa %1$d / %2$d</string>
@@ -622,11 +622,11 @@
     <string name="eink_colour_body">Kaeri bunu bu cihazdan anlayamadı. Dört kareye bakın.</string>
     <string name="eink_colour_squares">Dört kare: kırmızı, yeşil, mavi ve kehribar</string>
     <string name="eink_colour_hint">Dördü de gri görünüyorsa Yalnızca gri seçeneğini seçin. Bunu Ayarlar › Ekran\'dan değiştirebilirsiniz.</string>
-    <string name="eink_colour_yes">Renk görüyorum</string>
+    <string name="eink_colour_yes">Evet, renkli</string>
     <string name="eink_colour_no">Yalnızca gri</string>
     <string name="eink_colour_skip">Atla</string>
-    <string name="eink_colour_skipped">Atlandı. Resimler renkli kalır; gri ekran bunları gri tonlarda gösterir.</string>
-    <string name="eink_page_keys_hint">Sayfa çevirmek için cihaz ayarlarında sayfa tuşlarını Ses olarak ayarlayın.</string>
+    <string name="eink_colour_skipped">Atlandı. Resimler renkli kalır. Gri bir ekran onları gri tonlarda gösterir.</string>
+    <string name="eink_page_keys_hint">Tuşlarla sayfa çevirmek için cihaz ayarlarında tuşları Ses olarak ayarlayın.</string>
     <string name="eink_new">Yeni</string>
     <string name="reader_notice_start_over">Baştan başla</string>
     <string name="reader_notice_go_back">Geri dön</string>
@@ -787,7 +787,7 @@
     <string name="tv_info_from">Nereden</string>
     <string name="tv_info_state">Durum</string>
     <string name="tv_store_revoked">Artık bu TV\'ye izin vermiyor</string>
-    <string name="tv_seeding_note">En iyi çaba: bu TV\'de torrent paylaşımı yalnızca Kaeri açıkken çalışır.</string>
+    <string name="tv_seeding_note">Bu TV yalnızca Kaeri açıkken paylaşım yapar.</string>
     <string name="tv_sign_out_title">%1$s oturumu kapatılsın mı?</string>
     <string name="tv_account_not_signed_in">Oturum açılmadı</string>
     <string name="tv_account_signed_in_as">Oturum açık: %1$s</string>
@@ -891,7 +891,7 @@
         <item quantity="one">%1$s kendi ayarında kapalı.</item>
         <item quantity="other">%1$s kendi ayarlarında kapalı.</item>
     </plurals>
-    <string name="settings_coming_up_opens">Bir gösteri ayarlarını açar.</string>
+    <string name="settings_coming_up_opens">Ayarlarını açmak için bir diziye dokunun.</string>
     <string name="torrents_proxy_as">%1$s olarak</string>
     <string name="title_facts_aired">Yayınlandı %1$s</string>
     <string name="title_facts_airing">%1$s tarihinden beri yayında</string>
@@ -1009,7 +1009,7 @@
     <string name="settings_titles_note_english">AniList\'te listelendiği gibi İngilizce adlar. Yoksa romaji.</string>
     <string name="settings_titles_note_romaji">AniList\'te listelendiği gibi, Latin harflerle yazılmış Japonca adlar.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">Bu cihazda en iyi çaba: paylaşım yalnızca Kaeri açıkken çalışır.</string>
+    <string name="settings_seeding_best_effort">Bu cihaz yalnızca Kaeri açıkken paylaşım yapar.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Bir bölüm</item>
         <item quantity="other">%1$d bölüm</item>
@@ -1026,7 +1026,7 @@
     <string name="settings_libraries_value">JNA ve AndroidX, Apache License 2.0 altında</string>
     <string name="settings_report_bug_value">GitHub\'ı tarayıcınızda açar</string>
     <string name="downloads_storage_share_description">İndirmeler %1$s yer kaplıyor</string>
-    <string name="settings_aside_notifications">Takip ettiğiniz bir gösterinin yeni bölümü çıktığında tek bildirim: gösterinin adı ve bölüm numarası, bölümün adı değil. Bir gösteri bunu kendi ayarlarından kapatabilir.</string>
+    <string name="settings_aside_notifications">Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim: dizinin adı ve bölüm numarası, bölümün adı hiçbir zaman yer almaz. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.</string>
     <string name="settings_aside_downloads">İndirmeler, bu cihazda Kaeri\'in kendi alanında durur ve başka uygulamalar okuyamaz. Uygulamayı kaldırmak onları da siler.</string>
     <string name="settings_aside_sources">Kaynaklar sırayla, yukarıdan aşağıya denenir. Bir gösteri, başlık sayfasından kendine özgü bir kaynak seçebilir.</string>
     <string name="settings_upscaling_description">Aynı kare. Soldaki yarısı özgün 480p, sağdaki yarısı %1$s ile.</string>
@@ -1115,7 +1115,7 @@
     </plurals>
     <string name="trailer_failed">Fragman açılamadı</string>
     <string name="engine_down_title">Kaeri durdu</string>
-    <string name="engine_down_stopped">İşi yapan parça durdu. Yeniden deneyin veya uygulamayı kapatıp bir kez daha açın.</string>
+    <string name="engine_down_stopped">Yeniden başlayana kadar yeni bir şey yüklenmez. Yeniden deneyin ya da uygulamayı kapatıp bir kez daha açın.</string>
     <string name="engine_down_quit">Kapat</string>
     <string name="about_title">Hakkında</string>
     <string name="about_title_app">Kaeri hakkında</string>
@@ -1154,9 +1154,9 @@
     <string name="report_crash_settings">Çökme raporu ayarları</string>
     <string name="settings_group_crashes">Çökme raporları</string>
     <string name="settings_crash_save">Çökme raporlarını bu cihaz üzerinde sakla</string>
-    <string name="settings_crash_save_detail">Bu açıkken Kaeri, her çökmenin kısa bir kaydını bu cihaz üzerinde tutar. Başlıklar, adresler ve adlar kaldırılır; böylece kaydı Hata bildir\'e ekleyebilirsiniz. Kendiliğinden hiçbir şey gönderilmez.</string>
+    <string name="settings_crash_save_detail">Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.</string>
     <string name="settings_crash_ask">Çökmeden sonra sor</string>
-    <string name="settings_crash_ask_detail">Bir sonraki açılışta Bildir… ile bir bildirim gösterir.</string>
+    <string name="settings_crash_ask_detail">Kaeri bir sonraki açılışında Bildir… düğmesiyle bir uyarı gösterir.</string>
     <string name="settings_crash_os_heading">%1$s tarafından tutulanlar</string>
     <string name="settings_crash_os_detail">%1$s, bunu açmadan önceki bu çökmeleri tuttu. Sen eklemedikçe bunlardan hiçbir şey kaydedilmez.</string>
     <string name="settings_crash_os_item">Çökme · %1$s</string>
@@ -1166,7 +1166,7 @@
     <string name="settings_crash_view">Göster</string>
     <string name="settings_crash_delete">Sil</string>
     <string name="settings_crash_delete_all">Tümünü sil</string>
-    <string name="settings_crash_footnote">Çökme raporları bu cihaz üzerinde kalır. Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir\'den GitHub\'da açtığında çıkar. Raporlar 30 gün sonra silinir.</string>
+    <string name="settings_crash_footnote">Çökme raporları bu cihazda kalır ve Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir\'den GitHub\'da açtığınızda dışarı çıkar. Raporlar 30 gün sonra silinir.</string>
     <string name="calendar_previous_week">Önceki hafta</string>
     <string name="calendar_next_week">Sonraki hafta</string>
     <string name="calendar_this_week">Bu hafta</string>
@@ -1208,9 +1208,9 @@
     <string name="cast_tvs_note_mac">Chromecast bölümünde, TV\'de oynat altında görünürler. Bölümü bu Mac gönderir.</string>
     <string name="cast_tvs_note_iphone">Chromecast bölümünde, TV\'de oynat altında görünürler. Bölümü bu iPhone gönderir.</string>
     <string name="cast_tvs_note_ipad">Chromecast bölümünde, TV\'de oynat altında görünürler. Bölümü bu iPad gönderir.</string>
-    <string name="cast_torrents_note_mac">Chromecast özellikli TV\'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu Mac gönderir.</string>
-    <string name="cast_torrents_note_iphone">Chromecast özellikli TV\'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPhone gönderir.</string>
-    <string name="cast_torrents_note_ipad">Chromecast özellikli TV\'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPad gönderir.</string>
+    <string name="cast_torrents_note_mac">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu Mac gönderir.</string>
+    <string name="cast_torrents_note_iphone">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPhone gönderir.</string>
+    <string name="cast_torrents_note_ipad">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPad gönderir.</string>
     <string name="cast_up_next_plays_in">Sıradaki · %1$d sn içinde oynatılır</string>
     <string name="cast_couldnt_start">%1$s üzerinde başlatılamadı</string>
     <string name="cast_stopped">Yayın durduruldu</string>
@@ -1463,11 +1463,11 @@
     <string name="downloads_delete_title">%1$s silinsin mi?</string>
     <string name="downloads_delete_detail">Dosya bu cihazdan kaldırılır.</string>
     <string name="downloads_delete_one_title">İndirmeyi sil</string>
-    <string name="downloads_delete_one_detail">Yalnızca bağlantıyla ya da yeniden indirdiğinizde tekrar oynatılır.</string>
+    <string name="downloads_delete_one_detail">Bundan sonra bölümü yeniden indirmezseniz oynatmak için bağlantı gerekir.</string>
     <string name="downloads_delete_watched">İzlenen indirmeleri sil</string>
     <string name="downloads_seeding_title">Paylaşım</string>
     <string name="downloads_seeding_after_watching">İzledikten sonra paylaşım</string>
-    <string name="downloads_seeding_note">İzlenen bölümler, Kaeri açıkken ve Kaynaklar altında belirlenen oran ya da süre sınırına ulaşılana kadar paylaşılır.</string>
+    <string name="downloads_seeding_note">İzlenen bölümler Kaeri açıkken geri paylaşılır. Paylaşım, Ayarlar\'da Kaynaklar altında belirlediğiniz oran ya da süre sınırında durur.</string>
     <string name="downloads_seeding_open_only">Paylaşım yalnızca Kaeri açıkken sürer.</string>
     <string name="downloads_background_title">Pencere kapanırken indirmeler sürüyorsa</string>
     <string name="downloads_background_keep">İndirmeler sürsün</string>
@@ -1496,8 +1496,8 @@
     <string name="episode_download_done">İndirildi</string>
     <string name="episode_download_failed">Bölüm %1$d indirilemedi. Yeniden deneyin.</string>
     <string name="first_other_title">Başka bir cihazda Kaeri kullanıyor musunuz?</string>
-    <string name="first_other_line">Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.</string>
-    <string name="first_other_pair_line">Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.</string>
+    <string name="first_other_line">Onunla eşleştirin; bu cihaz kaynaklarınızı, takip hizmetlerinizi ve geçmişinizi alır, kurulumun geri kalanı da sizin için yapılır.</string>
+    <string name="first_other_pair_line">O cihazda girmeniz için bir kod alırsınız. İkisi de aynı Wi-Fi ağında olmalı.</string>
     <string name="first_other_restore">Bulut klasöründen geri yükle</string>
     <string name="first_other_restore_line">Kaydettiğiniz kurtarma anahtarını kullanır</string>
     <string name="first_other_no">Hayır, burada başla</string>
@@ -1510,9 +1510,9 @@
     <string name="first_join_signins_line">%1$s</string>
     <string name="first_join_server">%1$s ekle</string>
     <string name="first_join_server_line">%1$s · %2$s üzerindeki anahtarla giriş yapar, %3$s içinde saklanır</string>
-    <string name="first_join_folders">Klasörler %1$s üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.</string>
+    <string name="first_join_folders">Klasörler %1$s üzerinde kalır. Bu cihazın kendi klasörlerini “Kaynaklarınız” bölümünde ekleyin.</string>
     <string name="first_join_steps_done">Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.</string>
-    <string name="first_join_store_refused">%1$s bu cihaza izin vermedi. %2$s size davet gönderebilir.</string>
+    <string name="first_join_store_refused">%1$s bu cihazı içeri almadı. %2$s size bir davet gönderebilir.</string>
     <string name="first_join_syncing">%1$s ile eşitleniyor</string>
     <string name="home_title">Ana sayfa</string>
     <string name="home_resume_episode">Bölüm %1$d devam et</string>
@@ -1537,7 +1537,7 @@
     <string name="home_end">Şimdilik hepsi bu. Tam listeler için Sezonluk ve Takvim\'e bakın.</string>
     <string name="home_end_signed_out">Listenizi ve Planlama\'yı almak için AniList\'e giriş yapın.</string>
     <string name="home_sign_in">AniList\'e giriş yap</string>
-    <string name="home_end_no_sources">Ana sayfadan oynatmak için bir kaynak ekleyin. Eklenti mağazalarında seçebileceğiniz birkaç tane var.</string>
+    <string name="home_end_no_sources">Ana sayfadan oynatmak için bir kaynak ekleyin. Eklentiler, Eklenti mağazalarından gelir.</string>
     <string name="home_not_found">Kaynaklarınızda bulunamadı</string>
     <string name="home_failed">Bazı öneriler yüklenemedi</string>
     <string name="home_try_again">Yeniden dene</string>
@@ -1698,7 +1698,7 @@
     <string name="title_connect_drive">Oynatmak için sürücüyü bağlayın</string>
     <string name="library_picker_title">Bölümlerinizin olduğu bir klasör seçin.</string>
     <string name="library_remove_detail">Dosyalarınız olduğu yerde kalır.</string>
-    <string name="library_reason_offline">AniList\'e sorulamadı. Sonraki taramada yeniden denenir.</string>
+    <string name="library_reason_offline">AniList\'e ulaşılamadı. Sonraki tarama yeniden dener.</string>
     <string name="library_choose_match">Eşleşmeyi seç</string>
     <string name="library_kept_line">Kendi başlığı olarak bırakıldı</string>
     <string name="library_fix_match">Bu eşleşmeyi düzelt</string>
@@ -1709,7 +1709,7 @@
     <string name="licensed_title">Lisanslı hizmetler</string>
     <string name="licensed_body">Kaeri, ücretini ödediğiniz yayın hizmetlerindeki başlıkları açabilir. Kendisi hiçbirini oynatmaz. Bağlantılar AniList\'ten gelir.</string>
     <string name="licensed_region">Bölge</string>
-    <string name="licensed_region_line">AniList\'in başka ülkeler için işaretlediği bağlantıları gizler. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.</string>
+    <string name="licensed_region_line">AniList\'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.</string>
     <string name="licensed_yours">Hizmetleriniz</string>
     <string name="licensed_show_all">Tümünü göster (%1$d)</string>
     <string name="licensed_region_system">Bu cihaz ile aynı olsun</string>
@@ -1857,7 +1857,7 @@
     <string name="onboarding_where_hosts">Kaeri zaten sahip olduklarınızı oynatır: bu cihaz üzerindeki dosyalar, Jellyfin sunucunuz ve katıldığınız mağazalardan gelen eklentiler.</string>
     <string name="onboarding_own_heading">Kendi medyanız var mı?</string>
     <string name="onboarding_invite_heading">Davet bağlantınız var mı?</string>
-    <string name="onboarding_where_stores">Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası imzalıdır ve her cihaz için ayrı bir belirteç verir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</string>
+    <string name="onboarding_where_stores">Eklentiler, eklenti mağazaları üzerinden gelir. Her biri imzalıdır ve her cihaza kendi belirtecini verir; bu yüzden sahibinden aldığınız bir davet bağlantısıyla katılırsınız.</string>
     <string name="onboarding_demo_heading">Şimdi deneyin</string>
     <string name="onboarding_demo_detail">Demo, yapımcılarının CC BY 4.0 altında paylaştığı こうしす！ dizisini Wikimedia Commons\'tan oynatır.</string>
     <string name="onboarding_play_demo">Demoyu oynat</string>
@@ -1871,12 +1871,12 @@
     <string name="party_join">Birlikte izlemeye katıl</string>
     <string name="party_leave">Birlikte izlemeden ayrıl</string>
     <string name="party_leaving">Ayrılıyor…</string>
-    <string name="party_ready_action">Hazırım</string>
+    <string name="party_ready_action">İzlemeye hazır</string>
     <string name="party_copy_invite">Davet bağlantısını kopyala</string>
     <string name="party_stay">Kal</string>
     <string name="party_leave_and_close">Ayrıl ve kapat</string>
     <string name="party_not_now">Şimdi değil</string>
-    <string name="party_getting_ready">Hazırlanıyor…</string>
+    <string name="party_getting_ready">Öneriler yükleniyor…</string>
     <string name="party_server">Sunucu</string>
     <string name="party_server_hint">host:port</string>
     <string name="party_recent_servers">Son kullanılan sunucular</string>
@@ -1887,7 +1887,7 @@
     <string name="party_your_name">Odadaki adınız</string>
     <string name="party_server_public">%1$s tarafından işletilen herkese açık bir sunucu, Kaeri tarafından değil.</string>
     <string name="party_server_suggest">Kendi sunucunuz yok mu? %1$s herkese açık bir sunucudur ve %2$s tarafından işletilir.</string>
-    <string name="party_server_invited">Sizi davet eden kişinin seçtiği bir sunucu. Kaeri bu sunucuyu işletmez.</string>
+    <string name="party_server_invited">Bu sunucuyu sizi davet eden kişi seçti. Kaeri bu sunucuyu işletmez.</string>
     <string name="party_server_shape">Sunucuyu bir ana makine ve bir port olarak yazın, örneğin party.example:8999.</string>
     <string name="party_privacy">Sunucu adınızı, odayı ve birinin ne zaman oynattığını, duraklattığını ya da ileri sardığını görür. Her biriniz bölümü kendi kaynaklarınızdan oynatır.</string>
     <string name="party_room_hint">Oda adını bilen herkes katılabilir. Davet bağlantısı oda adını taşır, kimsenin bunu okuyup bildirmesi gerekmez.</string>
@@ -1959,7 +1959,7 @@
     <string name="together_open_player">Oynatıcıyı aç</string>
     <string name="together_recent">Son odalar</string>
     <string name="together_recent_row">%1$s. bölüm · %2$s ile · %3$s</string>
-    <string name="together_recent_empty">Katıldığınız odalar burada görünür, son on tanesi.</string>
+    <string name="together_recent_empty">Katıldığınız son on oda burada görünür.</string>
     <string name="together_rejoin">Yeniden katıl</string>
     <string name="together_forget_room">Son odalardan kaldır</string>
     <plurals name="together_someone_here">
@@ -2065,7 +2065,7 @@
     <string name="party_chat_hidden_line">Ayarlar\'da, Oynatma bölümünde Sohbeti gizle açık.</string>
     <string name="party_chat_show">Sohbeti göster</string>
     <string name="settings_hide_chat">Birlikte izlemeler içinde sohbeti gizle</string>
-    <string name="settings_hide_chat_line">Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.</string>
+    <string name="settings_hide_chat_line">Sohbet satırları, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, sohbet alanı da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.</string>
     <string name="party_mute">%1$s kişisini sustur</string>
     <string name="party_unmute">%1$s kişisinin sesini aç</string>
     <string name="party_unmute_short">Sesi aç</string>
@@ -2279,8 +2279,8 @@
     <string name="player_load_subtitle_file">Altyazı dosyası yükle…</string>
     <string name="player_load_audio_file">Ses dosyası yükle…</string>
     <string name="player_file_picker_failed">Dosya seçici açılamadı. Yeniden deneyin.</string>
-    <string name="player_subtitle_file_failed">Bu altyazı dosyası yüklenemedi. Bunun bir altyazı dosyası olduğunu kontrol edin.</string>
-    <string name="player_audio_file_failed">Bu ses dosyası yüklenemedi. Bunun bir ses dosyası olduğunu kontrol edin.</string>
+    <string name="player_subtitle_file_failed">Bu dosya altyazı olarak yüklenemedi. .srt ya da .ass gibi bir altyazı dosyası seçin.</string>
+    <string name="player_audio_file_failed">Bu dosya ses olarak yüklenemedi. .mka ya da .flac gibi bir ses dosyası seçin.</string>
     <string name="player_track_unnamed">Adsız parça</string>
     <string name="player_audio_track_n">Ses %1$d</string>
     <string name="player_subtitle_track_n">Altyazı %1$d</string>
@@ -2346,7 +2346,7 @@
     <string name="reader_gap_small">Küçük</string>
     <string name="reader_look_system">Sistem</string>
     <string name="onboarding_read_demo">Demoyu oku</string>
-    <string name="onboarding_demo_books_detail">Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.</string>
+    <string name="onboarding_demo_books_detail">Yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir öykü.</string>
     <string name="onboarding_demo_both_detail">Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.</string>
     <string name="home_demo_only_books">Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</string>
     <string name="home_spotlight_read">Oku</string>
@@ -2577,7 +2577,7 @@
     <string name="book_sources_no_match">Eşleşme yok</string>
     <string name="book_sources_keep">Eşleşmeyenleri koru</string>
     <string name="book_sources_find">Bul</string>
-    <string name="book_sources_unmatched_note">Eşleşmeyen seriler yine klasörden okunur. Eşleşene kadar takip hizmeti ilerlemesi olmaz.</string>
+    <string name="book_sources_unmatched_note">Eşleşmeyen serileri yine klasörden okuyabilirsiniz. Eşleşene kadar ilerlemeleri takip hizmetine gitmez.</string>
     <string name="library_scope_label">Diziler veya Okuma</string>
     <string name="library_scope_shows">Diziler</string>
     <string name="library_scope_reading">Okuma</string>
@@ -2639,9 +2639,9 @@
     <string name="onboarding_lists_line_read">Kaeri, okuduklarınızı %1$s ile eşit tutar.</string>
     <string name="onboarding_lists_line_both">Kaeri, okuduklarınızı ve izlediklerinizi %1$s ile eşit tutar.</string>
     <string name="onboarding_lists_anilist_line">Listeler, ilerleme ve öneriler</string>
-    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl ve Trakt sonradan Ayarlar\'da Hesaplar altından eklenebilir.</string>
-    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu ve MangaUpdates sonradan Ayarlar\'da Hesaplar altından eklenebilir.</string>
-    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt sonradan Ayarlar\'da Hesaplar altından eklenebilir.</string>
+    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl ve Trakt\'ı daha sonra Ayarlar\'da Hesaplar altından ekleyebilirsiniz.</string>
+    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu ve MangaUpdates\'i daha sonra Ayarlar\'da Hesaplar altından ekleyebilirsiniz.</string>
+    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt\'ı daha sonra Ayarlar\'da Hesaplar altından ekleyebilirsiniz.</string>
     <string name="onboarding_connect">%1$s bağla</string>
     <string name="onboarding_books_title">Kitaplarınız nereden gelir</string>
     <string name="onboarding_books_line">Kaeri kitapsız gelir. Elinizdekileri ekleyin ya da sahibinin davetiyle bir eklenti mağazasına katılın.</string>
@@ -2725,8 +2725,8 @@
     <string name="settings_delete_after_reading_note">Yer imli bölümler saklanır</string>
     <string name="settings_chapter_notifications_note">Okuma listenizdeki seriler</string>
     <string name="settings_downloads_finished_note">İndirilen tüm bölümler bitince</string>
-    <string name="settings_chapter_notifications_footer">Bölümlerin kendi sistem kanalı vardır, bu yüzden ayrıca sessize alınabilir.</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates, herkese açık API\'siyle kullanılır.</string>
+    <string name="settings_chapter_notifications_footer">Bölümlerin kendi sistem kanalı vardır; böylece onları sessize alıp gerisini açık tutabilirsiniz.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri, MangaUpdates ile herkese açık API\'si üzerinden iletişim kurar.</string>
     <string name="accounts_username">Kullanıcı adı</string>
     <plurals name="read_downloads_total">
         <item quantity="one">%1$d bölüm · %2$s</item>
@@ -2754,7 +2754,7 @@
     <string name="seasonal_empty_format">Bu sezon bu biçimde başlık yok</string>
     <string name="seasonal_empty_format_detail">Tüm biçimleri deneyin.</string>
     <string name="seasonal_filter_in_search">Aramada filtrele</string>
-    <string name="seasonal_filter_help">Bu sezon Arama\'da. Her filtre sonuçları daraltır.</string>
+    <string name="seasonal_filter_help">Bu sezonu, her filtrenin çalıştığı Arama\'da açar</string>
     <string name="sort_popularity">Popülerlik</string>
     <string name="sort_score">Puan</string>
     <string name="sort_air_day">Yayın günü</string>
@@ -2801,7 +2801,7 @@
     <string name="filter_released">Yayın tarihi</string>
     <string name="filter_where_to_watch">Nerede izlenir</string>
     <string name="filter_licensed_only">Yalnızca lisanslı</string>
-    <string name="filter_my_list">Listemdeki başlıklar</string>
+    <string name="filter_my_list">Listenizdeki başlıklar</string>
     <string name="filter_show">Göster</string>
     <string name="filter_hide">Gizle</string>
     <string name="filter_only">Yalnızca</string>
@@ -2980,7 +2980,7 @@
     <string name="servers_kind_films">Filmler</string>
     <string name="servers_error_certificate">%1$s, bu cihazın güvenmediği bir sertifika kullanıyor. Güvendiği bir sertifikaya sahip, https:// ile başlayan bir adres kullanın.</string>
     <string name="servers_row_signed_out_here">Oturum kapalı</string>
-    <string name="servers_sign_out_line">Bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.</string>
+    <string name="servers_sign_out_line">Oturumu kapatmak, bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.</string>
     <string name="settings_language">Dil</string>
     <string name="settings_language_app">Uygulama dili</string>
     <string name="language_follow_system">Sistem dilini kullan</string>
@@ -3088,11 +3088,11 @@
     <string name="settings_artwork_detail">Atıf, uygulamanın yasal notlarında</string>
     <string name="settings_new_episodes">Yeni bölümler</string>
     <string name="settings_new_episodes_detail">İzleme listenizdeki diziler</string>
-    <string name="settings_notify_detail">İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.</string>
+    <string name="settings_notify_detail">Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim alırsınız. Bildirim diziyi ve bölüm numarasını belirtir, bölümün adını hiçbir zaman belirtmez. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.</string>
     <string name="settings_coming_up">Yaklaşanlar · sonraki 7 gün</string>
     <string name="settings_system_notifications">Bildirim ayarları</string>
     <string name="settings_system_notifications_detail">Ses, titreşim ve kilit ekranı</string>
-    <string name="settings_system_notifications_apple">Sistem Ayarları\'nı açar. Afiş stili, ses ve rozetler orada ayarlanır.</string>
+    <string name="settings_system_notifications_apple">Afiş stilini, sesi ve rozetleri ayarladığınız Sistem Ayarları\'nı açar.</string>
     <string name="settings_notifications_blocked">Kapalı: sistem Kaeri için bildirimlere izin vermiyor</string>
     <string name="settings_notifications_show_on">Bu dizinin ayarlarında açık</string>
     <string name="settings_notify_show">Bu dizinin yeni bölümü çıktığında</string>
@@ -3106,7 +3106,7 @@
     <string name="show_settings_always">Her zaman</string>
     <string name="show_settings_never">Hiçbir zaman</string>
     <string name="show_settings_subs_remembered">Son bölümünüzden hatırlandı.</string>
-    <string name="show_settings_subs_follow">Oynatıcıda seçilir. Ayarlar › Oynatma ayarlarını izler.</string>
+    <string name="show_settings_subs_follow">Oynatıcıda seçilir. O zamana kadar Ayarlar › Oynatma geçerlidir.</string>
     <string name="show_settings_source">Kaynak</string>
     <string name="show_settings_source_detail">Otomatik seçim kaynaklarınızı sırayla dener.</string>
     <string name="show_settings_reset">Varsayılanlara sıfırla</string>
@@ -3136,7 +3136,7 @@
     <string name="settings_upload_unlimited">Sınırsız</string>
     <string name="settings_upscaling_natural">Doğal · ArtCNN</string>
     <string name="settings_label_hover_cards">Üzerine gelince kapağı büyüt</string>
-    <string name="settings_hover_cards_note">İmleç bir kapağın üzerinde durunca fragmanlı büyük bir kart gösterilir.</string>
+    <string name="settings_hover_cards_note">İmleç bir kapağın üzerinde durunca fragmanıyla daha büyük bir kart açılır.</string>
     <string name="settings_upscaling_note_natural">Çizgiler ve doku olduğu gibi korunur, hiçbir şey yeniden çizilmez.</string>
     <string name="settings_upscaling_note_sharp">Daha keskin çizgiler ve belirgin kenarlar, dokudan biraz ödün vererek.</string>
     <string name="settings_after_download">Her indirme bittiğinde çalıştırılan komut</string>
@@ -3224,7 +3224,7 @@
     <string name="book_server_err_password">%1$s bu parolayı kabul etmedi</string>
     <string name="book_server_err_password_line">%1$s için tarayıcıda kullandığınız kullanıcı adı ve parolayı girin.</string>
     <string name="book_server_err_key">%1$s bu anahtarı kabul etmedi</string>
-    <string name="book_server_err_key_line">Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</string>
+    <string name="book_server_err_key_line">Anahtar, Kavita\'da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</string>
     <string name="book_server_empty">%1$s bu hesaba hiç seri göstermiyor</string>
     <string name="book_server_empty_line">Giriş yapılıyor, ama sunucu hâlâ tarıyor olabilir veya bu hesabın kitaplara erişimi olmayabilir.</string>
     <string name="book_server_empty_recheck">Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.</string>
@@ -3263,25 +3263,25 @@
     <string name="store_installed_row">Yüklendi</string>
     <string name="store_install_all_reading">Okuma için hepsini yükle</string>
     <plurals name="store_installed">
-        <item quantity="one">Bir eklenti yüklendi. “kaynaklar” bölümünde.</item>
-        <item quantity="other">Yüklenen eklentiler: %1$d. Bunlar “kaynaklar” bölümünde.</item>
+        <item quantity="one">Bir eklenti yüklendi. “Kaynaklarınız” bölümünde.</item>
+        <item quantity="other">%1$d eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.</item>
     </plurals>
     <string name="store_other_medium">%1$s içindeki her eklenti izlemek için</string>
     <string name="store_other_medium_line">Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.</string>
     <string name="store_turn_on_watching">İzlemeyi aç</string>
     <string name="store_empty">%1$s içinde henüz eklentiler yok</string>
-    <string name="store_empty_line">Üyesiniz. %1$s yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.</string>
+    <string name="store_empty_line">Üyesiniz, bu yüzden %1$s yeni eklentiler eklediğinde bunlar Eklenti mağazaları içinde görünür.</string>
     <string name="store_err_unreachable">%1$s adresine ulaşılamadı</string>
-    <string name="store_err_unreachable_line">Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını %1$s kişisine sorun.</string>
+    <string name="store_err_unreachable_line">Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin ya da çalışıp çalışmadığını %1$s kişisine sorun.</string>
     <plurals name="store_other_medium_more">
         <item quantity="one">Bir tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
         <item quantity="other">%1$d tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="one">Bir tane daha okumak için, ama bu TV okuma yapmıyor.</item>
-        <item quantity="other">%1$d tane daha okumak için, ama bu TV okuma yapmıyor.</item>
+        <item quantity="one">Bir tane daha okuma için; bu TV okuma yapmaz.</item>
+        <item quantity="other">%1$d tane daha okuma için; bu TV okuma yapmaz.</item>
     </plurals>
-    <string name="store_tv_all_reading">%1$s içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.</string>
+    <string name="store_tv_all_reading">%1$s içindeki her eklenti okuma için; bu TV okuma yapmaz.</string>
     <string name="store_plugin_row">Sürüm %1$s · %2$s ile iletişim kurabilir</string>
     <string name="source_added">%1$s eklendi · %2$d seri</string>
     <plurals name="source_added_plugins">
@@ -3411,7 +3411,7 @@
     <string name="sources_add_folder">Klasör…</string>
     <string name="sources_add_server">Medya sunucusu…</string>
     <string name="sources_add_store">Bir eklenti mağazasına katıl…</string>
-    <string name="sources_empty_body">Kaynaklar, bölümlerin geldiği yerlerdir: bu cihaz üzerindeki klasörler, medya sunucunuz ve katıldığınız mağazalardan gelen eklentiler.</string>
+    <string name="sources_empty_body">Kaynaklar, bölümlerin geldiği yerlerdir: bu cihazdaki klasörler, medya sunucunuz ve katıldığınız eklenti mağazalarından gelen eklentiler.</string>
     <string name="sources_empty_more">Ya da %1$s.</string>
     <string name="sources_empty_join_link">bir eklenti mağazasına katılın</string>
     <string name="sources_add_folder_button">Klasör ekle</string>
@@ -3425,7 +3425,7 @@
     <string name="sources_demo_link_licence">Lisans</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Yalnızca Wikimedia Commons\'a erişir: upload.wikimedia.org ve commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">Demo yalnızca Wikimedia Commons\'a erişir: upload.wikimedia.org ve commons.wikimedia.org.</string>
     <string name="sources_demo_private">Demo hiçbir yerde oturum açmaz ve AniList\'e hiçbir şey yazmaz.</string>
     <string name="sources_demo_remove">Demoyu kaldır</string>
     <string name="sources_demo_add">Demoyu ekle</string>
@@ -3448,7 +3448,7 @@
     <string name="stores_intro">Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.</string>
     <string name="stores_not_from_app">Eklentiler eklenti mağazasının sahibinden gelir, Kaeri\'den gelmez. İstediğiniz zaman eklenti mağazasından ayrılabilirsiniz.</string>
     <string name="stores_join_owner_responsible">Bu eklenti mağazası sahibi %1$s tarafından işletiliyor ve eklentiler onun tarafından seçildi. Kaeri bunları yapmadı, incelemedi ya da onaylamadı.</string>
-    <string name="stores_no_plugins">Bu eklenti mağazası henüz eklentiler sunmuyor.</string>
+    <string name="stores_no_plugins">Bu eklenti mağazasında henüz eklentiler yok.</string>
     <string name="stores_plugins">Eklentiler</string>
     <string name="stores_plugin_limits">Her eklenti yalnızca yanında listelenen sunuculara bağlanabilir ve dosyalarınızı okuyamaz.</string>
     <string name="stores_plugin_limits_short">Eklentiler dosyalarınızı okuyamaz ve listelenmeyen sunuculara bağlanamaz.</string>
@@ -3460,7 +3460,7 @@
     <string name="stores_access_ended_detail">Bu eklenti mağazasının sahibi erişiminizi sonlandırdı. Yüklü eklentiler çalışmaya devam eder, ancak hiçbiri güncellenmez.</string>
     <string name="stores_access_ended_page">Bu eklenti mağazası artık bu cihazı kabul etmiyor. Yüklü eklentiler siz kaldırana kadar kalır.</string>
     <string name="stores_no_longer_joined">Bu eklenti mağazası artık katılınmış değil.</string>
-    <string name="stores_offline_last_list">Çevrimdışı: %1$s. Aşağıdaki eklentiler, kontrol edilen son listedir.</string>
+    <string name="stores_offline_last_list">Çevrimdışı: %1$s. Gönderdiği son liste gösteriliyor.</string>
     <string name="stores_offline_last_list_plain">Çevrimdışı. Gönderdiği son liste gösteriliyor.</string>
     <string name="stores_key_line">Mağaza anahtarı %1$s · %2$s</string>
     <string name="stores_device_joined_as">Şu adla katıldı: %1$s</string>
@@ -3495,14 +3495,14 @@
     <string name="stores_install_label">%1$s yükle</string>
     <string name="stores_replace_label">Elle eklenen %1$s kopyasını değiştir</string>
     <string name="stores_remove_plugin_title">%1$s kaldırılsın mı?</string>
-    <string name="stores_remove_plugin_detail">Bu cihazdan silinir. Eklenti mağazası onu yeniden yükleyebilir.</string>
+    <string name="stores_remove_plugin_detail">Bu cihazdan silinir. eklenti mağazasından yeniden yükleyebilirsiniz.</string>
     <string name="stores_newly_contacts">Yeni bağlanılanlar</string>
     <string name="stores_update_contacts">Bu güncelleme ayrıca şu sunuculara bağlanır: %1$s.</string>
     <string name="stores_new_in">Yenilikler: %1$s</string>
     <string name="stores_join_title">eklenti mağazasına katıl</string>
     <string name="stores_add_title">Eklenti mağazası ekle</string>
     <string name="stores_join_detail">eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın.</string>
-    <string name="stores_join_detail_desktop">eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın. Hiçbir şey katılmadan ya da yüklenmeden önce eklenti mağazasının sunduklarını görürsünüz.</string>
+    <string name="stores_join_detail_desktop">Bir eklenti mağazasının sahibinin size gönderdiği davet bağlantısını yapıştırın. Katılmadan ya da bir şey yüklemeden önce eklenti mağazasının neler sunduğunu görürsünüz.</string>
     <string name="stores_join_detail_opened">eklenti mağazasının sahibinin gönderdiği bağlantıyı yapıştırın. Mesajlar\'dan açılan bir Kaeri:// davet bağlantısı bu sayfayı doğrudan doldurur.</string>
     <string name="stores_invite_link">Davet bağlantısı</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3570,7 +3570,7 @@
     <string name="stores_invite_works_times_forever">%1$d kez geçerli, siz iptal edene kadar.</string>
     <string name="stores_invite_works_any">Bu bağlantıya sahip herkes %1$s tarihine kadar katılabilir.</string>
     <string name="stores_invite_works_any_forever">Bu bağlantıya sahip herkes siz iptal edene kadar katılabilir.</string>
-    <string name="stores_invite_once_until">Gönderdiğiniz kişi için bir kez geçerli. %1$s tarihine kadar.</string>
+    <string name="stores_invite_once_until">Gönderdiğiniz kişi için %1$s tarihine kadar bir kez çalışır.</string>
     <string name="stores_invite_once_forever">Gönderdiğiniz kişi için bir kez geçerli, siz iptal edene kadar.</string>
     <string name="stores_invite_contact_needed">Önce bu mağaza için bir iletişim bilgisi ekleyin. Sınırsız kullanılabilen bir bağlantı, mağazanın kendi bağlantısı gibi başkalarına iletilebilir.</string>
     <string name="stores_invite_owner_once">Sahip davetleri bir kez geçerlidir.</string>
@@ -3619,7 +3619,7 @@
         <item quantity="other">%1$d eklenti</item>
     </plurals>
     <string name="notice_open_stores">eklenti mağazalarını aç</string>
-    <string name="stores_what_is">Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaz için ayrı bir belirteç veren küçük bir sunucudur. kaynaklar eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</string>
+    <string name="stores_what_is">Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaza kendi belirtecini veren küçük bir sunucudur. İçindeki eklentiler kaynaklar ekler. Kaeri eklenti mağazaları işletmez ve hiçbirini listelemez; bu yüzden sahibinden aldığınız bir davet bağlantısıyla birine katılırsınız.</string>
     <string name="stores_what_is_link">eklenti mağazası nedir?</string>
     <string name="stores_invite_rules">Bir davet bağlantısı bir kişi için bir kez geçerlidir ve yedi gün sürer. Sizinkinin süresi dolduysa eklenti mağazası sahibinden yenisini isteyin.</string>
     <string name="stores_qr_label">Davet bağlantısı için QR kodu</string>
@@ -3665,7 +3665,7 @@
     <string name="sync_road_nearby">Yakındaki bir cihaz ile</string>
     <string name="sync_road_nearby_line">Aynı Wi-Fi\'deki başka bir cihaz ile eşleştirin. Başka hiçbir yerde bir şey saklanmaz.</string>
     <string name="sync_road_cloud">Bir bulut klasörü üzerinden</string>
-    <string name="sync_road_cloud_line">Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlar birbirinden uzaktayken de çalışır ve yedek tutar.</string>
+    <string name="sync_road_cloud_line">Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlarınız birbirinden uzaktayken de çalışır ve bir yedek tutar.</string>
     <string name="sync_road_later">Diğer yolu sonradan ekleyebilirsiniz. Çoğu kişi ikisini birden kullanır.</string>
     <string name="devices_yours">Cihazlarınız</string>
     <string name="devices_only_this">Yalnızca bu cihaz</string>
@@ -3685,7 +3685,7 @@
     <string name="sync_turn_off_alert">%1$s üzerinde eşitleme kapatılsın mı?</string>
     <string name="sync_turn_off_alert_line">Bu %1$s, diğer cihazlar ile paylaşmayı bırakır. Elindeki her şey burada kalır.</string>
     <string name="cloud_group">Bulut klasörü</string>
-    <string name="cloud_foot">cihazlar birbirinden uzaktayken devreye girer ve mühürlü bir yedek tutar. Yalnızca cihazlar okuyabilir.</string>
+    <string name="cloud_foot">Klasör, cihazlarınızı birbirinden uzaktayken eşitler ve mühürlü bir yedek saklar. Onu yalnızca cihazlarınız okuyabilir.</string>
     <string name="cloud_add">Bulut klasörü ekle</string>
     <string name="cloud_pick_title">Bir bulut klasörü seçin</string>
     <string name="cloud_google_line">Drive\'ınızda gizli bir Kaeri klasörü</string>
@@ -3801,7 +3801,7 @@
     <string name="profiles_delete_alert_line">%1$s profilinin bu cihaz cihazdaki geçmişi ve girişleri kaldırılır. %1$s ile eşitlenen cihazlar kendi verilerini tutar.</string>
     <string name="profiles_picker">Kim izliyor?</string>
     <string name="profiles_ask_at_launch">Açılışta kimin izlediğini sor</string>
-    <string name="profiles_ask_foot">Varsayılan olarak kapalı. Evin paylaştığı bir iPad için. Hesap satırı profilleri istediğiniz zaman değiştirir.</string>
+    <string name="profiles_ask_foot">Varsayılan olarak kapalıdır. Tüm evin paylaştığı bir iPad için açın. Profilleri istediğiniz zaman hesap satırından değiştirebilirsiniz.</string>
     <string name="profiles_switch">Profil değiştir</string>
     <string name="profiles_manage">Profilleri yönet</string>
     <string name="first_setup_other">Başka bir cihaz cihazdan kur</string>
@@ -4070,7 +4070,7 @@
     <string name="accounts_tokens_file">Oturum anahtarları bu cihazda, yalnızca sizin okuyabildiğiniz bir dosyada tutulur.</string>
     <string name="accounts_tokens_keystore">Oturum anahtarları bu cihazda tutulur ve cihazın anahtar deposundaki bir anahtarla mühürlenir.</string>
     <string name="accounts_form_title">Oturum aç: %1$s</string>
-    <string name="accounts_form_detail">Parolanız yalnızca bir kez %1$s hizmetine gönderilir. Oturum anahtarı bu cihazda tutulur.</string>
+    <string name="accounts_form_detail">Parolanız bir kez %1$s hizmetine gider; karşılığında bu cihazda kalan bir belirteç alınır.</string>
     <string name="accounts_user_or_email">E-posta veya kullanıcı adı</string>
     <string name="accounts_password">Parola</string>
     <string name="accounts_signing_in_action">Oturum açılıyor</string>
@@ -4094,7 +4094,7 @@
     <string name="accounts_keep_theirs">%1$s değerini tut</string>
     <string name="accounts_open_on">%1$s üzerinde aç</string>
     <string name="accounts_listed_by">%1$s tarafından listelendi</string>
-    <string name="accounts_did_not_answer">%1$s yanıt vermedi.</string>
+    <string name="accounts_did_not_answer">%1$s yanıt vermedi. Biraz sonra yeniden deneyin.</string>
     <string name="accounts_no_extras">%1$s bu dizi için henüz kadro, ekip ya da öneri içermiyor.</string>
     <string name="accounts_episodes_from">Bölümler %1$s üzerinden gelir. Oynatmak için bir kaynak ekleyin.</string>
     <string name="accounts_adds_season">%1$s, bir sezonun başlıklarını duyuruldukça ekler.</string>
@@ -4215,7 +4215,7 @@
     <string name="updates_saved_replace">%1$s sürümü İndirilenler klasörüne kaydedildi. Güncellemek için eski dosyayı yenisiyle değiştirin: %2$s</string>
     <string name="updates_saved_replace_plain">%1$s sürümü İndirilenler klasörüne kaydedildi. Güncellemek için eski dosyayı yenisiyle değiştirin.</string>
     <string name="updates_why_server">İndirme durdu: sunucu reddetti (%1$d). Daha sonra yeniden deneyin.</string>
-    <string name="updates_why_connection">İndirme durdu: bağlantı koptu.</string>
+    <string name="updates_why_connection">İndirme durdu: bağlantı koptu. Yeniden deneyin.</string>
     <string name="updates_why_save">İndirme kaydedilemedi: %1$s</string>
     <string name="updates_why_size">İndirme %1$s, bu güncelleme için listelenen %2$s değil.</string>
     <string name="updates_why_checksum">İndirme, bu güncelleme için listelenen sağlama toplamıyla eşleşmiyor.</string>

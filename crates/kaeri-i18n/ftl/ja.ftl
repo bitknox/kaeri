@@ -28,7 +28,7 @@ notice-cast-refused = { $name }でこのストリームを再生できません�
 notice-cast-taken-over = 別のデバイスが{ $name }で再生を始めたため、キャストを終了しました。
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = このデバイスは{ $name }と同じネットワークにないか、VPN経由で接続しています。キャストには同じネットワークが必要です。
+notice-cast-not-same-network = このデバイスは{ $name }と同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name }との接続が切れたため、キャストを終了しました。
@@ -358,7 +358,7 @@ match-search-timed-out = 時間内に応答がありませんでした。
 match-search-source-off = オンになっていません。
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = このタイトルには{ $source }を使います。
+notice-source-pinned = このタイトルは今後{ $source }から再生します。
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = ソースの自動選択に戻しました。
@@ -538,13 +538,13 @@ reader-moved = { $device }が止まった第{ $chapter }話の{ $page }ページ
 reader-moved-number = { $device }が止まった第{ $chapter }話の{ $page }ページに移動しました
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = 右から左に自動判定しました
+reader-detected-right-to-left = 右から左のようです
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = 左から右に自動判定しました
+reader-detected-left-to-right = 左から右のようです
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = 縦スクロールに自動判定しました
+reader-detected-strip = 縦スクロールのようです
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = オフラインです。ダウンロード済みの章は開けます。
@@ -1093,7 +1093,7 @@ store-admin-link-foreign = { $store }から、別のアドレスを指す管理�
 store-open-join-unsupported = { $store }のサーバーは古く、リンクで誰でも参加できるようにはできません。先に更新してください。
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name }をオフにしました。エピソードを探すときは飛ばされます。
+source-switched-off = { $name }をオフにしました。Kaeriはエピソードを探すときにこれを飛ばします。
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name }をオンにしました。
@@ -1102,7 +1102,7 @@ source-switched-on = { $name }をオンにしました。
 plugin-not-loaded = { $id }は読み込まれていません。ソースの下にインストールされているか確認してください。
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = このタイトルには{ $name }を使います。
+release-pinned = このタイトルは今後{ $name }を使います。
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = その選択を保存できませんでした。{ $reason }
@@ -1192,10 +1192,10 @@ notice-token-exchange-failed = { $tracker }からトークンを取得できま�
 notice-browser-not-opened = サインイン用のブラウザを開けませんでした。ブラウザがインストールされているか確認して、もう一度試してください。{ $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = 待機中の{ $tracker }のサインインはありません。サインインを最初からやり直してください。
+notice-sign-in-not-waiting = { $tracker }からサインインの応答が届きましたが、待機中のサインインはありません。サインインを最初からやり直してください。
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = { $tracker }から戻ったサインイン情報が、今回の要求のものではありません。サインインを最初からやり直してください。
+notice-sign-in-wrong-request = { $tracker }からのサインインの応答が、要求と一致しません。サインインを最初からやり直してください。
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = { $tracker }へのサインインがトークンなしで戻ってきました。もう一度試してください。
@@ -1291,7 +1291,7 @@ notice-update-available = { $tag }が公開されました。kaeri --updateを�
 cause-proxy-needs-address = プロキシにはホストとポートが必要です。
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = プロキシのアドレスは、確認に使えないアドレスです。
+cause-proxy-address-unusable = プロキシの確認では、このアドレスを使えません。
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = サーバーに接続できませんでした。
@@ -1315,7 +1315,7 @@ notice-playback-failed = 再生に失敗しました。別のソースをお試�
 notice-engine-fault = Kaeriの内部で問題が発生しました。処理は続行されましたが、画面が止まっているように見える場合は、終了してから開き直してください。
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{ $path }に残されています。連携サービスの情報は、次回の同期で戻ります。
+notice-database-set-aside = データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{ $path }に残っています。連携サービスにある情報は、次回の同期で戻ります。
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeriはフォルダ { $path }を作成できませんでした。ディスクに空きがあり、フォルダに書き込めることを確認してから、もう一度お試しください。{ $reason }
@@ -1330,7 +1330,7 @@ config-reset-failed = 設定をリセットするため{ $path }を移動しよ�
 start-failed-database = Kaeriは{ $path }のデータベースを開けませんでした。同じフォルダで別のKaeriアプリが開いている場合は、終了してからもう一度お試しください。{ $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeriは、config.tomlのネットワーク設定から接続を設定できませんでした。{ $reason }
+start-failed-network = Kaeriは、config.tomlのネットワーク設定で接続できませんでした。設定を確認してから、もう一度お試しください。{ $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeriを起動できませんでした。一度終了してから、開き直してください。{ $reason }
@@ -1363,10 +1363,10 @@ notice-surprise-empty-filters = この条件に合う作品がありません。
 notice-surprise-empty-planning = 「計画中」リストが空です。
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = オフラインです。検索からのおまかせにはAniListが必要です。
+notice-surprise-offline = オフラインです。おまかせで作品を選ぶにはAniListが必要です。
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = いまは作品を選べませんでした。しばらくしてからもう一度お試しください。
+notice-surprise-failed = AniListに接続できず、作品を選べませんでした。しばらくしてからもう一度お試しください。
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = プロキシを編集
@@ -1483,7 +1483,7 @@ party-members = メンバー
 party-choose-a-source = ソースを選択
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = どのソースにもエピソード{ $episode }がありません。ソースはプラグインが提供し、プラグインはプラグインストアから追加されます。
+party-sources-none-listed = どのソースにもエピソード{ $episode }がありません。ソースはプラグインから、プラグインはプラグインストアから追加します。
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1579,10 +1579,10 @@ settings-caption-sample = ランタンの道は、最後の町を過ぎても続
 settings-caption-note = 字幕のあるエピソードでは、{ $language }の標準字幕がこのように表示されます。スタイル付きの字幕は独自の見た目を保ちます。
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = 視聴リストの作品のエピソードが公開されると、{ $tracker }が伝える時刻に1件通知します。作品ごとの設定が優先されます。
+settings-notify-note-on = 視聴リストの作品のエピソードが公開されると、{ $tracker }が伝える時刻に1件通知が届きます。作品ごとの設定がこの設定より優先されます。
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = オフです。作品ごとの設定で通知をオンにした作品だけ通知します。
+settings-notify-note-off = オフです。作品ごとの設定で通知をオンにした作品だけが通知を送ります。
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeriはアカウントなしで使えます。サインアウトしても、視聴履歴はこのコンピューターに残ります。
@@ -1657,7 +1657,7 @@ controller-help-buttons = コントローラーのボタン
 settings-note-cast-tvs-computer = 「テレビで再生」のChromecastの下に表示されます。このコンピューターがエピソードを送信します。
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのコンピューターがエピソードを送信します。
+settings-note-torrents-while-casting-computer = オンにすると、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのコンピューターがエピソードを送信します。
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = プラグインストアを開く
@@ -1828,7 +1828,7 @@ stores-owner-needs-connection = プラグインストアに接続が必要です
 stores-owner-needs-connection-detail = このデバイスがオンラインに戻ったら、もう一度お試しください。
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = リンクを作成するには、プラグインストアへの接続が必要です。
+stores-owner-link-offline = このデバイスがオフラインの間はリンクを作成できません。
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = このリンクを送ってください。一度だけ使えて、{ $until }まで有効です。
@@ -1837,7 +1837,7 @@ stores-send-link-until = このリンクを送ってください。一度だけ�
 stores-open-on-detail = 名前なしで参加できます。オフにするとリンクが停止し、再びオンにすると新しいリンクが作られます。
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = 招待した人だけが参加できます。オンにすると、リンクを持つ人は名前なしで参加できます。
+stores-open-off-detail = 招待した人だけが参加できます。オンにすると、リンクを持つ人なら誰でも名前なしで参加できます。
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = 名前は保存されません。
@@ -1873,7 +1873,7 @@ stores-published-state = 公開済み
 stores-publish-label = { $name } { $version }を公開
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = あとで確認するには、設定のデバイスを開き、アカウントのパスワードを入力します。
+rkey-lock-linux = 設定のデバイスで、アカウントのパスワードを入力すると再び確認できます。
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Kaeriの復元キーを表示します
@@ -2029,7 +2029,7 @@ library-row-summary-linux =
 library-page-watching-linux = 変更を監視中
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Kaeriの起動時に再確認します
+library-page-no-watch-linux = Kaeriの起動時に変更を確認します
 
 # Heading over the matched series.
 library-matched-linux = 一致済み
@@ -2194,7 +2194,7 @@ title-no-seasons = このタイトルの関連シリーズは見つかりませ�
 title-pin-off-page = ソースを選ぶには、タイトルのページを開いてください。
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = ソースはまだ登録されていません。少し待ってから、もう一度お試しください。
+title-no-sources-yet = ソースをまだ読み込んでいます。少し待ってから、もう一度お試しください。
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = 視聴ステータスは連携サービスに保存されますが、サインインしている連携サービスがありません。:accountsでサインインしてください。
@@ -2368,7 +2368,7 @@ episodes-empty-none-listed = エピソードは掲載されていません
 episodes-empty-none-listed-hint = ソースにはこのタイトルのエピソードが掲載されていません。{ $search }で正しい一致を検索するか、{ $pick }で別のソースを選べます。
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = このエピソードには選択できるリリースがありません。
+episodes-no-releases = このエピソードには選べるリリースがありません。
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = ダウンロードの前にソースを追加してください。{ $key }でソース画面を開いてください。
@@ -3031,7 +3031,7 @@ downloads-column-progress = 進捗
 downloads-empty-heading = 待機中はありません
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = タイトルやエピソードで{ $key }を押すと、オフライン用に追加できます。
+downloads-empty-hint = タイトルやエピソードで{ $key }を押すと、ダウンロードできます。
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = E{ $episode }
@@ -3211,16 +3211,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = 送信待ち{ $queued }件、IDの紐付け待ち{ $held }件
+accounts-row-queued-held = 送信待ち{ $queued }件、照合待ち{ $held }件
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = 手元を残す
+accounts-conflict-keep-mine = 手元を使う
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = 連携先を残す
+accounts-conflict-keep-theirs = 連携先を使う
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }：自分 { $local } / 連携サービス { $remote }
+accounts-conflict-row = { $title }  ·  { $field }：手元 { $local } / 連携サービス { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = ライブラリ
@@ -3253,7 +3253,7 @@ lists-empty-type-to-search = 入力して検索
 lists-empty-browse-filtered = ↵を押すと、この絞り込みで一覧を表示できます。
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = ↵を押すと、人気の作品を表示できます。
+lists-empty-browse-popular = ↵を押すと、人気の高い作品を表示できます。
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = 該当する結果はありません
@@ -3917,7 +3917,7 @@ settings-label-episode-discussions = エピソードのディスカッション
 settings-label-comment-images = コメントの画像を読み込む
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = カレンダーに自分のリストの作品だけを表示
+settings-label-calendar-mine = カレンダーにあなたのリストの作品だけを表示
 
 # Note under the titles row.
 settings-note-titles = AniListの選択は、AniListアカウントの設定に従います。サインアウト中は英語になります。
@@ -3974,13 +3974,13 @@ settings-note-update-check = 1日1回、起動時にキャッシュを使った�
 settings-note-presence = 次のエピソードから反映されます。
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = クライアントIDが必要です。discord.com/developers でアプリを登録してください。
+settings-note-presence-needs-client = 先にクライアントIDを設定してください。discord.com/developers でアプリを登録すると取得できます。
 
 # Note under the presence title row. The quoted text is what Discord shows.
 settings-note-presence-title = オフにすると、作品名を出さずに「アニメを視聴中」と表示します。
 
 # Note under the rich presence row.
-settings-note-presence-rich = カバー画像、進行バー、AniListへのリンクを追加します。タイトルの表示が必要です。
+settings-note-presence-rich = タイトルを表示しているあいだ、カバー画像、進行バー、AniListへのリンクを追加します。
 
 # Note under the torrent playback row.
 settings-note-torrents = 初期設定ではオフです。すぐに反映されます。
@@ -4136,13 +4136,13 @@ stores-footer-update-hosts = この更新は{ $hosts }への接続も求めて�
 stores-footer-may-contact = 接続できるホスト：{ $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = 自分として参加する、別のパソコン用の一度限りのリンク
+stores-footer-link-device = あなたとして別のデバイスを参加させる、一度限りのリンク
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = 新しい人のための一度限りのリンク
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = 参加者の一覧と、アクセス権の削除
+stores-footer-members = 参加者を確認し、アクセス権を取り消します
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ 招待された人だけが参加できるようにし、リンクを止めます
@@ -4157,7 +4157,7 @@ stores-footer-publish = この端末のプラグインフォルダーからプ�
 stores-footer-admin = ブラウザーでメンバー、招待、プラグインを管理
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = このストアからインストールしたプラグインは、この端末に残り、更新されなくなります
+stores-footer-leave = このストアからインストールしたプラグインは、このデバイスに残り、更新されなくなります
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = リンクを知っている人なら誰でも
@@ -4325,7 +4325,7 @@ stores-footer-remove-anonymous = ↵ 参加日時しか分からないこのデ�
 stores-footer-remove-all-anonymous = ↵ リンクから参加したすべてのデバイスを削除
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = ターミナルが対応している場合はクリップボードにコピーしました。そうでない場合は選択してコピーしてください。
+stores-link-copied = ターミナルが対応していればコピーしました。コピーされない場合は、リンクを選択してコピーしてください。
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = 選択してコピーしてください。
@@ -4397,7 +4397,7 @@ stores-key-matches-invite = { $fingerprint }（招待と一致）
 stores-join-open = リンクを知っている人なら誰でも参加できます。
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = 名前なしで参加し、同じリンクで別のデバイスも参加します。
+stores-join-anonymous = 名前なしで参加します。ほかのデバイスも同じリンクで参加できます。
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = 参加済みです。もう一度参加すると、このデバイスに新しいトークンが発行されます。
@@ -4406,7 +4406,7 @@ stores-join-already = 参加済みです。もう一度参加すると、この�
 stores-join-device-note = ストアのオーナーにこの名前が表示されます。変更するには入力してください。
 
 # Lines of the leave confirmation.
-stores-leave-plugins = このストアからインストールしたプラグインは、この端末に残り、更新されなくなります。
+stores-leave-plugins = このストアからインストールしたプラグインは、このデバイスに残り、更新されなくなります。
 
 # Lines of the leave confirmation.
 stores-leave-revoked = このデバイスのストアへのアクセス権は取り消されます。
@@ -4418,7 +4418,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = すでにインストールされたプラグインは、そのメンバーの端末に残ります。
+stores-remove-member-plugins = すでにインストールされたプラグインは、そのメンバーのデバイスに残ります。
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = リンクは使えなくなります。
@@ -4478,7 +4478,7 @@ stores-choice-update = { $version }に更新
 stores-choice-replace = 手動で追加したものを置き換え
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = この端末から削除
+stores-choice-remove = このデバイスから削除
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = このストアでの提供を停止
@@ -4619,7 +4619,7 @@ party-no-source-still-in = { $reason } 同時視聴には引き続き参加し�
 status-reloading-sources = ソースを再読み込みしています…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = この作品に固定されていたソースの{ $name }は利用できないため、ほかのソースを使用します。
+pin-unavailable = この作品に固定されているソースの{ $name }は利用できません。ほかのソースを試します。
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = 一緒に見る
@@ -4748,13 +4748,13 @@ settings-group-crashes = クラッシュレポート
 settings-crash-save = このデバイスにクラッシュレポートを保存
 
 # Line under that switch.
-settings-crash-save-detail = オンにすると、Kaeriはクラッシュのたびに、タイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。バグ報告に追加できます。自動では何も送信されません。
+settings-crash-save-detail = Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = クラッシュ後に確認する
 
 # Line under that switch.
-settings-crash-ask-detail = 次回の起動時に「報告…」付きの通知を表示します。
+settings-crash-ask-detail = 次にKaeriを開いたとき、「報告…」付きの通知を表示します。
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = { $system }が保持
@@ -4784,7 +4784,7 @@ settings-crash-delete = 削除
 settings-crash-delete-all = すべて削除
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = クラッシュレポートはこのデバイスに残ります。Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。
+settings-crash-footnote = クラッシュレポートはこのデバイスに残り、Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。
 
 # Button that shows the week before.
 calendar-previous-week = 前の週
@@ -4910,13 +4910,13 @@ cast-tvs-note-iphone = 「テレビで再生」のChromecastの下に表示さ�
 cast-tvs-note-ipad = 「テレビで再生」のChromecastの下に表示されます。このiPadがエピソードを送信します。
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのMacがエピソードを送信します。
+cast-torrents-note-mac = これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのMacがエピソードを送信します。
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPhoneがエピソードを送信します。
+cast-torrents-note-iphone = これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPhoneがエピソードを送信します。
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPadがエピソードを送信します。
+cast-torrents-note-ipad = これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPadがエピソードを送信します。
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = 次のエピソード · { $seconds }秒後に再生
@@ -5648,7 +5648,7 @@ downloads-delete-detail = ファイルがこのデバイスから削除されま
 downloads-delete-one-title = ダウンロードを削除
 
 # Line under it: what you lose.
-downloads-delete-one-detail = 再び再生するには、接続するか、もう一度ダウンロードしてください。
+downloads-delete-one-detail = 削除後は、もう一度ダウンロードしない限り、再生には接続が必要です。
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = 視聴済みのダウンロードを削除
@@ -5660,7 +5660,7 @@ downloads-seeding-title = シーディング
 downloads-seeding-after-watching = 視聴後のシーディング
 
 # Line under the seeding heading.
-downloads-seeding-note = 視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達するまで続きます。
+downloads-seeding-note = 視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達すると、共有は止まります。
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = ウィンドウを閉じるときにダウンロード中の場合
@@ -5738,10 +5738,10 @@ episode-download-failed = 第{ $episode }話をダウンロードできません
 first-other-title = ほかのデバイスですでにKaeriを使っていますか？
 
 # Under the title.
-first-other-line = ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。
+first-other-line = ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれ、残りの設定も完了します。
 
 # Line under the pair row.
-first-other-pair-line = そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。
+first-other-pair-line = そのデバイスに入力するコードが表示されます。どちらも同じWi-Fiに接続している必要があります。
 
 # Row that restores from a sync folder.
 first-other-restore = クラウドフォルダーから復元
@@ -5855,7 +5855,7 @@ home-end-signed-out = AniListにサインインして、リストと視聴予定
 home-sign-in = AniListにサインイン
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = ホームから再生するにはソースを追加してください。プラグインストアから選べます。
+home-end-no-sources = ホームから再生するにはソースを追加してください。プラグインはプラグインストアから入手します。
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = あなたのソースには見つかりません
@@ -6284,7 +6284,7 @@ library-picker-title = エピソードが入ったフォルダーを選んでく
 library-remove-detail = ファイルは元の場所に残ります。
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = AniListに問い合わせられませんでした。次回のスキャンで再試行します。
+library-reason-offline = AniListに接続できませんでした。次回のスキャンで再試行します。
 
 # Button that opens the match picker for a group.
 library-choose-match = 照合先を選ぶ
@@ -6317,7 +6317,7 @@ licensed-body = Kaeriでは、あなたが契約している配信サービス�
 licensed-region = 地域
 
 # Line under the region menu.
-licensed-region-line = AniListが他の国向けとしているリンクを非表示にします。国が指定されていないリンクも多いので、利用中のサービスも選んでください。
+licensed-region-line = AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。
 
 # Heading over the services the viewer pays for.
 licensed-yours = 利用中のサービス
@@ -6761,7 +6761,7 @@ onboarding-own-heading = 自分のメディアがありますか?
 onboarding-invite-heading = 招待リンクをお持ちですか?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。
+onboarding-where-stores = プラグインはプラグインストアから入手します。どれも署名付きで、デバイスごとに専用のトークンを発行します。そのため、参加には運営者からの招待リンクが必要です。
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = 今すぐ試す
@@ -6818,7 +6818,7 @@ party-leave-and-close = 退出して閉じる
 party-not-now = 今はしない
 
 # Line while the form fetches its suggestions.
-party-getting-ready = 準備しています…
+party-getting-ready = 候補を読み込んでいます…
 
 # Label of the server field.
 party-server = サーバー
@@ -7061,7 +7061,7 @@ together-recent = 最近のルーム
 together-recent-row = エピソード { $episode } · { $names }と · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = 参加したルームが直近10件ここに表示されます。
+together-recent-empty = 参加したルームのうち、直近10件がここに表示されます。
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = 再参加
@@ -7144,7 +7144,7 @@ party-member-finding = ソースを探しています
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = { $time }から視聴中
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = 準備完了
 
 # Heading of the invite block in the lobby.
@@ -7361,7 +7361,7 @@ party-chat-show = チャットを表示
 settings-hide-chat = 同時視聴でチャットを非表示
 
 # Line under that switch.
-settings-hide-chat-line = メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。
+settings-hide-chat-line = チャットのメッセージ、リアクション、シークバー上の目印は映像に表示されず、チャットの入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = { $name }をミュート
@@ -7962,10 +7962,10 @@ player-load-audio-file = 音声ファイルを読み込む…
 player-file-picker-failed = ファイル選択を開けませんでした。もう一度お試しください。
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = その字幕ファイルを読み込めませんでした。字幕ファイルかどうか確認してください。
+player-subtitle-file-failed = そのファイルを字幕として読み込めませんでした。.srtや.assなどの字幕ファイルを選んでください。
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = その音声ファイルを読み込めませんでした。音声ファイルかどうか確認してください。
+player-audio-file-failed = そのファイルを音声として読み込めませんでした。.mkaや.flacなどの音声ファイルを選んでください。
 
 # Name of a track that has no name or language.
 player-track-unnamed = 名称なしのトラック
@@ -8157,7 +8157,7 @@ reader-look-system = システム
 onboarding-read-demo = デモを読む
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。
+onboarding-demo-books-detail = 短いコミックと短い物語が1つずつ。作者がCreative Commonsで共有しています。
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = 作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。
@@ -9180,10 +9180,10 @@ settings-chapter-notifications-note = 「読書中」リストの作品
 settings-downloads-finished-note = ダウンロード中の章がすべて終わったとき
 
 # Under New chapters.
-settings-chapter-notifications-footer = 章の通知は独自のシステムチャンネルを使うため、単独で消音できます。
+settings-chapter-notifications-footer = 章の通知は独自のシステムチャンネルを使うため、ほかの通知はそのままで章だけを消音できます。
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates は公開 API 経由で利用します。
+accounts-mangaupdates-credit = Kaeriは公開APIでMangaUpdatesに接続します。
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = ユーザー名
@@ -9249,7 +9249,7 @@ seasonal-empty-format-detail = すべての形式を試してください。
 seasonal-filter-in-search = 検索で絞り込む
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = このシーズンを検索で開き、どのフィルターでも絞り込めます。
+seasonal-filter-help = このシーズンを検索で開き、すべてのフィルターを使えます
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = 人気
@@ -9390,7 +9390,7 @@ filter-where-to-watch = 視聴先
 filter-licensed-only = 正規ライセンスのみ
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = マイリストの作品
+filter-my-list = 自分のリストにある作品
 
 # Value of a three-way filter: include the titles.
 filter-show = 表示
@@ -9885,7 +9885,7 @@ servers-error-certificate = { $host }は、このデバイスが信頼してい�
 servers-row-signed-out-here = サインアウト済み
 
 # Line under it: what signing out does.
-servers-sign-out-line = このデバイスのサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。
+servers-sign-out-line = サインアウトすると、このデバイスのサーバー上のセッションが終了します。サーバーとダウンロードはそのまま残ります。
 
 # Settings group and row title for choosing a language.
 settings-language = 言語
@@ -10203,7 +10203,7 @@ settings-new-episodes = 新しいエピソード
 settings-new-episodes-detail = 「視聴中」リストの作品が対象です
 
 # Line explaining what a notification says.
-settings-notify-detail = フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。
+settings-notify-detail = フォローしている作品のエピソードが公開されると、1件通知が届きます。通知には作品名とエピソード番号だけが表示され、エピソード名は表示されません。作品ごとの設定でオフにできます。
 
 # Row: the coming-up digest.
 settings-coming-up = 今後7日間の放送
@@ -10215,7 +10215,7 @@ settings-system-notifications = 通知の設定
 settings-system-notifications-detail = サウンド、バイブレーション、ロック画面
 
 # Line under it on Apple.
-settings-system-notifications-apple = システム設定を開きます。バナーの表示、サウンド、バッジの設定はそこで行います。
+settings-system-notifications-apple = システム設定を開きます。バナーのスタイル、サウンド、バッジはそこで設定します。
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = オフ：システムでKaeriの通知が許可されていません
@@ -10257,7 +10257,7 @@ show-settings-never = しない
 show-settings-subs-remembered = 最後に見たエピソードの設定を記憶しています。
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = プレーヤーで選択します。設定 › 再生に従います。
+show-settings-subs-follow = プレーヤーで選びます。それまでは 設定 › 再生 が適用されます。
 
 # Row: the source for this show.
 show-settings-source = ソース
@@ -10341,7 +10341,7 @@ settings-upscaling-natural = 自然 · ArtCNN
 settings-label-hover-cards = ホバーでカバーを拡大
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = カバーにポインターを重ねると、予告編付きの大きなカードを表示します。
+settings-hover-cards-note = カバーにポインターを置くと、予告編付きの大きなカードが開きます。
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = 線と質感を忠実に保ち、見た目は変えません。
@@ -11115,7 +11115,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = 接続先はWikimedia Commonsのみです(upload.wikimedia.org と commons.wikimedia.org)。
+sources-demo-hosts = デモの接続先はWikimedia Commonsだけです(upload.wikimedia.org と commons.wikimedia.org)。
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = デモはどこにもサインインせず、AniListに書き込むこともありません。
@@ -11220,7 +11220,7 @@ stores-access-ended-page = このプラグインストアは、このデバイ�
 stores-no-longer-joined = このプラグインストアには、もう参加していません。
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = オフラインです（{ $reason }）。下のプラグインは、最後に確認できた一覧です。
+stores-offline-last-list = オフラインです（{ $reason }）。最後に送られてきた一覧を表示しています。
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = オフラインです。最後に受け取った一覧を表示しています。
@@ -11325,7 +11325,7 @@ stores-replace-label = 手動で追加した{ $name }のコピーを置き換え
 stores-remove-plugin-title = { $name }を削除しますか？
 
 # Line under it.
-stores-remove-plugin-detail = このデバイスから削除されます。プラグインストアからは再びインストールできます。
+stores-remove-plugin-detail = このデバイスから削除されます。プラグインストアからもう一度インストールできます。
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = 新たに接続するホスト
@@ -11346,7 +11346,7 @@ stores-add-title = プラグインストアを追加
 stores-join-detail = プラグインストアの運営者から届いたリンクを貼り付けてください。
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = プラグインストアの運営者から届いた招待リンクを貼り付けてください。参加やインストールの前に、プラグインストアが提供する内容を確認できます。
+stores-join-detail-desktop = プラグインストアの運営者から届いた招待リンクを貼り付けます。参加やインストールの前に、プラグインストアの内容を確認できます。
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = プラグインストアの運営者から届いたリンクを貼り付けてください。メッセージアプリから開いたKaeri://の招待リンクは、このシートに直接入力されます。
@@ -11539,7 +11539,7 @@ stores-invite-works-any = このリンクを持っている人は誰でも、{ $
 stores-invite-works-any-forever = このリンクを持っている人は、取り消すまで誰でも参加できます。
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = 送った相手1人が1回だけ使えます。{ $until }まで。
+stores-invite-once-until = 送った相手1人が{ $until }まで1回だけ使えます。
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = 送った相手1人が1回だけ使えます。取り消すまで有効です。
@@ -11662,7 +11662,7 @@ stores-offers-plugins =
 notice-open-stores = プラグインストアを開く
 
 # Explainer on the empty plugin stores page.
-stores-what-is = プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
+stores-what-is = プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。そのプラグインがソースを追加します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加します。
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = プラグインストアとは?
@@ -11800,7 +11800,7 @@ sync-road-nearby-line = 同じWi-Fi上の別のデバイスとペアリングし
 sync-road-cloud = クラウドフォルダ経由
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。
+sync-road-cloud-line = すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても動作し、バックアップも残ります。
 
 # Road sheet footer.
 sync-road-later = もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。
@@ -11860,7 +11860,7 @@ sync-turn-off-alert-line = この{ $kind }は、ほかのデバイスとの共�
 cloud-group = クラウドフォルダ
 
 # Group footer.
-cloud-foot = デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。
+cloud-foot = このフォルダーが、離れている間もデバイスの状態をそろえ、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。
 
 # Row when only the nearby road is set.
 cloud-add = クラウドフォルダを追加
@@ -12202,7 +12202,7 @@ profiles-picker = 誰が見ますか?
 profiles-ask-at-launch = 起動時に「誰が見ますか?」を表示
 
 # iPad footer.
-profiles-ask-foot = 初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。
+profiles-ask-foot = 初期設定ではオフです。家族全員で共有するiPadではオンにしてください。プロファイルは、アカウントの行からいつでも切り替えられます。
 
 # TV Settings.
 profiles-switch = プロファイルを切り替え
@@ -12982,7 +12982,7 @@ accounts-tokens-keystore = サインイン用のトークンは、このデバ�
 accounts-form-title = { $tracker }にサインイン
 
 # Line under the title: where the password goes.
-accounts-form-detail = パスワードは一度だけ{ $tracker }に送信され、トークンがこのデバイスに保存されます。
+accounts-form-detail = パスワードは一度だけ{ $tracker }に送信され、代わりに受け取るトークンがこのデバイスに残ります。
 
 # Label of the name field.
 accounts-user-or-email = メールアドレスまたはユーザー名
@@ -13054,7 +13054,7 @@ accounts-open-on = { $tracker }で開く
 accounts-listed-by = { $tracker }に掲載
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker }から応答がありませんでした。
+accounts-did-not-answer = { $tracker }から応答がありませんでした。少し待ってからもう一度お試しください。
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker }には、この作品のキャスト、スタッフ、おすすめがまだありません。
@@ -13117,7 +13117,7 @@ tv-pairing-code = ペアリングコード
 tv-open-on-tv = テレビでKaeriを開いてください。このデバイスと同じWi-Fiに接続しておく必要があります。
 
 # Line telling what to type.
-tv-type-code = { $name }に表示される6桁の数字を入力してください。その後、このデバイスは自動で接続されます。
+tv-type-code = { $name }に表示される6桁の数字を入力してください。以後、このデバイスは自動で接続されます。
 
 # Line while pairing is under way.
 tv-pairing-moment = 少し時間がかかります。
@@ -13417,7 +13417,7 @@ updates-saved-replace-plain = バージョン { $version }をダウンロード�
 updates-why-server = サーバーがダウンロードを拒否したため、中断されました（{ $code }）。しばらくしてからもう一度お試しください。
 
 # The connection broke.
-updates-why-connection = ダウンロードが中断されました。接続が切れました。
+updates-why-connection = ダウンロードが中断されました。接続が切れました。もう一度お試しください。
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = ダウンロードを保存できませんでした: { $reason }

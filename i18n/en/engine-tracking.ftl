@@ -44,11 +44,11 @@ notice-browser-not-opened = Couldn't open a browser for the sign-in. Check that 
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
 # @arg tracker: text
-notice-sign-in-not-waiting = No sign-in to { $tracker } is waiting for that. Start the sign-in again.
+notice-sign-in-not-waiting = A sign-in reply from { $tracker } arrived, but no sign-in was waiting for it. Start the sign-in again.
 
 # Toast when a sign-in redirect does not match the request that was made.
 # @arg tracker: text
-notice-sign-in-wrong-request = That sign-in to { $tracker } didn't come back from this request. Start the sign-in again.
+notice-sign-in-wrong-request = The sign-in reply from { $tracker } doesn't match the request. Start the sign-in again.
 
 # Toast when a tracker sent the person back without a token.
 # @arg tracker: text
@@ -182,7 +182,7 @@ notice-update-available = { $tag } is out. Run kaeri --update to install it.
 cause-proxy-needs-address = A proxy needs a host and a port.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = The proxy's address is not one a check can use.
+cause-proxy-address-unusable = The proxy check can't use this address.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = The server couldn't be reached.

@@ -66,7 +66,7 @@ store-turn-on-watching = Slå på tittande
 store-empty = { $store } har inga { -plugin-pl } än
 store-empty-line = Du är medlem, så nya { -plugin-pl } visas i { -plugin-store-cap-pl } när { $owner } lägger till dem.
 store-err-unreachable = Det gick inte att nå { $host }
-store-err-unreachable-line = Inbjudan ser rätt ut, men ingen { -store } svarar. Försök igen senare, eller fråga { $owner } om den är igång.
+store-err-unreachable-line = Inbjudan ser rätt ut, men { -store }en svarar inte. Försök igen senare, eller fråga { $owner } om den är igång.
 store-other-medium-more = { $count ->
     [one] Ett till är för tittande, vilket är avstängt på denna { -device }.
    *[other] { $count } till är för tittande, vilket är avstängt på denna { -device }.

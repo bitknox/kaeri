@@ -20,4 +20,4 @@ cast-card-stop = Zatrzymaj przesyłanie
 cast-settings-tvs = Pokazuj telewizory z wbudowanym Chromecastem
 cast-settings-tvs-note = Pojawiają się w Chromecast w sekcji Odtwórz w telewizorze. To { -device } wysyła im odcinek.
 cast-settings-torrents = Torrenty podczas przesyłania
-cast-settings-torrents-note = Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. To { -device } wysyła odcinek, dopóki trwa odtwarzanie.
+cast-settings-torrents-note = Telewizor z wbudowanym Chromecastem może wtedy odtwarzać torrenty. To { -device } wysyła odcinek, dopóki trwa odtwarzanie.

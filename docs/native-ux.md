@@ -383,7 +383,7 @@ Nagare (cell 5, 100 × 160 pt) stands above a title, one line and at most one bu
 | --- | --- | --- | --- |
 | Library, signed out | Your AniList list shows here | Sign in to sync what you watch and where you stopped. | Sign in to AniList |
 | Downloads | No downloads | Downloaded episodes play without a connection. | none |
-| Sources, no sources | No sources yet | Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join. | Join a plugin store |
+| Sources, no sources | No sources yet | Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join. | Join a plugin store |
 | Search, no results | `ContentUnavailableView.search(text:)` |  |  |
 
 Home has no empty state. Its empty sections are left out, and with nothing watched it still has the popular pick, This season, This week and Trending now. Nagare stays for Home offline with nothing saved (see Offline).

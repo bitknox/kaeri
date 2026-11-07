@@ -1,5 +1,5 @@
 onboarding-read-demo = Demoyu oku
-onboarding-demo-books-detail = Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.
+onboarding-demo-books-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir öykü.
 onboarding-demo-both-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.
 home-demo-only-books = Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir { -plugin-store } ekleyin.
 home-spotlight-read = Oku

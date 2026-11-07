@@ -163,7 +163,7 @@ updates-saved-replace-plain = Version { $version } saved to Downloads. Replace t
 updates-why-server = The download stopped: the server refused it ({ $code }). Try again later.
 
 # The connection broke.
-updates-why-connection = The download stopped: the connection was lost.
+updates-why-connection = The download stopped: the connection was lost. Try again.
 
 # The file could not be saved. The reason is a sentence fragment.
 # @arg reason: cause

@@ -1,6 +1,6 @@
 first-other-title = Sudah memakai { -app-name } di { -device } lain?
-first-other-line = Pasangkan, lalu { -device } ini mendapatkan { -source-pl }, { -tracker-pl }, dan riwayat Anda. Langkah setelah ini pun selesai.
-first-other-pair-line = Menampilkan kode untuk dimasukkan di { -device } itu. Keduanya harus memakai Wi-Fi yang sama.
+first-other-line = Pasangkan, lalu { -device } ini mendapatkan { -source-pl }, { -tracker-pl }, dan riwayat Anda, dan sisa penyiapan pun selesai untuk Anda.
+first-other-pair-line = Anda akan mendapat kode untuk dimasukkan di { -device } itu. Keduanya harus memakai Wi-Fi yang sama.
 first-other-restore = Pulihkan dari folder cloud
 first-other-restore-line = Memakai kunci pemulihan yang Anda simpan
 first-other-no = Tidak, mulai di sini

@@ -33,7 +33,7 @@ notice-dismiss = Dismiss
 accounts-code-expired-detail = This code has expired. Get a new one to sign in to { $tracker }.
 
 # Notice when a list could not be refreshed and the rows already on screen stay.
-list-refresh-failed = Couldn't refresh. Showing what was loaded.
+list-refresh-failed = Couldn't refresh. You're seeing what loaded last time.
 
 # Notice when the browser sign-in for a tracker failed, as opposed to being closed by the person.
 # @arg tracker: text

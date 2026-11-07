@@ -17,13 +17,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device-pl }
  }
 stores-replace-by-hand-detail = Version { $version } von { $store } ersetzt die von Hand hinzugefügte Kopie.
-stores-open-join-on-detail = Sie treten ohne Namen bei. Wenn du das ausschaltest, wird der Link gestoppt. Wenn du ihn wieder einschaltest, entsteht ein neuer.
-stores-open-join-off-detail = Nur eingeladene Personen können beitreten. Wenn eingeschaltet, treten alle mit dem Link ohne Namen bei.
+stores-open-join-on-detail = Personen treten ohne Namen bei. Schaltest du das aus, funktioniert der Link nicht mehr. Schaltest du es wieder ein, gibt es einen neuen Link.
+stores-open-join-off-detail = Nur Personen, die du einlädst, können beitreten. Schaltest du das ein, kann jede Person mit dem Link beitreten, ohne Namen.
 stores-open-join-no-names = Es werden keine Namen gespeichert.
 stores-open-join-keep-working = Sie funktionieren weiter, bis du sie entfernst.
 stores-device-seen-at = Zuletzt gesehen { $when }
-stores-device-not-seen = Seitdem nicht mehr gesehen
-stores-publish-offered = Der { -plugin-store } bietet { $version } an
+stores-device-not-seen = Seit dem Beitritt nicht gesehen
+stores-publish-offered = Der { -plugin-store } hat { $version }
 stores-publish-not-yet = Noch nicht im { -plugin-store }
 torrents-sheet-edit-proxy = Proxy bearbeiten
 torrents-edit-proxy = Proxy bearbeiten
@@ -55,7 +55,7 @@ tv-seen-just-now = gerade eben
 stores-link-send-once = Schick diesen Link an { $who }. Er funktioniert einmal, bis { $until }.
 stores-link-send-once-anyone = Schick diesen Link an die Person, für die er ist. Er funktioniert einmal, bis { $until }.
 sources-remove-title = { $name } entfernen?
-sources-remove-detail-device = Es wird von diesem { -device } gelöscht. Ein { -plugin-store } kann es erneut installieren.
+sources-remove-detail-device = Es wird von diesem { -device } gelöscht. Du kannst es über einen { -plugin-store } wieder installieren.
 library-matched-apple = Zugeordnet
 servers-row-summary-apple = { $series ->
     [one] 1 Serie

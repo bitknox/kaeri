@@ -79,11 +79,11 @@ store-other-medium-more = { $count ->
    *[other] Mais { $count } são para assistir, o que está desativado neste { -device }.
  }
 store-tv-reading-only = { $count ->
-    [one] Mais um é para ler, o que esta TV não faz.
-    [many] Mais { $count } de são para ler, o que esta TV não faz.
-   *[other] Mais { $count } são para ler, o que esta TV não faz.
+    [one] Mais um é para leitura, o que esta TV não faz.
+    [many] Mais { $count } de { -plugin-pl } são para leitura, o que esta TV não faz.
+   *[other] Mais { $count } são para leitura, o que esta TV não faz.
  }
-store-tv-all-reading = Todo { -plugin } em { $store } é para ler, o que esta TV não faz.
+store-tv-all-reading = Todos os { -plugin-pl } de { $store } são para leitura, o que esta TV não faz.
 store-plugin-row = Versão { $version } · pode contatar { $hosts }
 source-added = Adicionado: { $name } · { $series } séries
 source-added-plugins = { $count ->

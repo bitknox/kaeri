@@ -6,5 +6,5 @@ notice-hidden-preview = Novo episódio
 notice-summary = Mais %u episódios novos
 notice-dismiss = Dispensar
 accounts-code-expired-detail = Este código expirou. Gere um novo para entrar no { $tracker }.
-list-refresh-failed = Não foi possível atualizar. Mostrando o que foi carregado.
+list-refresh-failed = Não foi possível atualizar. Você está vendo o que carregou da última vez.
 sign-in-failed = Não foi possível entrar no { $tracker }. Tente de novo.

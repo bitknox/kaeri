@@ -175,7 +175,7 @@ accounts-form-title = Sign in to { $tracker }
 
 # Line under the title: where the password goes.
 # @arg tracker: text
-accounts-form-detail = Your password goes to { $tracker } once, for a token kept on this { -device }.
+accounts-form-detail = Your password goes to { $tracker } once, in exchange for a token that stays on this { -device }.
 
 # Label of the name field.
 accounts-user-or-email = Email or user name
@@ -272,7 +272,7 @@ accounts-listed-by = Listed by { $tracker }
 
 # Line when the tracker did not answer.
 # @arg tracker: text
-accounts-did-not-answer = { $tracker } didn't answer.
+accounts-did-not-answer = { $tracker } didn't answer. Try again in a moment.
 
 # Line when the tracker has nothing for the show.
 # @arg tracker: text

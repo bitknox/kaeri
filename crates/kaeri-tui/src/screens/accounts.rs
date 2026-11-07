@@ -388,7 +388,7 @@ mod tests {
             ..kaeri_model::sync::SyncState::new("mal")
         })));
         let (_, detail) = &accounts_rows(&app)[0];
-        assert!(detail.contains("3 queued, 2 waiting for an id mapping"), "{detail}");
+        assert!(detail.contains("3 queued, 2 waiting for a match"), "{detail}");
 
         app.apply(Event::Sync(Box::new(kaeri_model::sync::SyncState {
             connected: true,

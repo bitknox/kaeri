@@ -70,4 +70,4 @@ servers-needs-look = { $count } chưa khớp với AniList
 servers-kind-films = Phim điện ảnh
 servers-error-certificate = { $host } dùng một chứng chỉ mà { -device } này không tin cậy. Hãy dùng địa chỉ https:// có chứng chỉ mà nó tin cậy.
 servers-row-signed-out-here = Đã đăng xuất
-servers-sign-out-line = Kết thúc phiên đăng nhập của { -device } này trên máy chủ. Máy chủ và các tập đã tải vẫn như cũ.
+servers-sign-out-line = Đăng xuất sẽ kết thúc phiên của { -device } này trên máy chủ. Máy chủ và các tập đã tải vẫn giữ nguyên.

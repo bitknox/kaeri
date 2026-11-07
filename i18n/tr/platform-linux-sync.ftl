@@ -1,4 +1,4 @@
-rkey-lock-linux = Hesap parolanızdan sonra Ayarlar'da, { -device-cap-pl } bölümünde yeniden görebilirsiniz.
+rkey-lock-linux = Hesap parolanızı girdikten sonra Ayarlar'da, { -device-cap-pl } bölümünde yeniden görebilirsiniz.
 rkey-lock-reason = { -app-name } kurtarma anahtarını göster
 profiles-popover-name = Profiller
 profiles-add-row-action = Ekle

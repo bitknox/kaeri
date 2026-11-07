@@ -4,7 +4,7 @@ downloads-column-title = Tytuł
 downloads-column-state = Stan
 downloads-column-progress = Postęp
 downloads-empty-heading = Nic nie czeka w kolejce
-downloads-empty-hint = Naciśnij { $key } na tytule lub odcinku, aby dodać go do kolejki offline.
+downloads-empty-hint = Naciśnij { $key } na tytule lub odcinku, aby go pobrać.
 downloads-row-episode = Odc. { $episode }
 downloads-row-episode-ahead = Odc. { $episode } · z góry
 downloads-note-sizes = { $downloaded } / { $total }
@@ -72,10 +72,10 @@ accounts-row-queued = { $count ->
     [many] { $count } w kolejce
    *[other] { $count } w kolejce
  }
-accounts-row-queued-held = { $queued } w kolejce, { $held } czeka na dopasowanie identyfikatora
-accounts-conflict-keep-mine = Zostaw moje
-accounts-conflict-keep-theirs = Zostaw ich
-accounts-conflict-row = { $title }  ·  { $field }: moje { $local } / ich { $remote }
+accounts-row-queued-held = { $queued } w kolejce, { $held } czeka na dopasowanie
+accounts-conflict-keep-mine = Lokalna
+accounts-conflict-keep-theirs = Zdalna
+accounts-conflict-row = { $title }  ·  { $field }: lokalna { $local } / zdalna { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Tytuły można ukryć tylko w sekcji { -continue-cap }.
 lists-continue-removed = { $title } ukryto w sekcji { -continue-cap }. Po ponownym obejrzeniu wróci.
@@ -86,7 +86,7 @@ lists-loading = Wczytywanie…
 lists-empty-press-enter = Naciśnij ↵, aby szukać
 lists-empty-type-to-search = Wpisz, aby szukać
 lists-empty-browse-filtered = Naciśnij ↵, aby przeglądać z tymi filtrami.
-lists-empty-browse-popular = Naciśnij ↵, aby przeglądać najpopularniejsze.
+lists-empty-browse-popular = Naciśnij ↵, aby przeglądać najpopularniejsze tytuły.
 lists-empty-no-matches = Brak wyników
 lists-empty-fewer-filters = Użyj mniej filtrów.
 lists-empty-shorter-query = Spróbuj krótszego zapytania albo tytułu w romaji.

@@ -14,13 +14,13 @@ stores-devices-count = { $count ->
    *[other] { $count }台の{ -device-pl }
  }
 stores-replace-by-hand-detail = { $store }の{ $version }が、手動で追加したコピーを置き換えます。
-stores-open-join-on-detail = 名前なしで参加できます。オフにするとリンクは使えなくなり、再びオンにすると新しいリンクが作られます。
-stores-open-join-off-detail = 招待した人だけが参加できます。オンにすると、リンクを持つ人は名前なしで参加できます。
+stores-open-join-on-detail = 名前なしで参加します。オフにするとリンクは使えなくなります。もう一度オンにすると新しいリンクになります。
+stores-open-join-off-detail = 招待した人だけが参加できます。オンにすると、リンクを持つ人なら誰でも名前なしで参加できます。
 stores-open-join-no-names = 名前は保存されません。
 stores-open-join-keep-working = 削除するまで使えます。
 stores-device-seen-at = { $when }に確認
-stores-device-not-seen = その後は確認されていません
-stores-publish-offered = { -plugin-store }は{ $version }を提供しています
+stores-device-not-seen = 参加後は確認されていません
+stores-publish-offered = { -plugin-store }には{ $version }があります
 stores-publish-not-yet = { -plugin-store }にはまだありません
 torrents-sheet-edit-proxy = プロキシを編集
 torrents-edit-proxy = プロキシを編集
@@ -52,7 +52,7 @@ tv-seen-just-now = たった今
 stores-link-send-once = このリンクを{ $who }に送ってください。一度だけ使え、{ $until }まで有効です。
 stores-link-send-once-anyone = このリンクを対象の人に送ってください。一度だけ使え、{ $until }まで有効です。
 sources-remove-title = { $name }を削除しますか？
-sources-remove-detail-device = この{ -device }から削除されます。{ -plugin-store }からは再びインストールできます。
+sources-remove-detail-device = この{ -device }から削除されます。{ -plugin-store }から再びインストールできます。
 library-matched-apple = 一致済み
 servers-row-summary-apple = { $series ->
    *[other] { $series }シリーズ

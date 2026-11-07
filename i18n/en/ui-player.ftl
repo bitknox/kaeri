@@ -600,10 +600,10 @@ player-load-audio-file = Load audio file…
 player-file-picker-failed = Couldn't open the file chooser. Try again.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Couldn't load that subtitle file. Check that it is a subtitle file.
+player-subtitle-file-failed = Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Couldn't load that audio file. Check that it is an audio file.
+player-audio-file-failed = Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Unnamed track

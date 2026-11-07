@@ -46,14 +46,14 @@ stores-plugin-added-by-hand = Ajouté à la main
 stores-plugin-from-another-store = Venu d'une autre { -store }
 stores-footer-update-hosts = La mise à jour veut aussi contacter { $hosts }
 stores-footer-may-contact = Peut contacter { $hosts }
-stores-footer-link-device = Un lien à usage unique pour rejoindre sous votre nom depuis un autre de vos { -device-pl }
+stores-footer-link-device = Un lien à usage unique qui ajoute un autre de vos { -device-pl } sous votre nom
 stores-footer-invite = Un lien à usage unique pour quelqu'un de nouveau
-stores-footer-members = Qui a rejoint, et retirer l'accès de quelqu'un
+stores-footer-members = Voir qui a rejoint, et retirer l’accès de quelqu’un
 stores-footer-close-join = ↵ Ne laisser rejoindre que les personnes invitées, et arrêter le lien
 stores-footer-open-join = ↵ Laisser rejoindre quiconque a le lien de la { -store }, sans nom
 stores-footer-publish = Proposer un { -plugin } depuis le dossier des { -plugin-pl } de cet { -device }
 stores-footer-admin = Gérer les membres, les invitations et les { -plugin-pl } dans votre navigateur
-stores-footer-leave = { -plugin-cap-pl } installés depuis cette { -store } restent sur cet { -device } et cessent de se mettre à jour
+stores-footer-leave = Les { -plugin-pl } installés depuis cette { -store } restent sur cet { -device } et cessent de se mettre à jour
 stores-who-open = Toute personne ayant le lien
 stores-who-invite-only = Seules les personnes invitées
 stores-label-offers = Propose
@@ -127,7 +127,7 @@ stores-footer-cancel-invite = ↵ Annuler cette invitation
 stores-footer-show-link = ↵ Afficher le lien pour le copier et le partager
 stores-footer-remove-anonymous = ↵ Retirer cet { -device }, identifié seulement par la date de son arrivée
 stores-footer-remove-all-anonymous = ↵ Retirer chaque { -device } ayant rejoint avec le lien
-stores-link-copied = Copié dans le presse-papiers lorsque le terminal le permet, sinon sélectionnez-le pour le copier.
+stores-link-copied = Copié, si le terminal le permet. Sinon, sélectionnez le lien pour le copier.
 stores-link-select = Sélectionnez-le pour le copier.
 stores-open-link-warning = Toute personne qui possède le lien peut rejoindre, sans nom et autant de fois qu'elle veut.
 stores-open-link-lasts = Il reste valable jusqu'à ce que la { -store } repasse sur invitation uniquement.
@@ -154,17 +154,17 @@ stores-label-device = { -device-cap }
 stores-key-matches-link = { $fingerprint }  (correspond au lien)
 stores-key-matches-invite = { $fingerprint }  (correspond à l'invitation)
 stores-join-open = Toute personne ayant le lien peut rejoindre.
-stores-join-anonymous = Vous rejoignez sans nom, et un autre { -device } rejoint avec le même lien.
+stores-join-anonymous = Vous rejoignez sans nom. Tout autre { -device } peut rejoindre avec le même lien.
 stores-join-already = Déjà rejoint. Rejoindre à nouveau donne à cet { -device } un nouveau jeton.
 stores-join-device-note = Le gérant de la { -store } voit ce nom. Saisissez pour le modifier.
-stores-leave-plugins = { -plugin-cap-pl } installés depuis cette { -store } restent sur cet { -device } et cessent de se mettre à jour.
+stores-leave-plugins = Les { -plugin-pl } installés depuis cette { -store } restent sur cet { -device } et cessent de se mettre à jour.
 stores-leave-revoked = L'accès de cet { -device } à la { -store } est révoqué.
 stores-remove-member-devices = { $count ->
     [one] Son { -device } cesse de fonctionner avec cette { -store } immédiatement.
     [many] Ses { $count } { -device-pl } cessent de fonctionner avec cette { -store } immédiatement.
    *[other] Ses { $count } { -device-pl } cessent de fonctionner avec cette { -store } immédiatement.
  }
-stores-remove-member-plugins = Les { -plugin-cap-pl } qu'ils ont déjà installés restent sur leurs { -device-pl }.
+stores-remove-member-plugins = Les { -plugin-pl } qu’ils ont déjà installés restent sur leurs { -device-pl }.
 stores-cancel-invite-link = Le lien ne fonctionne plus.
 stores-unpublish-members = Les membres qui l'ont installé le gardent, et il cesse de se mettre à jour.
 stores-open-anyone = Toute personne ayant le lien de la { -store } peut la rejoindre, sans nom.

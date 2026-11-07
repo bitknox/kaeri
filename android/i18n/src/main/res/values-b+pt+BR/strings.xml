@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s não começou a ler o stream. Uma VPN ou um firewall neste dispositivo pode estar atrapalhando.</string>
     <string name="notice_cast_refused">%1$s não conseguiu reproduzir este stream. Tente outra fonte.</string>
     <string name="notice_cast_taken_over">Outro dispositivo iniciou algo em %1$s, então a transmissão parou.</string>
-    <string name="notice_cast_not_same_network">Este dispositivo não está na mesma rede de %1$s ou acessa a rede por uma VPN. Para transmitir, os dois precisam estar na mesma rede.</string>
+    <string name="notice_cast_not_same_network">Este dispositivo não está na mesma rede que %1$s ou se conecta a ela por uma VPN. Conecte os dois à mesma rede para transmitir.</string>
     <string name="notice_cast_lost">Perdemos a conexão com %1$s, então a transmissão parou.</string>
     <string name="notice_cast_no_device">Essa TV não está mais na rede.</string>
     <string name="notice_cast_unavailable">Esta versão do Kaeri não consegue transmitir para TVs.</string>
@@ -130,7 +130,7 @@
     <string name="match_ruled_out_year">Ano diferente</string>
     <string name="match_search_timed_out">Não respondeu a tempo.</string>
     <string name="match_search_source_off">Não está ativada.</string>
-    <string name="notice_source_pinned">A fonte %1$s será usada para este título.</string>
+    <string name="notice_source_pinned">Agora este título é reproduzido de %1$s.</string>
     <string name="notice_source_automatic">Voltou à seleção automática de fonte para este título.</string>
     <string name="notice_source_choice_failed">Não foi possível salvar essa escolha. %1$s</string>
     <string name="notice_no_source_could_list">Nenhuma fonte conseguiu listar esta série: %1$s</string>
@@ -208,9 +208,9 @@
     <string name="reader_back_to_page">Voltar à página %1$d</string>
     <string name="reader_moved">Movido para %1$s, página %2$d, onde %3$s parou</string>
     <string name="reader_moved_number">Movido para o capítulo %1$s, página %2$d, onde %3$s parou</string>
-    <string name="reader_detected_right_to_left">Direita para esquerda, detectado</string>
-    <string name="reader_detected_left_to_right">Esquerda para direita, detectado</string>
-    <string name="reader_detected_strip">Tira longa, detectado</string>
+    <string name="reader_detected_right_to_left">Parece da direita à esquerda</string>
+    <string name="reader_detected_left_to_right">Parece da esquerda à direita</string>
+    <string name="reader_detected_strip">Parece uma tira longa</string>
     <string name="reading_failed_offline">Você está offline. Os capítulos baixados ainda abrem.</string>
     <string name="reading_failed_source_down">%1$s não está respondendo. Tente de novo mais tarde.</string>
     <string name="reading_failed_not_found">Esta fonte não tem mais isso. Tente outra fonte.</string>
@@ -419,7 +419,7 @@
     <string name="store_moved">%1$s está salva em %2$s, mas este link aponta para %3$s. Se a loja de plugins mudou, saia dela antes e entre de novo.</string>
     <string name="store_join_would_unname">Você entrou em %1$s como %2$s. Este link faria você entrar de novo sem o seu nome, então nada foi alterado.</string>
     <string name="store_not_the_invited">%1$s não é a loja de plugins do convite (%2$s). Você não entrou.</string>
-    <string name="store_token_not_kept">Não foi possível guardar o token desta loja de plugins. %1$s</string>
+    <string name="store_token_not_kept">Não foi possível salvar o token desta loja de plugins. %1$s</string>
     <string name="store_invite_unusable">Este convite já foi usado, foi cancelado ou expirou. Peça um novo.</string>
     <string name="store_invite_used_up">Este convite já foi usado o máximo de vezes. Peça um novo a %1$s.</string>
     <string name="store_invite_ended">Este convite expirou %2$s. Peça um novo a %1$s.</string>
@@ -441,10 +441,10 @@
     <string name="store_admin_missing">%1$s não tem página de administração. O servidor pode ser mais antigo.</string>
     <string name="store_admin_link_foreign">%1$s enviou um link de administração para outro endereço.</string>
     <string name="store_open_join_unsupported">O servidor de %1$s é mais antigo e não deixa ninguém entrar com link. Atualize-o primeiro.</string>
-    <string name="source_switched_off">Fonte %1$s está desligada. Ela é ignorada ao buscar episódios.</string>
+    <string name="source_switched_off">A fonte %1$s está desligada. O Kaeri a ignora ao buscar episódios.</string>
     <string name="source_switched_on">Fonte %1$s está ligada.</string>
     <string name="plugin_not_loaded">%1$s não está carregado. Confira se ele está instalado em Fontes.</string>
-    <string name="release_pinned">%1$s será usado neste título.</string>
+    <string name="release_pinned">Este título agora usa %1$s.</string>
     <string name="notice_choice_not_saved">Não foi possível salvar essa escolha. %1$s</string>
     <string name="torrent_proxy_waiting">A verificação do proxy falhou. Os torrents começam quando ela passar.</string>
     <string name="torrent_proxy_unchecked">Os torrents começam quando o proxy passar na verificação.</string>
@@ -474,8 +474,8 @@
     <string name="notice_sign_in_stopped">A conexão com o %1$s parou antes de terminar. Tente de novo. %2$s</string>
     <string name="notice_token_exchange_failed">Não foi possível receber um token do %1$s. Tente conectar de novo. %2$s</string>
     <string name="notice_browser_not_opened">Não foi possível abrir um navegador para a conexão. Verifique se há um instalado e tente de novo. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Nenhuma conexão com o %1$s aguarda por isso. Comece a conexão de novo.</string>
-    <string name="notice_sign_in_wrong_request">A conexão com o %1$s não voltou deste pedido. Comece a conexão de novo.</string>
+    <string name="notice_sign_in_not_waiting">Chegou uma resposta de login de %1$s, mas nenhum login estava esperando por ela. Comece o login de novo.</string>
+    <string name="notice_sign_in_wrong_request">A resposta de login de %1$s não corresponde ao pedido. Comece o login de novo.</string>
     <string name="notice_sign_in_no_token">A conexão com o %1$s voltou sem token. Tente de novo.</string>
     <string name="notice_mal_client_missing_build">Não foi possível concluir a conexão com o MyAnimeList: este app não inclui um cliente para ela.</string>
     <string name="notice_kitsu_signs_in_on_accounts">O Kitsu se conecta pela tela de Contas.</string>
@@ -513,7 +513,7 @@
     </plurals>
     <string name="notice_update_available">%1$s está disponível. Execute kaeri --update para instalar.</string>
     <string name="cause_proxy_needs_address">Um proxy precisa de um endereço e de uma porta.</string>
-    <string name="cause_proxy_address_unusable">O endereço do proxy não pode ser usado na verificação.</string>
+    <string name="cause_proxy_address_unusable">A verificação do proxy não pode usar este endereço.</string>
     <string name="cause_server_unreachable">Não foi possível alcançar o servidor.</string>
     <string name="legal_hosts_no_content">O Kaeri não hospeda séries nem livros. Você adiciona suas próprias fontes.</string>
     <string name="notice_saved">Configuração salva: %1$s.</string>
@@ -521,12 +521,12 @@
     <string name="notice_title_load_failed">Não foi possível carregar este título. Verifique sua conexão e tente de novo.</string>
     <string name="notice_playback_failed">A reprodução falhou. Tente outra fonte.</string>
     <string name="notice_engine_fault">Algo deu errado dentro do Kaeri. Ele continuou funcionando, mas se alguma tela parecer travada, saia e abra de novo.</string>
-    <string name="notice_database_set_aside">O banco de dados estava danificado, então o Kaeri criou um novo. O arquivo antigo foi guardado em %1$s. Os serviços de acompanhamento trazem de volta o que guardam na próxima sincronização.</string>
+    <string name="notice_database_set_aside">O banco de dados estava danificado, então o Kaeri criou um novo. O arquivo antigo foi guardado em %1$s. O que seus serviços de acompanhamento guardam volta na próxima sincronização.</string>
     <string name="start_failed_folder">O Kaeri não conseguiu criar a pasta %1$s. Verifique se o disco tem espaço e se é possível gravar nela, e tente de novo. %2$s</string>
     <string name="start_failed_config">%1$s tem uma configuração que o Kaeri não consegue usar: %2$s. Corrija ou remova, depois tente de novo.</string>
     <string name="config_reset_failed">O Kaeri não conseguiu mover %1$s para redefinir os ajustes. %2$s</string>
     <string name="start_failed_database">O Kaeri não conseguiu abrir o banco de dados em %1$s. Se outro Kaeri estiver aberto nesta pasta, feche-o e tente de novo. %2$s</string>
-    <string name="start_failed_network">O Kaeri não conseguiu configurar a conexão de rede com as configurações de rede do config.toml. %1$s</string>
+    <string name="start_failed_network">O Kaeri não conseguiu se conectar com as configurações de rede do config.toml. Confira essas configurações e tente de novo. %1$s</string>
     <string name="start_failed">O Kaeri não conseguiu iniciar. Saia e abra de novo. %1$s</string>
     <string name="start_failed_remote">O controle remoto não conseguiu iniciar. %1$s</string>
     <string name="start_failed_player">O player não conseguiu iniciar. %1$s</string>
@@ -540,8 +540,8 @@
     <string name="crash_notice_tv">O Kaeri fechou após um problema. Você pode relatá-lo em Configurações, Sobre.</string>
     <string name="notice_surprise_empty_filters">Nenhum título corresponde a estes filtros.</string>
     <string name="notice_surprise_empty_planning">A lista Planejado está vazia.</string>
-    <string name="notice_surprise_offline">Sem conexão. As sugestões da pesquisa precisam do AniList.</string>
-    <string name="notice_surprise_failed">Não foi possível escolher um título agora. Tente de novo daqui a pouco.</string>
+    <string name="notice_surprise_offline">Você está offline. Me surpreenda precisa do AniList para escolher um título.</string>
+    <string name="notice_surprise_failed">Não foi possível acessar o AniList para escolher um título. Tente de novo daqui a pouco.</string>
     <string name="account_button_named">%1$s, contas e configurações</string>
     <string name="calendar_empty_mine_ahead">Nada da sua lista vai ao ar nas próximas 4 semanas.</string>
     <string name="calendar_floor_line">O calendário volta no máximo 3 meses.</string>
@@ -554,7 +554,7 @@
     <string name="calendar_show_all_airing">Mostrar todas as séries no ar</string>
     <string name="calendar_now_label">Agora, %1$s</string>
     <string name="settings_discussions_label">Discussões dos episódios</string>
-    <string name="settings_discussions_note">Lê os comentários do tópico do AniList sobre os episódios que você já assistiu.</string>
+    <string name="settings_discussions_note">Você pode ler os comentários do tópico do fórum do AniList sobre os episódios que já assistiu.</string>
     <string name="settings_discussion_images_label">Carregar imagens nos comentários</string>
     <string name="settings_discussion_images_note">Cada imagem é carregada do site que a hospeda, e esse site vê o seu endereço IP.</string>
     <string name="discussion_waiting">Aguardando o AniList · %1$s</string>
@@ -592,7 +592,7 @@
     <string name="cast_settings_tvs">Mostrar TVs com Chromecast integrado</string>
     <string name="cast_settings_tvs_note">Elas aparecem em Chromecast, em Reproduzir na TV. Este dispositivo envia o episódio a elas.</string>
     <string name="cast_settings_torrents">Torrents durante a transmissão</string>
-    <string name="cast_settings_torrents_note">Permite que uma TV com Chromecast integrado reproduza torrents. Este dispositivo envia o episódio enquanto ele estiver sendo reproduzido.</string>
+    <string name="cast_settings_torrents_note">Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este dispositivo envia o episódio enquanto ele estiver sendo reproduzido.</string>
     <string name="reader_page_failed_swipe">Deslize para seguir sem ela.</string>
     <string name="reader_skip_page">Pular página</string>
     <string name="reader_page_of">Página %1$d de %2$d</string>
@@ -653,11 +653,11 @@
     <string name="eink_colour_body">O Kaeri não conseguiu saber por este dispositivo. Olhe os quatro quadrados.</string>
     <string name="eink_colour_squares">Quatro quadrados: vermelho, verde, azul e âmbar</string>
     <string name="eink_colour_hint">Se parecerem quatro cinzas, escolha Só cinzas. Você pode mudar isso em Ajustes › Tela.</string>
-    <string name="eink_colour_yes">Vejo cores</string>
+    <string name="eink_colour_yes">Sim, colorida</string>
     <string name="eink_colour_no">Só cinzas</string>
     <string name="eink_colour_skip">Pular</string>
-    <string name="eink_colour_skipped">Ignorado: as imagens ficam coloridas, e uma tela cinza as mostra em tons de cinza.</string>
-    <string name="eink_page_keys_hint">Ajuste os botões de página para Volume nos ajustes do dispositivo para virar páginas.</string>
+    <string name="eink_colour_skipped">Ignorado. As imagens ficam coloridas. Uma tela cinza as mostra em tons de cinza.</string>
+    <string name="eink_page_keys_hint">Para virar páginas com os botões, ajuste-os para Volume nos ajustes do dispositivo.</string>
     <string name="eink_new">Novo</string>
     <string name="reader_notice_start_over">Recomeçar</string>
     <string name="reader_notice_go_back">Voltar</string>
@@ -821,7 +821,7 @@
     <string name="tv_info_from">De</string>
     <string name="tv_info_state">Estado</string>
     <string name="tv_store_revoked">Não deixa mais esta TV entrar</string>
-    <string name="tv_seeding_note">Melhor esforço nesta TV: o seeding só roda enquanto a Kaeri estiver aberta.</string>
+    <string name="tv_seeding_note">Esta TV só compartilha enquanto o Kaeri estiver aberto.</string>
     <string name="tv_sign_out_title">Sair de %1$s?</string>
     <string name="tv_account_not_signed_in">Não entrou</string>
     <string name="tv_account_signed_in_as">Conectado como %1$s</string>
@@ -932,7 +932,7 @@
         <item quantity="many">%1$s estão desativados nas próprias configurações.</item>
         <item quantity="other">%1$s estão desativados nas próprias configurações.</item>
     </plurals>
-    <string name="settings_coming_up_opens">Um título abre as suas configurações.</string>
+    <string name="settings_coming_up_opens">Toque em um título para abrir as configurações dele.</string>
     <string name="torrents_proxy_as">como %1$s</string>
     <string name="title_facts_aired">Exibido em %1$s</string>
     <string name="title_facts_airing">Em exibição desde %1$s</string>
@@ -1057,7 +1057,7 @@
     <string name="settings_titles_note_english">Títulos em inglês como o AniList os lista, e romaji quando não houver.</string>
     <string name="settings_titles_note_romaji">Títulos japoneses em letras latinas, como o AniList os lista.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">Melhor esforço neste dispositivo: o compartilhamento só funciona enquanto o Kaeri estiver aberto.</string>
+    <string name="settings_seeding_best_effort">Este dispositivo só compartilha enquanto o Kaeri estiver aberto.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Um episódio</item>
         <item quantity="many">%1$d episódios</item>
@@ -1076,7 +1076,7 @@
     <string name="settings_libraries_value">JNA e AndroidX, sob a Apache License 2.0</string>
     <string name="settings_report_bug_value">Abre o GitHub no seu navegador</string>
     <string name="downloads_storage_share_description">Os downloads ocupam %1$s</string>
-    <string name="settings_aside_notifications">Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Um título pode desativar as próprias notificações nas configurações dele.</string>
+    <string name="settings_aside_notifications">Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Você pode desativar as notificações de um título nas configurações dele.</string>
     <string name="settings_aside_downloads">Os downloads ficam no espaço próprio do Kaeri neste dispositivo, que outros apps não conseguem ler. Remover o app remove também os downloads.</string>
     <string name="settings_aside_sources">Fontes são testadas em ordem, de cima para baixo. Um título pode manter a própria fonte, escolhida na página dele.</string>
     <string name="settings_upscaling_description">A mesma imagem: a metade esquerda em 480p original, a direita com %1$s</string>
@@ -1167,7 +1167,7 @@
     </plurals>
     <string name="trailer_failed">Não foi possível abrir o trailer</string>
     <string name="engine_down_title">O Kaeri parou</string>
-    <string name="engine_down_stopped">A parte que faz o trabalho parou. Tente de novo ou feche e abra o app mais uma vez.</string>
+    <string name="engine_down_stopped">Nada novo vai carregar até ele voltar a funcionar. Tente de novo ou feche e abra o app mais uma vez.</string>
     <string name="engine_down_quit">Sair</string>
     <string name="about_title">Sobre</string>
     <string name="about_title_app">Sobre o Kaeri</string>
@@ -1206,9 +1206,9 @@
     <string name="report_crash_settings">Ajustes dos relatórios de falha</string>
     <string name="settings_group_crashes">Relatórios de falha</string>
     <string name="settings_crash_save">Salvar relatórios de falha neste dispositivo</string>
-    <string name="settings_crash_save_detail">Quando ativado, o Kaeri guarda um breve registro de cada falha neste dispositivo, sem títulos, endereços e nomes, para você anexá-lo em Relatar um erro. Nada é enviado automaticamente.</string>
+    <string name="settings_crash_save_detail">O Kaeri guarda um breve registro de cada falha neste dispositivo para Relatar um erro, sem títulos, endereços e nomes. Nada é enviado automaticamente.</string>
     <string name="settings_crash_ask">Perguntar após uma falha</string>
-    <string name="settings_crash_ask_detail">Mostra um aviso na próxima abertura com Relatar…</string>
+    <string name="settings_crash_ask_detail">O Kaeri mostra um aviso com Relatar… na próxima vez que abrir.</string>
     <string name="settings_crash_os_heading">Guardados por %1$s</string>
     <string name="settings_crash_os_detail">%1$s guardou estas falhas de antes de você ativar isso. Nada delas é salvo, a menos que você adicione.</string>
     <string name="settings_crash_os_item">Falha · %1$s</string>
@@ -1218,7 +1218,7 @@
     <string name="settings_crash_view">Ver</string>
     <string name="settings_crash_delete">Apagar</string>
     <string name="settings_crash_delete_all">Apagar tudo</string>
-    <string name="settings_crash_footnote">Os relatórios de falha ficam neste dispositivo. O Kaeri não envia nada automaticamente. Um relatório só sai quando você o abre no GitHub, em Relatar um erro. Os relatórios são apagados após 30 dias.</string>
+    <string name="settings_crash_footnote">Os relatórios de falha ficam neste dispositivo, e o Kaeri não envia nada automaticamente. Um relatório só sai quando você o abre no GitHub, em Relatar um erro. Os relatórios são apagados após 30 dias.</string>
     <string name="calendar_previous_week">Semana anterior</string>
     <string name="calendar_next_week">Próxima semana</string>
     <string name="calendar_this_week">Esta semana</string>
@@ -1260,9 +1260,9 @@
     <string name="cast_tvs_note_mac">Elas aparecem em Chromecast, em Reproduzir na TV. Este Mac envia o episódio a elas.</string>
     <string name="cast_tvs_note_iphone">Elas aparecem em Chromecast, em Reproduzir na TV. Este iPhone envia o episódio a elas.</string>
     <string name="cast_tvs_note_ipad">Elas aparecem em Chromecast, em Reproduzir na TV. Este iPad envia o episódio a elas.</string>
-    <string name="cast_torrents_note_mac">Permite que uma TV com Chromecast integrado reproduza torrents. Este Mac envia o episódio enquanto ele estiver sendo reproduzido.</string>
-    <string name="cast_torrents_note_iphone">Permite que uma TV com Chromecast integrado reproduza torrents. Este iPhone envia o episódio enquanto ele estiver sendo reproduzido.</string>
-    <string name="cast_torrents_note_ipad">Permite que uma TV com Chromecast integrado reproduza torrents. Este iPad envia o episódio enquanto ele estiver sendo reproduzido.</string>
+    <string name="cast_torrents_note_mac">Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este Mac envia o episódio enquanto ele estiver sendo reproduzido.</string>
+    <string name="cast_torrents_note_iphone">Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este iPhone envia o episódio enquanto ele estiver sendo reproduzido.</string>
+    <string name="cast_torrents_note_ipad">Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este iPad envia o episódio enquanto ele estiver sendo reproduzido.</string>
     <string name="cast_up_next_plays_in">Próximo · começa em %1$d s</string>
     <string name="cast_couldnt_start">Não foi possível iniciar em %1$s</string>
     <string name="cast_stopped">Transmissão interrompida</string>
@@ -1520,11 +1520,11 @@
     <string name="downloads_delete_title">Excluir %1$s?</string>
     <string name="downloads_delete_detail">O arquivo é removido deste dispositivo.</string>
     <string name="downloads_delete_one_title">Excluir download</string>
-    <string name="downloads_delete_one_detail">Ele só volta a ser reproduzido com conexão, ou quando você baixar de novo.</string>
+    <string name="downloads_delete_one_detail">Depois disso, o episódio precisa de conexão para ser reproduzido, a menos que você o baixe de novo.</string>
     <string name="downloads_delete_watched">Excluir downloads assistidos</string>
     <string name="downloads_seeding_title">Semeadura</string>
     <string name="downloads_seeding_after_watching">Semeadura depois de assistir</string>
-    <string name="downloads_seeding_note">Episódios assistidos são compartilhados de volta enquanto Kaeri estiver aberto, até o limite de proporção ou de tempo definido em Configurações, em Fontes, ser atingido.</string>
+    <string name="downloads_seeding_note">Os episódios assistidos são compartilhados de volta enquanto o Kaeri estiver aberto. O compartilhamento para no limite de proporção ou de tempo definido em Configurações, em Fontes.</string>
     <string name="downloads_seeding_open_only">A semeadura só funciona enquanto Kaeri estiver aberto.</string>
     <string name="downloads_background_title">Quando a janela fechar com downloads em andamento</string>
     <string name="downloads_background_keep">Continuar baixando</string>
@@ -1554,8 +1554,8 @@
     <string name="episode_download_done">Baixado</string>
     <string name="episode_download_failed">Não foi possível baixar o episódio %1$d. Tente de novo.</string>
     <string name="first_other_title">Você já usa o Kaeri em outro dispositivo?</string>
-    <string name="first_other_line">Se você parear com ele, este dispositivo recebe suas fontes, seus serviços de acompanhamento e seu histórico. Os passos seguintes já ficam resolvidos.</string>
-    <string name="first_other_pair_line">Mostra um código para digitar nesse dispositivo. Os dois precisam estar na mesma rede Wi-Fi.</string>
+    <string name="first_other_line">Pareie com ele e este dispositivo recebe suas fontes, seus serviços de acompanhamento e seu histórico, e o resto da configuração é feito para você.</string>
+    <string name="first_other_pair_line">Você recebe um código para digitar nesse dispositivo. Os dois precisam estar na mesma rede Wi-Fi.</string>
     <string name="first_other_restore">Restaurar de uma pasta na nuvem</string>
     <string name="first_other_restore_line">Usa a chave de recuperação que você salvou</string>
     <string name="first_other_no">Não, começar aqui</string>
@@ -1596,7 +1596,7 @@
     <string name="home_end">Isso é tudo por enquanto. Temporada e Calendário têm as listas completas.</string>
     <string name="home_end_signed_out">Entre no AniList para trazer sua lista e os planejados.</string>
     <string name="home_sign_in">Entrar no AniList</string>
-    <string name="home_end_no_sources">Adicione uma fonte para reproduzir a partir do Início. As Lojas de plugins têm algumas para escolher.</string>
+    <string name="home_end_no_sources">Adicione uma fonte para reproduzir a partir do Início. Plugins vêm das Lojas de plugins.</string>
     <string name="home_not_found">Não está nas suas fontes</string>
     <string name="home_failed">Não foi possível carregar as sugestões</string>
     <string name="home_try_again">Tentar de novo</string>
@@ -1766,7 +1766,7 @@
     <string name="title_connect_drive">Conecte a unidade para reproduzir</string>
     <string name="library_picker_title">Escolha uma pasta com seus episódios.</string>
     <string name="library_remove_detail">Seus arquivos continuam onde estão.</string>
-    <string name="library_reason_offline">Não foi possível consultar o AniList. Uma nova tentativa será feita na próxima verificação.</string>
+    <string name="library_reason_offline">Não foi possível acessar o AniList. A próxima verificação tenta de novo.</string>
     <string name="library_choose_match">Escolher correspondência</string>
     <string name="library_kept_line">Mantido como título próprio</string>
     <string name="library_fix_match">Corrigir correspondência</string>
@@ -1777,7 +1777,7 @@
     <string name="licensed_title">Serviços licenciados</string>
     <string name="licensed_body">O Kaeri pode abrir títulos em serviços de streaming que você assina. Ele nunca os reproduz por conta própria. Os links vêm do AniList.</string>
     <string name="licensed_region">Região</string>
-    <string name="licensed_region_line">Oculta links que o AniList marca para outros países. A maioria dos links não indica país, então escolha também os seus serviços.</string>
+    <string name="licensed_region_line">Os links que o AniList marca para outros países ficam ocultos. A maioria dos links não indica país, então escolha também os seus serviços.</string>
     <string name="licensed_yours">Seus serviços</string>
     <string name="licensed_show_all">Mostrar todos (%1$d)</string>
     <string name="licensed_region_system">Seguir este dispositivo</string>
@@ -1925,7 +1925,7 @@
     <string name="onboarding_where_hosts">O Kaeri reproduz o que você já tem: arquivos neste dispositivo, seu servidor Jellyfin e plugins de lojas em que você entrar.</string>
     <string name="onboarding_own_heading">Tem seus próprios arquivos?</string>
     <string name="onboarding_invite_heading">Tem um link de convite?</string>
-    <string name="onboarding_where_stores">Plugins vêm de lojas de plugins. Uma loja de plugins é assinada e dá a cada dispositivo o seu próprio token, então você entra em uma com um link de convite do dono dela.</string>
+    <string name="onboarding_where_stores">Plugins vêm de lojas de plugins. Cada uma é assinada e dá a cada dispositivo o seu próprio token, por isso você entra com um link de convite do dono dela.</string>
     <string name="onboarding_demo_heading">Experimente agora</string>
     <string name="onboarding_demo_detail">A demo reproduz こうしす！, uma série que seus criadores compartilham sob a CC BY 4.0, do Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Reproduzir a demo</string>
@@ -1939,12 +1939,12 @@
     <string name="party_join">Participar</string>
     <string name="party_leave">Sair da sessão em grupo</string>
     <string name="party_leaving">Saindo…</string>
-    <string name="party_ready_action">Estou pronto</string>
+    <string name="party_ready_action">Pronto para assistir</string>
     <string name="party_copy_invite">Copiar link de convite</string>
     <string name="party_stay">Continuar</string>
     <string name="party_leave_and_close">Sair e fechar</string>
     <string name="party_not_now">Agora não</string>
-    <string name="party_getting_ready">Preparando tudo…</string>
+    <string name="party_getting_ready">Carregando sugestões…</string>
     <string name="party_server">Servidor</string>
     <string name="party_server_hint">host:port</string>
     <string name="party_recent_servers">Servidores recentes</string>
@@ -1955,7 +1955,7 @@
     <string name="party_your_name">Seu nome na sala</string>
     <string name="party_server_public">Um servidor público mantido por %1$s, não pelo Kaeri.</string>
     <string name="party_server_suggest">Não tem um servidor próprio? %1$s é um servidor público, mantido por %2$s.</string>
-    <string name="party_server_invited">Um servidor escolhido por quem convidou você. O Kaeri não o mantém.</string>
+    <string name="party_server_invited">Quem convidou você escolheu este servidor. O Kaeri não o mantém.</string>
     <string name="party_server_shape">Escreva o servidor como um host e uma porta, como party.example:8999.</string>
     <string name="party_privacy">O servidor vê o seu nome, a sala e quando alguém reproduz, pausa ou avança. Cada um de vocês reproduz o episódio pela própria fontes.</string>
     <string name="party_room_hint">Quem souber o nome da sala pode entrar. O link de convite já o contém, então ninguém precisa ler em voz alta.</string>
@@ -2028,7 +2028,7 @@
     <string name="together_open_player">Abrir player</string>
     <string name="together_recent">Salas recentes</string>
     <string name="together_recent_row">Episódio %1$s · com %2$s · %3$s</string>
-    <string name="together_recent_empty">As salas em que você entrar aparecem aqui, as últimas dez.</string>
+    <string name="together_recent_empty">As últimas dez salas em que você entrar aparecem aqui.</string>
     <string name="together_rejoin">Voltar</string>
     <string name="together_forget_room">Remover das salas recentes</string>
     <plurals name="together_someone_here">
@@ -2137,7 +2137,7 @@
     <string name="party_chat_hidden_line">Ocultar chat está ativado em Configurações, em Reprodução.</string>
     <string name="party_chat_show">Mostrar chat</string>
     <string name="settings_hide_chat">Ocultar chat nas sessões em grupo</string>
-    <string name="settings_hide_chat_line">As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo some. A lista de pessoas continua mostrando quem está na sala.</string>
+    <string name="settings_hide_chat_line">As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo de chat some. A lista de pessoas continua mostrando quem está na sala.</string>
     <string name="party_mute">Silenciar %1$s</string>
     <string name="party_unmute">Reativar %1$s</string>
     <string name="party_unmute_short">Reativar</string>
@@ -2354,8 +2354,8 @@
     <string name="player_load_subtitle_file">Carregar arquivo de legenda…</string>
     <string name="player_load_audio_file">Carregar arquivo de áudio…</string>
     <string name="player_file_picker_failed">Não foi possível abrir o seletor de arquivos. Tente de novo.</string>
-    <string name="player_subtitle_file_failed">Não foi possível carregar esse arquivo de legenda. Confira se é um arquivo de legenda.</string>
-    <string name="player_audio_file_failed">Não foi possível carregar esse arquivo de áudio. Confira se é um arquivo de áudio.</string>
+    <string name="player_subtitle_file_failed">Não foi possível carregar esse arquivo como legenda. Escolha um arquivo de legenda, como .srt ou .ass.</string>
+    <string name="player_audio_file_failed">Não foi possível carregar esse arquivo como áudio. Escolha um arquivo de áudio, como .mka ou .flac.</string>
     <string name="player_track_unnamed">Faixa sem nome</string>
     <string name="player_audio_track_n">Áudio %1$d</string>
     <string name="player_subtitle_track_n">Legendas %1$d</string>
@@ -2422,7 +2422,7 @@
     <string name="reader_gap_small">Pequeno</string>
     <string name="reader_look_system">Sistema</string>
     <string name="onboarding_read_demo">Ler a demo</string>
-    <string name="onboarding_demo_books_detail">A demo lê um quadrinho curto e um conto curto que os autores compartilham sob Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">Um quadrinho curto e um conto curto, compartilhados pelos autores sob Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Um episódio curto e um quadrinho curto, compartilhados pelos autores sob Creative Commons.</string>
     <string name="home_demo_only_books">Só a demo está ativa. Adicione uma pasta, um servidor ou uma loja de plugins para ler seus próprios livros.</string>
     <string name="home_spotlight_read">Ler</string>
@@ -2665,7 +2665,7 @@
     <string name="book_sources_no_match">Sem correspondência</string>
     <string name="book_sources_keep">Manter sem correspondência</string>
     <string name="book_sources_find">Procurar</string>
-    <string name="book_sources_unmatched_note">As séries sem correspondência ainda são lidas da pasta. Elas não têm progresso no serviço de acompanhamento até haver correspondência.</string>
+    <string name="book_sources_unmatched_note">Você ainda pode ler pela pasta as séries sem correspondência. Elas não recebem progresso no serviço de acompanhamento até terem correspondência.</string>
     <string name="library_scope_label">Séries ou leitura</string>
     <string name="library_scope_shows">Séries</string>
     <string name="library_scope_reading">Leitura</string>
@@ -2731,9 +2731,9 @@
     <string name="onboarding_lists_line_read">O Kaeri mantém o que você lê em sincronia com %1$s.</string>
     <string name="onboarding_lists_line_both">O Kaeri mantém o que você lê e assiste em sincronia com %1$s.</string>
     <string name="onboarding_lists_anilist_line">Listas, progresso e sugestões</string>
-    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl e Trakt podem ser adicionados depois em Ajustes, em Contas.</string>
-    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu e MangaUpdates podem ser adicionados depois em Ajustes, em Contas.</string>
-    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt podem ser adicionados depois em Ajustes, em Contas.</string>
+    <string name="onboarding_lists_later_watch">Você pode adicionar MyAnimeList, Kitsu, Simkl e Trakt depois em Configurações, em Contas.</string>
+    <string name="onboarding_lists_later_read">Você pode adicionar MyAnimeList, Kitsu e MangaUpdates depois em Configurações, em Contas.</string>
+    <string name="onboarding_lists_later_both">Você pode adicionar MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt depois em Configurações, em Contas.</string>
     <string name="onboarding_connect">Conectar %1$s</string>
     <string name="onboarding_books_title">De onde vêm seus livros</string>
     <string name="onboarding_books_line">O Kaeri não traz livros. Adicione o que você já tem ou entre em uma loja de plugins com um convite do dono.</string>
@@ -2820,8 +2820,8 @@
     <string name="settings_delete_after_reading_note">Os capítulos com marcador são mantidos</string>
     <string name="settings_chapter_notifications_note">Séries da sua lista Lendo</string>
     <string name="settings_downloads_finished_note">Quando todos os capítulos em download terminarem</string>
-    <string name="settings_chapter_notifications_footer">Os capítulos têm um canal próprio do sistema, então podem ser silenciados à parte.</string>
-    <string name="accounts_mangaupdates_credit">O MangaUpdates é acessado pela API pública dele.</string>
+    <string name="settings_chapter_notifications_footer">Os capítulos têm um canal próprio do sistema, então você pode silenciá-los e manter o resto.</string>
+    <string name="accounts_mangaupdates_credit">O Kaeri se comunica com o MangaUpdates pela API pública dele.</string>
     <string name="accounts_username">Nome de usuário</string>
     <plurals name="read_downloads_total">
         <item quantity="one">%1$d capítulo · %2$s</item>
@@ -2852,7 +2852,7 @@
     <string name="seasonal_empty_format">Nenhum título neste formato</string>
     <string name="seasonal_empty_format_detail">Tente todos os formatos.</string>
     <string name="seasonal_filter_in_search">Filtrar na pesquisa</string>
-    <string name="seasonal_filter_help">Esta temporada na pesquisa, onde todos os filtros a refinam</string>
+    <string name="seasonal_filter_help">Abre esta temporada na pesquisa, onde todos os filtros funcionam</string>
     <string name="sort_popularity">Popularidade</string>
     <string name="sort_score">Nota</string>
     <string name="sort_air_day">Dia de exibição</string>
@@ -2899,7 +2899,7 @@
     <string name="filter_released">Lançamento</string>
     <string name="filter_where_to_watch">Onde assistir</string>
     <string name="filter_licensed_only">Só licenciados</string>
-    <string name="filter_my_list">Títulos na minha lista</string>
+    <string name="filter_my_list">Títulos na sua lista</string>
     <string name="filter_show">Mostrar</string>
     <string name="filter_hide">Ocultar</string>
     <string name="filter_only">Só</string>
@@ -3085,7 +3085,7 @@
     <string name="servers_kind_films">Filmes</string>
     <string name="servers_error_certificate">%1$s usa um certificado em que este dispositivo não confia. Use um endereço https:// com um certificado em que ele confie.</string>
     <string name="servers_row_signed_out_here">Desconectado</string>
-    <string name="servers_sign_out_line">Encerra o acesso deste dispositivo ao servidor. O servidor e seus downloads continuam como estão.</string>
+    <string name="servers_sign_out_line">Sair encerra a sessão deste dispositivo no servidor. O servidor e seus downloads continuam como estão.</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_app">Idioma do app</string>
     <string name="language_follow_system">Seguir o idioma do sistema</string>
@@ -3194,11 +3194,11 @@
     <string name="settings_artwork_detail">Atribuição nos avisos do app</string>
     <string name="settings_new_episodes">Novos episódios</string>
     <string name="settings_new_episodes_detail">Aparece na sua lista Assistindo</string>
-    <string name="settings_notify_detail">Uma notificação quando um episódio de uma série que você acompanha sai: o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.</string>
+    <string name="settings_notify_detail">Você recebe uma notificação quando sai um episódio de uma série que você acompanha. Ela traz o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.</string>
     <string name="settings_coming_up">Próximos · 7 dias</string>
     <string name="settings_system_notifications">Ajustes de notificação</string>
     <string name="settings_system_notifications_detail">Som, vibração e tela de bloqueio</string>
-    <string name="settings_system_notifications_apple">Abre os ajustes do sistema, onde ficam o estilo do banner, o som e os selos.</string>
+    <string name="settings_system_notifications_apple">Abre os Ajustes do Sistema, onde você define o estilo do banner, o som e os selos.</string>
     <string name="settings_notifications_blocked">Desligado: o sistema não permite notificações do Kaeri</string>
     <string name="settings_notifications_show_on">Ligado nas configurações desta série</string>
     <string name="settings_notify_show">Quando um episódio desta série sai</string>
@@ -3212,7 +3212,7 @@
     <string name="show_settings_always">Sempre</string>
     <string name="show_settings_never">Nunca</string>
     <string name="show_settings_subs_remembered">Lembrado do seu último episódio.</string>
-    <string name="show_settings_subs_follow">Escolhido no player. Seguindo Configurações › Reprodução.</string>
+    <string name="show_settings_subs_follow">Escolhido no player. Até lá, vale Configurações › Reprodução.</string>
     <string name="show_settings_source">Fonte</string>
     <string name="show_settings_source_detail">Automático testa suas fontes em ordem.</string>
     <string name="show_settings_reset">Restaurar padrões</string>
@@ -3243,7 +3243,7 @@
     <string name="settings_upload_unlimited">Sem limite</string>
     <string name="settings_upscaling_natural">Natural · ArtCNN</string>
     <string name="settings_label_hover_cards">Ampliar capas ao passar o mouse</string>
-    <string name="settings_hover_cards_note">Mostra um cartão maior com o trailer quando você para o ponteiro sobre uma capa.</string>
+    <string name="settings_hover_cards_note">Deixar o ponteiro parado sobre uma capa abre um cartão maior com o trailer.</string>
     <string name="settings_upscaling_note_natural">Traços e textura fiéis, sem alterar o visual.</string>
     <string name="settings_upscaling_note_sharp">Traços mais nítidos e bordas mais fortes, com alguma perda de textura.</string>
     <string name="settings_after_download">Depois de cada download</string>
@@ -3392,11 +3392,11 @@
         <item quantity="other">Mais %1$d são para assistir, o que está desativado neste dispositivo.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="one">Mais um é para ler, o que esta TV não faz.</item>
-        <item quantity="many">Mais %1$d de são para ler, o que esta TV não faz.</item>
-        <item quantity="other">Mais %1$d são para ler, o que esta TV não faz.</item>
+        <item quantity="one">Mais um é para leitura, o que esta TV não faz.</item>
+        <item quantity="many">Mais %1$d de plugins são para leitura, o que esta TV não faz.</item>
+        <item quantity="other">Mais %1$d são para leitura, o que esta TV não faz.</item>
     </plurals>
-    <string name="store_tv_all_reading">Todo plugin em %1$s é para ler, o que esta TV não faz.</string>
+    <string name="store_tv_all_reading">Todos os plugins de %1$s são para leitura, o que esta TV não faz.</string>
     <string name="store_plugin_row">Versão %1$s · pode contatar %2$s</string>
     <string name="source_added">Adicionado: %1$s · %2$d séries</string>
     <plurals name="source_added_plugins">
@@ -3493,7 +3493,7 @@
     <string name="sources_torrent_source">Reprodução de torrents</string>
     <string name="sources_source_order_row">Ordem da fonte</string>
     <string name="sources_torrents_note">Os torrents fazem parte do Kaeri, não de um plugin. O proxy e o compartilhamento são definidos em Configurações, em Fontes.</string>
-    <string name="sources_rebuilding">Fontes estão sendo configuradas de novo</string>
+    <string name="sources_rebuilding">Configurando as fontes de novo</string>
     <string name="sources_response_ms">%1$d ms</string>
     <string name="match_fix">Corrigir correspondência</string>
     <string name="match_choose">Escolher correspondência</string>
@@ -3533,7 +3533,7 @@
     <string name="sources_add_folder">Pasta…</string>
     <string name="sources_add_server">Servidor de mídia…</string>
     <string name="sources_add_store">Entrar numa loja de plugins…</string>
-    <string name="sources_empty_body">Fontes são de onde vêm os episódios: pastas neste dispositivo, seu servidor de mídia e plugins de lojas em que você entrar.</string>
+    <string name="sources_empty_body">Fontes são de onde vêm os episódios: pastas neste dispositivo, seu servidor de mídia e plugins de lojas de plugins em que você entrar.</string>
     <string name="sources_empty_more">Ou %1$s.</string>
     <string name="sources_empty_join_link">entre numa loja de plugins</string>
     <string name="sources_add_folder_button">Adicionar uma pasta</string>
@@ -3547,7 +3547,7 @@
     <string name="sources_demo_link_licence">Licença</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">A demo acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.</string>
     <string name="sources_demo_private">A demo nunca entra em nenhuma conta e nunca grava no AniList.</string>
     <string name="sources_demo_remove">Remover demo</string>
     <string name="sources_demo_add">Adicionar a demo</string>
@@ -3570,7 +3570,7 @@
     <string name="stores_intro">Plugins adicionam fontes. Cada um lista os endereços com que se conecta antes que você o instale.</string>
     <string name="stores_not_from_app">Plugins vêm do dono da loja de plugins, e não do Kaeri. Você pode sair de uma loja de plugins a qualquer momento.</string>
     <string name="stores_join_owner_responsible">%1$s mantém esta loja de plugins e escolheu os plugins dela. O Kaeri não os criou, não os revisou nem os aprovou.</string>
-    <string name="stores_no_plugins">Esta loja de plugins ainda não oferece nenhum plugins.</string>
+    <string name="stores_no_plugins">Esta loja de plugins ainda não tem plugins.</string>
     <string name="stores_plugins">Plugins</string>
     <string name="stores_plugin_limits">Cada plugin só pode contatar os endereços listados com ele e não pode ler seus arquivos.</string>
     <string name="stores_plugin_limits_short">Plugins não podem ler seus arquivos nem contatar um endereço que não esteja listado.</string>
@@ -3582,7 +3582,7 @@
     <string name="stores_access_ended_detail">O dono desta loja de plugins encerrou seu acesso. Os plugins instalados continuam funcionando, mas nenhum será atualizado.</string>
     <string name="stores_access_ended_page">Esta loja de plugins não deixa mais este dispositivo entrar. Os plugins continuam instalados até que você os remova.</string>
     <string name="stores_no_longer_joined">Você não está mais nesta loja de plugins.</string>
-    <string name="stores_offline_last_list">Offline: %1$s. Os plugins abaixo são a última lista verificada.</string>
+    <string name="stores_offline_last_list">Offline: %1$s. Mostrando a última lista que ela enviou.</string>
     <string name="stores_offline_last_list_plain">Offline. Mostrando a última lista que ela enviou.</string>
     <string name="stores_key_line">Chave da loja %1$s · %2$s</string>
     <string name="stores_device_joined_as">Entrou como %1$s</string>
@@ -3617,14 +3617,14 @@
     <string name="stores_install_label">Instalar %1$s</string>
     <string name="stores_replace_label">Substituir a cópia de %1$s adicionada manualmente</string>
     <string name="stores_remove_plugin_title">Remover %1$s?</string>
-    <string name="stores_remove_plugin_detail">Ele é apagado deste dispositivo. A loja de plugins pode instalá-lo de novo.</string>
+    <string name="stores_remove_plugin_detail">Ele é apagado deste dispositivo. Você pode instalá-lo de novo pela loja de plugins.</string>
     <string name="stores_newly_contacts">Novos endereços</string>
     <string name="stores_update_contacts">Esta atualização também contata %1$s.</string>
     <string name="stores_new_in">Novidades na versão %1$s</string>
     <string name="stores_join_title">Entrar numa loja de plugins</string>
     <string name="stores_add_title">Adicionar uma loja de plugins</string>
     <string name="stores_join_detail">Cole o link que o dono da loja de plugins enviou para você.</string>
-    <string name="stores_join_detail_desktop">Cole o link de convite que o dono de uma loja de plugins enviou para você. Você vê o que a loja de plugins oferece antes de entrar ou instalar qualquer coisa.</string>
+    <string name="stores_join_detail_desktop">Cole o link de convite que o dono de uma loja de plugins enviou para você. Você vê o que a loja de plugins tem antes de entrar ou instalar qualquer coisa.</string>
     <string name="stores_join_detail_opened">Cole o link que o dono da loja de plugins enviou para você. Um link de convite Kaeri:// aberto pelo Mensagens preenche este painel diretamente.</string>
     <string name="stores_invite_link">Link de convite</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3638,7 +3638,7 @@
     <string name="stores_join_confirm_title">Entrar em %1$s?</string>
     <string name="stores_join_installs_nothing">Entrar não instala nada. Você escolhe quais plugins instalar, e cada um pede os endereços que contata.</string>
     <string name="stores_key_matches">A chave %1$s corresponde à loja de plugins.</string>
-    <string name="stores_anyone_note">Você entra sem nome. Outro dispositivo entra com o mesmo link.</string>
+    <string name="stores_anyone_note">Você entra sem nome. Outro dispositivo pode entrar com o mesmo link.</string>
     <string name="stores_already_joined_note">Este dispositivo já entrou nesta loja de plugins.</string>
     <string name="stores_device_name">Nome do dispositivo</string>
     <string name="stores_device_name_detail">O dono da loja de plugins vê este dispositivo por este nome.</string>
@@ -3693,7 +3693,7 @@
     <string name="stores_invite_works_times_forever">Vale para %1$d usos, até você cancelar.</string>
     <string name="stores_invite_works_any">Quem tiver este link pode entrar, até %1$s.</string>
     <string name="stores_invite_works_any_forever">Quem tiver este link pode entrar até você cancelar.</string>
-    <string name="stores_invite_once_until">Vale uma vez, para a pessoa a quem você o enviar. Até %1$s.</string>
+    <string name="stores_invite_once_until">Vale uma vez, para a pessoa a quem você o enviar, até %1$s.</string>
     <string name="stores_invite_once_forever">Vale uma vez, para a pessoa a quem você o enviar, até você cancelar.</string>
     <string name="stores_invite_contact_needed">Adicione antes um contato para esta loja. Um link que vale para qualquer número de usos pode ser repassado, como o próprio link da loja.</string>
     <string name="stores_invite_owner_once">Convites de dono valem uma vez.</string>
@@ -3746,7 +3746,7 @@
         <item quantity="other">%1$d plugins</item>
     </plurals>
     <string name="notice_open_stores">Abrir lojas de plugins</string>
-    <string name="stores_what_is">Uma loja de plugins é um servidor pequeno que guarda plugins assinados e dá a cada dispositivo o seu próprio token. Ela oferece fontes como plugins. O Kaeri não administra lojas de plugins nem lista nenhuma, então você entra em uma com um link de convite do dono dela.</string>
+    <string name="stores_what_is">Uma loja de plugins é um servidor pequeno que guarda plugins assinados e dá a cada dispositivo o seu próprio token. Os plugins dela adicionam fontes. O Kaeri não mantém lojas de plugins nem lista nenhuma, então você entra em uma com um link de convite do dono dela.</string>
     <string name="stores_what_is_link">O que é uma loja de plugins?</string>
     <string name="stores_invite_rules">Um link de convite vale uma vez, para uma pessoa, e dura sete dias. Peça um novo ao dono da loja de plugins se o seu expirou.</string>
     <string name="stores_qr_label">Código QR do link de convite</string>
@@ -3792,7 +3792,7 @@
     <string name="sync_road_nearby">Com um dispositivo por perto</string>
     <string name="sync_road_nearby_line">Pareie com outro dispositivo no mesmo Wi-Fi. Nada é guardado em outro lugar.</string>
     <string name="sync_road_cloud">Por uma pasta na nuvem</string>
-    <string name="sync_road_cloud_line">Um drive na nuvem que você já usa, ou o seu próprio servidor. Funciona mesmo com seus dispositivos longe um do outro e mantém um backup.</string>
+    <string name="sync_road_cloud_line">Um drive na nuvem que você já usa, ou o seu próprio servidor. Funciona enquanto seus dispositivos estão longe um do outro e mantém um backup.</string>
     <string name="sync_road_later">Você pode adicionar o outro jeito depois. A maioria das pessoas usa os dois.</string>
     <string name="devices_yours">Seus dispositivos</string>
     <string name="devices_only_this">Só este dispositivo</string>
@@ -3812,7 +3812,7 @@
     <string name="sync_turn_off_alert">Desativar a sincronização em %1$s?</string>
     <string name="sync_turn_off_alert_line">Este dispositivo (%1$s) para de compartilhar com seus outros dispositivos. Tudo o que ele tem fica aqui.</string>
     <string name="cloud_group">Pasta na nuvem</string>
-    <string name="cloud_foot">Completa enquanto seus dispositivos estão longe um do outro e mantém um backup selado. Só os seus dispositivos conseguem lê-lo.</string>
+    <string name="cloud_foot">A pasta mantém seus dispositivos em sincronia enquanto estão longe um do outro e guarda um backup selado. Só os seus dispositivos conseguem lê-lo.</string>
     <string name="cloud_add">Adicionar uma pasta na nuvem</string>
     <string name="cloud_pick_title">Escolher uma pasta na nuvem</string>
     <string name="cloud_google_line">Uma pasta oculta do Kaeri no seu Drive</string>
@@ -3929,7 +3929,7 @@
     <string name="profiles_delete_alert_line">O histórico e os logins de %1$s neste dispositivo são removidos. Os dispositivos que sincronizam com %1$s mantêm os deles.</string>
     <string name="profiles_picker">Quem está assistindo?</string>
     <string name="profiles_ask_at_launch">Perguntar quem está assistindo ao abrir</string>
-    <string name="profiles_ask_foot">Desativado por padrão. Para um iPad que a casa divide. A linha da conta troca de perfil a qualquer momento.</string>
+    <string name="profiles_ask_foot">Desativado por padrão. Ative para um iPad que toda a casa compartilha. Você pode trocar de perfil pela linha da conta a qualquer momento.</string>
     <string name="profiles_switch">Trocar de perfil</string>
     <string name="profiles_manage">Gerenciar perfis</string>
     <string name="first_setup_other">Configurar a partir de outro dispositivo</string>
@@ -4202,7 +4202,7 @@
     <string name="accounts_tokens_file">Os tokens de login ficam em um arquivo deste dispositivo, que só você pode ler.</string>
     <string name="accounts_tokens_keystore">Os tokens de login ficam neste dispositivo, protegidos por uma chave do armazenamento de chaves.</string>
     <string name="accounts_form_title">Entrar em %1$s</string>
-    <string name="accounts_form_detail">Sua senha vai para %1$s uma única vez, para gerar um token guardado neste dispositivo.</string>
+    <string name="accounts_form_detail">Sua senha vai para %1$s uma única vez, em troca de um token que fica neste dispositivo.</string>
     <string name="accounts_user_or_email">E-mail ou nome de usuário</string>
     <string name="accounts_password">Senha</string>
     <string name="accounts_signing_in_action">Entrando</string>
@@ -4226,7 +4226,7 @@
     <string name="accounts_keep_theirs">Manter o de %1$s</string>
     <string name="accounts_open_on">Abrir em %1$s</string>
     <string name="accounts_listed_by">Listado em %1$s</string>
-    <string name="accounts_did_not_answer">%1$s não respondeu.</string>
+    <string name="accounts_did_not_answer">%1$s não respondeu. Tente de novo daqui a pouco.</string>
     <string name="accounts_no_extras">%1$s ainda não tem elenco, equipe nem recomendações para esta série.</string>
     <string name="accounts_episodes_from">Episódios de %1$s. Adicione uma fonte para reproduzi-los.</string>
     <string name="accounts_adds_season">%1$s adiciona os títulos de uma temporada conforme são anunciados.</string>
@@ -4347,7 +4347,7 @@
     <string name="updates_saved_replace">A versão %1$s foi salva em Downloads. Substitua o arquivo antigo, %2$s, por ela para atualizar.</string>
     <string name="updates_saved_replace_plain">A versão %1$s foi salva em Downloads. Substitua o arquivo antigo por ela para atualizar.</string>
     <string name="updates_why_server">O download parou: o servidor recusou (%1$d). Tente de novo mais tarde.</string>
-    <string name="updates_why_connection">O download parou: a conexão caiu.</string>
+    <string name="updates_why_connection">O download parou: a conexão caiu. Tente de novo.</string>
     <string name="updates_why_save">Não foi possível salvar o download: %1$s</string>
     <string name="updates_why_size">O download tem %1$s, e não o tamanho de %2$s listado para esta versão.</string>
     <string name="updates_why_checksum">O download não bate com a soma de verificação listada para esta versão.</string>

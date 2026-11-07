@@ -48,7 +48,7 @@ library-row-summary-linux = { $episodes ->
    *[other] { $episodes } tập của { $series } bộ
  }
 library-page-watching-linux = Theo dõi thay đổi
-library-page-no-watch-linux = Quét lại khi { -app-name } khởi động
+library-page-no-watch-linux = Kiểm tra thay đổi khi { -app-name } khởi động
 library-matched-linux = Đã khớp
 library-best-guess-linux = Đoán gần nhất: { $title }
 library-fix-count-mismatch-linux = { $episodes ->

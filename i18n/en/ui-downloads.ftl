@@ -152,7 +152,7 @@ downloads-delete-detail = The file is removed from this { -device }.
 downloads-delete-one-title = Delete download
 
 # Line under it: what you lose.
-downloads-delete-one-detail = It plays again only with a connection, or once you download it again.
+downloads-delete-one-detail = After this, the episode needs a connection to play, unless you download it again.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Delete watched downloads
@@ -166,7 +166,7 @@ downloads-seeding-title = Seeding
 downloads-seeding-after-watching = Seeding after watching
 
 # Line under the seeding heading.
-downloads-seeding-note = Watched episodes are shared back while { -app-name } is open, until the ratio or the time limit set in Settings, under { -source-cap-pl }, is reached.
+downloads-seeding-note = Watched episodes are shared back while { -app-name } is open. Sharing stops at the ratio or time limit you set in Settings, under { -source-cap-pl }.
 
 # Line under the seeding heading where seeding cannot run in the background.
 # @only android

@@ -122,7 +122,7 @@ class NotificationsPaneTest {
         assertEquals(1, compose.onAllNodesWithText("On in this show's settings", substring = true).fetchSemanticsNodes().size)
         // A show its own switch leaves out is named under the week, not listed.
         assertTrue(compose.onAllNodesWithText("E2 · ", substring = true).fetchSemanticsNodes().isEmpty())
-        assertTrue(compose.onAllNodesWithText("Amber Forest is off in its own settings. A show opens its settings.").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText("Amber Forest is off in its own settings. Tap a show to open its settings.").fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test

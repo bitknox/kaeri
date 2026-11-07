@@ -4,7 +4,7 @@ Kaeri                                                                           
   ▤  Calendar               │  ───────────────────────────────────────────────────────────────────────────────────────
   ▦  Seasonal               │  Nothing queued
   /  Search                 │
-  ▥  Library                │  Press d on a title or episode to queue it for offline.
+  ▥  Library                │  Press d on a title or episode to download it.
 ▌ ↓  Downloads              │
   ◇  Sources                │
   ◎  Accounts               │
@@ -61,7 +61,7 @@ r05 c28-28 fg=rule
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
-r06 c31-84 fg=text-dim
+r06 c31-75 fg=text-dim
 r07 c00-00 fg=text-dim
 r07 c02-02 fg=text
 r07 c05-13 fg=text mod=BOLD

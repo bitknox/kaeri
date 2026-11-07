@@ -9,7 +9,7 @@ Kaeri                                                      plugins ·  ·  kitsu
 ▌◇ │
  ◎ │    About the demo
  ≡ │    こ う し す ！  · CC BY 4.0 · from Wikimedia Commons
- ⇄ │    Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wi…
+ ⇄ │    The demo reaches only Wikimedia Commons: upload.wikimedia.org and c…
    │    The demo never signs in anywhere and never writes to AniList.
    │    B  Play the demo   Y  Remove demo
    │

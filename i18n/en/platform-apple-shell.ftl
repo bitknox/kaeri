@@ -151,7 +151,7 @@ shell-library-order-label = Order
 shell-library-segment = { $name } { $count }
 
 # Error when a link that was pasted or opened is not a plugin store's invite.
-shell-not-a-store = This link doesn't lead to a { -plugin-store }. Ask the { -plugin-store }'s owner for a new invite.
+shell-not-a-store = This link doesn't lead to a { -plugin-store }. Ask the person who sent it for a new invite.
 
 # Context menu item that carries on with an episode that was left part-way.
 # @arg episode: int
@@ -188,7 +188,7 @@ shell-engine-stopped = { -app-name } stopped working
 
 # Plain line under the title of the page shown when the engine stopped while the app was open.
 # @allow proceed
-shell-engine-stopped-body = The part of the app that does the work has stopped. Start it again to carry on.
+shell-engine-stopped-body = Downloads and sync stopped with it. Start { -app-name } again to carry on.
 
 # Title menu item that queues every unwatched episode that is not downloaded yet.
 shell-download-unwatched = Download unwatched

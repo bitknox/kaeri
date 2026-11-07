@@ -11573,7 +11573,7 @@ pub fn party_member_watching_from(time: &str) -> String {
     text("party-member-watching-from", &[("time", Arg::Text(time))])
 }
 
-/// Label of the I'm ready button once you are ready.
+/// Label of the Ready to watch button once you are ready.
 pub fn party_ready_on() -> String {
     text("party-ready-on", &[])
 }

@@ -28,7 +28,7 @@ notice-cast-refused = { $name } não conseguiu reproduzir este stream. Tente out
 notice-cast-taken-over = Outro dispositivo iniciou algo em { $name }, então a transmissão parou.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Este dispositivo não está na mesma rede de { $name } ou acessa a rede por uma VPN. Para transmitir, os dois precisam estar na mesma rede.
+notice-cast-not-same-network = Este dispositivo não está na mesma rede que { $name } ou se conecta a ela por uma VPN. Conecte os dois à mesma rede para transmitir.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Perdemos a conexão com { $name }, então a transmissão parou.
@@ -364,7 +364,7 @@ match-search-timed-out = Não respondeu a tempo.
 match-search-source-off = Não está ativada.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = A fonte { $source } será usada para este título.
+notice-source-pinned = Agora este título é reproduzido de { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Voltou à seleção automática de fonte para este título.
@@ -556,13 +556,13 @@ reader-moved = Movido para { $chapter }, página { $page }, onde { $device } par
 reader-moved-number = Movido para o capítulo { $chapter }, página { $page }, onde { $device } parou
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Direita para esquerda, detectado
+reader-detected-right-to-left = Parece da direita à esquerda
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Esquerda para direita, detectado
+reader-detected-left-to-right = Parece da esquerda à direita
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Tira longa, detectado
+reader-detected-strip = Parece uma tira longa
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Você está offline. Os capítulos baixados ainda abrem.
@@ -1077,7 +1077,7 @@ store-join-would-unname = Você entrou em { $store } como { $member }. Este link
 store-not-the-invited = { $url } não é a loja de plugins do convite ({ $reason }). Você não entrou.
 
 # Error: the token for a joined store could not be saved on this device. The reason comes from the system.
-store-token-not-kept = Não foi possível guardar o token desta loja de plugins. { $reason }
+store-token-not-kept = Não foi possível salvar o token desta loja de plugins. { $reason }
 
 # Error: an invite that cannot be used any more.
 store-invite-unusable = Este convite já foi usado, foi cancelado ou expirou. Peça um novo.
@@ -1143,7 +1143,7 @@ store-admin-link-foreign = { $store } enviou um link de administração para out
 store-open-join-unsupported = O servidor de { $store } é mais antigo e não deixa ninguém entrar com link. Atualize-o primeiro.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = Fonte { $name } está desligada. Ela é ignorada ao buscar episódios.
+source-switched-off = A fonte { $name } está desligada. O Kaeri a ignora ao buscar episódios.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = Fonte { $name } está ligada.
@@ -1152,7 +1152,7 @@ source-switched-on = Fonte { $name } está ligada.
 plugin-not-loaded = { $id } não está carregado. Confira se ele está instalado em Fontes.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } será usado neste título.
+release-pinned = Este título agora usa { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Não foi possível salvar essa escolha. { $reason }
@@ -1242,10 +1242,10 @@ notice-token-exchange-failed = Não foi possível receber um token do { $tracker
 notice-browser-not-opened = Não foi possível abrir um navegador para a conexão. Verifique se há um instalado e tente de novo. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Nenhuma conexão com o { $tracker } aguarda por isso. Comece a conexão de novo.
+notice-sign-in-not-waiting = Chegou uma resposta de login de { $tracker }, mas nenhum login estava esperando por ela. Comece o login de novo.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = A conexão com o { $tracker } não voltou deste pedido. Comece a conexão de novo.
+notice-sign-in-wrong-request = A resposta de login de { $tracker } não corresponde ao pedido. Comece o login de novo.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = A conexão com o { $tracker } voltou sem token. Tente de novo.
@@ -1345,7 +1345,7 @@ notice-update-available = { $tag } está disponível. Execute kaeri --update par
 cause-proxy-needs-address = Um proxy precisa de um endereço e de uma porta.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = O endereço do proxy não pode ser usado na verificação.
+cause-proxy-address-unusable = A verificação do proxy não pode usar este endereço.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Não foi possível alcançar o servidor.
@@ -1369,7 +1369,7 @@ notice-playback-failed = A reprodução falhou. Tente outra fonte.
 notice-engine-fault = Algo deu errado dentro do Kaeri. Ele continuou funcionando, mas se alguma tela parecer travada, saia e abra de novo.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = O banco de dados estava danificado, então o Kaeri criou um novo. O arquivo antigo foi guardado em { $path }. Os serviços de acompanhamento trazem de volta o que guardam na próxima sincronização.
+notice-database-set-aside = O banco de dados estava danificado, então o Kaeri criou um novo. O arquivo antigo foi guardado em { $path }. O que seus serviços de acompanhamento guardam volta na próxima sincronização.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = O Kaeri não conseguiu criar a pasta { $path }. Verifique se o disco tem espaço e se é possível gravar nela, e tente de novo. { $reason }
@@ -1384,7 +1384,7 @@ config-reset-failed = O Kaeri não conseguiu mover { $path } para redefinir os a
 start-failed-database = O Kaeri não conseguiu abrir o banco de dados em { $path }. Se outro Kaeri estiver aberto nesta pasta, feche-o e tente de novo. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = O Kaeri não conseguiu configurar a conexão de rede com as configurações de rede do config.toml. { $reason }
+start-failed-network = O Kaeri não conseguiu se conectar com as configurações de rede do config.toml. Confira essas configurações e tente de novo. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = O Kaeri não conseguiu iniciar. Saia e abra de novo. { $reason }
@@ -1419,10 +1419,10 @@ notice-surprise-empty-filters = Nenhum título corresponde a estes filtros.
 notice-surprise-empty-planning = A lista Planejado está vazia.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Sem conexão. As sugestões da pesquisa precisam do AniList.
+notice-surprise-offline = Você está offline. Me surpreenda precisa do AniList para escolher um título.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Não foi possível escolher um título agora. Tente de novo daqui a pouco.
+notice-surprise-failed = Não foi possível acessar o AniList para escolher um título. Tente de novo daqui a pouco.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Editar proxy
@@ -1545,7 +1545,7 @@ party-members = Membros
 party-choose-a-source = Escolha uma fonte
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Nenhuma fonte lista o episódio { $episode }. As Fontes vêm de plugins, que uma loja de plugins adiciona.
+party-sources-none-listed = Nenhuma fonte lista o episódio { $episode }. As fontes vêm de plugins, que você adiciona de uma loja de plugins.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1647,10 +1647,10 @@ settings-caption-sample = A estrada da lanterna segue além da última cidade.
 settings-caption-note = Legendas simples aparecem assim, em { $language } quando o episódio as tiver. Legendas estilizadas mantêm o próprio visual.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = Uma notificação quando um episódio de uma série na sua lista Assistindo sair, no horário que { $tracker } informa. A configuração própria de cada série vem primeiro.
+settings-notify-note-on = Você recebe uma notificação quando sai um episódio de uma série da sua lista Assistindo, no horário informado por { $tracker }. A configuração própria de cada série tem prioridade sobre esta.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Desligado. Só notificam as séries ligadas nas próprias configurações.
+settings-notify-note-off = Desligado. Só enviam notificações as séries que você ligou nas próprias configurações.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = O Kaeri funciona sem conta. Seu histórico continua neste computador quando você sai da conta.
@@ -1727,7 +1727,7 @@ controller-help-buttons = Botões do controle
 settings-note-cast-tvs-computer = Elas aparecem em Chromecast, em Reproduzir na TV. Este computador envia o episódio a elas.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Permite que uma TV com Chromecast integrado reproduza torrents. Este computador envia o episódio enquanto ele estiver sendo reproduzido.
+settings-note-torrents-while-casting-computer = Com isto ligado, uma TV com Chromecast integrado pode reproduzir torrents. Este computador envia o episódio enquanto ele estiver sendo reproduzido.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Abrir lojas de plugins
@@ -1906,7 +1906,7 @@ stores-owner-needs-connection = A loja de plugins precisa de conexão
 stores-owner-needs-connection-detail = Tente de novo quando este dispositivo voltar a ter conexão.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Criar um link precisa de conexão com a loja de plugins.
+stores-owner-link-offline = Não é possível criar um link enquanto este dispositivo estiver offline.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Envie este link. Ele funciona uma vez, até { $until }.
@@ -1915,7 +1915,7 @@ stores-send-link-until = Envie este link. Ele funciona uma vez, até { $until }.
 stores-open-on-detail = Entram sem informar nome. Desativar isso interrompe o link; ativar de novo cria outro.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Só pessoas convidadas podem entrar. Ativado, qualquer pessoa com o link entra, sem informar nome.
+stores-open-off-detail = Só entram as pessoas que você convidar. Ligue isto e qualquer pessoa com o link pode entrar, sem nome.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Nenhum nome é guardado.
@@ -1939,7 +1939,7 @@ stores-publish-none-hint = Um plugin que você criar ou instalar aparece aqui.
 stores-not-published = Ainda não está na loja de plugins
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = A loja de plugins oferece { $version }
+stores-store-offers = A loja de plugins tem { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Atualizado na loja de plugins
@@ -1951,7 +1951,7 @@ stores-published-state = Publicado
 stores-publish-label = Publicar { $name } { $version }
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Você pode vê-la de novo em Configurações, Dispositivos, depois da senha da sua conta.
+rkey-lock-linux = Você pode vê-la de novo em Configurações, Dispositivos, depois de digitar a senha da sua conta.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Mostrar a chave de recuperação do Kaeri
@@ -2117,7 +2117,7 @@ library-row-summary-linux =
 library-page-watching-linux = Alterações são acompanhadas
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Verificada de novo quando o Kaeri inicia
+library-page-no-watch-linux = Mudanças verificadas quando o Kaeri inicia
 
 # Heading over the matched series.
 library-matched-linux = Identificadas
@@ -2284,7 +2284,7 @@ title-no-seasons = Não há temporadas relacionadas conhecidas para este título
 title-pin-off-page = Abra a página do título para escolher uma fonte para ele.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Nenhuma fontes foi registrada ainda. Tente de novo em instantes.
+title-no-sources-yet = As fontes ainda estão carregando. Tente de novo em instantes.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Seu status na lista fica guardado em um serviço de acompanhamento, e nenhum está conectado. Use :accounts para entrar em um.
@@ -2458,7 +2458,7 @@ episodes-empty-none-listed = Nenhum episódio listado
 episodes-empty-none-listed-hint = A fonte não listou episódios para este título. Pressione { $search } para pesquisar a correspondência certa, ou { $pick } para escolher outra fonte.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Não há versões disponíveis para escolher neste episódio.
+episodes-no-releases = Este episódio não tem versões para escolher.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Adicione uma fonte antes de baixar. Pressione { $key } para abrir a tela de Fontes.
@@ -3125,7 +3125,7 @@ downloads-column-progress = Progresso
 downloads-empty-heading = Nada na fila
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Pressione { $key } em um título ou episódio para baixá-lo offline.
+downloads-empty-hint = Pressione { $key } em um título ou episódio para baixá-lo.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = E{ $episode }
@@ -3309,16 +3309,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } na fila, { $held } aguardando a correspondência de id
+accounts-row-queued-held = { $queued } na fila, { $held } aguardando correspondência
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Manter o meu
+accounts-conflict-keep-mine = Usar local
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Manter o deles
+accounts-conflict-keep-theirs = Usar o da conta
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: aqui { $local } / no serviço de acompanhamento { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: local { $local } / no serviço de acompanhamento { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Biblioteca
@@ -3351,7 +3351,7 @@ lists-empty-type-to-search = Digite para buscar
 lists-empty-browse-filtered = Pressione ↵ para navegar com estes filtros.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = Pressione ↵ para navegar pelos mais populares.
+lists-empty-browse-popular = Pressione ↵ para ver os títulos mais populares.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Nada encontrado
@@ -4023,7 +4023,7 @@ settings-label-episode-discussions = Discussões de episódios
 settings-label-comment-images = Carregar imagens nos comentários
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Calendário mostra só a minha lista
+settings-label-calendar-mine = Calendário mostra só a sua lista
 
 # Note under the titles row.
 settings-note-titles = A escolha do AniList segue a sua conta do AniList e fica em inglês quando você não está conectado.
@@ -4080,13 +4080,13 @@ settings-note-update-check = Uma requisição em cache por dia, feita ao iniciar
 settings-note-presence = Vale a partir do episódio seguinte.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Precisa de um ID de cliente. Registre um app em discord.com/developers.
+settings-note-presence-needs-client = Defina um ID de cliente primeiro. Registre um app em discord.com/developers para obter um.
 
 # Note under the presence title row. The quoted text is what Discord shows.
 settings-note-presence-title = Desligado mostra “Assistindo anime” sem citar o título.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Adiciona a capa, uma barra de progresso e um link do AniList. Precisa que o título esteja visível.
+settings-note-presence-rich = Adiciona a capa, uma barra de progresso e um link do AniList, enquanto o título estiver visível.
 
 # Note under the torrent playback row.
 settings-note-torrents = Desativado por padrão. Vale na hora.
@@ -4244,13 +4244,13 @@ stores-footer-update-hosts = A atualização também precisa acessar { $hosts }
 stores-footer-may-contact = Pode acessar { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Um link de uso único que vincula outro dos seus computadores como você
+stores-footer-link-device = Um link de uso único que vincula outro dos seus dispositivos como você
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Um link de uso único para alguém novo
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Quem já entrou, e remover o acesso de alguém
+stores-footer-members = Veja quem entrou e remova o acesso de alguém
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Deixar entrar só as pessoas convidadas e parar o link
@@ -4265,7 +4265,7 @@ stores-footer-publish = Oferecer um plugin da pasta de plugins deste computador
 stores-footer-admin = Gerenciar membros, convites e plugins no navegador
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Plugins instalados por ela continuam neste computador e param de atualizar
+stores-footer-leave = Plugins instalados por ela continuam neste dispositivo e param de atualizar
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Qualquer pessoa com o link
@@ -4445,7 +4445,7 @@ stores-footer-remove-anonymous = ↵ Remover este dispositivo, identificado só 
 stores-footer-remove-all-anonymous = ↵ Remover todos os dispositivos que entraram pelo link
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Copiado para a área de transferência, quando o terminal permitir, ou selecione para copiar.
+stores-link-copied = Copiado, se este terminal permitir. Se não, selecione o link para copiá-lo.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Selecione para copiar.
@@ -4519,7 +4519,7 @@ stores-key-matches-invite = { $fingerprint }  (corresponde ao convite)
 stores-join-open = Qualquer pessoa com o link pode entrar.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Você entra sem nome, e outro dispositivo entra com o mesmo link.
+stores-join-anonymous = Você entra sem nome. Qualquer outro dispositivo pode entrar com o mesmo link.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Já entrou. Entrar de novo gera um novo token para este dispositivo.
@@ -4528,7 +4528,7 @@ stores-join-already = Já entrou. Entrar de novo gera um novo token para este di
 stores-join-device-note = O dono da loja vê este nome. Digite para alterar.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Plugins instalados por ela continuam neste computador e param de atualizar.
+stores-leave-plugins = Plugins instalados por ela continuam neste dispositivo e param de atualizar.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = O acesso deste dispositivo à loja foi revogado.
@@ -4542,7 +4542,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Plugins já instalados continuam nos computadores dessa pessoa.
+stores-remove-member-plugins = Plugins que essa pessoa já instalou continuam nos dispositivos dela.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = O link deixa de funcionar.
@@ -4602,7 +4602,7 @@ stores-choice-update = Atualizar para { $version }
 stores-choice-replace = Substituir a cópia adicionada manualmente
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Remover deste computador
+stores-choice-remove = Remover deste dispositivo
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Parar de oferecer nesta loja
@@ -4743,7 +4743,7 @@ party-no-source-still-in = { $reason } Você continua na sessão em grupo.
 status-reloading-sources = Recarregando fontes…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } está fixada para este título, mas não está disponível, então as outras fontes são usadas.
+pin-unavailable = { $name } está fixada para este título, mas não está disponível. Tentando as outras fontes.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Assistir juntos
@@ -4872,13 +4872,13 @@ settings-group-crashes = Relatórios de falha
 settings-crash-save = Salvar relatórios de falha neste dispositivo
 
 # Line under that switch.
-settings-crash-save-detail = Quando ativado, o Kaeri guarda um breve registro de cada falha neste dispositivo, sem títulos, endereços e nomes, para você anexá-lo em Relatar um erro. Nada é enviado automaticamente.
+settings-crash-save-detail = O Kaeri guarda um breve registro de cada falha neste dispositivo para Relatar um erro, sem títulos, endereços e nomes. Nada é enviado automaticamente.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Perguntar após uma falha
 
 # Line under that switch.
-settings-crash-ask-detail = Mostra um aviso na próxima abertura com Relatar…
+settings-crash-ask-detail = O Kaeri mostra um aviso com Relatar… na próxima vez que abrir.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Guardados por { $system }
@@ -4908,7 +4908,7 @@ settings-crash-delete = Apagar
 settings-crash-delete-all = Apagar tudo
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Os relatórios de falha ficam neste dispositivo. O Kaeri não envia nada automaticamente. Um relatório só sai quando você o abre no GitHub, em Relatar um erro. Os relatórios são apagados após 30 dias.
+settings-crash-footnote = Os relatórios de falha ficam neste dispositivo, e o Kaeri não envia nada automaticamente. Um relatório só sai quando você o abre no GitHub, em Relatar um erro. Os relatórios são apagados após 30 dias.
 
 # Button that shows the week before.
 calendar-previous-week = Semana anterior
@@ -5034,13 +5034,13 @@ cast-tvs-note-iphone = Elas aparecem em Chromecast, em Reproduzir na TV. Este iP
 cast-tvs-note-ipad = Elas aparecem em Chromecast, em Reproduzir na TV. Este iPad envia o episódio a elas.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Permite que uma TV com Chromecast integrado reproduza torrents. Este Mac envia o episódio enquanto ele estiver sendo reproduzido.
+cast-torrents-note-mac = Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este Mac envia o episódio enquanto ele estiver sendo reproduzido.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Permite que uma TV com Chromecast integrado reproduza torrents. Este iPhone envia o episódio enquanto ele estiver sendo reproduzido.
+cast-torrents-note-iphone = Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este iPhone envia o episódio enquanto ele estiver sendo reproduzido.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Permite que uma TV com Chromecast integrado reproduza torrents. Este iPad envia o episódio enquanto ele estiver sendo reproduzido.
+cast-torrents-note-ipad = Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este iPad envia o episódio enquanto ele estiver sendo reproduzido.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Próximo · começa em { $seconds } s
@@ -5782,7 +5782,7 @@ downloads-delete-detail = O arquivo é removido deste dispositivo.
 downloads-delete-one-title = Excluir download
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Ele só volta a ser reproduzido com conexão, ou quando você baixar de novo.
+downloads-delete-one-detail = Depois disso, o episódio precisa de conexão para ser reproduzido, a menos que você o baixe de novo.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Excluir downloads assistidos
@@ -5794,7 +5794,7 @@ downloads-seeding-title = Semeadura
 downloads-seeding-after-watching = Semeadura depois de assistir
 
 # Line under the seeding heading.
-downloads-seeding-note = Episódios assistidos são compartilhados de volta enquanto Kaeri estiver aberto, até o limite de proporção ou de tempo definido em Configurações, em Fontes, ser atingido.
+downloads-seeding-note = Os episódios assistidos são compartilhados de volta enquanto o Kaeri estiver aberto. O compartilhamento para no limite de proporção ou de tempo definido em Configurações, em Fontes.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Quando a janela fechar com downloads em andamento
@@ -5874,10 +5874,10 @@ episode-download-failed = Não foi possível baixar o episódio { $episode }. Te
 first-other-title = Você já usa o Kaeri em outro dispositivo?
 
 # Under the title.
-first-other-line = Se você parear com ele, este dispositivo recebe suas fontes, seus serviços de acompanhamento e seu histórico. Os passos seguintes já ficam resolvidos.
+first-other-line = Pareie com ele e este dispositivo recebe suas fontes, seus serviços de acompanhamento e seu histórico, e o resto da configuração é feito para você.
 
 # Line under the pair row.
-first-other-pair-line = Mostra um código para digitar nesse dispositivo. Os dois precisam estar na mesma rede Wi-Fi.
+first-other-pair-line = Você recebe um código para digitar nesse dispositivo. Os dois precisam estar na mesma rede Wi-Fi.
 
 # Row that restores from a sync folder.
 first-other-restore = Restaurar de uma pasta na nuvem
@@ -5993,7 +5993,7 @@ home-end-signed-out = Entre no AniList para trazer sua lista e os planejados.
 home-sign-in = Entrar no AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Adicione uma fonte para reproduzir a partir do Início. As Lojas de plugins têm algumas para escolher.
+home-end-no-sources = Adicione uma fonte para reproduzir a partir do Início. Plugins vêm das Lojas de plugins.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Não está nas suas fontes
@@ -6440,7 +6440,7 @@ library-picker-title = Escolha uma pasta com seus episódios.
 library-remove-detail = Seus arquivos continuam onde estão.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Não foi possível consultar o AniList. Uma nova tentativa será feita na próxima verificação.
+library-reason-offline = Não foi possível acessar o AniList. A próxima verificação tenta de novo.
 
 # Button that opens the match picker for a group.
 library-choose-match = Escolher correspondência
@@ -6473,7 +6473,7 @@ licensed-body = O Kaeri pode abrir títulos em serviços de streaming que você 
 licensed-region = Região
 
 # Line under the region menu.
-licensed-region-line = Oculta links que o AniList marca para outros países. A maioria dos links não indica país, então escolha também os seus serviços.
+licensed-region-line = Os links que o AniList marca para outros países ficam ocultos. A maioria dos links não indica país, então escolha também os seus serviços.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Seus serviços
@@ -6917,7 +6917,7 @@ onboarding-own-heading = Tem seus próprios arquivos?
 onboarding-invite-heading = Tem um link de convite?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Plugins vêm de lojas de plugins. Uma loja de plugins é assinada e dá a cada dispositivo o seu próprio token, então você entra em uma com um link de convite do dono dela.
+onboarding-where-stores = Plugins vêm de lojas de plugins. Cada uma é assinada e dá a cada dispositivo o seu próprio token, por isso você entra com um link de convite do dono dela.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Experimente agora
@@ -6959,7 +6959,7 @@ party-leave = Sair da sessão em grupo
 party-leaving = Saindo…
 
 # Label of the button that marks you as ready.
-party-ready-action = Estou pronto
+party-ready-action = Pronto para assistir
 
 # Button that copies the link to invite someone.
 party-copy-invite = Copiar link de convite
@@ -6974,7 +6974,7 @@ party-leave-and-close = Sair e fechar
 party-not-now = Agora não
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Preparando tudo…
+party-getting-ready = Carregando sugestões…
 
 # Label of the server field.
 party-server = Servidor
@@ -7007,7 +7007,7 @@ party-server-public = Um servidor público mantido por { $operator }, não pelo 
 party-server-suggest = Não tem um servidor próprio? { $server } é um servidor público, mantido por { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Um servidor escolhido por quem convidou você. O Kaeri não o mantém.
+party-server-invited = Quem convidou você escolheu este servidor. O Kaeri não o mantém.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Escreva o servidor como um host e uma porta, como party.example:8999.
@@ -7219,7 +7219,7 @@ together-recent = Salas recentes
 together-recent-row = Episódio { $episode } · com { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = As salas em que você entrar aparecem aqui, as últimas dez.
+together-recent-empty = As últimas dez salas em que você entrar aparecem aqui.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Voltar
@@ -7306,7 +7306,7 @@ party-member-finding = Procurando uma fonte
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Assistindo desde { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Pronto
 
 # Heading of the invite block in the lobby.
@@ -7525,7 +7525,7 @@ party-chat-show = Mostrar chat
 settings-hide-chat = Ocultar chat nas sessões em grupo
 
 # Line under that switch.
-settings-hide-chat-line = As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo some. A lista de pessoas continua mostrando quem está na sala.
+settings-hide-chat-line = As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo de chat some. A lista de pessoas continua mostrando quem está na sala.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Silenciar { $name }
@@ -8132,10 +8132,10 @@ player-load-audio-file = Carregar arquivo de áudio…
 player-file-picker-failed = Não foi possível abrir o seletor de arquivos. Tente de novo.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Não foi possível carregar esse arquivo de legenda. Confira se é um arquivo de legenda.
+player-subtitle-file-failed = Não foi possível carregar esse arquivo como legenda. Escolha um arquivo de legenda, como .srt ou .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Não foi possível carregar esse arquivo de áudio. Confira se é um arquivo de áudio.
+player-audio-file-failed = Não foi possível carregar esse arquivo como áudio. Escolha um arquivo de áudio, como .mka ou .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Faixa sem nome
@@ -8329,7 +8329,7 @@ reader-look-system = Sistema
 onboarding-read-demo = Ler a demo
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = A demo lê um quadrinho curto e um conto curto que os autores compartilham sob Creative Commons.
+onboarding-demo-books-detail = Um quadrinho curto e um conto curto, compartilhados pelos autores sob Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Um episódio curto e um quadrinho curto, compartilhados pelos autores sob Creative Commons.
@@ -8974,7 +8974,7 @@ book-sources-keep = Manter sem correspondência
 book-sources-find = Procurar
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = As séries sem correspondência ainda são lidas da pasta. Elas não têm progresso no serviço de acompanhamento até haver correspondência.
+book-sources-unmatched-note = Você ainda pode ler pela pasta as séries sem correspondência. Elas não recebem progresso no serviço de acompanhamento até terem correspondência.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Séries ou leitura
@@ -9144,13 +9144,13 @@ onboarding-lists-line-both = O Kaeri mantém o que você lê e assiste em sincro
 onboarding-lists-anilist-line = Listas, progresso e sugestões
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl e Trakt podem ser adicionados depois em Ajustes, em Contas.
+onboarding-lists-later-watch = Você pode adicionar MyAnimeList, Kitsu, Simkl e Trakt depois em Configurações, em Contas.
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = MyAnimeList, Kitsu e MangaUpdates podem ser adicionados depois em Ajustes, em Contas.
+onboarding-lists-later-read = Você pode adicionar MyAnimeList, Kitsu e MangaUpdates depois em Configurações, em Contas.
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt podem ser adicionados depois em Ajustes, em Contas.
+onboarding-lists-later-both = Você pode adicionar MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt depois em Configurações, em Contas.
 
 # The first-run page's main button: sign in to the tracker.
 onboarding-connect = Conectar { $tracker }
@@ -9390,10 +9390,10 @@ settings-chapter-notifications-note = Séries da sua lista Lendo
 settings-downloads-finished-note = Quando todos os capítulos em download terminarem
 
 # Under New chapters.
-settings-chapter-notifications-footer = Os capítulos têm um canal próprio do sistema, então podem ser silenciados à parte.
+settings-chapter-notifications-footer = Os capítulos têm um canal próprio do sistema, então você pode silenciá-los e manter o resto.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = O MangaUpdates é acessado pela API pública dele.
+accounts-mangaupdates-credit = O Kaeri se comunica com o MangaUpdates pela API pública dele.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Nome de usuário
@@ -9465,7 +9465,7 @@ seasonal-empty-format-detail = Tente todos os formatos.
 seasonal-filter-in-search = Filtrar na pesquisa
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Esta temporada na pesquisa, onde todos os filtros a refinam
+seasonal-filter-help = Abre esta temporada na pesquisa, onde todos os filtros funcionam
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popularidade
@@ -9606,7 +9606,7 @@ filter-where-to-watch = Onde assistir
 filter-licensed-only = Só licenciados
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Títulos na minha lista
+filter-my-list = Títulos na sua lista
 
 # Value of a three-way filter: include the titles.
 filter-show = Mostrar
@@ -10115,7 +10115,7 @@ servers-error-certificate = { $host } usa um certificado em que este dispositivo
 servers-row-signed-out-here = Desconectado
 
 # Line under it: what signing out does.
-servers-sign-out-line = Encerra o acesso deste dispositivo ao servidor. O servidor e seus downloads continuam como estão.
+servers-sign-out-line = Sair encerra a sessão deste dispositivo no servidor. O servidor e seus downloads continuam como estão.
 
 # Settings group and row title for choosing a language.
 settings-language = Idioma
@@ -10435,7 +10435,7 @@ settings-new-episodes = Novos episódios
 settings-new-episodes-detail = Aparece na sua lista Assistindo
 
 # Line explaining what a notification says.
-settings-notify-detail = Uma notificação quando um episódio de uma série que você acompanha sai: o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.
+settings-notify-detail = Você recebe uma notificação quando sai um episódio de uma série que você acompanha. Ela traz o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.
 
 # Row: the coming-up digest.
 settings-coming-up = Próximos · 7 dias
@@ -10447,7 +10447,7 @@ settings-system-notifications = Ajustes de notificação
 settings-system-notifications-detail = Som, vibração e tela de bloqueio
 
 # Line under it on Apple.
-settings-system-notifications-apple = Abre os ajustes do sistema, onde ficam o estilo do banner, o som e os selos.
+settings-system-notifications-apple = Abre os Ajustes do Sistema, onde você define o estilo do banner, o som e os selos.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Desligado: o sistema não permite notificações do Kaeri
@@ -10489,7 +10489,7 @@ show-settings-never = Nunca
 show-settings-subs-remembered = Lembrado do seu último episódio.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Escolhido no player. Seguindo Configurações › Reprodução.
+show-settings-subs-follow = Escolhido no player. Até lá, vale Configurações › Reprodução.
 
 # Row: the source for this show.
 show-settings-source = Fonte
@@ -10575,7 +10575,7 @@ settings-upscaling-natural = Natural · ArtCNN
 settings-label-hover-cards = Ampliar capas ao passar o mouse
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Mostra um cartão maior com o trailer quando você para o ponteiro sobre uma capa.
+settings-hover-cards-note = Deixar o ponteiro parado sobre uma capa abre um cartão maior com o trailer.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Traços e textura fiéis, sem alterar o visual.
@@ -10972,13 +10972,13 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-        [one] Mais um é para ler, o que esta TV não faz.
-        [many] Mais { $count } de são para ler, o que esta TV não faz.
-       *[other] Mais { $count } são para ler, o que esta TV não faz.
+        [one] Mais um é para leitura, o que esta TV não faz.
+        [many] Mais { $count } de plugins são para leitura, o que esta TV não faz.
+       *[other] Mais { $count } são para leitura, o que esta TV não faz.
     }
 
 # On a TV, info title when every plugin in a store is for reading.
-store-tv-all-reading = Todo plugin em { $store } é para ler, o que esta TV não faz.
+store-tv-all-reading = Todos os plugins de { $store } são para leitura, o que esta TV não faz.
 
 # Plugin row in an invite's result.
 store-plugin-row = Versão { $version } · pode contatar { $hosts }
@@ -11227,7 +11227,7 @@ sources-source-order-row = Ordem da fonte
 sources-torrents-note = Os torrents fazem parte do Kaeri, não de um plugin. O proxy e o compartilhamento são definidos em Configurações, em Fontes.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
-sources-rebuilding = Fontes estão sendo configuradas de novo
+sources-rebuilding = Configurando as fontes de novo
 
 # Value of a plugin's response time, in milliseconds.
 sources-response-ms = { $ms } ms
@@ -11337,7 +11337,7 @@ sources-add-server = Servidor de mídia…
 sources-add-store = Entrar numa loja de plugins…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Fontes são de onde vêm os episódios: pastas neste dispositivo, seu servidor de mídia e plugins de lojas em que você entrar.
+sources-empty-body = Fontes são de onde vêm os episódios: pastas neste dispositivo, seu servidor de mídia e plugins de lojas de plugins em que você entrar.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Ou { $join }.
@@ -11379,7 +11379,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.
+sources-demo-hosts = A demo acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = A demo nunca entra em nenhuma conta e nunca grava no AniList.
@@ -11448,7 +11448,7 @@ stores-not-from-app = Plugins vêm do dono da loja de plugins, e não do Kaeri. 
 stores-join-owner-responsible = { $owner } mantém esta loja de plugins e escolheu os plugins dela. O Kaeri não os criou, não os revisou nem os aprovou.
 
 # Line when the store has no plugins.
-stores-no-plugins = Esta loja de plugins ainda não oferece nenhum plugins.
+stores-no-plugins = Esta loja de plugins ainda não tem plugins.
 
 # Heading of the plugin list of a store.
 stores-plugins = Plugins
@@ -11484,7 +11484,7 @@ stores-access-ended-page = Esta loja de plugins não deixa mais este dispositivo
 stores-no-longer-joined = Você não está mais nesta loja de plugins.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Offline: { $reason }. Os plugins abaixo são a última lista verificada.
+stores-offline-last-list = Offline: { $reason }. Mostrando a última lista que ela enviou.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Offline. Mostrando a última lista que ela enviou.
@@ -11589,7 +11589,7 @@ stores-replace-label = Substituir a cópia de { $name } adicionada manualmente
 stores-remove-plugin-title = Remover { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Ele é apagado deste dispositivo. A loja de plugins pode instalá-lo de novo.
+stores-remove-plugin-detail = Ele é apagado deste dispositivo. Você pode instalá-lo de novo pela loja de plugins.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Novos endereços
@@ -11610,7 +11610,7 @@ stores-add-title = Adicionar uma loja de plugins
 stores-join-detail = Cole o link que o dono da loja de plugins enviou para você.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Cole o link de convite que o dono de uma loja de plugins enviou para você. Você vê o que a loja de plugins oferece antes de entrar ou instalar qualquer coisa.
+stores-join-detail-desktop = Cole o link de convite que o dono de uma loja de plugins enviou para você. Você vê o que a loja de plugins tem antes de entrar ou instalar qualquer coisa.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Cole o link que o dono da loja de plugins enviou para você. Um link de convite Kaeri:// aberto pelo Mensagens preenche este painel diretamente.
@@ -11652,7 +11652,7 @@ stores-join-installs-nothing = Entrar não instala nada. Você escolhe quais plu
 stores-key-matches = A chave { $key } corresponde à loja de plugins.
 
 # Line when the link is open to anyone.
-stores-anyone-note = Você entra sem nome. Outro dispositivo entra com o mesmo link.
+stores-anyone-note = Você entra sem nome. Outro dispositivo pode entrar com o mesmo link.
 
 # Line when the device joined this store already.
 stores-already-joined-note = Este dispositivo já entrou nesta loja de plugins.
@@ -11805,7 +11805,7 @@ stores-invite-works-any = Quem tiver este link pode entrar, até { $until }.
 stores-invite-works-any-forever = Quem tiver este link pode entrar até você cancelar.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Vale uma vez, para a pessoa a quem você o enviar. Até { $until }.
+stores-invite-once-until = Vale uma vez, para a pessoa a quem você o enviar, até { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Vale uma vez, para a pessoa a quem você o enviar, até você cancelar.
@@ -11936,7 +11936,7 @@ stores-offers-plugins =
 notice-open-stores = Abrir lojas de plugins
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Uma loja de plugins é um servidor pequeno que guarda plugins assinados e dá a cada dispositivo o seu próprio token. Ela oferece fontes como plugins. O Kaeri não administra lojas de plugins nem lista nenhuma, então você entra em uma com um link de convite do dono dela.
+stores-what-is = Uma loja de plugins é um servidor pequeno que guarda plugins assinados e dá a cada dispositivo o seu próprio token. Os plugins dela adicionam fontes. O Kaeri não mantém lojas de plugins nem lista nenhuma, então você entra em uma com um link de convite do dono dela.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = O que é uma loja de plugins?
@@ -12074,7 +12074,7 @@ sync-road-nearby-line = Pareie com outro dispositivo no mesmo Wi-Fi. Nada é gua
 sync-road-cloud = Por uma pasta na nuvem
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = Um drive na nuvem que você já usa, ou o seu próprio servidor. Funciona mesmo com seus dispositivos longe um do outro e mantém um backup.
+sync-road-cloud-line = Um drive na nuvem que você já usa, ou o seu próprio servidor. Funciona enquanto seus dispositivos estão longe um do outro e mantém um backup.
 
 # Road sheet footer.
 sync-road-later = Você pode adicionar o outro jeito depois. A maioria das pessoas usa os dois.
@@ -12134,7 +12134,7 @@ sync-turn-off-alert-line = Este dispositivo ({ $kind }) para de compartilhar com
 cloud-group = Pasta na nuvem
 
 # Group footer.
-cloud-foot = Completa enquanto seus dispositivos estão longe um do outro e mantém um backup selado. Só os seus dispositivos conseguem lê-lo.
+cloud-foot = A pasta mantém seus dispositivos em sincronia enquanto estão longe um do outro e guarda um backup selado. Só os seus dispositivos conseguem lê-lo.
 
 # Row when only the nearby road is set.
 cloud-add = Adicionar uma pasta na nuvem
@@ -12478,7 +12478,7 @@ profiles-picker = Quem está assistindo?
 profiles-ask-at-launch = Perguntar quem está assistindo ao abrir
 
 # iPad footer.
-profiles-ask-foot = Desativado por padrão. Para um iPad que a casa divide. A linha da conta troca de perfil a qualquer momento.
+profiles-ask-foot = Desativado por padrão. Ative para um iPad que toda a casa compartilha. Você pode trocar de perfil pela linha da conta a qualquer momento.
 
 # TV Settings.
 profiles-switch = Trocar de perfil
@@ -13266,7 +13266,7 @@ accounts-tokens-keystore = Os tokens de login ficam neste dispositivo, protegido
 accounts-form-title = Entrar em { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Sua senha vai para { $tracker } uma única vez, para gerar um token guardado neste dispositivo.
+accounts-form-detail = Sua senha vai para { $tracker } uma única vez, em troca de um token que fica neste dispositivo.
 
 # Label of the name field.
 accounts-user-or-email = E-mail ou nome de usuário
@@ -13338,7 +13338,7 @@ accounts-open-on = Abrir em { $tracker }
 accounts-listed-by = Listado em { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } não respondeu.
+accounts-did-not-answer = { $tracker } não respondeu. Tente de novo daqui a pouco.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } ainda não tem elenco, equipe nem recomendações para esta série.
@@ -13701,7 +13701,7 @@ updates-saved-replace-plain = A versão { $version } foi salva em Downloads. Sub
 updates-why-server = O download parou: o servidor recusou ({ $code }). Tente de novo mais tarde.
 
 # The connection broke.
-updates-why-connection = O download parou: a conexão caiu.
+updates-why-connection = O download parou: a conexão caiu. Tente de novo.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Não foi possível salvar o download: { $reason }

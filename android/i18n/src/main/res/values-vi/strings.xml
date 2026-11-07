@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s chưa bắt đầu đọc luồng phát. VPN hoặc tường lửa trên thiết bị này có thể đang chặn.</string>
     <string name="notice_cast_refused">%1$s không phát được luồng này. Hãy thử nguồn khác.</string>
     <string name="notice_cast_taken_over">Một thiết bị khác vừa bắt đầu phát trên %1$s, nên việc chiếu đã dừng.</string>
-    <string name="notice_cast_not_same_network">thiết bị này không nằm trong mạng mà %1$s đang dùng, hoặc đi qua VPN. Chiếu cần cả hai cùng một mạng.</string>
+    <string name="notice_cast_not_same_network">Thiết bị này không ở cùng mạng với %1$s, hoặc đang kết nối qua VPN. Hãy kết nối cả hai vào cùng một mạng để chiếu.</string>
     <string name="notice_cast_lost">Mất kết nối với %1$s, nên việc chiếu đã dừng.</string>
     <string name="notice_cast_no_device">TV đã chọn không còn trong mạng nữa.</string>
     <string name="notice_cast_unavailable">Phiên bản Kaeri này không hỗ trợ chiếu lên TV.</string>
@@ -124,7 +124,7 @@
     <string name="match_ruled_out_year">Khác năm</string>
     <string name="match_search_timed_out">Không phản hồi kịp thời.</string>
     <string name="match_search_source_off">Chưa được bật.</string>
-    <string name="notice_source_pinned">%1$s sẽ được dùng cho tựa này.</string>
+    <string name="notice_source_pinned">Tựa này giờ phát từ %1$s.</string>
     <string name="notice_source_automatic">Quay lại chọn nguồn tự động.</string>
     <string name="notice_source_choice_failed">Không lưu được lựa chọn đó. %1$s</string>
     <string name="notice_no_source_could_list">Không có nguồn nào liệt kê được tựa này: %1$s</string>
@@ -190,9 +190,9 @@
     <string name="reader_back_to_page">Quay lại trang %1$d</string>
     <string name="reader_moved">Đã chuyển tới %1$s, trang %2$d, nơi %3$s dừng lại</string>
     <string name="reader_moved_number">Đã chuyển tới chương %1$s, trang %2$d, nơi %3$s dừng lại</string>
-    <string name="reader_detected_right_to_left">Phải sang trái (tự nhận diện)</string>
-    <string name="reader_detected_left_to_right">Trái sang phải (tự nhận diện)</string>
-    <string name="reader_detected_strip">Cuộn dọc (tự nhận diện)</string>
+    <string name="reader_detected_right_to_left">Có vẻ đọc từ phải sang trái</string>
+    <string name="reader_detected_left_to_right">Có vẻ đọc từ trái sang phải</string>
+    <string name="reader_detected_strip">Có vẻ là truyện cuộn dọc</string>
     <string name="reading_failed_offline">Bạn đang ngoại tuyến. Các chương đã tải vẫn mở được.</string>
     <string name="reading_failed_source_down">%1$s không phản hồi. Hãy thử lại sau.</string>
     <string name="reading_failed_not_found">Nguồn này không còn có nội dung đó. Hãy thử nguồn khác.</string>
@@ -391,10 +391,10 @@
     <string name="store_admin_missing">%1$s không có trang quản trị. Máy chủ của nó có thể cũ hơn.</string>
     <string name="store_admin_link_foreign">%1$s gửi một liên kết quản trị dẫn đến địa chỉ khác.</string>
     <string name="store_open_join_unsupported">Máy chủ của %1$s cũ hơn và không thể cho phép ai tham gia bằng liên kết. Hãy cập nhật trước.</string>
-    <string name="source_switched_off">%1$s đã tắt và sẽ bị bỏ qua khi tìm tập.</string>
+    <string name="source_switched_off">%1$s đã tắt. Kaeri bỏ qua nó khi tìm tập.</string>
     <string name="source_switched_on">%1$s đã bật.</string>
     <string name="plugin_not_loaded">%1$s chưa được tải. Hãy kiểm tra plugin đã được cài trong mục Các nguồn chưa.</string>
-    <string name="release_pinned">%1$s sẽ được dùng cho tựa này.</string>
+    <string name="release_pinned">Tựa này giờ dùng %1$s.</string>
     <string name="notice_choice_not_saved">Không lưu được lựa chọn đó. %1$s</string>
     <string name="torrent_proxy_waiting">Kiểm tra proxy không đạt. Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</string>
     <string name="torrent_proxy_unchecked">Torrent sẽ bắt đầu khi proxy đạt kiểm tra.</string>
@@ -424,8 +424,8 @@
     <string name="notice_sign_in_stopped">Việc đăng nhập vào %1$s đã dừng trước khi xong. Hãy thử lại. %2$s</string>
     <string name="notice_token_exchange_failed">Không nhận được mã từ %1$s. Hãy thử đăng nhập lại. %2$s</string>
     <string name="notice_browser_not_opened">Không mở được trình duyệt để đăng nhập. Hãy kiểm tra xem đã cài trình duyệt chưa rồi thử lại. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Không có phiên đăng nhập vào %1$s nào đang chờ phản hồi này. Hãy bắt đầu đăng nhập lại.</string>
-    <string name="notice_sign_in_wrong_request">Phiên đăng nhập vào %1$s này không trả về từ yêu cầu đã gửi. Hãy bắt đầu đăng nhập lại.</string>
+    <string name="notice_sign_in_not_waiting">Đã nhận phản hồi đăng nhập từ %1$s, nhưng không có lần đăng nhập nào đang chờ. Hãy bắt đầu đăng nhập lại.</string>
+    <string name="notice_sign_in_wrong_request">Phản hồi đăng nhập từ %1$s không khớp với yêu cầu. Hãy bắt đầu đăng nhập lại.</string>
     <string name="notice_sign_in_no_token">Phiên đăng nhập vào %1$s trả về mà không có mã. Hãy thử lại.</string>
     <string name="notice_mal_client_missing_build">Không hoàn tất được đăng nhập MyAnimeList: bản dựng này chưa có thành phần kết nối cho dịch vụ đó.</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsu đăng nhập từ màn hình Tài khoản.</string>
@@ -459,7 +459,7 @@
     </plurals>
     <string name="notice_update_available">Đã có bản %1$s. Chạy kaeri --update để cài đặt.</string>
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
-    <string name="cause_proxy_address_unusable">Không kiểm tra được địa chỉ proxy này.</string>
+    <string name="cause_proxy_address_unusable">Bước kiểm tra proxy không dùng được địa chỉ này.</string>
     <string name="cause_server_unreachable">Không kết nối được tới máy chủ.</string>
     <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
     <string name="notice_saved">Đã lưu %1$s.</string>
@@ -467,12 +467,12 @@
     <string name="notice_title_load_failed">Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.</string>
     <string name="notice_playback_failed">Không phát được. Hãy thử nguồn khác.</string>
     <string name="notice_engine_fault">Có lỗi xảy ra bên trong Kaeri. Ứng dụng vẫn chạy tiếp, nhưng nếu màn hình có vẻ bị treo, hãy thoát rồi mở lại.</string>
-    <string name="notice_database_set_aside">Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại %1$s. các dịch vụ theo dõi sẽ khôi phục dữ liệu mà chúng đang giữ ở lần đồng bộ sau.</string>
+    <string name="notice_database_set_aside">Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại %1$s. Dữ liệu trên các dịch vụ theo dõi của bạn sẽ trở lại ở lần đồng bộ sau.</string>
     <string name="start_failed_folder">Kaeri không tạo được thư mục %1$s. Hãy kiểm tra xem ổ đĩa còn chỗ trống và thư mục có ghi được không, rồi thử lại. %2$s</string>
     <string name="start_failed_config">%1$s có một cài đặt mà Kaeri không dùng được: %2$s. Hãy sửa hoặc xóa cài đặt đó, rồi thử lại.</string>
     <string name="config_reset_failed">Kaeri không di chuyển được %1$s đi chỗ khác để đặt lại cài đặt. %2$s</string>
     <string name="start_failed_database">Kaeri không mở được cơ sở dữ liệu tại %1$s. Nếu có ứng dụng Kaeri khác đang mở thư mục này, hãy thoát ứng dụng đó rồi thử lại. %2$s</string>
-    <string name="start_failed_network">Kaeri không thiết lập được kết nối mạng theo các cài đặt mạng trong config.toml. %1$s</string>
+    <string name="start_failed_network">Kaeri không kết nối được với các cài đặt mạng trong config.toml. Hãy kiểm tra chúng rồi thử lại. %1$s</string>
     <string name="start_failed">Kaeri không khởi động được. Hãy thoát rồi mở lại. %1$s</string>
     <string name="start_failed_remote">Không khởi động được chức năng điều khiển từ xa. %1$s</string>
     <string name="start_failed_player">Không khởi động được trình phát. %1$s</string>
@@ -484,8 +484,8 @@
     <string name="crash_notice_tv">Kaeri đã đóng sau một sự cố. Bạn có thể báo cáo trong Cài đặt, Giới thiệu.</string>
     <string name="notice_surprise_empty_filters">Không có tựa nào khớp với các bộ lọc này.</string>
     <string name="notice_surprise_empty_planning">Danh sách Dự định xem đang trống.</string>
-    <string name="notice_surprise_offline">Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.</string>
-    <string name="notice_surprise_failed">Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.</string>
+    <string name="notice_surprise_offline">Bạn đang ngoại tuyến. Gợi ý ngẫu nhiên cần AniList để chọn một tựa.</string>
+    <string name="notice_surprise_failed">Không kết nối được với AniList để chọn một tựa. Hãy thử lại sau giây lát.</string>
     <string name="account_button_named">%1$s, tài khoản và cài đặt</string>
     <string name="calendar_empty_mine_ahead">Danh sách của bạn không có tập nào phát trong 4 tuần tới.</string>
     <string name="calendar_floor_line">Lịch chỉ xem lại được 3 tháng trước.</string>
@@ -498,7 +498,7 @@
     <string name="calendar_show_all_airing">Xem mọi bộ đang chiếu</string>
     <string name="calendar_now_label">Bây giờ, %1$s</string>
     <string name="settings_discussions_label">Thảo luận từng tập</string>
-    <string name="settings_discussions_note">Đọc các bình luận trong chủ đề thảo luận của từng tập trên diễn đàn AniList, cho các tập bạn đã xem.</string>
+    <string name="settings_discussions_note">Bạn có thể đọc bình luận trong chủ đề diễn đàn AniList của những tập bạn đã xem.</string>
     <string name="settings_discussion_images_label">Tải ảnh trong bình luận</string>
     <string name="settings_discussion_images_note">Mỗi ảnh được tải từ trang lưu trữ nó, và trang đó sẽ thấy địa chỉ IP của bạn.</string>
     <string name="discussion_waiting">Đang chờ AniList · %1$s</string>
@@ -534,7 +534,7 @@
     <string name="cast_settings_tvs">Hiện TV tích hợp Chromecast</string>
     <string name="cast_settings_tvs_note">Các TV này hiện dưới mục Chromecast trong Phát trên TV. thiết bị này gửi tập phim đến chúng.</string>
     <string name="cast_settings_torrents">Torrent khi đang truyền</string>
-    <string name="cast_settings_torrents_note">Cho phép TV tích hợp Chromecast phát torrent. thiết bị này gửi tập phim trong suốt thời gian TV phát.</string>
+    <string name="cast_settings_torrents_note">Khi đó, TV có Chromecast tích hợp sẽ phát được torrent. Thiết bị này gửi tập phim trong suốt thời gian phát.</string>
     <string name="reader_page_failed_swipe">Vuốt để đi tiếp mà không cần trang này.</string>
     <string name="reader_skip_page">Bỏ qua trang</string>
     <string name="reader_page_of">Trang %1$d/%2$d</string>
@@ -591,11 +591,11 @@
     <string name="eink_colour_body">Kaeri không xác định được từ thiết bị này. Hãy nhìn bốn ô vuông.</string>
     <string name="eink_colour_squares">Bốn ô vuông: đỏ, xanh lá, xanh lam và hổ phách</string>
     <string name="eink_colour_hint">Nếu chúng trông như bốn màu xám, hãy chọn Chỉ có xám. Bạn có thể đổi trong Cài đặt › Màn hình.</string>
-    <string name="eink_colour_yes">Tôi thấy màu</string>
+    <string name="eink_colour_yes">Có, màn hình màu</string>
     <string name="eink_colour_no">Chỉ có xám</string>
     <string name="eink_colour_skip">Bỏ qua</string>
-    <string name="eink_colour_skipped">Đã bỏ qua. Ảnh vẫn giữ màu, màn hình xám sẽ hiện thành các sắc xám.</string>
-    <string name="eink_page_keys_hint">Đặt phím chuyển trang thành Âm lượng trong cài đặt của thiết bị để lật trang.</string>
+    <string name="eink_colour_skipped">Đã bỏ qua. Ảnh vẫn giữ màu. Màn hình xám sẽ hiện chúng thành các sắc xám.</string>
+    <string name="eink_page_keys_hint">Để lật trang bằng phím, hãy đặt chúng thành Âm lượng trong cài đặt của thiết bị.</string>
     <string name="eink_new">Mới</string>
     <string name="reader_notice_start_over">Đọc lại từ đầu</string>
     <string name="reader_notice_go_back">Quay lại</string>
@@ -753,7 +753,7 @@
     <string name="tv_info_from">Xuất xứ</string>
     <string name="tv_info_state">Trạng thái</string>
     <string name="tv_store_revoked">Không còn cho phép TV này truy cập</string>
-    <string name="tv_seeding_note">Chỉ hỗ trợ tốt trên TV này: việc chia sẻ chỉ chạy khi Kaeri đang mở.</string>
+    <string name="tv_seeding_note">TV này chỉ chia sẻ lại khi Kaeri đang mở.</string>
     <string name="tv_sign_out_title">Đăng xuất khỏi %1$s?</string>
     <string name="tv_account_not_signed_in">Chưa đăng nhập</string>
     <string name="tv_account_signed_in_as">Đã đăng nhập với tên %1$s</string>
@@ -850,7 +850,7 @@
     <plurals name="settings_coming_up_switched_off">
         <item quantity="other">%1$s đang tắt trong cài đặt riêng của tựa.</item>
     </plurals>
-    <string name="settings_coming_up_opens">Chạm vào một tựa để mở cài đặt riêng của tựa đó.</string>
+    <string name="settings_coming_up_opens">Chạm vào một tựa để mở cài đặt của tựa đó.</string>
     <string name="torrents_proxy_as">với tên %1$s</string>
     <string name="title_facts_aired">Phát sóng %1$s</string>
     <string name="title_facts_airing">Đang phát sóng từ %1$s</string>
@@ -961,7 +961,7 @@
     <string name="settings_titles_note_english">Tên tiếng Anh như AniList ghi, và romaji nếu không có tên tiếng Anh.</string>
     <string name="settings_titles_note_romaji">Tên tiếng Nhật viết bằng chữ Latin, như AniList ghi.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">Cố gắng hết sức trên thiết bị này: seed chỉ chạy khi Kaeri đang mở.</string>
+    <string name="settings_seeding_best_effort">Thiết bị này chỉ chia sẻ lại khi Kaeri đang mở.</string>
     <plurals name="settings_downloads_count">
         <item quantity="other">%1$d tập</item>
     </plurals>
@@ -976,7 +976,7 @@
     <string name="settings_libraries_value">JNA và AndroidX, theo Apache License 2.0</string>
     <string name="settings_report_bug_value">Mở GitHub trong trình duyệt của bạn</string>
     <string name="downloads_storage_share_description">Tải xuống chiếm %1$s</string>
-    <string name="settings_aside_notifications">Một thông báo khi có tập mới của tựa bạn theo dõi: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tự tắt thông báo trong cài đặt của nó.</string>
+    <string name="settings_aside_notifications">Một thông báo khi có tập mới của tựa bạn theo dõi: tên tựa và số tập, không bao giờ có tên tập. Bạn có thể tắt thông báo của một tựa trong cài đặt của tựa đó.</string>
     <string name="settings_aside_downloads">Bản tải xuống nằm trong không gian riêng của Kaeri trên thiết bị này, ứng dụng khác không đọc được. Gỡ ứng dụng sẽ xóa chúng.</string>
     <string name="settings_aside_sources">Các nguồn được thử theo thứ tự từ trên xuống dưới. Một tựa có thể giữ nguồn riêng, chọn trong trang tựa.</string>
     <string name="settings_upscaling_description">Cùng một khung hình: nửa trái là 480p gốc, nửa phải là %1$s</string>
@@ -1063,7 +1063,7 @@
     </plurals>
     <string name="trailer_failed">Không mở được trailer</string>
     <string name="engine_down_title">Kaeri đã dừng</string>
-    <string name="engine_down_stopped">Phần xử lý đã dừng. Thử lại, hoặc thoát và mở lại ứng dụng.</string>
+    <string name="engine_down_stopped">Sẽ không tải thêm gì mới cho đến khi nó chạy lại. Hãy thử lại, hoặc thoát rồi mở lại ứng dụng.</string>
     <string name="engine_down_quit">Thoát</string>
     <string name="about_title">Giới thiệu</string>
     <string name="about_title_app">Giới thiệu về Kaeri</string>
@@ -1102,9 +1102,9 @@
     <string name="report_crash_settings">Cài đặt báo cáo sự cố</string>
     <string name="settings_group_crashes">Báo cáo sự cố</string>
     <string name="settings_crash_save">Lưu báo cáo sự cố trên thiết bị này</string>
-    <string name="settings_crash_save_detail">Khi bật, Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này, đã xóa tựa phim, địa chỉ và tên, để bạn thêm vào Báo lỗi. Không có gì tự động được gửi đi.</string>
+    <string name="settings_crash_save_detail">Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này để dùng cho Báo lỗi, đã xóa tựa, địa chỉ và tên. Không có gì tự động được gửi đi.</string>
     <string name="settings_crash_ask">Hỏi sau khi có sự cố</string>
-    <string name="settings_crash_ask_detail">Hiện thông báo ở lần mở sau, kèm nút Báo cáo…</string>
+    <string name="settings_crash_ask_detail">Kaeri hiện một thông báo kèm nút Báo cáo… ở lần mở sau.</string>
     <string name="settings_crash_os_heading">Do %1$s giữ</string>
     <string name="settings_crash_os_detail">%1$s đã giữ các sự cố này từ trước khi bạn bật tính năng này. Không có gì trong đó được lưu trừ khi bạn thêm vào.</string>
     <string name="settings_crash_os_item">Sự cố · %1$s</string>
@@ -1114,7 +1114,7 @@
     <string name="settings_crash_view">Xem</string>
     <string name="settings_crash_delete">Xóa</string>
     <string name="settings_crash_delete_all">Xóa tất cả</string>
-    <string name="settings_crash_footnote">Báo cáo sự cố ở lại trên thiết bị này. Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.</string>
+    <string name="settings_crash_footnote">Báo cáo sự cố ở lại trên thiết bị này, và Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.</string>
     <string name="calendar_previous_week">Tuần trước</string>
     <string name="calendar_next_week">Tuần sau</string>
     <string name="calendar_this_week">Tuần này</string>
@@ -1156,9 +1156,9 @@
     <string name="cast_tvs_note_mac">Chúng xuất hiện trong mục Chromecast ở Phát trên TV. Mac này sẽ gửi tập phim đến chúng.</string>
     <string name="cast_tvs_note_iphone">Chúng xuất hiện trong mục Chromecast ở Phát trên TV. iPhone này sẽ gửi tập phim đến chúng.</string>
     <string name="cast_tvs_note_ipad">Chúng xuất hiện trong mục Chromecast ở Phát trên TV. iPad này sẽ gửi tập phim đến chúng.</string>
-    <string name="cast_torrents_note_mac">Cho phép TV có Chromecast tích hợp sẵn phát torrent. Mac này gửi tập phim trong suốt thời gian phát.</string>
-    <string name="cast_torrents_note_iphone">Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPhone này gửi tập phim trong suốt thời gian phát.</string>
-    <string name="cast_torrents_note_ipad">Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPad này gửi tập phim trong suốt thời gian phát.</string>
+    <string name="cast_torrents_note_mac">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. Mac này gửi tập phim trong suốt thời gian phát.</string>
+    <string name="cast_torrents_note_iphone">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPhone này gửi tập phim trong suốt thời gian phát.</string>
+    <string name="cast_torrents_note_ipad">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPad này gửi tập phim trong suốt thời gian phát.</string>
     <string name="cast_up_next_plays_in">Tiếp theo · phát sau %1$d giây</string>
     <string name="cast_couldnt_start">Không bắt đầu được trên %1$s</string>
     <string name="cast_stopped">Đã dừng chiếu</string>
@@ -1406,11 +1406,11 @@
     <string name="downloads_delete_title">Xóa %1$s?</string>
     <string name="downloads_delete_detail">Tệp sẽ bị xóa khỏi thiết bị này.</string>
     <string name="downloads_delete_one_title">Xóa lượt tải</string>
-    <string name="downloads_delete_one_detail">Tập chỉ phát lại khi có mạng, hoặc sau khi tải lại.</string>
+    <string name="downloads_delete_one_detail">Sau đó, tập này cần kết nối mạng để phát, trừ khi bạn tải lại.</string>
     <string name="downloads_delete_watched">Xóa các tệp đã xem</string>
     <string name="downloads_seeding_title">Chia sẻ lại</string>
     <string name="downloads_seeding_after_watching">Chia sẻ lại sau khi xem</string>
-    <string name="downloads_seeding_note">Các tập đã xem được chia sẻ lại khi Kaeri đang mở, cho đến khi đạt tỉ lệ hoặc thời gian đặt trong Cài đặt, mục Các nguồn.</string>
+    <string name="downloads_seeding_note">Các tập đã xem được chia sẻ lại khi Kaeri đang mở. Việc chia sẻ dừng khi đạt tỉ lệ hoặc thời gian bạn đặt trong Cài đặt, mục Các nguồn.</string>
     <string name="downloads_seeding_open_only">Việc chia sẻ chỉ chạy khi Kaeri đang mở.</string>
     <string name="downloads_background_title">Khi cửa sổ đóng lúc đang tải</string>
     <string name="downloads_background_keep">Tiếp tục tải</string>
@@ -1438,8 +1438,8 @@
     <string name="episode_download_done">Đã tải</string>
     <string name="episode_download_failed">Không tải được tập %1$d. Hãy thử lại.</string>
     <string name="first_other_title">Bạn đã dùng Kaeri trên thiết bị khác?</string>
-    <string name="first_other_line">Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.</string>
-    <string name="first_other_pair_line">Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</string>
+    <string name="first_other_line">Ghép nối với nó, thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn, và các bước thiết lập còn lại được làm sẵn cho bạn.</string>
+    <string name="first_other_pair_line">Bạn sẽ nhận một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</string>
     <string name="first_other_restore">Khôi phục từ thư mục đám mây</string>
     <string name="first_other_restore_line">Dùng khóa khôi phục bạn đã lưu</string>
     <string name="first_other_no">Không, bắt đầu từ đây</string>
@@ -1452,7 +1452,7 @@
     <string name="first_join_signins_line">%1$s</string>
     <string name="first_join_server">Thêm %1$s</string>
     <string name="first_join_server_line">%1$s · đăng nhập bằng khóa từ %2$s, lưu trong %3$s</string>
-    <string name="first_join_folders">Thư mục vẫn ở trên %1$s. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.</string>
+    <string name="first_join_folders">Thư mục vẫn ở trên %1$s. Hãy thêm thư mục riêng của thiết bị này trong mục Các nguồn của bạn.</string>
     <string name="first_join_steps_done">Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.</string>
     <string name="first_join_store_refused">%1$s không cho thiết bị này vào. %2$s có thể gửi lời mời cho bạn.</string>
     <string name="first_join_syncing">Đang đồng bộ với %1$s</string>
@@ -1478,7 +1478,7 @@
     <string name="home_end">Tạm hết rồi. Mục Theo mùa và Lịch có đầy đủ danh sách.</string>
     <string name="home_end_signed_out">Đăng nhập AniList để đưa danh sách và mục Kế hoạch của bạn vào đây.</string>
     <string name="home_sign_in">Đăng nhập AniList</string>
-    <string name="home_end_no_sources">Thêm nguồn để phát từ Trang chủ. Có vài cái để chọn ở Các cửa hàng plugin.</string>
+    <string name="home_end_no_sources">Thêm nguồn để phát từ Trang chủ. Các plugin đến từ Các cửa hàng plugin.</string>
     <string name="home_not_found">Không có trong các nguồn của bạn</string>
     <string name="home_failed">Không tải được gợi ý</string>
     <string name="home_try_again">Thử lại</string>
@@ -1630,7 +1630,7 @@
     <string name="title_connect_drive">Kết nối ổ đĩa để phát</string>
     <string name="library_picker_title">Chọn thư mục chứa các tập của bạn.</string>
     <string name="library_remove_detail">Tệp của bạn vẫn ở nguyên chỗ cũ.</string>
-    <string name="library_reason_offline">Không hỏi được AniList. Sẽ thử lại ở lần quét sau.</string>
+    <string name="library_reason_offline">Không kết nối được với AniList. Lần quét sau sẽ thử lại.</string>
     <string name="library_choose_match">Chọn kết quả khớp</string>
     <string name="library_kept_line">Giữ thành một tựa riêng</string>
     <string name="library_fix_match">Sửa kết quả khớp</string>
@@ -1641,7 +1641,7 @@
     <string name="licensed_title">Dịch vụ có bản quyền</string>
     <string name="licensed_body">Kaeri có thể mở tựa phim trong các dịch vụ phát trực tuyến bạn trả phí. Ứng dụng không bao giờ tự phát chúng. Liên kết lấy từ AniList.</string>
     <string name="licensed_region">Khu vực</string>
-    <string name="licensed_region_line">Ẩn các liên kết AniList đánh dấu cho nước khác. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.</string>
+    <string name="licensed_region_line">Các liên kết AniList đánh dấu cho nước khác sẽ bị ẩn. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.</string>
     <string name="licensed_yours">Dịch vụ của bạn</string>
     <string name="licensed_show_all">Xem tất cả %1$d</string>
     <string name="licensed_region_system">Theo thiết bị này</string>
@@ -1789,7 +1789,7 @@
     <string name="onboarding_where_hosts">Kaeri phát những gì bạn đã có: tệp trên thiết bị này, máy chủ Jellyfin của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</string>
     <string name="onboarding_own_heading">Có phim của riêng bạn?</string>
     <string name="onboarding_invite_heading">Có liên kết mời?</string>
-    <string name="onboarding_where_stores">Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin được ký xác thực và cấp cho mỗi thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.</string>
+    <string name="onboarding_where_stores">Các plugin đến từ các cửa hàng plugin. Mỗi cửa hàng plugin được ký và cấp cho từng thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.</string>
     <string name="onboarding_demo_heading">Dùng thử ngay</string>
     <string name="onboarding_demo_detail">Bản demo phát こうしす！, một series mà nhóm làm phim chia sẻ theo CC BY 4.0, từ Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Phát bản demo</string>
@@ -1803,12 +1803,12 @@
     <string name="party_join">Tham gia xem chung</string>
     <string name="party_leave">Rời xem chung</string>
     <string name="party_leaving">Đang rời…</string>
-    <string name="party_ready_action">Tôi đã sẵn sàng</string>
+    <string name="party_ready_action">Sẵn sàng xem</string>
     <string name="party_copy_invite">Sao chép liên kết mời</string>
     <string name="party_stay">Ở lại</string>
     <string name="party_leave_and_close">Rời và đóng</string>
     <string name="party_not_now">Để sau</string>
-    <string name="party_getting_ready">Đang chuẩn bị…</string>
+    <string name="party_getting_ready">Đang tải gợi ý…</string>
     <string name="party_server">Máy chủ</string>
     <string name="party_server_hint">host:port</string>
     <string name="party_recent_servers">Máy chủ đã dùng</string>
@@ -1819,7 +1819,7 @@
     <string name="party_your_name">Tên của bạn trong phòng</string>
     <string name="party_server_public">Máy chủ công cộng do %1$s vận hành, không do Kaeri vận hành.</string>
     <string name="party_server_suggest">Chưa có máy chủ riêng? %1$s là máy chủ công cộng, do %2$s vận hành.</string>
-    <string name="party_server_invited">Máy chủ do người mời bạn chọn. Kaeri không vận hành máy chủ này.</string>
+    <string name="party_server_invited">Người mời bạn đã chọn máy chủ này. Kaeri không vận hành nó.</string>
     <string name="party_server_shape">Nhập máy chủ dưới dạng tên máy và cổng, ví dụ party.example:8999.</string>
     <string name="party_privacy">Máy chủ thấy tên bạn, tên phòng, và khi ai đó phát, tạm dừng hoặc tua. Mỗi người phát tập từ các nguồn của mình.</string>
     <string name="party_room_hint">Ai biết tên phòng đều có thể tham gia. Liên kết mời mang theo tên phòng, nên không cần đọc to.</string>
@@ -1890,7 +1890,7 @@
     <string name="together_open_player">Mở trình phát</string>
     <string name="together_recent">Phòng gần đây</string>
     <string name="together_recent_row">Tập %1$s · với %2$s · %3$s</string>
-    <string name="together_recent_empty">Các phòng bạn vào sẽ hiện ở đây, tối đa mười phòng.</string>
+    <string name="together_recent_empty">Mười phòng gần nhất bạn tham gia sẽ hiện ở đây.</string>
     <string name="together_rejoin">Vào lại</string>
     <string name="together_forget_room">Xóa khỏi phòng gần đây</string>
     <plurals name="together_someone_here">
@@ -1993,7 +1993,7 @@
     <string name="party_chat_hidden_line">Tùy chọn Ẩn trò chuyện đang bật trong Cài đặt, mục Phát.</string>
     <string name="party_chat_show">Hiện trò chuyện</string>
     <string name="settings_hide_chat">Ẩn trò chuyện trong các buổi xem chung</string>
-    <string name="settings_hide_chat_line">Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.</string>
+    <string name="settings_hide_chat_line">Tin nhắn, biểu cảm và các vạch của chúng trên thanh tua không hiện trên video, và ô trò chuyện cũng biến mất. Danh sách người tham gia vẫn cho biết ai đang trong phòng.</string>
     <string name="party_mute">Tắt tiếng %1$s</string>
     <string name="party_unmute">Bật tiếng %1$s</string>
     <string name="party_unmute_short">Bật tiếng</string>
@@ -2204,8 +2204,8 @@
     <string name="player_load_subtitle_file">Tải tệp phụ đề…</string>
     <string name="player_load_audio_file">Tải tệp âm thanh…</string>
     <string name="player_file_picker_failed">Không mở được hộp chọn tệp. Hãy thử lại.</string>
-    <string name="player_subtitle_file_failed">Không tải được tệp phụ đề đó. Hãy kiểm tra xem đây có phải tệp phụ đề không.</string>
-    <string name="player_audio_file_failed">Không tải được tệp âm thanh đó. Hãy kiểm tra xem đây có phải tệp âm thanh không.</string>
+    <string name="player_subtitle_file_failed">Không tải được tệp đó làm phụ đề. Hãy chọn một tệp phụ đề, chẳng hạn .srt hoặc .ass.</string>
+    <string name="player_audio_file_failed">Không tải được tệp đó làm âm thanh. Hãy chọn một tệp âm thanh, chẳng hạn .mka hoặc .flac.</string>
     <string name="player_track_unnamed">Rãnh chưa đặt tên</string>
     <string name="player_audio_track_n">Âm thanh %1$d</string>
     <string name="player_subtitle_track_n">Phụ đề %1$d</string>
@@ -2270,7 +2270,7 @@
     <string name="reader_gap_small">Nhỏ</string>
     <string name="reader_look_system">Theo hệ thống</string>
     <string name="onboarding_read_demo">Đọc bản demo</string>
-    <string name="onboarding_demo_books_detail">Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">Một truyện tranh ngắn và một truyện ngắn, do tác giả chia sẻ theo Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</string>
     <string name="home_demo_only_books">Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc cửa hàng plugin để đọc sách của bạn.</string>
     <string name="home_spotlight_read">Đọc</string>
@@ -2283,7 +2283,7 @@
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Đọc được ngay</string>
     <string name="search_demo_only_books">Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.</string>
-    <string name="reader_demo_end">Bản demo kết thúc ở đây</string>
+    <string name="reader_demo_end">Bản demo đến đây là hết</string>
     <string name="reader_demo_end_line">Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.</string>
     <string name="reader_demo_add_source">Thêm nguồn</string>
     <string name="reader_demo_again">Về trang 1</string>
@@ -2489,7 +2489,7 @@
     <string name="book_sources_no_match">Không khớp</string>
     <string name="book_sources_keep">Giữ chưa khớp</string>
     <string name="book_sources_find">Tìm</string>
-    <string name="book_sources_unmatched_note">Các bộ truyện chưa khớp vẫn đọc được từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.</string>
+    <string name="book_sources_unmatched_note">Bạn vẫn đọc được các bộ truyện chưa khớp từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.</string>
     <string name="library_scope_label">Phim hoặc Truyện</string>
     <string name="library_scope_shows">Phim</string>
     <string name="library_scope_reading">Truyện</string>
@@ -2630,8 +2630,8 @@
     <string name="settings_delete_after_reading_note">Các chương đã đánh dấu trang được giữ lại</string>
     <string name="settings_chapter_notifications_note">Bộ truyện trong danh sách Đang đọc của bạn</string>
     <string name="settings_downloads_finished_note">Khi các chương đang tải đều xong</string>
-    <string name="settings_chapter_notifications_footer">Chương có kênh hệ thống riêng, nên có thể tắt tiếng riêng.</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates được truy cập qua API công khai của nó.</string>
+    <string name="settings_chapter_notifications_footer">Chương có kênh hệ thống riêng, nên bạn có thể tắt tiếng chúng mà vẫn giữ các thông báo khác.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri kết nối với MangaUpdates qua API công khai của dịch vụ này.</string>
     <string name="accounts_username">Tên người dùng</string>
     <plurals name="read_downloads_total">
         <item quantity="other">%1$d chương · %2$s</item>
@@ -2656,7 +2656,7 @@
     <string name="seasonal_empty_format">Chưa có tựa nào ở định dạng này</string>
     <string name="seasonal_empty_format_detail">Thử tất cả định dạng.</string>
     <string name="seasonal_filter_in_search">Lọc trong Tìm kiếm</string>
-    <string name="seasonal_filter_help">Mùa này trong Tìm kiếm, nơi mọi bộ lọc có thể thu hẹp kết quả</string>
+    <string name="seasonal_filter_help">Mở mùa này trong Tìm kiếm, nơi mọi bộ lọc đều dùng được</string>
     <string name="sort_popularity">Phổ biến nhất</string>
     <string name="sort_score">Điểm cao nhất</string>
     <string name="sort_air_day">Ngày phát sóng</string>
@@ -2703,7 +2703,7 @@
     <string name="filter_released">Phát hành</string>
     <string name="filter_where_to_watch">Xem ở đâu</string>
     <string name="filter_licensed_only">Chỉ bản có giấy phép</string>
-    <string name="filter_my_list">Tựa trong danh sách</string>
+    <string name="filter_my_list">Tựa trong danh sách của bạn</string>
     <string name="filter_show">Hiện</string>
     <string name="filter_hide">Ẩn</string>
     <string name="filter_only">Chỉ</string>
@@ -2875,7 +2875,7 @@
     <string name="servers_kind_films">Phim điện ảnh</string>
     <string name="servers_error_certificate">%1$s dùng một chứng chỉ mà thiết bị này không tin cậy. Hãy dùng địa chỉ https:// có chứng chỉ mà nó tin cậy.</string>
     <string name="servers_row_signed_out_here">Đã đăng xuất</string>
-    <string name="servers_sign_out_line">Kết thúc phiên đăng nhập của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn như cũ.</string>
+    <string name="servers_sign_out_line">Đăng xuất sẽ kết thúc phiên của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn giữ nguyên.</string>
     <string name="settings_language">Ngôn ngữ</string>
     <string name="settings_language_app">Ngôn ngữ ứng dụng</string>
     <string name="language_follow_system">Theo ngôn ngữ hệ thống</string>
@@ -2982,11 +2982,11 @@
     <string name="settings_artwork_detail">Ghi công trong phần ghi chú của ứng dụng</string>
     <string name="settings_new_episodes">Tập mới</string>
     <string name="settings_new_episodes_detail">Cho các tựa trong danh sách Đang xem của bạn</string>
-    <string name="settings_notify_detail">Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.</string>
+    <string name="settings_notify_detail">Bạn nhận một thông báo khi tập của tựa bạn theo dõi ra mắt. Thông báo ghi tên tựa và số tập, không bao giờ ghi tên tập. Mỗi tựa có thể tắt thông báo riêng trong cài đặt của nó.</string>
     <string name="settings_coming_up">Sắp ra mắt · 7 ngày tới</string>
     <string name="settings_system_notifications">Cài đặt thông báo</string>
     <string name="settings_system_notifications_detail">Âm thanh, rung và màn hình khóa</string>
-    <string name="settings_system_notifications_apple">Mở Cài đặt hệ thống, nơi đặt kiểu biểu ngữ, âm thanh và huy hiệu.</string>
+    <string name="settings_system_notifications_apple">Mở Cài đặt hệ thống, nơi bạn đặt kiểu biểu ngữ, âm thanh và huy hiệu.</string>
     <string name="settings_notifications_blocked">Tắt: hệ thống không cho phép thông báo của Kaeri</string>
     <string name="settings_notifications_show_on">Đang bật trong cài đặt của tựa này</string>
     <string name="settings_notify_show">Khi tập của tựa này ra mắt</string>
@@ -3000,7 +3000,7 @@
     <string name="show_settings_always">Luôn</string>
     <string name="show_settings_never">Không bao giờ</string>
     <string name="show_settings_subs_remembered">Ghi nhớ từ tập gần nhất của bạn.</string>
-    <string name="show_settings_subs_follow">Chọn trong trình phát. Theo Cài đặt › Phát.</string>
+    <string name="show_settings_subs_follow">Chọn trong trình phát. Trước đó, áp dụng Cài đặt › Phát.</string>
     <string name="show_settings_source">Nguồn</string>
     <string name="show_settings_source_detail">Tự động thử lần lượt các nguồn.</string>
     <string name="show_settings_reset">Đặt lại mặc định</string>
@@ -3029,7 +3029,7 @@
     <string name="settings_upload_unlimited">Không giới hạn</string>
     <string name="settings_upscaling_natural">Tự nhiên · ArtCNN</string>
     <string name="settings_label_hover_cards">Phóng to ảnh bìa khi trỏ chuột</string>
-    <string name="settings_hover_cards_note">Hiện thẻ lớn hơn có trailer khi bạn trỏ chuột vào ảnh bìa.</string>
+    <string name="settings_hover_cards_note">Đặt con trỏ lên ảnh bìa sẽ mở một thẻ lớn hơn có trailer.</string>
     <string name="settings_upscaling_note_natural">Giữ nguyên nét và chất liệu, không vẽ lại.</string>
     <string name="settings_upscaling_note_sharp">Nét rõ hơn và cạnh mạnh hơn, đổi lại chất liệu kém mịn hơn.</string>
     <string name="settings_after_download">Sau mỗi lần tải xong</string>
@@ -3151,22 +3151,22 @@
     <string name="store_installed_row">Đã cài</string>
     <string name="store_install_all_reading">Cài tất cả để đọc</string>
     <plurals name="store_installed">
-        <item quantity="other">Đã cài, các plugin: %1$d. Chúng nằm trong mục “các nguồn”.</item>
+        <item quantity="other">Đã cài %1$d plugin. Chúng nằm trong mục Các nguồn của bạn.</item>
     </plurals>
     <string name="store_other_medium">Mọi plugin trong %1$s đều để xem</string>
     <string name="store_other_medium_line">Xem đang tắt trên thiết bị này, nên không cái nào hiện trong mục “các nguồn”.</string>
     <string name="store_turn_on_watching">Bật xem</string>
     <string name="store_empty">%1$s chưa có các plugin</string>
-    <string name="store_empty_line">Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi %1$s thêm chúng.</string>
+    <string name="store_empty_line">Bạn là thành viên, nên các plugin mới sẽ hiện trong Các cửa hàng plugin khi %1$s thêm chúng.</string>
     <string name="store_err_unreachable">Không kết nối được với %1$s</string>
     <string name="store_err_unreachable_line">Lời mời có vẻ đúng, nhưng cửa hàng không phản hồi. Hãy thử lại sau, hoặc hỏi %1$s xem nó có đang chạy không.</string>
     <plurals name="store_other_medium_more">
         <item quantity="other">Còn %1$d cái để xem, nhưng xem đang tắt trên thiết bị này.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="other">Còn %1$d cái để đọc, nhưng TV này không hỗ trợ đọc.</item>
+        <item quantity="other">Còn %1$d plugin khác dành cho việc đọc, mà TV này không hỗ trợ.</item>
     </plurals>
-    <string name="store_tv_all_reading">Mọi plugin trong %1$s đều để đọc, nhưng TV này không hỗ trợ đọc.</string>
+    <string name="store_tv_all_reading">Mọi plugin trong %1$s đều dành cho việc đọc, mà TV này không hỗ trợ.</string>
     <string name="store_plugin_row">Phiên bản %1$s · có thể kết nối tới %2$s</string>
     <string name="source_added">Đã thêm %1$s · %2$d bộ</string>
     <plurals name="source_added_plugins">
@@ -3251,7 +3251,7 @@
     <string name="sources_torrent_source">Phát torrent</string>
     <string name="sources_source_order_row">Thứ tự ưu tiên</string>
     <string name="sources_torrents_note">Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.</string>
-    <string name="sources_rebuilding">Các nguồn đang được thiết lập lại</string>
+    <string name="sources_rebuilding">Đang thiết lập lại các nguồn</string>
     <string name="sources_response_ms">%1$d ms</string>
     <string name="match_fix">Sửa tựa này</string>
     <string name="match_choose">Chọn tựa phù hợp</string>
@@ -3268,8 +3268,8 @@
     <string name="match_similarity">%1$s khớp</string>
     <string name="match_search_field">Tìm trên %1$s</string>
     <string name="match_search_another">Tìm tựa khác</string>
-    <string name="match_searching">Đang tìm trên %1$s “%2$s”</string>
-    <string name="match_search_empty">Không có gì trên %1$s cho “%2$s”.</string>
+    <string name="match_searching">Đang tìm “%2$s” trên %1$s</string>
+    <string name="match_search_empty">Không có gì cho “%2$s” trên %1$s.</string>
     <string name="match_search_empty_hint">Thử ít từ hơn, hoặc tên tựa bằng ngôn ngữ khác.</string>
     <string name="match_search_failed">Không tìm được trên %1$s.</string>
     <string name="match_picking">Đang khớp</string>
@@ -3289,7 +3289,7 @@
     <string name="sources_add_folder">Thư mục…</string>
     <string name="sources_add_server">Máy chủ media…</string>
     <string name="sources_add_store">Tham gia một cửa hàng plugin…</string>
-    <string name="sources_empty_body">Các nguồn là nơi các tập phim đến từ: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</string>
+    <string name="sources_empty_body">Các nguồn là nơi các tập phim đến: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</string>
     <string name="sources_empty_more">Hoặc %1$s.</string>
     <string name="sources_empty_join_link">tham gia một cửa hàng plugin</string>
     <string name="sources_add_folder_button">Thêm thư mục</string>
@@ -3303,7 +3303,7 @@
     <string name="sources_demo_link_licence">Giấy phép</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">Bản demo chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.</string>
     <string name="sources_demo_private">Bản demo không bao giờ đăng nhập ở đâu và không bao giờ ghi vào AniList.</string>
     <string name="sources_demo_remove">Gỡ bản demo</string>
     <string name="sources_demo_add">Thêm bản demo</string>
@@ -3326,7 +3326,7 @@
     <string name="stores_intro">Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.</string>
     <string name="stores_not_from_app">Các plugin đến từ chủ của cửa hàng plugin, không phải từ Kaeri. Bạn có thể rời cửa hàng plugin bất cứ lúc nào.</string>
     <string name="stores_join_owner_responsible">%1$s vận hành cửa hàng plugin này và chọn các các plugin của nó. Kaeri không tạo, xét duyệt hay chấp thuận chúng.</string>
-    <string name="stores_no_plugins">cửa hàng plugin này chưa cung cấp các plugin nào.</string>
+    <string name="stores_no_plugins">Cửa hàng plugin này chưa có các plugin nào.</string>
     <string name="stores_plugins">Các plugin</string>
     <string name="stores_plugin_limits">Mỗi plugin chỉ có thể kết nối tới các máy chủ được liệt kê cùng với nó và không thể đọc tệp của bạn.</string>
     <string name="stores_plugin_limits_short">Các plugin không thể đọc tệp của bạn hoặc kết nối tới máy chủ không được liệt kê.</string>
@@ -3338,7 +3338,7 @@
     <string name="stores_access_ended_detail">Chủ cửa hàng plugin này đã kết thúc quyền truy cập của bạn, nhưng các plugin đã cài vẫn hoạt động và sẽ không được cập nhật nữa.</string>
     <string name="stores_access_ended_page">cửa hàng plugin này không còn cho thiết bị này truy cập, nhưng các plugin vẫn được cài cho đến khi bạn gỡ bỏ.</string>
     <string name="stores_no_longer_joined">Không còn tham gia cửa hàng plugin này.</string>
-    <string name="stores_offline_last_list">Ngoại tuyến: %1$s. Danh sách các plugin bên dưới là bản được kiểm tra gần nhất.</string>
+    <string name="stores_offline_last_list">Ngoại tuyến: %1$s. Đang hiện danh sách gần nhất mà nó gửi.</string>
     <string name="stores_offline_last_list_plain">Ngoại tuyến. Đang hiển thị danh sách gần nhất mà nó đã gửi.</string>
     <string name="stores_key_line">Cửa hàng: khóa %1$s · %2$s</string>
     <string name="stores_device_joined_as">Đã tham gia với tên %1$s</string>
@@ -3373,14 +3373,14 @@
     <string name="stores_install_label">Cài đặt %1$s</string>
     <string name="stores_replace_label">Thay thế bản %1$s đã thêm thủ công</string>
     <string name="stores_remove_plugin_title">Gỡ %1$s?</string>
-    <string name="stores_remove_plugin_detail">Nó bị xóa khỏi thiết bị này, và cửa hàng plugin có thể cài đặt lại.</string>
+    <string name="stores_remove_plugin_detail">Nó sẽ bị xóa khỏi thiết bị này. Bạn có thể cài lại từ cửa hàng plugin.</string>
     <string name="stores_newly_contacts">Kết nối thêm</string>
     <string name="stores_update_contacts">Bản cập nhật này cũng kết nối tới %1$s.</string>
     <string name="stores_new_in">Mới trong %1$s</string>
     <string name="stores_join_title">Tham gia cửa hàng plugin</string>
     <string name="stores_add_title">Thêm cửa hàng plugin</string>
     <string name="stores_join_detail">Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn.</string>
-    <string name="stores_join_detail_desktop">Dán liên kết mời mà chủ cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin cung cấp gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.</string>
+    <string name="stores_join_detail_desktop">Dán liên kết mời mà chủ của một cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin có gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.</string>
     <string name="stores_join_detail_opened">Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn. Liên kết mời Kaeri:// mở từ Tin nhắn sẽ điền trực tiếp vào bảng này.</string>
     <string name="stores_invite_link">Liên kết mời</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3447,7 +3447,7 @@
     <string name="stores_invite_works_times_forever">Dùng được %1$d lần, cho đến khi bạn hủy.</string>
     <string name="stores_invite_works_any">Ai có liên kết này đều tham gia được, đến %1$s.</string>
     <string name="stores_invite_works_any_forever">Ai có liên kết này đều tham gia được, cho đến khi bạn hủy.</string>
-    <string name="stores_invite_once_until">Dùng được một lần, cho người bạn gửi tới. Đến %1$s.</string>
+    <string name="stores_invite_once_until">Dùng được một lần, cho người bạn gửi tới, đến %1$s.</string>
     <string name="stores_invite_once_forever">Dùng được một lần, cho người bạn gửi tới, cho đến khi bạn hủy.</string>
     <string name="stores_invite_contact_needed">Hãy thêm thông tin liên hệ cho cửa hàng này trước. Liên kết dùng không giới hạn có thể bị chuyển tiếp, giống như liên kết của chính cửa hàng.</string>
     <string name="stores_invite_owner_once">Lời mời chủ sở hữu chỉ dùng một lần.</string>
@@ -3492,7 +3492,7 @@
         <item quantity="other">Cung cấp %1$d plugin</item>
     </plurals>
     <string name="notice_open_stores">Mở các cửa hàng plugin</string>
-    <string name="stores_what_is">Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành các cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.</string>
+    <string name="stores_what_is">Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Các plugin của nó thêm các nguồn. Kaeri không vận hành cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia một cửa hàng plugin bằng liên kết mời từ chủ của nó.</string>
     <string name="stores_what_is_link">Cửa hàng plugin là gì?</string>
     <string name="stores_invite_rules">Liên kết mời dùng được một lần, cho một người, và có hiệu lực bảy ngày. Hãy xin chủ sở hữu cửa hàng plugin liên kết mới nếu liên kết của bạn đã hết hạn.</string>
     <string name="stores_qr_label">Mã QR cho liên kết mời</string>
@@ -3538,7 +3538,7 @@
     <string name="sync_road_nearby">Với một thiết bị ở gần</string>
     <string name="sync_road_nearby_line">Ghép nối với một thiết bị khác trong cùng mạng Wi-Fi. Không có gì được lưu ở nơi nào khác.</string>
     <string name="sync_road_cloud">Qua thư mục đám mây</string>
-    <string name="sync_road_cloud_line">Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Dùng được khi các các thiết bị ở xa nhau, và giữ một bản sao lưu.</string>
+    <string name="sync_road_cloud_line">Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Nó hoạt động khi các các thiết bị của bạn ở xa nhau và giữ một bản sao lưu.</string>
     <string name="sync_road_later">Bạn có thể thêm cách còn lại sau. Hầu hết mọi người dùng cả hai.</string>
     <string name="devices_yours">Các thiết bị của bạn</string>
     <string name="devices_only_this">Chỉ thiết bị này</string>
@@ -3558,7 +3558,7 @@
     <string name="sync_turn_off_alert">Tắt đồng bộ trên %1$s?</string>
     <string name="sync_turn_off_alert_line">%1$s này ngừng chia sẻ với các các thiết bị khác của bạn. Mọi thứ nó có vẫn ở lại đây.</string>
     <string name="cloud_group">Thư mục đám mây</string>
-    <string name="cloud_foot">Bổ sung khi các các thiết bị của bạn ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được.</string>
+    <string name="cloud_foot">Thư mục này giữ các các thiết bị của bạn đồng bộ khi chúng ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được nó.</string>
     <string name="cloud_add">Thêm thư mục đám mây</string>
     <string name="cloud_pick_title">Chọn thư mục đám mây</string>
     <string name="cloud_google_line">Một thư mục ẩn của Kaeri trong Drive của bạn</string>
@@ -3673,7 +3673,7 @@
     <string name="profiles_delete_alert_line">Lịch sử và các lượt đăng nhập của %1$s trên thiết bị này sẽ bị xóa. Các Các thiết bị đồng bộ với %1$s vẫn giữ bản của chúng.</string>
     <string name="profiles_picker">Ai đang xem?</string>
     <string name="profiles_ask_at_launch">Hỏi ai đang xem khi mở ứng dụng</string>
-    <string name="profiles_ask_foot">Mặc định tắt. Dành cho iPad cả nhà dùng chung. Hàng tài khoản cho phép đổi hồ sơ bất cứ lúc nào.</string>
+    <string name="profiles_ask_foot">Mặc định tắt. Hãy bật cho iPad mà cả nhà dùng chung. Bạn có thể đổi hồ sơ từ hàng tài khoản bất cứ lúc nào.</string>
     <string name="profiles_switch">Đổi hồ sơ</string>
     <string name="profiles_manage">Quản lý hồ sơ</string>
     <string name="first_setup_other">Thiết lập từ thiết bị khác</string>
@@ -3938,7 +3938,7 @@
     <string name="accounts_tokens_file">Mã đăng nhập được lưu trong một tệp trên thiết bị này, chỉ bạn đọc được.</string>
     <string name="accounts_tokens_keystore">Mã đăng nhập được lưu trên thiết bị này, được mã hóa bằng khóa trong kho khóa hệ thống.</string>
     <string name="accounts_form_title">Đăng nhập vào %1$s</string>
-    <string name="accounts_form_detail">Mật khẩu của bạn chỉ được gửi tới %1$s một lần, để lấy mã đăng nhập lưu trên thiết bị này.</string>
+    <string name="accounts_form_detail">Mật khẩu của bạn chỉ được gửi tới %1$s một lần, để đổi lấy một token lưu trên thiết bị này.</string>
     <string name="accounts_user_or_email">Email hoặc tên người dùng</string>
     <string name="accounts_password">Mật khẩu</string>
     <string name="accounts_signing_in_action">Đang đăng nhập</string>
@@ -3962,7 +3962,7 @@
     <string name="accounts_keep_theirs">Giữ giá trị trên %1$s</string>
     <string name="accounts_open_on">Mở trên %1$s</string>
     <string name="accounts_listed_by">Được liệt kê bởi %1$s</string>
-    <string name="accounts_did_not_answer">%1$s không phản hồi.</string>
+    <string name="accounts_did_not_answer">%1$s không phản hồi. Hãy thử lại sau giây lát.</string>
     <string name="accounts_no_extras">%1$s chưa có diễn viên, đội sản xuất hay gợi ý cho tựa này.</string>
     <string name="accounts_episodes_from">Các tập đến từ %1$s. Thêm một nguồn để phát chúng.</string>
     <string name="accounts_adds_season">%1$s thêm các tựa của mỗi mùa khi chúng được công bố.</string>
@@ -3983,7 +3983,7 @@
     <string name="tv_choose_another">Chọn TV khác…</string>
     <string name="tv_pairing_code">Mã ghép nối</string>
     <string name="tv_open_on_tv">Mở Kaeri trên TV. TV cần cùng mạng Wi-Fi với thiết bị này.</string>
-    <string name="tv_type_code">Nhập sáu chữ số mà %1$s hiển thị. Sau đó thiết bị này sẽ tự kết nối.</string>
+    <string name="tv_type_code">Nhập sáu chữ số mà %1$s hiển thị. Từ đó trở đi, thiết bị này sẽ tự kết nối.</string>
     <string name="tv_pairing_moment">Việc này mất một lúc.</string>
     <string name="tv_looking">Đang tìm TV trên mạng này</string>
     <string name="tv_none_found">Không tìm thấy TV</string>
@@ -4083,7 +4083,7 @@
     <string name="updates_saved_replace">Đã lưu phiên bản %1$s vào Tải xuống. Để cập nhật, hãy thay tệp cũ %2$s bằng tệp này.</string>
     <string name="updates_saved_replace_plain">Đã lưu phiên bản %1$s vào Tải xuống. Để cập nhật, hãy thay tệp cũ bằng tệp này.</string>
     <string name="updates_why_server">Việc tải về đã dừng: máy chủ từ chối (%1$d). Thử lại sau.</string>
-    <string name="updates_why_connection">Việc tải về đã dừng: kết nối bị gián đoạn.</string>
+    <string name="updates_why_connection">Việc tải về đã dừng: mất kết nối. Hãy thử lại.</string>
     <string name="updates_why_save">Không lưu được bản tải về: %1$s</string>
     <string name="updates_why_size">Tệp tải về có kích thước %1$s, không phải %2$s như danh sách của phiên bản này.</string>
     <string name="updates_why_checksum">Bản tải về không khớp với mã kiểm tra được liệt kê cho phiên bản này.</string>

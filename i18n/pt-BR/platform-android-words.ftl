@@ -22,7 +22,7 @@ settings-coming-up-switched-off = { $count ->
     [many] { $names } estão desativados nas próprias configurações.
    *[other] { $names } estão desativados nas próprias configurações.
  }
-settings-coming-up-opens = Um título abre as suas configurações.
+settings-coming-up-opens = Toque em um título para abrir as configurações dele.
 torrents-proxy-as = como { $user }
 title-facts-aired = Exibido em { $dates }
 title-facts-airing = Em exibição desde { $date }
@@ -147,7 +147,7 @@ settings-titles-note-english-missing = { $title } não tem título em inglês no
 settings-titles-note-english = Títulos em inglês como o AniList os lista, e romaji quando não houver.
 settings-titles-note-romaji = Títulos japoneses em letras latinas, como o AniList os lista.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Melhor esforço neste { -device }: o compartilhamento só funciona enquanto o { -app-name } estiver aberto.
+settings-seeding-best-effort = Este { -device } só compartilha enquanto o { -app-name } estiver aberto.
 settings-downloads-count = { $count ->
     [one] Um episódio
     [many] { $count } episódios
@@ -166,7 +166,7 @@ settings-typefaces-value = Roboto Flex e Zen Kaku Gothic New, sob a SIL Open Fon
 settings-libraries-value = JNA e AndroidX, sob a Apache License 2.0
 settings-report-bug-value = Abre o GitHub no seu navegador
 downloads-storage-share-description = Os downloads ocupam { $size }
-settings-aside-notifications = Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Um título pode desativar as próprias notificações nas configurações dele.
+settings-aside-notifications = Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Você pode desativar as notificações de um título nas configurações dele.
 settings-aside-downloads = Os downloads ficam no espaço próprio do { -app-name } neste { -device }, que outros apps não conseguem ler. Remover o app remove também os downloads.
 settings-aside-sources = { -source-cap-pl } são testadas em ordem, de cima para baixo. Um título pode manter a própria { -source }, escolhida na página dele.
 settings-upscaling-description = A mesma imagem: a metade esquerda em 480p original, a direita com { $mode }

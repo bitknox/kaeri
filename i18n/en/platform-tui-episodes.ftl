@@ -42,7 +42,7 @@ title-pin-off-page = Open the title's page to pick a { -source } for it.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
 # @only tui
-title-no-sources-yet = No { -source-pl } are registered yet. Try again in a moment.
+title-no-sources-yet = The { -source-pl } are still loading. Try again in a moment.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 # @only tui
@@ -308,7 +308,7 @@ episodes-empty-none-listed-hint = The { -source } listed no episodes for this ti
 
 # Toast when an episode has no { -release } to pick from.
 # @only tui
-episodes-no-releases = No { -release-pl } are available to pick from for this episode.
+episodes-no-releases = This episode has no { -release-pl } to pick from.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 # @arg key: text

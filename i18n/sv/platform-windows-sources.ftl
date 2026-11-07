@@ -22,7 +22,7 @@ sources-status-working = Redo
 sources-version-ready = Version { $version } är redo
 sources-use-this = Använd den här { -source }n
 sources-use-name = { $name } på
-sources-remove-detail = Det slutar användas för avsnitt. Du kan installera det igen från sin { -plugin-store }.
+sources-remove-detail = { -app-name } provar det inte längre för avsnitt. Du kan installera det igen från dess { -plugin-store }.
 stores-updates-count = { $count ->
     [one] En att uppdatera
    *[other] { $count } att uppdatera

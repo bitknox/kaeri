@@ -9,7 +9,7 @@ Kaeri                                                  plugins ●  ·  anilist 
   https://plugins.example/join/Wd3Kp8Lq2Zx7Nv5Rt1Yb0g?open#Qe7Ga1Ud5Js0Lo6W
   i2Ty9Rb3Np8
 
-  Copied to the clipboard where the terminal allows it, or select it to co…
+  Copied, if this terminal allows it. If not, select the link to copy it.
   Anyone with it can join, without a name, as often as they like.
   It works until the store goes back to invites only.
 
@@ -49,8 +49,8 @@ r10 c00-07 fg=rule bg=ground
 r10 c08-23 fg=rule bg=ground mod=BOLD
 r10 c24-79 fg=rule bg=ground
 r11 c00-01 fg=rule bg=ground
-r11 c02-74 fg=text-dim bg=ground
-r11 c75-79 fg=rule bg=ground
+r11 c02-72 fg=text-dim bg=ground
+r11 c73-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
 r12 c02-64 fg=text-dim bg=ground
 r12 c65-79 fg=rule bg=ground

@@ -79,4 +79,4 @@ servers-needs-look = Niedopasowane do AniList: { $count }
 servers-kind-films = Filmy
 servers-error-certificate = { $host } używa certyfikatu, któremu to { -device } nie ufa. Użyj adresu https:// z certyfikatem, któremu zaufa.
 servers-row-signed-out-here = Wylogowano
-servers-sign-out-line = Kończy logowanie na tym urządzeniu. Serwer i twoje pobrane odcinki zostają bez zmian.
+servers-sign-out-line = Po wylogowaniu to { -device } traci sesję na serwerze. Serwer i twoje pobrane odcinki zostają bez zmian.
