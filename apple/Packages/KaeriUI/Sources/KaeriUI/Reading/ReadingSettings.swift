@@ -91,8 +91,8 @@ struct ReadingPane: View {
                     }
                 }
             }
-            SettingsRow(title: L.settingsReaderWebtoons, note: L.settingsReaderWebtoonsNote) {
-                value(L.settingsReaderStrip)
+            SettingsRow(title: L.settingsReaderWebtoons) {
+                SettingMenu(key: .webtoonMode)
             }
             SettingsRow(title: L.settingsReaderNovels) {
                 menu(current: ReaderDefaultWords.novel(store)?.label, label: L.settingsReaderNovels) {
@@ -109,8 +109,11 @@ struct ReadingPane: View {
             }
         }
         SettingsGroup(title: L.settingsFollowGroup, footnote: L.settingsFollowFooter(device: Device.name)) {
-            SettingsRow(title: L.settingsFollowMode, note: L.settingsFollowModeNote) {
+            SettingsRow(title: L.settingsModeFollows) {
                 SettingSwitch(key: .seriesChoicesFollow)
+            }
+            SettingsRow(title: L.settingsLookFollows, note: L.settingsLookFollowsNote) {
+                SettingSwitch(key: .lookFollows)
             }
         }
         .task { store.reading.loadReaderDefaults() }
@@ -138,8 +141,8 @@ struct ReadingPane: View {
     }
 }
 
-/// Downloads' Reading group: over cellular on touch, keeping chapters ready, deleting after
-/// reading.
+/// Downloads' Reading group: over cellular on touch, which new chapters download, deleting
+/// after reading.
 struct ReadingDownloadsGroup: View {
     var body: some View {
         SettingsGroup(title: L.settingsGroupReading) {
@@ -148,8 +151,8 @@ struct ReadingDownloadsGroup: View {
                 SettingSwitch(key: .chapterDownloadsOnCellular)
             }
             #endif
-            SettingsRow(title: SettingKey.keepChaptersReady.title, note: L.settingsKeepChaptersReadyNote) {
-                SettingSwitch(key: .keepChaptersReady)
+            SettingsRow(title: SettingKey.newChapters.title, note: L.settingsNewChaptersNote) {
+                SettingMenu(key: .newChapters)
             }
             SettingsRow(title: SettingKey.deleteAfterReading.title, note: L.settingsDeleteAfterReadingNote) {
                 SettingSwitch(key: .deleteAfterReading)
@@ -158,13 +161,11 @@ struct ReadingDownloadsGroup: View {
     }
 }
 
-/// Notifications' New chapters row, with its own system channel.
-struct ChapterNoticesGroup: View {
+/// Notifications' New chapters row. The group's footnote says chapters have their own channel.
+struct ChapterNoticesRow: View {
     var body: some View {
-        SettingsGroup(title: L.settingsChapterNotifications, footnote: L.settingsChapterNotificationsFooter) {
-            SettingsRow(title: SettingKey.chapterNotifications.title, note: L.settingsChapterNotificationsNote) {
-                SettingSwitch(key: .chapterNotifications)
-            }
+        SettingsRow(title: SettingKey.chapterNotifications.title, note: L.settingsChapterNotificationsNote) {
+            SettingSwitch(key: .chapterNotifications)
         }
     }
 }
@@ -189,13 +190,7 @@ struct PhoneReadingPage: View {
                 }
                 .pickerStyle(.navigationLink)
                 .listRowBackground(Palette.raised)
-                HStack {
-                    PhoneRowTitle(title: L.settingsReaderWebtoons, note: L.settingsReaderWebtoonsNote)
-                    Spacer()
-                    Text(L.settingsReaderStrip).font(.ui(17)).foregroundStyle(.haze)
-                }
-                .listRowBackground(Palette.raised)
-                .accessibilityElement(children: .combine)
+                PhoneSettingPicker(key: .webtoonMode)
                 Picker(selection: Binding(
                     get: { ReaderDefaultWords.novel(store) },
                     set: { if let value = $0 { ReaderDefaultWords.setNovel(value, store) } }
@@ -219,7 +214,8 @@ struct PhoneReadingPage: View {
                 Text(L.settingsReaderDefaultsFooter)
             }
             Section {
-                PhoneSettingSwitch(key: .seriesChoicesFollow, note: L.settingsFollowModeNote, title: L.settingsFollowMode)
+                PhoneSettingSwitch(key: .seriesChoicesFollow)
+                PhoneSettingSwitch(key: .lookFollows, note: L.settingsLookFollowsNote)
             } header: {
                 PhoneSectionHeader(L.settingsFollowGroup)
             } footer: {
@@ -232,33 +228,28 @@ struct PhoneReadingPage: View {
     }
 }
 
-/// The iPhone Downloads page's Reading section.
-/// Headed Files when reading is the only medium, as the shows' settings are when watching is,
-/// so the page does not carry two Reading headings.
+/// The iPhone Downloads page's Reading settings. Right under the Reading downloads, which carry
+/// the heading, so the page has one Reading heading; with none downloaded, headed Reading with
+/// both media on and Files with reading alone, as the shows' settings are.
 struct PhoneReadingDownloadsSection: View {
     @Environment(AppStore.self) private var store
+    var headed = true
 
     var body: some View {
-        Section {
-            PhoneSettingSwitch(key: .chapterDownloadsOnCellular)
-            PhoneSettingSwitch(key: .keepChaptersReady, note: L.settingsKeepChaptersReadyNote)
-            PhoneSettingSwitch(key: .deleteAfterReading, note: L.settingsDeleteAfterReadingNote)
-        } header: {
-            PhoneSectionHeader(store.medium.both ? L.settingsGroupReading : L.settingsGroupFiles)
+        if headed {
+            Section { rows } header: {
+                PhoneSectionHeader(store.medium.both ? L.settingsGroupReading : L.settingsGroupFiles)
+            }
+        } else {
+            Section { rows }
         }
     }
-}
 
-/// The iPhone Notifications page's New chapters section.
-struct PhoneChapterNoticesSection: View {
-    var body: some View {
-        Section {
-            PhoneSettingSwitch(key: .chapterNotifications, note: L.settingsChapterNotificationsNote)
-        } header: {
-            PhoneSectionHeader(L.settingsChapterNotifications)
-        } footer: {
-            Text(L.settingsChapterNotificationsFooter)
-        }
+    @ViewBuilder
+    private var rows: some View {
+        PhoneSettingSwitch(key: .chapterDownloadsOnCellular)
+        PhoneSettingPicker(key: .newChapters, note: L.settingsNewChaptersNote)
+        PhoneSettingSwitch(key: .deleteAfterReading, note: L.settingsDeleteAfterReadingNote)
     }
 }
 #endif

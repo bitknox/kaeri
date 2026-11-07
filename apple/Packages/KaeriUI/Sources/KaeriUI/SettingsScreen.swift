@@ -381,7 +381,8 @@ struct SettingsAside: View {
                     aside(L.sourcesTitle, L.settingsAsideSourcesApple)
                 }
             case .accounts:
-                aside(L.navAccounts, L.settingsAsideAccounts)
+                aside(L.navAccounts, store.medium.answer == .read ? L.settingsAsideAccountsRead
+                      : store.medium.both ? L.settingsAsideAccountsBoth : L.settingsAsideAccounts)
             case .devices:
                 aside(L.devicesTitle, L.devicesAside(kind: Device.name))
             case .profiles:

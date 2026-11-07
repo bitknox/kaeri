@@ -490,7 +490,7 @@ struct PhoneDownloadsPage: View {
 
     var body: some View {
         let watched = WatchedDownloads(store)
-        let books = store.medium.reads ? BookDownloadSeries.group(store.reading.downloads?.rows ?? []) : []
+        let books = store.medium.reads ? (store.reading.downloads?.series ?? []) : []
         let showsEmpty = !store.medium.watches || (store.downloads.loaded && store.downloads.groups.isEmpty)
         let booksEmpty = !store.medium.reads || (store.reading.downloads != nil && books.isEmpty)
         PhoneList {
@@ -509,11 +509,14 @@ struct PhoneDownloadsPage: View {
                 } header: {
                     PhoneSectionHeader(L.settingsGroupReading)
                 } footer: {
-                    if let meter = store.reading.downloads?.meter, meter.chapters > 0 {
-                        Text(L.readDownloadsTotal(n: Int(meter.chapters), size: Wording.bytes(meter.used)))
-                            .monospacedDigit()
+                    if let total = ReadDownloadsWords.total(store) {
+                        Text(total).monospacedDigit()
                     }
                 }
+            }
+            // Reading's settings follow its downloads, under the one Reading heading.
+            if store.medium.reads {
+                PhoneReadingDownloadsSection(headed: books.isEmpty)
             }
             ForEach(store.medium.watches ? store.downloads.groups : []) { group in
                 Section {
@@ -538,9 +541,6 @@ struct PhoneDownloadsPage: View {
                 } header: {
                     PhoneSectionHeader(L.downloadsSeedingAfterWatching)
                 }
-            }
-            if store.medium.reads {
-                PhoneReadingDownloadsSection()
             }
             if store.medium.watches {
                 Section {
@@ -838,7 +838,7 @@ struct PhoneAccountsPage: View {
                         .listRowBackground(Palette.raised)
                 } else {
                     HStack {
-                        PhoneRowTitle(title: AccountsModel.name("anilist"), note: L.accountsBringsLists)
+                        PhoneRowTitle(title: AccountsModel.name("anilist"), note: AccountWords.bringsLists(store.medium.answer))
                         Spacer()
                         Button(L.actionSignIn) { store.connect("anilist") }
                             .buttonStyle(SecondaryCapsuleStyle(height: 30, raisedSurface: true, fontSize: 15))
@@ -868,6 +868,14 @@ struct PhoneAccountsPage: View {
             } footer: {
                 Text(AccountWords.footnote(store))
             }
+            if store.medium.reads {
+                Section {
+                    PhoneSettingPicker(key: .sendProgressAfter)
+                    PhoneSettingPicker(key: .whenTrackersDisagree, note: L.settingsDisagreeNote)
+                } header: {
+                    PhoneSectionHeader(L.settingsProgressGroup)
+                }
+            }
         }
         .navigationTitle(L.navAccounts)
         .navigationBarTitleDisplayMode(.inline)
@@ -888,7 +896,8 @@ struct PhoneTrackerRow: View {
         let state = store.accounts.tracker(tracker)
         HStack {
             PhoneRowTitle(title: AccountsModel.name(tracker),
-                          note: state?.connected == true ? AccountWords.status(state!, store.accounts) : nil)
+                          note: state?.connected == true ? AccountWords.status(state!, store.accounts)
+                              : store.medium.both ? AccountWords.serves(tracker) : AccountWords.keeps(tracker))
             Spacer()
             Group {
                 if state?.connected == true {

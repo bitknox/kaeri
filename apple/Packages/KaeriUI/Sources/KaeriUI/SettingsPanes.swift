@@ -220,9 +220,15 @@ struct StorageAside: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        let watched = WatchedDownloads(store).rows.reduce(UInt64(0)) { $0 + $1.bytesOnDisk }
-        let total = store.downloads.bytesOnDisk
-        let unwatched = total - min(watched, total)
+        let shows = store.medium.watches ? store.downloads.bytesOnDisk : 0
+        let watched = store.medium.watches ? min(WatchedDownloads(store).rows.reduce(UInt64(0)) { $0 + $1.bytesOnDisk }, shows) : 0
+        let meter = store.medium.reads ? store.reading.downloads?.meter : nil
+        let books = meter?.used ?? 0
+        let read = min(meter?.readBytes ?? 0, books)
+        let total = shows + books
+        // Silk for what is still to watch or read, haze for what is done with.
+        let unwatched = total - (watched + read)
+        let seen = watched + read
         Text(L.settingsGroupStorage).groupHeaderStyle().macLineHeight(14)
             .accessibilityAddTraits(.isHeader)
         GeometryReader { proxy in
@@ -238,12 +244,22 @@ struct StorageAside: View {
         }
         .frame(height: 8)
         .accessibilityHidden(true)
-        legend(L.settingsStorageUnwatched, unwatched, .silk)
-        legend(L.episodeWatched, watched, .haze)
+        switch store.medium.answer {
+        case .watch:
+            legend(L.settingsStorageUnwatched, unwatched, .silk)
+            legend(L.episodeWatched, seen, .haze)
+        case .read:
+            legend(L.settingsStorageUnread, unwatched, .silk)
+            legend(L.settingsStorageRead, seen, .haze)
+        case .both:
+            legend(L.settingsStorageUnseenBoth, unwatched, .silk)
+            legend(L.settingsStorageSeenBoth, seen, .haze)
+        }
         Text(summary(total))
             .font(.mac(13))
             .macLineHeight(18)
             .foregroundStyle(.silk)
+            .task { if store.medium.reads, store.reading.downloads == nil { store.reading.loadDownloads() } }
     }
 
     private func legend(_ label: String, _ bytes: UInt64, _ color: Color) -> some View {
@@ -386,7 +402,9 @@ struct AccountsPane: View {
         let anilist = store.accounts.tracker("anilist")
         SettingsGroup(
             title: AccountsModel.name("anilist"),
-            footnote: L.settingsAccountsSyncNote(tracker: AccountsModel.name("anilist"))
+            footnote: store.medium.answer == .read
+                ? L.settingsAccountsSyncNoteRead(tracker: AccountsModel.name("anilist"))
+                : L.settingsAccountsSyncNote(tracker: AccountsModel.name("anilist"))
         ) {
             if let anilist, anilist.connected {
                 AccountRow(state: anilist) {
@@ -405,7 +423,7 @@ struct AccountsPane: View {
                     }
                 }
             } else {
-                SettingsRow(title: AccountsModel.name("anilist"), note: L.accountsBringsLists) {
+                SettingsRow(title: AccountsModel.name("anilist"), note: AccountWords.bringsLists(store.medium.answer)) {
                     HStack(spacing: 8) {
                         Working(store.accounts.isWorking("anilist"))
                         Button(L.actionSignIn) { store.connect("anilist") }
@@ -421,6 +439,16 @@ struct AccountsPane: View {
         SettingsGroup(title: L.accountsOtherTrackers, footnote: AccountWords.footnote(store)) {
             ForEach(AccountWords.others(store.medium.answer), id: \.self) { tracker in
                 TrackerRow(tracker: tracker, sheet: $sheet)
+            }
+        }
+        if store.medium.reads {
+            SettingsGroup(title: L.settingsProgressGroup) {
+                SettingsRow(title: SettingKey.sendProgressAfter.title) {
+                    SettingMenu(key: .sendProgressAfter)
+                }
+                SettingsRow(title: SettingKey.whenTrackersDisagree.title, note: L.settingsDisagreeNote) {
+                    SettingMenu(key: .whenTrackersDisagree)
+                }
             }
         }
         SettingsGroup {
@@ -490,7 +518,7 @@ struct TrackerRow: View {
         let state = store.accounts.tracker(tracker)
         SettingsRow(
             title: AccountsModel.name(tracker),
-            note: state?.connected == true ? AccountWords.status(state!, store.accounts) : nil
+            note: state?.connected == true ? AccountWords.status(state!, store.accounts) : AccountWords.keeps(tracker)
         ) {
             Group {
                 if state?.connected == true {
@@ -538,6 +566,30 @@ enum AccountWords {
     static func dot(_ state: SyncState, _ accounts: AccountsModel) -> SyncSummary.State {
         if state.needsReauth || state.pullError != nil { return .problem }
         return state.outbox == 0 && !accounts.isWorking("sync") ? .synced : .waiting
+    }
+
+    /// What signing in to AniList brings, for what Kaeri is for.
+    static func bringsLists(_ answer: KaeriIsFor) -> String {
+        switch answer {
+        case .watch: L.accountsBringsLists
+        case .read: L.accountsBringsListsRead
+        case .both: L.accountsBringsListsBoth
+        }
+    }
+
+    /// What a tracker not signed in keeps in step: MangaUpdates only reading lists.
+    static func keeps(_ tracker: String) -> String {
+        tracker == "mangaupdates" ? L.accountsTrackerReadingLists : L.accountsTrackerLists
+    }
+
+    /// What a tracker serves, on a phone with both media on: MangaUpdates reading, Simkl and
+    /// Trakt shows, the rest both.
+    static func serves(_ tracker: String) -> String {
+        switch tracker {
+        case "mangaupdates": L.accountsTrackerServesReading
+        case "simkl", "trakt": L.accountsTrackerServesShows
+        default: L.accountsTrackerServesBoth
+        }
     }
 
     /// The trackers after AniList that serve what Kaeri is for: MangaUpdates only with reading

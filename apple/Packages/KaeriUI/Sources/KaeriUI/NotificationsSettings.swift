@@ -157,29 +157,40 @@ struct ComingUpRow: View {
 
 // MARK: - Mac and iPad
 
-/// The Notifications pane: the New episodes switch, and what will notify in the next 7 days.
+/// The Notifications pane: one group with New chapters and New episodes, as the medium has them,
+/// then what will notify in the next 7 days.
 struct NotificationsPane: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
-        if store.medium.reads {
-            ChapterNoticesGroup()
+        SettingsGroup(footnote: footnote) {
+            if store.medium.reads {
+                ChapterNoticesRow()
+            }
+            if store.medium.watches {
+                SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
+                    EpisodeNoticesToggle { Text(L.settingsNewEpisodes) }
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+            }
         }
         if store.medium.watches {
-            episodeGroups
+            comingUp
         }
     }
 
+    /// The chapters' own channel, then what the system allows.
+    private var footnote: String {
+        var lines: [String] = []
+        if store.medium.reads { lines.append(L.settingsChapterNotificationsFooter) }
+        if store.medium.watches { lines.append(NoticeWords.permission) }
+        return lines.joined(separator: " ") // i18n-skip
+    }
+
     @ViewBuilder
-    private var episodeGroups: some View {
-        SettingsGroup(title: L.settingsNewEpisodes, footnote: NoticeWords.permission) {
-            SettingsRow(title: L.settingsNewEpisodes, note: NoticeWords.line(store)) {
-                EpisodeNoticesToggle { Text(L.settingsNewEpisodes) }
-                    .toggleStyle(.switch)
-                    .labelsHidden()
-            }
-        }
+    private var comingUp: some View {
         SettingsGroup(title: L.settingsComingUp, footnote: NoticeWords.leftOut(store)) {
             let rows = store.notifications.comingUp
             if rows.isEmpty {
@@ -216,6 +227,7 @@ struct NotificationsAside: View {
         let on = store.settings.isOn(.episodeNotifications)
         Text(L.settingsNewEpisodes).groupHeaderStyle().macLineHeight(14)
             .accessibilityAddTraits(.isHeader)
+            .padding(.bottom, -6)
         NoticePreview(row: store.notifications.comingUp.first)
             .opacity(on ? 1 : 0.4)
         Text(on ? L.settingsNotifyExplainOn(tracker: AccountsModel.name("anilist")) : L.settingsNotifyExplainOff)
@@ -357,11 +369,21 @@ struct PhoneNotificationsPage: View {
     var body: some View {
         let overrides = Int(store.notifications.week?.overrides ?? 0)
         PhoneList {
-            if store.medium.reads {
-                PhoneChapterNoticesSection()
+            Section {
+                if store.medium.reads {
+                    PhoneSettingSwitch(key: .chapterNotifications, note: L.settingsChapterNotificationsNote)
+                }
+                if store.medium.watches {
+                    EpisodeNoticesToggle {
+                        PhoneRowTitle(title: L.settingsNewEpisodes, note: NoticeWords.line(store, counts: false))
+                    }
+                    .listRowBackground(Palette.raised)
+                }
+            } footer: {
+                Text(footer(overrides))
             }
             if store.medium.watches {
-                episodeSections(overrides)
+                comingUp
             }
             systemSection
         }
@@ -373,18 +395,19 @@ struct PhoneNotificationsPage: View {
         }
     }
 
+    /// The chapters' own channel, the shows that set their own, and what the system allows.
+    private func footer(_ overrides: Int) -> String {
+        var lines: [String] = []
+        if store.medium.reads { lines.append(L.settingsChapterNotificationsFooter) }
+        if store.medium.watches {
+            if overrides > 0 { lines.append("\(NoticeWords.overridden(overrides)).") } // i18n-skip
+            lines.append(NoticeWords.permission)
+        }
+        return lines.joined(separator: " ") // i18n-skip
+    }
+
     @ViewBuilder
-    private func episodeSections(_ overrides: Int) -> some View {
-            Section {
-                EpisodeNoticesToggle {
-                    PhoneRowTitle(title: L.settingsNewEpisodes, note: NoticeWords.line(store, counts: false))
-                }
-                .listRowBackground(Palette.raised)
-            } header: {
-                PhoneSectionHeader(L.settingsNewEpisodes)
-            } footer: {
-                Text(overrides > 0 ? "\(NoticeWords.overridden(overrides)). \(NoticeWords.permission)" : NoticeWords.permission)
-            }
+    private var comingUp: some View {
             Section {
                 let rows = store.notifications.comingUp
                 if rows.isEmpty {
