@@ -13445,9 +13445,9 @@ pub fn progress_row_failed(count: i64, reason: &str) -> String {
     text("progress-row-failed", &[("count", Arg::Int(count)), ("reason", Arg::Text(reason))])
 }
 
-/// The server's row, when Send progress to the server is off.
-pub fn progress_row_off() -> String {
-    text("progress-row-off", &[])
+/// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+pub fn progress_row_off(kind: &str) -> String {
+    text("progress-row-off", &[("kind", Arg::Text(kind))])
 }
 
 /// Sidebar and tab label: the shows' Home when both media are on.

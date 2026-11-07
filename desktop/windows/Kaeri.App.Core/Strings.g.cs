@@ -5563,8 +5563,8 @@ public static partial class T
     /// <summary>The server's row, the server said no. Try again sits beside it.</summary>
     public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
 
-    /// <summary>The server's row, when Send progress to the server is off.</summary>
-    public static string ProgressRowOff => Get("ProgressRowOff");
+    /// <summary>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ProgressRowOff(string kind) => Fill(Get("ProgressRowOff"), ("kind", kind));
 
     /// <summary>Sidebar and tab label: the shows' Home when both media are on.</summary>
     public static string NavWatch => Get("NavWatch");
@@ -12823,7 +12823,7 @@ public static partial class T
         ["ProgressRowRetrying_other"] = "{count} chapters waiting. Kaeri will try again.",
         ["ProgressRowFailed_one"] = "1 chapter not saved: {reason}",
         ["ProgressRowFailed_other"] = "{count} chapters not saved: {reason}",
-        ["ProgressRowOff"] = "Progress stays on this device",
+        ["ProgressRowOff"] = "Progress stays on this {kind}",
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",

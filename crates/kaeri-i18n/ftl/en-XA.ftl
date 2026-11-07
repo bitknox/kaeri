@@ -8422,8 +8422,8 @@ progress-row-failed =
        *[other] [{ $count } çĥàþţéŕš ñöţ šàṽéð: { $reason }~~~~~~~~~]
     }
 
-# The server's row, when Send progress to the server is off.
-progress-row-off = [Þŕöĝŕéšš šţàýš öñ ţĥîš ðéṽîçé~~~~~~~~~]
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = [Þŕöĝŕéšš šţàýš öñ ţĥîš { $kind }~~~~~~~~]
 
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = [Ŵàţçĥ~~]

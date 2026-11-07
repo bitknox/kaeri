@@ -188350,13 +188350,13 @@
       }
     },
     "progress-row-off" : {
-      "comment" : "The server's row, when Send progress to the server is off.",
+      "comment" : "The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. Argument 1: kind (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Progress stays on this device"
+            "value" : "Progress stays on this %1$@"
           }
         }
       }

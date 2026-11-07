@@ -8270,8 +8270,10 @@ public enum L {
         Self.format("progress-row-failed", fallback: "%1$lld chapters not saved: %2$@", count, reason)
     }
 
-    /// The server's row, when Send progress to the server is off.
-    public static var progressRowOff: String { string("progress-row-off", fallback: "Progress stays on this device") }
+    /// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func progressRowOff(kind: String) -> String {
+        Self.format("progress-row-off", fallback: "Progress stays on this %1$@", kind)
+    }
 
     /// Sidebar and tab label: the shows' Home when both media are on.
     public static var navWatch: String { string("nav-watch", fallback: "Watch") }

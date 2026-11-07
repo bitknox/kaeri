@@ -7717,8 +7717,8 @@
     <comment>The server's row, the server said no. Try again sits beside it.</comment>
   </data>
   <data name="ProgressRowOff" xml:space="preserve">
-    <value>Progress stays on this device</value>
-    <comment>The server's row, when Send progress to the server is off.</comment>
+    <value>Progress stays on this {kind}</value>
+    <comment>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</comment>
   </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Watch</value>

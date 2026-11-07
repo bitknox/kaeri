@@ -8726,9 +8726,9 @@ object Strings {
     fun progressRowFailed(context: Context, count: Int, reason: String): String =
         context.resources.getQuantityString(R.plurals.progress_row_failed, count, count, reason)
 
-    /** The server's row, when Send progress to the server is off. */
-    fun progressRowOff(context: Context): String =
-        context.getString(R.string.progress_row_off)
+    /** The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. */
+    fun progressRowOff(context: Context, kind: String): String =
+        context.getString(R.string.progress_row_off, kind)
 
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =

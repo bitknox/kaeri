@@ -8422,8 +8422,8 @@ progress-row-failed =
        *[other] { $count } chapters not saved: { $reason }
     }
 
-# The server's row, when Send progress to the server is off.
-progress-row-off = Progress stays on this device
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = Progress stays on this { $kind }
 
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Watch

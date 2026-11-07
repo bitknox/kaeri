@@ -4616,8 +4616,8 @@
         <item quantity="one">1 chapter not saved: %2$s</item>
         <item quantity="other">%1$d chapters not saved: %2$s</item>
     </plurals>
-    <!-- The server's row, when Send progress to the server is off. -->
-    <string name="progress_row_off">Progress stays on this device</string>
+    <!-- The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. -->
+    <string name="progress_row_off">Progress stays on this %1$s</string>
     <!-- Sidebar and tab label: the shows' Home when both media are on. -->
     <string name="nav_watch">Watch</string>
     <!-- Sidebar and tab label: reading's Home. -->
