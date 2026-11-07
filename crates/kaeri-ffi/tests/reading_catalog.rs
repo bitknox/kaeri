@@ -432,6 +432,9 @@ fn updates_asked_first_get_their_covers_and_medium_without_home() {
         .unwrap();
     let rows: Vec<_> = updates.days.iter().flat_map(|d| &d.rows).collect();
     assert!(rows.iter().all(|r| r.tile.cover.is_some()), "{rows:?}");
+    engine.shutdown();
+}
+
 fn search_tiles(
     engine: &Arc<FfiEngine>,
     query: ReadSearchQuery,
