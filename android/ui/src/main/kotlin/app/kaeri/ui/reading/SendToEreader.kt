@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -337,14 +338,14 @@ private fun ValueRow(name: String, value: String?) {
 
 /** A send held for Wi-Fi: the Wi-Fi mark, still, and the engine's line saying why. */
 @Composable
-private fun WaitingLine(line: String, modifier: Modifier = Modifier) {
+private fun WaitingLine(line: String, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.bodyLarge) {
     Row(
         modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Wifi, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Text(line, style = MaterialTheme.typography.bodyLarge)
+        Text(line, style = style)
     }
 }
 
@@ -498,7 +499,7 @@ private fun SendStatusRow(send: ExportJob, actions: AppActions) {
             }
         }
         when (send) {
-            is ExportJob.Waiting -> WaitingLine(send.line.text(context), Modifier.padding(top = 8.dp))
+            is ExportJob.Waiting -> WaitingLine(send.line.text(context), Modifier.padding(top = 8.dp), MaterialTheme.typography.bodyMedium)
             is ExportJob.Failed -> Row(
                 Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -60,6 +60,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -433,14 +434,14 @@ private fun SeriesActions(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (words == null || failed) {
             FilledTonalButton(onClick = onReadFrom, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
-                Text(Strings.seriesReadFromAnother(context), style = MaterialTheme.typography.titleMedium)
+                Text(Strings.seriesReadFromAnother(context), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
             }
         } else {
             Button(
                 onClick = { onMain(series.action) },
                 enabled = !choosing,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+            ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
         if (!failed && words != null) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
