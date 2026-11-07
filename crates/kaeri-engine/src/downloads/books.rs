@@ -35,6 +35,7 @@ use kaeri_core::{
     config::{Config, NewChapters},
 };
 use kaeri_model::{
+    Msg, ReadingMsg,
     command::AppState,
     event::Event,
     medium::AppEdition,
@@ -102,6 +103,8 @@ pub struct Setup {
     pub mobile: bool,
     /// Chapters download only on Wi-Fi, as the settings say.
     pub wifi_only: bool,
+    /// Say when a run of downloads is done: the Downloads finished notification.
+    pub tell_done: bool,
 }
 
 impl Setup {
@@ -118,6 +121,7 @@ impl Setup {
             delete_after: reading.delete_after_reading,
             mobile: network.cellular && !wifi && !network.offline,
             wifi_only: !reading.downloads_on_cellular,
+            tell_done: config.notifications.downloads,
         }
     }
 }
@@ -279,12 +283,12 @@ impl BookDownloads {
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
         let free = self.free().unwrap_or(0);
-        let (series, read_bytes) = sizes::series(store, &rows, wifi);
+        let (series, read_bytes, kept) = sizes::series(store, &rows, wifi);
         BookDownloadsView {
             rows: shown,
             meter: StorageMeter { used, free, chapters, read_bytes },
             series,
-            total: sizes::total(chapters, used),
+            total: sizes::total(kept, used),
         }
     }
 
@@ -621,6 +625,9 @@ impl BookDownloads {
     async fn run(&self, lent: Lent) {
         let store = lent.sources.store().clone();
         let mut touched: Vec<WorkId> = Vec::new();
+        // The chapters the person asked for that finished in this run, by series.
+        let mut finished: Vec<(String, usize)> = Vec::new();
+        let mut stopped = false;
         loop {
             let next = {
                 let mut running = self.0.running.lock().unwrap_or_else(|e| e.into_inner());
@@ -642,8 +649,18 @@ impl BookDownloads {
             if !touched.contains(&work) {
                 touched.push(work);
             }
-            if !self.one(&lent, &store, row).await {
+            let asked = !row.keep_ready;
+            let work = row.work.clone();
+            let (go_on, done) = self.one(&lent, &store, row).await;
+            if done && asked {
+                match finished.iter_mut().find(|(w, _)| *w == work) {
+                    Some((_, n)) => *n += 1,
+                    None => finished.push((work, 1)),
+                }
+            }
+            if !go_on {
                 *self.0.running.lock().unwrap_or_else(|e| e.into_inner()) = false;
+                stopped = true;
                 break;
             }
             tokio::time::sleep(self.0.pace).await;
@@ -652,10 +669,16 @@ impl BookDownloads {
         for work in touched {
             self.relist(&lent, work);
         }
+        // Only a run that emptied the queue is done: a held or full one has more to come.
+        let held = self.setup().hold;
+        if self.setup().tell_done && !stopped && !held && !finished.is_empty() {
+            let _ = lent.tx.send(Event::Reading(done_notice(&store, &finished)));
+        }
     }
 
-    /// Fetch one chapter. False when the queue should stop: the device is full.
-    async fn one(&self, lent: &Lent, store: &Store, row: BookDownload) -> bool {
+    /// Fetch one chapter. Says whether the queue goes on, which it does not when the device is
+    /// full, and whether the chapter is now downloaded.
+    async fn one(&self, lent: &Lent, store: &Store, row: BookDownload) -> (bool, bool) {
         let now = lent.clock.now();
         if let Err(e) = store.book_download_progress(row.id, 0, None, now) {
             tracing::warn!(error = %e, "a download was not started");
@@ -670,18 +693,18 @@ impl BookDownloads {
                     tracing::warn!(error = %e, "a finished download was not kept");
                 }
                 self.publish(store, &lent.tx);
-                true
+                (true, true)
             }
             Err(Stop::Cancelled) => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
                 self.publish(store, &lent.tx);
-                true
+                (true, false)
             }
             Err(Stop::Held) => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
                 let _ = store.book_download_requeue(row.id, now);
                 self.publish(store, &lent.tx);
-                true
+                (true, false)
             }
             Err(Stop::Failed(failure)) => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
@@ -690,7 +713,7 @@ impl BookDownloads {
                     tracing::warn!(error = %e, "a failed download was not kept");
                 }
                 self.publish(store, &lent.tx);
-                !full
+                (!full, false)
             }
         }
     }
@@ -959,6 +982,37 @@ fn decode(text: &str) -> ReadingFailure {
 }
 
 /// A work's chapters in reading order, and the source they come from.
+/// The Downloads finished notification for what a run finished: one series by name, in its own
+/// unit, or several counted.
+fn done_notice(store: &Store, finished: &[(String, usize)]) -> ReadingEvent {
+    let title = Msg::Reading(ReadingMsg::ReadingDownloadsDoneTitle);
+    let count = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
+    match finished {
+        [(work, n)] => {
+            let kind = store.book_work_kind(work).ok().flatten();
+            let novel = kind.as_ref().is_some_and(|k| k.medium == "novel");
+            let name = kind.and_then(|k| k.title).unwrap_or_else(|| work.clone());
+            let body = if novel {
+                ReadingMsg::ReadingDownloadsDoneParts { title: name, count: count(*n) }
+            } else {
+                ReadingMsg::ReadingDownloadsDoneChapters { title: name, count: count(*n) }
+            };
+            ReadingEvent::DownloadsDone {
+                work: Some(WorkId::new(work.clone())),
+                title,
+                body: Msg::Reading(body),
+            }
+        }
+        _ => ReadingEvent::DownloadsDone {
+            work: None,
+            title,
+            body: Msg::Reading(ReadingMsg::ReadingDownloadsDoneSeries {
+                count: count(finished.len()),
+            }),
+        },
+    }
+}
+
 async fn ordered_chapters(
     sources: &BookSources,
     work: &WorkId,

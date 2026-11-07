@@ -213,6 +213,60 @@ async fn a_chapter_downloads_into_a_cbz_the_shelf_reads() {
 }
 
 #[tokio::test]
+async fn downloads_finished_is_said_once_the_asked_chapters_are_done_and_only_when_on() {
+    // Off: the run ends without a word.
+    let mut kit = kit(&["1", "2", "3"]);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+    assert!(!kit.drain().iter().any(|e| matches!(e, ReadingEvent::DownloadsDone { .. })));
+
+    // On: one notice for the run, naming the series and counting its chapters.
+    kit.setup(Setup { tell_done: true, ..Setup::default() });
+    kit.queue
+        .download(
+            &kit.lent,
+            WorkId::new(WORK),
+            DownloadPick::Chapters { ids: ids(&["2", "3"]) },
+        )
+        .await;
+    kit.settle().await;
+    let said: Vec<_> = kit
+        .drain()
+        .into_iter()
+        .filter_map(|e| match e {
+            ReadingEvent::DownloadsDone { work, body, .. } => Some((work, body)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        said,
+        [(
+            Some(WorkId::new(WORK)),
+            Msg::Reading(ReadingMsg::ReadingDownloadsDoneChapters {
+                title: "The Lantern Ferry".into(),
+                count: 2
+            })
+        )]
+    );
+}
+
+#[tokio::test]
+async fn the_total_counts_parts_apart_and_every_series_line_says_its_size() {
+    let kit = kit(&["1", "2"]);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+    let view = kit.queue.view(kit.store());
+    let words = |line: &[Msg]| line.iter().map(Msg::id).collect::<Vec<_>>();
+    assert_eq!(words(&view.total), ["reading-chapters", "reading-dl-size"]);
+    assert_eq!(words(&view.series[0].line)[..2], ["reading-chapters", "reading-dl-size"]);
+
+    // A light novel's downloads are parts in the total.
+    kit.store().seed_book_work(WORK, "novel", None, None, "The Lantern Ferry", 2).unwrap();
+    let view = kit.queue.view(kit.store());
+    assert_eq!(words(&view.total), ["reading-dl-parts", "reading-dl-size"]);
+}
+
+#[tokio::test]
 async fn a_text_chapter_downloads_as_a_single_chapter_epub() {
     let kit = kit(&[]);
     kit.shelf.listed.lock().unwrap().push(SourceChapter::new("text-1", "1"));

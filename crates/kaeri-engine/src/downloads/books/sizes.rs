@@ -54,21 +54,37 @@ fn amount(chapters: usize, bytes: u64, novel: bool) -> Vec<Msg> {
     ]
 }
 
-/// The Reading section's total: "38 chapters · 1.1 GB". Nothing with nothing downloaded.
-pub(crate) fn total(chapters: u32, bytes: u64) -> Vec<Msg> {
-    if chapters == 0 {
-        return Vec::new();
+/// The Reading section's total, each kind by its own word: "38 chapters · 5 parts · 1.1 GB".
+/// Nothing with nothing downloaded.
+pub(crate) fn total(kept: Kept, bytes: u64) -> Vec<Msg> {
+    let mut out = Vec::new();
+    if kept.chapters > 0 {
+        out.push(r(ReadingMsg::ReadingChapters { count: count(kept.chapters) }));
     }
-    amount(chapters as usize, bytes, false)
+    if kept.parts > 0 {
+        out.push(r(ReadingMsg::ReadingDlParts { count: count(kept.parts) }));
+    }
+    if !out.is_empty() {
+        out.push(r(ReadingMsg::ReadingDlSize { size: Size::of(bytes) }));
+    }
+    out
+}
+
+/// What is downloaded, by kind: manga chapters, and light novel parts.
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct Kept {
+    pub chapters: usize,
+    pub parts: usize,
 }
 
 /// Each series with downloads, the one downloading first, then by when each last changed, with
-/// what its read chapters take up altogether.
+/// what its read chapters take up altogether and what is downloaded by kind.
 pub(crate) fn series(
     store: &Store,
     rows: &[BookDownload],
     wifi: bool,
-) -> (Vec<BookDownloadSeries>, u64) {
+) -> (Vec<BookDownloadSeries>, u64, Kept) {
+    let mut kept_all = Kept::default();
     let mut by_work: Vec<(&str, Vec<&BookDownload>)> = Vec::new();
     for row in rows.iter().filter(|d| d.state != BookDownloadState::Removed) {
         match by_work.iter_mut().find(|(w, _)| *w == row.work) {
@@ -108,7 +124,17 @@ pub(crate) fn series(
             .map(|d| d.bytes)
             .sum();
 
+        if novel {
+            kept_all.parts += done.len();
+        } else {
+            kept_all.chapters += done.len();
+        }
+
+        // What is kept and its size first, on every row, then what is happening now.
         let mut line = Vec::new();
+        if !done.is_empty() {
+            line.extend(amount(done.len(), bytes, novel));
+        }
         let mut progress = None;
         if let Some(now) = downloading {
             line.push(r(ReadingMsg::ReadingDlChapter { chapter: label(now) }));
@@ -127,11 +153,8 @@ pub(crate) fn series(
             let failure = first.error.as_deref().map_or(ReadingFailure::Offline, decode);
             line.push(failure.msg());
         } else {
-            if !done.is_empty() {
-                line.extend(amount(done.len(), bytes, novel));
-                if clearable > 0 {
-                    line.push(r(ReadingMsg::ReadingDlRead { count: count(clearable) }));
-                }
+            if clearable > 0 {
+                line.push(r(ReadingMsg::ReadingDlRead { count: count(clearable) }));
             }
             if waiting > 0 {
                 line.push(r(ReadingMsg::ReadingDlQueued { count: count(waiting) }));
@@ -159,7 +182,7 @@ pub(crate) fn series(
     out.sort_by(|a, b| {
         b.0.cmp(&a.0).then(b.1.cmp(&a.1)).then_with(|| a.2.title.cmp(&b.2.title))
     });
-    (out.into_iter().map(|(_, _, s)| s).collect(), read_bytes)
+    (out.into_iter().map(|(_, _, s)| s).collect(), read_bytes, kept_all)
 }
 
 /// Bytes per page and pages per chapter learnt from finished downloads: the source's first,

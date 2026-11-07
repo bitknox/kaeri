@@ -214,6 +214,7 @@ impl App {
             | S::WhenTrackersDisagree
             | S::CountsAsRead
             | S::ChapterNotifications
+            | S::DownloadsFinished
             | S::OpenAt
             | S::TorrentsOnCellular
             | S::EpisodeNotifications
@@ -355,6 +356,7 @@ fn label_text(key: SettingKey) -> String {
         S::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
         S::CountsAsRead => t::settings_counts_read(),
         S::ChapterNotifications => t::settings_chapter_notifications(),
+        S::DownloadsFinished => t::settings_downloads_finished(),
         S::OpenAt => t::settings_open_at(),
         S::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
         S::EpisodeNotifications => t::settings_label_episode_notifications(),

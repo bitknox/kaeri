@@ -161,6 +161,7 @@ public sealed partial class SettingsPage : Page
         K.WhenTrackersDisagree => T.SettingsWhenTrackersDisagree,
         K.CountsAsRead => T.SettingsCountsRead,
         K.ChapterNotifications => T.SettingsChapterNotifications,
+        K.DownloadsFinished => T.SettingsDownloadsFinished,
         K.OpenAt => T.SettingsOpenAt,
         K.AdultTitles => T.SettingsAdult,
         K.EpisodeNotifications => T.SettingsEpisodeNotifications,

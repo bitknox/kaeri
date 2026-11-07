@@ -537,11 +537,20 @@ pub struct NotificationsConfig {
     pub episodes: bool,
     /// The same for new chapters of the series you read. Off until you turn it on.
     pub chapters: bool,
+    /// Let a native app say when the chapters it was downloading are all done. Off until you
+    /// turn it on.
+    pub downloads: bool,
 }
 
 impl Default for NotificationsConfig {
     fn default() -> Self {
-        Self { airing_digest: true, desktop: false, episodes: false, chapters: false }
+        Self {
+            airing_digest: true,
+            desktop: false,
+            episodes: false,
+            chapters: false,
+            downloads: false,
+        }
     }
 }
 

@@ -131,6 +131,9 @@ pub enum SettingKey {
     /// Whether the app notifies of new chapters in the series on the Reading list, on its own
     /// channel. Off by default; the check runs only while reading is on.
     ChapterNotifications,
+    /// Whether the app notifies when the chapters it was downloading are all done. Off by
+    /// default.
+    DownloadsFinished,
     /// Which Home the app opens at while it is for watching and reading: `watch` or `read`.
     OpenAt,
     /// Whether torrents run over a cellular connection.
@@ -258,7 +261,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 30] = [
+    pub const NATIVE_ROWS: [Self; 31] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -284,6 +287,7 @@ impl SettingKey {
         Self::DeleteAfterReading,
         Self::SeriesChoicesFollow,
         Self::ChapterNotifications,
+        Self::DownloadsFinished,
         Self::OpenAt,
         Self::LookFollows,
         Self::WebtoonMode,
@@ -371,6 +375,7 @@ impl SettingKey {
             Self::WhenTrackersDisagree => (&["reading"], "when_trackers_disagree"),
             Self::CountsAsRead => (&["reading"], "counts_as_read"),
             Self::ChapterNotifications => (&["notifications"], "chapters"),
+            Self::DownloadsFinished => (&["notifications"], "downloads"),
             Self::OpenAt => (&["reading"], "open_at"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
@@ -522,6 +527,9 @@ impl SettingKey {
             Self::ChapterNotifications => {
                 to.notifications.chapters = from.notifications.chapters;
             }
+            Self::DownloadsFinished => {
+                to.notifications.downloads = from.notifications.downloads
+            }
             Self::OpenAt => to.reading.open_at.clone_from(&from.reading.open_at),
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
@@ -613,7 +621,9 @@ impl SettingKey {
             | Self::EpisodeDiscussions
             | Self::CommentImages
             | Self::CastTvs => "integrations",
-            Self::EpisodeNotifications | Self::ChapterNotifications => "notifications",
+            Self::EpisodeNotifications
+            | Self::ChapterNotifications
+            | Self::DownloadsFinished => "notifications",
             Self::SaveCrashReports | Self::AskAfterCrash => "about",
             Self::MpvOptions => "advanced",
         }
@@ -681,6 +691,7 @@ impl SettingKey {
             Self::WhenTrackersDisagree => "when trackers disagree",
             Self::CountsAsRead => "counts as read",
             Self::ChapterNotifications => "new chapter notifications",
+            Self::DownloadsFinished => "downloads finished",
             Self::OpenAt => "open at",
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
@@ -1067,6 +1078,7 @@ pub fn step(
             V::Str(stepped(CountsAsRead::ALL, effective.reading.counts_as_read, delta))
         }
         SettingKey::ChapterNotifications => V::Bool(!effective.notifications.chapters),
+        SettingKey::DownloadsFinished => V::Bool(!effective.notifications.downloads),
         SettingKey::OpenAt => {
             const LADDER: [&str; 2] = ["watch", "read"];
             let at = LADDER.iter().position(|c| *c == effective.reading.open_at).unwrap_or(0);
@@ -1295,6 +1307,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             config.reading.counts_as_read = choice;
         }
         (SettingKey::ChapterNotifications, V::Bool(on)) => config.notifications.chapters = *on,
+        (SettingKey::DownloadsFinished, V::Bool(on)) => config.notifications.downloads = *on,
         (SettingKey::OpenAt, V::Str(name)) => {
             if !matches!(name.as_str(), "watch" | "read") {
                 return false;
@@ -1498,6 +1511,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         }
         SettingKey::CountsAsRead => effective.reading.counts_as_read.name().into(),
         SettingKey::ChapterNotifications => on_off(effective.notifications.chapters),
+        SettingKey::DownloadsFinished => on_off(effective.notifications.downloads),
         SettingKey::OpenAt => effective.reading.open_at.clone(),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
@@ -1610,6 +1624,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::SeriesChoicesFollow => c.reading.mode_follows(),
         S::LookFollows => c.reading.look_follows(),
         S::ChapterNotifications => c.notifications.chapters,
+        S::DownloadsFinished => c.notifications.downloads,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
@@ -1956,6 +1971,7 @@ mod tests {
                 (SettingKey::DeleteAfterReading, "off"),
                 (SettingKey::SeriesChoicesFollow, "on"),
                 (SettingKey::ChapterNotifications, "off"),
+                (SettingKey::DownloadsFinished, "off"),
                 (SettingKey::OpenAt, "watch"),
                 (SettingKey::LookFollows, "on"),
                 (SettingKey::WebtoonMode, "strip"),

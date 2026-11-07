@@ -89,6 +89,7 @@ pub fn label(key: SettingKey) -> String {
         K::WhenTrackersDisagree => t::settings_when_trackers_disagree(),
         K::CountsAsRead => t::settings_counts_read(),
         K::ChapterNotifications => t::settings_chapter_notifications(),
+        K::DownloadsFinished => t::settings_downloads_finished(),
         K::OpenAt => t::settings_open_at(),
         K::AdultTitles => t::settings_label_adult_titles(),
         K::EpisodeNotifications => t::settings_label_episode_notifications(),
@@ -184,6 +185,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::SeriesChoicesFollow
             | K::LookFollows
             | K::ChapterNotifications
+            | K::DownloadsFinished
             | K::EpisodeNotifications
             | K::ControllerInput
             | K::SwapFaceButtons
