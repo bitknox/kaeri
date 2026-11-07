@@ -492,8 +492,22 @@ fn the_reading_demo_opens_before_any_search_and_after_a_restart() {
     assert_eq!(page.medium, kaeri_core::media::Medium::Novel);
     assert_eq!(page.demo.as_ref(), Some(story));
     assert_eq!(page.demo_other.as_ref(), Some(&comic.work));
-    assert_eq!(page.cover, None, "the story has no cover: the apps draw its plate");
+    assert_eq!(page.cover, story.cover);
     assert_eq!(page.synopsis.as_deref(), Some(story.synopsis.as_str()));
+
+    // Its cover comes with the app: the bundled frontispiece, whole, and nothing fetched.
+    let url = page.cover.clone().expect("the story's cover");
+    engine.send(Command::FetchArtwork { url: url.clone() });
+    let wanted = url.clone();
+    let read = read_until(
+        &engine,
+        move |event| matches!(event, Event::ArtworkReady { url, .. } | Event::ImageFailed { url, .. } if *url == wanted),
+    );
+    let bytes = read.into_iter().find_map(|event| match event {
+        Event::ArtworkReady { url: u, bytes } if u == url => Some(bytes),
+        _ => None,
+    });
+    assert_eq!(bytes.as_deref(), Some(kaeri_core::reading_demo::STORY_COVER.bytes));
 
     // The comic, with its cover.
     let (page, _) = demo_page(&engine, &comic.work);

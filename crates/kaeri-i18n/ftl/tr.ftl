@@ -8267,6 +8267,9 @@ demo-credit-book = { $title }, { $author }. Lisans: { $licence }. Wikimedia Comm
 # The story's credit in About the demo.
 demo-credit-story = { $title }, { $author }. Kamu malı. Uygulamayla birlikte gelir.
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Kapak: “{ $title }”, { $artist }, { $year }. Kamu malı. Uygulamayla birlikte gelir.
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 

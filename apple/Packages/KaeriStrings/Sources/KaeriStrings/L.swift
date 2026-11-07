@@ -8139,6 +8139,11 @@ public enum L {
         Self.format("demo-credit-story", fallback: "%1$@ by %2$@. Public domain. It comes with the app.", title, author)
     }
 
+    /// The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+    public static func demoCreditCover(title: String, artist: String, year: String) -> String {
+        Self.format("demo-credit-cover", fallback: "Cover: “%1$@” by %2$@, %3$@. Public domain. It comes with the app.", title, artist, year)
+    }
+
     /// Credit capsule in the reader's top bar on page 1.
     public static func readerDemoCredit(title: String, author: String, licence: String) -> String {
         Self.format("reader-demo-credit", fallback: "%1$@ · %2$@ · %3$@", title, author, licence)

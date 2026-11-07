@@ -13260,6 +13260,11 @@ pub fn demo_credit_story(title: &str, author: &str) -> String {
     text("demo-credit-story", &[("title", Arg::Text(title)), ("author", Arg::Text(author))])
 }
 
+/// The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+pub fn demo_credit_cover(title: &str, artist: &str, year: &str) -> String {
+    text("demo-credit-cover", &[("title", Arg::Text(title)), ("artist", Arg::Text(artist)), ("year", Arg::Text(year))])
+}
+
 /// Credit capsule in the reader's top bar on page 1.
 pub fn reader_demo_credit(title: &str, author: &str, licence: &str) -> String {
     text("reader-demo-credit", &[("title", Arg::Text(title)), ("author", Arg::Text(author)), ("licence", Arg::Text(licence))])

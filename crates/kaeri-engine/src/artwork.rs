@@ -357,6 +357,15 @@ mod tests {
     }
 
     #[test]
+    fn the_bundled_story_cover_is_already_cover_sized() {
+        let art = kaeri_core::reading_demo::STORY_COVER;
+        let decoded = image::load_from_memory(art.bytes).unwrap();
+        assert_eq!((decoded.width(), decoded.height()), (art.width, art.height));
+        assert_eq!(decoded.height(), DEMO_COVER_SIDE, "sized like the comic's cover");
+        assert_eq!(image::guess_format(art.bytes).unwrap(), image::ImageFormat::Jpeg);
+    }
+
+    #[test]
     fn cache_paths_are_stable_across_runs() {
         // If these drifted, the disk cache would never hit.
         let a = kaeri_core::hash::stable_hash("https://s4.anilist.co/cover/1.jpg");

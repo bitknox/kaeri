@@ -8,6 +8,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title } của { $author }. Giấy phép { $licence }. Đọc từ Wikimedia Commons.
 demo-credit-story = { $title } của { $author }. Phạm vi công cộng. Đi kèm trong ứng dụng.
+demo-credit-cover = Bìa: “{ $title }” của { $artist }, { $year }. Phạm vi công cộng. Đi kèm trong ứng dụng.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Đọc được ngay
 search-demo-only-books = Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm { -source }.

@@ -8291,6 +8291,9 @@ demo-credit-book = [{ $title } ƀý { $author }. Ļîçéñšéð { $licence }. 
 # The story's credit in About the demo.
 demo-credit-story = [{ $title } ƀý { $author }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~]
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = [Çöṽéŕ: “{ $title }” ƀý { $artist }, { $year }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = [{ $title } · { $author } · { $licence }~~~~~]
 

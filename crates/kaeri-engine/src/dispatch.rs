@@ -1090,9 +1090,13 @@ pub(crate) fn dispatch(
         Command::ClearSkipMarks => crate::skip_marks::clear(services, tx),
 
         // Off the loop, with no job: covers report back on their own.
-        // The reading demo's cover comes from the demo's own pinned pages.
-        Command::FetchArtwork { url } => match kaeri_core::reading_demo::cover_page(&url) {
-            Some(page) => artwork::spawn_demo_cover(
+        // The reading demo's covers come from the demo: the comic's pinned first page, and the
+        // story's cover as the app bundles it, never fetched.
+        Command::FetchArtwork { url } => match kaeri_core::reading_demo::cover(&url) {
+            Some(kaeri_core::reading_demo::DemoCover::Bundled(bytes)) => {
+                let _ = tx.send(Event::ArtworkReady { url, bytes: bytes.to_vec() });
+            }
+            Some(kaeri_core::reading_demo::DemoCover::Page(page)) => artwork::spawn_demo_cover(
                 url,
                 page,
                 services.paths.image_cache(),

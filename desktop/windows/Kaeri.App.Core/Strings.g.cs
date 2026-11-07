@@ -5458,6 +5458,9 @@ public static partial class T
     /// <summary>The story's credit in About the demo.</summary>
     public static string DemoCreditStory(string title, string author) => Fill(Get("DemoCreditStory"), ("title", title), ("author", author));
 
+    /// <summary>The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.</summary>
+    public static string DemoCreditCover(string title, string artist, string year) => Fill(Get("DemoCreditCover"), ("title", title), ("artist", artist), ("year", year));
+
     /// <summary>Credit capsule in the reader's top bar on page 1.</summary>
     public static string ReaderDemoCredit(string title, string author, string licence) => Fill(Get("ReaderDemoCredit"), ("title", title), ("author", author), ("licence", licence));
 
@@ -12768,6 +12771,7 @@ public static partial class T
         ["DemoSeriesFacts_other"] = "Demo · Comic · {pages} pages",
         ["DemoCreditBook"] = "{title} by {author}. Licensed {licence}. Read from Wikimedia Commons.",
         ["DemoCreditStory"] = "{title} by {author}. Public domain. It comes with the app.",
+        ["DemoCreditCover"] = "Cover: “{title}” by {artist}, {year}. Public domain. It comes with the app.",
         ["ReaderDemoCredit"] = "{title} · {author} · {licence}",
         ["SearchDemoReads"] = "Demo · Reads now",
         ["SearchDemoOnlyBooks"] = "Only the demo is on. Other titles appear once you add a source.",

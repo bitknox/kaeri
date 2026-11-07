@@ -9,6 +9,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title } av { $author }. Licensierad under { $licence }. Läses från Wikimedia Commons.
 demo-credit-story = { $title } av { $author }. Allmän egendom. Den följer med appen.
+demo-credit-cover = Omslag: ”{ $title }” av { $artist }, { $year }. Allmän egendom. Det följer med appen.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Läsbar nu
 search-demo-only-books = Bara demon är på. Andra titlar visas när du lägger till en { -source }.

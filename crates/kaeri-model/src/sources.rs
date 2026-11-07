@@ -422,11 +422,34 @@ pub struct DemoWorkInfo {
     /// A line written for the demo, for Home's spotlight and the series page.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub synopsis: String,
-    /// The comic's cover: its first page's address, fetched with `FetchArtwork` like any cover
-    /// and answered from the demo's checked pages. `None` for the story, whose plate the apps
-    /// draw.
+    /// Its cover's address, fetched with `FetchArtwork` like any cover. The engine answers it
+    /// from the demo: the comic's checked first page, or the story's frontispiece, which comes
+    /// with the app and is never fetched.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub cover: Option<String>,
+    /// The credit of a cover that is not the work's own page: the story's frontispiece. About
+    /// the demo lists it beside the work's credit.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover_credit: Option<DemoCoverCredit>,
+}
+
+/// Who made a demo cover, and under what licence, for About the demo.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoCoverCredit {
+    /// The art's own caption, in English: "Blowing her breath upon him".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub title: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub artist: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub year: u32,
+    /// "Public domain". Not translated, like the works' licences.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence: String,
+    /// The Commons file page, which names its licence and its maker. Linked, never read from.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub page_url: String,
 }
 
 /// The reading demo's works, credits and hosts, for the demo's series page and its credits.
@@ -462,6 +485,13 @@ impl DemoWorkInfo {
             work: work.work_id(),
             synopsis: work.synopsis.into(),
             cover: work.cover().map(Into::into),
+            cover_credit: work.cover_art.map(|art| DemoCoverCredit {
+                title: art.title.into(),
+                artist: art.artist.into(),
+                year: art.year.into(),
+                licence: art.licence.into(),
+                page_url: art.page_url.into(),
+            }),
         }
     }
 }
@@ -867,7 +897,7 @@ mod section_tests {
     }
 
     #[test]
-    fn every_reading_demo_work_opens_as_its_own_work_and_only_the_comic_has_a_cover() {
+    fn every_reading_demo_work_opens_as_its_own_work_with_its_own_cover() {
         let info = reading_demo_info();
         let (comic, story) = (&info.works[0], &info.works[1]);
         assert_eq!(comic.work, kaeri_core::reading_demo::COMIC.work_id());
@@ -879,7 +909,16 @@ mod section_tests {
                 .as_deref()
                 .is_some_and(|c| c.starts_with("https://upload.wikimedia.org/"))
         );
-        assert_eq!(story.cover, None);
+        assert_eq!(
+            story.cover.as_deref(),
+            Some(kaeri_core::reading_demo::STORY_COVER.file_url)
+        );
+        assert_ne!(story.cover, comic.cover);
+        assert_eq!(comic.cover_credit, None);
+        let credit = story.cover_credit.as_ref().expect("the frontispiece is credited");
+        assert_eq!((credit.artist.as_str(), credit.year), ("Keishū Takénouchi", 1904));
+        assert_eq!(credit.licence, "Public domain");
+        assert!(credit.page_url.starts_with("https://commons.wikimedia.org/wiki/File:"));
         assert!(!comic.synopsis.is_empty() && !story.synopsis.is_empty());
     }
 }
