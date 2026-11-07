@@ -803,6 +803,9 @@ pub struct ExportTarget {
     /// Files over the device's limit are written in parts, near 195 MB each.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub split: bool,
+    /// The target last sent to on this device.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chosen: bool,
 }
 
 /// A prepared file, ready for the share sheet. Large exports come in parts near 195 MB.
@@ -1342,6 +1345,10 @@ pub enum ReadingCommand {
         chapter: Option<ChapterId>,
         page: Option<u32>,
     },
+    /// Keeps the e-reader the Send sheet starts on, on this device only.
+    SetSendTarget {
+        target: String,
+    },
     LoadFeed,
     SetFeed {
         on: bool,
@@ -1395,9 +1402,10 @@ impl ReadingCommand {
             | Self::DownloadDeleteRead { .. }
             | Self::EstimateDownload { .. }
             | Self::LoadDownloads => ReadingAbout::Downloads,
-            Self::LoadExportTargets | Self::Prepare { .. } | Self::CancelPrepare { .. } => {
-                ReadingAbout::Export
-            }
+            Self::LoadExportTargets
+            | Self::Prepare { .. }
+            | Self::CancelPrepare { .. }
+            | Self::SetSendTarget { .. } => ReadingAbout::Export,
             Self::LoadFeed | Self::SetFeed { .. } | Self::SetFeedShare { .. } => {
                 ReadingAbout::Feed
             }

@@ -610,6 +610,9 @@ pub struct ReadingConfig {
     pub feed: FeedConfig,
     /// E-readers of the person's own, beside the built-in device classes, by id.
     pub export_profiles: BTreeMap<String, ExportProfileConfig>,
+    /// The e-reader last sent to, on this device: the one the Send sheet starts on.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub send_target: Option<String>,
 }
 
 impl Default for ReadingConfig {
@@ -634,6 +637,7 @@ impl Default for ReadingConfig {
             eink: BTreeMap::new(),
             feed: FeedConfig::default(),
             export_profiles: BTreeMap::new(),
+            send_target: None,
         }
     }
 }

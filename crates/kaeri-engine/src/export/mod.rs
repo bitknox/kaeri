@@ -123,10 +123,25 @@ pub(crate) fn handles(command: &ReadingCommand) -> bool {
             | ReadingCommand::CancelPrepare { .. }
             | ReadingCommand::Shared { .. }
             | ReadingCommand::StoppedAt { .. }
+            | ReadingCommand::SetSendTarget { .. }
             | ReadingCommand::LoadFeed
             | ReadingCommand::SetFeed { .. }
             | ReadingCommand::SetFeedShare { .. }
     )
+}
+
+/// The targets the apps list, the one last sent to marked.
+fn targets_of(engine: &EngineState) -> Vec<kaeri_model::reading::ExportTarget> {
+    let reading = &engine.config.effective().reading;
+    let chosen = reading.send_target.as_deref();
+    profiles::all(reading)
+        .iter()
+        .map(|p| {
+            let mut target = p.target();
+            target.chosen = chosen == Some(target.id.as_str());
+            target
+        })
+        .collect()
 }
 
 fn fail(about: ReadingAbout, failure: ReadingFailure, tx: &Outbox) {
@@ -148,11 +163,19 @@ pub(crate) fn command(
     let sources = &services.book_sources;
     match command {
         ReadingCommand::LoadExportTargets => {
-            let targets = profiles::all(&engine.config.effective().reading)
-                .iter()
-                .map(profiles::Profile::target)
-                .collect();
-            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets)));
+            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
+        }
+        ReadingCommand::SetSendTarget { target } => {
+            use kaeri_core::settings::SettingValue;
+            if let Err(e) = engine.config.write(
+                &services.paths,
+                &["reading"],
+                "send_target",
+                SettingValue::Str(target),
+            ) {
+                tracing::warn!(error = %e, "the send target was not kept");
+            }
+            let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
         }
         ReadingCommand::Prepare { work, pick, target, format } => {
             prepare_files(engine, services, work, pick, &target, format, job, tx);
