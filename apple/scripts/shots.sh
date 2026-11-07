@@ -107,7 +107,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
