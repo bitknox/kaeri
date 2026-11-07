@@ -46,6 +46,24 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     /** How sync stands, from the first answer to `LoadSync` on. */
     val status: StateFlow<SyncStatus?> = _status.asStateFlow()
 
+    /** First run's join page: the code, the pairing, and what the paired device brings. */
+    val join = JoinModel(clock)
+
+    private val _pairing = MutableStateFlow<Long?>(null)
+
+    /** A typed code is pairing, since this moment on the clock: Pair's spinner shows after 600 ms. */
+    val pairing: StateFlow<Long?> = _pairing.asStateFlow()
+
+    /** Pair was pressed with a typed code. */
+    internal fun pairingFrom(at: Long = clock()) {
+        _pairing.value = at
+    }
+
+    /** The other device's setup came over the paired link. */
+    internal fun setup(setup: app.kaeri.engine.model.JoinedSetup) {
+        join.setup(setup)
+    }
+
     private val _profiles = MutableStateFlow(ProfilesView())
 
     /** The profiles: empty for one person, who never meets a picker or a name. */
@@ -166,7 +184,8 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     val settingUp: StateFlow<Boolean> = _settingUp.asStateFlow()
 
     internal fun status(status: SyncStatus) {
-        val joined = _status.value?.devices?.size?.let { status.devices.size > it } == true
+        val before = _status.value?.devices
+        val joined = before?.size?.let { status.devices.size > it } == true
         _status.value = status
         // The folder asked for is the one in use. While a service is being changed the old one
         // is in use still, so any folder says nothing then.
@@ -177,7 +196,12 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
             working = false
             _finished.value += 1
         }
-        if (joined) _invite.value = null
+        if (joined) {
+            _invite.value = null
+            _pairing.value = null
+            val known = before.orEmpty().map { it.id }.toSet()
+            join.paired(status.devices.firstOrNull { !it.thisDevice && it.id !in known }?.name)
+        }
     }
 
     internal fun profiles(view: ProfilesView) {
@@ -194,6 +218,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     internal fun problem(problem: SyncProblem) {
         _problem.value = problem
+        _pairing.value = null
         _signIn.value = null
         _settingUp.value = false
         working = false
@@ -206,10 +231,13 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     internal fun invite(code: String, port: Int, seconds: Int) {
         _invite.value = PairInvite(code, port, clock() + seconds * 1000L)
+        join.invite(code, port, clock() + seconds * 1000L)
     }
 
     internal fun copied(copied: SignInsCopied) {
         _copied.value = copied
+        _pairing.value = null
+        join.copied(copied)
     }
 
     /** The pairing success was read: Done on its sheet or page. */
@@ -227,6 +255,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     internal fun pairFailed(problem: app.kaeri.engine.model.SyncPairProblem, device: String?) {
         _pairFailed.value = problem to device
+        _pairing.value = null
         // No device showing a code answered: one may have moved, which a browse below Android 14
         // finds only by resolving it again.
         if (problem == app.kaeri.engine.model.SyncPairProblem.NOT_FOUND) (network as? NsdRelook)?.relook()
@@ -239,6 +268,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     internal fun storeJoin(join: StoreJoin) {
         _storeJoins.value = _storeJoins.value + join
+        this.join.storeJoin(join)
     }
 
     /** The answers were shown. */

@@ -1941,6 +1941,30 @@ object Strings {
     fun castSettingsTorrentsNote(context: Context): String =
         context.getString(R.string.cast_settings_torrents_note)
 
+    /** Where Android keeps a Kavita key, filling { $store } in "Kaeri keeps the key in … and shows only its last four characters." */
+    fun bookServerKeystoreAndroid(context: Context): String =
+        context.getString(R.string.book_server_keystore_android)
+
+    /** Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters. */
+    fun storeInviteChip(context: Context, last: String): String =
+        context.getString(R.string.store_invite_chip, last)
+
+    /** How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts". */
+    fun storePluginHosts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_plugin_hosts, count, count)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Watch. */
+    fun joinMediumLineWatch(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_watch, device)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Both. */
+    fun joinMediumLineBoth(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_both, device)
+
+    /** Join page, paired view: where this device keeps a book server's key, filling $store in "kept in { $store }". */
+    fun joinKeyStore(context: Context): String =
+        context.getString(R.string.join_key_store)
+
     /** Under the failed page's reason on a phone: turning on skips the missing page. */
     fun readerPageFailedSwipe(context: Context): String =
         context.getString(R.string.reader_page_failed_swipe)
@@ -8661,6 +8685,66 @@ object Strings {
     /** Primary action on the demo's series page. */
     fun demoReadChapter(context: Context, number: String): String =
         context.getString(R.string.demo_read_chapter, number)
+
+    /** Page between chapters, under the tracker line: the server has the progress. */
+    fun progressServerSaved(context: Context, server: String): String =
+        context.getString(R.string.progress_server_saved, server)
+
+    /** Same place, only after 600 ms without an answer. */
+    fun progressServerSending(context: Context, server: String): String =
+        context.getString(R.string.progress_server_sending, server)
+
+    /** Same place, offline: the send waits in the queue. */
+    fun progressServerOffline(context: Context, server: String): String =
+        context.getString(R.string.progress_server_offline, server)
+
+    /** Same place, the send failed for a reason that can pass. */
+    fun progressServerRetrying(context: Context, server: String): String =
+        context.getString(R.string.progress_server_retrying, server)
+
+    /** Same place, the server said no. Try again follows it. */
+    fun progressServerFailed(context: Context, server: String, reason: String): String =
+        context.getString(R.string.progress_server_failed, server, reason)
+
+    /** Reason: a Kavita key. */
+    fun progressWhyKey(context: Context): String =
+        context.getString(R.string.progress_why_key)
+
+    /** Reason: a Komga or OPDS password. */
+    fun progressWhyPassword(context: Context): String =
+        context.getString(R.string.progress_why_password)
+
+    /** Reason. */
+    fun progressWhyGone(context: Context): String =
+        context.getString(R.string.progress_why_gone)
+
+    /** Reason, after a day of retries. */
+    fun progressWhyGaveUp(context: Context): String =
+        context.getString(R.string.progress_why_gave_up)
+
+    /** Your sources, the server's row, second line. */
+    fun progressRowSaved(context: Context, ago: String): String =
+        context.getString(R.string.progress_row_saved, ago)
+
+    /** The server's row, after 600 ms without an answer. */
+    fun progressRowSending(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_sending, count, count)
+
+    /** The server's row, offline. */
+    fun progressRowOffline(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_offline, count, count)
+
+    /** The server's row, the last try failed for a reason that can pass. */
+    fun progressRowRetrying(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_retrying, count, count)
+
+    /** The server's row, the server said no. Try again sits beside it. */
+    fun progressRowFailed(context: Context, count: Int, reason: String): String =
+        context.resources.getQuantityString(R.plurals.progress_row_failed, count, count, reason)
+
+    /** The server's row, when Send progress to the server is off. */
+    fun progressRowOff(context: Context): String =
+        context.getString(R.string.progress_row_off)
 
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =

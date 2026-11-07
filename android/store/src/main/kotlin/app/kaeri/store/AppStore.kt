@@ -24,9 +24,11 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
+import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SubtitleStyle
 import app.kaeri.engine.model.SyncSignInStep
@@ -154,6 +156,18 @@ class AppStore(
 
     /** The book sources and Read from's editions. */
     val bookSources = BookSourcesModel { send(it) }
+
+    /** What came in after a source was added, or why nothing did. */
+    val cameIn = CameInModel(scope) { send(it) }
+
+    /** Did my server get it: the line on the page between chapters, and each server's row. */
+    val serverLines = ServerLines(scope, send = { send(it) }, hostFor = ::progressHost, quiet = ::progressOnClose)
+    val rowLines = RowLines(scope) { send(it) }.also { lines ->
+        bookSources.onServers = { rows ->
+            lines.update(rows)
+            serverLines.rows(rows)
+        }
+    }
 
     /** Send to e-reader. */
     val export = ExportModel { send(it) }
@@ -1416,6 +1430,7 @@ class AppStore(
             is Event.Sync -> accounts.apply(event.v1)
             is Event.SyncStatus -> sync.status(event.v1)
             is Event.SyncInvite -> sync.invite(event.code, event.port.toInt(), event.seconds.toInt())
+            is Event.SetupFrom -> sync.setup(event.v1)
             is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
             is Event.SyncSignIn -> syncSignIn(event.service, event.step)
             is Event.SyncProblem -> {
@@ -1456,6 +1471,7 @@ class AppStore(
             Event.SourcesChanged -> providers.sourcesChanged()
             is Event.TorrentProxy -> providers.proxySaid(event.v1)
             is Event.Demo -> _demo.value = event.v1
+            is Event.CameIn -> cameIn.apply(event.v1)
             is Event.ProxyChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
             is Event.ProviderPreference -> providers.preference(event.v1)
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
@@ -1478,6 +1494,12 @@ class AppStore(
             // The reader's own, and a reading load that failed where the reader or the e-ink
             // profile shows it.
             is Event.Reader -> {
+                when (val said = event.v1) {
+                    is ReaderEvent.ProgressSent -> serverLines.sent(said.chapter, said.server, said.host, said.result)
+                    is ReaderEvent.ChapterRead -> serverLines.chapterRead(said.work, said.chapter)
+                    is ReaderEvent.Closed -> serverLines.clear()
+                    else -> {}
+                }
                 readers.forEach { it(event) }
                 reading.observe(event)
             }
@@ -1662,6 +1684,19 @@ class AppStore(
         notices.post(EngineNotice(kind = NoticeKind.INFO, text = "", hint = null), Strings::matchCleared)
         send(Command.ClearMatch(id))
     }
+
+    /**
+     * The host [work]'s progress goes to: the book server its edition in use reads from, when that
+     * server is on and takes progress. Null otherwise, and then the page shows no Sending.
+     */
+    private fun progressHost(work: WorkId): String? {
+        val source = reading.series.value[work]?.edition?.sourceId ?: return null
+        val server = bookSources.view.value?.servers?.firstOrNull { it.id == source && it.reportProgress && !it.off } ?: return null
+        return runCatching { java.net.URI(server.address).host }.getOrNull() ?: server.address
+    }
+
+    /** Progress is sent once the reader closes: the page between chapters has no server line. */
+    private fun progressOnClose(): Boolean = settings.row(SettingKey.SEND_PROGRESS_AFTER)?.value == "close"
 
     private fun applyMatch(event: Event) {
         when (event) {

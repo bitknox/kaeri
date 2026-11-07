@@ -1055,6 +1055,21 @@
     <string name="cast_settings_torrents">Torrents while casting</string>
     <!-- Settings, Sources: under the row above. -->
     <string name="cast_settings_torrents_note">Lets a TV with Chromecast built in play torrents. This device sends the episode for as long as it plays.</string>
+    <!-- Where Android keeps a Kavita key, filling { $store } in "Kaeri keeps the key in … and shows only its last four characters." -->
+    <string name="book_server_keystore_android">Android’s keystore</string>
+    <!-- Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters. -->
+    <string name="store_invite_chip">Invite ••••%1$s</string>
+    <!-- How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts". -->
+    <plurals name="store_plugin_hosts">
+        <item quantity="one">%1$d host</item>
+        <item quantity="other">%1$d hosts</item>
+    </plurals>
+    <!-- Join page, paired view: the line under "Kaeri is for" when the other device's answer is Watch. -->
+    <string name="join_medium_line_watch">Watching, as on %1$s</string>
+    <!-- Join page, paired view: the line under "Kaeri is for" when the other device's answer is Both. -->
+    <string name="join_medium_line_both">Watching and reading, as on %1$s</string>
+    <!-- Join page, paired view: where this device keeps a book server's key, filling $store in "kept in { $store }". -->
+    <string name="join_key_store">Android’s keystore</string>
     <!-- Under the failed page's reason on a phone: turning on skips the missing page. -->
     <string name="reader_page_failed_swipe">Swipe to go on without it.</string>
     <!-- Button that goes on past a page that could not be loaded. -->
@@ -4572,6 +4587,48 @@
     <string name="demo_story_row">Story · %1$s · %2$s</string>
     <!-- Primary action on the demo's series page. -->
     <string name="demo_read_chapter">Read chapter %1$s</string>
+    <!-- Page between chapters, under the tracker line: the server has the progress. -->
+    <string name="progress_server_saved">Saved to %1$s</string>
+    <!-- Same place, only after 600 ms without an answer. -->
+    <string name="progress_server_sending">Sending to %1$s…</string>
+    <!-- Same place, offline: the send waits in the queue. -->
+    <string name="progress_server_offline">Will send to %1$s when you’re back online</string>
+    <!-- Same place, the send failed for a reason that can pass. -->
+    <string name="progress_server_retrying">%1$s didn’t answer. Kaeri will try again.</string>
+    <!-- Same place, the server said no. Try again follows it. -->
+    <string name="progress_server_failed">Not saved to %1$s: %2$s.</string>
+    <!-- Reason: a Kavita key. -->
+    <string name="progress_why_key">the server refused the key</string>
+    <!-- Reason: a Komga or OPDS password. -->
+    <string name="progress_why_password">the server refused the password</string>
+    <!-- Reason. -->
+    <string name="progress_why_gone">this series isn’t on the server any more</string>
+    <!-- Reason, after a day of retries. -->
+    <string name="progress_why_gave_up">no answer for a day</string>
+    <!-- Your sources, the server's row, second line. -->
+    <string name="progress_row_saved">Progress saved %1$s</string>
+    <!-- The server's row, after 600 ms without an answer. -->
+    <plurals name="progress_row_sending">
+        <item quantity="one">Sending 1 chapter…</item>
+        <item quantity="other">Sending %1$d chapters…</item>
+    </plurals>
+    <!-- The server's row, offline. -->
+    <plurals name="progress_row_offline">
+        <item quantity="one">1 chapter will send when you’re back online</item>
+        <item quantity="other">%1$d chapters will send when you’re back online</item>
+    </plurals>
+    <!-- The server's row, the last try failed for a reason that can pass. -->
+    <plurals name="progress_row_retrying">
+        <item quantity="one">1 chapter waiting. Kaeri will try again.</item>
+        <item quantity="other">%1$d chapters waiting. Kaeri will try again.</item>
+    </plurals>
+    <!-- The server's row, the server said no. Try again sits beside it. -->
+    <plurals name="progress_row_failed">
+        <item quantity="one">1 chapter not saved: %2$s</item>
+        <item quantity="other">%1$d chapters not saved: %2$s</item>
+    </plurals>
+    <!-- The server's row, when Send progress to the server is off. -->
+    <string name="progress_row_off">Progress stays on this device</string>
     <!-- Sidebar and tab label: the shows' Home when both media are on. -->
     <string name="nav_watch">Watch</string>
     <!-- Sidebar and tab label: reading's Home. -->
