@@ -24,7 +24,8 @@ fn page() -> Vec<u8> {
     bytes
 }
 
-/// A source with a list a test shapes: chapters of 3 pages, `text-` ones of text, and `gone`.
+/// A source with a list a test shapes: chapters of 3 pages, `text-` ones of text, `made-` ones
+/// of pages it makes itself, and `gone`.
 struct Shelf {
     manifest: BookSourceManifest,
     listed: Mutex<Vec<SourceChapter>>,
@@ -64,6 +65,11 @@ impl BookSource for Shelf {
         if chapter.starts_with("text-") {
             return Ok(ChapterContent::Text("<p>The ferry left at dusk.</p>".into()));
         }
+        if chapter.starts_with("made-") {
+            return Ok(ChapterContent::Images(
+                (1..=3).map(|n| PageRef::made("s-1", chapter, format!("p{n}"))).collect(),
+            ));
+        }
         Ok(ChapterContent::Images(
             (1..=3)
                 .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
@@ -73,7 +79,11 @@ impl BookSource for Shelf {
 
     async fn fetch_page(&self, page_ref: &PageRef) -> Result<Vec<u8>, PageError> {
         *self.fetched.lock().unwrap() += 1;
-        self.asked.lock().unwrap().push(page_ref.url.clone());
+        let asked = match &page_ref.made {
+            Some(made) => format!("made {}/{}", made.chapter, made.id),
+            None => page_ref.url.clone(),
+        };
+        self.asked.lock().unwrap().push(asked);
         if self.broken.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Status(404));
         }
@@ -225,6 +235,23 @@ async fn a_chapter_downloads_into_a_cbz_the_shelf_reads() {
     let rows: Vec<_> = relisted.unwrap().into_iter().flat_map(|g| g.chapters).collect();
     assert_eq!(rows[0].download, Some(ChapterDownloadState::Done));
     assert_eq!(rows[2].download, None);
+}
+
+#[tokio::test]
+async fn a_chapter_of_pages_the_source_makes_downloads_as_one_it_fetches_does() {
+    let kit = kit(&[]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("made-1", "1"));
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    // Each page was asked of the source, one at a time and in order, never as an address.
+    assert_eq!(
+        *kit.shelf.asked.lock().unwrap(),
+        ["made made-1/p1", "made made-1/p2", "made made-1/p3"]
+    );
+    let shelf = kit.store().shelf(WORK).unwrap();
+    assert_eq!((shelf[0].format.as_str(), shelf[0].pages), ("cbz", Some(3)));
 }
 
 #[tokio::test]

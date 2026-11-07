@@ -2,13 +2,18 @@
 //!
 //! This exists to be read. It uses every part of the `kaeri:books` ABI: the manifest with its
 //! media and languages, the lent `fetch`, `regex-captures` and `config-get`, the title hints, both
-//! kinds of chapter content and the error vocabulary. Everything but `search` answers from data
-//! kept in the plugin, so the shape of a real book source is visible without a server.
+//! kinds of chapter content, both kinds of page and the error vocabulary. Everything but `search`
+//! answers from data kept in the plugin, so the shape of a real book source is visible without a
+//! server.
 //!
 //! It talks to `books.example` for its catalogue and names page images on `pages.example`, two
 //! made-up hosts that stand for your own server. Both are in `allowed-hosts`: the host fetches
 //! page images through the same allowlist as everything else, so a page host the manifest leaves
 //! out is a page that never loads.
+//!
+//! One chapter, "Extra", comes as a single archive rather than as page images, the way some
+//! servers hand chapters over. Its pages are `plugin` pages: the host asks `page-bytes` for each
+//! one when it wants it, and the plugin reads that page out of the archive.
 //!
 //! The two series are made up too: a manga, "The Lantern Cartographer", and a novel, "Saltglass
 //! Letters".
@@ -23,8 +28,8 @@ mod bindings {
 
 use bindings::{
     exports::kaeri::books::source::{
-        Chapter, Content, Guest, Manifest, Page, SeriesDetail, SeriesHit, SourceError,
-        TitleHints,
+        Chapter, Content, Guest, Manifest, Page, PageImage, PageUrl, SeriesDetail, SeriesHit,
+        SourceError, TitleHints,
     },
     kaeri::books::host,
 };
@@ -39,6 +44,11 @@ const PAGE_HOST: &str = "pages.example";
 /// The AniList id the example catalogue files its manga under. A source with an index of its
 /// own looks a work up by id instead of searching for it.
 const LANTERN_ANILIST: u32 = 990_001;
+
+/// The "Extra" chapter as your server would hand it over: one CBZ, four pages. A real plugin
+/// fetches it, `host::fetch` with `https://books.example/lantern/lantern-extra.cbz`; the example
+/// keeps a copy so it reads without a server. Its pages are plain made-up pictures.
+const EXTRA_ARCHIVE: &[u8] = include_bytes!("../lantern-extra.cbz");
 
 const LANTERN: &str = "example:lantern-cartographer";
 const SALTGLASS: &str = "example:saltglass-letters";
@@ -158,22 +168,33 @@ impl Guest for Component {
 
     fn chapter_content(series: String, chapter: String) -> Result<Content, SourceError> {
         match (series.as_str(), chapter.as_str()) {
+            // The archive's pages, named by their entries. The host hands a name back to
+            // `page-bytes` when it wants that page, one page at a time, so a whole chapter is
+            // never held in memory at once.
+            (LANTERN, "lantern-extra") => Ok(Content::Images(
+                stored_entries(EXTRA_ARCHIVE)?
+                    .into_iter()
+                    .map(|(name, _)| Page {
+                        image: PageImage::Plugin(name),
+                        width: Some(60),
+                        height: Some(90),
+                    })
+                    .collect(),
+            )),
             (LANTERN, id) if id.starts_with("lantern-") => {
-                let pages = match id {
-                    "lantern-10-5" => 8,
-                    "lantern-extra" => 4,
-                    _ => 3,
-                };
+                let pages = if id == "lantern-10-5" { 8 } else { 3 };
                 Ok(Content::Images(
                     (1..=pages)
                         .map(|n| Page {
-                            url: format!("https://{PAGE_HOST}/lantern/{id}/{n:03}.jpg"),
-                            // Headers the image host needs travel with each page, so a download
-                            // later sends them too.
-                            headers: vec![(
-                                "referer".into(),
-                                format!("https://{API_HOST}/series/lantern-cartographer"),
-                            )],
+                            image: PageImage::Url(PageUrl {
+                                url: format!("https://{PAGE_HOST}/lantern/{id}/{n:03}.jpg"),
+                                // Headers the image host needs travel with each page, so a
+                                // download later sends them too.
+                                headers: vec![(
+                                    "referer".into(),
+                                    format!("https://{API_HOST}/series/lantern-cartographer"),
+                                )],
+                            }),
                             width: Some(1_200),
                             height: Some(1_800),
                         })
@@ -189,6 +210,73 @@ impl Guest for Component {
             _ => Err(SourceError::NotFound),
         }
     }
+
+    /// One page of the "Extra" archive: the entry the host names, whole. The host checks what
+    /// comes back (its size, that it is an image, and how large it claims to be), so a page
+    /// here is a JPEG, PNG, WebP, GIF or AVIF file as the archive holds it.
+    fn page_bytes(
+        series: String,
+        chapter: String,
+        page: String,
+    ) -> Result<Vec<u8>, SourceError> {
+        if (series.as_str(), chapter.as_str()) != (LANTERN, "lantern-extra") {
+            // Every other page here is an address the host fetches itself.
+            return Err(SourceError::NotFound);
+        }
+        stored_entries(EXTRA_ARCHIVE)?
+            .into_iter()
+            .find(|(name, _)| *name == page)
+            .map(|(_, bytes)| bytes.to_vec())
+            .ok_or(SourceError::NotFound)
+    }
+}
+
+/// The files in a ZIP archive (a CBZ is one) whose entries are stored rather than compressed,
+/// as image archives often are: the images are compressed already. Read from the central
+/// directory at the end of the file. A real plugin would use a ZIP crate, which reads compressed
+/// entries too.
+fn stored_entries(zip: &[u8]) -> Result<Vec<(String, &[u8])>, SourceError> {
+    let bad = || SourceError::Parse("the chapter archive is not a ZIP file".into());
+    let u16_at = |at: usize| {
+        zip.get(at..at + 2)
+            .map(|b| usize::from(u16::from_le_bytes([b[0], b[1]])))
+            .ok_or_else(bad)
+    };
+    let u32_at = |at: usize| {
+        zip.get(at..at + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize)
+            .ok_or_else(bad)
+    };
+    // The end of central directory record: its signature, then the entry count at 10 and the
+    // directory's offset at 16.
+    let end = (0..zip.len().saturating_sub(21))
+        .rev()
+        .find(|&at| zip[at..].starts_with(b"PK\x05\x06"))
+        .ok_or_else(bad)?;
+    let count = u16_at(end + 10)?;
+    let mut at = u32_at(end + 16)?;
+    let mut entries = Vec::with_capacity(count);
+    for _ in 0..count {
+        if !zip.get(at..).is_some_and(|rest| rest.starts_with(b"PK\x01\x02")) {
+            return Err(bad());
+        }
+        let (method, size, local) = (u16_at(at + 10)?, u32_at(at + 20)?, u32_at(at + 42)?);
+        let name_len = u16_at(at + 28)?;
+        let name = zip.get(at + 46..at + 46 + name_len).ok_or_else(bad)?;
+        let name = String::from_utf8_lossy(name).into_owned();
+        at += 46 + name_len + u16_at(at + 30)? + u16_at(at + 32)?;
+        if method != 0 {
+            return Err(SourceError::Parse(format!("{name} is compressed")));
+        }
+        // The data follows the entry's local header, whose name and extra field can differ in
+        // length from the directory's.
+        let start = local + 30 + u16_at(local + 26)? + u16_at(local + 28)?;
+        let bytes = zip.get(start..start + size).ok_or_else(bad)?;
+        if !name.ends_with('/') {
+            entries.push((name, bytes));
+        }
+    }
+    Ok(entries)
 }
 
 fn lantern_hit() -> SeriesHit {
