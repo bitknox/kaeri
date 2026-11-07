@@ -1007,6 +1007,10 @@
     <value>You can close this tab and go back to Kaeri.</value>
     <comment>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</comment>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>This device was removed from sync on another device. Join again to sync it.</value>
+    <comment>The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.</comment>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Signed in to {tracker}.</value>
     <comment>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</comment>
@@ -1602,6 +1606,14 @@
   <data name="SettingsMotion" xml:space="preserve">
     <value>Motion</value>
     <comment>Setting: whether the app animates.</comment>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Smooth scrolling</value>
+    <comment>Setting: a mouse wheel glides the page into place rather than moving it in steps.</comment>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Each turn of the mouse wheel glides the page into place. Touchpads and touch scroll as before.</value>
+    <comment>Under the Smooth scrolling switch.</comment>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Start in full screen</value>

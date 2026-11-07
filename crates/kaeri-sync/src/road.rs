@@ -6,6 +6,7 @@
 //! <prefix>/devices/<id>/keys.bin     the keyring, wrapped for this device
 //! <prefix>/devices/<id>/000001.seg   this device's ops, sealed
 //! <prefix>/devices/<id>/acks.bin     the version vector this device has seen, sealed
+//! <prefix>/keys/<id>/<from>-<fp>.bin the keyring as device <from> holds it, wrapped for <id>
 //! <prefix>/paused/<id>               present while the group holds back from that device
 //! <prefix>/removed/<id>              present once the group removed that device
 //! ```
@@ -16,10 +17,19 @@
 //! a held-back device would never read the register that lets it back in. Not a lock, which
 //! removing a device is (it rotates the key): a device that ignored the marker could still read.
 //!
+//! Removing a device rotates: a new group key and a new recovery key, both in the keyring, so
+//! every device it is wrapped for learns them, and `group.bin` under the new recovery key. A
+//! removed device that knew the old recovery key opens nothing written after. Each rotation says
+//! whom its key was kept from; a device that finds the current key was not kept from a device the
+//! log lists as removed, as when two removals ran at once, rotates again. Every device wraps its
+//! keyring for the others whenever it changes, `keys.bin` for every version and a file of its own
+//! under `keys/`, which no other device writes over, so the keys of rotations that ran at once
+//! reach everyone.
+//!
 //! A removed device cannot read the removal, which is sealed under the key it no longer holds, so
 //! the device that removes it also writes its name under `removed/`. The removed device finds it
-//! at the start of its next pass and says it was removed, rather than that it holds no key. A
-//! device that joins again with the recovery key takes its name out.
+//! at the start of its next pass and says it was removed, rather than that it holds no key, and a
+//! join or set-up under that id says so too: it joins again under a new id.
 
 use std::{collections::BTreeMap, sync::Arc};
 
@@ -57,6 +67,10 @@ pub struct FolderReport {
     /// The group holds back from this device (its name is under `paused/`): the pass read and
     /// wrote nothing.
     pub paused: bool,
+    /// This pass rotated the group key, and this is the recovery key it made.
+    pub rotated: Option<RecoveryKey>,
+    /// The recovery key that opens `group.bin`, when this pass looked: after the keyring changed.
+    pub recovery: Option<RecoveryKey>,
 }
 
 impl FolderReport {
@@ -178,13 +192,27 @@ impl FolderRoad {
             .await?;
         let road = Self::open(target, prefix, store, device, key, ring);
         road.write_own_keys().await?;
-        road.write_missing_keys(&[]).await?;
+        road.share_keys(&[]).await?;
         Ok(road)
+    }
+
+    /// Whether the folder names `device` under `removed/`: the group removed it.
+    pub async fn is_removed(
+        target: &dyn FolderTarget,
+        prefix: &str,
+        device: &str,
+    ) -> Result<bool> {
+        Ok(target
+            .list(&join(prefix, "removed"))
+            .await?
+            .iter()
+            .any(|e| !e.is_dir && e.name == device))
     }
 
     /// Open the group a folder holds as one of its devices, with the keyring another device
     /// wrapped for this one: no recovery key needed. [`SyncError::NoGroup`] when the folder holds
-    /// none, and [`SyncError::GroupExists`] when it holds one this device has no key for.
+    /// none, [`SyncError::GroupExists`] when it holds one this device has no key for, and
+    /// [`SyncError::Removed`] when the group removed this device.
     pub async fn open_as_member(
         target: Arc<dyn FolderTarget>,
         prefix: &str,
@@ -194,6 +222,9 @@ impl FolderRoad {
     ) -> Result<Self> {
         if !Self::group_exists(&*target, prefix).await? {
             return Err(SyncError::NoGroup);
+        }
+        if Self::is_removed(&*target, prefix, device).await? {
+            return Err(SyncError::Removed);
         }
         let path = join(prefix, &format!("devices/{device}/keys.bin"));
         let wrapped = match target.read(&path).await {
@@ -205,7 +236,8 @@ impl FolderRoad {
         Ok(Self::open(target, prefix, store, device, key, ring))
     }
 
-    /// Join the group a folder holds, with its recovery key.
+    /// Join the group a folder holds, with its recovery key. [`SyncError::Removed`] when the
+    /// group removed a device of this id: it joins under a new one.
     pub async fn join(
         target: Arc<dyn FolderTarget>,
         prefix: &str,
@@ -220,6 +252,9 @@ impl FolderRoad {
             Err(e) => return Err(e.into()),
         };
         let (_, ring) = open_group_file(&bytes, recovery)?;
+        if Self::is_removed(&*target, prefix, device).await? {
+            return Err(SyncError::Removed);
+        }
         let road = Self::open(target, prefix, store, device, key, ring);
         road.write_own_keys().await?;
         Ok(road)
@@ -255,13 +290,7 @@ impl FolderRoad {
 
     async fn write_own_keys(&self) -> Result<()> {
         let wrapped = wrap_for(&self.key.public(), &self.device, &self.keyring());
-        self.replace(&self.path(&format!("devices/{}/keys.bin", self.device)), &wrapped)
-            .await?;
-        // In the group with its keys: not a removed device any more, if it was one.
-        match self.target.remove(&self.path(&format!("removed/{}", self.device))).await {
-            Ok(()) | Err(FolderError::NotFound(_)) => Ok(()),
-            Err(e) => Err(e.into()),
-        }
+        self.replace(&self.path(&format!("devices/{}/keys.bin", self.device)), &wrapped).await
     }
 
     /// Write a file that is rewritten: a temporary name, then a move over the old one.
@@ -278,6 +307,13 @@ impl FolderRoad {
     /// Read what other devices wrote, write what this one has, say what has been seen, and
     /// compact what everyone has seen.
     pub async fn sync(&self) -> Result<FolderReport> {
+        self.sync_rotating(false).await
+    }
+
+    /// A pass that also rotates the group key when `rotate` (a device was removed here, or a new
+    /// recovery key was asked for) or when the current key may have reached a removed device.
+    /// The recovery key a rotation made comes back in [`FolderReport::rotated`].
+    pub async fn sync_rotating(&self, rotate: bool) -> Result<FolderReport> {
         let mut report = FolderReport::default();
         let removed: Vec<String> = self
             .store
@@ -312,13 +348,12 @@ impl FolderRoad {
             .filter(|(_, value)| value == "off")
             .map(|(device, _)| device)
             .collect();
-        // A rotation by another device reaches this one as a new keys.bin.
+        // A rotation by another device reaches this one as new keys.
         self.refresh_keys().await?;
 
         let devices = self.target.list(&self.path("devices")).await?;
         let present: Vec<String> =
             devices.iter().filter(|e| e.is_dir).map(|e| e.name.clone()).collect();
-        self.write_missing_keys(&present).await?;
         for entry in devices.iter().filter(|e| e.is_dir && e.name != self.device) {
             if removed.contains(&entry.name) || paused.contains(&entry.name) {
                 continue;
@@ -326,6 +361,16 @@ impl FolderRoad {
             report.devices_seen += 1;
             self.read_device(&entry.name, &mut report).await?;
         }
+        // What was read may be this device's own removal: it writes nothing more.
+        let removed_now = self.removed_devices()?;
+        if removed_now.contains(&self.device) {
+            return Err(SyncError::Removed);
+        }
+        if rotate || self.keyring().reaches_removed(&removed_now) {
+            report.rotated = Some(self.rotate(&removed_now).await?);
+        }
+        self.share_keys(&present).await?;
+        report.recovery = self.check_group().await?;
         self.write_segments(&mut report).await?;
         self.write_acks().await?;
         // After the segments, so a device that finds a marker can read the register behind it.
@@ -369,34 +414,129 @@ impl FolderRoad {
         Ok(())
     }
 
-    /// Wrap the keyring for each device in the group's list that has no place in the folder yet:
-    /// one paired nearby, which can then open the folder once it signs in to it.
-    async fn write_missing_keys(&self, present: &[String]) -> Result<()> {
+    fn removed_devices(&self) -> Result<Vec<String>> {
+        Ok(self
+            .store
+            .sync_peers()?
+            .into_iter()
+            .filter(|(_, _, _, removed)| *removed)
+            .map(|(d, ..)| d)
+            .collect())
+    }
+
+    /// Wrap the keyring for each other device in the group's list whenever it is not the one
+    /// last wrapped for it, and for one with no place in the folder yet (paired nearby, which can
+    /// then open the folder once it signs in to it). `keys.bin` is what every version reads; the
+    /// file under `keys/` is this device's alone, so no rotation that ran at once writes over it.
+    async fn share_keys(&self, present: &[String]) -> Result<()> {
+        let ring = self.keyring();
+        let fp = ring.fingerprint();
         for (device, _, pubkey, removed) in self.store.sync_peers()? {
-            if removed || device == self.device || present.contains(&device) {
+            if removed || device == self.device {
                 continue;
             }
             let Some(pubkey) = pubkey.as_deref().and_then(crate::keys::public_of) else {
                 continue;
             };
-            let wrapped = wrap_for(&pubkey, &device, &self.keyring());
+            let shared = self.meta(&format!("keys.{device}"));
+            let was = self.store.sync_meta_get(&shared)?;
+            if present.contains(&device) && was.as_deref() == Some(fp.as_str()) {
+                continue;
+            }
+            let wrapped = wrap_for(&pubkey, &device, &ring);
             self.replace(&self.path(&format!("devices/{device}/keys.bin")), &wrapped).await?;
+            if was.as_deref() == Some(fp.as_str()) {
+                continue;
+            }
+            let mine = format!("keys/{device}/{}-{fp}.bin", self.device);
+            match self.target.write_new(&self.path(&mine), &wrapped).await {
+                Ok(()) | Err(FolderError::Exists(_)) => {}
+                Err(e) => return Err(e.into()),
+            }
+            if let Some(old) = was.filter(|old| *old != fp) {
+                let old = format!("keys/{device}/{}-{old}.bin", self.device);
+                match self.target.remove(&self.path(&old)).await {
+                    Ok(()) | Err(FolderError::NotFound(_)) => {}
+                    Err(e) => return Err(e.into()),
+                }
+            }
+            self.store.sync_meta_set(&shared, &fp)?;
         }
         Ok(())
     }
 
+    /// Merge the keyrings wrapped for this device: `keys.bin`, and each file under `keys/` not
+    /// read before.
     async fn refresh_keys(&self) -> Result<()> {
+        let mut found = Vec::new();
         let path = self.path(&format!("devices/{}/keys.bin", self.device));
         match self.target.read(&path).await {
-            Ok(bytes) => {
-                if let Ok(theirs) = self.key.unwrap(&self.device, &bytes) {
-                    self.set_ring(self.keyring().merged(&theirs));
-                }
-                Ok(())
-            }
-            Err(FolderError::NotFound(_)) => Ok(()),
-            Err(e) => Err(e.into()),
+            Ok(bytes) => found.push(bytes),
+            Err(FolderError::NotFound(_)) => {}
+            Err(e) => return Err(e.into()),
         }
+        let dir = format!("keys/{}", self.device);
+        let names: Vec<String> = self
+            .target
+            .list(&self.path(&dir))
+            .await?
+            .into_iter()
+            .filter(|e| !e.is_dir && e.name.ends_with(".bin"))
+            .map(|e| e.name)
+            .collect();
+        let seen_key = self.meta("keys.read");
+        let seen: Vec<String> = self
+            .store
+            .sync_meta_get(&seen_key)?
+            .and_then(|json| serde_json::from_str(&json).ok())
+            .unwrap_or_default();
+        for name in names.iter().filter(|n| !seen.contains(n)) {
+            match self.target.read(&self.path(&format!("{dir}/{name}"))).await {
+                Ok(bytes) => found.push(bytes),
+                Err(FolderError::NotFound(_)) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        for bytes in found {
+            if let Ok(theirs) = self.key.unwrap(&self.device, &bytes) {
+                self.set_ring(self.keyring().merged(&theirs));
+            }
+        }
+        if names != seen {
+            let json =
+                serde_json::to_string(&names).map_err(|_| SyncError::Damaged("encoding"))?;
+            self.store.sync_meta_set(&seen_key, &json)?;
+        }
+        Ok(())
+    }
+
+    /// When the keyring changed since the last look: which of its recovery keys opens
+    /// `group.bin`, and, when one does and `group.bin` lacks a key this device holds, the
+    /// keyring written there again under that same recovery key. A recovery key none of them
+    /// matches (made by a version that does not share it) is left alone.
+    async fn check_group(&self) -> Result<Option<RecoveryKey>> {
+        let ring = self.keyring();
+        let candidates = ring.recovery_keys();
+        let checked = self.meta("group.checked");
+        let fp = ring.fingerprint();
+        if candidates.is_empty()
+            || self.store.sync_meta_get(&checked)?.as_deref() == Some(fp.as_str())
+        {
+            return Ok(None);
+        }
+        let bytes = self.target.read(&self.path("group.bin")).await?;
+        let mut found = None;
+        for recovery in candidates {
+            if let Ok((_, held)) = open_group_file(&bytes, &recovery) {
+                if !held.holds(&ring) {
+                    self.write_group(&recovery, &held.merged(&ring)).await?;
+                }
+                found = Some(recovery);
+                break;
+            }
+        }
+        self.store.sync_meta_set(&checked, &fp)?;
+        Ok(found)
     }
 
     async fn read_device(&self, device: &str, report: &mut FolderReport) -> Result<()> {
@@ -545,43 +685,34 @@ impl FolderRoad {
             .is_ok_and(|entries| entries.iter().all(|e| e.name == "keys.bin"))
     }
 
-    /// Rotate the group key, as after removing a device: a new current key, wrapped for every
-    /// device still in the group and under the recovery key. The removed device keeps what it had
-    /// and reads nothing written from here on. Needs the recovery key to rewrite `group.bin`.
-    pub async fn rotate_group_key(&self, recovery: &RecoveryKey) -> Result<Keyring> {
-        let ring = self.keyring().rotated();
+    /// Rotate, as after removing a device: a new group key kept from every device in `removed`,
+    /// and a new recovery key, both in the keyring, with `group.bin` under the new recovery key.
+    /// No old recovery key is needed. The others get the keyring as the pass goes on
+    /// ([`Self::share_keys`]); a removed device keeps what it had, reads nothing written from
+    /// here on, and finds its name under `removed/`.
+    async fn rotate(&self, removed: &[String]) -> Result<RecoveryKey> {
+        let recovery = RecoveryKey::generate();
+        let ring = self.keyring().rotated_from(removed, &recovery);
         self.set_ring(ring.clone());
-        self.write_group(recovery, &ring).await?;
-        for (device, _, pubkey, removed) in self.store.sync_peers()? {
-            if device == self.device {
-                continue;
-            }
-            if removed {
-                match self.target.write_new(&self.path(&format!("removed/{device}")), b"").await
-                {
-                    Ok(()) | Err(FolderError::Exists(_)) => {}
-                    Err(e) => return Err(e.into()),
-                }
-                continue;
-            }
-            let Some(pubkey) = pubkey
-                .and_then(|p| hex::decode(p).ok())
-                .and_then(|p| <[u8; 32]>::try_from(p).ok())
-            else {
-                continue;
-            };
-            let wrapped = wrap_for(&pubkey, &device, &ring);
-            self.replace(&self.path(&format!("devices/{device}/keys.bin")), &wrapped).await?;
-        }
+        // This device's own copy first, so the new keys are never only in memory.
         self.write_own_keys().await?;
-        Ok(ring)
+        self.write_group(&recovery, &ring).await?;
+        for device in removed.iter().filter(|d| **d != self.device) {
+            match self.target.write_new(&self.path(&format!("removed/{device}")), b"").await {
+                Ok(()) | Err(FolderError::Exists(_)) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Ok(recovery)
     }
 
-    /// Make a new recovery key: the old one stops working at once.
+    /// Make a new recovery key, rotating the group key with it, in a pass: the old one stops
+    /// working at once, and the others learn the new one on their next pass.
     pub async fn new_recovery_key(&self) -> Result<RecoveryKey> {
-        let recovery = RecoveryKey::generate();
-        self.write_group(&recovery, &self.keyring()).await?;
-        Ok(recovery)
+        self.sync_rotating(true)
+            .await?
+            .rotated
+            .ok_or(SyncError::Damaged("a rotation that made no key"))
     }
 
     async fn write_group(&self, recovery: &RecoveryKey, ring: &Keyring) -> Result<()> {
@@ -977,39 +1108,181 @@ mod tests {
         assert_eq!(s.resume("1"), None);
     }
 
+    /// Each device in the group's list with its key, as the engine says it on joining.
+    fn announce(devices: &[&Dev]) {
+        for d in devices {
+            d.store.sync_device_add(&d.id, "device", &d.identity().public_hex()).unwrap();
+        }
+    }
+
+    async fn join_with(
+        target: &Arc<dyn FolderTarget>,
+        d: &Dev,
+        key: &RecoveryKey,
+    ) -> FolderRoad {
+        FolderRoad::join(target.clone(), "kaeri", d.store.clone(), &d.id, d.identity(), key)
+            .await
+            .unwrap()
+    }
+
+    /// The newest segment `device` wrote, as the folder holds it.
+    async fn newest_segment(target: &Arc<dyn FolderTarget>, device: &str) -> Vec<u8> {
+        let dir = format!("kaeri/devices/{device}");
+        let last = target
+            .list(&dir)
+            .await
+            .unwrap()
+            .into_iter()
+            .filter(|e| e.name.ends_with(".seg"))
+            .map(|e| e.name)
+            .max()
+            .expect("a segment");
+        target.read(&format!("{dir}/{last}")).await.unwrap()
+    }
+
     #[tokio::test]
-    async fn rotation_reaches_the_others_and_a_removed_device_is_cut_off() {
+    async fn a_removal_rotates_both_keys_and_the_removed_device_reads_nothing_new() {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
-        let (a, ra, b, rb, recovery) = pair(&target).await;
+        let (a, ra, b, rb, old) = pair(&target).await;
         let c = dev("00000000000000c3", 1_000);
-        let rc = FolderRoad::join(
+        let rc = join_with(&target, &c, &old).await;
+        announce(&[&a, &b, &c]);
+        for _ in 0..2 {
+            for r in [&ra, &rb, &rc] {
+                r.sync().await.unwrap();
+            }
+        }
+        // B removes C: B never needs the recovery key for it.
+        b.store.sync_device_remove(&c.id).unwrap();
+        let fresh = rb.sync_rotating(true).await.unwrap().rotated.expect("a new recovery key");
+        b.watch("1", 500.0);
+        rb.sync().await.unwrap();
+        // A learns the new keys and the new recovery key on its next pass.
+        let seen = ra.sync().await.unwrap();
+        assert_eq!(seen.recovery.as_ref(), Some(&fresh));
+        assert_eq!(a.resume("1"), Some(500.0));
+        assert_eq!(ra.keyring().current_epoch(), rb.keyring().current_epoch());
+        // C is told it was removed, cannot open what B wrote since, and the recovery key it knew
+        // no longer opens the folder.
+        assert!(matches!(rc.sync().await, Err(SyncError::Removed)));
+        assert_eq!(c.resume("1"), None);
+        let after = newest_segment(&target, &b.id).await;
+        assert!(matches!(seal::open(&rc.keyring(), &after), Err(SyncError::KeyMismatch)));
+        let d = dev("00000000000000d4", 1_000);
+        let joined = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            d.store.clone(),
+            &d.id,
+            d.identity(),
+            &old,
+        );
+        assert!(matches!(joined.await, Err(SyncError::WrongRecoveryKey)));
+        join_with(&target, &d, &fresh).await;
+        // Joining or opening the folder again under the id the group removed is refused.
+        let again = FolderRoad::join(
             target.clone(),
             "kaeri",
             c.store.clone(),
             &c.id,
             c.identity(),
-            &recovery,
-        )
-        .await
-        .unwrap();
-        for d in [&b, &c] {
-            a.store.sync_device_add(&d.id, "device", &d.identity().public_hex()).unwrap();
+            &fresh,
+        );
+        assert!(matches!(again.await, Err(SyncError::Removed)));
+        let open = FolderRoad::open_as_member(
+            target.clone(),
+            "kaeri",
+            c.store.clone(),
+            &c.id,
+            c.identity(),
+        );
+        assert!(matches!(open.await, Err(SyncError::Removed)));
+    }
+
+    #[tokio::test]
+    async fn two_removals_at_once_end_on_one_key_neither_removed_device_holds() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, old) = pair(&target).await;
+        let c = dev("00000000000000c3", 1_000);
+        let d = dev("00000000000000d4", 1_000);
+        let rc = join_with(&target, &c, &old).await;
+        let rd = join_with(&target, &d, &old).await;
+        announce(&[&a, &b, &c, &d]);
+        for _ in 0..2 {
+            for r in [&ra, &rb, &rc, &rd] {
+                r.sync().await.unwrap();
+            }
         }
-        ra.sync().await.unwrap();
-        rb.sync().await.unwrap();
-        rc.sync().await.unwrap();
+        // A removes C and B removes D, and both rotate before either reads the other's removal.
         a.store.sync_device_remove(&c.id).unwrap();
-        ra.rotate_group_key(&recovery).await.unwrap();
-        a.watch("1", 500.0);
+        b.store.sync_device_remove(&d.id).unwrap();
+        ra.rotate(std::slice::from_ref(&c.id)).await.unwrap();
+        rb.rotate(std::slice::from_ref(&d.id)).await.unwrap();
+        // A few passes: each reads the other's removal and keys, and one rotates again.
+        let mut found = (None, None);
+        for _ in 0..3 {
+            if let Some(key) = ra.sync().await.unwrap().recovery {
+                found.0 = Some(key);
+            }
+            if let Some(key) = rb.sync().await.unwrap().recovery {
+                found.1 = Some(key);
+            }
+        }
+        let (ka, kb) = (ra.keyring(), rb.keyring());
+        assert_eq!(ka.current_epoch(), kb.current_epoch());
+        let removed = vec![c.id.clone(), d.id.clone()];
+        assert!(!ka.reaches_removed(&removed), "the current key was kept from both");
+        // Both hold the recovery key that opens the folder.
+        let group = target.read("kaeri/group.bin").await.unwrap();
+        let held = ka.recovery_keys().into_iter().find(|k| open_group_file(&group, k).is_ok());
+        assert!(held.is_some());
+        assert_eq!(found.0.as_ref().or(held.as_ref()), held.as_ref());
+        assert_eq!(found.1.as_ref().or(held.as_ref()), held.as_ref());
+        // What each writes now, neither removed device can open.
+        a.watch("2", 100.0);
+        b.watch("3", 100.0);
         ra.sync().await.unwrap();
         rb.sync().await.unwrap();
-        assert_eq!(b.resume("1"), Some(500.0));
-        assert_eq!(rb.keyring().current_epoch(), 2);
-        // The removed device still holds the old key and cannot read what follows; it is told
-        // it was removed rather than that it holds no key.
-        let err = rc.sync().await.unwrap_err();
-        assert!(matches!(err, SyncError::Removed), "{err:?}");
-        assert_eq!(c.resume("1"), None);
+        ra.sync().await.unwrap();
+        assert_eq!((a.resume("3"), b.resume("2")), (Some(100.0), Some(100.0)));
+        for gone in [&rc, &rd] {
+            for writer in [&a.id, &b.id] {
+                let bytes = newest_segment(&target, writer).await;
+                assert!(matches!(
+                    seal::open(&gone.keyring(), &bytes),
+                    Err(SyncError::KeyMismatch)
+                ));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn a_device_away_through_two_rotations_catches_up() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, old) = pair(&target).await;
+        let c = dev("00000000000000c3", 1_000);
+        let rc = join_with(&target, &c, &old).await;
+        let d = dev("00000000000000d4", 1_000);
+        let rd = join_with(&target, &d, &old).await;
+        announce(&[&a, &b, &c, &d]);
+        for _ in 0..2 {
+            for r in [&ra, &rb, &rc, &rd] {
+                r.sync().await.unwrap();
+            }
+        }
+        // B is away while A removes C, then D, writing between.
+        a.store.sync_device_remove(&c.id).unwrap();
+        ra.sync_rotating(true).await.unwrap();
+        a.watch("1", 100.0);
+        ra.sync().await.unwrap();
+        a.store.sync_device_remove(&d.id).unwrap();
+        ra.sync_rotating(true).await.unwrap();
+        a.watch("2", 200.0);
+        ra.sync().await.unwrap();
+        let back = rb.sync().await.unwrap();
+        assert_eq!((b.resume("1"), b.resume("2")), (Some(100.0), Some(200.0)));
+        assert_eq!(rb.keyring().current_epoch(), ra.keyring().current_epoch());
+        assert!(back.recovery.is_some());
     }
 
     #[tokio::test]

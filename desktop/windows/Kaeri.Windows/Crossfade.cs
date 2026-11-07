@@ -48,14 +48,15 @@ static class Crossfade
             Stretch = Microsoft.UI.Xaml.Media.Stretch.Fill,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(offset.X, offset.Y, 0, 0),
+            Margin = new Thickness(offset.X - host.Padding.Left, offset.Y - host.Padding.Top, 0, 0),
             IsHitTestVisible = false,
         };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(ghost, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
-        Grid.SetRow(ghost, Grid.GetRow(area));
-        Grid.SetColumn(ghost, Grid.GetColumn(area));
-        Grid.SetRowSpan(ghost, Grid.GetRowSpan(area));
-        Grid.SetColumnSpan(ghost, Grid.GetColumnSpan(area));
+        // Over the whole grid, as its place is measured from the grid's corner, inside its padding:
+        // in the area's own row it would stand lower by the rows above, such as the party bar over
+        // the pages.
+        Grid.SetRowSpan(ghost, Math.Max(1, host.RowDefinitions.Count));
+        Grid.SetColumnSpan(ghost, Math.Max(1, host.ColumnDefinitions.Count));
         host.Children.Add(ghost);
         // The fade waits two frames, so what the change settles a frame late (a scroll to a row
         // just built) happens under the picture and never shows half done.

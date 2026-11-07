@@ -220,7 +220,7 @@ public sealed partial class ProvidersPage : Page
             var list = new ListView { SelectionMode = ListViewSelectionMode.None, IsItemClickEnabled = true, Margin = new Thickness(-12, 0, 0, 0) };
             list.ItemClick += (_, e) =>
             {
-                if (e.ClickedItem is ListViewItem { Tag: ValueTuple<Type, object> go })
+                if (Ui.ClickedRow(list, e.ClickedItem) is { Tag: ValueTuple<Type, object> go })
                     ctx.Window.Push(go.Item1, go.Item2 is "" ? null : go.Item2);
             };
             return list;
@@ -290,28 +290,20 @@ public sealed partial class ProvidersPage : Page
         return section;
     }
 
-    /// <summary>No sources yet: Add a folder (amber) and Add a media server, then a line to join a store.</summary>
+    /// <summary>
+    /// No sources yet: the app's empty state, as every big empty is, with Nagare, one line and Join
+    /// a plugin store. A folder and a server stay in the header's Add menu, on screen beside it,
+    /// and the demo, while it is offered, is a link under the button.
+    /// </summary>
     UIElement Empty()
     {
-        var empty = new StackPanel { Spacing = 12, MaxWidth = 520, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 40, 0, 0) };
-        empty.Children.Add(Ui.Text(T.SourcesEmptyTitle, "SubtitleTextBlockStyle"));
-        empty.Children.Add(Ui.Haze(T.SourcesEmptyBody));
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 8, 0, 0) };
-        buttons.Children.Add(Ui.Label(T.SourcesAddFolderButton, (_, _) => ctx.Window.AddFolder(), accent: true));
-        buttons.Children.Add(Ui.Label(T.SourcesAddServerButton, (_, _) => ctx.Window.ShowAddServer()));
+        var empty = States.Empty(T.SourcesEmptyTitle, T.SourcesEmptyBody, T.StoresJoinAction, () => ctx.Window.ShowJoinStore());
         if (ctx.Known.Settings?.Sources.OfferDemo != false)
-            buttons.Children.Add(Ui.Label(T.SourcesDemoAdd, (_, _) => ctx.Send(new Command.AddDemo())));
-        empty.Children.Add(buttons);
-        var more = new StackPanel { Orientation = Orientation.Horizontal };
-        var join = new HyperlinkButton { Content = T.SourcesEmptyJoinLink, Padding = new Thickness(0), Margin = new Thickness(4, 0, 0, 0) };
-        join.Click += (_, _) => ctx.Window.ShowJoinStore();
-        // "Or { join }.": the link stands where the sentence puts it.
-        var parts = T.SourcesEmptyMore("\u0001").Split('\u0001');
-        more.Children.Add(Ui.Haze(parts[0], wrap: false));
-        more.Children.Add(join);
-        if (parts.Length > 1)
-            more.Children.Add(Ui.Haze(parts[1], wrap: false));
-        empty.Children.Add(more);
+        {
+            var demo = new HyperlinkButton { Content = T.SourcesDemoAdd, Style = Ui.Res<Style>("SilkLinkStyle"), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0) };
+            demo.Click += (_, _) => ctx.Send(new Command.AddDemo());
+            empty.Children.Add(demo);
+        }
         return empty;
     }
 

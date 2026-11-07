@@ -55,7 +55,7 @@ static class ReportDialog
         if (!saving)
         {
             body.Children.Add(Ui.Haze(T.ReportCrashOff));
-            var link = new HyperlinkButton { Content = T.ReportCrashSettings, Padding = new Thickness(0) };
+            var link = new HyperlinkButton { Content = T.ReportCrashSettings, Style = Ui.Res<Style>("SilkLinkLeadingStyle") };
             body.Children.Add(link);
             link.Click += (_, _) =>
             {
@@ -75,7 +75,7 @@ static class ReportDialog
             Visibility = Visibility.Collapsed,
         };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(sent, T.ReportShowSent);
-        var toggle = new HyperlinkButton { Content = T.ReportShowSent, Padding = new Thickness(0) };
+        var toggle = new HyperlinkButton { Content = T.ReportShowSent, Style = Ui.Res<Style>("SilkLinkLeadingStyle") };
         toggle.Click += (_, _) =>
         {
             var open = sent.Visibility == Visibility.Collapsed;

@@ -970,6 +970,9 @@ public enum L {
     /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
     public static var cloudLoopbackDone: String { string("cloud-loopback-done", fallback: "You can close this tab and go back to Kaeri.") }
 
+    /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+    public static var syncDeviceRemoved: String { string("sync-device-removed", fallback: "This device was removed from sync on another device. Join again to sync it.") }
+
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     public static func noticeSignedIn(tracker: String) -> String {
         Self.format("notice-signed-in", fallback: "Signed in to %1$@.", tracker)

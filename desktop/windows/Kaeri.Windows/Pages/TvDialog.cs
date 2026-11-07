@@ -758,7 +758,6 @@ sealed class TvDialog
             nowRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             nowRow.Children.Add(cover);
             var words = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-            title.FontSize = 15;
             words.Children.Add(title);
             words.Children.Add(episode);
             Grid.SetColumn(words, 1);
@@ -1153,7 +1152,8 @@ sealed class TvDialog
             nowRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             nowRow.Children.Add(cover);
             var words = new StackPanel { Spacing = 3, VerticalAlignment = VerticalAlignment.Center };
-            title.FontSize = 18;
+            // The title of what plays on the TV heads the remote: the medium show-title size.
+            title.Style = Ui.Res<Style>("ShowTitleMediumStyle");
             words.Children.Add(title);
             words.Children.Add(episode);
             reason.Margin = new Thickness(0, 6, 0, 0);

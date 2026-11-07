@@ -753,3 +753,36 @@ fn a_held_op_applies_once_this_version_knows_its_kind() {
     assert_eq!(b.store.apply_ops(Vec::new()).unwrap().ops, 0);
     assert_eq!(b.store.sync_meta_get("held_unknown").unwrap(), None);
 }
+
+#[test]
+fn a_removed_device_starts_over_under_a_new_id_and_the_group_takes_it() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    for d in [&a, &b] {
+        d.store.sync_device_add(&d.id, "x", "00").unwrap();
+    }
+    a.finish(SHOW, "1");
+    exchange(&a, &b);
+    a.store.sync_device_remove("bbbb").unwrap();
+    send(&a, &b);
+    let gone = |s: &Store, id: &str| s.sync_peers().unwrap().iter().any(|p| p.0 == id && p.3);
+    assert!(gone(&b.store, "bbbb"), "b read its own removal");
+    // Joining again under the same id would stay removed for good: it starts over.
+    b.store.sync_device_add("bbbb", "x", "00").unwrap();
+    assert!(gone(&b.store, "bbbb") && gone(&a.store, "bbbb"));
+    b.store.sync_new_device("bbbc").unwrap();
+    assert_eq!(b.store.sync_device().unwrap(), None, "off until it joins");
+    b.store.sync_enable("bbbc").unwrap();
+    b.store.sync_device_add("bbbc", "x", "00").unwrap();
+    b.store.set_show_setting(OTHER, "skip", Some("on"), b.secs() * 1000).unwrap();
+    b.finish(SHOW, "2");
+    send(&b, &a);
+    assert!(!gone(&a.store, "bbbc"), "the new id is in the group");
+    assert_eq!(a.store.events_for(SHOW, 10).unwrap().len(), 2, "its new watch arrived");
+    assert_eq!(
+        a.store.events_for(SHOW, 10).unwrap().iter().filter(|e| e.episode == "1").count(),
+        1
+    );
+    // What it held stays.
+    assert_eq!(b.store.events_for(SHOW, 10).unwrap().len(), 2);
+}

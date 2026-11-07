@@ -174,6 +174,8 @@ static class HoverPreview
         readonly Border card;
         readonly StackPanel words;
         bool closing, playing;
+        /// <summary>The card's scale where it covers the cover: it grows from this and goes back to it.</summary>
+        float coverScale = 1;
         readonly TrailerStage? stage;
         readonly DispatcherQueueTimer leave;
         readonly Button sound = new();
@@ -368,8 +370,8 @@ static class HoverPreview
         }
 
         /// <summary>
-        /// From the cover to the card on the standard token: the card scales up from where the
-        /// cover is, the banner shows from the start and the words come in from 100 ms. The
+        /// From the cover to the card on the standard spring, as on the Mac: the card grows from where
+        /// the cover is, the banner shows from the start and the words come in from 100 ms. The
         /// trailer starts once the card has grown. With animation effects off, a crossfade.
         /// </summary>
         void Grow(Rect cover, double x, double y, double height)
@@ -378,28 +380,23 @@ static class HoverPreview
             var compositor = visual.Compositor;
             var fade = compositor.CreateScalarKeyFrameAnimation();
             fade.InsertKeyFrame(0, 0);
-            fade.InsertKeyFrame(1, 1);
+            fade.InsertKeyFrame(1, 1, Motion.FadeInEasing(compositor));
             if (!Motion.Enabled)
             {
                 fade.Duration = Motion.Standard;
                 visual.StartAnimation("Opacity", fade);
                 return;
             }
-            var ease = compositor.CreateCubicBezierEasingFunction(new System.Numerics.Vector2(0.2f, 0), new System.Numerics.Vector2(0, 1));
             // The point of the card over the cover's centre stays put while it grows.
             visual.CenterPoint = new System.Numerics.Vector3((float)(cover.X + cover.Width / 2 - x), (float)(cover.Y + cover.Height / 2 - y), 0);
-            var from = (float)Math.Clamp(cover.Width / card.Width, 0.2, 1);
-            var scale = compositor.CreateVector3KeyFrameAnimation();
-            scale.InsertKeyFrame(0, new System.Numerics.Vector3(from, from, 1));
-            scale.InsertKeyFrame(1, System.Numerics.Vector3.One, ease);
-            scale.Duration = Motion.Standard;
+            coverScale = (float)Math.Clamp(cover.Width / card.Width, 0.2, 1);
+            Motion.Spring(visual, "Scale", System.Numerics.Vector3.One, new System.Numerics.Vector3(coverScale, coverScale, 1));
             fade.Duration = Motion.Quick;
-            visual.StartAnimation("Scale", scale);
             visual.StartAnimation("Opacity", fade);
             var text = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(words);
             var later = compositor.CreateScalarKeyFrameAnimation();
             later.InsertKeyFrame(0, 0);
-            later.InsertKeyFrame(1, 1);
+            later.InsertKeyFrame(1, 1, Motion.FadeInEasing(compositor));
             later.DelayTime = TimeSpan.FromMilliseconds(100);
             later.DelayBehavior = Microsoft.UI.Composition.AnimationDelayBehavior.SetInitialValueBeforeDelay;
             later.Duration = Motion.Standard - TimeSpan.FromMilliseconds(100);
@@ -431,7 +428,7 @@ static class HoverPreview
             leave.Start();
         }
 
-        /// <summary>Leaves on the quick token: the trailer stops, the card fades, and it is gone.</summary>
+        /// <summary>Leaves on the quick token: the trailer stops, the card shrinks back to the cover and fades, and it is gone.</summary>
         public void Dismiss()
         {
             if (closing)
@@ -452,8 +449,11 @@ static class HoverPreview
             }
             card.IsHitTestVisible = false;
             var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(card);
+            // Back into the cover on the quick spring as it fades, as on the Mac.
+            if (Motion.Enabled)
+                Motion.Spring(visual, "Scale", new System.Numerics.Vector3(coverScale, coverScale, 1), quick: true);
             var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
-            fade.InsertKeyFrame(1, 0);
+            fade.InsertKeyFrame(1, 0, visual.Compositor.CreateCubicBezierEasingFunction(new(0.42f, 0), new(1, 1)));
             fade.Duration = Motion.Quick;
             var batch = visual.Compositor.CreateScopedBatch(Microsoft.UI.Composition.CompositionBatchTypes.Animation);
             visual.StartAnimation("Opacity", fade);

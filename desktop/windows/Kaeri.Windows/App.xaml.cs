@@ -69,6 +69,8 @@ public partial class App : Application
         window.Activate();
 #if KAERI_TESTING
         Probe.Start(window.DispatcherQueue);
+        if (window.Content is Microsoft.UI.Xaml.UIElement root)
+            Probe.HearWheel(root);
 #endif
     }
 }

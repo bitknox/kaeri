@@ -122,6 +122,9 @@ enum Msg {
     Paired { who: Paired },
     /// No: the code is not showing, ran out, or was wrong too often.
     Refused,
+    /// No: the group removed the dialer's device. A version without this word reads it as a
+    /// reply it did not expect.
+    Removed,
     /// What this side asks the other for, before the log.
     Asks { asks: Vec<String> },
     /// The answer to the other side's asks, sealed for it, hex.
@@ -188,6 +191,11 @@ pub fn forget(store: &Store, device: &str) -> Result<()> {
         &serde_json::to_string(&all).map_err(|_| SyncError::Damaged("trust"))?,
     )?;
     Ok(())
+}
+
+/// Whether the group's log lists `device` as removed: no session with it, either way.
+fn is_removed(store: &Store, device: &str) -> bool {
+    store.sync_peers().unwrap_or_default().iter().any(|(d, _, _, gone)| *gone && d == device)
 }
 
 fn find(store: &Store, fingerprint: &Fingerprint) -> Option<Paired> {
@@ -305,6 +313,10 @@ async fn serve(
         return Err(SyncError::Damaged("expected hello"));
     };
     let (peer, just_paired) = if let Some(known) = find(store, &peer_fp) {
+        if is_removed(store, &known.device) {
+            write(&mut stream, &Msg::Removed).await?;
+            return Err(SyncError::Paused);
+        }
         if store.sync_device_paused(&known.device) {
             write(&mut stream, &Msg::Refused).await?;
             return Err(SyncError::Paused);
@@ -341,6 +353,12 @@ async fn serve(
         if side.confirm(&mac).is_err() {
             write(&mut stream, &Msg::Refused).await?;
             return Err(SyncError::WrongCode);
+        }
+        // A device the group removed is told so, and the code stays for it to pair again as a
+        // new device.
+        if is_removed(store, &who.device) {
+            write(&mut stream, &Msg::Removed).await?;
+            return Err(SyncError::Paused);
         }
         // Right: the code is spent.
         *showing.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
@@ -430,11 +448,14 @@ pub async fn dial(
     let (peer, just_paired) = match read(&mut stream).await? {
         Msg::Ready => {
             let peer = find(store, &their_fp);
-            if peer.as_ref().is_some_and(|p| store.sync_device_paused(&p.device)) {
+            if peer.as_ref().is_some_and(|p| {
+                store.sync_device_paused(&p.device) || is_removed(store, &p.device)
+            }) {
                 return Err(SyncError::Paused);
             }
             (peer, false)
         }
+        Msg::Removed => return Err(SyncError::Removed),
         Msg::PairReply { message, mac } => {
             let (side, _) = started.ok_or_else(|| pairing("a code was not asked for"))?;
             let proof = side.finish(&message, &mac).map_err(|e| match e {
@@ -442,8 +463,10 @@ pub async fn dial(
                 e => pairing(e),
             })?;
             write(&mut stream, &Msg::Proof { mac: proof, who: me.paired() }).await?;
-            let Msg::Paired { who } = read(&mut stream).await? else {
-                return Err(SyncError::WrongCode);
+            let who = match read(&mut stream).await? {
+                Msg::Paired { who } => who,
+                Msg::Removed => return Err(SyncError::Removed),
+                _ => return Err(SyncError::WrongCode),
             };
             trust(store, their_fp, who.clone())?;
             (Some(who), true)
@@ -649,6 +672,50 @@ mod tests {
         let refused = dial(&guest, &guest_store, loopback(listener.port()), None, None).await;
         assert!(refused.is_err());
         assert!(listener.next_session().await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn a_removed_device_is_told_so_and_pairs_again_only_as_a_new_device() {
+        let (host, host_store) = device("00000000000000a1", "Living room");
+        let (guest, guest_store) = device("00000000000000b2", "Phone");
+        let mut listener =
+            Listener::bind(host.clone(), host_store.clone(), loopback(0)).await.unwrap();
+        let code = listener.show_code();
+        dial(&guest, &guest_store, loopback(listener.port()), Some(&code), None).await.unwrap();
+        listener.next_session().await.unwrap().unwrap();
+        host_store.sync_device_remove("00000000000000b2").unwrap();
+        watch(&host_store, "4");
+
+        // Paired before: told it was removed, and nothing crosses.
+        let pinned = fingerprint_of(&guest_store, "00000000000000a1");
+        let seen = dial(&guest, &guest_store, loopback(listener.port()), None, pinned).await;
+        assert!(matches!(seen, Err(SyncError::Removed)), "{seen:?}");
+        assert!(listener.next_session().await.unwrap().is_err());
+        assert_eq!(guest_store.resume_position(AnilistId::new(9_001), "4").unwrap(), None);
+        // Nor the other way.
+        let back =
+            Listener::bind(guest.clone(), guest_store.clone(), loopback(0)).await.unwrap();
+        let pinned = fingerprint_of(&host_store, "00000000000000b2");
+        let refused = dial(&host, &host_store, loopback(back.port()), None, pinned).await;
+        assert!(matches!(refused, Err(SyncError::Paused)), "{refused:?}");
+
+        // Forgotten here, as removing it does, it comes with a code under the same id: told so,
+        // and the code is not spent.
+        forget(&host_store, "00000000000000b2").unwrap();
+        let code = listener.show_code();
+        let seen =
+            dial(&guest, &guest_store, loopback(listener.port()), Some(&code), None).await;
+        assert!(matches!(seen, Err(SyncError::Removed)), "{seen:?}");
+        assert!(listener.next_session().await.unwrap().is_err());
+        assert!(listener.code_showing());
+        // As a new device, with a new id and key, it pairs.
+        let (fresh, fresh_store) = device("00000000000000b9", "Phone");
+        dial(&fresh, &fresh_store, loopback(listener.port()), Some(&code), None).await.unwrap();
+        listener.next_session().await.unwrap().unwrap();
+        assert_eq!(
+            fresh_store.resume_position(AnilistId::new(9_001), "4").unwrap(),
+            Some(100.0)
+        );
     }
 
     #[tokio::test]

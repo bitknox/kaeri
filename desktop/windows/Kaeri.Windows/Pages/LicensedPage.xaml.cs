@@ -97,7 +97,7 @@ public sealed partial class LicensedPage : Page
         }
         if (!all && services.Length > shown.Length)
         {
-            var more = new HyperlinkButton { Content = T.LicensedShowAll(services.Length), Padding = new Thickness(0, 6, 0, 6) };
+            var more = new HyperlinkButton { Content = T.LicensedShowAll(services.Length), Style = Ui.Res<Style>("SilkLinkCaptionStyle") };
             more.Click += (_, _) => { all = true; Draw(); };
             Stack.Children.Add(more);
         }
