@@ -66,6 +66,8 @@ struct SeriesRow {
     name: String,
     #[serde(default)]
     localized_name: Option<String>,
+    #[serde(default)]
+    library_id: Option<i64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -128,6 +130,63 @@ async fn count_series(signed: &Http) -> Option<u32> {
     pagination_total(response.headers().get("pagination")?.to_str().ok()?)
 }
 
+/// How many series the account sees now, for a recheck.
+pub async fn count_all(signed: &Http) -> Result<Option<u32>> {
+    let request = signed
+        .request(reqwest::Method::POST, "api/Series/all-v2?PageNumber=1&PageSize=1")
+        .json(&serde_json::json!({}));
+    let response = signed.send(request).await?;
+    Ok(response
+        .headers()
+        .get("pagination")
+        .and_then(|h| h.to_str().ok())
+        .and_then(pagination_total))
+}
+
+/// A library, as `api/Library/libraries` lists it.
+#[derive(Deserialize)]
+struct LibraryRow {
+    id: i64,
+    #[serde(default)]
+    name: String,
+}
+
+/// Kavita's filter field for a series' library, and the comparison "is one of".
+const FIELD_LIBRARIES: u8 = 19;
+const CONTAINS: u8 = 5;
+
+/// How many series of one library the account sees.
+async fn count_in_library(signed: &Http, library: i64) -> Option<u32> {
+    let filter = serde_json::json!({
+        "statements": [{ "comparison": CONTAINS, "field": FIELD_LIBRARIES, "value": library.to_string() }],
+        "combination": 1,
+        "limitTo": 0,
+    });
+    let request = signed
+        .request(reqwest::Method::POST, "api/Series/all-v2?PageNumber=1&PageSize=1")
+        .json(&filter);
+    let response = signed.send(request).await.ok()?;
+    pagination_total(response.headers().get("pagination")?.to_str().ok()?)
+}
+
+/// The libraries this account sees, each with its series counted. Kavita before 0.8 lists them
+/// at `api/Library`.
+pub async fn libraries(signed: &Http) -> Result<Vec<crate::Library>> {
+    let rows: Vec<LibraryRow> = match signed.json("api/Library/libraries").await {
+        Ok(rows) => rows,
+        Err(ServerError::NotFound | ServerError::Status(_)) => {
+            signed.json("api/Library").await?
+        }
+        Err(e) => return Err(e),
+    };
+    let mut out = Vec::with_capacity(rows.len());
+    for row in rows {
+        let series = count_in_library(signed, row.id).await;
+        out.push(crate::Library { id: row.id.to_string(), name: row.name, series });
+    }
+    Ok(out)
+}
+
 /// `totalItems` from Kavita's `Pagination` header.
 fn pagination_total(header: &str) -> Option<u32> {
     let value: serde_json::Value = serde_json::from_str(header).ok()?;
@@ -146,6 +205,28 @@ pub async fn sign_in(
         .request(reqwest::Method::POST, "api/Account/login")
         .json(&serde_json::json!({ "username": user, "password": password }));
     let login: Login = crate::http::read_json(http.send(request).await?).await?;
+    described(client, address, login).await
+}
+
+/// Sign in with an account's API key, the one its OPDS link carries: Kavita's plugin sign-in,
+/// which answers the same tokens a password sign-in does. A key it does not know is a 401.
+pub async fn sign_in_with_key(
+    client: &reqwest::Client,
+    address: &str,
+    key: &str,
+) -> Result<SignedIn> {
+    let http = Http::new(client, address, Auth::None);
+    let path = format!("api/Plugin/authenticate?apiKey={}&pluginName=Kaeri", encode(key));
+    let request = http.request(reqwest::Method::POST, &path);
+    let mut login: Login = crate::http::read_json(http.send(request).await?).await?;
+    if login.api_key.is_empty() {
+        login.api_key = key.to_owned();
+    }
+    described(client, address, login).await
+}
+
+/// The server as it describes itself to an account that has just signed in.
+async fn described(client: &reqwest::Client, address: &str, login: Login) -> Result<SignedIn> {
     if login.token.is_empty() {
         return Err(ServerError::Unauthorized);
     }
@@ -171,6 +252,8 @@ pub async fn sign_in(
 /// A Kavita server as a book source.
 pub struct KavitaSource {
     manifest: BookSourceManifest,
+    /// The libraries asked, by id; every one when empty.
+    libraries: Vec<String>,
     http: Http,
     api_key: String,
     refresh: Mutex<String>,
@@ -198,12 +281,20 @@ impl KavitaSource {
                 allowed_hosts: Vec::new(),
                 capabilities: vec!["progress".into()],
             },
+            libraries: Vec::new(),
             http,
             api_key: tokens.api_key.clone(),
             refresh: Mutex::new(tokens.refresh.clone()),
             keep,
             signed_out,
         }
+    }
+
+    /// Ask only these libraries, by id. Empty asks every one.
+    #[must_use]
+    pub fn in_libraries(mut self, libraries: Vec<String>) -> Self {
+        self.libraries = libraries;
+        self
     }
 
     fn aim(&self, error: ServerError) -> ProviderError {
@@ -301,6 +392,10 @@ impl BookSource for KavitaSource {
         Ok(found
             .series
             .into_iter()
+            .filter(|s| {
+                self.libraries.is_empty()
+                    || s.library_id.is_some_and(|l| self.libraries.contains(&l.to_string()))
+            })
             .map(|s| {
                 let mut hit = SeriesHit::new(s.id.to_string(), s.name.clone());
                 if let Some(local) = s.localized_name.filter(|l| !l.is_empty() && *l != s.name)
