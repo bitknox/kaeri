@@ -2002,6 +2002,15 @@ mod tests {
         desk.record_read(&ahead, Vec::new()).unwrap();
         carry(&desk);
         h.synced();
+        // The move opens chapter 2 on the page worker, which may finish before the events are
+        // looked at, so the open is waited for first and what came before it is looked at after.
+        let opened = h
+            .until(|e| match e {
+                ReaderEvent::Opened(view) => Some((view.chapter.id.clone(), view.start.page)),
+                _ => None,
+            })
+            .await;
+        assert_eq!((opened.0.as_str(), opened.1), ("2", Some(2)));
         let said = h.drain();
         let moved = said.iter().find_map(|e| match e {
             ReaderEvent::Moved { to, from_device, back, .. } => {
@@ -2018,13 +2027,6 @@ mod tests {
                 device: "Desk".into()
             }]
         );
-        let opened = h
-            .until(|e| match e {
-                ReaderEvent::Opened(view) => Some((view.chapter.id.clone(), view.start.page)),
-                _ => None,
-            })
-            .await;
-        assert_eq!((opened.0.as_str(), opened.1), ("2", Some(2)));
 
         h.send(ReaderCommand::GoBack { session: h.session() });
         let back = h
