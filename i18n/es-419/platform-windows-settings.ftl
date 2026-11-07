@@ -45,3 +45,17 @@ torrents-dialog-edit-proxy = Editar proxy
 settings-note-trailers-windows = Los tráileres se reproducen silenciados desde YouTube, que ve tu dirección IP. No se reproducen con conexión medida, con los efectos de animación desactivados, en modo de ahorro de energía ni con Narrador activo.
 settings-note-cast-tvs-pc = Aparecen en Chromecast, dentro de Reproducir en la TV. Esta PC les envía el episodio.
 settings-note-torrents-while-casting-pc = Permite que una TV con Chromecast integrado reproduzca torrents. Esta PC envía el episodio mientras se reproduce.
+settings-language-restart = Reiniciar
+settings-differences = { $count ->
+    [one] Un título difiere de { $tracker }
+    [many] { $count } títulos difieren de { $tracker }
+   *[other] { $count } títulos difieren de { $tracker }
+ }
+settings-differences-review = Revisar
+settings-search = Buscar en ajustes
+settings-quality-detail-windows = Una calidad mayor toma la mejor versión que ofrece una { -source } y ocupa más espacio.
+settings-merge-subtitles-detail-windows = Los subtítulos se quedan con el episodio vaya donde vaya el archivo.
+settings-keep-seeding-detail-windows = Una descarga que sigue compartiéndose se queda en la caché de { -app-name }, no en la carpeta de descargas.
+settings-discussions-note-windows = Lee los comentarios del hilo del foro de AniList de los episodios que has visto.
+settings-comment-images-note-windows = Cada imagen se carga desde el sitio que la aloja, que ve tu dirección IP.
+settings-folder-browse = Examinar…

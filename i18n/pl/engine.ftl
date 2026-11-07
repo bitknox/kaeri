@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } nie udostępnia żadnych seriali. { -source-cap-pl } dodajesz samodzielnie.
+legal-hosts-no-content = { -app-name } nie udostępnia żadnych seriali ani książek. { -source-cap-pl } dodajesz samodzielnie.
 notice-saved = Zapisano: { $label }.
 notice-not-saved = Nie udało się zapisać tego ustawienia. { $reason }
 notice-title-load-failed = Nie udało się wczytać tego tytułu. Sprawdź połączenie i spróbuj ponownie.

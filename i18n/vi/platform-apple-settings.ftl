@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Các tệp sẽ bị xóa khỏi { -device } này. Các tập chưa xem vẫn được giữ lại.
 settings-folder-default = Lưu cùng bộ nhớ đệm torrent
 settings-storage-unwatched = Chưa xem
+settings-storage-unread = Chưa đọc
+settings-storage-read = Đã đọc
+settings-storage-unseen-both = Chưa xem hoặc chưa đọc
+settings-storage-seen-both = Đã xem hoặc đã đọc
 settings-storage-used = { $size } cho tải xuống.
 settings-storage-used-free = { $size } cho tải xuống. Còn trống { $free } trên { -device } này.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }
 settings-accounts-sync-note = Tiến độ và thay đổi danh sách được đồng bộ với { $tracker }. { -library-cap } và Danh sách của tôi trong Lịch hiển thị danh sách { $tracker } của bạn.
+settings-accounts-sync-note-read = Tiến độ và thay đổi danh sách được đồng bộ với { $tracker }. { -library-cap } hiện các danh sách { $tracker } của bạn.
 settings-conflicts = { $count ->
    *[other] { $count } tựa khác với { $tracker }
  }

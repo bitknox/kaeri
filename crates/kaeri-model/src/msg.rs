@@ -1253,6 +1253,14 @@ pub enum ReadingMsg {
     ReadingFailedOff,
     /// Why something about reading failed, for any other reason. The reason is as it came.
     ReadingFailedOther { reason: String },
+    /// Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+    ReadingFailedSendTooLarge { file: String, target: String, size: Size, limit: Size },
+    /// Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+    ReadingFailedSendMissing { file: String, part: String },
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+    ReadingFailedSendEncoding { file: String, part: String },
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+    ReadingFailedSendMalformed { file: String, part: String },
     /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
     ReadingKindManga,
     /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
@@ -1347,6 +1355,8 @@ pub enum ReadingMsg {
     ReadingRowNew,
     /// A chapter row's state: it is kept on this device to read offline.
     ReadingRowDownloaded,
+    /// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+    ReadingRowGoneFromSource,
     /// A chapter row's state: it is read from the source and nothing of it is on this device.
     ReadingRowNotDownloaded,
     /// A chapter row's state: a file in one of the person's folders, or one already on the device.
@@ -1476,6 +1486,10 @@ impl ReadingMsg {
             Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
             Self::ReadingFailedOff => "reading-failed-off",
             Self::ReadingFailedOther { .. } => "reading-failed-other",
+            Self::ReadingFailedSendTooLarge { .. } => "reading-failed-send-too-large",
+            Self::ReadingFailedSendMissing { .. } => "reading-failed-send-missing",
+            Self::ReadingFailedSendEncoding { .. } => "reading-failed-send-encoding",
+            Self::ReadingFailedSendMalformed { .. } => "reading-failed-send-malformed",
             Self::ReadingKindManga => "reading-kind-manga",
             Self::ReadingKindManhwa => "reading-kind-manhwa",
             Self::ReadingKindManhua => "reading-kind-manhua",
@@ -1523,6 +1537,7 @@ impl ReadingMsg {
             Self::ReadingRowRead => "reading-row-read",
             Self::ReadingRowNew => "reading-row-new",
             Self::ReadingRowDownloaded => "reading-row-downloaded",
+            Self::ReadingRowGoneFromSource => "reading-row-gone-from-source",
             Self::ReadingRowNotDownloaded => "reading-row-not-downloaded",
             Self::ReadingRowOnDevice => "reading-row-on-device",
             Self::ReadingRowQueued => "reading-row-queued",
@@ -1608,6 +1623,10 @@ impl ReadingMsg {
             Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
             Self::ReadingFailedOff => Vec::new(),
             Self::ReadingFailedOther { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::ReadingFailedSendTooLarge { file, target, size, limit } => vec![("file", Value::Text(file.clone())), ("target", Value::Text(target.clone())), ("size", Value::Size(*size)), ("limit", Value::Size(*limit))],
+            Self::ReadingFailedSendMissing { file, part } => vec![("file", Value::Text(file.clone())), ("part", Value::Text(part.clone()))],
+            Self::ReadingFailedSendEncoding { file, part } => vec![("file", Value::Text(file.clone())), ("part", Value::Text(part.clone()))],
+            Self::ReadingFailedSendMalformed { file, part } => vec![("file", Value::Text(file.clone())), ("part", Value::Text(part.clone()))],
             Self::ReadingKindManga => Vec::new(),
             Self::ReadingKindManhwa => Vec::new(),
             Self::ReadingKindManhua => Vec::new(),
@@ -1655,6 +1674,7 @@ impl ReadingMsg {
             Self::ReadingRowRead => Vec::new(),
             Self::ReadingRowNew => Vec::new(),
             Self::ReadingRowDownloaded => Vec::new(),
+            Self::ReadingRowGoneFromSource => Vec::new(),
             Self::ReadingRowNotDownloaded => Vec::new(),
             Self::ReadingRowOnDevice => Vec::new(),
             Self::ReadingRowQueued => Vec::new(),

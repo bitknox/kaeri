@@ -57,6 +57,7 @@ plugin-duplicate-file = { $path } deklarerar redan { $plugin }. Ta bort den file
 plugin-install-failed = Det gick inte att installera { $plugin }. { $reason }
 plugin-publish-failed = Det gick inte att publicera { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } finns inte längre i { -plugin }mappen.
+store-takes-no-books = { $store } listar inga { -source-pl } för böcker än. Dess ägare kan uppdatera { -plugin-store }n för att lägga till dem.
 store-invite-needs-link = Den här { -device }en gick med i { $store } via länken. Klistra in samma länk på den andra { -device }en.
 store-link-malformed = Länken från { -plugin-store } fungerar inte. Be ägaren kontrollera den. { $reason }
 store-link-wrong-key = Länken från { -plugin-store } bär en annan nyckel. Kontrollera adressen den startades med.

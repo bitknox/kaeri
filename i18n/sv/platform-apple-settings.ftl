@@ -27,6 +27,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Filerna tas bort från den här { -device }en. Avsnitt som inte har setts än finns kvar.
 settings-folder-default = Sparas med torrentcachen
 settings-storage-unwatched = Ännu inte sett
+settings-storage-unread = Inte läst än
+settings-storage-read = Läst
+settings-storage-unseen-both = Inte sett eller läst än
+settings-storage-seen-both = Sett eller läst
 settings-storage-used = { $size } i hämtningar.
 settings-storage-used-free = { $size } i hämtningar. { $free } lediga på den här { -device }en.
 settings-source-count = { $count ->
@@ -34,6 +38,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = Framsteg och liständringar synkas till { $tracker }. { -library-cap } och kalenderns Min lista visar dina listor på { $tracker }.
+settings-accounts-sync-note-read = Förlopp och liständringar synkas till { $tracker }. { -library-cap } visar dina listor från { $tracker }.
 settings-conflicts = { $count ->
     [one] En titel skiljer sig från { $tracker }
    *[other] { $count } titlar skiljer sig från { $tracker }

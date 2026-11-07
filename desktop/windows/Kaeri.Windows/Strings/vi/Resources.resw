@@ -497,6 +497,399 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Không kết nối được với {server}. Hãy kiểm tra máy chủ hoặc thử lại.</value>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>Chương {chapter}</value>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>Thường ra vào thứ Hai</value>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>Thường ra vào thứ Ba</value>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>Thường ra vào thứ Tư</value>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>Thường ra vào thứ Năm</value>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>Thường ra vào thứ Sáu</value>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>Thường ra vào thứ Bảy</value>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>Thường ra vào Chủ nhật</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>Khoảng {weeks} tuần một lần</value>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>Cũng có bản phim</value>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>Cũng có bản truyện</value>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>Chương {chapter} được gửi tới các dịch vụ theo dõi là chương {whole}.</value>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>Đọc tiếp từ trang {page}</value>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>Quay lại trang {page}</value>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>Đã chuyển tới {chapter}, trang {page}, nơi {device} dừng lại</value>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
+    <value>Đã chuyển tới chương {chapter}, trang {page}, nơi {device} dừng lại</value>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>Phải sang trái (tự nhận diện)</value>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>Trái sang phải (tự nhận diện)</value>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>Cuộn dọc (tự nhận diện)</value>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>Bạn đang ngoại tuyến. Các chương đã tải vẫn mở được.</value>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>{source} không phản hồi. Hãy thử lại sau.</value>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>Nguồn này không còn có nội dung đó. Hãy thử nguồn khác.</value>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>{source} đã từ chối yêu cầu. {reason}</value>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>Kaeri không đọc được dữ liệu mà {source} gửi về. Có thể plugin của nó cần cập nhật.</value>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>Trang này không tải được (lỗi {status}). Hãy thử lại.</value>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>Hãy đăng nhập lại vào {what} để đọc tiếp.</value>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>{path} không còn ở đó nữa. Nếu nó nằm trên ổ đĩa, hãy kết nối ổ đĩa rồi thử lại.</value>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>Không đọc được {path} dưới dạng {format}. Tệp có thể đã bị hỏng.</value>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>Kaeri không đọc được tệp {kind}.</value>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>Sách này được bảo vệ bản quyền nên Kaeri không mở được.</value>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>Thiết bị này đã hết dung lượng trống. Hãy giải phóng bớt rồi thử lại.</value>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>Tiểu thuyết cần System WebView mới hơn phiên bản {version}. Hãy cập nhật Android System WebView rồi thử lại.</value>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>Plugin này cần Kaeri mới hơn ({world}). Hãy cập nhật Kaeri để dùng.</value>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>Bản Kaeri này chưa hỗ trợ đọc truyện.</value>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>Đã xảy ra lỗi. {reason}</value>
+  </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} có dung lượng {size}, còn {target} chỉ nhận tệp tối đa {limit}. Hãy gửi ít chương hơn mỗi lần rồi thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file} thiếu {part} nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{part} trong {file} dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{part} trong {file} không hợp lệ nên tệp chưa được gửi. Hãy thử lại.</value>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>Manhwa</value>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>Manhua</value>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>Webtoon</value>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>One-shot</value>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>Light novel</value>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>Tiểu thuyết</value>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>Đang ra</value>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>Đã hoàn thành</value>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>Tạm ngưng</value>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>Đã hủy</value>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>Chưa phát hành</value>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>{count} chương</value>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>{count} tập</value>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>Trong danh sách dự định của bạn</value>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>Chương mới của truyện bạn theo dõi</value>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>Tiếp tục đọc</value>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>Tiếp theo cho bạn</value>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>Phổ biến, đang ra</value>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>Chương {chapter} ra hôm nay</value>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>Chương {chapter}, {title}, ra hôm nay</value>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>Chương {chapter} · trang {page}</value>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>Chương {chapter} · {percent}%</value>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>Chương {chapter} là chương mới</value>
+  </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>Phần {part}</value>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>Phần {part} · {percent}%</value>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>Phần {part} là phần mới</value>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>Phần {part} · {title}</value>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>Phần {part} ra hôm nay</value>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>Phần {part}, {title}, ra hôm nay</value>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>Chương {chapter} / {of}</value>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>Tập {volume}, phần {part}</value>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>Nhật Bản</value>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>Hàn Quốc</value>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>Trung Quốc</value>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>Đài Loan</value>
+  </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>Máy đọc sách khác</value>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>E-ink, 6 inch</value>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>E-ink, 7 inch</value>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>E-ink màu, 7 inch</value>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>Máy tính bảng</value>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>Chương {chapter}</value>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>{n} chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.</value>
+  </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>Chương {chapter} · {title}</value>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>Đã đọc</value>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>Mới</value>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>Đã tải</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Đã bị gỡ khỏi nguồn</value>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>Chưa tải</value>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>Trên thiết bị này</value>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>Đang chờ</value>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>Đang chờ · cần Wi-Fi</value>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>Đang tải · {done}/{total} trang</value>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>Không tải được</value>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>Trang {page}/{of}</value>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>Trang {page}</value>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n} trang</value>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n} phiên bản</value>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>vừa xong</value>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes} phút trước</value>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>hôm nay</value>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>hôm qua</value>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days} ngày trước</value>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks} tuần trước</value>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months} tháng trước</value>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years} năm trước</value>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>Đã xóa khỏi {tracker}</value>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>Không có trong danh sách {tracker} của bạn</value>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>Chưa khớp trên {tracker}, nên ở đó không có gì thay đổi</value>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>Vẫn còn trong danh sách {tracker} của bạn</value>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>Hãy đăng nhập lại vào {tracker}, rồi thử một lần nữa.</value>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>Không có truyện nào tên này</value>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>Không phản hồi từ {time}</value>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>Không phản hồi</value>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>{count} phần</value>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>{size}</value>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>{count} đã đọc</value>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>Chương {chapter}</value>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>{done}/{total} trang</value>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>{count} đang chờ nữa</value>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>{count} đang chờ</value>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>chờ Wi-Fi</value>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>Chương {chapter} không tải được</value>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>Khoảng {size}</value>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>qua Wi-Fi</value>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>qua dữ liệu di động</value>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>chờ Wi-Fi</value>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>Đã tải xong</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>{count} chương của {title} đã sẵn sàng để đọc ngoại tuyến.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>{count} phần của {title} đã sẵn sàng để đọc ngoại tuyến.</value>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>Các chương của {count} bộ truyện đã sẵn sàng để đọc ngoại tuyến.</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Đã tham gia {store} với tên {member}.</value>
   </data>
@@ -637,6 +1030,9 @@
   </data>
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>{plugin} không còn trong thư mục plugin.</value>
+  </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>{store} chưa liệt kê các nguồn sách. Chủ sở hữu có thể cập nhật cửa hàng plugin để thêm chúng.</value>
   </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>Thiết bị này đã tham gia {store} bằng liên kết. Hãy dán cùng liên kết đó vào thiết bị kia.</value>
@@ -855,7 +1251,7 @@
     <value>Không kết nối được tới máy chủ.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình.</value>
+    <value>Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Đã lưu {label}.</value>
@@ -1055,6 +1451,9 @@
   <data name="MatchChoiceLine" xml:space="preserve">
     <value>{parts} · khớp {percent}%</value>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>Tìm kiếm khi gõ tạm dừng một lúc để không vượt giới hạn của AniList. Nhấn Enter để tìm ngay.</value>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>Đang sửa bình luận của bạn</value>
   </data>
@@ -1253,6 +1652,36 @@
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
     <value>Cho phép TV có Chromecast tích hợp phát torrent. PC này gửi tập phim trong suốt thời gian phát.</value>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Khởi động lại</value>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>{count} tựa khác với {tracker}</value>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>Xem lại</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>Tìm cài đặt</value>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>Mức cao hơn lấy bản tốt nhất mà nguồn cung cấp, và tốn nhiều dung lượng hơn.</value>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>Phụ đề đi cùng tập phim dù tệp được chuyển đi đâu.</value>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>Bản tải đang tiếp tục chia sẻ nằm trong bộ nhớ đệm của Kaeri, không nằm trong thư mục tải xuống.</value>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>Đọc bình luận trên chủ đề diễn đàn của AniList cho các tập bạn đã xem.</value>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>Mỗi ảnh được tải từ trang lưu trữ nó, và trang đó thấy địa chỉ IP của bạn.</value>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>Chọn…</value>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeri vẫn đang tải xuống</value>
   </data>
@@ -1372,6 +1801,42 @@
   </data>
   <data name="StartFailedQuit" xml:space="preserve">
     <value>Thoát</value>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeri đã ngừng hoạt động</value>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>Phần xử lý công việc của ứng dụng đã dừng. Hãy mở lại Kaeri để tiếp tục.</value>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>Mở lại</value>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>{tracker} đã đồng bộ</value>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>{tracker} chưa đồng bộ</value>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>Đăng nhập lại vào {tracker}</value>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>Hiện những gì đang chạy</value>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>Không có gì đang chạy.</value>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>Mở Các thiết bị</value>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>Thông điệp</value>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>Chưa có thông điệp nào</value>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>Sự cố</value>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, tập {episode}</value>
@@ -3707,6 +4172,9 @@
   <data name="PartyFormNothing" xml:space="preserve">
     <value>Tập đang phát sẽ phát cùng phòng.</value>
   </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>Khi đã vào, hãy nhấn Phát trên bất kỳ tập nào để xem cùng phòng.</value>
+  </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>Tập {episode} của {title}</value>
   </data>
@@ -3853,6 +4321,9 @@
   </data>
   <data name="TogetherStart" xml:space="preserve">
     <value>Tạo phòng</value>
+  </data>
+  <data name="TogetherStartLine" xml:space="preserve">
+    <value>Mở một phòng và mời bạn bè bằng liên kết hoặc mã, rồi nhấn Phát trên tập bạn muốn xem.</value>
   </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>Vào phòng</value>
@@ -4054,6 +4525,9 @@
   </data>
   <data name="PartyBarIdle" xml:space="preserve">
     <value>Trong phòng · chưa có gì phát cho bạn</value>
+  </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>Nhấn Phát trên bất kỳ tập nào để xem cùng phòng</value>
   </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>{name} đã tạm dừng</value>
@@ -4865,6 +5339,120 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Thêm trong Cài đặt…</value>
   </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>Đang tải trang {page}</value>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>Không tải được trang {page}</value>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>Thử lại</value>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>Đóng</value>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>Đã đọc</value>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>Kế tiếp</value>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>Phải sang trái</value>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>Trái sang phải</value>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>Dải dọc</value>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>Màn hình</value>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>Chiều rộng</value>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>Có chân</value>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>Không chân</value>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>Giấy</value>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>Sáng</value>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>Nâu cổ điển</value>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>Tối</value>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>Hẹp</value>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>Rộng</value>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>Tự động</value>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>Một</value>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>Hai</value>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>Tách đôi</value>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>Xoay</value>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>Nguyên</value>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>Hai mép</value>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>Hai nửa</value>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>Tắt</value>
+  </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>Các chương</value>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>Còn {count} trang trong chương này</value>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>Đang tải các chương</value>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>Theo giao diện</value>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>Đen</value>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>Trắng</value>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>Bạn đã đọc kịp</value>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>Không</value>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>Nhỏ</value>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>Theo hệ thống</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Đọc bản demo</value>
   </data>
@@ -4936,6 +5524,933 @@
   </data>
   <data name="DemoReadChapter" xml:space="preserve">
     <value>Đọc chương {number}</value>
+  </data>
+  <data name="NavWatch" xml:space="preserve">
+    <value>Xem</value>
+  </data>
+  <data name="NavRead" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="NavUpdates" xml:space="preserve">
+    <value>Cập nhật</value>
+  </data>
+  <data name="HomeReadReleasing" xml:space="preserve">
+    <value>Đang ra</value>
+  </data>
+  <data name="HomeReadCheckedOnOpen" xml:space="preserve">
+    <value>Kiểm tra khi bạn mở Kaeri</value>
+  </data>
+  <data name="HomeReadEnd" xml:space="preserve">
+    <value>Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.</value>
+  </data>
+  <data name="HomeReadNoSources" xml:space="preserve">
+    <value>Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin để đọc từ Trang chủ.</value>
+  </data>
+  <data name="WeekUsually" xml:space="preserve">
+    <value>Thường</value>
+  </data>
+  <data name="WeekNothingUsually" xml:space="preserve">
+    <value>Thường không có</value>
+  </data>
+  <data name="UpdatesChecked" xml:space="preserve">
+    <value>Đã kiểm tra {ago}</value>
+  </data>
+  <data name="ChapterUpdatesCheckedCaughtUp" xml:space="preserve">
+    <value>Đã kiểm tra {ago} · các bộ truyện bạn đã đọc kịp</value>
+  </data>
+  <data name="ChapterUpdatesChecking" xml:space="preserve">
+    <value>Đang kiểm tra chương mới…</value>
+  </data>
+  <data name="UpdatesDownloadNew" xml:space="preserve">
+    <value>Tải chương mới</value>
+  </data>
+  <data name="UpdatesEmptyTitle" xml:space="preserve">
+    <value>Không có chương mới</value>
+  </data>
+  <data name="ChapterUpdatesEmptyLine" xml:space="preserve">
+    <value>Kaeri kiểm tra vài lần mỗi ngày các bộ truyện trong danh sách Đang đọc mà bạn đã đọc kịp.</value>
+  </data>
+  <data name="ChapterUpdatesToday" xml:space="preserve">
+    <value>Hôm nay</value>
+  </data>
+  <data name="ChapterUpdatesYesterday" xml:space="preserve">
+    <value>Hôm qua</value>
+  </data>
+  <data name="ChapterUpdatesVersions_other" xml:space="preserve">
+    <value>{n} phiên bản</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeries" xml:space="preserve">
+    <value>Mở {title}</value>
+  </data>
+  <data name="ChapterUpdatesOpenChapterHint" xml:space="preserve">
+    <value>Mở chương</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeriesMenu" xml:space="preserve">
+    <value>Mở bộ truyện</value>
+  </data>
+  <data name="ActionReadChapter" xml:space="preserve">
+    <value>Đọc chương {n}</value>
+  </data>
+  <data name="ActionContinueChapter" xml:space="preserve">
+    <value>Tiếp tục chương {n} · trang {page}</value>
+  </data>
+  <data name="ActionContinuePart" xml:space="preserve">
+    <value>Tiếp tục phần {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>Tiếp tục phần {n}</value>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>Đọc phần {n}</value>
+  </data>
+  <data name="ActionReadAgain" xml:space="preserve">
+    <value>Đọc lại</value>
+  </data>
+  <data name="SeriesReadingFrom" xml:space="preserve">
+    <value>Đang đọc từ</value>
+  </data>
+  <data name="SeriesChange" xml:space="preserve">
+    <value>Đổi</value>
+  </data>
+  <data name="SeriesSourcesMore_other" xml:space="preserve">
+    <value>và {n} nữa</value>
+  </data>
+  <data name="SeriesTrackerAsk" xml:space="preserve">
+    <value>Đây là bộ truyện nào? Chọn</value>
+  </data>
+  <data name="SeriesPreferredGroup" xml:space="preserve">
+    <value>Nhóm bạn ưu tiên ở đây</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_other" xml:space="preserve">
+    <value>{n}/{total} chương</value>
+  </data>
+  <data name="SeriesTrackerChapters_other" xml:space="preserve">
+    <value>{n} chương</value>
+  </data>
+  <data name="SeriesTrackerWithVolume" xml:space="preserve">
+    <value>{chapters} · tập {volume}</value>
+  </data>
+  <data name="SeriesTrackerVolumes" xml:space="preserve">
+    <value>Tập {volume}/{total}</value>
+  </data>
+  <data name="SeriesReadFromAnother" xml:space="preserve">
+    <value>Đọc từ nguồn khác</value>
+  </data>
+  <data name="SeriesScore" xml:space="preserve">
+    <value>Chấm điểm…</value>
+  </data>
+  <data name="SeriesAddToList" xml:space="preserve">
+    <value>Thêm vào danh sách</value>
+  </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>Xóa khỏi các danh sách…</value>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>Xóa {title} khỏi các danh sách của bạn?</value>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>Bộ truyện sẽ bị xóa khỏi danh sách trên mỗi dịch vụ theo dõi bạn đã kết nối. Vị trí đọc và các chương đã đọc vẫn ở lại trong Kaeri.</value>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>Các danh sách của bạn</value>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>{n} chương</value>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>Tất cả chưa đọc</value>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>Không tìm thấy trong</value>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>Tìm ở đó</value>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>Tìm trong {source}</value>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>Tìm</value>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>Không tìm thấy với những từ này</value>
+  </data>
+  <data name="SeriesTracking" xml:space="preserve">
+    <value>Theo dõi</value>
+  </data>
+  <data name="SeriesReadFromMenu" xml:space="preserve">
+    <value>Đổi nguồn…</value>
+  </data>
+  <data name="SeriesReadAgainMenu" xml:space="preserve">
+    <value>Đọc lại từ đầu…</value>
+  </data>
+  <data name="SeriesVolumes" xml:space="preserve">
+    <value>Các tập</value>
+  </data>
+  <data name="SeriesChapters" xml:space="preserve">
+    <value>Các chương</value>
+  </data>
+  <data name="SeriesOrder" xml:space="preserve">
+    <value>Thứ tự</value>
+  </data>
+  <data name="SeriesNewestFirst" xml:space="preserve">
+    <value>Mới nhất trước</value>
+  </data>
+  <data name="SeriesOldestFirst" xml:space="preserve">
+    <value>Cũ nhất trước</value>
+  </data>
+  <data name="SeriesVolume" xml:space="preserve">
+    <value>Tập {n}</value>
+  </data>
+  <data name="SeriesNoVolume" xml:space="preserve">
+    <value>Chưa thuộc tập nào</value>
+  </data>
+  <data name="SeriesChapterRange" xml:space="preserve">
+    <value>chương {from} đến {to}</value>
+  </data>
+  <data name="SeriesVolumeRead" xml:space="preserve">
+    <value>đã đọc</value>
+  </data>
+  <data name="SeriesExpanded" xml:space="preserve">
+    <value>Đã mở rộng</value>
+  </data>
+  <data name="SeriesCollapsed" xml:space="preserve">
+    <value>Đã thu gọn</value>
+  </data>
+  <data name="SeriesNoChaptersTitle" xml:space="preserve">
+    <value>Nguồn này chưa có chương nào</value>
+  </data>
+  <data name="SeriesNoChaptersLine" xml:space="preserve">
+    <value>Có thể nguồn khác có chúng.</value>
+  </data>
+  <data name="SeriesChaptersFailed" xml:space="preserve">
+    <value>Không tải được các chương từ {source}.</value>
+  </data>
+  <data name="SeriesChapterNumber" xml:space="preserve">
+    <value>Chương {n}</value>
+  </data>
+  <data name="SeriesBookmarked" xml:space="preserve">
+    <value>Đã đánh dấu</value>
+  </data>
+  <data name="SeriesMarkRead" xml:space="preserve">
+    <value>Đánh dấu đã đọc</value>
+  </data>
+  <data name="SeriesMarkUnread" xml:space="preserve">
+    <value>Đánh dấu chưa đọc</value>
+  </data>
+  <data name="SeriesMarkReadUpTo" xml:space="preserve">
+    <value>Đánh dấu đã đọc đến đây</value>
+  </data>
+  <data name="SeriesDownload" xml:space="preserve">
+    <value>Tải xuống</value>
+  </data>
+  <data name="SeriesReadChapterMenu" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="SeriesBookmark" xml:space="preserve">
+    <value>Đánh dấu trang</value>
+  </data>
+  <data name="SeriesRemoveBookmark" xml:space="preserve">
+    <value>Bỏ đánh dấu</value>
+  </data>
+  <data name="SeriesVersions_other" xml:space="preserve">
+    <value>{n} phiên bản</value>
+  </data>
+  <data name="SeriesVersionsLoading" xml:space="preserve">
+    <value>Đang tìm các phiên bản…</value>
+  </data>
+  <data name="SeriesVersionInUse" xml:space="preserve">
+    <value>Đang dùng {name}</value>
+  </data>
+  <data name="SeriesPreferVersion" xml:space="preserve">
+    <value>Ưu tiên {name} cho bộ truyện này</value>
+  </data>
+  <data name="ChapterStateDownloaded" xml:space="preserve">
+    <value>Đã tải</value>
+  </data>
+  <data name="ChapterStateQueued" xml:space="preserve">
+    <value>Đang chờ</value>
+  </data>
+  <data name="ChapterStateWifi" xml:space="preserve">
+    <value>Đang chờ · cần Wi-Fi</value>
+  </data>
+  <data name="ChapterStateDownloading" xml:space="preserve">
+    <value>Đang tải · {done}/{total} trang</value>
+  </data>
+  <data name="ChapterStateFailed" xml:space="preserve">
+    <value>Không tải được. {reason}</value>
+  </data>
+  <data name="ChapterStatePageOf" xml:space="preserve">
+    <value>Trang {page}/{of}</value>
+  </data>
+  <data name="ChapterStatePage" xml:space="preserve">
+    <value>Trang {page}</value>
+  </data>
+  <data name="ChapterStateRead" xml:space="preserve">
+    <value>Đã đọc</value>
+  </data>
+  <data name="ChapterStateNew" xml:space="preserve">
+    <value>Mới</value>
+  </data>
+  <data name="ChapterDownloadStop" xml:space="preserve">
+    <value>Dừng tải</value>
+  </data>
+  <data name="ChapterRetry" xml:space="preserve">
+    <value>Thử lại</value>
+  </data>
+  <data name="ChapterDownloadDelete" xml:space="preserve">
+    <value>Xóa bản tải</value>
+  </data>
+  <data name="DownloadNext" xml:space="preserve">
+    <value>{n} chương chưa đọc kế</value>
+  </data>
+  <data name="DownloadUnread" xml:space="preserve">
+    <value>Mọi chương chưa đọc</value>
+  </data>
+  <data name="DownloadVolumeCount_other" xml:space="preserve">
+    <value>{volume} · {n} chương</value>
+  </data>
+  <data name="DownloadChoose" xml:space="preserve">
+    <value>Chọn chương…</value>
+  </data>
+  <data name="DownloadDeleteSeries" xml:space="preserve">
+    <value>Xóa các bản tải của bộ truyện này</value>
+  </data>
+  <data name="DownloadChapters_other" xml:space="preserve">
+    <value>Tải {n} chương</value>
+  </data>
+  <data name="DownloadOverWifi" xml:space="preserve">
+    <value>Qua Wi-Fi</value>
+  </data>
+  <data name="ReadAgainTitle" xml:space="preserve">
+    <value>Đọc lại {title} từ đầu?</value>
+  </data>
+  <data name="ReadAgainLine" xml:space="preserve">
+    <value>Vị trí của bạn quay về chương 1 trên mọi thiết bị của bạn. Các chương vẫn được đánh dấu đã đọc trên các dịch vụ theo dõi, và AniList tính là đọc lại.</value>
+  </data>
+  <data name="ReadAgainConfirm" xml:space="preserve">
+    <value>Đọc lại</value>
+  </data>
+  <data name="SeriesReadFromTitle" xml:space="preserve">
+    <value>Đọc từ</value>
+  </data>
+  <data name="SeriesReadFromAsking" xml:space="preserve">
+    <value>Đang hỏi các nguồn của bạn…</value>
+  </data>
+  <data name="SeriesReadFromNoneTitle" xml:space="preserve">
+    <value>Không nguồn nào có bộ truyện này</value>
+  </data>
+  <data name="SeriesReadFromNoneLine" xml:space="preserve">
+    <value>Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin trong Các nguồn của bạn.</value>
+  </data>
+  <data name="SeriesReadFromChapters" xml:space="preserve">
+    <value>Chương 1 đến {latest}</value>
+  </data>
+  <data name="SeriesReadFromChaptersLater" xml:space="preserve">
+    <value>chương 1 đến {latest}</value>
+  </data>
+  <data name="SeriesReadFromOnDevice" xml:space="preserve">
+    <value>trên {device} này</value>
+  </data>
+  <data name="SeriesReadFromNote" xml:space="preserve">
+    <value>Dấu đã đọc thuộc về bộ truyện, nên được giữ nguyên khi bạn đổi. Các bản tải từ nguồn cũ vẫn ở lại cho đến khi bạn xóa.</value>
+  </data>
+  <data name="SeriesNotTracked" xml:space="preserve">
+    <value>Không theo dõi ở đây</value>
+  </data>
+  <data name="SeriesTrackerConnect" xml:space="preserve">
+    <value>Kết nối trong Cài đặt để theo dõi bộ truyện này</value>
+  </data>
+  <data name="SeriesTrackerNotThere" xml:space="preserve">
+    <value>Không có kết quả khớp trên dịch vụ theo dõi này</value>
+  </data>
+  <data name="SeriesTrackerLooking" xml:space="preserve">
+    <value>Đang tìm bộ truyện này…</value>
+  </data>
+  <data name="SeriesTrackerBehind" xml:space="preserve">
+    <value>Đang ở chương {has}. Sẽ nhận chương {gets} ở lần đồng bộ sau.</value>
+  </data>
+  <data name="SeriesTrackerAhead" xml:space="preserve">
+    <value>Đang ở chương {has}, xa hơn Kaeri.</value>
+  </data>
+  <data name="SeriesTrackerScore" xml:space="preserve">
+    <value>{score}/10</value>
+  </data>
+  <data name="SeriesTrackerKeepKaeri" xml:space="preserve">
+    <value>Giữ vị trí của Kaeri</value>
+  </data>
+  <data name="SeriesTrackerTakeTheirs" xml:space="preserve">
+    <value>Dùng vị trí của {tracker}</value>
+  </data>
+  <data name="SeriesTrackerNoneOfThese" xml:space="preserve">
+    <value>Không có cái nào</value>
+  </data>
+  <data name="ReadListReading" xml:space="preserve">
+    <value>Đang đọc</value>
+  </data>
+  <data name="ReadListPlanning" xml:space="preserve">
+    <value>Dự định</value>
+  </data>
+  <data name="ReadListCompleted" xml:space="preserve">
+    <value>Hoàn thành</value>
+  </data>
+  <data name="ReadListPaused" xml:space="preserve">
+    <value>Tạm dừng</value>
+  </data>
+  <data name="ReadListDropped" xml:space="preserve">
+    <value>Bỏ dở</value>
+  </data>
+  <data name="ReadListRereading" xml:space="preserve">
+    <value>Đọc lại</value>
+  </data>
+  <data name="ReadListYourFiles" xml:space="preserve">
+    <value>Tệp của bạn</value>
+  </data>
+  <data name="MediumWatch" xml:space="preserve">
+    <value>Xem</value>
+  </data>
+  <data name="MediumRead" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="MediumBoth" xml:space="preserve">
+    <value>Cả hai</value>
+  </data>
+  <data name="MediumWatchLine" xml:space="preserve">
+    <value>Phim bộ và phim lẻ từ các nguồn của bạn</value>
+  </data>
+  <data name="MediumReadLine" xml:space="preserve">
+    <value>Manga, webtoon và light novel từ các nguồn của bạn</value>
+  </data>
+  <data name="MediumBothLine" xml:space="preserve">
+    <value>Xem và đọc, mỗi thứ ở một nơi riêng</value>
+  </data>
+  <data name="MediumAnswerWatch" xml:space="preserve">
+    <value>Xem</value>
+  </data>
+  <data name="MediumAnswerRead" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="MediumAnswerBoth" xml:space="preserve">
+    <value>Xem và đọc</value>
+  </data>
+  <data name="SourcesAddTitle" xml:space="preserve">
+    <value>Thêm nguồn</value>
+  </data>
+  <data name="BookAddLine" xml:space="preserve">
+    <value>Sách bạn đã có, hoặc các plugin từ một cửa hàng mà chủ sở hữu đã mời bạn.</value>
+  </data>
+  <data name="BookAddFolder" xml:space="preserve">
+    <value>Một thư mục</value>
+  </data>
+  <data name="BookAddFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF và thư mục ảnh trên {device} này hoặc một ổ đĩa</value>
+  </data>
+  <data name="BookAddServer" xml:space="preserve">
+    <value>Một máy chủ</value>
+  </data>
+  <data name="BookAddServerLine" xml:space="preserve">
+    <value>Komga, Kavita hoặc danh mục OPDS mà bạn có thể đăng nhập</value>
+  </data>
+  <data name="BookAddStore" xml:space="preserve">
+    <value>Một cửa hàng plugin</value>
+  </data>
+  <data name="BookAddStoreLine" xml:space="preserve">
+    <value>Dán lời mời từ chủ sở hữu cửa hàng</value>
+  </data>
+  <data name="BookAddServerTitle" xml:space="preserve">
+    <value>Thêm máy chủ</value>
+  </data>
+  <data name="BookAddServerButton" xml:space="preserve">
+    <value>Thêm máy chủ</value>
+  </data>
+  <data name="SourcesFoundServer" xml:space="preserve">
+    <value>Đã tìm thấy máy chủ {kind}</value>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>Đã tìm thấy máy chủ {kind} có {n} bộ truyện</value>
+  </data>
+  <data name="BookServerLooking" xml:space="preserve">
+    <value>Đang kiểm tra địa chỉ này…</value>
+  </data>
+  <data name="BookServerNote" xml:space="preserve">
+    <value>Kaeri gửi tiến độ đọc của bạn về máy chủ này. Mật khẩu được giữ trong Keychain.</value>
+  </data>
+  <data name="BookSourcesFolders" xml:space="preserve">
+    <value>Thư mục</value>
+  </data>
+  <data name="BookSourcesServers" xml:space="preserve">
+    <value>Máy chủ</value>
+  </data>
+  <data name="BookSourcesPlugins" xml:space="preserve">
+    <value>Các plugin</value>
+  </data>
+  <data name="BookSourcesPluginsFooter" xml:space="preserve">
+    <value>Các plugin đến từ các cửa hàng plugin mà bạn tham gia.</value>
+  </data>
+  <data name="BookSourcesSeries_other" xml:space="preserve">
+    <value>{n} bộ truyện</value>
+  </data>
+  <data name="BookSourcesScanning" xml:space="preserve">
+    <value>Đang quét · đã thấy {n}</value>
+  </data>
+  <data name="BookSourcesMissing" xml:space="preserve">
+    <value>Không tìm thấy. Ổ đĩa đã được kết nối chưa?</value>
+  </data>
+  <data name="BookSourcesOff" xml:space="preserve">
+    <value>Tắt</value>
+  </data>
+  <data name="BookSourcesProgressBack" xml:space="preserve">
+    <value>tiến độ được gửi về máy chủ</value>
+  </data>
+  <data name="BookSourcesOpds" xml:space="preserve">
+    <value>Danh mục OPDS</value>
+  </data>
+  <data name="BookSourcesFromStore" xml:space="preserve">
+    <value>Từ {store}</value>
+  </data>
+  <data name="BookSourcesVersion" xml:space="preserve">
+    <value>phiên bản {version}</value>
+  </data>
+  <data name="BookSourcesCheckMatches" xml:space="preserve">
+    <value>Kiểm tra kết quả khớp · {n}</value>
+  </data>
+  <data name="BookSourcesCheckMatchesTitle" xml:space="preserve">
+    <value>Kiểm tra kết quả khớp</value>
+  </data>
+  <data name="BookSourcesScan" xml:space="preserve">
+    <value>Quét lại</value>
+  </data>
+  <data name="BookSourcesReportProgress" xml:space="preserve">
+    <value>Gửi tiến độ về máy chủ</value>
+  </data>
+  <data name="BookSourcesUse" xml:space="preserve">
+    <value>Dùng máy chủ này</value>
+  </data>
+  <data name="BookSourcesNotABookServer" xml:space="preserve">
+    <value>Địa chỉ này có phản hồi, nhưng không phải máy chủ sách.</value>
+  </data>
+  <data name="BookSourcesNoMatch" xml:space="preserve">
+    <value>Không khớp</value>
+  </data>
+  <data name="BookSourcesKeep" xml:space="preserve">
+    <value>Giữ chưa khớp</value>
+  </data>
+  <data name="BookSourcesFind" xml:space="preserve">
+    <value>Tìm</value>
+  </data>
+  <data name="BookSourcesUnmatchedNote" xml:space="preserve">
+    <value>Các bộ truyện chưa khớp vẫn đọc được từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.</value>
+  </data>
+  <data name="LibraryScopeLabel" xml:space="preserve">
+    <value>Phim hoặc Truyện</value>
+  </data>
+  <data name="LibraryScopeShows" xml:space="preserve">
+    <value>Phim</value>
+  </data>
+  <data name="LibraryScopeReading" xml:space="preserve">
+    <value>Truyện</value>
+  </data>
+  <data name="ReadSortLastRead" xml:space="preserve">
+    <value>Đọc gần nhất</value>
+  </data>
+  <data name="ReadLibraryListValue_other" xml:space="preserve">
+    <value>{list}, {n} bộ truyện</value>
+  </data>
+  <data name="ReadLibraryEmpty" xml:space="preserve">
+    <value>Chưa có gì trong {list}</value>
+  </data>
+  <data name="ReadLibraryEmptyLine" xml:space="preserve">
+    <value>Các bộ truyện bạn thêm từ Tìm kiếm hoặc trang truyện sẽ hiện ở đây.</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyTitle" xml:space="preserve">
+    <value>Chưa có gì trong tệp của bạn</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyLine" xml:space="preserve">
+    <value>Các bộ truyện trong thư mục và máy chủ của bạn mà không thuộc danh sách nào sẽ hiện ở đây.</value>
+  </data>
+  <data name="ReadLibraryFilesAdd" xml:space="preserve">
+    <value>Thêm thư mục hoặc máy chủ</value>
+  </data>
+  <data name="ReadSearchPlaceholder" xml:space="preserve">
+    <value>Tìm truyện</value>
+  </data>
+  <data name="SearchOtherScope_other" xml:space="preserve">
+    <value>{n} kết quả trong {scope}</value>
+  </data>
+  <data name="SearchShowThem" xml:space="preserve">
+    <value>Hiện ra</value>
+  </data>
+  <data name="ReadSearchBrowseLine" xml:space="preserve">
+    <value>{what} · từ AniList</value>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>{n} bộ truyện từ AniList</value>
+  </data>
+  <data name="ReadSearchFailed" xml:space="preserve">
+    <value>Không tìm kiếm được</value>
+  </data>
+  <data name="ReadSearchNothing" xml:space="preserve">
+    <value>Không tìm thấy gì cho {query}</value>
+  </data>
+  <data name="ReadSearchNothingBrowse" xml:space="preserve">
+    <value>Không có gì khớp với các bộ lọc này</value>
+  </data>
+  <data name="ReadSearchNothingLine" xml:space="preserve">
+    <value>Hãy thử từ khác, hoặc một tên bằng ngôn ngữ khác.</value>
+  </data>
+  <data name="ReadSearchNothingFiltersLine" xml:space="preserve">
+    <value>Ít bộ lọc hơn có thể tìm thấy nhiều hơn.</value>
+  </data>
+  <data name="ReadSearchClearFilters" xml:space="preserve">
+    <value>Xóa bộ lọc</value>
+  </data>
+  <data name="ReadSortPopular" xml:space="preserve">
+    <value>Phổ biến</value>
+  </data>
+  <data name="ReadSortTrending" xml:space="preserve">
+    <value>Thịnh hành</value>
+  </data>
+  <data name="ReadSortScore" xml:space="preserve">
+    <value>Điểm</value>
+  </data>
+  <data name="ReadSortNewest" xml:space="preserve">
+    <value>Mới nhất</value>
+  </data>
+  <data name="ReadFilterFormat" xml:space="preserve">
+    <value>Định dạng</value>
+  </data>
+  <data name="ReadFilterOrigin" xml:space="preserve">
+    <value>Xuất xứ</value>
+  </data>
+  <data name="ReadFilterStatus" xml:space="preserve">
+    <value>Tình trạng</value>
+  </data>
+  <data name="ReadFilterGenres" xml:space="preserve">
+    <value>Thể loại</value>
+  </data>
+  <data name="ReadFilterTitle" xml:space="preserve">
+    <value>Bộ lọc</value>
+  </data>
+  <data name="ReadFilterReset" xml:space="preserve">
+    <value>Đặt lại</value>
+  </data>
+  <data name="ReadFilterAny" xml:space="preserve">
+    <value>Bất kỳ</value>
+  </data>
+  <data name="ReadFilterSet" xml:space="preserve">
+    <value>{name}:</value>
+  </data>
+  <data name="ReadFilterMany" xml:space="preserve">
+    <value>{first} và {more} nữa</value>
+  </data>
+  <data name="ReadFilterNotGenre" xml:space="preserve">
+    <value>Không phải {genre}</value>
+  </data>
+  <data name="ReadFilterGenresCount_other" xml:space="preserve">
+    <value>{n} thể loại</value>
+  </data>
+  <data name="ReadFilterIncluded" xml:space="preserve">
+    <value>Bao gồm</value>
+  </data>
+  <data name="ReadFilterLeftOut" xml:space="preserve">
+    <value>Loại trừ</value>
+  </data>
+  <data name="OnboardingStep" xml:space="preserve">
+    <value>{step}/{total}</value>
+  </data>
+  <data name="OnboardingWelcomeLine" xml:space="preserve">
+    <value>Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</value>
+  </data>
+  <data name="OnboardingWelcomeNote" xml:space="preserve">
+    <value>Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</value>
+  </data>
+  <data name="OnboardingMediumTitle" xml:space="preserve">
+    <value>Xem, đọc hay cả hai?</value>
+  </data>
+  <data name="OnboardingMediumLine" xml:space="preserve">
+    <value>Kaeri chỉ hiện những gì bạn chọn. Bạn có thể đổi trong Cài đặt.</value>
+  </data>
+  <data name="OnboardingMediumHint" xml:space="preserve">
+    <value>Hãy chọn một trong ba trước</value>
+  </data>
+  <data name="OnboardingListsTitle" xml:space="preserve">
+    <value>Đưa các danh sách của bạn vào</value>
+  </data>
+  <data name="OnboardingListsLineWatch" xml:space="preserve">
+    <value>Kaeri giữ việc xem của bạn đồng bộ với {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineRead" xml:space="preserve">
+    <value>Kaeri giữ việc đọc của bạn đồng bộ với {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineBoth" xml:space="preserve">
+    <value>Kaeri giữ việc đọc và xem của bạn đồng bộ với {tracker}.</value>
+  </data>
+  <data name="OnboardingListsAnilistLine" xml:space="preserve">
+    <value>Danh sách, tiến độ và gợi ý</value>
+  </data>
+  <data name="OnboardingListsLaterWatch" xml:space="preserve">
+    <value>Bạn có thể thêm MyAnimeList, Kitsu, Simkl và Trakt sau trong Cài đặt, mục Tài khoản.</value>
+  </data>
+  <data name="OnboardingListsLaterRead" xml:space="preserve">
+    <value>Bạn có thể thêm MyAnimeList, Kitsu và MangaUpdates sau trong Cài đặt, mục Tài khoản.</value>
+  </data>
+  <data name="OnboardingListsLaterBoth" xml:space="preserve">
+    <value>Bạn có thể thêm MyAnimeList, Kitsu, MangaUpdates, Simkl và Trakt sau trong Cài đặt, mục Tài khoản.</value>
+  </data>
+  <data name="OnboardingConnect" xml:space="preserve">
+    <value>Kết nối {tracker}</value>
+  </data>
+  <data name="OnboardingBooksTitle" xml:space="preserve">
+    <value>Sách của bạn đến từ đâu</value>
+  </data>
+  <data name="OnboardingBooksLine" xml:space="preserve">
+    <value>Kaeri không đi kèm sách nào. Hãy thêm những gì bạn đã có, hoặc tham gia một cửa hàng plugin bằng lời mời từ chủ sở hữu.</value>
+  </data>
+  <data name="OnboardingBooksFolder" xml:space="preserve">
+    <value>Thêm thư mục</value>
+  </data>
+  <data name="OnboardingBooksFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF và thư mục ảnh</value>
+  </data>
+  <data name="OnboardingBooksServer" xml:space="preserve">
+    <value>Thêm máy chủ</value>
+  </data>
+  <data name="OnboardingBooksServerLine" xml:space="preserve">
+    <value>Komga, Kavita hoặc danh mục OPDS</value>
+  </data>
+  <data name="OnboardingBooksInviteHeading" xml:space="preserve">
+    <value>Lời mời cửa hàng plugin</value>
+  </data>
+  <data name="OnboardingBooksInvitePlaceholder" xml:space="preserve">
+    <value>Dán lời mời</value>
+  </data>
+  <data name="OnboardingBooksPluginLine" xml:space="preserve">
+    <value>Các plugin chạy mã của những người bạn tin tưởng. Chỉ tham gia các cửa hàng plugin có chủ sở hữu mà bạn biết.</value>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>Phim và sách của bạn đến từ đâu</value>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>Kaeri không đi kèm phim hay sách nào. Hãy thêm những gì bạn đã có, hoặc tham gia một cửa hàng plugin bằng lời mời từ chủ sở hữu.</value>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>Phim</value>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>Sách</value>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>Tệp video trên {device} này</value>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>Máy chủ Jellyfin của bạn</value>
+  </data>
+  <data name="MediumChoicePosition" xml:space="preserve">
+    <value>{n}/{total}</value>
+  </data>
+  <data name="MediumChangeLater" xml:space="preserve">
+    <value>Bạn có thể đổi trong Cài đặt.</value>
+  </data>
+  <data name="MediumUpdateLine" xml:space="preserve">
+    <value>Kaeri giờ đây có thể đọc manga, webtoon và light novel từ các nguồn của bạn. Hãy chọn Kaeri dùng để làm gì trên {device} này.</value>
+  </data>
+  <data name="MediumJoinTitleWatch_other" xml:space="preserve">
+    <value>{devices} đang được đặt để xem</value>
+  </data>
+  <data name="MediumJoinTitleRead_other" xml:space="preserve">
+    <value>{devices} đang được đặt để đọc</value>
+  </data>
+  <data name="MediumJoinTitleBoth_other" xml:space="preserve">
+    <value>{devices} đang được đặt để xem và đọc</value>
+  </data>
+  <data name="MediumJoinLine" xml:space="preserve">
+    <value>Hãy chọn Kaeri dùng để làm gì trên {device} này. Mỗi thiết bị giữ lựa chọn riêng.</value>
+  </data>
+  <data name="MediumOffTitleWatch" xml:space="preserve">
+    <value>Tắt việc xem?</value>
+  </data>
+  <data name="MediumOffTitleRead" xml:space="preserve">
+    <value>Tắt việc đọc?</value>
+  </data>
+  <data name="MediumOffWatchBody" xml:space="preserve">
+    <value>Lịch, Theo mùa, Cùng xem và phim của bạn sẽ biến mất khỏi Kaeri trên {device} này. Danh sách, tiến độ và các bản tải vẫn còn, và quay lại nếu bạn bật lại việc xem.</value>
+  </data>
+  <data name="MediumOffReadBody" xml:space="preserve">
+    <value>Cập nhật và phần đọc của bạn sẽ biến mất khỏi Kaeri trên {device} này. Danh sách, tiến độ và các bản tải vẫn còn, và quay lại nếu bạn bật lại việc đọc.</value>
+  </data>
+  <data name="MediumOffDeleteWatch" xml:space="preserve">
+    <value>Xóa các tập đã tải</value>
+  </data>
+  <data name="MediumOffDeleteRead" xml:space="preserve">
+    <value>Xóa các chương đã tải</value>
+  </data>
+  <data name="MediumOffDeleteSize" xml:space="preserve">
+    <value>{size} trên {device} này</value>
+  </data>
+  <data name="MediumOffConfirmWatch" xml:space="preserve">
+    <value>Tắt việc xem</value>
+  </data>
+  <data name="MediumOffConfirmRead" xml:space="preserve">
+    <value>Tắt việc đọc</value>
+  </data>
+  <data name="SettingsKaeriIsFor" xml:space="preserve">
+    <value>Kaeri dùng để</value>
+  </data>
+  <data name="SettingsMediumNote" xml:space="preserve">
+    <value>Mỗi thiết bị giữ lựa chọn riêng</value>
+  </data>
+  <data name="SettingsMediumFooter" xml:space="preserve">
+    <value>Mỗi thiết bị giữ lựa chọn riêng. Tắt một mục vẫn giữ danh sách, tiến độ và các bản tải của nó.</value>
+  </data>
+  <data name="SettingsOpenAtNote" xml:space="preserve">
+    <value>Trang chủ mà Kaeri khởi động vào</value>
+  </data>
+  <data name="SettingsGroupReading" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="SettingsGroupShows" xml:space="preserve">
+    <value>Phim</value>
+  </data>
+  <data name="SettingsAsideReading" xml:space="preserve">
+    <value>Mặc định của trình đọc là điểm bắt đầu của mọi bộ truyện. Bộ truyện nào bạn đổi trong trình đọc sẽ giữ lựa chọn riêng.</value>
+  </data>
+  <data name="SettingsReaderDefaults" xml:space="preserve">
+    <value>Mặc định của trình đọc</value>
+  </data>
+  <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
+    <value>Bộ truyện nào bạn đổi sẽ giữ chế độ, hướng đọc và giao diện riêng.</value>
+  </data>
+  <data name="SettingsReaderManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="SettingsReaderWebtoons" xml:space="preserve">
+    <value>Webtoon</value>
+  </data>
+  <data name="SettingsReaderWebtoonsNote" xml:space="preserve">
+    <value>Webtoon luôn mở dưới dạng dải dọc</value>
+  </data>
+  <data name="SettingsReaderNovels" xml:space="preserve">
+    <value>Light novel</value>
+  </data>
+  <data name="SettingsReaderRtl" xml:space="preserve">
+    <value>Trang, phải sang trái</value>
+  </data>
+  <data name="SettingsReaderLtr" xml:space="preserve">
+    <value>Trang, trái sang phải</value>
+  </data>
+  <data name="SettingsReaderStrip" xml:space="preserve">
+    <value>Dải dọc</value>
+  </data>
+  <data name="SettingsReaderPages" xml:space="preserve">
+    <value>Trang</value>
+  </data>
+  <data name="SettingsReaderScrolled" xml:space="preserve">
+    <value>Cuộn</value>
+  </data>
+  <data name="SettingsCountsRead" xml:space="preserve">
+    <value>Tính là đã đọc</value>
+  </data>
+  <data name="SettingsCountsReadNote" xml:space="preserve">
+    <value>Dừng một lúc ở trang cuối, hoặc chuyển sang chương sau</value>
+  </data>
+  <data name="SettingsCountsReadValue" xml:space="preserve">
+    <value>Sau trang cuối</value>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>Khi rời khỏi chương</value>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>Lật qua trang cuối, hoặc mở chương sau</value>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>Khi bạn đánh dấu</value>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</value>
+  </data>
+  <data name="SettingsFollowGroup" xml:space="preserve">
+    <value>Cài đặt bộ truyện đi theo bạn</value>
+  </data>
+  <data name="SettingsFollowMode" xml:space="preserve">
+    <value>Chế độ, hướng đọc và màu</value>
+  </data>
+  <data name="SettingsFollowModeNote" xml:space="preserve">
+    <value>Bộ truyện bạn đổi sẽ đọc giống nhau trên các thiết bị khác</value>
+  </data>
+  <data name="SettingsFollowFooter" xml:space="preserve">
+    <value>Cỡ chữ, lề, vùng chạm và làm mới ở lại trên {device} này.</value>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>Màu hoặc xám</value>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>Bộ truyện trong Đang đọc</value>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>Bộ truyện đang đọc cũng được giữ sẵn các chương sau</value>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>Tiến độ</value>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>Một chương được đọc xong</value>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>Đóng trình đọc</value>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>Giữ mức xa nhất</value>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>Thay đổi mới nhất</value>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>Trạng thái và điểm theo thay đổi mới nhất</value>
+  </data>
+  <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
+    <value>Các chương sau của bộ truyện trong danh sách Đang đọc của bạn</value>
+  </data>
+  <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
+    <value>Các chương đã đánh dấu trang được giữ lại</value>
+  </data>
+  <data name="SettingsChapterNotificationsNote" xml:space="preserve">
+    <value>Bộ truyện trong danh sách Đang đọc của bạn</value>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>Khi các chương đang tải đều xong</value>
+  </data>
+  <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
+    <value>Chương có kênh hệ thống riêng, nên có thể tắt tiếng riêng.</value>
+  </data>
+  <data name="AccountsMangaupdatesCredit" xml:space="preserve">
+    <value>MangaUpdates được truy cập qua API công khai của nó.</value>
+  </data>
+  <data name="AccountsUsername" xml:space="preserve">
+    <value>Tên người dùng</value>
+  </data>
+  <data name="ReadDownloadsTotal_other" xml:space="preserve">
+    <value>{n} chương · {size}</value>
+  </data>
+  <data name="ReadDownloadsActive" xml:space="preserve">
+    <value>{chapter} · {done}/{total} trang</value>
+  </data>
+  <data name="ReadDownloadsMoreQueued" xml:space="preserve">
+    <value>{n} đang chờ nữa</value>
+  </data>
+  <data name="ReadDownloadsQueued_other" xml:space="preserve">
+    <value>{n} chương đang chờ</value>
+  </data>
+  <data name="ReadDownloadsFailed" xml:space="preserve">
+    <value>{chapter} không tải được. {reason}</value>
+  </data>
+  <data name="ReadDownloadsKept_other" xml:space="preserve">
+    <value>{n} chương</value>
+  </data>
+  <data name="ReadDownloadsRead" xml:space="preserve">
+    <value>{n} đã đọc</value>
+  </data>
+  <data name="ReadDownloadsDeleteRead" xml:space="preserve">
+    <value>Xóa chương đã đọc</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Mùa trước</value>
@@ -5795,6 +7310,42 @@
   <data name="SettingsTorrentsCellular" xml:space="preserve">
     <value>Torrent khi dùng dữ liệu di động</value>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>Tải chương bằng dữ liệu di động</value>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>Giữ sẵn các chương sau</value>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>Xóa chương sau khi đọc</value>
+  </data>
+  <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
+    <value>Cài đặt bộ truyện đi theo bạn</value>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>Chương mới</value>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>Chế độ và hướng đọc</value>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>Giao diện</value>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>Gửi tiến độ sau</value>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>Khi các dịch vụ theo dõi không khớp nhau</value>
+  </data>
+  <data name="SettingsChapterNotifications" xml:space="preserve">
+    <value>Chương mới</value>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>Tải xong</value>
+  </data>
+  <data name="SettingsOpenAt" xml:space="preserve">
+    <value>Mở ở</value>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>Chia sẻ sau khi xem</value>
   </data>
@@ -5854,6 +7405,9 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Tập mới</value>
+  </data>
+  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
+    <value>Cho các tựa trong danh sách Đang xem của bạn</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.</value>
@@ -6023,6 +7577,12 @@
   <data name="SettingsAsideAccounts" xml:space="preserve">
     <value>Kaeri dùng được không cần tài khoản. Lịch sử xem vẫn ở trên thiết bị này khi bạn đăng xuất.</value>
   </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>Kaeri dùng được mà không cần tài khoản. Lịch sử đọc của bạn vẫn ở lại trên thiết bị này khi bạn đăng xuất.</value>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>Kaeri dùng được mà không cần tài khoản. Lịch sử xem và đọc của bạn vẫn ở lại trên thiết bị này khi bạn đăng xuất.</value>
+  </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>hôm nay</value>
   </data>
@@ -6178,6 +7738,15 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Đặt lại kiểu phụ đề</value>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>Chia sẻ trong mạng này</value>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>Mật khẩu của feed</value>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>Cổng của feed</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Địa chỉ</value>
@@ -7267,6 +8836,9 @@
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>Đăng nhập {service} trong trình duyệt</value>
+  </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>Bạn có thể đóng cửa sổ này. Kaeri vẫn chạy tiếp và tự mở bước kế tiếp khi sẵn sàng.</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>máy tính</value>
@@ -8366,6 +9938,9 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>Chọn tệp torrent</value>
   </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeri không đọc được liên kết hoặc tệp đó.</value>
+  </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>Đây có phải {title}, tập {episode} không?</value>
   </data>
@@ -8416,6 +9991,27 @@
   </data>
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.</value>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.</value>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.</value>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>Danh sách và tiến độ</value>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>Danh sách đọc và tiến độ</value>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>Phim và truyện</value>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>Truyện</value>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>Phim</value>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>Thư viện và đồng bộ cần tài khoản {tracker} của bạn</value>

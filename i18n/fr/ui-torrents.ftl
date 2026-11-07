@@ -43,6 +43,7 @@ opened-open = Ouvrir un lien ou un fichier
 opened-paste-title = Ouvrir un lien magnet ou un fichier torrent
 opened-paste-placeholder = Lien magnet ou hash d’info
 opened-choose-file = Choisir un fichier torrent
+opened-unreadable = { -app-name } n'a pas pu lire ce lien ou ce fichier.
 opened-confirm = Est-ce { $title }, épisode { $episode } ?
 opened-confirm-title = Est-ce { $title } ? Choisissez l’épisode.
 opened-no-guess = { -app-name } n’a pas pu déterminer ce que c’est. Choisissez le titre concerné ou lisez-le sans suivi.

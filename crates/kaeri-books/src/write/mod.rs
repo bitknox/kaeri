@@ -7,6 +7,7 @@
 //! `javascript:` links, frames, objects and embeds are left out of what is written.
 
 mod cbz;
+mod check;
 mod epub;
 mod kepub;
 pub(crate) mod xhtml;
@@ -15,6 +16,7 @@ use std::io;
 use std::ops::Range;
 
 pub use cbz::CbzWriter;
+pub use check::{Problem, ProblemKind, check_epub};
 pub use epub::{BookMeta, EpubFlavor, EpubWriter, FixedLayout};
 pub use kepub::kepub_from_epub;
 

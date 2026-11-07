@@ -460,6 +460,9 @@ public final class ReaderModel {
         case .endPage(let session, let next, let why, _):
             guard session == self.session else { return }
             end = ReaderEnd(next: next, why: why)
+        case .progressSent:
+            // The page between chapters does not show the server's answer yet.
+            break
         case .nextPreview, .opening:
             // The Android reader's end page preview and opening screen; this reader has neither.
             break
@@ -636,6 +639,8 @@ extension ReadingFailure {
         case .needsNewerKaeri(let world): .readingFailedNeedsNewer(world: world)
         case .readingOff: .readingFailedOff
         case .other(let reason): .readingFailedOther(reason: reason)
+        // The send checks carry sizes, which the engine puts at human scale.
+        case .sendTooLarge, .sendCheck: readingFailureMsg(failure: self)
         }
         return msg.text
     }

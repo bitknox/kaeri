@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
@@ -22,13 +23,12 @@ import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.design.Motion
 import app.kaeri.design.atFullSpeed
 import app.kaeri.design.rememberAnimationsRemoved
-import app.kaeri.engine.model.EinkPanel
 import app.kaeri.eink.EinkModel
 import app.kaeri.eink.EinkPainter
 import app.kaeri.eink.EinkQuestions
 import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
-import app.kaeri.eink.NoRefresh
+import app.kaeri.eink.RefreshControllers
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.phone.NovelScreen
@@ -129,9 +129,11 @@ private fun OpenReader(store: AppStore, einkModel: EinkModel, request: ReaderReq
             if (profile.question != null) {
                 EinkQuestions(profile, einkModel)
             } else {
-                val painter = remember(profile.profile?.panel) {
-                    EinkPainter.defaults(profile.profile?.panel ?: EinkPanel.GREY, NoRefresh)
+                val painter = remember(profile.profile?.family, profile.profile?.panel) {
+                    EinkPainter.forProfile(profile.profile) { RefreshControllers.of(it, context) }
                 }
+                // The Refresh settings, sent again when the person changes one.
+                SideEffect { painter.policy = EinkPainter.policyOf(profile.profile) }
                 EinkReader(
                     session = session,
                     state = state,

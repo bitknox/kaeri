@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } tidak menghosting tayangan apa pun. Anda menambahkan { -source-pl } Anda sendiri.
+legal-hosts-no-content = { -app-name } tidak menghosting tayangan atau buku apa pun. Anda menambahkan { -source-pl } Anda sendiri.
 notice-saved = { $label } disimpan.
 notice-not-saved = Tidak dapat menyimpan pengaturan itu. { $reason }
 notice-title-load-failed = Tidak dapat memuat judul ini. Periksa koneksi Anda, lalu coba lagi.

@@ -118,6 +118,64 @@ pub fn spawn_fetch(
     });
 }
 
+/// The longest side of the reading demo's cover, in pixels: as large as a series page's cover
+/// is drawn on a tablet, where the page it comes from is 3503 pixels tall.
+const DEMO_COVER_SIDE: u32 = 900;
+
+/// The reading demo's cover: the comic's first page from the demo's own checked pages, never
+/// from the plain client, made small once and kept with the other covers.
+pub fn spawn_demo_cover(
+    url: String,
+    page: &'static kaeri_core::reading_demo::DemoPage,
+    cache_dir: PathBuf,
+    demo: kaeri_providers::reading_demo::ReadingDemo,
+    tx: Outbox,
+) {
+    tokio::spawn(async move {
+        let path = cache_dir.join(format!("{}.img", kaeri_core::hash::stable_hash(&url)));
+        let fetched = match read_cached(&path).await {
+            Some(bytes) => Ok(bytes),
+            None => match demo.page(page).await {
+                Ok(bytes) => {
+                    let small = tokio::task::spawn_blocking(move || shrink(bytes))
+                        .await
+                        .map_err(|_| false);
+                    if let Ok(small) = &small {
+                        write_cached(&path, small).await;
+                    }
+                    small
+                }
+                Err(e) => Err(matches!(
+                    e,
+                    kaeri_core::traits::PageError::Failed(
+                        kaeri_core::error::ProviderError::Transport(_)
+                    )
+                )),
+            },
+        };
+        let _ = tx.send(match fetched {
+            Ok(bytes) => Event::ArtworkReady { url, bytes },
+            Err(offline) => Event::ImageFailed { url, offline },
+        });
+    });
+}
+
+/// A page made cover-sized, as a JPEG; the page itself when it cannot be.
+fn shrink(bytes: Vec<u8>) -> Vec<u8> {
+    let Ok(image) = image::load_from_memory(&bytes) else { return bytes };
+    if image.width().max(image.height()) <= DEMO_COVER_SIDE {
+        return bytes;
+    }
+    let small =
+        image.resize(DEMO_COVER_SIDE, DEMO_COVER_SIDE, image::imageops::FilterType::Triangle);
+    let mut out = Vec::new();
+    let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, 85);
+    match small.to_rgb8().write_with_encoder(encoder) {
+        Ok(()) => out,
+        Err(_) => bytes,
+    }
+}
+
 /// A fixed number of slots, handed to the newest waiter first.
 struct Slots {
     state: Mutex<SlotState>,
@@ -282,6 +340,21 @@ async fn download(http: &HttpClient, url: &str) -> Result<Vec<u8>, Failure> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_demo_cover_is_made_small_and_stays_a_jpeg() {
+        let page = image::RgbImage::from_pixel(1240, 1750, image::Rgb([200, 120, 40]));
+        let mut bytes = Vec::new();
+        image::DynamicImage::ImageRgb8(page)
+            .write_with_encoder(image::codecs::jpeg::JpegEncoder::new(&mut bytes))
+            .unwrap();
+        let small = shrink(bytes.clone());
+        let decoded = image::load_from_memory(&small).unwrap();
+        assert_eq!(decoded.height(), DEMO_COVER_SIDE);
+        assert!(decoded.width() < DEMO_COVER_SIDE);
+        assert_eq!(image::guess_format(&small).unwrap(), image::ImageFormat::Jpeg);
+        assert_eq!(shrink(b"not an image".to_vec()), b"not an image");
+    }
 
     #[test]
     fn cache_paths_are_stable_across_runs() {

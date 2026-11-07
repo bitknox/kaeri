@@ -44,3 +44,16 @@ torrents-dialog-edit-proxy = Proxy'yi düzenle
 settings-note-trailers-windows = Fragmanlar YouTube'dan sessiz oynatılır ve YouTube IP adresinizi görür. Ölçümlü bağlantıda, animasyon efektleri kapalıyken, enerji tasarrufu modundayken ya da Anlatıcı çalışırken oynatılmaz.
 settings-note-cast-tvs-pc = Bunlar TV'de oynat bölümünde Chromecast başlığı altında görünür. Bölümü bu bilgisayar gönderir.
 settings-note-torrents-while-casting-pc = Chromecast özellikli bir TV'nin torrent oynatmasını sağlar. Oynattığı sürece bölümü bu bilgisayar gönderir.
+settings-language-restart = Yeniden başlat
+settings-differences = { $count ->
+    [one] Bir başlık { $tracker } ile farklı
+   *[other] { $count } başlık { $tracker } ile farklı
+ }
+settings-differences-review = İncele
+settings-search = Ayarlarda ara
+settings-quality-detail-windows = Yüksek, her { -source } içinde bulunan en iyi seçeneği alır ve daha fazla yer kaplar.
+settings-merge-subtitles-detail-windows = Altyazılar, dosya nereye giderse gitsin bölümle birlikte kalır.
+settings-keep-seeding-detail-windows = Seed edilmeye açık tutulan bir indirme, indirme klasöründe değil, { -app-name }'nin önbelleğinde kalır.
+settings-discussions-note-windows = AniList forum başlığındaki yorumları, izlediğiniz bölümler için okur.
+settings-comment-images-note-windows = Her görsel, onu barındıran siteden yüklenir ve site IP adresinizi görür.
+settings-folder-browse = Gözat…

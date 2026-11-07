@@ -718,6 +718,7 @@ pub(crate) fn dispatch(
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
+            services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
@@ -1089,13 +1090,23 @@ pub(crate) fn dispatch(
         Command::ClearSkipMarks => crate::skip_marks::clear(services, tx),
 
         // Off the loop, with no job: covers report back on their own.
-        Command::FetchArtwork { url } => artwork::spawn_fetch(
-            url,
-            services.paths.image_cache(),
-            services.http.clone(),
-            services.artwork.clone(),
-            tx.clone(),
-        ),
+        // The reading demo's cover comes from the demo's own pinned pages.
+        Command::FetchArtwork { url } => match kaeri_core::reading_demo::cover_page(&url) {
+            Some(page) => artwork::spawn_demo_cover(
+                url,
+                page,
+                services.paths.image_cache(),
+                services.book_sources.demo.clone(),
+                tx.clone(),
+            ),
+            None => artwork::spawn_fetch(
+                url,
+                services.paths.image_cache(),
+                services.http.clone(),
+                services.artwork.clone(),
+                tx.clone(),
+            ),
+        },
 
         // What a native app shows outside itself: notifications, and its widgets. Off the loop,
         // with no job, each answered with one event.
@@ -1264,6 +1275,9 @@ pub(crate) async fn handle_internal(
         Internal::LetGo => {
             ahead::let_go(engine, services, tx);
             crate::downloads::books::launched(engine, services, tx);
+            if engine.reading.available {
+                services.book_sources.start_write_back(services.clock.clone());
+            }
             crate::export::apply_feed(engine, services, tx);
         }
         Internal::Reader { session, wake } => {

@@ -603,6 +603,18 @@ reading-failed-off = [Ŕéàðîñĝ îšñ'ţ àṽàîļàƀļé îñ ţĥîš
 # Why something about reading failed, for any other reason. The reason is as it came.
 reading-failed-other = [Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ. { $reason }~~~~~~~~]
 
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = [{ $file } îš { $size }, àñð { $target } ţàķéš ƒîļéš üþ ţö { $limit }. Šéñð ƒéŵéŕ çĥàþţéŕš àţ à ţîɱé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = [{ $file } îš ɱîššîñĝ { $part }, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = [{ $part } îñ { $file } ĥàš ţĥé ŵŕöñĝ ţéẋţ éñçöðîñĝ, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = [{ $part } îñ { $file } îšñ'ţ ṽàļîð, šö îţ ŵàšñ'ţ šéñţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
+
 # Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 reading-kind-manga = [Ṁàñĝà~~]
 
@@ -755,6 +767,9 @@ reading-row-new = [Ñéŵ~]
 
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = [Ðöŵñļöàðéð~~~]
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = [Ĝöñé ƒŕöɱ ţĥé šöüŕçé~~~~~~]
 
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = [Ñöţ ðöŵñļöàðéð~~~~~]
@@ -1309,7 +1324,7 @@ cause-proxy-address-unusable = [Ţĥé þŕöẋý'š àððŕéšš îš ñöţ
 cause-server-unreachable = [Ţĥé šéŕṽéŕ çöüļðñ'ţ ƀé ŕéàçĥéð.~~~~~~~~~~]
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~]
+legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš öŕ ƀööķš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~]
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = [Šàṽéð { $label }.~~~]

@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name }は作品をホストしていません。{ -source-pl }はご自身で追加します。
+legal-hosts-no-content = { -app-name }は作品も本もホストしていません。{ -source-pl }はご自身で追加します。
 notice-saved = { $label }を保存しました。
 notice-not-saved = 設定を保存できませんでした。{ $reason }
 notice-title-load-failed = この作品の詳細を読み込めませんでした。接続を確認して、もう一度お試しください。

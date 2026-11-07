@@ -1010,6 +1010,39 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0030_book_progress_outbox",
+        r#"
+    -- Reading progress waiting to be told to a book server: made offline, or tried and not
+    -- taken yet. One row per chapter of a series on a server, holding the newest mark; a mark
+    -- the server took is deleted. `due_at` is when to try next. `held` names why a row waits
+    -- for Try again instead (a refused key, the series gone, no answer for a day), and
+    -- `problem` why the last try failed. `first_failed_at` starts the day of retries.
+    CREATE TABLE book_progress_outbox (
+        server          TEXT    NOT NULL,
+        series          TEXT    NOT NULL,
+        chapter         TEXT    NOT NULL,
+        read            INTEGER NOT NULL,
+        at              INTEGER NOT NULL,
+        attempts        INTEGER NOT NULL DEFAULT 0,
+        due_at          INTEGER NOT NULL,
+        first_failed_at INTEGER,
+        problem         TEXT,
+        held            TEXT,
+        PRIMARY KEY (server, series, chapter)
+    ) WITHOUT ROWID;
+    CREATE INDEX book_progress_outbox_due ON book_progress_outbox (held, due_at);
+
+    -- How writing progress back to each server last went: when it last took a mark, and why
+    -- the last try failed while none has been taken since.
+    CREATE TABLE book_progress_state (
+        server     TEXT PRIMARY KEY,
+        sent_at    INTEGER,
+        problem    TEXT,
+        problem_at INTEGER
+    ) WITHOUT ROWID;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
@@ -1166,6 +1199,8 @@ mod tests {
             "book_download",
             "read_unread",
             "read_note",
+            "book_progress_outbox",
+            "book_progress_state",
         ] {
             let found: bool = conn
                 .query_row(

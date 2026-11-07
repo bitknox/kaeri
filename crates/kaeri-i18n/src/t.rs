@@ -950,6 +950,26 @@ pub fn reading_failed_other(reason: &str) -> String {
     text("reading-failed-other", &[("reason", Arg::Text(reason))])
 }
 
+/// Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+pub fn reading_failed_send_too_large(file: &str, target: &str, size: &str, limit: &str) -> String {
+    text("reading-failed-send-too-large", &[("file", Arg::Text(file)), ("target", Arg::Text(target)), ("size", Arg::Text(size)), ("limit", Arg::Text(limit))])
+}
+
+/// Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+pub fn reading_failed_send_missing(file: &str, part: &str) -> String {
+    text("reading-failed-send-missing", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
+/// Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+pub fn reading_failed_send_encoding(file: &str, part: &str) -> String {
+    text("reading-failed-send-encoding", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
+/// Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+pub fn reading_failed_send_malformed(file: &str, part: &str) -> String {
+    text("reading-failed-send-malformed", &[("file", Arg::Text(file)), ("part", Arg::Text(part))])
+}
+
 /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
 pub fn reading_kind_manga() -> String {
     text("reading-kind-manga", &[])
@@ -1183,6 +1203,11 @@ pub fn reading_row_new() -> String {
 /// A chapter row's state: it is kept on this device to read offline.
 pub fn reading_row_downloaded() -> String {
     text("reading-row-downloaded", &[])
+}
+
+/// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+pub fn reading_row_gone_from_source() -> String {
+    text("reading-row-gone-from-source", &[])
 }
 
 /// A chapter row's state: it is read from the source and nothing of it is on this device.

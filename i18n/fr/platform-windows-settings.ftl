@@ -45,3 +45,17 @@ torrents-dialog-edit-proxy = Modifier le proxy
 settings-note-trailers-windows = Les bandes-annonces sont lues en sourdine depuis YouTube, qui voit votre adresse IP. Elles ne sont pas lues sur une connexion limitée au volume, avec les animations désactivées, en économie d’énergie ou avec Narrateur actif.
 settings-note-cast-tvs-pc = Ils apparaissent sous Chromecast dans Lire sur la TV. Ce PC leur envoie l’épisode.
 settings-note-torrents-while-casting-pc = Permet à une TV avec Chromecast intégré de lire des torrents. Ce PC envoie l’épisode tant qu’il est en lecture.
+settings-language-restart = Redémarrer
+settings-differences = { $count ->
+    [one] Un titre diffère de { $tracker }
+    [many] { $count } titres diffèrent de { $tracker }
+   *[other] { $count } titres diffèrent de { $tracker }
+ }
+settings-differences-review = Examiner
+settings-search = Rechercher dans les réglages
+settings-quality-detail-windows = Plus haut, c'est la meilleure version qu'une { -source } propose, et plus d'espace.
+settings-merge-subtitles-detail-windows = Les sous-titres restent avec l'épisode, où que le fichier aille.
+settings-keep-seeding-detail-windows = Un téléchargement qui continue le partage reste dans le cache de { -app-name }, pas dans le dossier de téléchargement.
+settings-discussions-note-windows = Lit les commentaires du fil du forum AniList pour les épisodes que vous avez regardés.
+settings-comment-images-note-windows = Chaque image se charge depuis le site qui l'héberge, qui voit votre adresse IP.
+settings-folder-browse = Parcourir…

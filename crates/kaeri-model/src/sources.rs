@@ -415,6 +415,18 @@ pub struct DemoWorkInfo {
     /// Pages of the comic, nought for the story.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub pages: u32,
+    /// The work it opens as, from the first launch on: the engine matches the demo's series to
+    /// it before anything is searched.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub work: kaeri_core::books::WorkId,
+    /// A line written for the demo, for Home's spotlight and the series page.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub synopsis: String,
+    /// The comic's cover: its first page's address, fetched with `FetchArtwork` like any cover
+    /// and answered from the demo's checked pages. `None` for the story, whose plate the apps
+    /// draw.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover: Option<String>,
 }
 
 /// The reading demo's works, credits and hosts, for the demo's series page and its credits.
@@ -447,6 +459,9 @@ impl DemoWorkInfo {
             } else {
                 kaeri_core::reading_demo::COMIC_PAGES.len() as u32
             },
+            work: work.work_id(),
+            synopsis: work.synopsis.into(),
+            cover: work.cover().map(Into::into),
         }
     }
 }
@@ -849,5 +864,22 @@ mod section_tests {
         assert_eq!(info.works.len(), 2);
         assert!(info.works.iter().all(|w| w.licence.as_deref().is_some_and(|l| !l.is_empty())));
         assert!(info.works.iter().any(|w| w.licence.as_deref() == Some("Public domain")));
+    }
+
+    #[test]
+    fn every_reading_demo_work_opens_as_its_own_work_and_only_the_comic_has_a_cover() {
+        let info = reading_demo_info();
+        let (comic, story) = (&info.works[0], &info.works[1]);
+        assert_eq!(comic.work, kaeri_core::reading_demo::COMIC.work_id());
+        assert_eq!(story.work, kaeri_core::reading_demo::STORY.work_id());
+        assert_ne!(comic.work, story.work);
+        assert!(
+            comic
+                .cover
+                .as_deref()
+                .is_some_and(|c| c.starts_with("https://upload.wikimedia.org/"))
+        );
+        assert_eq!(story.cover, None);
+        assert!(!comic.synopsis.is_empty() && !story.synopsis.is_empty());
     }
 }

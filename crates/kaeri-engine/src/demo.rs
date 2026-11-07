@@ -74,7 +74,7 @@ pub fn set(on: bool, engine: &mut EngineState, services: &Services, tx: &Outbox)
     }
     // The reading demo goes with it: one switch for both works and the episode.
     if on && engine.reading.available {
-        services.book_sources.put_demo();
+        services.book_sources.put_demo(services.clock.now());
     } else if !on {
         services.book_sources.remove_demo();
     }

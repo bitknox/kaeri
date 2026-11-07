@@ -200,7 +200,16 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
             chapters: sent.chapters.into_iter().map(ChapterId::new).collect(),
         });
     let rhythm = kit.store.book_rhythm(work.as_str()).ok().flatten();
-    let medium = kept.as_ref().map_or_else(|| local_medium(kit, work), |k| k.book.medium());
+    let demo = kit
+        .sources
+        .edition_of(work, None)
+        .filter(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID)
+        .and_then(|(_, series)| kaeri_core::reading_demo::work(&series));
+    let medium = match (&kept, demo) {
+        (Some(k), _) => k.book.medium(),
+        (None, Some(demo)) => demo.medium(),
+        (None, None) => local_medium(kit, work),
+    };
     let action = tiles::action(&kit.store, &kit.sources, work, medium);
     let demo = kit
         .sources
@@ -246,11 +255,31 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
             })
             .map(|other| kit.sources.demo_work_id(other)),
         partial,
+        demo: None,
+        demo_other: None,
     };
     if let Some(kept) = kept {
         fill(kit, ask, &mut view, &kept);
+    } else if let Some(demo) = demo {
+        fill_demo(&mut view, demo);
     }
     view
+}
+
+/// A work of the reading demo: its header from the demo itself, with its credit and the demo's
+/// other work.
+fn fill_demo(view: &mut SeriesView, demo: &kaeri_core::reading_demo::DemoWork) {
+    use kaeri_core::reading_demo::WORKS;
+    view.titles.display = demo.series.to_owned();
+    view.cover = demo.cover().map(str::to_owned);
+    view.format = Some(demo.format().to_owned());
+    view.synopsis = Some(demo.synopsis.to_owned());
+    view.authors = vec![demo.author.to_owned()];
+    view.chapters_total = Some(1);
+    view.facts =
+        vec![kaeri_model::reading::kind_words(Some(demo.format()), demo.medium(), None)];
+    view.demo = Some(kaeri_model::sources::DemoWorkInfo::of(demo));
+    view.demo_other = WORKS.iter().find(|other| other.id != demo.id).map(|o| o.work_id());
 }
 
 fn fill(kit: &Kit, ask: Ask, view: &mut SeriesView, kept: &KeptBook) {

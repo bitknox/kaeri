@@ -46,3 +46,18 @@ torrents-dialog-edit-proxy = Изменить прокси
 settings-note-trailers-windows = Трейлеры идут без звука с YouTube, который видит ваш IP-адрес. Не воспроизводятся при лимитном подключении, с выключенными анимациями, в режиме экономии энергии или с Экранным диктором.
 settings-note-cast-tvs-pc = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот ПК отправляет им эпизод.
 settings-note-torrents-while-casting-pc = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот ПК передаёт эпизод, пока он идёт.
+settings-language-restart = Перезапустить
+settings-differences = { $count ->
+    [one] { $count } название отличается от { $tracker }
+    [few] { $count } названия отличаются от { $tracker }
+    [many] { $count } названий отличаются от { $tracker }
+   *[other] { $count } названия отличаются от { $tracker }
+ }
+settings-differences-review = Просмотреть
+settings-search = Поиск по настройкам
+settings-quality-detail-windows = Чем выше, тем лучше версия, которую предлагает { -source }, и тем больше нужно места.
+settings-merge-subtitles-detail-windows = Субтитры остаются с серией, куда бы ни попал файл.
+settings-keep-seeding-detail-windows = Загрузка, которая продолжает раздачу, остаётся в кэше { -app-name }, а не в папке загрузок.
+settings-discussions-note-windows = Читает комментарии из темы на форуме AniList для серий, которые вы смотрели.
+settings-comment-images-note-windows = Каждая картинка грузится с сайта, где она размещена, и он видит ваш IP-адрес.
+settings-folder-browse = Обзор…

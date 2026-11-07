@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Berkas dihapus dari { -device } ini. Episode yang belum ditonton tetap disimpan.
 settings-folder-default = Disimpan bersama cache torrent
 settings-storage-unwatched = Belum ditonton
+settings-storage-unread = Belum dibaca
+settings-storage-read = Dibaca
+settings-storage-unseen-both = Belum ditonton atau dibaca
+settings-storage-seen-both = Ditonton atau dibaca
 settings-storage-used = { $size } untuk unduhan.
 settings-storage-used-free = { $size } untuk unduhan. { $free } tersedia di { -device } ini.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }
 settings-accounts-sync-note = Kemajuan dan perubahan daftar disinkronkan ke { $tracker }. { -library-cap } dan Daftar Saya di Kalender menampilkan daftar { $tracker } Anda.
+settings-accounts-sync-note-read = Kemajuan dan perubahan daftar disinkronkan ke { $tracker }. { -library-cap } menampilkan daftar { $tracker } Anda.
 settings-conflicts = { $count ->
    *[other] { $count } judul berbeda dari { $tracker }
  }

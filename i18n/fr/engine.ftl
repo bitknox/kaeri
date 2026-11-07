@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } n’héberge aucune série. Vous ajoutez vos propres { -source-pl }.
+legal-hosts-no-content = { -app-name } n’héberge aucune série ni aucun livre. Vous ajoutez vos propres { -source-pl }.
 notice-saved = « { $label } » enregistré.
 notice-not-saved = Impossible d’enregistrer ce réglage. { $reason }
 notice-title-load-failed = Impossible de charger ce titre. Vérifiez votre connexion, puis réessayez.

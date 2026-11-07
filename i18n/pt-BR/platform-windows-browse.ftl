@@ -46,3 +46,4 @@ search-result-in-library = Na sua { -library }
 search-result-on-server = Em { $server }
 search-result-on-service = Em { $service }
 match-choice-line = { $parts } · { $percent }% de correspondência
+search-rate-limit-enter = A busca enquanto você digita está em pausa por um momento, para respeitar os limites do AniList. Pressione Enter para buscar agora.

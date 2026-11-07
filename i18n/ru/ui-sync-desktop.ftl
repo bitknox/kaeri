@@ -1,5 +1,6 @@
 cloud-browser-line = Браузер открыл страницу { $service }. Разрешите доступ там, и { -app-name } продолжит сам.
 cloud-browser-title = Войдите в { $service } в браузере
+cloud-close-carries-on = Это окно можно закрыть. { -app-name } продолжит работу и сам откроет следующий шаг, когда он будет готов.
 device-kind-computer = компьютер
 devices-enter-code = Ввести код
 devices-show-key = Показать

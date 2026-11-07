@@ -251,6 +251,18 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "accounts-brings-lists-both": {
+    "source": "a4746214109a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "accounts-brings-lists-read": {
+    "source": "5edb7fb16aab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "accounts-browser-failed": {
     "source": "508548dd067f",
     "state": "draft",
@@ -544,6 +556,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "accounts-mangaupdates-credit": {
+    "source": "1903178a1ed6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "accounts-needs-sign-in": {
     "source": "28aac7c697de",
@@ -947,11 +965,47 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "accounts-tracker-lists": {
+    "source": "4af2924e0d7f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "accounts-tracker-reading-lists": {
+    "source": "3663c9ff4e59",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "accounts-tracker-serves-both": {
+    "source": "106ad4c555fd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "accounts-tracker-serves-reading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "accounts-tracker-serves-shows": {
+    "source": "b65b4daf699f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "accounts-user-or-email": {
     "source": "4e2cfe42bb57",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "accounts-username": {
+    "source": "b9537f8b3738",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "accounts-welcome-detail": {
     "source": "6d4e82cb6437",
@@ -1012,6 +1066,24 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "action-continue-chapter": {
+    "source": "57ef2d085981",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "action-continue-part": {
+    "source": "38f1f9ab1e06",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "action-continue-part-plain": {
+    "source": "8530db75900e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "action-copied": {
     "source": "f4de3bfbfaca",
@@ -1157,6 +1229,24 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "action-read-again": {
+    "source": "7e7743a76fa0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "action-read-chapter": {
+    "source": "1d132232f2f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "action-read-part": {
+    "source": "9fc475b1ffaf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "action-remove": {
     "source": "ea4f08110bb8",
     "state": "draft",
@@ -1288,6 +1378,60 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "book-add-folder": {
+    "source": "ce53b5e9610f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-folder-line": {
+    "source": "58a2b88f15c7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-line": {
+    "source": "6e51e3b464c9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-server": {
+    "source": "8efb57d08e2b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-server-button": {
+    "source": "3ccd6573fff8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-server-line": {
+    "source": "b380a267c82a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-server-title": {
+    "source": "1bf4d2f48541",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-store": {
+    "source": "b3cb9c51fcc0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-add-store-line": {
+    "source": "def995838ae4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "book-folder-add": {
     "source": "4994bf45e758",
@@ -1463,8 +1607,20 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "book-server-looking": {
+    "source": "090691cc5152",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "book-server-not-books-line": {
     "source": "0187f301f7ca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-server-note": {
+    "source": "22bd1fe9a80a",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -1489,6 +1645,138 @@
   },
   "book-server-username": {
     "source": "03f42eea7215",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-check-matches": {
+    "source": "c512f3209588",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-check-matches-title": {
+    "source": "8bf3e967cdc6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-find": {
+    "source": "d1fe2584eebc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-folders": {
+    "source": "d4d3a1e6f326",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-from-store": {
+    "source": "dc692269415f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-keep": {
+    "source": "a531174e82ba",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-missing": {
+    "source": "d1296e1b78e4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-no-match": {
+    "source": "e67efe78de69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-not-a-book-server": {
+    "source": "51d84d4f7f08",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-off": {
+    "source": "302cbb19bf9a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-opds": {
+    "source": "9dffd1eadf7a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-plugins": {
+    "source": "ed2424b80add",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-plugins-footer": {
+    "source": "a7ec5fafac42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-progress-back": {
+    "source": "8411dbb1091b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-report-progress": {
+    "source": "489f1534cfcc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-scan": {
+    "source": "3efeff3aa4c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-scanning": {
+    "source": "c5b1424a7e2b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-series": {
+    "source": "e177e9459174",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-servers": {
+    "source": "56e796506fb8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-unmatched-note": {
+    "source": "f1f9c2cd9ccf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-use": {
+    "source": "e698b1e80eef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "book-sources-version": {
+    "source": "42fbee35dbce",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -2357,6 +2645,132 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "chapter-download-delete": {
+    "source": "23e4b9ddd758",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-download-stop": {
+    "source": "f72ed7e4e24c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-retry": {
+    "source": "2c8189544e3e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-downloaded": {
+    "source": "b87a1067596d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-downloading": {
+    "source": "24f29cc15c43",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-failed": {
+    "source": "60b572e8227e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-new": {
+    "source": "3741f519c32a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-page-of": {
+    "source": "e39806e7f965",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-queued": {
+    "source": "3ec4da71c1a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-state-wifi": {
+    "source": "40f4bef74ccf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-checked-caught-up": {
+    "source": "4092dc5b48c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-checking": {
+    "source": "091b2822fb56",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-empty-line": {
+    "source": "9d074e26cc47",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-open-chapter-hint": {
+    "source": "f5181f7d5c91",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-open-series": {
+    "source": "26438065e499",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-open-series-menu": {
+    "source": "663623671877",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-today": {
+    "source": "63d040e37887",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-versions": {
+    "source": "0de2bd08c710",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "chapter-updates-yesterday": {
+    "source": "5b4abc92ede5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "chrome-activity-more": {
     "source": "5bc9c34fe675",
     "state": "draft",
@@ -2500,6 +2914,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-05"
+  },
+  "cloud-close-carries-on": {
+    "source": "aa3ca06aec90",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "cloud-connect": {
     "source": "7a4f059aaa02",
@@ -4139,6 +4559,36 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "download-chapters": {
+    "source": "e65228277566",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "download-choose": {
+    "source": "751efbdf4a92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "download-delete-series": {
+    "source": "3146d06c0365",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "download-next": {
+    "source": "d8bb3717116a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "download-over-wifi": {
+    "source": "8a2d84301374",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "download-range-from": {
     "source": "a6ab5184d631",
     "state": "draft",
@@ -4162,6 +4612,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "download-unread": {
+    "source": "3110634ae30a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "download-volume-count": {
+    "source": "7d2fe7f0b73f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "downloads-ahead": {
     "source": "7ead8737ff5c",
@@ -4937,6 +5399,312 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "eink-ask-body": {
+    "source": "31459de2b13d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-ask-later": {
+    "source": "06a100db128e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-ask-no": {
+    "source": "b14513f84768",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-ask-title": {
+    "source": "44452d147adf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-ask-yes": {
+    "source": "51e80af5cbab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-back-to-series": {
+    "source": "95b48aa392c7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-caught-up": {
+    "source": "e609666568cb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-chapter": {
+    "source": "2d0f308d9cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-chapter-titled": {
+    "source": "22d2cc0160e6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-checks-again": {
+    "source": "7ab67dddf55d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-clean-screen": {
+    "source": "31c3c1fef304",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-body": {
+    "source": "47c3b05a55d9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-hint": {
+    "source": "d6c5c8a6dde1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-no": {
+    "source": "864823d3ff29",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-skip": {
+    "source": "66413c24dcf6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-skipped": {
+    "source": "dbf2a2c9b6f5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-squares": {
+    "source": "4182dcccb73f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-title": {
+    "source": "1c9157c60e49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-colour-yes": {
+    "source": "2b11a7f3c9f5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-contents": {
+    "source": "f0ca10f34324",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-continue-to": {
+    "source": "f8e12f37a15b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-counted-read": {
+    "source": "b46e4b0b2ed2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-end-next": {
+    "source": "0fbf6dc6a196",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-end-of-chapter": {
+    "source": "89668a60e3ad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-end-pages": {
+    "source": "62523e893444",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-finished": {
+    "source": "15a6e8862eeb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-finished-line": {
+    "source": "295d24d6ec74",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-folio-one": {
+    "source": "244beece763d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-folio-two": {
+    "source": "8564f1e90359",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-loading-chapter": {
+    "source": "555c24be5d39",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-new": {
+    "source": "3741f519c32a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-next-chapter": {
+    "source": "5013793e87d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-next-missing": {
+    "source": "296eae85b3a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-next-not-out": {
+    "source": "292492332b47",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-next-offline": {
+    "source": "cfee3aa9910f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-next-offline-line": {
+    "source": "d46eb0242fd1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-on-device": {
+    "source": "f6b0293c6b49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-open-downloads": {
+    "source": "454338c50e83",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-page-failed-details": {
+    "source": "92171470fd96",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-page-keys-hint": {
+    "source": "c636193f61ae",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-pages-left": {
+    "source": "90377a3adfc9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-previous-chapter": {
+    "source": "7ac92381ab6c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-reads-ltr": {
+    "source": "8fc6a6f60382",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-reads-rtl": {
+    "source": "a5ca6dc2e9e3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-reads-strip": {
+    "source": "0344902b61f4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-settings": {
+    "source": "9d8b8aa2b404",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-turn-to-continue": {
+    "source": "da7f5727e06a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-zone-next-ltr": {
+    "source": "4c6d52ca601f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-zone-next-rtl": {
+    "source": "ada86031654a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "eink-zone-tap": {
+    "source": "6ce0e019e201",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "engine-down-quit": {
     "source": "45156213b0fb",
     "state": "draft",
@@ -4954,6 +5722,24 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "engine-stopped-detail": {
+    "source": "cd79e4b0b22a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "engine-stopped-open-again": {
+    "source": "c703c8789587",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "engine-stopped-title": {
+    "source": "8cb5fdb6fd4e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "episode-aired": {
     "source": "43f8e2b01315",
@@ -5751,6 +6537,48 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "export-chapter": {
+    "source": "2d0f308d9cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-device-colour-eink": {
+    "source": "7fd551d7cfb4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-device-eink-6": {
+    "source": "a9470f1d686c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-device-eink-7": {
+    "source": "6193becc82fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-device-other": {
+    "source": "c949e13ce376",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-device-tablet": {
+    "source": "2153d9eae4dc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "export-waits-for-wifi": {
+    "source": "5c75b5abd78d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "film-length-hours": {
     "source": "fb12680c5861",
@@ -6742,6 +7570,30 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "home-read-checked-on-open": {
+    "source": "7d5842615363",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "home-read-end": {
+    "source": "4fed703f1fff",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "home-read-no-sources": {
+    "source": "b25ad38ca458",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "home-read-releasing": {
+    "source": "b6615a570470",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "home-reason-new-season": {
     "source": "ca365fa0e755",
@@ -8025,11 +8877,14 @@
     "at": "2026-10-31"
   },
   "legal-hosts-no-content": {
-    "source": "79ea79e8a842",
+    "source": "4a5a5a964c7b",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-01",
-    "back": "Kaeri hosts no show. You add your own sources."
+    "at": "2026-11-07",
+    "flags": [
+      "The legal line now covers books (approved in English 2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Kaeri hosts no show and no book. You add your own sources."
   },
   "library-add-planning": {
     "source": "7164d161006c",
@@ -8480,6 +9335,24 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "library-scope-label": {
+    "source": "c3a18628183f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "library-scope-reading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "library-scope-shows": {
+    "source": "b65b4daf699f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "library-season": {
     "source": "67cda8f167d8",
@@ -9687,6 +10560,156 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "medium-answer-both": {
+    "source": "d00bab897d15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-answer-read": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-answer-watch": {
+    "source": "0ebc660e93c4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-both": {
+    "source": "f7a5f7a7c80c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-both-line": {
+    "source": "421326de6b7f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-change-later": {
+    "source": "9f2770ab826b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-choice-position": {
+    "source": "cbdfc796d7a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-join-line": {
+    "source": "d8c9430045a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-join-title-both": {
+    "source": "83a5bcbb23c1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-join-title-read": {
+    "source": "3bd7e1c093f1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-join-title-watch": {
+    "source": "f2bfe4d7096b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-confirm-read": {
+    "source": "252cf5f99786",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-confirm-watch": {
+    "source": "053f46fe6b55",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-delete-read": {
+    "source": "2af725aebdb4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-delete-size": {
+    "source": "b1f61f7282ea",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-delete-watch": {
+    "source": "ced46f30959a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-read-body": {
+    "source": "ab7b44d5250c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-title-read": {
+    "source": "b245671c7a2d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-title-watch": {
+    "source": "3fd0155061ed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-off-watch-body": {
+    "source": "a199fee4729b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-read-line": {
+    "source": "0b235ebb0cf3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-update-line": {
+    "source": "8b1fe13ccd91",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-watch": {
+    "source": "9375cab2f4e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "medium-watch-line": {
+    "source": "42bce4efb797",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "menu-check-for-updates": {
     "source": "0c2d622bae70",
     "state": "draft",
@@ -10017,11 +11040,29 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "messages-alert": {
+    "source": "5ac24e3b37d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "messages-empty": {
     "source": "c9e36319670b",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "messages-none": {
+    "source": "c9e36319670b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "messages-title": {
+    "source": "bdeedc1c6030",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "more-cast": {
     "source": "dfeb719ce9e8",
@@ -10377,6 +11418,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "nav-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "nav-search": {
     "source": "5d929ff1619a",
     "state": "draft",
@@ -10448,6 +11495,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "nav-updates": {
+    "source": "10d2d2c46133",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "nav-watch": {
+    "source": "9375cab2f4e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "nav-watch-together": {
     "source": "84c519a849b9",
@@ -11337,6 +12396,102 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "onboarding-books-folder": {
+    "source": "552d12f3b085",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-folder-line": {
+    "source": "881cfd14e410",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-invite-heading": {
+    "source": "224afaf42bb7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-invite-placeholder": {
+    "source": "97d3761f4784",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-line": {
+    "source": "50bf26cb8070",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-plugin-line": {
+    "source": "2b1358e9885c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-server": {
+    "source": "1bf4d2f48541",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-server-line": {
+    "source": "dea7aef63bff",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-books-title": {
+    "source": "416195bdced9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-books": {
+    "source": "1802f2190f34",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-line": {
+    "source": "2877717a5621",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-shows": {
+    "source": "b65b4daf699f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-shows-folder-line": {
+    "source": "9c00a9390e06",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-shows-server-line": {
+    "source": "ab9911400eb1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-both-title": {
+    "source": "70a626429894",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-connect": {
+    "source": "bb38597870e0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "onboarding-continue": {
     "source": "4ad38c5effd0",
     "state": "draft",
@@ -11397,6 +12552,72 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "onboarding-lists-anilist-line": {
+    "source": "906ecdf332f4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-later-both": {
+    "source": "66d513c1f7e1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-later-read": {
+    "source": "14944faec082",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-later-watch": {
+    "source": "457f28123c49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-line-both": {
+    "source": "d4b1ed2ce6b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-line-read": {
+    "source": "a63e6f982a0c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-line-watch": {
+    "source": "7bf85c152572",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-lists-title": {
+    "source": "07c9588ce3b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-medium-hint": {
+    "source": "384bccfb4c9e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-medium-line": {
+    "source": "9e141a244765",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-medium-title": {
+    "source": "3a8f8f8de9c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "onboarding-not-now": {
     "source": "275772c501fb",
     "state": "draft",
@@ -11445,6 +12666,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "onboarding-step": {
+    "source": "2d4f00e6e786",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "onboarding-tagline": {
     "source": "ab0945061e41",
     "state": "draft",
@@ -11456,6 +12683,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "onboarding-welcome-line": {
+    "source": "fdc3f5c0d875",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "onboarding-welcome-note": {
+    "source": "8254eeeb3626",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "onboarding-welcome-to": {
     "source": "30e6995d1586",
@@ -11588,6 +12827,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "opened-unreadable": {
+    "source": "6cfdb3d4516c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "opened-untracked-detail": {
     "source": "4a70d85d75f8",
@@ -12243,6 +13488,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "party-bar-pick": {
+    "source": "7a762d8f7409",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "party-bar-title": {
     "source": "ef77a44c4083",
     "state": "draft",
@@ -12482,6 +13733,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "party-form-pick-later": {
+    "source": "f566f4ca7f23",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "party-getting-ready": {
     "source": "f9dd4d33ccb7",
@@ -15645,6 +16902,528 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "read-again-confirm": {
+    "source": "7e7743a76fa0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-again-line": {
+    "source": "22d43af9ce19",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-again-title": {
+    "source": "ccfb89beada6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-active": {
+    "source": "f3da69fdcf85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-delete-read": {
+    "source": "10fd50f05688",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-failed": {
+    "source": "57045bac4d7a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-kept": {
+    "source": "7becc6d36f85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-more-queued": {
+    "source": "a816b6dd2850",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-queued": {
+    "source": "75110f42b7a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-read": {
+    "source": "f5f3ab54df6b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-downloads-total": {
+    "source": "f129b12fd475",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-any": {
+    "source": "f999d4199ff4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-format": {
+    "source": "a3c9339de23c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-genres": {
+    "source": "33b167859a44",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-genres-count": {
+    "source": "979c344aecbb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-included": {
+    "source": "2929031238d4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-left-out": {
+    "source": "1daf241c903f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-many": {
+    "source": "1c271cea4565",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-not-genre": {
+    "source": "7b64f01aec2e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-origin": {
+    "source": "9eecb8124fb0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-reset": {
+    "source": "255857544a9d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-set": {
+    "source": "860fd3b89ede",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-status": {
+    "source": "ad3e3c8146fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-filter-title": {
+    "source": "a8beb6b11822",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-from-not-found": {
+    "source": "44faa9e30cd0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-from-search": {
+    "source": "5d929ff1619a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-from-search-none": {
+    "source": "eaf3b13566ea",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-from-search-placeholder": {
+    "source": "ad85488f72dc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-from-search-there": {
+    "source": "336c81312203",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-empty": {
+    "source": "d3adf45c142a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-empty-line": {
+    "source": "0e728f0fdcca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-files-add": {
+    "source": "8658acb1fe7c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-files-empty-line": {
+    "source": "964b99823b73",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-files-empty-title": {
+    "source": "fee4f564b791",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-library-list-value": {
+    "source": "64d690b16cec",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-completed": {
+    "source": "5033dab8c17f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-dropped": {
+    "source": "9f6eeb8259b5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-paused": {
+    "source": "95bc8722b270",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-planning": {
+    "source": "caff67c331d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-reading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-rereading": {
+    "source": "91721cca9358",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-list-your-files": {
+    "source": "c3f76ba4473b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-browse-line": {
+    "source": "40af5fd80735",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-clear-filters": {
+    "source": "e253299d8c90",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-failed": {
+    "source": "1d7fe5c4eb80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-nothing": {
+    "source": "76628fdd5e7e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-nothing-browse": {
+    "source": "d2871fe2ecc3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-nothing-filters-line": {
+    "source": "25df81fa3da3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-nothing-line": {
+    "source": "da4f531de7d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-placeholder": {
+    "source": "858a45f45da6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-search-total": {
+    "source": "8ff253aea036",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-sort-last-read": {
+    "source": "e63ad5b26290",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-sort-newest": {
+    "source": "74dea8806e19",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-sort-popular": {
+    "source": "791ef75ce61f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-sort-score": {
+    "source": "7d684b625728",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "read-sort-trending": {
+    "source": "c15ed31aec49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-action-controls": {
+    "source": "83cd32b685cc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-action-next": {
+    "source": "542ffff55876",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-action-previous": {
+    "source": "5b6a1140834a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-all-manga": {
+    "source": "a90be37eda4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-all-manga-here": {
+    "source": "3d7d48e9ca2e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-all-novels": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-all-strips": {
+    "source": "c1db01fad609",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-back-to-page": {
+    "source": "b5bd3aa46e72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-back-to-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-background": {
+    "source": "1efbfc3937d5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-background-black": {
+    "source": "5e3cb80d43a3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-background-theme": {
+    "source": "aab875d8cfcf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-background-white": {
+    "source": "8e985aeeca6a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-failed": {
+    "source": "b7151743bc09",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-in-progress": {
+    "source": "d07633ff2e7b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-line": {
+    "source": "2d0f308d9cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-line-titled": {
+    "source": "22d2cc0160e6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-new": {
+    "source": "2138d5192571",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-pages": {
+    "source": "47f9179a6d15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapter-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapters": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapters-loading": {
+    "source": "7abd3b1cb71e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-chapters-tab": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-choose-source": {
+    "source": "2e134e8c7be9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-close": {
+    "source": "5e8250fb85d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-colour-auto": {
+    "source": "e5b9722c67a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-colour-colour": {
+    "source": "7e9d0b96d39e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-colour-greys": {
+    "source": "cea1c48fd544",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-continue": {
+    "source": "86c7e142d926",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-crop-borders": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "reader-demo-add-source": {
     "source": "b930414eb315",
     "state": "draft",
@@ -15671,6 +17450,2240 @@
   },
   "reader-demo-end-line": {
     "source": "a7279651c0cd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-detected-left-to-right": {
+    "source": "e66f58953d6b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-detected-right-to-left": {
+    "source": "f0713de5593a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-detected-strip": {
+    "source": "e4c1875322a4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-divider-facts-source": {
+    "source": "2ce4a890556a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-divider-images": {
+    "source": "a45c0f9430a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-again": {
+    "source": "d93eec285563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-caught-up": {
+    "source": "e609666568cb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-caught-up-body": {
+    "source": "3ce370affb34",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-continue": {
+    "source": "86c7e142d926",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-facts": {
+    "source": "2c8a9ee4f2f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-finished": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-finished-body": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-finished-line": {
+    "source": "d3fe674de2e4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-finished-title": {
+    "source": "3467c810cf1b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-from": {
+    "source": "03f9bb55319f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-next": {
+    "source": "0fbf6dc6a196",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-next-detail": {
+    "source": "17fd6fdfe3f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-no-source": {
+    "source": "6799149dde6b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-none": {
+    "source": "d89e734d3bd8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-none-line": {
+    "source": "3ab576b2f95f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-not-out": {
+    "source": "ea24be349c9e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-not-out-body": {
+    "source": "3ab576b2f95f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-not-read": {
+    "source": "a8555163106b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-of-chapter": {
+    "source": "9dfd61e866b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-of-chapter-number": {
+    "source": "89668a60e3ad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-offline": {
+    "source": "56bcafcd90ca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-offline-body": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-offline-line": {
+    "source": "9bc0324f167d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-offline-title": {
+    "source": "f3ecf9ed334e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-pages": {
+    "source": "62523e893444",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-swipe": {
+    "source": "ae13414ecd6f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-tracker": {
+    "source": "8889ba40058a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-end-tracker-offline": {
+    "source": "dd54aedecf1f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-failed-chapter": {
+    "source": "06502febeb13",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-failed-choose": {
+    "source": "2e134e8c7be9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-failed-novel": {
+    "source": "48562c71eb93",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-fit-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-fit-screen": {
+    "source": "744d993d03f2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-fit-width": {
+    "source": "f21fb4f4b9e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-focus-filter-description": {
+    "source": "94ce9aee8961",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-focus-filter-paper": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-focus-filter-title": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-focus-paper": {
+    "source": "f2e1d30dca1c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-folio": {
+    "source": "1727403b0497",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-font": {
+    "source": "079cf7850d93",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-font-sans": {
+    "source": "34134524c10c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-font-serif": {
+    "source": "e1f53d96fe3f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-foot": {
+    "source": "ebd5f4ef8256",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-gap-none": {
+    "source": "669b18c6d2d9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-gap-small": {
+    "source": "3d2cc8d952ad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-go-to-page": {
+    "source": "e682f076f650",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-go-to-page-field": {
+    "source": "dc5c56017381",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-greyscale": {
+    "source": "dd075fe3d5f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-grid-page": {
+    "source": "dd6d2c6813eb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-grid-title": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-images": {
+    "source": "fc8531b2fd0f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-layout": {
+    "source": "2e4818861000",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-line": {
+    "source": "7abc53e988e9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-line-novel": {
+    "source": "7abc53e988e9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-line-scroll": {
+    "source": "09d910fab6e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-line-spread": {
+    "source": "09bcdd26d035",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-line-strip": {
+    "source": "310bc0d31cea",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-navigation": {
+    "source": "07e6118e838b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-paper": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-group-text": {
+    "source": "2492f5fb1b05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-justify": {
+    "source": "7077a13a0ce2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-key-step": {
+    "source": "18151a124004",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-key-step-panel": {
+    "source": "1e85480db1ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-key-step-screen": {
+    "source": "744d993d03f2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-layout-auto": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-layout-double": {
+    "source": "6d1df319e235",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-layout-single": {
+    "source": "3011ca19bf83",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-line-loose": {
+    "source": "80b71fc6f43c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-line-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-line-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look-dark": {
+    "source": "ac895c732f35",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look-light": {
+    "source": "3b0ab4b52326",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look-paper": {
+    "source": "da89d00e1b71",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look-sepia": {
+    "source": "cf92ea96f389",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-look-system": {
+    "source": "a81e2cdaf692",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-margins": {
+    "source": "690701565560",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-margins-narrow": {
+    "source": "7ebe6e1acc5d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-margins-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-margins-wide": {
+    "source": "cd5bf30253fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-back": {
+    "source": "54d27adc14ef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-back-to-page": {
+    "source": "141af6c05ed9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-chapters": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-go": {
+    "source": "09023907b59c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-go-to-page": {
+    "source": "3917cd151c21",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-next-chapter": {
+    "source": "759843fa5ac7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-next-page": {
+    "source": "d1dd00fc6f05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-previous-chapter": {
+    "source": "fed38b995da4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-previous-page": {
+    "source": "30dc103481da",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-settings": {
+    "source": "c0b4e1267791",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-zoom-fit": {
+    "source": "77376896bb51",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-zoom-in": {
+    "source": "22fde937cb70",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-menu-zoom-out": {
+    "source": "b05582ce9168",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-minutes-left": {
+    "source": "e2c4da4d9e86",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto": {
+    "source": "36cb8cc9898d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto-detail": {
+    "source": "40e8cb520f04",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto-line": {
+    "source": "ca1ebf3103ac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto-name": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto-option": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-auto-way": {
+    "source": "403aac313a33",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-choice-note": {
+    "source": "46e82bba1964",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-detected": {
+    "source": "3b693c47d6a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-detected-note": {
+    "source": "3b693c47d6a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-ltr": {
+    "source": "0628c840adfd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-override-note": {
+    "source": "f1754a381ee5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-rtl": {
+    "source": "3bdd07186f7c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-saved": {
+    "source": "46e82bba1964",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-scrolled": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-set": {
+    "source": "f1754a381ee5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-strip": {
+    "source": "1e2ca413f712",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-strip-detail": {
+    "source": "9e40e6b1cd20",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-strip-line": {
+    "source": "9e40e6b1cd20",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-use-default": {
+    "source": "082eda98d60c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-vertical": {
+    "source": "8ed04ce33a3a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-mode-vertical-line": {
+    "source": "d7217c9d3bb3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-heading-images": {
+    "source": "fc8531b2fd0f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-heading-layout": {
+    "source": "2e4818861000",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-heading-navigation": {
+    "source": "07e6118e838b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-heading-paper": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-heading-text": {
+    "source": "2492f5fb1b05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-more-settings": {
+    "source": "c807f531ef32",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-moved": {
+    "source": "26c02b802d2f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-moved-number": {
+    "source": "e96cffaf036f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-nothing-to-read": {
+    "source": "5212adb5fde3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-notice-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-notice-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-notice-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-novel-line-scroll": {
+    "source": "8d823b1d1ef1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-off": {
+    "source": "302cbb19bf9a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-offline-line": {
+    "source": "c98ca421ce61",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-on": {
+    "source": "091d5807b5b3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-opening": {
+    "source": "abe25f4dcf10",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-opening-chapter": {
+    "source": "219217a4a552",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-opening-finding": {
+    "source": "334876825772",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-opening-slow": {
+    "source": "82ab0ba82b73",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-opening-waited": {
+    "source": "627b8ecfa83f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-failed": {
+    "source": "b3061271e345",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-failed-hint": {
+    "source": "6ab7ad7596e4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-failed-swipe": {
+    "source": "6ab7ad7596e4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-label": {
+    "source": "828b44b9a54e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-loading": {
+    "source": "127a99ddd331",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-of": {
+    "source": "3a1e76c345ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-page-plate": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages-left": {
+    "source": "45c0e8687ff9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages-of": {
+    "source": "8316b1188159",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages-scroll": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-pages-tab": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-dim": {
+    "source": "0e2e0a1238cd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-line": {
+    "source": "9d7252d63f76",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-look": {
+    "source": "9a4efb2778f1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-mode": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-mode-note": {
+    "source": "0ed0b6b6194f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-parts": {
+    "source": "f3978c64d0af",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-quiet-note": {
+    "source": "e9791fb927c4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-quiet-value": {
+    "source": "390a013bf91e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-paper-turn": {
+    "source": "75f795d0c190",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet": {
+    "source": "b6e67716d2af",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet-denied": {
+    "source": "50608edf5969",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet-line": {
+    "source": "ba64efb61aa5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet-notice": {
+    "source": "0d57338e6565",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet-rule": {
+    "source": "5ebef6381938",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-quiet-trigger": {
+    "source": "df7c610c7c32",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-reading-mode": {
+    "source": "566ac8adad81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-resumed": {
+    "source": "adb6245a6ad5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-background": {
+    "source": "1efbfc3937d5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-colour": {
+    "source": "f0e2bf631e79",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-crop": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-direction": {
+    "source": "d23ee5e66df8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-folio": {
+    "source": "f382dbdb0f4f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-font": {
+    "source": "079cf7850d93",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-foot": {
+    "source": "9d906b114f0f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-greyscale": {
+    "source": "dd075fe3d5f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-justify": {
+    "source": "7077a13a0ce2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-look": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-margins": {
+    "source": "690701565560",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-pages": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-paper": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-quiet": {
+    "source": "b6e67716d2af",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-reading-mode": {
+    "source": "566ac8adad81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-spreads": {
+    "source": "e8c25baed19d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-strip-gap": {
+    "source": "aa8563d9a3b0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-strip-width": {
+    "source": "7f61ea0990e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-tap": {
+    "source": "2aece9ae6b06",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-text-size": {
+    "source": "66da146c9f6b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-row-volume": {
+    "source": "48bb9190c5b3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-scrubber": {
+    "source": "2e192b19ed15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-scrubber-in-chapter": {
+    "source": "7a51e176806e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-scrubber-value": {
+    "source": "d07633ff2e7b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-search-settings": {
+    "source": "b6524adc3c31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-settings": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-settings-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-settings-open": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-settings-search": {
+    "source": "b901449675b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-sheet-all-manga": {
+    "source": "a90be37eda4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-sheet-all-novels": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-sheet-more": {
+    "source": "c807f531ef32",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-sheet-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-size-large": {
+    "source": "8cc0d06745c9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-size-small": {
+    "source": "b0ca99f72a07",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-skip-page": {
+    "source": "aa5c7814c62f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-sources-title": {
+    "source": "91a0ad6e3f2a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spacing-loose": {
+    "source": "80b71fc6f43c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spacing-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spacing-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spreads": {
+    "source": "e8c25baed19d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spreads-rotate": {
+    "source": "b1288bfb6b36",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spreads-split": {
+    "source": "1c3461f13244",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-spreads-whole": {
+    "source": "9cf2d8eed1b5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-strip-gap": {
+    "source": "aa8563d9a3b0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-strip-width": {
+    "source": "f21fb4f4b9e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-swipe-to-continue": {
+    "source": "ae13414ecd6f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-tap-edges": {
+    "source": "86ccc5d1f7cb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-tap-off": {
+    "source": "302cbb19bf9a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-tap-sides": {
+    "source": "c64fbfe3431a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-tap-zones": {
+    "source": "2aece9ae6b06",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-text-label": {
+    "source": "09084307b5a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-text-size": {
+    "source": "66da146c9f6b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-this-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-try-again": {
+    "source": "cd1dd6ff53d0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-use-default": {
+    "source": "082eda98d60c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-value-off": {
+    "source": "302cbb19bf9a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-value-on": {
+    "source": "091d5807b5b3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-volume": {
+    "source": "d4907c64a096",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-volume-keys": {
+    "source": "78edabc77437",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-volume-line": {
+    "source": "d4907c64a096",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-volume-none": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-volume-read": {
+    "source": "f53030f71ea4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-window": {
+    "source": "5a3e33abd5fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-controls": {
+    "source": "83cd32b685cc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-forward": {
+    "source": "9fc3568ec862",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-menu": {
+    "source": "6d8c02aee480",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-next": {
+    "source": "542ffff55876",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reader-zone-previous": {
+    "source": "5b6a1140834a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-about-every-weeks": {
+    "source": "0d734b4135bd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-days": {
+    "source": "e1e02c7a37f9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-minutes": {
+    "source": "19d06baa2556",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-months": {
+    "source": "c9c56f0472ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-now": {
+    "source": "84126fa92f00",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-today": {
+    "source": "a411597d0674",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-weeks": {
+    "source": "5c31e689e30c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-years": {
+    "source": "890150270ebf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-ago-yesterday": {
+    "source": "f945458585f6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-also-a-book": {
+    "source": "a65843a71506",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-also-a-show": {
+    "source": "411271244328",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapter-new": {
+    "source": "860f9d8cd65b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapter-of": {
+    "source": "fb2436151044",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapter-page": {
+    "source": "9b5f6f62ab62",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapter-percent": {
+    "source": "048167341b81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapter-titled": {
+    "source": "22d2cc0160e6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-chapters": {
+    "source": "fbe319cfb16b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-chapter": {
+    "source": "2d0f308d9cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-failed": {
+    "source": "ca8a5240cc3a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-more-queued": {
+    "source": "d323e674e86b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-pages": {
+    "source": "c339ba269662",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-parts": {
+    "source": "ab5de0b28ab1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-queued": {
+    "source": "b3594d06fbca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-read": {
+    "source": "168300dff86f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-size": {
+    "source": "efe139ed7bc7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-dl-waits-wifi": {
+    "source": "9d3930bc9ffe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-downloads-done-chapters": {
+    "source": "7ab5f0dec3c7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-downloads-done-parts": {
+    "source": "a3cac7cc72cd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-downloads-done-series": {
+    "source": "ff4c23da1cd5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-downloads-done-title": {
+    "source": "32342a48ead9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-estimate-mobile": {
+    "source": "277ecd16c649",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-estimate-size": {
+    "source": "606a4043d82e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-estimate-waits-wifi": {
+    "source": "9d3930bc9ffe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-estimate-wifi": {
+    "source": "36565cdc28e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-blocked": {
+    "source": "e48a5b049687",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-disk-full": {
+    "source": "1dc54149fbc1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-file-missing": {
+    "source": "b8e92b321587",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-needs-newer": {
+    "source": "51a8379c6171",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-not-found": {
+    "source": "35c3819515d0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-off": {
+    "source": "dec1de0d9aee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-offline": {
+    "source": "b298ea6a87fd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-other": {
+    "source": "0fc6b05b743f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-page": {
+    "source": "2859ee00c51c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-parse": {
+    "source": "cec0ef238d04",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-protected": {
+    "source": "61e36a239d18",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-send-encoding": {
+    "source": "e4c1135293c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} does not have the right text encoding, so the file was not sent. Try again."
+  },
+  "reading-failed-send-malformed": {
+    "source": "646ddc05957c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} in {file} is not valid, so the file was not sent. Try again."
+  },
+  "reading-failed-send-missing": {
+    "source": "f0be1888e15b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{part} is missing from {file}, so the file was not sent. Try again."
+  },
+  "reading-failed-send-too-large": {
+    "source": "9cbb9e6ab169",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of a new Send to e-reader failure (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "{file} weighs {size}, and {target} accepts files up to {limit}. Send fewer chapters at a time and try again."
+  },
+  "reading-failed-sign-in": {
+    "source": "60eb04781d66",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-source-down": {
+    "source": "7035a7df5f53",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-unreadable": {
+    "source": "d1849c79fccd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-unsupported": {
+    "source": "042683006a89",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-failed-webview": {
+    "source": "f08495615630",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-light-novel": {
+    "source": "75401a3a2100",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-manga": {
+    "source": "b5aac60b8c49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-manhua": {
+    "source": "ef47429f5961",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-manhwa": {
+    "source": "ef4e4e9f5967",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-novel": {
+    "source": "ee0908d820d1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-one-shot": {
+    "source": "3fdde02c7c29",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-kind-webtoon": {
+    "source": "949c7c488974",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-miss-down": {
+    "source": "3ddeab92238a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-miss-down-since": {
+    "source": "9c20b2974534",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-miss-no-series": {
+    "source": "a8e01753cfd8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-next-chapter": {
+    "source": "2d0f308d9cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-next-part": {
+    "source": "6871386895c4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-on-planning": {
+    "source": "5694db2cbf78",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-origin-china": {
+    "source": "21ea22dc971a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-origin-japan": {
+    "source": "79314939aba9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-origin-korea": {
+    "source": "8a71d4aaaf55",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-origin-taiwan": {
+    "source": "4385134a24c6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-out-today": {
+    "source": "558637e6b369",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-out-today-titled": {
+    "source": "656ec02b8468",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-part-new": {
+    "source": "61b740c99d35",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-part-out-today": {
+    "source": "c42333e2b2ea",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-part-out-today-titled": {
+    "source": "318eb5dbede6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-part-percent": {
+    "source": "9b388388ed49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-part-titled": {
+    "source": "6f7b64283ffa",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-removed-failed": {
+    "source": "f675e1d99c15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-removed-from": {
+    "source": "48cd1da78264",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-removed-not-there": {
+    "source": "b91f57039a57",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-removed-sign-in": {
+    "source": "2546f824d38d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-removed-unmatched": {
+    "source": "b81bcb342412",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-downloaded": {
+    "source": "b87a1067596d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-downloading": {
+    "source": "24f29cc15c43",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-failed": {
+    "source": "e5aaebe9e70c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-gone-from-source": {
+    "source": "ebf1ae400b57",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-07",
+    "flags": [
+      "Machine draft of the new chapter row state (2026-11-07). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Removed from the source"
+  },
+  "reading-row-new": {
+    "source": "3741f519c32a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-not-downloaded": {
+    "source": "549d29da8348",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-on-device": {
+    "source": "0b3112447456",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-page-of": {
+    "source": "e39806e7f965",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-pages": {
+    "source": "57446cc53bd6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-percent": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-queued": {
+    "source": "3ec4da71c1a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-versions": {
+    "source": "0de2bd08c710",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-row-waits-wifi": {
+    "source": "40f4bef74ccf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-split-chapter": {
+    "source": "066d71a2dffa",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-spotlight-continue": {
+    "source": "9668aa073457",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-spotlight-new-chapter": {
+    "source": "b6d1bb9c57af",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-spotlight-popular": {
+    "source": "f79bb315bf0e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-spotlight-up-next": {
+    "source": "56a0ea8dcf5a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-status-cancelled": {
+    "source": "3bb786d3b55b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-status-finished": {
+    "source": "bb99d4ec27fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-status-hiatus": {
+    "source": "bd12f4dba748",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-status-not-yet": {
+    "source": "dd1f605e20f9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-status-releasing": {
+    "source": "76f341a69693",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-fridays": {
+    "source": "3156e70f48d0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-mondays": {
+    "source": "a1ef5bcb112d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-saturdays": {
+    "source": "88b110417e71",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-sundays": {
+    "source": "f8d32b751b4c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-thursdays": {
+    "source": "f9ddb7290d44",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-tuesdays": {
+    "source": "9027f3e8693a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-usually-wednesdays": {
+    "source": "22cf02861d99",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-volume-part": {
+    "source": "0f13cacf6111",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "reading-volumes": {
+    "source": "b0f666ed938f",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -16371,6 +20384,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "search-other-scope": {
+    "source": "63034dcfcc48",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "search-paused-rate-limit": {
     "source": "b8f0dbd256fb",
     "state": "draft",
@@ -16406,6 +20425,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "search-rate-limit-enter": {
+    "source": "9a159dd4ca89",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "search-rate-limit-return": {
     "source": "6977f68fd47c",
@@ -16484,6 +20509,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "search-show-them": {
+    "source": "16493360c272",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "search-sort-by": {
     "source": "3606b9d856cd",
@@ -16688,6 +20719,402 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "series-add-to-list": {
+    "source": "d5f22d89131b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-bookmark": {
+    "source": "dbacf34fc010",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-bookmarked": {
+    "source": "aad4b3365e92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-chapter-number": {
+    "source": "de316fed6e13",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-chapter-range": {
+    "source": "55604d4d8a20",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-chapters": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-chapters-failed": {
+    "source": "a4bec9f56ae1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-choose-all-unread": {
+    "source": "96b4dce1d235",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-chosen": {
+    "source": "d87bcbeb4b08",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-collapsed": {
+    "source": "447b471f5276",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-download": {
+    "source": "d3386a2ef42e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-expanded": {
+    "source": "cc171fcfaff7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-mark-read": {
+    "source": "25d8abc3362e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-mark-read-up-to": {
+    "source": "451b6574413d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-mark-unread": {
+    "source": "b12bc1431767",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-newest-first": {
+    "source": "ba2a0427963d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-no-chapters-line": {
+    "source": "040a196578b3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-no-chapters-title": {
+    "source": "a605369bdf6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-no-volume": {
+    "source": "cf1efd885e4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-not-tracked": {
+    "source": "f21304e8e6db",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-oldest-first": {
+    "source": "da134a52656c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-order": {
+    "source": "2ba5f4d8f3bd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-prefer-version": {
+    "source": "de2bdf69f9c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-preferred-group": {
+    "source": "094d0e5550bc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-again-menu": {
+    "source": "c548a26cb51a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-chapter-menu": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-another": {
+    "source": "571d1b08c321",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-asking": {
+    "source": "01ffcc14c31a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-chapters": {
+    "source": "470f96e0ab71",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-chapters-later": {
+    "source": "2f82f7200fa4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-menu": {
+    "source": "b0d38a83aefd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-none-line": {
+    "source": "51c0e74b7575",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-none-title": {
+    "source": "ffd0599c824c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-note": {
+    "source": "d5ce33173378",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-on-device": {
+    "source": "eb68ef6eb2a5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-read-from-title": {
+    "source": "06ead60f6229",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-reading-from": {
+    "source": "96aad5843529",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-remove-bookmark": {
+    "source": "4a10a115049f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-remove-from-lists": {
+    "source": "5213390279f7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-remove-from-lists-line": {
+    "source": "a380c48838bf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-remove-from-lists-title": {
+    "source": "013c7cc8cfed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-removed-title": {
+    "source": "fa288e022c50",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-score": {
+    "source": "d97cbac417b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-sources-more": {
+    "source": "a6d9684ab23c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-ahead": {
+    "source": "3d516693d515",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-ask": {
+    "source": "12e9fba56f41",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-behind": {
+    "source": "c850aabda2d7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-chapters": {
+    "source": "d87bcbeb4b08",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-chapters-of": {
+    "source": "9ea16e2c37ce",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-connect": {
+    "source": "0183c4f28f71",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-keep-kaeri": {
+    "source": "3ac9e8bb0807",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-looking": {
+    "source": "45fd94e4d4ad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-none-of-these": {
+    "source": "694b0dc9e3b9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-not-there": {
+    "source": "677919128710",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-score": {
+    "source": "62012f442537",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-take-theirs": {
+    "source": "7c0cc0aecab3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-volumes": {
+    "source": "23895e971848",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracker-with-volume": {
+    "source": "071b251e8382",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-tracking": {
+    "source": "55ec8ec1b154",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-version-in-use": {
+    "source": "3015e8577a6c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-versions": {
+    "source": "0de2bd08c710",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-versions-loading": {
+    "source": "477bd68eeabe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-volume": {
+    "source": "9b689fa03b16",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-volume-read": {
+    "source": "4ce6531fbfdd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "series-volumes": {
+    "source": "3982328498d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "servers-add": {
     "source": "3ccd6573fff8",
@@ -17079,6 +21506,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-accounts-sync-note-read": {
+    "source": "4080955c5929",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-adult": {
     "source": "ce456a795439",
     "state": "draft",
@@ -17163,6 +21596,18 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-aside-accounts-both": {
+    "source": "8c37889778b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-aside-accounts-read": {
+    "source": "d39ada9d877e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-aside-advanced": {
     "source": "de865fa6e0e7",
     "state": "draft",
@@ -17186,6 +21631,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-aside-reading": {
+    "source": "85173953b34d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-aside-sources": {
     "source": "4ae1769fd08a",
@@ -17301,6 +21752,30 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-chapter-downloads-cellular": {
+    "source": "77f13065a9cf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-chapter-notifications": {
+    "source": "526dc4f8cd11",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-chapter-notifications-footer": {
+    "source": "78bbc7d72492",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-chapter-notifications-note": {
+    "source": "97cbcfcb2945",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-check-updates": {
     "source": "e6a8976fdb82",
     "state": "draft",
@@ -17373,6 +21848,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-comment-images-note-windows": {
+    "source": "84b8079a2d65",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-conflicts": {
     "source": "387b5cf6fc7f",
     "state": "draft",
@@ -17390,6 +21871,48 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-counts-read": {
+    "source": "e33596fbfe5d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-marked": {
+    "source": "3b45aeef1dba",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-marked-note": {
+    "source": "b6cc9a8d14c0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-moving-on": {
+    "source": "eab538e765e7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-moving-on-note": {
+    "source": "a07712ab8e4f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-note": {
+    "source": "4ff4aebfecac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-counts-read-value": {
+    "source": "ea5cf114cb8c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-counts-watched": {
     "source": "072233e11e4b",
@@ -17487,6 +22010,18 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "settings-delete-after-reading": {
+    "source": "9b63dd759f9f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-delete-after-reading-note": {
+    "source": "613fffb5350d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-delete-watched-detail": {
     "source": "48429f0b9ed5",
     "state": "draft",
@@ -17498,6 +22033,36 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-differences": {
+    "source": "387b5cf6fc7f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-differences-review": {
+    "source": "fc53e352afbc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-disagree-furthest": {
+    "source": "aada856974a3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-disagree-latest": {
+    "source": "62f5104cf3d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-disagree-note": {
+    "source": "871510c72912",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-discord": {
     "source": "6979dab8dbd2",
@@ -17535,6 +22100,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-discussions-note-windows": {
+    "source": "45164d7b39f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-download-cellular": {
     "source": "c5ba5f9e1979",
     "state": "draft",
@@ -17564,6 +22135,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-downloads-finished": {
+    "source": "32342a48ead9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-downloads-finished-note": {
+    "source": "2d0820126fc8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-edit-proxy": {
     "source": "593f1c53c928",
@@ -17601,6 +22184,12 @@
     "by": "agent",
     "at": "2026-11-05"
   },
+  "settings-folder-browse": {
+    "source": "679697aa6fad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-folder-choose": {
     "source": "bf4808a055e7",
     "state": "draft",
@@ -17612,6 +22201,30 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-follow-footer": {
+    "source": "418e7ce85e0c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-follow-group": {
+    "source": "a9d973a7672b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-follow-mode": {
+    "source": "876704af5409",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-follow-mode-note": {
+    "source": "c5c7df680577",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-group-advanced": {
     "source": "21b06c38fc41",
@@ -17690,6 +22303,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-group-reading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-group-shows": {
+    "source": "b65b4daf699f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-group-storage": {
     "source": "f49525241bba",
@@ -17775,6 +22400,24 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "settings-kaeri-is-for": {
+    "source": "d133e2baf4c0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-keep-chapters-ready": {
+    "source": "551b7afd6ddb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-keep-chapters-ready-note": {
+    "source": "b13616173096",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-keep-next": {
     "source": "9b7142165739",
     "state": "draft",
@@ -17804,6 +22447,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-keep-seeding-detail-windows": {
+    "source": "6361c0f42ec3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-label-adult-titles": {
     "source": "8cc5289bca55",
@@ -18147,6 +22796,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-language-restart": {
+    "source": "14bec4678c4e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-libmpv-licence": {
     "source": "8599d160656d",
     "state": "draft",
@@ -18183,11 +22838,35 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-look-follows": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-look-follows-note": {
+    "source": "46fb4460dde2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-mark-opening": {
     "source": "ec6f5610fb31",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-medium-footer": {
+    "source": "2a3fc054fb26",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-medium-note": {
+    "source": "8780f7a9ac88",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-merge-subtitles": {
     "source": "fd1c4ce2e0c9",
@@ -18201,6 +22880,18 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-merge-subtitles-detail-windows": {
+    "source": "c6ff3df78902",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-mode-follows": {
+    "source": "83f70c175f51",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-motion": {
     "source": "191bbfc4126e",
     "state": "draft",
@@ -18212,6 +22903,24 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-new-chapters-download": {
+    "source": "526dc4f8cd11",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-new-chapters-note": {
+    "source": "052f057aa4b6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-new-chapters-reading": {
+    "source": "75dd9d382cf8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-new-downloads": {
     "source": "09e40f89650c",
@@ -18226,10 +22935,10 @@
     "at": "2026-10-31"
   },
   "settings-new-episodes-detail": {
-    "source": "d77fd146ec3f",
+    "source": "d36c9a74fabd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-next-value": {
     "source": "30a719b95b21",
@@ -18555,6 +23264,36 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-opds-feed": {
+    "source": "546ba86aca81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-opds-password": {
+    "source": "c6bc1946778f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-opds-port": {
+    "source": "2ffc8a91a650",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-open-at": {
+    "source": "e9b500b97e99",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-open-at-note": {
+    "source": "b5d80f66fb1e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-option-adaptive": {
     "source": "dd7faa87991f",
     "state": "draft",
@@ -18777,6 +23516,24 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-progress-chapter": {
+    "source": "7e31680a4773",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-progress-close": {
+    "source": "ade1f65168ad",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-progress-group": {
+    "source": "a557ae6bee91",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-quality": {
     "source": "f675f879b1c8",
     "state": "draft",
@@ -18788,6 +23545,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-quality-detail-windows": {
+    "source": "670170eea1d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-quality-higher": {
     "source": "362a37ebf554",
@@ -18812,6 +23575,72 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-reader-defaults": {
+    "source": "9857a7f6f2f2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-defaults-footer": {
+    "source": "75c039fc0c33",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-ltr": {
+    "source": "95ca6477957c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-manga": {
+    "source": "b5aac60b8c49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-novels": {
+    "source": "3c3c06c61387",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-pages": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-rtl": {
+    "source": "dfd214e00bbd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-scrolled": {
+    "source": "c2536e077514",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-strip": {
+    "source": "1c02a05eeb3f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-webtoons": {
+    "source": "f9f8b9419039",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-reader-webtoons-note": {
+    "source": "d6cc61f677eb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-report-bug-value": {
     "source": "2cf2fe695c9b",
@@ -18867,6 +23696,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-search": {
+    "source": "b901449675b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-seed-after": {
     "source": "21047952b5dd",
     "state": "draft",
@@ -18908,6 +23743,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-send-progress-after": {
+    "source": "d705f0d84e05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-series-choices-follow": {
+    "source": "637f913cf34a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-session-dubbed": {
     "source": "6bcf29098f02",
@@ -19044,6 +23891,30 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-storage-read": {
+    "source": "740d542bbe69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-storage-seen-both": {
+    "source": "d05604b44857",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-storage-unread": {
+    "source": "df59189e5524",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "settings-storage-unseen-both": {
+    "source": "5c05581f4227",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "settings-storage-unwatched": {
     "source": "fe490b5af482",
@@ -20047,6 +24918,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "settings-when-trackers-disagree": {
+    "source": "893b0a237aa3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "settings-wifi-only": {
     "source": "c6074f17b89e",
     "state": "draft",
@@ -20897,6 +25774,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "sources-add-title": {
+    "source": "b930414eb315",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "sources-check": {
     "source": "ed417c93cb56",
     "state": "draft",
@@ -21154,6 +26037,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "sources-found-server": {
+    "source": "70914b7ade57",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "sources-found-server-series": {
+    "source": "9b803ff4e075",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "sources-kind-licensed": {
     "source": "2e107b63b73b",
@@ -22306,6 +27201,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "store-takes-no-books": {
+    "source": "be7727cdfd32",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "store-token-missing": {
     "source": "d01483584d43",
@@ -25841,6 +30742,42 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "titlebar-not-synced": {
+    "source": "704174a3dc96",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "titlebar-nothing-running": {
+    "source": "e12d45939620",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "titlebar-open-devices": {
+    "source": "ed8c7eb8895b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "titlebar-sign-in-again": {
+    "source": "42433d9dc0ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "titlebar-status-hint": {
+    "source": "e83e861583b6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "titlebar-synced": {
+    "source": "298b195af530",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "toast-at-top": {
     "source": "fdae55bd18bf",
     "state": "draft",
@@ -26058,10 +30995,10 @@
     "at": "2026-11-01"
   },
   "together-start-line": {
-    "source": "b673b15525a6",
+    "source": "f692bd9dc9f7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-07"
   },
   "together-title": {
     "source": "84c519a849b9",
@@ -28463,6 +33400,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "updates-checked": {
+    "source": "98bb1156cb38",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "updates-checking": {
     "source": "01c73731d210",
     "state": "draft",
@@ -28523,6 +33466,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "updates-download-new": {
+    "source": "dbc868848652",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
   "updates-downloading": {
     "source": "f7a9a85cecd3",
     "state": "draft",
@@ -28558,6 +33507,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "updates-empty-title": {
+    "source": "09e5722d1759",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "updates-feed-missing": {
     "source": "818b3852625a",
@@ -29026,6 +33981,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "week-nothing-usually": {
+    "source": "0e9b18c04a86",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "week-usually": {
+    "source": "13cea975710d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
   },
   "welcome-airing-today-label": {
     "source": "b7f76b2e72bc",

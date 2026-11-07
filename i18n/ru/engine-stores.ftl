@@ -65,6 +65,7 @@ plugin-duplicate-file = Файл { $path } уже объявляет { $plugin }
 plugin-install-failed = Не удалось установить { $plugin }. { $reason }
 plugin-publish-failed = Не удалось опубликовать { $plugin }. { $reason }
 plugin-missing-locally = { -plugin-cap } { $plugin } больше не найден в папке.
+store-takes-no-books = { $store } пока не показывает { -source-pl } для книг. Его владелец может обновить { -plugin-store }, чтобы добавить их.
 store-invite-needs-link = { -device } подключилось к { $store } по ссылке. Вставьте ту же ссылку на другое { -device }.
 store-link-malformed = { -plugin-store } прислал ссылку, которую не удалось разобрать. Попросите владельца проверить { -plugin-store }. { $reason }
 store-link-wrong-key = { -plugin-store } создал ссылку с другим ключом. Проверьте адрес, с которого она начиналась.

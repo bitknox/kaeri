@@ -569,6 +569,516 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Nie można połączyć się z {server}. Sprawdź serwer lub spróbuj ponownie.</value>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>Rozdział {chapter}</value>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>Zwykle w poniedziałki</value>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>Zwykle we wtorki</value>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>Zwykle w środy</value>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>Zwykle w czwartki</value>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>Zwykle w piątki</value>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>Zwykle w soboty</value>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>Zwykle w niedziele</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
+    <value>Około co tydzień</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_few" xml:space="preserve">
+    <value>Około co {weeks} tygodnie</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_many" xml:space="preserve">
+    <value>Około co {weeks} tygodni</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>Około co {weeks} tygodnia</value>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>Jest też serialem</value>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>Jest też książką</value>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>Trackery zapiszą rozdział {chapter} jako {whole}.</value>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>Wznowiono na stronie {page}</value>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>Wróć do strony {page}</value>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>Przeniesiono do: {chapter}, strona {page}, tam gdzie skończono na: {device}</value>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
+    <value>Przeniesiono do rozdziału {chapter}, strona {page}, tam gdzie skończono na: {device}</value>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>Od prawej do lewej, wykryto</value>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>Od lewej do prawej, wykryto</value>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>Długi pasek, wykryto</value>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>Jesteś offline. Pobrane rozdziały nadal się otwierają.</value>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>{source} nie odpowiada. Spróbuj ponownie później.</value>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>To źródło już tego nie ma. Wypróbuj inne źródło.</value>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>Żądanie zostało odrzucone przez: {source}. {reason}</value>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>Kaeri nie potrafi odczytać odpowiedzi od: {source}. Wtyczka może wymagać aktualizacji.</value>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>Ta strona się nie wczytała (błąd {status}). Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>Zaloguj się ponownie ({what}), aby móc czytać.</value>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>Nie znaleziono: {path}. Jeśli plik jest na dysku, podłącz go i spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>Nie można odczytać pliku {path} jako {format}. Plik może być uszkodzony.</value>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>Kaeri nie odczytuje plików {kind}.</value>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>Ta książka jest zabezpieczona przed kopiowaniem, więc Kaeri nie może jej otworzyć.</value>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>To urządzenie jest pełne. Zwolnij trochę miejsca i spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>Powieści wymagają nowszego systemowego WebView niż wersja {version}. Zaktualizuj Android System WebView i spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>Ta wtyczka wymaga nowszej wersji aplikacji Kaeri ({world}). Zaktualizuj Kaeri, aby jej używać.</value>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>Czytanie nie jest dostępne w tej wersji aplikacji Kaeri.</value>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>Coś poszło nie tak. {reason}</value>
+  </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file} ma {size}, a {target} przyjmuje pliki do {limit}. Wyślij mniej rozdziałów naraz i spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>W {file} brakuje elementu {part}, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>Element {part} w {file} ma złe kodowanie tekstu, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>Element {part} w {file} jest nieprawidłowy, więc plik nie został wysłany. Spróbuj ponownie.</value>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>Manhwa</value>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>Manhua</value>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>Webtoon</value>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>One-shot</value>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>Light novel</value>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>Powieść</value>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>Wydawana</value>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>Zakończona</value>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>Na przerwie</value>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>Anulowana</value>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>Wkrótce</value>
+  </data>
+  <data name="ReadingChapters_one" xml:space="preserve">
+    <value>1 rozdział</value>
+  </data>
+  <data name="ReadingChapters_few" xml:space="preserve">
+    <value>{count} rozdziały</value>
+  </data>
+  <data name="ReadingChapters_many" xml:space="preserve">
+    <value>{count} rozdziałów</value>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>{count} rozdziału</value>
+  </data>
+  <data name="ReadingVolumes_one" xml:space="preserve">
+    <value>1 tom</value>
+  </data>
+  <data name="ReadingVolumes_few" xml:space="preserve">
+    <value>{count} tomy</value>
+  </data>
+  <data name="ReadingVolumes_many" xml:space="preserve">
+    <value>{count} tomów</value>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>{count} tomu</value>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>Na liście planowanych</value>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>Nowy rozdział w serii, którą czytasz</value>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>Wróć do czytania</value>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>Następna lektura dla ciebie</value>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>Popularne i wciąż wydawane</value>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>Rozdział {chapter} wyszedł dziś</value>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>Rozdział {chapter}, {title}, wyszedł dziś</value>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>Rozdział {chapter} · strona {page}</value>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>Rozdział {chapter} · {percent}%</value>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>Nowy rozdział: {chapter}</value>
+  </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>Część {part}</value>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>Część {part} · {percent}%</value>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>Nowa część: {part}</value>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>Część {part} · {title}</value>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>Część {part} wyszła dziś</value>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>Część {part}, {title}, wyszła dziś</value>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>Rozdział {chapter} z {of}</value>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>Tom {volume}, część {part}</value>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>Japonia</value>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>Korea</value>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>Chiny</value>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>Tajwan</value>
+  </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>Inny czytnik</value>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>E-ink, 6 cali</value>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>E-ink, 7 cali</value>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>Kolorowy e-ink, 7 cali</value>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>Tablet</value>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>Rozdział {chapter}</value>
+  </data>
+  <data name="ExportWaitsForWifi_one" xml:space="preserve">
+    <value>Jeden rozdział nie jest jeszcze pobrany, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</value>
+  </data>
+  <data name="ExportWaitsForWifi_few" xml:space="preserve">
+    <value>Do pobrania zostały {n} rozdziały, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</value>
+  </data>
+  <data name="ExportWaitsForWifi_many" xml:space="preserve">
+    <value>Do pobrania zostało {n} rozdziałów, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</value>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>Do pobrania zostało {n} rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</value>
+  </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>Rozdział {chapter} · {title}</value>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>Przeczytany</value>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>Nowy</value>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>Pobrany</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Usunięte przez źródło</value>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>Niepobrany</value>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>To urządzenie</value>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>W kolejce</value>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>W kolejce · czeka na Wi-Fi</value>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>Pobieranie · {done} z {total} stron</value>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>Nie udało się pobrać</value>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>Strona {page} z {of}</value>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>Strona {page}</value>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>1 strona</value>
+  </data>
+  <data name="ReadingRowPages_few" xml:space="preserve">
+    <value>{n} strony</value>
+  </data>
+  <data name="ReadingRowPages_many" xml:space="preserve">
+    <value>{n} stron</value>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n} strony</value>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>1 wersja</value>
+  </data>
+  <data name="ReadingRowVersions_few" xml:space="preserve">
+    <value>{n} wersje</value>
+  </data>
+  <data name="ReadingRowVersions_many" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>przed chwilą</value>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes} min temu</value>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>dziś</value>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>wczoraj</value>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>1 dzień temu</value>
+  </data>
+  <data name="ReadingAgoDays_few" xml:space="preserve">
+    <value>{days} dni temu</value>
+  </data>
+  <data name="ReadingAgoDays_many" xml:space="preserve">
+    <value>{days} dni temu</value>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days} dnia temu</value>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>1 tydzień temu</value>
+  </data>
+  <data name="ReadingAgoWeeks_few" xml:space="preserve">
+    <value>{weeks} tygodnie temu</value>
+  </data>
+  <data name="ReadingAgoWeeks_many" xml:space="preserve">
+    <value>{weeks} tygodni temu</value>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks} tygodnia temu</value>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>1 miesiąc temu</value>
+  </data>
+  <data name="ReadingAgoMonths_few" xml:space="preserve">
+    <value>{months} miesiące temu</value>
+  </data>
+  <data name="ReadingAgoMonths_many" xml:space="preserve">
+    <value>{months} miesięcy temu</value>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months} miesiąca temu</value>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>1 rok temu</value>
+  </data>
+  <data name="ReadingAgoYears_few" xml:space="preserve">
+    <value>{years} lata temu</value>
+  </data>
+  <data name="ReadingAgoYears_many" xml:space="preserve">
+    <value>{years} lat temu</value>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years} roku temu</value>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>Usunięto z: {tracker}</value>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>Nie było na twojej liście: {tracker}</value>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>Brak dopasowania w: {tracker}, więc nic się tam nie zmieniło</value>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>Nadal na twojej liście: {tracker}</value>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>Zaloguj się ponownie ({tracker}) i spróbuj jeszcze raz.</value>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>Brak serii o tej nazwie</value>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>Nie odpowiada od {time}</value>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>Nie odpowiada</value>
+  </data>
+  <data name="ReadingDlParts_one" xml:space="preserve">
+    <value>1 część</value>
+  </data>
+  <data name="ReadingDlParts_few" xml:space="preserve">
+    <value>{count} części</value>
+  </data>
+  <data name="ReadingDlParts_many" xml:space="preserve">
+    <value>{count} części</value>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>{count} części</value>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>{size}</value>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>{count} przeczytanych</value>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>Rozdział {chapter}</value>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>{done} z {total} stron</value>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>Jeszcze {count} w kolejce</value>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>{count} w kolejce</value>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>czeka na Wi-Fi</value>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>Nie udało się pobrać rozdziału {chapter}</value>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>Około {size}</value>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>przez Wi-Fi</value>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>przez dane komórkowe</value>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>czeka na Wi-Fi</value>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>Pobieranie zakończone</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
+    <value>Gotowe do czytania offline: rozdział z serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_few" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} rozdziały z serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_many" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} rozdziałów z serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} rozdziału z serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
+    <value>Gotowe do czytania offline: część serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_few" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} części serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_many" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} części serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>Gotowe do czytania offline: {count} części serii {title}.</value>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>Rozdziały z {count} serii są gotowe do czytania offline.</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Dołączono do {store} jako {member}.</value>
   </data>
@@ -745,6 +1255,9 @@
   </data>
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>{plugin} nie ma w folderze, w którym są wtyczki.</value>
+  </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>{store} nie obsługuje jeszcze źródła z książkami. Jego właściciel może zaktualizować sklep z wtyczkami, aby je dodać.</value>
   </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>To urządzenie dołączyło do {store} linkiem. Wklej ten sam link na drugim urządzenie.</value>
@@ -981,7 +1494,7 @@
     <value>Nie udało się połączyć z serwerem.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri nie udostępnia żadnych seriali. Źródła dodajesz samodzielnie.</value>
+    <value>Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Zapisano: {label}.</value>
@@ -1198,6 +1711,9 @@
   </data>
   <data name="MatchChoiceLine" xml:space="preserve">
     <value>{parts} · dopasowanie {percent}%</value>
+  </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>Wyszukiwanie w trakcie pisania jest chwilowo wstrzymane, aby zmieścić się w limitach AniList. Naciśnij Enter, aby wyszukać teraz.</value>
   </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>Edytujesz swój komentarz</value>
@@ -1433,6 +1949,45 @@
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
     <value>Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten komputer wysyła odcinek, dopóki trwa odtwarzanie.</value>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Uruchom ponownie</value>
+  </data>
+  <data name="SettingsDifferences_one" xml:space="preserve">
+    <value>Jeden tytuł różni się od: {tracker}</value>
+  </data>
+  <data name="SettingsDifferences_few" xml:space="preserve">
+    <value>{count} tytuły różnią się od: {tracker}</value>
+  </data>
+  <data name="SettingsDifferences_many" xml:space="preserve">
+    <value>{count} tytułów różni się od: {tracker}</value>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>{count} tytułu różni się od: {tracker}</value>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>Przejrzyj</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>Szukaj w ustawieniach</value>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>Wyższa jakość oznacza najlepszą wersję, jaką oferuje źródło, i więcej miejsca.</value>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>Napisy zostają przy odcinku, gdziekolwiek trafi plik.</value>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>Pobieranie, które nadal seeduje, zostaje w pamięci podręcznej aplikacji Kaeri, a nie w folderze pobierania.</value>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>Wczytuje komentarze z wątku na forum AniList dla obejrzanych odcinków.</value>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>Każdy obraz wczytuje się z witryny, która go hostuje, i ta widzi twój adres IP.</value>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>Przeglądaj…</value>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeri nadal pobiera pliki</value>
   </data>
@@ -1579,6 +2134,42 @@
   </data>
   <data name="StartFailedQuit" xml:space="preserve">
     <value>Zamknij</value>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeri przestał działać</value>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>Część aplikacji, która wykonuje pracę, zatrzymała się. Otwórz Kaeri ponownie, aby kontynuować.</value>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>Otwórz ponownie</value>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>{tracker}: zsynchronizowano</value>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>{tracker}: brak synchronizacji</value>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>Zaloguj się ponownie: {tracker}</value>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>Pokazuje, co jest uruchomione</value>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>Nic nie jest uruchomione.</value>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>Otwórz: Urządzenia</value>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>Komunikaty</value>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>Brak komunikatów</value>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>Problem</value>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, odcinek {episode}</value>
@@ -4076,6 +4667,9 @@
   <data name="PartyFormNothing" xml:space="preserve">
     <value>Odtwarzany teraz odcinek trafi do pokoju.</value>
   </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>Gdy już będziesz w pokoju, naciśnij Odtwórz przy dowolnym odcinku, aby oglądać go razem z pokojem.</value>
+  </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>Odcinek {episode}: {title}</value>
   </data>
@@ -4231,6 +4825,9 @@
   </data>
   <data name="TogetherStart" xml:space="preserve">
     <value>Zacznij oglądać razem</value>
+  </data>
+  <data name="TogetherStartLine" xml:space="preserve">
+    <value>Otwórz pokój i zaproś znajomych linkiem lub kodem, a potem naciśnij Odtwórz przy tym, co chcesz oglądać.</value>
   </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>Dołącz do oglądania</value>
@@ -4450,6 +5047,9 @@
   </data>
   <data name="PartyBarIdle" xml:space="preserve">
     <value>W pokoju · nic się dla ciebie nie odtwarza</value>
+  </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>Naciśnij Odtwórz przy dowolnym odcinku, aby oglądać go razem z pokojem</value>
   </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>Wstrzymano: {name}</value>
@@ -5297,6 +5897,129 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Więcej w Ustawieniach…</value>
   </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>Wczytywanie strony {page}</value>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>Nie udało się wczytać strony {page}</value>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>Spróbuj ponownie</value>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>Przeczytano</value>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>Kolejny</value>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>Od prawej do lewej</value>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>Od lewej do prawej</value>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>Pasek</value>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>Ekran</value>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>Szerokość</value>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>Szeryfowa</value>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>Bezszeryfowa</value>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>Papier</value>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>Jasny</value>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>Sepia</value>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>Ciemny</value>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>Wąskie</value>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>Szerokie</value>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>Jedna</value>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>Dwie</value>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>Podziel</value>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>Obróć</value>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>Całość</value>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>Krawędzie</value>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>Połowy</value>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>Wyłączone</value>
+  </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>Rozdziały</value>
+  </data>
+  <data name="ReaderPagesLeft_one" xml:space="preserve">
+    <value>Została jedna strona w tym rozdziale</value>
+  </data>
+  <data name="ReaderPagesLeft_few" xml:space="preserve">
+    <value>Zostały {count} strony w tym rozdziale</value>
+  </data>
+  <data name="ReaderPagesLeft_many" xml:space="preserve">
+    <value>Zostało {count} stron w tym rozdziale</value>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>Zostało {count} strony w tym rozdziale</value>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>Wczytywanie rozdziałów</value>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>Motyw</value>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>Czarne</value>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>Białe</value>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>Jesteś na bieżąco</value>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>Brak</value>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>Mały</value>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>Systemowy</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Przeczytaj demo</value>
   </data>
@@ -5386,6 +6109,1113 @@
   </data>
   <data name="DemoReadChapter" xml:space="preserve">
     <value>Czytaj rozdział {number}</value>
+  </data>
+  <data name="NavWatch" xml:space="preserve">
+    <value>Oglądaj</value>
+  </data>
+  <data name="NavRead" xml:space="preserve">
+    <value>Czytaj</value>
+  </data>
+  <data name="NavUpdates" xml:space="preserve">
+    <value>Aktualizacje</value>
+  </data>
+  <data name="HomeReadReleasing" xml:space="preserve">
+    <value>Aktualnie wydawane</value>
+  </data>
+  <data name="HomeReadCheckedOnOpen" xml:space="preserve">
+    <value>Sprawdzane po otwarciu aplikacji Kaeri</value>
+  </data>
+  <data name="HomeReadEnd" xml:space="preserve">
+    <value>To na razie wszystko. Pełne listy znajdziesz w sekcjach Aktualizacje i Szukaj.</value>
+  </data>
+  <data name="HomeReadNoSources" xml:space="preserve">
+    <value>Dodaj folder, serwer lub sklep z wtyczkami, aby czytać na stronie głównej.</value>
+  </data>
+  <data name="WeekUsually" xml:space="preserve">
+    <value>Zwykle</value>
+  </data>
+  <data name="WeekNothingUsually" xml:space="preserve">
+    <value>Zwykle nic</value>
+  </data>
+  <data name="UpdatesChecked" xml:space="preserve">
+    <value>Sprawdzono: {ago}</value>
+  </data>
+  <data name="ChapterUpdatesCheckedCaughtUp" xml:space="preserve">
+    <value>Sprawdzono: {ago} · serie, w których jesteś na bieżąco</value>
+  </data>
+  <data name="ChapterUpdatesChecking" xml:space="preserve">
+    <value>Sprawdzanie nowych rozdziałów…</value>
+  </data>
+  <data name="UpdatesDownloadNew" xml:space="preserve">
+    <value>Pobierz nowe</value>
+  </data>
+  <data name="UpdatesEmptyTitle" xml:space="preserve">
+    <value>Brak nowych rozdziałów</value>
+  </data>
+  <data name="ChapterUpdatesEmptyLine" xml:space="preserve">
+    <value>Kaeri kilka razy dziennie sprawdza serie z twojej listy czytania, w których jesteś na bieżąco.</value>
+  </data>
+  <data name="ChapterUpdatesToday" xml:space="preserve">
+    <value>Dzisiaj</value>
+  </data>
+  <data name="ChapterUpdatesYesterday" xml:space="preserve">
+    <value>Wczoraj</value>
+  </data>
+  <data name="ChapterUpdatesVersions_one" xml:space="preserve">
+    <value>1 wersja</value>
+  </data>
+  <data name="ChapterUpdatesVersions_few" xml:space="preserve">
+    <value>{n} wersje</value>
+  </data>
+  <data name="ChapterUpdatesVersions_many" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="ChapterUpdatesVersions_other" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeries" xml:space="preserve">
+    <value>Otwórz: {title}</value>
+  </data>
+  <data name="ChapterUpdatesOpenChapterHint" xml:space="preserve">
+    <value>Otwiera rozdział</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeriesMenu" xml:space="preserve">
+    <value>Otwórz serię</value>
+  </data>
+  <data name="ActionReadChapter" xml:space="preserve">
+    <value>Czytaj rozdział {n}</value>
+  </data>
+  <data name="ActionContinueChapter" xml:space="preserve">
+    <value>Wznów rozdział {n} · strona {page}</value>
+  </data>
+  <data name="ActionContinuePart" xml:space="preserve">
+    <value>Wznów część {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>Wznów część {n}</value>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>Czytaj część {n}</value>
+  </data>
+  <data name="ActionReadAgain" xml:space="preserve">
+    <value>Czytaj ponownie</value>
+  </data>
+  <data name="SeriesReadingFrom" xml:space="preserve">
+    <value>Czytasz z</value>
+  </data>
+  <data name="SeriesChange" xml:space="preserve">
+    <value>Zmień</value>
+  </data>
+  <data name="SeriesSourcesMore_one" xml:space="preserve">
+    <value>jeszcze 1</value>
+  </data>
+  <data name="SeriesSourcesMore_few" xml:space="preserve">
+    <value>jeszcze {n}</value>
+  </data>
+  <data name="SeriesSourcesMore_many" xml:space="preserve">
+    <value>jeszcze {n}</value>
+  </data>
+  <data name="SeriesSourcesMore_other" xml:space="preserve">
+    <value>jeszcze {n}</value>
+  </data>
+  <data name="SeriesTrackerAsk" xml:space="preserve">
+    <value>Która to seria? Wybierz</value>
+  </data>
+  <data name="SeriesPreferredGroup" xml:space="preserve">
+    <value>Twoja preferowana grupa</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_one" xml:space="preserve">
+    <value>{n} z {total} rozdziału</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_few" xml:space="preserve">
+    <value>{n} z {total} rozdziałów</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_many" xml:space="preserve">
+    <value>{n} z {total} rozdziałów</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_other" xml:space="preserve">
+    <value>{n} z {total} rozdziału</value>
+  </data>
+  <data name="SeriesTrackerChapters_one" xml:space="preserve">
+    <value>1 rozdział</value>
+  </data>
+  <data name="SeriesTrackerChapters_few" xml:space="preserve">
+    <value>{n} rozdziały</value>
+  </data>
+  <data name="SeriesTrackerChapters_many" xml:space="preserve">
+    <value>{n} rozdziałów</value>
+  </data>
+  <data name="SeriesTrackerChapters_other" xml:space="preserve">
+    <value>{n} rozdziału</value>
+  </data>
+  <data name="SeriesTrackerWithVolume" xml:space="preserve">
+    <value>{chapters} · tom {volume}</value>
+  </data>
+  <data name="SeriesTrackerVolumes" xml:space="preserve">
+    <value>Tom {volume} z {total}</value>
+  </data>
+  <data name="SeriesReadFromAnother" xml:space="preserve">
+    <value>Wybierz inne źródło</value>
+  </data>
+  <data name="SeriesScore" xml:space="preserve">
+    <value>Ocena…</value>
+  </data>
+  <data name="SeriesAddToList" xml:space="preserve">
+    <value>Dodaj do listy</value>
+  </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>Usuń z list…</value>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>Usunąć {title} z twoich list?</value>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>Seria zniknie z listy w każdej połączonej usłudze śledzenia. Twoje miejsce i przeczytane rozdziały zostają w aplikacji Kaeri.</value>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>Twoje listy</value>
+  </data>
+  <data name="SeriesChosen_one" xml:space="preserve">
+    <value>Wybrano: 1 rozdział</value>
+  </data>
+  <data name="SeriesChosen_few" xml:space="preserve">
+    <value>Wybrano: {n} rozdziały</value>
+  </data>
+  <data name="SeriesChosen_many" xml:space="preserve">
+    <value>Wybrano: {n} rozdziałów</value>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>Wybrano: {n} rozdziału</value>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>Wszystkie nieprzeczytane</value>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>Nie znaleziono w</value>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>Szukaj tam</value>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>Szukaj: {source}</value>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>Szukaj</value>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>Nic nie znaleziono dla tych słów</value>
+  </data>
+  <data name="SeriesTracking" xml:space="preserve">
+    <value>Śledzenie</value>
+  </data>
+  <data name="SeriesReadFromMenu" xml:space="preserve">
+    <value>Zmień źródło…</value>
+  </data>
+  <data name="SeriesReadAgainMenu" xml:space="preserve">
+    <value>Czytaj od początku…</value>
+  </data>
+  <data name="SeriesVolumes" xml:space="preserve">
+    <value>Tomy</value>
+  </data>
+  <data name="SeriesChapters" xml:space="preserve">
+    <value>Rozdziały</value>
+  </data>
+  <data name="SeriesOrder" xml:space="preserve">
+    <value>Kolejność</value>
+  </data>
+  <data name="SeriesNewestFirst" xml:space="preserve">
+    <value>Od najnowszych</value>
+  </data>
+  <data name="SeriesOldestFirst" xml:space="preserve">
+    <value>Od najstarszych</value>
+  </data>
+  <data name="SeriesVolume" xml:space="preserve">
+    <value>Tom {n}</value>
+  </data>
+  <data name="SeriesNoVolume" xml:space="preserve">
+    <value>Jeszcze w żadnym tomie</value>
+  </data>
+  <data name="SeriesChapterRange" xml:space="preserve">
+    <value>rozdziały od {from} do {to}</value>
+  </data>
+  <data name="SeriesVolumeRead" xml:space="preserve">
+    <value>przeczytany</value>
+  </data>
+  <data name="SeriesExpanded" xml:space="preserve">
+    <value>Rozwinięty</value>
+  </data>
+  <data name="SeriesCollapsed" xml:space="preserve">
+    <value>Zwinięty</value>
+  </data>
+  <data name="SeriesNoChaptersTitle" xml:space="preserve">
+    <value>To źródło nie ma jeszcze rozdziałów</value>
+  </data>
+  <data name="SeriesNoChaptersLine" xml:space="preserve">
+    <value>Inne źródło może je mieć.</value>
+  </data>
+  <data name="SeriesChaptersFailed" xml:space="preserve">
+    <value>Nie udało się wczytać rozdziałów z: {source}.</value>
+  </data>
+  <data name="SeriesChapterNumber" xml:space="preserve">
+    <value>Rozdział {n}</value>
+  </data>
+  <data name="SeriesBookmarked" xml:space="preserve">
+    <value>Zakładka</value>
+  </data>
+  <data name="SeriesMarkRead" xml:space="preserve">
+    <value>Oznacz jako przeczytane</value>
+  </data>
+  <data name="SeriesMarkUnread" xml:space="preserve">
+    <value>Oznacz jako nieprzeczytane</value>
+  </data>
+  <data name="SeriesMarkReadUpTo" xml:space="preserve">
+    <value>Oznacz jako przeczytane do tego miejsca</value>
+  </data>
+  <data name="SeriesDownload" xml:space="preserve">
+    <value>Pobierz</value>
+  </data>
+  <data name="SeriesReadChapterMenu" xml:space="preserve">
+    <value>Czytaj</value>
+  </data>
+  <data name="SeriesBookmark" xml:space="preserve">
+    <value>Dodaj zakładkę</value>
+  </data>
+  <data name="SeriesRemoveBookmark" xml:space="preserve">
+    <value>Usuń zakładkę</value>
+  </data>
+  <data name="SeriesVersions_one" xml:space="preserve">
+    <value>1 wersja</value>
+  </data>
+  <data name="SeriesVersions_few" xml:space="preserve">
+    <value>{n} wersje</value>
+  </data>
+  <data name="SeriesVersions_many" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="SeriesVersions_other" xml:space="preserve">
+    <value>{n} wersji</value>
+  </data>
+  <data name="SeriesVersionsLoading" xml:space="preserve">
+    <value>Szukanie wersji…</value>
+  </data>
+  <data name="SeriesVersionInUse" xml:space="preserve">
+    <value>W użyciu: {name}</value>
+  </data>
+  <data name="SeriesPreferVersion" xml:space="preserve">
+    <value>Preferuj: {name} dla tej serii</value>
+  </data>
+  <data name="ChapterStateDownloaded" xml:space="preserve">
+    <value>Pobrany</value>
+  </data>
+  <data name="ChapterStateQueued" xml:space="preserve">
+    <value>W kolejce</value>
+  </data>
+  <data name="ChapterStateWifi" xml:space="preserve">
+    <value>W kolejce · czeka na Wi-Fi</value>
+  </data>
+  <data name="ChapterStateDownloading" xml:space="preserve">
+    <value>Pobieranie · {done} z {total} stron</value>
+  </data>
+  <data name="ChapterStateFailed" xml:space="preserve">
+    <value>Nie udało się pobrać. {reason}</value>
+  </data>
+  <data name="ChapterStatePageOf" xml:space="preserve">
+    <value>Strona {page} z {of}</value>
+  </data>
+  <data name="ChapterStatePage" xml:space="preserve">
+    <value>Strona {page}</value>
+  </data>
+  <data name="ChapterStateRead" xml:space="preserve">
+    <value>Przeczytany</value>
+  </data>
+  <data name="ChapterStateNew" xml:space="preserve">
+    <value>Nowy</value>
+  </data>
+  <data name="ChapterDownloadStop" xml:space="preserve">
+    <value>Zatrzymaj pobieranie</value>
+  </data>
+  <data name="ChapterRetry" xml:space="preserve">
+    <value>Ponów</value>
+  </data>
+  <data name="ChapterDownloadDelete" xml:space="preserve">
+    <value>Usuń pobrane</value>
+  </data>
+  <data name="DownloadNext" xml:space="preserve">
+    <value>Kolejne nieprzeczytane: {n}</value>
+  </data>
+  <data name="DownloadUnread" xml:space="preserve">
+    <value>Każdy nieprzeczytany rozdział</value>
+  </data>
+  <data name="DownloadVolumeCount_one" xml:space="preserve">
+    <value>{volume} · 1 rozdział</value>
+  </data>
+  <data name="DownloadVolumeCount_few" xml:space="preserve">
+    <value>{volume} · {n} rozdziały</value>
+  </data>
+  <data name="DownloadVolumeCount_many" xml:space="preserve">
+    <value>{volume} · {n} rozdziałów</value>
+  </data>
+  <data name="DownloadVolumeCount_other" xml:space="preserve">
+    <value>{volume} · {n} rozdziału</value>
+  </data>
+  <data name="DownloadChoose" xml:space="preserve">
+    <value>Wybierz rozdziały…</value>
+  </data>
+  <data name="DownloadDeleteSeries" xml:space="preserve">
+    <value>Usuń pobrane rozdziały tej serii</value>
+  </data>
+  <data name="DownloadChapters_one" xml:space="preserve">
+    <value>Pobierz 1 rozdział</value>
+  </data>
+  <data name="DownloadChapters_few" xml:space="preserve">
+    <value>Pobierz {n} rozdziały</value>
+  </data>
+  <data name="DownloadChapters_many" xml:space="preserve">
+    <value>Pobierz {n} rozdziałów</value>
+  </data>
+  <data name="DownloadChapters_other" xml:space="preserve">
+    <value>Pobierz {n} rozdziału</value>
+  </data>
+  <data name="DownloadOverWifi" xml:space="preserve">
+    <value>Przez Wi-Fi</value>
+  </data>
+  <data name="ReadAgainTitle" xml:space="preserve">
+    <value>Przeczytać {title} ponownie od początku?</value>
+  </data>
+  <data name="ReadAgainLine" xml:space="preserve">
+    <value>Twoje miejsce wraca do rozdziału 1, a zmiana obejmuje wszystkie twoje urządzenia. Trackery zachowują rozdziały jako przeczytane, a AniList liczy ponowne czytanie.</value>
+  </data>
+  <data name="ReadAgainConfirm" xml:space="preserve">
+    <value>Czytaj ponownie</value>
+  </data>
+  <data name="SeriesReadFromTitle" xml:space="preserve">
+    <value>Czytaj z</value>
+  </data>
+  <data name="SeriesReadFromAsking" xml:space="preserve">
+    <value>Pytam twoje źródła…</value>
+  </data>
+  <data name="SeriesReadFromNoneTitle" xml:space="preserve">
+    <value>Żadne źródło nie ma tej serii</value>
+  </data>
+  <data name="SeriesReadFromNoneLine" xml:space="preserve">
+    <value>Dodaj folder, serwer lub sklep z wtyczkami w sekcji Twoje źródła.</value>
+  </data>
+  <data name="SeriesReadFromChapters" xml:space="preserve">
+    <value>Rozdziały od 1 do {latest}</value>
+  </data>
+  <data name="SeriesReadFromChaptersLater" xml:space="preserve">
+    <value>rozdziały od 1 do {latest}</value>
+  </data>
+  <data name="SeriesReadFromOnDevice" xml:space="preserve">
+    <value>na: {device}</value>
+  </data>
+  <data name="SeriesReadFromNote" xml:space="preserve">
+    <value>Oznaczenia przeczytania należą do serii, więc zostają po zmianie. Pobrane rozdziały zostają, dopóki ich nie usuniesz.</value>
+  </data>
+  <data name="SeriesNotTracked" xml:space="preserve">
+    <value>Nie śledzone tutaj</value>
+  </data>
+  <data name="SeriesTrackerConnect" xml:space="preserve">
+    <value>Połącz w Ustawieniach, aby śledzić tę serię</value>
+  </data>
+  <data name="SeriesTrackerNotThere" xml:space="preserve">
+    <value>Ten tracker nie ma dopasowania</value>
+  </data>
+  <data name="SeriesTrackerLooking" xml:space="preserve">
+    <value>Szukanie tej serii…</value>
+  </data>
+  <data name="SeriesTrackerBehind" xml:space="preserve">
+    <value>Ma rozdział {has}. Przy kolejnej synchronizacji dostanie {gets}.</value>
+  </data>
+  <data name="SeriesTrackerAhead" xml:space="preserve">
+    <value>Ma rozdział {has}, więcej niż Kaeri.</value>
+  </data>
+  <data name="SeriesTrackerScore" xml:space="preserve">
+    <value>{score} / 10</value>
+  </data>
+  <data name="SeriesTrackerKeepKaeri" xml:space="preserve">
+    <value>Zachowaj postęp z aplikacji Kaeri</value>
+  </data>
+  <data name="SeriesTrackerTakeTheirs" xml:space="preserve">
+    <value>Użyj miejsca z: {tracker}</value>
+  </data>
+  <data name="SeriesTrackerNoneOfThese" xml:space="preserve">
+    <value>Żadna z nich</value>
+  </data>
+  <data name="ReadListReading" xml:space="preserve">
+    <value>Czytane</value>
+  </data>
+  <data name="ReadListPlanning" xml:space="preserve">
+    <value>Planowane</value>
+  </data>
+  <data name="ReadListCompleted" xml:space="preserve">
+    <value>Ukończone</value>
+  </data>
+  <data name="ReadListPaused" xml:space="preserve">
+    <value>Wstrzymane</value>
+  </data>
+  <data name="ReadListDropped" xml:space="preserve">
+    <value>Porzucone</value>
+  </data>
+  <data name="ReadListRereading" xml:space="preserve">
+    <value>Czytane ponownie</value>
+  </data>
+  <data name="ReadListYourFiles" xml:space="preserve">
+    <value>Twoje pliki</value>
+  </data>
+  <data name="MediumWatch" xml:space="preserve">
+    <value>Oglądaj</value>
+  </data>
+  <data name="MediumRead" xml:space="preserve">
+    <value>Czytaj</value>
+  </data>
+  <data name="MediumBoth" xml:space="preserve">
+    <value>Oba</value>
+  </data>
+  <data name="MediumWatchLine" xml:space="preserve">
+    <value>Seriale i filmy dostarczane przez twoje źródła</value>
+  </data>
+  <data name="MediumReadLine" xml:space="preserve">
+    <value>Manga, webtoony i light novel dostarczane przez twoje źródła</value>
+  </data>
+  <data name="MediumBothLine" xml:space="preserve">
+    <value>Oglądanie i czytanie, każde w swoim miejscu</value>
+  </data>
+  <data name="MediumAnswerWatch" xml:space="preserve">
+    <value>Oglądanie</value>
+  </data>
+  <data name="MediumAnswerRead" xml:space="preserve">
+    <value>Czytanie</value>
+  </data>
+  <data name="MediumAnswerBoth" xml:space="preserve">
+    <value>Oglądanie i czytanie</value>
+  </data>
+  <data name="SourcesAddTitle" xml:space="preserve">
+    <value>Dodaj źródło</value>
+  </data>
+  <data name="BookAddLine" xml:space="preserve">
+    <value>Książki, które już masz, albo wtyczki: zaproszenie dostajesz od właściciela, który prowadzi sklep.</value>
+  </data>
+  <data name="BookAddFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="BookAddFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF i foldery z obrazami na: {device} lub na dysku</value>
+  </data>
+  <data name="BookAddServer" xml:space="preserve">
+    <value>Serwer</value>
+  </data>
+  <data name="BookAddServerLine" xml:space="preserve">
+    <value>Komga, Kavita lub katalog OPDS, do którego możesz się zalogować</value>
+  </data>
+  <data name="BookAddStore" xml:space="preserve">
+    <value>Sklep z wtyczkami</value>
+  </data>
+  <data name="BookAddStoreLine" xml:space="preserve">
+    <value>Wklej zaproszenie od właściciela, który prowadzi sklep</value>
+  </data>
+  <data name="BookAddServerTitle" xml:space="preserve">
+    <value>Dodaj serwer</value>
+  </data>
+  <data name="BookAddServerButton" xml:space="preserve">
+    <value>Dodaj serwer</value>
+  </data>
+  <data name="SourcesFoundServer" xml:space="preserve">
+    <value>Znaleziono serwer {kind}</value>
+  </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>Znaleziono serwer {kind} z 1 serią</value>
+  </data>
+  <data name="SourcesFoundServerSeries_few" xml:space="preserve">
+    <value>Znaleziono serwer {kind} z {n} seriami</value>
+  </data>
+  <data name="SourcesFoundServerSeries_many" xml:space="preserve">
+    <value>Znaleziono serwer {kind} z {n} seriami</value>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>Znaleziono serwer {kind} z {n} seriami</value>
+  </data>
+  <data name="BookServerLooking" xml:space="preserve">
+    <value>Sprawdzanie tego adresu…</value>
+  </data>
+  <data name="BookServerNote" xml:space="preserve">
+    <value>Kaeri odsyła postęp czytania na ten serwer. Hasło zostaje w Pęku kluczy.</value>
+  </data>
+  <data name="BookSourcesFolders" xml:space="preserve">
+    <value>Foldery</value>
+  </data>
+  <data name="BookSourcesServers" xml:space="preserve">
+    <value>Serwery</value>
+  </data>
+  <data name="BookSourcesPlugins" xml:space="preserve">
+    <value>Wtyczki</value>
+  </data>
+  <data name="BookSourcesPluginsFooter" xml:space="preserve">
+    <value>Wtyczki przychodzą przez sklepy z wtyczkami, do których dołączasz.</value>
+  </data>
+  <data name="BookSourcesSeries_one" xml:space="preserve">
+    <value>1 seria</value>
+  </data>
+  <data name="BookSourcesSeries_few" xml:space="preserve">
+    <value>{n} serie</value>
+  </data>
+  <data name="BookSourcesSeries_many" xml:space="preserve">
+    <value>{n} serii</value>
+  </data>
+  <data name="BookSourcesSeries_other" xml:space="preserve">
+    <value>{n} serii</value>
+  </data>
+  <data name="BookSourcesScanning" xml:space="preserve">
+    <value>Przeglądanie · znaleziono: {n}</value>
+  </data>
+  <data name="BookSourcesMissing" xml:space="preserve">
+    <value>Nie znaleziono. Czy dysk jest podłączony?</value>
+  </data>
+  <data name="BookSourcesOff" xml:space="preserve">
+    <value>Wyłączony</value>
+  </data>
+  <data name="BookSourcesProgressBack" xml:space="preserve">
+    <value>postęp wraca na serwer</value>
+  </data>
+  <data name="BookSourcesOpds" xml:space="preserve">
+    <value>Katalog OPDS</value>
+  </data>
+  <data name="BookSourcesFromStore" xml:space="preserve">
+    <value>Z: {store}</value>
+  </data>
+  <data name="BookSourcesVersion" xml:space="preserve">
+    <value>wersja {version}</value>
+  </data>
+  <data name="BookSourcesCheckMatches" xml:space="preserve">
+    <value>Sprawdź dopasowania · {n}</value>
+  </data>
+  <data name="BookSourcesCheckMatchesTitle" xml:space="preserve">
+    <value>Sprawdź dopasowania</value>
+  </data>
+  <data name="BookSourcesScan" xml:space="preserve">
+    <value>Przeszukaj ponownie</value>
+  </data>
+  <data name="BookSourcesReportProgress" xml:space="preserve">
+    <value>Wysyłaj postęp na serwer</value>
+  </data>
+  <data name="BookSourcesUse" xml:space="preserve">
+    <value>Używaj tego serwera</value>
+  </data>
+  <data name="BookSourcesNotABookServer" xml:space="preserve">
+    <value>Ten adres odpowiada, ale nie jako serwer książek.</value>
+  </data>
+  <data name="BookSourcesNoMatch" xml:space="preserve">
+    <value>Brak dopasowania</value>
+  </data>
+  <data name="BookSourcesKeep" xml:space="preserve">
+    <value>Zostaw bez dopasowania</value>
+  </data>
+  <data name="BookSourcesFind" xml:space="preserve">
+    <value>Znajdź</value>
+  </data>
+  <data name="BookSourcesUnmatchedNote" xml:space="preserve">
+    <value>Serie bez dopasowania nadal da się czytać z folderu. Trackery nie zobaczą ich postępu, dopóki ich nie dopasujesz.</value>
+  </data>
+  <data name="LibraryScopeLabel" xml:space="preserve">
+    <value>Seriale lub czytanie: Biblioteka i Szukaj</value>
+  </data>
+  <data name="LibraryScopeShows" xml:space="preserve">
+    <value>Seriale</value>
+  </data>
+  <data name="LibraryScopeReading" xml:space="preserve">
+    <value>Czytanie</value>
+  </data>
+  <data name="ReadSortLastRead" xml:space="preserve">
+    <value>Ostatnio czytane</value>
+  </data>
+  <data name="ReadLibraryListValue_one" xml:space="preserve">
+    <value>{list}, 1 seria</value>
+  </data>
+  <data name="ReadLibraryListValue_few" xml:space="preserve">
+    <value>{list}, {n} serie</value>
+  </data>
+  <data name="ReadLibraryListValue_many" xml:space="preserve">
+    <value>{list}, {n} serii</value>
+  </data>
+  <data name="ReadLibraryListValue_other" xml:space="preserve">
+    <value>{list}, {n} serii</value>
+  </data>
+  <data name="ReadLibraryEmpty" xml:space="preserve">
+    <value>Nic jeszcze na liście: {list}</value>
+  </data>
+  <data name="ReadLibraryEmptyLine" xml:space="preserve">
+    <value>Serie dodane z Szukaj lub ze strony serii pojawią się tutaj.</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyTitle" xml:space="preserve">
+    <value>Brak jeszcze plików</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyLine" xml:space="preserve">
+    <value>Serie z twoich folderów i serwerów, które nie są na żadnej liście, pojawią się tutaj.</value>
+  </data>
+  <data name="ReadLibraryFilesAdd" xml:space="preserve">
+    <value>Dodaj folder lub serwer</value>
+  </data>
+  <data name="ReadSearchPlaceholder" xml:space="preserve">
+    <value>Szukaj w czytaniu</value>
+  </data>
+  <data name="SearchOtherScope_one" xml:space="preserve">
+    <value>1 wynik w: {scope}</value>
+  </data>
+  <data name="SearchOtherScope_few" xml:space="preserve">
+    <value>{n} wyniki w: {scope}</value>
+  </data>
+  <data name="SearchOtherScope_many" xml:space="preserve">
+    <value>{n} wyników w: {scope}</value>
+  </data>
+  <data name="SearchOtherScope_other" xml:space="preserve">
+    <value>{n} wyniku w: {scope}</value>
+  </data>
+  <data name="SearchShowThem" xml:space="preserve">
+    <value>Pokaż</value>
+  </data>
+  <data name="ReadSearchBrowseLine" xml:space="preserve">
+    <value>{what} · z AniList</value>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>1 seria z AniList</value>
+  </data>
+  <data name="ReadSearchTotal_few" xml:space="preserve">
+    <value>{n} serie z AniList</value>
+  </data>
+  <data name="ReadSearchTotal_many" xml:space="preserve">
+    <value>{n} serii z AniList</value>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>{n} serii z AniList</value>
+  </data>
+  <data name="ReadSearchFailed" xml:space="preserve">
+    <value>Nie udało się wyszukać</value>
+  </data>
+  <data name="ReadSearchNothing" xml:space="preserve">
+    <value>Nic nie znaleziono dla: {query}</value>
+  </data>
+  <data name="ReadSearchNothingBrowse" xml:space="preserve">
+    <value>Nic nie pasuje do tych filtrów</value>
+  </data>
+  <data name="ReadSearchNothingLine" xml:space="preserve">
+    <value>Spróbuj innych słów lub tytułu w innym języku.</value>
+  </data>
+  <data name="ReadSearchNothingFiltersLine" xml:space="preserve">
+    <value>Mniej filtrów może dać więcej wyników.</value>
+  </data>
+  <data name="ReadSearchClearFilters" xml:space="preserve">
+    <value>Wyczyść filtry</value>
+  </data>
+  <data name="ReadSortPopular" xml:space="preserve">
+    <value>Popularne</value>
+  </data>
+  <data name="ReadSortTrending" xml:space="preserve">
+    <value>Na czasie</value>
+  </data>
+  <data name="ReadSortScore" xml:space="preserve">
+    <value>Ocena</value>
+  </data>
+  <data name="ReadSortNewest" xml:space="preserve">
+    <value>Najnowsze</value>
+  </data>
+  <data name="ReadFilterFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="ReadFilterOrigin" xml:space="preserve">
+    <value>Pochodzenie</value>
+  </data>
+  <data name="ReadFilterStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ReadFilterGenres" xml:space="preserve">
+    <value>Gatunki</value>
+  </data>
+  <data name="ReadFilterTitle" xml:space="preserve">
+    <value>Filtry</value>
+  </data>
+  <data name="ReadFilterReset" xml:space="preserve">
+    <value>Resetuj</value>
+  </data>
+  <data name="ReadFilterAny" xml:space="preserve">
+    <value>Dowolne</value>
+  </data>
+  <data name="ReadFilterSet" xml:space="preserve">
+    <value>{name}:</value>
+  </data>
+  <data name="ReadFilterMany" xml:space="preserve">
+    <value>{first} i jeszcze {more}</value>
+  </data>
+  <data name="ReadFilterNotGenre" xml:space="preserve">
+    <value>Bez: {genre}</value>
+  </data>
+  <data name="ReadFilterGenresCount_one" xml:space="preserve">
+    <value>1 gatunek</value>
+  </data>
+  <data name="ReadFilterGenresCount_few" xml:space="preserve">
+    <value>{n} gatunki</value>
+  </data>
+  <data name="ReadFilterGenresCount_many" xml:space="preserve">
+    <value>{n} gatunków</value>
+  </data>
+  <data name="ReadFilterGenresCount_other" xml:space="preserve">
+    <value>{n} gatunku</value>
+  </data>
+  <data name="ReadFilterIncluded" xml:space="preserve">
+    <value>Uwzględnione</value>
+  </data>
+  <data name="ReadFilterLeftOut" xml:space="preserve">
+    <value>Pominięte</value>
+  </data>
+  <data name="OnboardingStep" xml:space="preserve">
+    <value>{step} z {total}</value>
+  </data>
+  <data name="OnboardingWelcomeLine" xml:space="preserve">
+    <value>Śledź to, co oglądasz i czytasz. Dostarczają to twoje źródła.</value>
+  </data>
+  <data name="OnboardingWelcomeNote" xml:space="preserve">
+    <value>Twoje listy i postęp zostają przy tobie. Trackery i źródła dodajesz sam.</value>
+  </data>
+  <data name="OnboardingMediumTitle" xml:space="preserve">
+    <value>Oglądać, czytać, czy jedno i drugie?</value>
+  </data>
+  <data name="OnboardingMediumLine" xml:space="preserve">
+    <value>Kaeri pokazuje tylko to, co wybierzesz. Możesz to zmienić w Ustawieniach.</value>
+  </data>
+  <data name="OnboardingMediumHint" xml:space="preserve">
+    <value>Najpierw wybierz jedną z trzech opcji</value>
+  </data>
+  <data name="OnboardingListsTitle" xml:space="preserve">
+    <value>Wczytaj swoje listy</value>
+  </data>
+  <data name="OnboardingListsLineWatch" xml:space="preserve">
+    <value>Kaeri synchronizuje twoje oglądanie z: {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineRead" xml:space="preserve">
+    <value>Kaeri synchronizuje twoje czytanie z: {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineBoth" xml:space="preserve">
+    <value>Kaeri synchronizuje twoje czytanie i oglądanie z: {tracker}.</value>
+  </data>
+  <data name="OnboardingListsAnilistLine" xml:space="preserve">
+    <value>Listy, postęp i propozycje</value>
+  </data>
+  <data name="OnboardingListsLaterWatch" xml:space="preserve">
+    <value>MyAnimeList, Kitsu, Simkl i Trakt możesz dodać później w Ustawieniach, w sekcji Konta.</value>
+  </data>
+  <data name="OnboardingListsLaterRead" xml:space="preserve">
+    <value>MyAnimeList, Kitsu i MangaUpdates możesz dodać później w Ustawieniach, w sekcji Konta.</value>
+  </data>
+  <data name="OnboardingListsLaterBoth" xml:space="preserve">
+    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl i Trakt możesz dodać później w Ustawieniach, w sekcji Konta.</value>
+  </data>
+  <data name="OnboardingConnect" xml:space="preserve">
+    <value>Połącz: {tracker}</value>
+  </data>
+  <data name="OnboardingBooksTitle" xml:space="preserve">
+    <value>Skąd masz książki</value>
+  </data>
+  <data name="OnboardingBooksLine" xml:space="preserve">
+    <value>Kaeri nie zawiera żadnych książek. Dodaj to, co już masz, albo skorzystaj z zaproszenia od właściciela, który prowadzi sklep z wtyczkami.</value>
+  </data>
+  <data name="OnboardingBooksFolder" xml:space="preserve">
+    <value>Dodaj folder</value>
+  </data>
+  <data name="OnboardingBooksFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF i foldery z obrazami</value>
+  </data>
+  <data name="OnboardingBooksServer" xml:space="preserve">
+    <value>Dodaj serwer</value>
+  </data>
+  <data name="OnboardingBooksServerLine" xml:space="preserve">
+    <value>Komga, Kavita lub katalog OPDS</value>
+  </data>
+  <data name="OnboardingBooksInviteHeading" xml:space="preserve">
+    <value>Sklep z wtyczkami: zaproszenie</value>
+  </data>
+  <data name="OnboardingBooksInvitePlaceholder" xml:space="preserve">
+    <value>Wklej zaproszenie</value>
+  </data>
+  <data name="OnboardingBooksPluginLine" xml:space="preserve">
+    <value>Wtyczki uruchamiają kod od osób, którym ufasz. Wybieraj tylko te sklepy z wtyczkami, których właściciela znasz.</value>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>Skąd masz seriale i książki</value>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>Kaeri nie zawiera żadnych seriali ani książek. Dodaj to, co już masz, albo skorzystaj z zaproszenia od właściciela, który prowadzi sklep z wtyczkami.</value>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>Seriale</value>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>Książki</value>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>Pliki wideo na: {device}</value>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>Twój serwer Jellyfin</value>
+  </data>
+  <data name="MediumChoicePosition" xml:space="preserve">
+    <value>{n} z {total}</value>
+  </data>
+  <data name="MediumChangeLater" xml:space="preserve">
+    <value>Możesz to zmienić w Ustawieniach.</value>
+  </data>
+  <data name="MediumUpdateLine" xml:space="preserve">
+    <value>Kaeri potrafi teraz czytać mangę, webtoony i light novel dostarczane przez twoje źródła. Wybierz, do czego służy Kaeri na: {device}.</value>
+  </data>
+  <data name="MediumJoinTitleWatch_one" xml:space="preserve">
+    <value>{devices} jest ustawione na oglądanie</value>
+  </data>
+  <data name="MediumJoinTitleWatch_few" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie</value>
+  </data>
+  <data name="MediumJoinTitleWatch_many" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie</value>
+  </data>
+  <data name="MediumJoinTitleWatch_other" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie</value>
+  </data>
+  <data name="MediumJoinTitleRead_one" xml:space="preserve">
+    <value>{devices} jest ustawione na czytanie</value>
+  </data>
+  <data name="MediumJoinTitleRead_few" xml:space="preserve">
+    <value>{devices} są ustawione na czytanie</value>
+  </data>
+  <data name="MediumJoinTitleRead_many" xml:space="preserve">
+    <value>{devices} są ustawione na czytanie</value>
+  </data>
+  <data name="MediumJoinTitleRead_other" xml:space="preserve">
+    <value>{devices} są ustawione na czytanie</value>
+  </data>
+  <data name="MediumJoinTitleBoth_one" xml:space="preserve">
+    <value>{devices} jest ustawione na oglądanie i czytanie</value>
+  </data>
+  <data name="MediumJoinTitleBoth_few" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie i czytanie</value>
+  </data>
+  <data name="MediumJoinTitleBoth_many" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie i czytanie</value>
+  </data>
+  <data name="MediumJoinTitleBoth_other" xml:space="preserve">
+    <value>{devices} są ustawione na oglądanie i czytanie</value>
+  </data>
+  <data name="MediumJoinLine" xml:space="preserve">
+    <value>Wybierz, do czego służy Kaeri na: {device}. Każde urządzenie zachowuje własną odpowiedź.</value>
+  </data>
+  <data name="MediumOffTitleWatch" xml:space="preserve">
+    <value>Wyłączyć oglądanie?</value>
+  </data>
+  <data name="MediumOffTitleRead" xml:space="preserve">
+    <value>Wyłączyć czytanie?</value>
+  </data>
+  <data name="MediumOffWatchBody" xml:space="preserve">
+    <value>Kalendarz, Sezonowe, Oglądaj razem i twoje seriale znikają z aplikacji Kaeri na: {device}. Lista, postęp i pobrane pliki zostają i wracają, jeśli ponownie włączysz oglądanie.</value>
+  </data>
+  <data name="MediumOffReadBody" xml:space="preserve">
+    <value>Aktualizacje i twoje czytanie znikają z aplikacji Kaeri na: {device}. Lista, postęp i pobrane pliki zostają i wracają, jeśli ponownie włączysz czytanie.</value>
+  </data>
+  <data name="MediumOffDeleteWatch" xml:space="preserve">
+    <value>Usuń pobrane odcinki</value>
+  </data>
+  <data name="MediumOffDeleteRead" xml:space="preserve">
+    <value>Usuń pobrane rozdziały</value>
+  </data>
+  <data name="MediumOffDeleteSize" xml:space="preserve">
+    <value>{size} na: {device}</value>
+  </data>
+  <data name="MediumOffConfirmWatch" xml:space="preserve">
+    <value>Wyłącz oglądanie</value>
+  </data>
+  <data name="MediumOffConfirmRead" xml:space="preserve">
+    <value>Wyłącz czytanie</value>
+  </data>
+  <data name="SettingsKaeriIsFor" xml:space="preserve">
+    <value>Kaeri służy do</value>
+  </data>
+  <data name="SettingsMediumNote" xml:space="preserve">
+    <value>Każde urządzenie zachowuje własną odpowiedź</value>
+  </data>
+  <data name="SettingsMediumFooter" xml:space="preserve">
+    <value>Każde urządzenie zachowuje własną odpowiedź. Wyłączenie jednej opcji zachowuje listę, postęp i pobrane pliki.</value>
+  </data>
+  <data name="SettingsOpenAtNote" xml:space="preserve">
+    <value>Strona główna, od której startuje Kaeri</value>
+  </data>
+  <data name="SettingsGroupReading" xml:space="preserve">
+    <value>Czytanie</value>
+  </data>
+  <data name="SettingsGroupShows" xml:space="preserve">
+    <value>Seriale</value>
+  </data>
+  <data name="SettingsAsideReading" xml:space="preserve">
+    <value>Domyślne ustawienia czytnika to punkt wyjścia każdej serii. Seria zmieniona w czytniku zachowuje własne wybory.</value>
+  </data>
+  <data name="SettingsReaderDefaults" xml:space="preserve">
+    <value>Domyślne ustawienia czytnika</value>
+  </data>
+  <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
+    <value>Seria, którą zmienisz, zachowuje własny tryb, kierunek i wygląd.</value>
+  </data>
+  <data name="SettingsReaderManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="SettingsReaderWebtoons" xml:space="preserve">
+    <value>Webtoony</value>
+  </data>
+  <data name="SettingsReaderWebtoonsNote" xml:space="preserve">
+    <value>Webtoony zawsze otwierają się jako długi pasek</value>
+  </data>
+  <data name="SettingsReaderNovels" xml:space="preserve">
+    <value>Light novel</value>
+  </data>
+  <data name="SettingsReaderRtl" xml:space="preserve">
+    <value>Strony, od prawej do lewej</value>
+  </data>
+  <data name="SettingsReaderLtr" xml:space="preserve">
+    <value>Strony, od lewej do prawej</value>
+  </data>
+  <data name="SettingsReaderStrip" xml:space="preserve">
+    <value>Długi pasek</value>
+  </data>
+  <data name="SettingsReaderPages" xml:space="preserve">
+    <value>Strony</value>
+  </data>
+  <data name="SettingsReaderScrolled" xml:space="preserve">
+    <value>Przewijanie</value>
+  </data>
+  <data name="SettingsCountsRead" xml:space="preserve">
+    <value>Liczy się jako przeczytany</value>
+  </data>
+  <data name="SettingsCountsReadNote" xml:space="preserve">
+    <value>Chwila na ostatniej stronie albo przejście do kolejnego rozdziału</value>
+  </data>
+  <data name="SettingsCountsReadValue" xml:space="preserve">
+    <value>Po ostatniej stronie</value>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>Po opuszczeniu rozdziału</value>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>Przewrócenie ostatniej strony albo otwarcie kolejnego rozdziału</value>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>Gdy sam oznaczysz</value>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>Kontynuuj oglądanie i Trackery idą za twoimi oznaczeniami</value>
+  </data>
+  <data name="SettingsFollowGroup" xml:space="preserve">
+    <value>Ustawienia serii, które podążają za tobą</value>
+  </data>
+  <data name="SettingsFollowMode" xml:space="preserve">
+    <value>Tryb, kierunek i kolor</value>
+  </data>
+  <data name="SettingsFollowModeNote" xml:space="preserve">
+    <value>Zmieniona seria czyta się tak samo (pozostałe twoje urządzenia)</value>
+  </data>
+  <data name="SettingsFollowFooter" xml:space="preserve">
+    <value>Rozmiar tekstu, marginesy, strefy dotyku i odświeżanie zostają na: {device}.</value>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>Kolor lub szarości</value>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>Serie z listy Czytane</value>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>Czytana seria ma też gotowe kolejne rozdziały</value>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>Postęp</value>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>Przeczytany rozdział</value>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>Zamknięcie czytnika</value>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>Zachowaj najdalszy</value>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>Ostatnia zmiana</value>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>Status i ocena podążają za ostatnią zmianą</value>
+  </data>
+  <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
+    <value>Kolejne rozdziały serii z twojej listy czytania</value>
+  </data>
+  <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
+    <value>Rozdziały z zakładką zostają</value>
+  </data>
+  <data name="SettingsChapterNotificationsNote" xml:space="preserve">
+    <value>Serie z twojej listy czytania</value>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>Gdy wszystkie pobierane rozdziały są gotowe</value>
+  </data>
+  <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
+    <value>Rozdziały mają własny kanał systemowy, więc można je wyciszyć osobno.</value>
+  </data>
+  <data name="AccountsMangaupdatesCredit" xml:space="preserve">
+    <value>MangaUpdates jest dostępne przez publiczne API.</value>
+  </data>
+  <data name="AccountsUsername" xml:space="preserve">
+    <value>Nazwa użytkownika</value>
+  </data>
+  <data name="ReadDownloadsTotal_one" xml:space="preserve">
+    <value>1 rozdział · {size}</value>
+  </data>
+  <data name="ReadDownloadsTotal_few" xml:space="preserve">
+    <value>{n} rozdziały · {size}</value>
+  </data>
+  <data name="ReadDownloadsTotal_many" xml:space="preserve">
+    <value>{n} rozdziałów · {size}</value>
+  </data>
+  <data name="ReadDownloadsTotal_other" xml:space="preserve">
+    <value>{n} rozdziału · {size}</value>
+  </data>
+  <data name="ReadDownloadsActive" xml:space="preserve">
+    <value>{chapter} · {done} z {total} stron</value>
+  </data>
+  <data name="ReadDownloadsMoreQueued" xml:space="preserve">
+    <value>Jeszcze {n} w kolejce</value>
+  </data>
+  <data name="ReadDownloadsQueued_one" xml:space="preserve">
+    <value>1 rozdział w kolejce</value>
+  </data>
+  <data name="ReadDownloadsQueued_few" xml:space="preserve">
+    <value>{n} rozdziały w kolejce</value>
+  </data>
+  <data name="ReadDownloadsQueued_many" xml:space="preserve">
+    <value>{n} rozdziałów w kolejce</value>
+  </data>
+  <data name="ReadDownloadsQueued_other" xml:space="preserve">
+    <value>{n} rozdziału w kolejce</value>
+  </data>
+  <data name="ReadDownloadsFailed" xml:space="preserve">
+    <value>Nie udało się pobrać: {chapter}. {reason}</value>
+  </data>
+  <data name="ReadDownloadsKept_one" xml:space="preserve">
+    <value>1 rozdział</value>
+  </data>
+  <data name="ReadDownloadsKept_few" xml:space="preserve">
+    <value>{n} rozdziały</value>
+  </data>
+  <data name="ReadDownloadsKept_many" xml:space="preserve">
+    <value>{n} rozdziałów</value>
+  </data>
+  <data name="ReadDownloadsKept_other" xml:space="preserve">
+    <value>{n} rozdziału</value>
+  </data>
+  <data name="ReadDownloadsRead" xml:space="preserve">
+    <value>{n} przeczytanych</value>
+  </data>
+  <data name="ReadDownloadsDeleteRead" xml:space="preserve">
+    <value>Usuń przeczytane</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Poprzedni sezon</value>
@@ -6317,6 +8147,42 @@
   <data name="SettingsTorrentsCellular" xml:space="preserve">
     <value>Torrenty przez dane komórkowe</value>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>Pobieranie rozdziałów przez dane komórkowe</value>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>Trzymaj następne rozdziały pobrane</value>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>Usuwaj rozdziały po przeczytaniu</value>
+  </data>
+  <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
+    <value>Ustawienia serii podążają za tobą</value>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>Nowe rozdziały</value>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>Tryb i kierunek</value>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>Wygląd</value>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>Wysyłaj postęp po</value>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>Gdy trackery się nie zgadzają</value>
+  </data>
+  <data name="SettingsChapterNotifications" xml:space="preserve">
+    <value>Nowe rozdziały</value>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>Pobieranie zakończone</value>
+  </data>
+  <data name="SettingsOpenAt" xml:space="preserve">
+    <value>Otwieraj na</value>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>Udostępniaj po obejrzeniu</value>
   </data>
@@ -6376,6 +8242,9 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nowe odcinki</value>
+  </data>
+  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
+    <value>Dla tytułów z twojej listy oglądanych</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</value>
@@ -6554,6 +8423,12 @@
   <data name="SettingsAsideAccounts" xml:space="preserve">
     <value>Kaeri działa bez konta. Po wylogowaniu historia oglądania zostaje lokalnie.</value>
   </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>Kaeri działa bez konta. Historia czytania zostaje na tym urządzenie, gdy się wylogujesz.</value>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>Kaeri działa bez konta. Historia oglądania i czytania zostaje na tym urządzenie, gdy się wylogujesz.</value>
+  </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>dzisiaj</value>
   </data>
@@ -6709,6 +8584,15 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Zresetuj styl napisów</value>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>Udostępniaj w tej sieci</value>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>Hasło kanału</value>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>Port kanału</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
@@ -7979,6 +9863,9 @@
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>Zaloguj się do usługi {service} w przeglądarce</value>
   </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>Możesz to zamknąć. Kaeri kończy pracę w tle i sam otworzy kolejny krok, gdy będzie gotowy.</value>
+  </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>komputer</value>
   </data>
@@ -9113,6 +11000,9 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>Wybierz plik torrent</value>
   </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeri nie mógł odczytać tego linku ani pliku.</value>
+  </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>Czy to {title}, odcinek {episode}?</value>
   </data>
@@ -9163,6 +11053,27 @@
   </data>
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>Importuje listy i uzupełnia Kontynuuj oglądanie tytułami, które oglądasz.</value>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co czytasz.</value>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co oglądasz i czytasz.</value>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>Listy i postęp</value>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>Listy czytania i postęp</value>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>Seriale i czytanie</value>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>Czytanie</value>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>Seriale</value>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>Biblioteka i synchronizacja wymagają konta w {tracker}</value>

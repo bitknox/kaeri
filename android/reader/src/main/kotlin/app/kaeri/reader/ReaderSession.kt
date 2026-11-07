@@ -422,6 +422,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 now.copy(jump = ReaderJump(now.leafOf(event.place), event.place.strip, ++ids))
             }
             is ReaderEvent.Closed -> if (ours(event.session)) now.copy(closed = true) else return
+            // The page between chapters does not show the server's answer yet.
+            is ReaderEvent.ProgressSent -> return
         }
     }
 

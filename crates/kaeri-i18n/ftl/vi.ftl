@@ -486,6 +486,438 @@ party-left = Đã rời xem chung.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Không kết nối được với { $server }. Hãy kiểm tra máy chủ hoặc thử lại.
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Chương { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Thường ra vào thứ Hai
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Thường ra vào thứ Ba
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Thường ra vào thứ Tư
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Thường ra vào thứ Năm
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Thường ra vào thứ Sáu
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Thường ra vào thứ Bảy
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Thường ra vào Chủ nhật
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+       *[other] Khoảng { $weeks } tuần một lần
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = Cũng có bản phim
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = Cũng có bản truyện
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = Chương { $chapter } được gửi tới các dịch vụ theo dõi là chương { $whole }.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = Đọc tiếp từ trang { $page }
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = Quay lại trang { $page }
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = Đã chuyển tới { $chapter }, trang { $page }, nơi { $device } dừng lại
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = Đã chuyển tới chương { $chapter }, trang { $page }, nơi { $device } dừng lại
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Phải sang trái (tự nhận diện)
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Trái sang phải (tự nhận diện)
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Cuộn dọc (tự nhận diện)
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = Bạn đang ngoại tuyến. Các chương đã tải vẫn mở được.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } không phản hồi. Hãy thử lại sau.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = Nguồn này không còn có nội dung đó. Hãy thử nguồn khác.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } đã từ chối yêu cầu. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri không đọc được dữ liệu mà { $source } gửi về. Có thể plugin của nó cần cập nhật.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = Trang này không tải được (lỗi { $status }). Hãy thử lại.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Hãy đăng nhập lại vào { $what } để đọc tiếp.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } không còn ở đó nữa. Nếu nó nằm trên ổ đĩa, hãy kết nối ổ đĩa rồi thử lại.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = Không đọc được { $path } dưới dạng { $format }. Tệp có thể đã bị hỏng.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri không đọc được tệp { $kind }.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = Sách này được bảo vệ bản quyền nên Kaeri không mở được.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = Thiết bị này đã hết dung lượng trống. Hãy giải phóng bớt rồi thử lại.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Tiểu thuyết cần System WebView mới hơn phiên bản { $version }. Hãy cập nhật Android System WebView rồi thử lại.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = Plugin này cần Kaeri mới hơn ({ $world }). Hãy cập nhật Kaeri để dùng.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = Bản Kaeri này chưa hỗ trợ đọc truyện.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Đã xảy ra lỗi. { $reason }
+
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } có dung lượng { $size }, còn { $target } chỉ nhận tệp tối đa { $limit }. Hãy gửi ít chương hơn mỗi lần rồi thử lại.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } thiếu { $part } nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $part } trong { $file } dùng sai mã hóa văn bản nên tệp chưa được gửi. Hãy thử lại.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $part } trong { $file } không hợp lệ nên tệp chưa được gửi. Hãy thử lại.
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Manga
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Manhwa
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Manhua
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Webtoon
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = One-shot
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Light novel
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Tiểu thuyết
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = Đang ra
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Đã hoàn thành
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = Tạm ngưng
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = Đã hủy
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Chưa phát hành
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+       *[other] { $count } chương
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+       *[other] { $count } tập
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = Trong danh sách dự định của bạn
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = Chương mới của truyện bạn theo dõi
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Tiếp tục đọc
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Tiếp theo cho bạn
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Phổ biến, đang ra
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = Chương { $chapter } ra hôm nay
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Chương { $chapter }, { $title }, ra hôm nay
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Chương { $chapter } · trang { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Chương { $chapter } · { $percent }%
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = Chương { $chapter } là chương mới
+
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Phần { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Phần { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = Phần { $part } là phần mới
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Phần { $part } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = Phần { $part } ra hôm nay
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Phần { $part }, { $title }, ra hôm nay
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Chương { $chapter } / { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Tập { $volume }, phần { $part }
+
+# A search filter: books from Japan.
+reading-origin-japan = Nhật Bản
+
+# A search filter: books from Korea.
+reading-origin-korea = Hàn Quốc
+
+# A search filter: books from China.
+reading-origin-china = Trung Quốc
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Đài Loan
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = Máy đọc sách khác
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 inch
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 inch
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = E-ink màu, 7 inch
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Máy tính bảng
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Chương { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+       *[other] { $n } chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.
+    }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Chương { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Đã đọc
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = Mới
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Đã tải
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Đã bị gỡ khỏi nguồn
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = Chưa tải
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = Trên thiết bị này
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = Đang chờ
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = Đang chờ · cần Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Đang tải · { $done }/{ $total } trang
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = Không tải được
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Trang { $page }/{ $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Trang { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+       *[other] { $n } trang
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+       *[other] { $n } phiên bản
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = vừa xong
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } phút trước
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = hôm nay
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = hôm qua
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+       *[other] { $days } ngày trước
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+       *[other] { $weeks } tuần trước
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+       *[other] { $months } tháng trước
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+       *[other] { $years } năm trước
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Đã xóa khỏi { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = Không có trong danh sách { $tracker } của bạn
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Chưa khớp trên { $tracker }, nên ở đó không có gì thay đổi
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = Vẫn còn trong danh sách { $tracker } của bạn
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = Hãy đăng nhập lại vào { $tracker }, rồi thử một lần nữa.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = Không có truyện nào tên này
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = Không phản hồi từ { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Không phản hồi
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+       *[other] { $count } phần
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = { $count } đã đọc
+
+# The chapter downloading now.
+reading-dl-chapter = Chương { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done }/{ $total } trang
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = { $count } đang chờ nữa
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = { $count } đang chờ
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = chờ Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = Chương { $chapter } không tải được
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = Khoảng { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = qua Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = qua dữ liệu di động
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = chờ Wi-Fi
+
+# The notification's title.
+reading-downloads-done-title = Đã tải xong
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+       *[other] { $count } chương của { $title } đã sẵn sàng để đọc ngoại tuyến.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+       *[other] { $count } phần của { $title } đã sẵn sàng để đọc ngoại tuyến.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = Các chương của { $count } bộ truyện đã sẵn sàng để đọc ngoại tuyến.
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Đã tham gia { $store } với tên { $member }.
 
@@ -638,6 +1070,9 @@ plugin-publish-failed = Không đăng được { $plugin }. { $reason }
 
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } không còn trong thư mục plugin.
+
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } chưa liệt kê các nguồn sách. Chủ sở hữu có thể cập nhật cửa hàng plugin để thêm chúng.
 
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = Thiết bị này đã tham gia { $store } bằng liên kết. Hãy dán cùng liên kết đó vào thiết bị kia.
@@ -862,7 +1297,7 @@ cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy nà
 cause-server-unreachable = Không kết nối được tới máy chủ.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri không lưu trữ bộ phim nào. Bạn tự thêm các nguồn của mình.
+legal-hosts-no-content = Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Đã lưu { $label }.
@@ -6436,6 +6871,9 @@ party-joining = Đang tham gia { $room } trên { $server }…
 # Line on the form when no episode is playing yet.
 party-form-nothing = Tập đang phát sẽ phát cùng phòng.
 
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = Khi đã vào, hãy nhấn Phát trên bất kỳ tập nào để xem cùng phòng.
+
 # Line naming the episode of the form.
 party-form-episode-of = Tập { $episode } của { $title }
 
@@ -6585,6 +7023,9 @@ together-people-button = Cùng xem
 
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Tạo phòng
+
+# Line under Start a party.
+together-start-line = Mở một phòng và mời bạn bè bằng liên kết hoặc mã, rồi nhấn Phát trên tập bạn muốn xem.
 
 # Heading of the field that joins a watch party.
 together-join = Vào phòng
@@ -6792,6 +7233,9 @@ party-bar-line = { $count } người trong phòng · { $ready } sẵn sàng
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = Trong phòng · chưa có gì phát cho bạn
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = Nhấn Phát trên bất kỳ tập nào để xem cùng phòng
 
 # Notice in the player when someone pauses.
 party-paused-by = { $name } đã tạm dừng
@@ -7592,6 +8036,123 @@ player-subs-bg-box = Khung
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Thêm trong Cài đặt…
 
+# Under a page that is still loading after four seconds.
+reader-page-loading = Đang tải trang { $page }
+
+# Heading where a page could not be loaded.
+reader-page-failed = Không tải được trang { $page }
+
+# Button that loads a failed page again.
+reader-try-again = Thử lại
+
+# Closes the reader and goes back to the series.
+reader-close = Đóng
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Đã đọc
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = Kế tiếp
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Phải sang trái
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Trái sang phải
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Dải dọc
+
+# A choice for how a page is fitted.
+reader-fit-screen = Màn hình
+
+# A choice for how a page is fitted.
+reader-fit-width = Chiều rộng
+
+# A choice of typeface.
+reader-font-serif = Có chân
+
+# A choice of typeface.
+reader-font-sans = Không chân
+
+# A look for reading: warm paper.
+reader-look-paper = Giấy
+
+# A look for reading: a light page.
+reader-look-light = Sáng
+
+# A look for reading: a brown page.
+reader-look-sepia = Nâu cổ điển
+
+# A look for reading: a dark page.
+reader-look-dark = Tối
+
+# A choice of margins.
+reader-margins-narrow = Hẹp
+
+# A choice of margins.
+reader-margins-wide = Rộng
+
+# A choice for page layout.
+reader-layout-auto = Tự động
+
+# A choice for page layout.
+reader-layout-single = Một
+
+# A choice for page layout.
+reader-layout-double = Hai
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Tách đôi
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Xoay
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Nguyên
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+reader-tap-edges = Hai mép
+
+# A choice for the reader's tap zones: the left and right halves turn the page.
+reader-tap-sides = Hai nửa
+
+# A choice for the reader's tap zones: taps do not turn the page.
+reader-tap-off = Tắt
+
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = Các chương
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+       *[other] Còn { $count } trang trong chương này
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = Đang tải các chương
+
+# Background choice.
+reader-background-theme = Theo giao diện
+
+# Background choice.
+reader-background-black = Đen
+
+# Background choice.
+reader-background-white = Trắng
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = Bạn đã đọc kịp
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = Không
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = Nhỏ
+
+# Look choice that follows the system's light or dark.
+reader-look-system = Theo hệ thống
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Đọc bản demo
 
@@ -7669,6 +8230,993 @@ demo-story-row = Truyện ngắn · { $author } · { $licence }
 
 # Primary action on the demo's series page.
 demo-read-chapter = Đọc chương { $number }
+
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = Xem
+
+# Sidebar and tab label: reading's Home.
+nav-read = Đọc
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = Cập nhật
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = Đang ra
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = Kiểm tra khi bạn mở Kaeri
+
+# Line at the end of Read, under the last shelf.
+home-read-end = Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin để đọc từ Trang chủ.
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = Thường
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = Thường không có
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = Đã kiểm tra { $ago }
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = Đã kiểm tra { $ago } · các bộ truyện bạn đã đọc kịp
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = Đang kiểm tra chương mới…
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = Tải chương mới
+
+# Updates with nothing in it.
+updates-empty-title = Không có chương mới
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = Kaeri kiểm tra vài lần mỗi ngày các bộ truyện trong danh sách Đang đọc mà bạn đã đọc kịp.
+
+# Day heading in Updates.
+chapter-updates-today = Hôm nay
+
+# Day heading in Updates.
+chapter-updates-yesterday = Hôm qua
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+       *[other] { $n } phiên bản
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = Mở { $title }
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = Mở chương
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = Mở bộ truyện
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = Đọc chương { $n }
+
+# The main action when a chapter is part read.
+action-continue-chapter = Tiếp tục chương { $n } · trang { $page }
+
+# The main action for a light novel part, part read.
+action-continue-part = Tiếp tục phần { $n } · { $percent }%
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Tiếp tục phần { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Đọc phần { $n }
+
+# The main action when every chapter is read.
+action-read-again = Đọc lại
+
+# Label of the source row on the series page.
+series-reading-from = Đang đọc từ
+
+# Button beside a row on the series page that opens its sheet.
+series-change = Đổi
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+       *[other] và { $n } nữa
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = Đây là bộ truyện nào? Chọn
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = Nhóm bạn ưu tiên ở đây
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+       *[other] { $n }/{ $total } chương
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+       *[other] { $n } chương
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = { $chapters } · tập { $volume }
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = Tập { $volume }/{ $total }
+
+# Main place when the source can't be read from.
+series-read-from-another = Đọc từ nguồn khác
+
+# Status menu item: a score submenu.
+series-score = Chấm điểm…
+
+# Status menu's label before the series is on a list.
+series-add-to-list = Thêm vào danh sách
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Xóa khỏi các danh sách…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = Xóa { $title } khỏi các danh sách của bạn?
+
+# Line in that question.
+series-remove-from-lists-line = Bộ truyện sẽ bị xóa khỏi danh sách trên mỗi dịch vụ theo dõi bạn đã kết nối. Vị trí đọc và các chương đã đọc vẫn ở lại trong Kaeri.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Các danh sách của bạn
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+       *[other] { $n } chương
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = Tất cả chưa đọc
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Không tìm thấy trong
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Tìm ở đó
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = Tìm trong { $source }
+
+# Button that runs that search.
+read-from-search = Tìm
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = Không tìm thấy với những từ này
+
+# The More menu: the Tracking sheet.
+series-tracking = Theo dõi
+
+# The More menu: the Read from sheet.
+series-read-from-menu = Đổi nguồn…
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = Đọc lại từ đầu…
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = Các tập
+
+# Heading of the chapter list.
+series-chapters = Các chương
+
+# Accessibility label of the chapter order menu.
+series-order = Thứ tự
+
+# Chapter order.
+series-newest-first = Mới nhất trước
+
+# Chapter order.
+series-oldest-first = Cũ nhất trước
+
+# A volume's heading in the chapter list.
+series-volume = Tập { $n }
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = Chưa thuộc tập nào
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = chương { $from } đến { $to }
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = đã đọc
+
+# Accessibility value of a volume heading.
+series-expanded = Đã mở rộng
+
+# Accessibility value of a volume heading.
+series-collapsed = Đã thu gọn
+
+# The chapter list when the source has none.
+series-no-chapters-title = Nguồn này chưa có chương nào
+
+# Line under it.
+series-no-chapters-line = Có thể nguồn khác có chúng.
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = Không tải được các chương từ { $source }.
+
+# A chapter row's title.
+series-chapter-number = Chương { $n }
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = Đã đánh dấu
+
+# Chapter menu and swipe action.
+series-mark-read = Đánh dấu đã đọc
+
+# Chapter menu and swipe action.
+series-mark-unread = Đánh dấu chưa đọc
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = Đánh dấu đã đọc đến đây
+
+# Chapter menu and swipe action.
+series-download = Tải xuống
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = Đọc
+
+# Chapter menu item.
+series-bookmark = Đánh dấu trang
+
+# Chapter menu item.
+series-remove-bookmark = Bỏ đánh dấu
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+       *[other] { $n } phiên bản
+    }
+
+# In that menu while the versions load.
+series-versions-loading = Đang tìm các phiên bản…
+
+# The version in use, in that menu.
+series-version-in-use = Đang dùng { $name }
+
+# Make another group the one used for this series.
+series-prefer-version = Ưu tiên { $name } cho bộ truyện này
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = Đã tải
+
+# A chapter waiting to download.
+chapter-state-queued = Đang chờ
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = Đang chờ · cần Wi-Fi
+
+# A chapter downloading.
+chapter-state-downloading = Đang tải · { $done }/{ $total } trang
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = Không tải được. { $reason }
+
+# A part-read chapter.
+chapter-state-page-of = Trang { $page }/{ $of }
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = Trang { $page }
+
+# A read chapter.
+chapter-state-read = Đã đọc
+
+# A chapter that came out since you last looked.
+chapter-state-new = Mới
+
+# Button: stop a chapter's download.
+chapter-download-stop = Dừng tải
+
+# Button: try a failed chapter's download again.
+chapter-retry = Thử lại
+
+# Chapter menu item.
+chapter-download-delete = Xóa bản tải
+
+# Download menu item.
+download-next = { $n } chương chưa đọc kế
+
+# Download menu item.
+download-unread = Mọi chương chưa đọc
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+       *[other] { $volume } · { $n } chương
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = Chọn chương…
+
+# Download menu item.
+download-delete-series = Xóa các bản tải của bộ truyện này
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+       *[other] Tải { $n } chương
+    }
+
+# Line above that button.
+download-over-wifi = Qua Wi-Fi
+
+# Title of the question before reading a series again.
+read-again-title = Đọc lại { $title } từ đầu?
+
+# What happens on each side.
+read-again-line = Vị trí của bạn quay về chương 1 trên mọi thiết bị của bạn. Các chương vẫn được đánh dấu đã đọc trên các dịch vụ theo dõi, và AniList tính là đọc lại.
+
+# The confirming button.
+read-again-confirm = Đọc lại
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = Đọc từ
+
+# While the sheet asks every source.
+series-read-from-asking = Đang hỏi các nguồn của bạn…
+
+# The sheet with no source that has the series.
+series-read-from-none-title = Không nguồn nào có bộ truyện này
+
+# Line under it.
+series-read-from-none-line = Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin trong Các nguồn của bạn.
+
+# A source's chapters, first on its line.
+series-read-from-chapters = Chương 1 đến { $latest }
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = chương 1 đến { $latest }
+
+# After a folder's chapters.
+series-read-from-on-device = trên { $device } này
+
+# Footnote of the Read from sheet.
+series-read-from-note = Dấu đã đọc thuộc về bộ truyện, nên được giữ nguyên khi bạn đổi. Các bản tải từ nguồn cũ vẫn ở lại cho đến khi bạn xóa.
+
+# Heading for trackers that don't track this series.
+series-not-tracked = Không theo dõi ở đây
+
+# A tracker that isn't connected.
+series-tracker-connect = Kết nối trong Cài đặt để theo dõi bộ truyện này
+
+# A tracker that has no such series.
+series-tracker-not-there = Không có kết quả khớp trên dịch vụ theo dõi này
+
+# A tracker looking for the series.
+series-tracker-looking = Đang tìm bộ truyện này…
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = Đang ở chương { $has }. Sẽ nhận chương { $gets } ở lần đồng bộ sau.
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = Đang ở chương { $has }, xa hơn Kaeri.
+
+# A tracker's score out of ten.
+series-tracker-score = { $score }/10
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = Giữ vị trí của Kaeri
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = Dùng vị trí của { $tracker }
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = Không có cái nào
+
+# AniList's list.
+read-list-reading = Đang đọc
+
+# AniList's list.
+read-list-planning = Dự định
+
+# AniList's list.
+read-list-completed = Hoàn thành
+
+# AniList's list.
+read-list-paused = Tạm dừng
+
+# AniList's list.
+read-list-dropped = Bỏ dở
+
+# AniList's list.
+read-list-rereading = Đọc lại
+
+# Series in folders and servers that are on no list.
+read-list-your-files = Tệp của bạn
+
+# A choice.
+medium-watch = Xem
+
+# A choice.
+medium-read = Đọc
+
+# A choice.
+medium-both = Cả hai
+
+# Line under the Watch choice.
+medium-watch-line = Phim bộ và phim lẻ từ các nguồn của bạn
+
+# Line under the Read choice.
+medium-read-line = Manga, webtoon và light novel từ các nguồn của bạn
+
+# Line under the Both choice.
+medium-both-line = Xem và đọc, mỗi thứ ở một nơi riêng
+
+# The answer, as the Settings row says it.
+medium-answer-watch = Xem
+
+# The answer, as the Settings row says it.
+medium-answer-read = Đọc
+
+# The answer, as the Settings row says it.
+medium-answer-both = Xem và đọc
+
+# Title of the sheet and the toolbar button.
+sources-add-title = Thêm nguồn
+
+# Line in the Add a source sheet.
+book-add-line = Sách bạn đã có, hoặc các plugin từ một cửa hàng mà chủ sở hữu đã mời bạn.
+
+# A kind in the Add a source sheet.
+book-add-folder = Một thư mục
+
+# Line under it.
+book-add-folder-line = CBZ, EPUB, PDF và thư mục ảnh trên { $device } này hoặc một ổ đĩa
+
+# A kind in the Add a source sheet.
+book-add-server = Một máy chủ
+
+# Line under it.
+book-add-server-line = Komga, Kavita hoặc danh mục OPDS mà bạn có thể đăng nhập
+
+# A kind in the Add a source sheet.
+book-add-store = Một cửa hàng plugin
+
+# Line under it.
+book-add-store-line = Dán lời mời từ chủ sở hữu cửa hàng
+
+# Title of the Add a server sheet.
+book-add-server-title = Thêm máy chủ
+
+# The sheet's amber button.
+book-add-server-button = Thêm máy chủ
+
+# What the address answered, before the sign-in.
+sources-found-server = Đã tìm thấy máy chủ { $kind }
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+       *[other] Đã tìm thấy máy chủ { $kind } có { $n } bộ truyện
+    }
+
+# While the address is tried.
+book-server-looking = Đang kiểm tra địa chỉ này…
+
+# Line under the password.
+book-server-note = Kaeri gửi tiến độ đọc của bạn về máy chủ này. Mật khẩu được giữ trong Keychain.
+
+# Heading in Your sources.
+book-sources-folders = Thư mục
+
+# Heading in Your sources.
+book-sources-servers = Máy chủ
+
+# Heading in Your sources.
+book-sources-plugins = Các plugin
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = Các plugin đến từ các cửa hàng plugin mà bạn tham gia.
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+       *[other] { $n } bộ truyện
+    }
+
+# A folder being looked through.
+book-sources-scanning = Đang quét · đã thấy { $n }
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = Không tìm thấy. Ổ đĩa đã được kết nối chưa?
+
+# A source that is turned off.
+book-sources-off = Tắt
+
+# On a server's line.
+book-sources-progress-back = tiến độ được gửi về máy chủ
+
+# A server's kind.
+book-sources-opds = Danh mục OPDS
+
+# A plugin's store.
+book-sources-from-store = Từ { $store }
+
+# A plugin's version.
+book-sources-version = phiên bản { $version }
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = Kiểm tra kết quả khớp · { $n }
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = Kiểm tra kết quả khớp
+
+# A folder menu item: look through the folders again.
+book-sources-scan = Quét lại
+
+# A server menu switch.
+book-sources-report-progress = Gửi tiến độ về máy chủ
+
+# A server menu switch.
+book-sources-use = Dùng máy chủ này
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = Địa chỉ này có phản hồi, nhưng không phải máy chủ sách.
+
+# A folder name with no match.
+book-sources-no-match = Không khớp
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = Giữ chưa khớp
+
+# Button: search for the match by hand.
+book-sources-find = Tìm
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = Các bộ truyện chưa khớp vẫn đọc được từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = Phim hoặc Truyện
+
+# A side of that control.
+library-scope-shows = Phim
+
+# A side of that control.
+library-scope-reading = Truyện
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = Đọc gần nhất
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+       *[other] { $list }, { $n } bộ truyện
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = Chưa có gì trong { $list }
+
+# Line under it.
+read-library-empty-line = Các bộ truyện bạn thêm từ Tìm kiếm hoặc trang truyện sẽ hiện ở đây.
+
+# Your files with nothing in it.
+read-library-files-empty-title = Chưa có gì trong tệp của bạn
+
+# Line under it.
+read-library-files-empty-line = Các bộ truyện trong thư mục và máy chủ của bạn mà không thuộc danh sách nào sẽ hiện ở đây.
+
+# The button under it.
+read-library-files-add = Thêm thư mục hoặc máy chủ
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = Tìm truyện
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+       *[other] { $n } kết quả trong { $scope }
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = Hiện ra
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = { $what } · từ AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+       *[other] { $n } bộ truyện từ AniList
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = Không tìm kiếm được
+
+# No results for what was typed.
+read-search-nothing = Không tìm thấy gì cho { $query }
+
+# No results while browsing with filters.
+read-search-nothing-browse = Không có gì khớp với các bộ lọc này
+
+# Line under no results.
+read-search-nothing-line = Hãy thử từ khác, hoặc một tên bằng ngôn ngữ khác.
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = Ít bộ lọc hơn có thể tìm thấy nhiều hơn.
+
+# The button under it.
+read-search-clear-filters = Xóa bộ lọc
+
+# A sort of reading's Search, AniList's.
+read-sort-popular = Phổ biến
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = Thịnh hành
+
+# A sort of reading's Search, AniList's.
+read-sort-score = Điểm
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = Mới nhất
+
+# A filter.
+read-filter-format = Định dạng
+
+# A filter.
+read-filter-origin = Xuất xứ
+
+# A filter.
+read-filter-status = Tình trạng
+
+# A filter.
+read-filter-genres = Thể loại
+
+# Title of the iPhone's filters sheet.
+read-filter-title = Bộ lọc
+
+# Button in that sheet that clears every filter.
+read-filter-reset = Đặt lại
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = Bất kỳ
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = { $name }:
+
+# A filter with several values: the first, then how many more.
+read-filter-many = { $first } và { $more } nữa
+
+# A genre left out.
+read-filter-not-genre = Không phải { $genre }
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+       *[other] { $n } thể loại
+    }
+
+# A genre's state: only series with it.
+read-filter-included = Bao gồm
+
+# A genre's state: no series with it.
+read-filter-left-out = Loại trừ
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = { $step }/{ $total }
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.
+
+# Note under the welcome line.
+onboarding-welcome-note = Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = Xem, đọc hay cả hai?
+
+# Line under the title of the medium page.
+onboarding-medium-line = Kaeri chỉ hiện những gì bạn chọn. Bạn có thể đổi trong Cài đặt.
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = Hãy chọn một trong ba trước
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = Đưa các danh sách của bạn vào
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = Kaeri giữ việc xem của bạn đồng bộ với { $tracker }.
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = Kaeri giữ việc đọc của bạn đồng bộ với { $tracker }.
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = Kaeri giữ việc đọc và xem của bạn đồng bộ với { $tracker }.
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = Danh sách, tiến độ và gợi ý
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = Bạn có thể thêm MyAnimeList, Kitsu, Simkl và Trakt sau trong Cài đặt, mục Tài khoản.
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = Bạn có thể thêm MyAnimeList, Kitsu và MangaUpdates sau trong Cài đặt, mục Tài khoản.
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = Bạn có thể thêm MyAnimeList, Kitsu, MangaUpdates, Simkl và Trakt sau trong Cài đặt, mục Tài khoản.
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = Kết nối { $tracker }
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = Sách của bạn đến từ đâu
+
+# Line under the title of the books page.
+onboarding-books-line = Kaeri không đi kèm sách nào. Hãy thêm những gì bạn đã có, hoặc tham gia một cửa hàng plugin bằng lời mời từ chủ sở hữu.
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = Thêm thư mục
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = CBZ, EPUB, PDF và thư mục ảnh
+
+# Row on the books page: add a book server.
+onboarding-books-server = Thêm máy chủ
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = Komga, Kavita hoặc danh mục OPDS
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = Lời mời cửa hàng plugin
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = Dán lời mời
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = Các plugin chạy mã của những người bạn tin tưởng. Chỉ tham gia các cửa hàng plugin có chủ sở hữu mà bạn biết.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Phim và sách của bạn đến từ đâu
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri không đi kèm phim hay sách nào. Hãy thêm những gì bạn đã có, hoặc tham gia một cửa hàng plugin bằng lời mời từ chủ sở hữu.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Phim
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Sách
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Tệp video trên { $device } này
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Máy chủ Jellyfin của bạn
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = { $n }/{ $total }
+
+# Under the choices in the sheet.
+medium-change-later = Bạn có thể đổi trong Cài đặt.
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = Kaeri giờ đây có thể đọc manga, webtoon và light novel từ các nguồn của bạn. Hãy chọn Kaeri dùng để làm gì trên { $device } này.
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+       *[other] { $devices } đang được đặt để xem
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+       *[other] { $devices } đang được đặt để đọc
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+       *[other] { $devices } đang được đặt để xem và đọc
+    }
+
+# Line of the sheet on joining.
+medium-join-line = Hãy chọn Kaeri dùng để làm gì trên { $device } này. Mỗi thiết bị giữ lựa chọn riêng.
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = Tắt việc xem?
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = Tắt việc đọc?
+
+# What turning watching off does.
+medium-off-watch-body = Lịch, Theo mùa, Cùng xem và phim của bạn sẽ biến mất khỏi Kaeri trên { $device } này. Danh sách, tiến độ và các bản tải vẫn còn, và quay lại nếu bạn bật lại việc xem.
+
+# What turning reading off does.
+medium-off-read-body = Cập nhật và phần đọc của bạn sẽ biến mất khỏi Kaeri trên { $device } này. Danh sách, tiến độ và các bản tải vẫn còn, và quay lại nếu bạn bật lại việc đọc.
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = Xóa các tập đã tải
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = Xóa các chương đã tải
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = { $size } trên { $device } này
+
+# The confirmation's main button.
+medium-off-confirm-watch = Tắt việc xem
+
+# The confirmation's main button.
+medium-off-confirm-read = Tắt việc đọc
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = Kaeri dùng để
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = Mỗi thiết bị giữ lựa chọn riêng
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = Mỗi thiết bị giữ lựa chọn riêng. Tắt một mục vẫn giữ danh sách, tiến độ và các bản tải của nó.
+
+# Line under Open at.
+settings-open-at-note = Trang chủ mà Kaeri khởi động vào
+
+# Settings pane and group: reading.
+settings-group-reading = Đọc
+
+# Downloads group with both media on: shows.
+settings-group-shows = Phim
+
+# The Reading pane's column beside it.
+settings-aside-reading = Mặc định của trình đọc là điểm bắt đầu của mọi bộ truyện. Bộ truyện nào bạn đổi trong trình đọc sẽ giữ lựa chọn riêng.
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = Mặc định của trình đọc
+
+# Under the reader defaults.
+settings-reader-defaults-footer = Bộ truyện nào bạn đổi sẽ giữ chế độ, hướng đọc và giao diện riêng.
+
+# Row: manga's reader default.
+settings-reader-manga = Manga
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = Webtoon
+
+# Line under Webtoons.
+settings-reader-webtoons-note = Webtoon luôn mở dưới dạng dải dọc
+
+# Row: light novels' reader default.
+settings-reader-novels = Light novel
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = Trang, phải sang trái
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = Trang, trái sang phải
+
+# A reader default: one long strip.
+settings-reader-strip = Dải dọc
+
+# A reader default for novels: pages.
+settings-reader-pages = Trang
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = Cuộn
+
+# Row: when a chapter counts as read.
+settings-counts-read = Tính là đã đọc
+
+# Line under Counts as read.
+settings-counts-read-note = Dừng một lúc ở trang cuối, hoặc chuyển sang chương sau
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = Sau trang cuối
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = Khi rời khỏi chương
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = Lật qua trang cuối, hoặc mở chương sau
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = Khi bạn đánh dấu
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = Cài đặt bộ truyện đi theo bạn
+
+# Row in that group.
+settings-follow-mode = Chế độ, hướng đọc và màu
+
+# Line under that row.
+settings-follow-mode-note = Bộ truyện bạn đổi sẽ đọc giống nhau trên các thiết bị khác
+
+# Under the group: what stays on this device.
+settings-follow-footer = Cỡ chữ, lề, vùng chạm và làm mới ở lại trên { $device } này.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Màu hoặc xám
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Bộ truyện trong Đang đọc
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = Bộ truyện đang đọc cũng được giữ sẵn các chương sau
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Tiến độ
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = Một chương được đọc xong
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Đóng trình đọc
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Giữ mức xa nhất
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = Thay đổi mới nhất
+
+# Line under When trackers disagree.
+settings-disagree-note = Trạng thái và điểm theo thay đổi mới nhất
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = Các chương sau của bộ truyện trong danh sách Đang đọc của bạn
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = Các chương đã đánh dấu trang được giữ lại
+
+# Line under New chapters.
+settings-chapter-notifications-note = Bộ truyện trong danh sách Đang đọc của bạn
+
+# Line under Downloads finished.
+settings-downloads-finished-note = Khi các chương đang tải đều xong
+
+# Under New chapters.
+settings-chapter-notifications-footer = Chương có kênh hệ thống riêng, nên có thể tắt tiếng riêng.
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = MangaUpdates được truy cập qua API công khai của nó.
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = Tên người dùng
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+       *[other] { $n } chương · { $size }
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = { $chapter } · { $done }/{ $total } trang
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = { $n } đang chờ nữa
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+       *[other] { $n } chương đang chờ
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = { $chapter } không tải được. { $reason }
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+       *[other] { $n } chương
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = { $n } đã đọc
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = Xóa chương đã đọc
 
 # Button that shows the season before.
 seasonal-previous = Mùa trước
@@ -8552,6 +10100,42 @@ settings-wifi-only-detail = Tải xuống chờ đến khi có Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Torrent khi dùng dữ liệu di động
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Tải chương bằng dữ liệu di động
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Giữ sẵn các chương sau
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Xóa chương sau khi đọc
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Cài đặt bộ truyện đi theo bạn
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = Chương mới
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Chế độ và hướng đọc
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Giao diện
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Gửi tiến độ sau
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = Khi các dịch vụ theo dõi không khớp nhau
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = Chương mới
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Tải xong
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Mở ở
+
 # Row: seeding after watching.
 settings-seed-after = Chia sẻ sau khi xem
 
@@ -8611,6 +10195,9 @@ settings-artwork-detail = Ghi công trong phần ghi chú của ứng dụng
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Tập mới
+
+# Line under it.
+settings-new-episodes-detail = Cho các tựa trong danh sách Đang xem của bạn
 
 # Line explaining what a notification says.
 settings-notify-detail = Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.
@@ -8783,6 +10370,12 @@ settings-upscaling-sharp = Sắc nét · Anime4K
 # Side note in Accounts.
 settings-aside-accounts = Kaeri dùng được không cần tài khoản. Lịch sử xem vẫn ở trên thiết bị này khi bạn đăng xuất.
 
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri dùng được mà không cần tài khoản. Lịch sử đọc của bạn vẫn ở lại trên thiết bị này khi bạn đăng xuất.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri dùng được mà không cần tài khoản. Lịch sử xem và đọc của bạn vẫn ở lại trên thiết bị này khi bạn đăng xuất.
+
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = hôm nay
 
@@ -8938,6 +10531,15 @@ settings-subs-styled-strip-detail = Mọi dòng hiện như thoại thường �
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Đặt lại kiểu phụ đề
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Chia sẻ trong mạng này
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Mật khẩu của feed
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Cổng của feed
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Địa chỉ
@@ -10083,6 +11685,9 @@ cloud-browser-line = Trình duyệt của bạn đã mở trang của { $service
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Đăng nhập { $service } trong trình duyệt
 
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = Bạn có thể đóng cửa sổ này. Kaeri vẫn chạy tiếp và tự mở bước kế tiếp khi sẵn sàng.
+
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = máy tính
 
@@ -11190,6 +12795,9 @@ opened-paste-placeholder = Liên kết magnet hoặc info hash
 # Button: choose a torrent file from the device.
 opened-choose-file = Chọn tệp torrent
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri không đọc được liên kết hoặc tệp đó.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = Đây có phải { $title }, tập { $episode } không?
 
@@ -11240,6 +12848,27 @@ accounts-welcome-detail = Đăng nhập vào { $tracker } để đồng bộ dan
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Danh sách và tiến độ
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Danh sách đọc và tiến độ
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Phim và truyện
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Truyện
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Phim
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Thư viện và đồng bộ cần tài khoản { $tracker } của bạn
