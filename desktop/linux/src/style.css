@@ -386,6 +386,16 @@ scale.reader-scrub slider {
   color: #1E2033;
 }
 .reader-light toggle:checked { color: var(--silk); background: #FCFAF4; }
+/* The header's buttons in a light look, as libadwaita draws them on a light header but on the
+   look's own Raised fill, so they read over a dark margin as well as over the page. */
+.reader-light .reader-head button.reader-back,
+.reader-light .reader-head windowcontrols > button { color: var(--silk); }
+.reader-light .reader-head button.reader-back { background-color: var(--raised); }
+.reader-light .reader-head button.reader-back:hover { background-color: var(--raised-selected); }
+.reader-light .reader-head button.reader-back:active { background-color: var(--rule); }
+.reader-light .reader-head windowcontrols > button > image { background-color: var(--raised); }
+.reader-light .reader-head windowcontrols > button:hover > image { background-color: var(--raised-selected); }
+.reader-light .reader-head windowcontrols > button:active > image { background-color: var(--rule); }
 .strip-leaf { background: transparent; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }

@@ -150,6 +150,7 @@ impl Reader {
         title.set_ellipsize(gtk::pango::EllipsizeMode::End);
         let close = gtk::Button::from_icon_name("go-previous-symbolic");
         close.set_tooltip_text(Some(&t::reader_close()));
+        close.add_css_class("reader-back");
         close.update_property(&[gtk::accessible::Property::Label(&t::reader_close())]);
         let head = adw::HeaderBar::new();
         head.add_css_class("flat");
