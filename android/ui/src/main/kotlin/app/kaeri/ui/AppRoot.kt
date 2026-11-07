@@ -481,6 +481,7 @@ fun AppRoot(
             }
         }
         if (firstLaunch) FirstLaunch(onCover = { covered = it })
+        app.kaeri.ui.reading.ReadingAppHost(start, firstLaunch, covered)
         MatchPickerHost()
         SurpriseHost()
         EngineDown()

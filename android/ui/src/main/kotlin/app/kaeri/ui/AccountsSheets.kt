@@ -209,10 +209,15 @@ internal fun SheetField(
 /**
  * Kitsu's sign-in: its email or user name and password, which go to Kitsu once, for a token kept
  * on this device. It closes once Kitsu says yes. A refusal is said in the sheet, under the fields,
- * with the password kept so a retry is one tap; the notice goes to Messages only.
+ * with the password kept so a retry is one tap; the notice goes to Messages only. MangaUpdates,
+ * with reading on, signs in through the same sheet, with its user name.
  */
 @Composable
-internal fun KitsuSheet(onDismiss: () -> Unit) {
+internal fun KitsuSheet(onDismiss: () -> Unit, tracker: String = "kitsu") {
+    if (tracker == "mangaupdates") {
+        MangaUpdatesSheet(onDismiss)
+        return
+    }
     val store = LocalAppStore.current
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val working by store.accounts.working.collectAsStateWithLifecycle()
@@ -363,10 +368,13 @@ internal fun ConflictsSheet(onDismiss: () -> Unit) {
     }
 }
 
-/** Which of the sheets that come up over any screen is open: Kitsu's sign-in for now. */
+/** Which of the sheets that come up over any screen is open: Kitsu's sign-in, or MangaUpdates'. */
 @Stable
 class AppSheets {
     var kitsu by mutableStateOf(false)
+
+    /** MangaUpdates' sign-in, from Accounts with reading on. */
+    var mangaUpdates by mutableStateOf(false)
 
     /** Whether the phone's navigation bar is hidden: while chapters are being chosen, their bar takes its place. */
     var barHidden by mutableStateOf(false)
@@ -388,5 +396,72 @@ internal fun AccountSheets() {
     prompt?.takeIf { it.code != closed }?.let { shown ->
         DeviceCodeSheet(shown) { closed = shown.code }
     }
-    if (sheets.kitsu) KitsuSheet { sheets.kitsu = false }
+    if (sheets.kitsu) KitsuSheet({ sheets.kitsu = false })
+    if (sheets.mangaUpdates) KitsuSheet({ sheets.mangaUpdates = false }, tracker = "mangaupdates")
+}
+
+/**
+ * MangaUpdates' sign-in, as Kitsu's: user name and password, sent once for a token kept on this
+ * device, closing once MangaUpdates says yes and saying a refusal under the fields. The sign-in
+ * goes through reading's command, so the sheet knows it is waiting from its own tap.
+ */
+@Composable
+private fun MangaUpdatesSheet(onDismiss: () -> Unit) {
+    val store = LocalAppStore.current
+    val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
+    val failure by store.accounts.signInFailure.collectAsStateWithLifecycle()
+    val offline by store.offline.collectAsStateWithLifecycle()
+    var username by rememberSaveable { mutableStateOf("") }
+    // Never saved: the password lives only as long as the sheet.
+    var password by remember { mutableStateOf("") }
+    var sent by remember { mutableStateOf(false) }
+    // The engine names it so in its notices; the sheet holds the refusal that names it.
+    val name = "MangaUpdates" // i18n-skip
+    val busy = sent && failure == null
+    val connected = trackers["mangaupdates"]?.connected == true
+    LaunchedEffect(connected) { if (connected) onDismiss() }
+    DisposableEffect(Unit) {
+        store.accounts.credentialsSheet(name)
+        onDispose { store.accounts.credentialsSheet(null) }
+    }
+    val ready = username.isNotBlank() && password.isNotEmpty() && !busy
+    val signIn = {
+        if (ready) {
+            // A retry starts clean: the last refusal leaves the sheet.
+            if (failure != null) store.accounts.credentialsSheet(name)
+            sent = true
+            store.reading.connectMangaUpdates(username.trim(), password)
+        }
+    }
+    SettingsSheet(onDismiss, holdsInput = changedSinceOpened(username, password)) {
+        SheetTitle(stringResource(R.string.accounts_form_title, name))
+        SheetText(stringResource(R.string.accounts_form_detail, name))
+        Spacer(Modifier.heightIn(min = 16.dp))
+        SheetField(
+            username,
+            { username = it },
+            stringResource(R.string.accounts_username),
+            keyboard = KeyboardOptions(imeAction = ImeAction.Next, autoCorrectEnabled = false),
+        )
+        Spacer(Modifier.heightIn(min = 12.dp))
+        SheetField(
+            password,
+            { password = it },
+            stringResource(R.string.accounts_password),
+            password = true,
+            keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false),
+            actions = KeyboardActions(onDone = { signIn() }),
+            error = failure != null,
+        )
+        failure?.let { reason ->
+            val context = LocalContext.current
+            SheetProblem(if (offline) stringResource(R.string.state_offline_line) else AccountsModel.signInProblem(context, name, reason))
+        }
+        SheetButtons {
+            QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
+            Button(onClick = signIn, enabled = ready) {
+                Text(stringResource(if (busy) R.string.accounts_signing_in_action else R.string.accounts_sign_in))
+            }
+        }
+    }
 }

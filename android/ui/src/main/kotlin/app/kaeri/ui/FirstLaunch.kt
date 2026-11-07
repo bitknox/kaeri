@@ -1,8 +1,10 @@
-// First launch (spec, First launch): three short pages over the app before it opens on Continue.
-// Welcome says what Kaeri is; AniList offers the sign-in; Sources
-// takes an invite link to a plugin store, with the own-risk line. Every page can be passed over,
-// each step is in Settings afterwards, and the pages never mention torrents. Once they close they
-// do not come back; a device that already has an account or a store never sees them.
+// First launch (spec, First launch): short pages over the app before it opens on Continue.
+// Welcome says what Kaeri is; where this build can read, the next page asks what Kaeri is for
+// (Watch, Read or Both, nothing chosen until a row is); AniList offers the sign-in, worded for that
+// choice; the last page says where shows or books come from: an invite link to a plugin store with
+// the own-risk line, and for books a folder or a server. Every page can be passed over, each step
+// is in Settings afterwards, and the pages never mention torrents. Once they close they do not come
+// back; a device that already has an account or a store never sees them.
 
 package app.kaeri.ui
 
@@ -75,9 +77,18 @@ import app.kaeri.design.Nagare
 import app.kaeri.store.AppStore
 import app.kaeri.store.DevicePreferences
 import app.kaeri.store.InviteLinks
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.MediumAsk
+import app.kaeri.ui.reading.AddBookServerSheet
+import app.kaeri.ui.reading.MediumChoiceRows
+import app.kaeri.ui.reading.rememberFolderPicker
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 
 /** The pages, in order. */
-internal enum class FirstLaunchPage { Welcome, AniList, Sources, SetUp }
+internal enum class FirstLaunchPage { Welcome, Medium, AniList, Sources, SetUp }
 
 /** The preference that says the pages have been through, on this device. */
 internal const val FIRST_LAUNCH_DONE = "firstLaunchDone"
@@ -99,7 +110,21 @@ internal fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = Fi
     val phase by store.phase.collectAsStateWithLifecycle()
     // An engine that did not start says so on its own screen; the pages wait for the next launch.
     val stopped = phase is AppStore.Phase.Failed || phase is AppStore.Phase.Stopped
-    val covering = !done && !stopped
+    // The pages and the answer chosen live here, so they wait while a server is added under them.
+    val page = rememberSaveable { mutableStateOf(start) }
+    val chosen = rememberSaveable { mutableStateOf<KaeriIsFor?>(null) }
+    var away by rememberSaveable { mutableStateOf(false) }
+    val serverFlow by store.servers.flow.collectAsStateWithLifecycle()
+    var serverOpened by remember { mutableStateOf(false) }
+    LaunchedEffect(away, serverFlow != null) {
+        if (!away) return@LaunchedEffect
+        // Add a server opened, then closed: the pages come back where they were.
+        if (serverFlow != null) serverOpened = true else if (serverOpened) {
+            serverOpened = false
+            away = false
+        }
+    }
+    val covering = !done && !stopped && !away
     LaunchedEffect(covering) { onCover(covering) }
     if (!covering) return
     val finish = {
@@ -128,14 +153,25 @@ internal fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = Fi
         }
     }
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-        if (showing) FirstLaunchPages(start, finish)
+        if (showing) FirstLaunchPages(page, chosen, finish, addShowServer = { away = true })
     }
 }
 
 @Composable
-private fun FirstLaunchPages(start: FirstLaunchPage, finish: () -> Unit) {
+private fun FirstLaunchPages(
+    pageState: androidx.compose.runtime.MutableState<FirstLaunchPage>,
+    chosenState: androidx.compose.runtime.MutableState<KaeriIsFor?>,
+    finish: () -> Unit,
+    addShowServer: () -> Unit,
+) {
     val store = LocalAppStore.current
-    var page by rememberSaveable { mutableStateOf(start) }
+    val navigator = LocalNavigator.current
+    var page by pageState
+    var chosen by chosenState
+    // Asked only where this build can read and the answer is not fixed; otherwise three pages.
+    val medium by store.medium.view.collectAsStateWithLifecycle()
+    val choosable = medium?.let { it.readingAvailable && !it.fixed } == true
+    val answer = chosen ?: medium?.answer ?: KaeriIsFor.WATCH
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val stores by store.stores.stores.collectAsStateWithLifecycle()
     val joining by store.stores.joining.collectAsStateWithLifecycle()
@@ -150,7 +186,10 @@ private fun FirstLaunchPages(start: FirstLaunchPage, finish: () -> Unit) {
             store.sync.first(false)
             page = FirstLaunchPage.Welcome
         } else {
-            page = FirstLaunchPage.entries[page.ordinal - 1]
+            page = when (page) {
+                FirstLaunchPage.AniList -> if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.Welcome
+                else -> FirstLaunchPage.entries[page.ordinal - 1]
+            }
         }
     }
     // A pairing that finished from here was read on its success page: the pages are through.
@@ -163,28 +202,76 @@ private fun FirstLaunchPages(start: FirstLaunchPage, finish: () -> Unit) {
         label = "first launch", // i18n-skip
     ) { shown ->
         when (shown) {
-            FirstLaunchPage.Welcome -> WelcomePage(next = { page = FirstLaunchPage.AniList }, setUp = { page = FirstLaunchPage.SetUp })
-            FirstLaunchPage.AniList -> AniListPage(
-                signIn = { store.connect("anilist") },
-                notNow = { page = FirstLaunchPage.Sources },
+            FirstLaunchPage.Welcome -> WelcomePage(
+                four = choosable,
+                next = { page = if (choosable) FirstLaunchPage.Medium else FirstLaunchPage.AniList },
+                setUp = { page = FirstLaunchPage.SetUp },
             )
-            FirstLaunchPage.SetUp -> SetUpPage(done = finish)
-            FirstLaunchPage.Sources -> SourcesPage(
-                join = { link -> store.stores.openJoin(link) },
-                skip = finish,
-                playDemo = {
-                    store.playDemo()
-                    finish()
+            FirstLaunchPage.Medium -> MediumPage(
+                chosen = chosen,
+                choose = { chosen = it },
+                back = { page = FirstLaunchPage.Welcome },
+                next = {
+                    chosen?.let { picked ->
+                        val ask = store.medium.asking.value
+                        if (ask is MediumAsk.FirstRun) store.medium.answer(ask, picked) else store.medium.choose(picked)
+                        page = FirstLaunchPage.AniList
+                    }
                 },
             )
+            FirstLaunchPage.AniList -> if (choosable) {
+                ListsPage(
+                    answer = answer,
+                    signIn = { store.connect("anilist") },
+                    back = { page = FirstLaunchPage.Medium },
+                    notNow = { page = FirstLaunchPage.Sources },
+                    skip = finish,
+                )
+            } else {
+                AniListPage(
+                    signIn = { store.connect("anilist") },
+                    notNow = { page = FirstLaunchPage.Sources },
+                )
+            }
+            FirstLaunchPage.SetUp -> SetUpPage(done = finish)
+            FirstLaunchPage.Sources -> when {
+                choosable && answer == KaeriIsFor.READ -> BooksPage(
+                    join = { link -> store.stores.openJoin(link) },
+                    back = { page = FirstLaunchPage.AniList },
+                    done = finish,
+                )
+                choosable && answer == KaeriIsFor.BOTH -> BooksPage(
+                    join = { link -> store.stores.openJoin(link) },
+                    back = { page = FirstLaunchPage.AniList },
+                    done = finish,
+                    showServer = {
+                        addShowServer()
+                        navigator.open(ADD_SERVER_ROUTE)
+                    },
+                )
+                else -> SourcesPage(
+                    step = if (choosable) 4 else null,
+                    join = { link -> store.stores.openJoin(link) },
+                    skip = finish,
+                    playDemo = {
+                        store.playDemo()
+                        finish()
+                    },
+                )
+            }
         }
     }
 }
 
-/** Nagare, the name, what Kaeri is, and Continue. */
+/**
+ * Nagare, the name, what Kaeri is, and Continue. With four pages, the first of them: Welcome to
+ * Kaeri, keeping track of what is watched and read, and that lists and progress stay the person's.
+ */
 @Composable
-private fun WelcomePage(next: () -> Unit, setUp: () -> Unit) {
+private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
+    val step: (@Composable () -> Unit)? = if (four) ({ StepLabel(1) }) else null
     PageFrame(
+        top = step,
         buttons = {
             Button(onClick = next, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.onboarding_continue)) }
             TextButton(
@@ -196,12 +283,21 @@ private fun WelcomePage(next: () -> Unit, setUp: () -> Unit) {
     ) {
         Nagare(cell = 5, modifier = Modifier.align(Alignment.CenterHorizontally))
         Text(
-            "Kaeri", // i18n-skip
+            if (four) stringResource(R.string.onboarding_welcome_to) else "Kaeri", // i18n-skip
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp).semantics { heading() },
         )
-        PageLine(stringResource(R.string.onboarding_tagline), Modifier.padding(top = 8.dp), center = true)
+        PageLine(stringResource(if (four) R.string.onboarding_welcome_line else R.string.onboarding_tagline), Modifier.padding(top = 8.dp), center = true)
+        if (four) {
+            Text(
+                stringResource(R.string.onboarding_welcome_note),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            )
+        }
     }
 }
 
@@ -335,12 +431,13 @@ private fun AniListPage(signIn: () -> Unit, notNow: () -> Unit) {
  * The link pasted here opens the join sheet on it, which shows the store before anything is joined.
  */
 @Composable
-private fun SourcesPage(join: (String) -> Unit, skip: () -> Unit, playDemo: () -> Unit) {
+private fun SourcesPage(step: Int?, join: (String) -> Unit, skip: () -> Unit, playDemo: () -> Unit) {
     var link by rememberSaveable { mutableStateOf("") }
     val ready = InviteLinks.looksLikeInvite(link)
     PageFrame(
         top = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                step?.let { Box(Modifier.weight(1f)) { StepLabel(it) } }
                 TextButton(
                     onClick = skip,
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
@@ -444,5 +541,248 @@ private fun PageLine(text: String, modifier: Modifier = Modifier, center: Boolea
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = if (center) TextAlign.Center else TextAlign.Start,
         modifier = modifier.fillMaxWidth(),
+    )
+}
+
+// The four pages, where this build can read
+
+/** "2 of 4", over a page's title. */
+@Composable
+private fun StepLabel(step: Int) {
+    Text(
+        Strings.onboardingStep(LocalContext.current, step, 4),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * A step after Welcome, as Android draws it: the step and the title at the top, the content under
+ * them scrolling when the window is short, and the foot's row with Back as a text button at the
+ * start and the page's actions at the end, the filled one last. Skip, where a page has it, sits at
+ * the top's end.
+ */
+@Composable
+private fun StepFrame(
+    step: Int,
+    title: String,
+    back: () -> Unit,
+    skip: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Column(
+            Modifier
+                .widthIn(max = 560.dp)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+        ) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { StepLabel(step) }
+                skip?.let {
+                    TextButton(
+                        onClick = it,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                    ) { Text(stringResource(R.string.onboarding_skip)) }
+                }
+            }
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(top = 8.dp).semantics { heading() },
+                )
+                content()
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextButton(
+                    onClick = back,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                ) { Text(stringResource(R.string.action_back)) }
+                Spacer(Modifier.weight(1f))
+                actions()
+            }
+        }
+    }
+}
+
+/** Watch, read, or both? Nothing chosen at first, and Continue waits for a row. */
+@Composable
+private fun MediumPage(chosen: KaeriIsFor?, choose: (KaeriIsFor) -> Unit, back: () -> Unit, next: () -> Unit) {
+    val hint = stringResource(R.string.onboarding_medium_hint)
+    StepFrame(
+        step = 2,
+        title = stringResource(R.string.onboarding_medium_title),
+        back = back,
+        actions = {
+            Button(
+                onClick = next,
+                enabled = chosen != null,
+                modifier = Modifier.semantics { if (chosen == null) stateDescription = hint },
+            ) { Text(stringResource(R.string.onboarding_continue)) }
+        },
+    ) {
+        PageLine(stringResource(R.string.onboarding_medium_line), Modifier.padding(top = 8.dp))
+        MediumChoiceRows(chosen, Modifier.padding(top = 16.dp), onChoose = choose)
+    }
+}
+
+/**
+ * Bring in your lists: AniList first, worded for what Kaeri is for, and the other trackers named
+ * for later. Connect AniList is the one filled button; Not now goes on, Skip closes the pages.
+ */
+@Composable
+private fun ListsPage(answer: KaeriIsFor, signIn: () -> Unit, back: () -> Unit, notNow: () -> Unit, skip: () -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val working by store.accounts.working.collectAsStateWithLifecycle()
+    val busy = store.accounts.isWorking(working, "anilist")
+    val anilist = "AniList" // i18n-skip
+    StepFrame(
+        step = 3,
+        title = stringResource(R.string.onboarding_lists_title),
+        back = back,
+        skip = skip,
+        actions = {
+            TextButton(
+                onClick = notNow,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            ) { Text(stringResource(R.string.onboarding_not_now)) }
+            Button(onClick = signIn, enabled = !busy) { WorkLabel(Strings.onboardingConnect(context, anilist), busy) }
+        },
+    ) {
+        PageLine(
+            when (answer) {
+                KaeriIsFor.WATCH -> Strings.onboardingListsLineWatch(context, anilist)
+                KaeriIsFor.READ -> Strings.onboardingListsLineRead(context, anilist)
+                KaeriIsFor.BOTH -> Strings.onboardingListsLineBoth(context, anilist)
+            },
+            Modifier.padding(top = 8.dp),
+        )
+        Column(
+            Modifier
+                .padding(top = 24.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Text(anilist, style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.onboarding_lists_anilist_line),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            stringResource(
+                when (answer) {
+                    KaeriIsFor.WATCH -> R.string.onboarding_lists_later_watch
+                    KaeriIsFor.READ -> R.string.onboarding_lists_later_read
+                    KaeriIsFor.BOTH -> R.string.onboarding_lists_later_both
+                },
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        )
+    }
+}
+
+/**
+ * Where your books come from, after Read: a folder, a server and an invite, with no list of
+ * sources and no suggestion. After Both, one page with a Shows part (a Jellyfin server, through
+ * [showServer]) and a Books part. Done closes the pages.
+ */
+@Composable
+private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit, showServer: (() -> Unit)? = null) {
+    val context = LocalContext.current
+    val both = showServer != null
+    var serverSheet by rememberSaveable { mutableStateOf(false) }
+    var folderFailed by rememberSaveable { mutableStateOf(false) }
+    val pickFolder = rememberFolderPicker(onFailed = { folderFailed = true })
+    StepFrame(
+        step = 4,
+        title = stringResource(if (both) R.string.onboarding_both_title else R.string.onboarding_books_title),
+        back = back,
+        actions = { Button(onClick = done) { Text(stringResource(R.string.action_done)) } },
+    ) {
+        PageLine(stringResource(if (both) R.string.onboarding_both_line else R.string.onboarding_books_line), Modifier.padding(top = 8.dp))
+        val chevron: @Composable () -> Unit = { androidx.compose.material3.Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+        val bookRows = listOf<@Composable (Place) -> Unit>(
+            { place ->
+                InfoRow(
+                    place,
+                    stringResource(R.string.onboarding_books_folder),
+                    stringResource(R.string.onboarding_books_folder_line),
+                    onClick = {
+                        folderFailed = false
+                        pickFolder()
+                    },
+                    trailing = chevron,
+                )
+            },
+            { place ->
+                InfoRow(place, stringResource(R.string.onboarding_books_server), stringResource(R.string.onboarding_books_server_line), onClick = { serverSheet = true }, trailing = chevron)
+            },
+        )
+        if (showServer != null) {
+            SettingsGroup(
+                title = stringResource(R.string.onboarding_both_shows),
+                modifier = Modifier.padding(top = 16.dp),
+                rows = listOf({ place ->
+                    InfoRow(place, stringResource(R.string.onboarding_books_server), stringResource(R.string.onboarding_both_shows_server_line), onClick = showServer, trailing = chevron)
+                }),
+            )
+            SettingsGroup(title = stringResource(R.string.onboarding_both_books), modifier = Modifier.padding(top = 8.dp), rows = bookRows)
+        } else {
+            SettingsGroup(modifier = Modifier.padding(top = 24.dp), rows = bookRows)
+        }
+        if (folderFailed) SheetProblem(stringResource(R.string.book_folder_failed), Modifier.padding(top = 8.dp))
+        InviteField(join)
+    }
+    if (serverSheet) AddBookServerSheet(onDismiss = { serverSheet = false })
+}
+
+/** The plugin store invite: its heading, the field with Join, and the line about plugins beside it. */
+@Composable
+private fun InviteField(join: (String) -> Unit) {
+    var link by rememberSaveable { mutableStateOf("") }
+    val ready = InviteLinks.looksLikeInvite(link)
+    Text(
+        stringResource(R.string.onboarding_books_invite_heading),
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp).semantics { heading() },
+    )
+    OutlinedTextField(
+        value = link,
+        onValueChange = { link = it },
+        placeholder = { Text(stringResource(R.string.onboarding_books_invite_placeholder)) },
+        singleLine = true,
+        trailingIcon = { TextButton(onClick = { join(link.trim()) }, enabled = ready) { Text(stringResource(R.string.onboarding_join)) } },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false, imeAction = ImeAction.Go),
+        keyboardActions = KeyboardActions(onGo = { if (ready) join(link.trim()) }),
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Text(
+        stringResource(R.string.onboarding_books_plugin_line),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
     )
 }
