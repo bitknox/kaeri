@@ -27,6 +27,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Dosyalar bu { -device }dan silinir. Henüz izlenmemiş bölümler kalır.
 settings-folder-default = Torrent önbelleğiyle birlikte tutulur
 settings-storage-unwatched = Henüz izlenmedi
+settings-storage-unread = Henüz okunmadı
+settings-storage-read = Okundu
+settings-storage-unseen-both = Henüz izlenmedi veya okunmadı
+settings-storage-seen-both = İzlendi veya okundu
 settings-storage-used = İndirmeler { $size } yer kaplıyor.
 settings-storage-used-free = İndirmeler { $size } yer kaplıyor. Bu { -device } üzerinde { $free } boş.
 settings-source-count = { $count ->
@@ -34,6 +38,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = İlerleme ve liste değişiklikleri { $tracker } ile eşitlenir. { -library-cap } ve Takvimdeki Listem, { $tracker } listelerinizi gösterir.
+settings-accounts-sync-note-read = İlerleme ve liste değişiklikleri { $tracker } ile eşitlenir. { -library-cap }, { $tracker } listelerinizi gösterir.
 settings-conflicts = { $count ->
     [one] Bir başlık { $tracker } ile farklı
    *[other] { $count } başlık { $tracker } ile farklı

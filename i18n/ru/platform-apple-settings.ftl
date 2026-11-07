@@ -29,6 +29,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Файлы удаляются здесь. Серии, которые ещё не просмотрены, остаются.
 settings-folder-default = Хранится в кеше торрентов
 settings-storage-unwatched = Ещё не просмотрено
+settings-storage-unread = Ещё не прочитано
+settings-storage-read = Прочитано
+settings-storage-unseen-both = Ещё не просмотрено и не прочитано
+settings-storage-seen-both = Просмотрено или прочитано
 settings-storage-used = Загрузки занимают { $size }.
 settings-storage-used-free = Загрузки занимают { $size }. Свободно на диске: { $free }.
 settings-source-count = { $count ->
@@ -38,6 +42,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source }ов
  }
 settings-accounts-sync-note = Прогресс и изменения списков синхронизируются с { $tracker }. { -library-cap } и «Мой список» в календаре показывают ваши списки { $tracker }.
+settings-accounts-sync-note-read = Прогресс и изменения списков синхронизируются с { $tracker }. В разделе «{ -library-cap }» видны ваши списки { $tracker }.
 settings-conflicts = { $count ->
     [one] { $count } название отличается от { $tracker }
     [few] { $count } названия отличаются от { $tracker }

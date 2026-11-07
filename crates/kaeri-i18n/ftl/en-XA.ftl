@@ -1309,7 +1309,7 @@ cause-proxy-address-unusable = [Ţĥé þŕöẋý'š àððŕéšš îš ñöţ
 cause-server-unreachable = [Ţĥé šéŕṽéŕ çöüļðñ'ţ ƀé ŕéàçĥéð.~~~~~~~~~~]
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~]
+legal-hosts-no-content = [Ķàéŕî ðöéšñ'ţ ĥöšţ àñý šĥöŵš öŕ ƀööķš. Ýöü àðð ýöüŕ öŵñ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~]
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = [Šàṽéð { $label }.~~~]

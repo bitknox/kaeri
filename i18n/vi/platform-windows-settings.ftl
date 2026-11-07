@@ -43,3 +43,15 @@ torrents-dialog-edit-proxy = Sửa proxy
 settings-note-trailers-windows = Trailer phát tắt tiếng từ YouTube, nơi thấy được địa chỉ IP của bạn. Không phát khi dùng kết nối tính phí, khi tắt hiệu ứng chuyển động, khi bật tiết kiệm năng lượng hoặc khi Narrator đang chạy.
 settings-note-cast-tvs-pc = Chúng xuất hiện trong mục Chromecast ở Phát trên TV. PC này sẽ gửi tập phim cho chúng.
 settings-note-torrents-while-casting-pc = Cho phép TV có Chromecast tích hợp phát torrent. PC này gửi tập phim trong suốt thời gian phát.
+settings-language-restart = Khởi động lại
+settings-differences = { $count ->
+   *[other] { $count } tựa khác với { $tracker }
+ }
+settings-differences-review = Xem lại
+settings-search = Tìm cài đặt
+settings-quality-detail-windows = Mức cao hơn lấy bản tốt nhất mà { -source } cung cấp, và tốn nhiều dung lượng hơn.
+settings-merge-subtitles-detail-windows = Phụ đề đi cùng tập phim dù tệp được chuyển đi đâu.
+settings-keep-seeding-detail-windows = Bản tải đang tiếp tục chia sẻ nằm trong bộ nhớ đệm của { -app-name }, không nằm trong thư mục tải xuống.
+settings-discussions-note-windows = Đọc bình luận trên chủ đề diễn đàn của AniList cho các tập bạn đã xem.
+settings-comment-images-note-windows = Mỗi ảnh được tải từ trang lưu trữ nó, và trang đó thấy địa chỉ IP của bạn.
+settings-folder-browse = Chọn…

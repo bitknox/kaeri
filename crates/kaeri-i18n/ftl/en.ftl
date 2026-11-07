@@ -1309,7 +1309,7 @@ cause-proxy-address-unusable = The proxy's address is not one a check can use.
 cause-server-unreachable = The server couldn't be reached.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri doesn't host any shows. You add your own sources.
+legal-hosts-no-content = Kaeri doesn't host any shows or books. You add your own sources.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Saved { $label }.

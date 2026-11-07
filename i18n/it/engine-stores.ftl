@@ -61,6 +61,7 @@ plugin-duplicate-file = { $path } dichiara già { $plugin }. Rimuovi prima quel 
 plugin-install-failed = Impossibile installare { $plugin }. { $reason }
 plugin-publish-failed = Impossibile pubblicare { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } non è più nella cartella dei { -plugin-pl }.
+store-takes-no-books = { $store } non elenca ancora { -source-pl } di libri. Il suo proprietario può aggiornare il { -plugin-store } per aggiungerle.
 store-invite-needs-link = Questo { -device } si è unito a { $store } con il suo link. Incolla lo stesso link sull'altro { -device }.
 store-link-malformed = Il { -plugin-store } ha inviato un link che non funziona. Chiedi al proprietario di controllare il { -plugin-store }. { $reason }
 store-link-wrong-key = Il { -plugin-store } ha creato un link con una chiave diversa. Controlla l'indirizzo da cui è stato avviato.

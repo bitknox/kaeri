@@ -47,3 +47,4 @@ search-result-in-library = В вашей { -library }
 search-result-on-server = На { $server }
 search-result-on-service = В { $service }
 match-choice-line = { $parts } · совпадение { $percent }%
+search-rate-limit-enter = Поиск по мере ввода ненадолго приостановлен, чтобы не превысить лимиты AniList. Нажмите Enter, чтобы искать сейчас.

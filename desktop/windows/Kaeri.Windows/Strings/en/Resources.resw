@@ -1744,7 +1744,7 @@
     <comment>The reason a request failed: it never reached the server.</comment>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri doesn't host any shows. You add your own sources.</value>
+    <value>Kaeri doesn't host any shows or books. You add your own sources.</value>
     <comment>The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.</comment>
   </data>
   <data name="NoticeSaved" xml:space="preserve">

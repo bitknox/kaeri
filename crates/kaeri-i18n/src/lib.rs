@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(en.text("sources-title", &[]), "Sources");
         assert_eq!(
             en.text("legal-hosts-no-content", &[]),
-            "Kaeri doesn't host any shows. You add your own sources."
+            "Kaeri doesn't host any shows or books. You add your own sources."
         );
         assert_eq!(
             en.text("plugin-risk-warning", &[]),

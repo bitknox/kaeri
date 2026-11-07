@@ -884,7 +884,7 @@
     <!-- The reason a request failed: it never reached the server. -->
     <string name="cause_server_unreachable">The server couldn\'t be reached.</string>
     <!-- The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it. -->
-    <string name="legal_hosts_no_content">Kaeri doesn\'t host any shows. You add your own sources.</string>
+    <string name="legal_hosts_no_content">Kaeri doesn\'t host any shows or books. You add your own sources.</string>
     <!-- Toast after a setting is stored. The label is the setting's name. -->
     <string name="notice_saved">Saved %1$s.</string>
     <!-- Toast when a setting could not be stored. The reason comes from the system. -->

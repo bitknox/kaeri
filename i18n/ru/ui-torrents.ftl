@@ -43,6 +43,7 @@ opened-open = Открыть ссылку или файл
 opened-paste-title = Открыть магнитную ссылку или торрент-файл
 opened-paste-placeholder = Магнитная ссылка или инфохеш
 opened-choose-file = Выбрать торрент-файл
+opened-unreadable = { -app-name } не смог прочитать эту ссылку или файл.
 opened-confirm = Это { $title }, эпизод { $episode }?
 opened-confirm-title = Это { $title }? Выберите эпизод.
 opened-no-guess = { -app-name } не смог определить, что это. Выберите тайтл или воспроизведите без учёта просмотра.

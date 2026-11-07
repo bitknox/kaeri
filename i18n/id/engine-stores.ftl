@@ -53,6 +53,7 @@ plugin-duplicate-file = { $path } sudah mendeklarasikan { $plugin }. Hapus file 
 plugin-install-failed = Tidak bisa memasang { $plugin }. { $reason }
 plugin-publish-failed = Tidak bisa menerbitkan { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } tidak lagi ada di folder { -plugin }.
+store-takes-no-books = { $store } belum mencantumkan { -source-pl } buku. Pemiliknya bisa memperbarui { -plugin-store } untuk menambahkannya.
 store-invite-needs-link = Anda sudah bergabung dengan { $store } dari { -device } ini lewat tautan. Tempelkan tautan yang sama di { -device } lain.
 store-link-malformed = Tautan yang dikirim { -plugin-store } tidak berfungsi. Minta pemiliknya memeriksa { -plugin-store }. { $reason }
 store-link-wrong-key = Tautan dari { -plugin-store } ini memakai kunci yang berbeda. Periksa alamat tempat { -plugin-store } itu dijalankan.

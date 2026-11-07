@@ -6,7 +6,7 @@ To report a vulnerability, follow [SECURITY.md](SECURITY.md) instead of opening 
 
 ## Rules
 
-- Kaeri doesn't host any shows. Apart from a demo of Creative Commons works, it comes with no
+- Kaeri doesn't host any shows or books. Apart from a demo of Creative Commons works, it comes with no
   sources, and it doesn't list, recommend or link to any. You add the sources you're entitled to
   use.
 - Kaeri lists and recommends no stores or plugins. Don't add code, docs or examples shaped

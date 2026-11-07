@@ -53,6 +53,7 @@ plugin-duplicate-file = { $path } đã khai báo { $plugin }. Hãy xóa tệp đ
 plugin-install-failed = Không cài được { $plugin }. { $reason }
 plugin-publish-failed = Không đăng được { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } không còn trong thư mục { -plugin }.
+store-takes-no-books = { $store } chưa liệt kê { -source-pl } sách. Chủ sở hữu có thể cập nhật { -plugin-store } để thêm chúng.
 store-invite-needs-link = { -device-cap } này đã tham gia { $store } bằng liên kết. Hãy dán cùng liên kết đó vào { -device } kia.
 store-link-malformed = { -plugin-store-cap } gửi một liên kết không dùng được. Hãy nhờ chủ { -plugin-store } kiểm tra lại. { $reason }
 store-link-wrong-key = { -plugin-store-cap } đã tạo liên kết với một khóa khác. Hãy kiểm tra địa chỉ đã dùng khi khởi động.

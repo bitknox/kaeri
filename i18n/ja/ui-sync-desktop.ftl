@@ -1,5 +1,6 @@
 cloud-browser-line = ブラウザで{ $service }のページが開きました。そこでアクセスを許可すると、{ -app-name }は自動で先に進みます。
 cloud-browser-title = ブラウザで{ $service }にサインイン
+cloud-close-carries-on = このウィンドウは閉じて構いません。{ -app-name }は処理を続け、準備ができたら次のステップを自動で開きます。
 device-kind-computer = コンピュータ
 devices-enter-code = コードを入力
 devices-show-key = 表示

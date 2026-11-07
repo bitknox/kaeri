@@ -3,13 +3,13 @@ title: Legal and contact
 description: What Kaeri is and is not, who answers for sources, plugins and plugin stores, and where to send a report.
 ---
 
-Kaeri doesn't host any shows. You add your own sources.
+Kaeri doesn't host any shows or books. You add your own sources.
 
-Apart from a demo of Creative Commons works, Kaeri comes with no sources, and it doesn’t list, recommend or link to any. It is a free, open-source app for watching and tracking anime, made by volunteers and released under the MIT licence.
+Apart from a demo of Creative Commons works, Kaeri comes with no sources, and it doesn’t list, recommend or link to any. It is a free, open-source app for watching, reading and tracking anime, manga and light novels, made by volunteers and released under the MIT licence.
 
-## Playback and sync
+## Playback, reading and sync
 
-Kaeri plays video from sources you add, keeps your watch history on your device, and syncs it to the trackers you sign in to. It is built for media you own, servers you run, streams you have the right to play, licensed services and tracker sync. Browsing uses AniList’s public data.
+Kaeri plays video and shows chapters and books from sources you add, keeps your watch and reading history on your device, and syncs it to the trackers you sign in to. It is built for media and books you own, servers you run, streams you have the right to play, licensed services and tracker sync. Browsing uses AniList’s public data.
 
 ## Plugins, stores and DRM
 

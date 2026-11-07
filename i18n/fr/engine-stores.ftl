@@ -61,6 +61,7 @@ plugin-duplicate-file = { $path } déclare déjà { $plugin }. Supprimez d’abo
 plugin-install-failed = Impossible d’installer { $plugin }. { $reason }
 plugin-publish-failed = Impossible de publier { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } n’est plus dans le dossier du { -plugin }.
+store-takes-no-books = { $store } ne liste pas encore les { -source-pl } de livres. Son propriétaire peut mettre à jour la { -plugin-store } pour les ajouter.
 store-invite-needs-link = Cet { -device } a rejoint { $store } avec son lien. Collez le même lien sur l’autre { -device }.
 store-link-malformed = La { -plugin-store } a envoyé un lien qui ne fonctionne pas. Demandez à son propriétaire de vérifier la { -plugin-store }. { $reason }
 store-link-wrong-key = La { -plugin-store } a créé un lien avec une autre clé. Vérifiez l’adresse utilisée pour la lancer.

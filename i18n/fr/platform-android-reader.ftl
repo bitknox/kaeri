@@ -1,0 +1,185 @@
+reader-page-failed-swipe = Balayez pour passer sans elle.
+reader-skip-page = Passer la page
+reader-page-of = Page { $page } sur { $pages }
+reader-pages-of = Pages { $first } et { $second } sur { $pages }
+reader-action-next = Page suivante
+reader-action-previous = Page précédente
+reader-action-controls = Commandes
+eink-zone-next-rtl = Touchez ou balayez à droite
+eink-zone-next-ltr = Touchez ou balayez à gauche
+eink-zone-tap = Touchez
+eink-folio-one = { $page } sur { $pages }
+eink-folio-two = { $first } et { $second } sur { $pages }
+eink-chapter-titled = Chapitre { $chapter } · { $title }
+eink-chapter = Chapitre { $chapter }
+eink-contents = Sommaire
+eink-back = Retour
+eink-pages-left = { $count ->
+    [one] Une page restante dans le chapitre
+    [many] { $count } pages restantes dans le chapitre
+   *[other] { $count } pages restantes dans le chapitre
+ }
+eink-next-chapter = Chapitre suivant
+eink-previous-chapter = Chapitre précédent
+eink-settings = Réglages
+eink-clean-screen = Nettoyer l'écran
+eink-end-of-chapter = Fin du chapitre { $chapter }
+eink-counted-read = Compté comme lu
+eink-end-next = Suivant
+eink-end-pages = { $count ->
+    [one] Une page
+    [many] { $count } pages
+   *[other] { $count } pages
+ }
+eink-reads-rtl = de droite à gauche
+eink-reads-ltr = de gauche à droite
+eink-reads-strip = bande verticale
+eink-on-device = sur cet { -device }
+eink-continue-to = { -continue-cap } au chapitre { $chapter }
+eink-back-to-series = Retour à la série
+eink-turn-to-continue = Tournez la page pour { -continue }
+eink-next-missing = Le chapitre { $chapter } n'est pas encore dans vos { -source-pl }
+eink-next-not-out = Le prochain chapitre n'est pas encore sorti
+eink-caught-up = Vous êtes à jour
+eink-checks-again = { -app-name } revérifie vos { -source-pl } quand vous ouvrez Mises à jour ou cette série. Il apparaîtra sous Nouveaux chapitres.
+eink-finished = C'était le dernier chapitre
+eink-finished-line = La série est terminée.
+eink-next-offline = Pas sur cet { -device }, et vous êtes hors ligne
+eink-next-offline-line = Connectez-vous au Wi-Fi pour le charger, ou ouvrez ce qui est déjà ici.
+eink-open-downloads = Voir téléchargements
+eink-loading-chapter = Chargement du chapitre { $chapter }
+eink-page-failed-details = Détails dans Plus, sous Messages.
+eink-ask-title = Cet écran est-il e-ink ?
+eink-ask-body = { -app-name } a trouvé des signes d'un écran e-ink sans pouvoir le confirmer. La mise en page e-ink tourne les pages au lieu de défiler, n'anime rien et demande à l'écran de se rafraîchir quand il le faut.
+eink-ask-yes = Passer en mise en page e-ink
+eink-ask-no = Garder la mise en page standard
+eink-ask-later = Vous pourrez changer cela plus tard dans Réglages, sous Écran.
+eink-colour-title = Cet écran affiche-t-il la couleur ?
+eink-colour-body = { -app-name } n'a pas pu le savoir pour cet { -device }. Regardez les quatre carrés.
+eink-colour-squares = Quatre carrés : rouge, vert, bleu et ambre
+eink-colour-hint = S'ils ressemblent à quatre gris, choisissez Gris seulement. Modifiable dans Réglages › Écran.
+eink-colour-yes = Je vois des couleurs
+eink-colour-no = Gris seulement
+eink-colour-skip = Passer
+eink-colour-skipped = Passé : les images restent en couleur, affichées en gris sur un écran gris.
+eink-page-keys-hint = Réglez les boutons de page sur Volume dans les réglages de l'{ -device } pour tourner les pages.
+eink-new = Nouveau
+reader-notice-start-over = Recommencer
+reader-notice-go-back = Revenir
+reader-notice-change = Modifier
+reader-settings = Réglages du lecteur
+reader-chapter-line = Chapitre { $chapter }
+reader-chapter-line-titled = Chapitre { $chapter } · { $title }
+reader-novel-line-scroll = Chapitre { $chapter } · défilement
+reader-minutes-left = { $minutes } min
+reader-zone-next = Page suivante
+reader-grid-title = Pages
+reader-end-of-chapter-number = Fin du chapitre { $chapter }
+reader-end-facts = Chapitre { $chapter } · { $facts }
+reader-end-continue = { -continue-cap }
+reader-end-swipe = Balayez pour lire la suite
+reader-end-series = Retour à la série
+reader-end-again = Relire depuis le début
+reader-opening-chapter = Ouverture du chapitre { $chapter }
+reader-failed-chapter = Impossible d'ouvrir le chapitre { $chapter }
+reader-sheet-series = Cette série
+reader-sheet-all-manga = Tous les mangas
+reader-sheet-all-novels = Tous les light novels
+reader-sheet-more = Plus de réglages du lecteur
+reader-row-reading-mode = Mode de lecture
+reader-mode-auto-way = Auto · { $way }
+reader-mode-auto-name = Auto
+reader-mode-auto-line = { $way }, d'après les détails de la série
+reader-mode-strip-line = Pour les webtoons et les longues images
+reader-mode-detected = Détecté d'après les détails de la série.
+reader-mode-set = Défini pour { $title } sur tous vos { -device-pl }.
+reader-mode-use-default = Par défaut
+reader-mode-saved = Votre choix est enregistré pour cette série et la suit sur vos autres { -device-pl }.
+reader-row-fit = Ajustement
+reader-row-crop = Rogner les bords
+reader-row-paper = Mode papier
+reader-row-text-size = Taille du texte
+reader-row-font = Police
+reader-row-look = Apparence
+reader-row-line-spacing = Interligne
+reader-spacing-tight = Serré
+reader-spacing-normal = Normal
+reader-spacing-loose = Aéré
+reader-row-margins = Marges
+reader-row-pages = Pages
+reader-pages-paged = Par pages
+reader-pages-scroll = Défilement
+reader-row-justify = Justifier le texte
+reader-row-page-layout = Mise en page
+reader-row-spreads = Pages larges
+reader-row-colour = Pages en couleur
+reader-colour-auto = Comme dessiné
+reader-colour-colour = Couleur
+reader-colour-greys = Gris
+reader-row-tap = Zones tactiles
+reader-row-volume = Touches de volume = pages
+reader-row-strip-width = Largeur de bande
+reader-row-greyscale = Pages en gris
+reader-row-quiet = Silence pendant la lecture
+reader-quiet-line = Les notifications attendent la fermeture du lecteur. Android demande d'abord l'accès à Ne pas déranger.
+reader-quiet-notice = Notifications en attente pendant la lecture
+reader-row-foot = Pages restantes du chapitre
+reader-row-folio = Numéro de page
+reader-row-direction = Sens
+reader-more-heading-layout = Mise en page
+reader-more-heading-navigation = Navigation
+reader-more-heading-text = Texte
+reader-more-heading-images = Images
+reader-more-heading-paper = Mode papier
+reader-settings-back = Retour
+reader-paper-line = Les pages tournent aussitôt et rien ne bouge dans le lecteur. Modifiez chaque élément ci-dessous.
+reader-grid-page = Aller à la page { $page }
+reader-scrubber-in-chapter = Page dans le chapitre
+reader-failed-novel = Impossible d'afficher ce chapitre
+reader-end-tracker = Lu · { $trackers } à jour
+reader-end-tracker-offline = Lu · { $tracker } se mettra à jour une fois en ligne
+reader-end-none = Pas de chapitre { $chapter } dans vos { -source-pl }
+reader-end-none-line = { -app-name } cherche de nouveaux chapitres en arrière-plan et les ajoute à Mises à jour.
+reader-end-finished-title = Fin
+reader-end-finished-line = Cette série n'a plus de chapitres.
+reader-end-offline-title = Le chapitre { $chapter } n'est pas téléchargé
+reader-end-offline-line = Vous êtes hors ligne. Il s'ouvrira ici une fois connecté, ou téléchargez-le sur la page de la série pour la prochaine fois.
+reader-quiet-rule = Lecture dans { -app-name }
+reader-quiet-trigger = Pendant que le lecteur est ouvert
+reader-quiet-denied = L'accès à Ne pas déranger a été refusé : les notifications continuent d'arriver.
+reader-row-background = Arrière-plan
+reader-fit-height = Hauteur
+reader-mode-vertical = Pages verticales
+reader-mode-vertical-line = Pages l'une sous l'autre
+reader-volume-line = Tome { $volume }
+reader-volume-read = Tome { $volume } · lu
+reader-volume-none = Chapitres
+reader-page-plate = Page { $page }
+reader-opening-finding = Recherche d'une { -source }
+reader-failed-choose = Choisir une { -source }
+reader-settings-search = Rechercher dans les réglages
+reader-paper-turn = Tourner les pages aussitôt
+reader-zone-previous = Page précédente
+reader-zone-controls = Commandes
+reader-size-small = Texte plus petit
+reader-size-large = Texte plus grand
+reader-end-pages = { $count ->
+    [one] Une page
+    [many] { $count } pages
+   *[other] { $count } pages
+ }
+reader-value-on = Activé
+reader-value-off = Désactivé
+reader-row-strip-gap = Espace entre images
+reader-paper-look = Apparence papier le jour
+reader-paper-dim = Atténuer la page
+reader-end-from = De { $source }
+reader-divider-images = { $count ->
+    [one] Une image
+    [many] { $count } images
+   *[other] { $count } images
+ }
+reader-divider-facts-source = { $facts } · de { $source }
+reader-opening-waited = { $line } · { $seconds } s
+reader-sources-title = Lire ce chapitre depuis
+reader-paper-parts = Ce que cela change

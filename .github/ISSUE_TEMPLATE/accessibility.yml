@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for telling us. kaeri doesn't host any shows. Don't post links to sources
+        Thank you for telling us. kaeri doesn't host any shows or books. Don't post links to sources
         and don't name sites that carry content. Use made-up titles in examples.
   - type: dropdown
     id: platform

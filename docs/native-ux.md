@@ -7,7 +7,7 @@ The apps behave like Apple's own apps and look like Kaeri. Navigation, controls,
 Later decisions win where they disagree with this text:
 
 - The design review settled: Settings sits inside the Mac and iPad main window, a ⌘K palette is built, torrents run on every device, and Up next counts down 10 s and fades through the ground colour.
-- Copy, 1 November 2026: the legal line is "Kaeri doesn't host any shows. You add your own sources." In the apps it appears only in About, beside Legal and contact. Three notices stay where a choice is made: the plugin warning (`plugin-risk-warning`), the store owner line (`stores-join-owner-responsible`) and the torrent playback sharing note. No other screen carries a legal line.
+- Copy, 1 November 2026: the legal line is "Kaeri doesn't host any shows or books. You add your own sources." In the apps it appears only in About, beside Legal and contact. Three notices stay where a choice is made: the plugin warning (`plugin-risk-warning`), the store owner line (`stores-join-owner-responsible`) and the torrent playback sharing note. No other screen carries a legal line.
 - Home, 31 October 2026: Home replaces Continue as the first section, as the Home section below sets out. Patterns F1 and A1 on the canvas now read: only the viewer's own next thing sits above their queue, or a plainly labelled popular pick when they have none.
 - Android TV, Windows and Linux follow the same principles, states, motion tokens and copy rules through their own platform's controls. Their own notes are `docs/desktop-*.md`.
 
@@ -553,7 +553,7 @@ Labels are short and concrete, in the words the platform uses for the same thing
 3. Name the thing and its number: “Episode 7 · 14 min left”, “Plays in 8 s”. Numbers, durations and dates go through the system formatters (`Duration.formatted`, `Date.FormatStyle`), so they follow the locale and its clock.
 4. A middle dot joins facts. No dashes, exclamation marks, emoji, “please”, “oops” or “simply”, and no marketing words such as free, unlimited, powerful or seamless.
 5. An error says what failed and what to do next. Raw error chains never reach the screen; they go to Messages.
-6. Legal-first: “sources you choose”, “doesn't host any shows”, “you add your own sources”. Copy stays neutral, never suggests that Kaeri supplies or recommends what to watch, and never puts torrents in a headline.
+6. Legal-first: “sources you choose”, “doesn't host any shows or books”, “you add your own sources”. Copy stays neutral, never suggests that Kaeri supplies or recommends what to watch, and never puts torrents in a headline.
 7. Keys appear only where keys exist. Mac menus show their shortcuts; nothing on iPhone says “press S”. A `NoticeHint` is a button, never a sentence about a key.
 8. Engine text arrives in the terminal's lower case. The app capitalises the first letter and changes nothing else (see Decisions for you).
 

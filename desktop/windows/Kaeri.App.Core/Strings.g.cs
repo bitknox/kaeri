@@ -10700,7 +10700,7 @@ public static partial class T
         ["CauseProxyNeedsAddress"] = "A proxy needs a host and a port.",
         ["CauseProxyAddressUnusable"] = "The proxy's address is not one a check can use.",
         ["CauseServerUnreachable"] = "The server couldn't be reached.",
-        ["LegalHostsNoContent"] = "Kaeri doesn't host any shows. You add your own sources.",
+        ["LegalHostsNoContent"] = "Kaeri doesn't host any shows or books. You add your own sources.",
         ["NoticeSaved"] = "Saved {label}.",
         ["NoticeNotSaved"] = "Couldn't save that setting. {reason}",
         ["NoticeTitleLoadFailed"] = "Couldn't load this title. Check your connection and try again.",
