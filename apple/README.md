@@ -104,14 +104,14 @@ mpv.sh builds it as one dynamic `Mpv.framework` per slice that exports only `_mp
 MPVKit's LGPL configuration at the release it pins, and builds from source only what Kaeri
 patches:
 
-- **libass 0.17.5** with `patches/libass`. Since macOS 15 and iOS 18 Apple ships PingFang, Core
-  Text's fallback for Han, in a format FreeType cannot open, so libass drew boxes. The patch
+- libass 0.17.5, with `patches/libass`. Since macOS 15 and iOS 18 Apple ships PingFang, Core
+  Text's fallback for Han, in a format FreeType cannot open, so stock libass draws boxes. The patch
   skips fonts FreeType cannot open and falls back down Core Text's cascade instead: Hiragino Sans
   and, for simplified characters, Hiragino Sans GB on the Mac. iOS has no such font for
   simplified-only characters (简), so the iOS app bundles one, below.
-- **mpv 0.41.0** with `patches/mpv`: MPVKit's own three, which add the `moltenvk` context, and
-  ours, which makes that context follow the layer's size. Without it mpv kept drawing at its first
-  size after a resize, full screen or rotation.
+- mpv 0.41.0, with `patches/mpv`: MPVKit's own three, which add the `moltenvk` context, and
+  Kaeri's, which makes that context follow the layer's size. Without it mpv keeps drawing at its
+  first size after a resize, full screen or rotation.
 
 Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, checked
 against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest. The link
@@ -166,9 +166,9 @@ Not Icon Composer, which scales one drawing to every size and puts the pixels on
 
 What the systems do with it (checked 2026-10-21, Xcode 27.1):
 
-- **iOS 27.0 Simulator:** the per-size images are used. The iPhone 17's Home Screen draws the
+- On the iOS 27.0 Simulator the per-size images are used. The iPhone 17's Home Screen draws the
   64 pt @3x slot, 192 px, pixel for pixel, in light and dark.
-- **macOS 27:** the per-size images are used, a master to each size. So the Mac's are drawn inset:
+- On macOS 27 the per-size images are used, a master to each size. So the Mac's are drawn inset:
   macOS draws every app icon inside its rounded square, 824 of every 1024 pixels across, rounded
   up to whole even pixels (14 at 16 px, 104 at 128), and scales an image drawn to the tile's edge,
   or to a square a fraction smaller, to fill it, off whole pixels. The ground fills that square,
@@ -197,15 +197,15 @@ Swift Testing outside where SwiftPM looks, and the script points it there. The t
 Testing. They never touch the real home directory or keychain: the store's tests start the testing
 engine in temporary directories, and keep secrets in memory.
 
-- **KaeriKit**: the bindings, and the model's helpers the bindings do not carry, ported to the
+- `KaeriKit` has the bindings, and the model's helpers the bindings do not carry, ported to the
   same rules: the resume clock (`10:06`), the latest episode out, and the wording for spans and
   counts (`out 19h ago`, `2 changes`).
-- **KaeriDesign**: the brief's colour tokens with the glass and selection tints, the motion
+- `KaeriDesign` has the brief's colour tokens with the glass and selection tints, the motion
   tokens (`.quick`, `.standard`, `.fadeIn`, `.fadeOut`), Zen Kaku Gothic New Bold under the SIL Open
   Font License (`Font.showTitle(size:relativeTo:)`), the boards' fixed line heights, Nagare at whole
   points per pixel, and the cover plate: a muted rect of the cover's own colour where the art has
   not arrived.
-- **KaeriStore**: `EngineClient` owns the `FfiEngine`, and its one task reads `nextEvents()`
+- In `KaeriStore`, `EngineClient` owns the `FfiEngine`, and its one task reads `nextEvents()`
   and hands each batch to the main actor; an empty batch means the engine stopped. `AppStore`
   applies each event to the model that owns it: Continue, Seasonal, Calendar, Search, Library, a
   title cache that every list reads its rows from, jobs under the terminal's 600 ms rule, notices,
@@ -221,10 +221,10 @@ engine in temporary directories, and keep secrets in memory.
   activity is the app's own (`PlayingActivity`, from `PlayerModel.playingActivity`), not
   SwiftUI's, so it hears `userActivityWasContinued`: when another device takes the episode
   over, the playing session here is paused.
-- **KaeriUI**: the screens over the store: Continue (with the setup card on a first launch),
+- `KaeriUI` has the screens over the store: Continue (with the setup card on a first launch),
   Calendar, Seasonal, Search, the Library and a title's page with AniList's metadata and its More
   About This Show sheet, the Mac's menu bar and ⌘K palette, the notice capsule and Messages;
-  Settings (in the window on the Mac and iPad, a sheet on iPhone), Providers, Plugin Stores,
+  Settings (in the window on the Mac and iPad, a sheet on iPhone), Sources, Plugin stores,
   Downloads, a show's own settings, and the sign-in sheets. A `Navigator` holds where the app is. Settings' menus offer the engine's own choices, from
   `KaeriKit`'s ports of the setting ladders and their words, which a test holds to the
   engine's.
@@ -242,9 +242,9 @@ engine in temporary directories, and keep secrets in memory.
   without opening the app; Airing today lists everything airing today with yours marked, and
   says your shows' times. The intents, their `TitleEntity` and the App Shortcuts are the app
   target's (`App/Intents.swift`): Siri's phrase training reads the entity's name from the app's
-  own metadata, and with the entity in a framework it found none. Titles are suggested only
+  own metadata, and with the entity in a framework it finds none. Titles are suggested only
   while "Show titles in Spotlight" is on.
-- **KaeriPlayer**: libmpv in the app's own view, on `Mpv.xcframework` (which mpv.sh links in
+- `KaeriPlayer` is libmpv in the app's own view, on `Mpv.xcframework` (which mpv.sh links in
   as `Mpv/`). `MpvClient` owns one mpv: every call runs on its own serial queue, so nothing waits
   on mpv from the main thread (a screenshot or a reconfigure waits on mpv's render thread, which
   hops to the main thread to switch EDR on), and from `shutdown()` on every call throws. Its
@@ -261,7 +261,7 @@ engine in temporary directories, and keep secrets in memory.
   frame is presented, on the GPU, and nothing runs while it is off. Paused, when mpv draws no
   frames to copy, it shows mpv's screenshot of the window instead. Its tests render for
   real into a layer in no window, on media `scripts/player-media.sh` makes, which `test.sh` runs.
-- **KaeriPlayerUI**, in the same package: the player the app hosts for the engine, and its
+- `KaeriPlayerUI`, in the same package, is the player the app hosts for the engine, and its
   screens. `PlayerModel` carries out the engine's `PlayerOps` on an mpv, one op to one call, on a
   task of its own that awaits each; turns mpv's events into `PlayerReport`s for the playback
   whose file mpv has (a `Load` belongs to its playback from mpv's `start-file` on); keeps the
@@ -314,7 +314,7 @@ engine in temporary directories, and keep secrets in memory.
   while playing. `View.hostsPlayer(_:)` opens it with the model. Its
   tests run the model on a scripted mpv, and one plays the Fixtures app's episode end to end on
   the testing engine and a real mpv.
-- **KaeriDev**: the dev harness, below.
+- `KaeriDev` is the dev harness, below.
 
 ## The Xcode project
 
@@ -325,8 +325,8 @@ cd apple && xcodegen generate && open Kaeri.xcodeproj
 The generated project is gitignored; `project.yml` is its source. It builds two apps from the same
 sources:
 
-- **Kaeri** (`app.kaeri.app`): the app on the release engine. It opens `kaeri://` links.
-- **Kaeri Fixtures** (`app.kaeri.fixtures`): the same app on the testing engine, compiled with
+- Kaeri (`app.kaeri.app`) is the app on the release engine. It opens `kaeri://` links.
+- Kaeri Fixtures (`app.kaeri.fixtures`) is the same app on the testing engine, compiled with
   `FIXTURES`. It starts on a scene of the fixture titles (`-KaeriScene watching`, the default,
   `fresh`, or `playing`) in a new temporary directory each launch, for tests and screenshots only.
   In the Playing scene Continue starts episode 7 of Hoshikuzu no Tabibito, and every episode
@@ -343,7 +343,7 @@ directory of their own, `<configuration>-fixtures`, so neither app can link the 
 Each scheme's pre-action builds its engine for the platform being built, before Xcode plans the
 build, into `apple/.engine/<flavour>.log`. The engine frameworks' first build phase runs
 `engine.sh --check`, so a build whose engine is missing or stale fails and says which command to
-run. The **Kaeri Fixtures** scheme tests every package: `xcodebuild -scheme "Kaeri Fixtures"
+run. The Kaeri Fixtures scheme tests every package: `xcodebuild -scheme "Kaeri Fixtures"
 -destination platform=macOS test`. A build to keep is the Release configuration, on the engine in
 cargo's release profile: `xcodebuild -scheme Kaeri -configuration Release -destination
 platform=macOS build`, or Product › Archive.
@@ -356,14 +356,14 @@ reads the terminal's directories, and has no hardened runtime, which the plugins
 ## The widgets
 
 Continue watching and Airing today, on the Home Screen, the Lock Screen and the Mac desktop, are
-the **KaeriWidgets** extension, which the app embeds on every platform. Its sources are in
+the KaeriWidgets extension, which the app embeds on every platform. Its sources are in
 `Packages/KaeriWidgets`:
 
-- **KaeriWidgetData**: the snapshot and its files, the stale rules, the timelines' dates, what
+- `KaeriWidgetData` has the snapshot and its files, the stale rules, the timelines' dates, what
   each size shows in each state, the `kaeri://` links, the small widget's play intent and
   AniList's public schedule. It knows no engine, so the store and the extension both link it.
-- **KaeriWidgetUI**: the layouts and the timeline providers, compiled into the extension.
-- **WidgetShots**: `swift run WidgetShots <dir>` draws every size and state from fixture snapshots.
+- `KaeriWidgetUI` has the layouts and the timeline providers, compiled into the extension.
+- In `WidgetShots`, `swift run WidgetShots <dir>` draws every size and state from fixture snapshots.
 
 The app asks the engine for `Command::WidgetSnapshot` two seconds after Continue, the Calendar, a
 playback or a sync last changed, and `WidgetFeed` writes the answer, as `widgets/snapshot.json`
@@ -394,13 +394,13 @@ continues when Kaeri is opened.
 
 ## Where the app keeps its data
 
-- **Mac**: the terminal app's own directories, so both apps share one config, one database and one
-  set of plugins: `~/Library/Application Support/kaeri` for config and data and
+- On the Mac the app uses the terminal app's own directories, so both apps share one config, one
+  database and one set of plugins: `~/Library/Application Support/kaeri` for config and data and
   `~/Library/Caches/kaeri` for the cache, the rule the terminal resolves them by
   (`directories::ProjectDirs::from("", "", "kaeri")`). Tokens follow `trackers.token_storage`,
   as the terminal keeps them.
-- **iPhone and iPad**: the app container's Application Support and Caches, and the keychain.
-- **Overridden**: `KAERI_HOME_OVERRIDE=<dir>` or the launch argument `-KaeriHome <dir>`
+- On iPhone and iPad it uses the app container's Application Support and Caches, and the keychain.
+- `KAERI_HOME_OVERRIDE=<dir>` or the launch argument `-KaeriHome <dir>`
   puts `config`, `data` and `cache` under one directory instead.
 
 The keychain items are the terminal's: generic passwords under the service `kaeri`, with the
@@ -413,22 +413,22 @@ the terminal made, macOS asks whether to allow it. A signed build keeps that ans
 They arrive when an episode airs, as local notifications scheduled ahead, since no code of the
 app's runs at that moment (KaeriStore's `Notifications/`):
 
-- **The week.** The engine's `UpcomingNotices` says the next seven days' broadcasts of the shows
+- The engine's `UpcomingNotices` says the next seven days' broadcasts of the shows
   being watched or switched on for themselves, and of those switched off, each with why and
   whether it notifies: with Settings' switch off, only a show switched on for itself does.
   `NoticePlan` makes one notification of each episode that notifies: `ep.<show>.<episode>.sub`,
   a `UNCalendarNotificationTrigger` at its time, at most 60. "Episode 9 is out." with Play and
   Mark watched when caught up; "Episode 10 is out. Next for you: episode 8." with Play alone when
   behind. All in the `new-episodes` thread, named in a group's summary by their show.
-- **Dubs.** AniList dates only the broadcast, so a show watched dubbed is not scheduled: the
+- AniList dates only the broadcast, so a show watched dubbed is not scheduled: the
   background check says its episode once the source lists the dub, posted then as
   `ep.<show>.<episode>.dub`, "Episode 9 is out, dubbed." The pane's footnote names those shows.
-- **Scheduling.** `NoticeScheduler` keeps the pending ones in step with the week: it takes back
+- `NoticeScheduler` keeps the pending ones in step with the week: it takes back
   what no longer notifies, schedules what is new or changed with the cover attached, and remembers
   what it scheduled, so the background check never says an episode twice. Asked for at launch, on
   coming forward, after a sync or a change of progress, and when a switch changes.
-- **The background refresh.** iOS's `BGAppRefreshTask` (`app.kaeri.refresh`) and the Mac's
-  `NSBackgroundActivityScheduler`, every six hours or as the system decides, kept scheduled while
+- The background refresh is iOS's `BGAppRefreshTask` (`app.kaeri.refresh`) and the Mac's
+  `NSBackgroundActivityScheduler`, run every six hours or as the system decides, kept scheduled while
   Settings' switch is on, any show is switched on for itself (the settings' `notifySwitchedOn`) or
   any of the widgets is placed (`WidgetCenter`'s current configurations, looked at on launch, on
   coming forward and after each refresh), and cancelled only when none holds. With only a widget,
@@ -437,11 +437,11 @@ app's runs at that moment (KaeriStore's `Notifications/`):
   `widgets/snapshot.json` in the App Group (`KAERI_APP_GROUP`). With the app not running it
   starts an engine of its own with none of the launch's background work, which the app's own
   start waits out.
-- **Actions.** Play opens the app into the player; Mark watched runs in the background through the
+- Play opens the app into the player; Mark watched runs in the background through the
   engine's mark, which queues for the trackers when offline; the notification itself opens the
   title page (`NoticeRoute`).
-- **Permission** is asked only when a switch is turned on, the setting's or a show's.
-- **Never a real banner from a test.** Everything goes through `NoticeCentre`. The tests and the
+- Permission is asked only when a switch is turned on, the setting's or a show's.
+- No test posts a real banner: everything goes through `NoticeCentre`. The tests and the
   Fixtures app use `QuietNoticeCentre`, which shows nothing and asks nothing; the Fixtures app
   reaches the system's only on iOS, and only when launched with `-KaeriRealNotifications`.
 
@@ -647,5 +647,5 @@ playback. What the Simulator cannot show, and a device has to:
 - Settings' "Show titles in Spotlight" switch, which waits for the design: Settings has no
   Privacy pane. The indexer already honours `kaeri.showInSpotlight` in the app's defaults,
   on unless set off. The Library's lists are indexed as they are shown, not asked for at launch.
-- Settings, Providers, Plugin Stores and Downloads: what the engine cannot set yet (E8's settings,
+- Settings, Sources, Plugin stores and Downloads: what the engine cannot set yet (E8's settings,
   E9's fields, `DisablePlugin`) is left out until it can, rather than drawn and disabled.
