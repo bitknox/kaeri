@@ -65,6 +65,7 @@ import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.readerSurface
 import app.kaeri.store.AppStore
 import app.kaeri.ui.ArtworkImage
+import app.kaeri.ui.LocalAppStore
 
 /**
  * The app with the reader over it, in one shared transition layout so the reader can grow out of
@@ -84,7 +85,10 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
         ) {
             app()
         }
-        ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
+        // The cover it grows out of loads as the app's covers do.
+        CompositionLocalProvider(LocalAppStore provides store) {
+            ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
+        }
     }
 }
 
