@@ -14,6 +14,7 @@
 //   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
 //             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   firstLaunch  true to show first launch's pages, which fixtures leave out otherwise
+//   join      store opens the plugin store's join page over the section
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
@@ -92,6 +93,7 @@ internal object Flavour {
             update = UpdateStage.named(intent.getStringExtra("update")) != null,
             signIn = intent.getStringExtra("signin"),
             settings = intent.getStringExtra("settings"),
+            joinStore = intent.getStringExtra("join") == "store",
         )
     }
 

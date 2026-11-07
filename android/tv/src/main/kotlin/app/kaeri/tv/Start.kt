@@ -18,4 +18,6 @@ data class Start(
     val signIn: String? = null,
     /** A Settings section to open on: fixtures' `--es settings Devices`. */
     val settings: String? = null,
+    /** Whether the plugin store's join page opens over the destination: fixtures' `--es join store`. */
+    val joinStore: Boolean = false,
 )
