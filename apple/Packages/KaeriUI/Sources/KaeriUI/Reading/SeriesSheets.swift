@@ -69,7 +69,7 @@ struct ReadSheetFrame<Content: View>: View {
         }
         // A sheet with a pinned foot opens tall, so what it asks is on screen with the button.
         .presentationDetents(pinned == nil ? [.medium, .large] : [.large])
-        .sheetSizing(fitted: fitted)
+        .sheetSizing(fitted: fitted && pinned == nil)
         .presentationBackground(.raised)
         #endif
     }
