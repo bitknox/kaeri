@@ -419,7 +419,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         var page = new StackPanel { Spacing = 20 };
         page.Children.Add(new Border { Height = band, Background = Ui.Res<Brush>("RaisedBrush") });
         var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, -120 - 20, 36, 0) };
-        head.Children.Add(States.Plate(120, 180, 8));
+        head.Children.Add(States.Plate(120, 180, Kaeri.Windows.Art.Radius(120)));
         var bars = new StackPanel { Spacing = 10, VerticalAlignment = VerticalAlignment.Bottom };
         bars.Children.Add(States.Plate(320, 28, 4));
         bars.Children.Add(States.Plate(200, 14, 3));
@@ -466,12 +466,16 @@ public sealed partial class TitlePage : Page, IPageKeys
             ctx.Pick = new Pick(id, new SurprisePool.Planning(), true);
 #endif
         ShowAnother();
-        // The cover a grid sent flies in to this one; anything else crossfades.
-        var flight = ConnectedAnimationService.GetForCurrentView().GetAnimation(CoverAnimation);
+        // The cover a grid sent flies in to this one, on the standard spring as the Mac's art flies;
+        // anything else crossfades.
+        var service = ConnectedAnimationService.GetForCurrentView();
+        var flight = service.GetAnimation(CoverAnimation);
         if (flight is not null)
         {
             if (known && Motion.Enabled)
             {
+                service.DefaultDuration = Motion.Standard;
+                service.DefaultEasingFunction = Motion.SpringEasing(Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(CoverFrame).Compositor);
                 flight.Configuration = new BasicConnectedAnimationConfiguration();
                 flight.TryStart(CoverFrame);
             }
@@ -981,7 +985,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         void Text(string text) => AvailLine.Children.Add(new TextBlock { Text = text, Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords });
         HyperlinkButton Link(string text, Action go)
         {
-            var b = new HyperlinkButton { Content = text, Padding = new Thickness(4, 0, 4, 0) };
+            var b = new HyperlinkButton { Content = text, Style = Ui.Res<Style>("SilkLinkStyle"), VerticalAlignment = VerticalAlignment.Center };
             b.Click += (_, _) => go();
             AvailLine.Children.Add(b);
             return b;
@@ -1164,7 +1168,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             list.Children.Add(new TextBlock { Text = T.TitleRelated, Style = Res<Style>("BodyStrongTextBlockStyle") });
             foreach (var r in related.Take(8))
             {
-                var link = new HyperlinkButton { Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
+                var link = new HyperlinkButton { Style = Res<Style>("SilkLinkLeadingStyle"), HorizontalAlignment = HorizontalAlignment.Left };
                 var text = new StackPanel();
                 text.Children.Add(new TextBlock { Text = r.Title, Style = Res<Style>("ShowTitleStyle") });
                 text.Children.Add(new TextBlock { Text = RelationLine(r.Relation, r.Format), Style = Res<Style>("HazeCaptionStyle") });

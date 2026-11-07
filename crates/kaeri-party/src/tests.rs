@@ -389,6 +389,18 @@ async fn play_starts_when_everyone_is_ready() {
 }
 
 #[tokio::test]
+async fn a_member_who_has_not_said_ready_is_not_ready_to_the_others() {
+    let server = server().await;
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    viewer.run_for(Duration::from_millis(200)).await;
+    room_until(&server, "had Ada not ready", |r| {
+        r.members.iter().any(|m| m.name == "Ada" && m.ready == Some(false))
+    })
+    .await;
+}
+
+#[tokio::test]
 async fn a_player_ahead_of_the_room_is_moved_back() {
     let server = server().await;
     let mika = server.member(ROOM, "Mika");

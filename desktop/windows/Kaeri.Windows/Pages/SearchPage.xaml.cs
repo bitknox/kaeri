@@ -91,6 +91,14 @@ public sealed partial class SearchPage : Page
         Run(live: true, typing: true);
     }
 
+    /// <summary>Enter in the box while this page is up: searches at once, on this page.</summary>
+    internal void Submit(string text)
+    {
+        query = text;
+        openedWith = text;
+        Run();
+    }
+
     /// <summary>What the page was last opened with: a typed query, a browse from Home, or nothing.</summary>
     object? openedWith;
     bool opened;

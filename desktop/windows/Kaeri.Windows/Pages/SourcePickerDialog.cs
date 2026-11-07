@@ -45,7 +45,7 @@ sealed class SourcePickerDialog
         this.id = id;
 
         AutomationProperties.SetName(list, T.SourcePickerTitle);
-        list.ItemClick += (_, e) => Pick((e.ClickedItem as FrameworkElement)?.Tag as PickerRow);
+        list.ItemClick += (_, e) => Pick(Ui.ClickedRow(list, e.ClickedItem)?.Tag as PickerRow);
         // Enter and Space pick the row that has focus, as a click does.
         list.PreviewKeyDown += (_, e) =>
         {

@@ -287,6 +287,8 @@ pub enum Msg {
     PartyServerUnreachable { server: String },
     /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
     CloudLoopbackDone,
+    /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+    SyncDeviceRemoved,
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     NoticeSignedIn { tracker: String },
     /// Toast after a sign-in succeeded and the token went into the system keychain.
@@ -561,6 +563,7 @@ impl Msg {
             Self::PartyLeft => "party-left",
             Self::PartyServerUnreachable { .. } => "party-server-unreachable",
             Self::CloudLoopbackDone => "cloud-loopback-done",
+            Self::SyncDeviceRemoved => "sync-device-removed",
             Self::NoticeSignedIn { .. } => "notice-signed-in",
             Self::NoticeSignedInKeychain { .. } => "notice-signed-in-keychain",
             Self::NoticeSignedInFile { .. } => "notice-signed-in-file",
@@ -770,6 +773,7 @@ impl Msg {
             Self::PartyLeft => Vec::new(),
             Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
             Self::CloudLoopbackDone => Vec::new(),
+            Self::SyncDeviceRemoved => Vec::new(),
             Self::NoticeSignedIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInKeychain { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInFile { tracker } => vec![("tracker", Value::Text(tracker.clone()))],

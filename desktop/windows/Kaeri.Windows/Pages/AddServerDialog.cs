@@ -222,7 +222,7 @@ sealed class AddServerDialog
         Attach(body);
         if (checkedServer?.QuickConnect == true)
         {
-            var link = new HyperlinkButton { Content = T.ServersUseQuickConnect, Padding = new Thickness(0) };
+            var link = new HyperlinkButton { Content = T.ServersUseQuickConnect, Style = Ui.Res<Style>("SilkLinkLeadingStyle") };
             link.Click += (_, _) => StartQuickConnect();
             body.Children.Add(link);
         }

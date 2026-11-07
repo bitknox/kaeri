@@ -3,9 +3,10 @@
     x:Class="Kaeri.Windows.Pages.FolderPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:k="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
     Background="{ThemeResource GroundBrush}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" k:SmoothWheel.On="True">
     <StackPanel Padding="36,20,36,32" Spacing="12" MaxWidth="760" HorizontalAlignment="Left">
       <!-- The title is known at once; what the engine sends waits under it. -->
       <StackPanel x:Name="Head" Spacing="12" />

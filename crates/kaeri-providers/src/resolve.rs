@@ -18,7 +18,9 @@
 //!
 //! Rungs 5 and 6 are what make this robust rather than merely clever: below the confidence
 //! floor the ladder *stops and asks* instead of guessing, and a user's answer is written
-//! back as a rung-1 override so the same title is never disambiguated twice.
+//! back as a rung-1 override so the same title is never disambiguated twice. Across sources, a
+//! question is the last resort: a source that cannot choose is passed over for one further down
+//! the order that matches the title, and the user is asked only when none does.
 
 use kaeri_core::{
     ids::{AnilistId, ProviderKey},
@@ -302,9 +304,10 @@ fn miss_of<T>(attempt: &Attempt<T>) -> Miss {
 /// — from its remembered match or by searching it — before it is asked, and asked alone. Sources
 /// keep their own catalogues, so one that cannot match the title, or has no such episode, says
 /// nothing about the next, and the walk moves on, as it does past a source that fails. A source
-/// that finds candidates but cannot choose stops it instead: the user is asked, the answer is
-/// remembered as an override, and the order stays the user's rather than skipping ahead to
-/// whichever source happened to be sure.
+/// that finds candidates but cannot choose is passed over the same way, as unmatched: it is a
+/// question for the user only when no source further down answers, and the first such source in
+/// the order is the one asked. A match the user chose is an override, which the ladder takes
+/// before searching, so that source answers in its place in the order.
 ///
 /// For something asked of one episode at a time, such as its streams. For a whole listing, which
 /// one source may have only part of, use [`gather`].
@@ -462,8 +465,8 @@ pub struct Contribution<T> {
 pub enum Gathered<T> {
     /// Every source that answered, highest ranked first. Never empty.
     Answered(Vec<Contribution<T>>),
-    /// The source first in the order that matched anything found candidates and could not
-    /// choose: a question for the user. See [`Answer::Ambiguous`].
+    /// No source answered, and at least one found candidates and could not choose: a question
+    /// for the user, from the first such source in the order. See [`Answer::Ambiguous`].
     Ambiguous { provider_id: String, candidates: Vec<Candidate> },
     /// No source answered. See [`Answer::Unanswered`].
     Unanswered { reasons: Vec<String>, matched: bool },
@@ -507,9 +510,10 @@ const GRACE: std::time::Duration = std::time::Duration::from_millis(3 * 400);
 /// `complete`, so a page can show the first table without waiting for the rest. The last state
 /// is the return value, not a progress call.
 ///
-/// The user's order decides which source wins an episode, and decides what is asked: a source
-/// first in the order that finds candidates and cannot choose is a question, as in
-/// [`first_answer`], whatever the sources below it said.
+/// The user's order decides which source wins an episode. A source that finds candidates and
+/// cannot choose is passed over as unmatched, as in [`first_answer`]: the listing comes from the
+/// sources that matched the title, and the first source that could not choose is a question only
+/// when none did.
 #[allow(clippy::too_many_arguments)]
 pub async fn gather<T, F, Fut>(
     store: &Store,
@@ -592,15 +596,8 @@ where
                 _ => None,
             })
             .collect();
-        // The first source in the order that settled with anything but "no": if the sources
-        // above it are all settled and it is a question, it is the answer already.
-        let settled_question = outcomes
-            .iter()
-            .take_while(|o| matches!(o, Some(Outcome::Failed { .. } | Outcome::Skipped)))
-            .count();
-        if matches!(outcomes.get(settled_question), Some(Some(Outcome::Ambiguous { .. }))) {
-            break;
-        }
+        // A source that could not choose falls short like one that said no, so the sources
+        // below it are asked now rather than after the hedge.
         if !complete(&answered) {
             // Short of everything: shown as it is, and the sources below are asked now.
             if matches!(outcomes[rank], Some(Outcome::Answered(_))) {
@@ -627,10 +624,8 @@ where
         match outcome {
             Outcome::Answered(contribution) => answered.push(contribution),
             Outcome::Ambiguous { provider_id, candidates } => {
-                // Only the first of the order that is not a plain "no" asks.
-                if answered.is_empty() && question.is_none() {
-                    question = Some((provider_id, candidates));
-                }
+                // Only the first of the order that could not choose would ask.
+                question.get_or_insert((provider_id, candidates));
             }
             Outcome::Failed { reason, matched: found, .. } => {
                 matched |= found;
@@ -639,11 +634,19 @@ where
             Outcome::Skipped => {}
         }
     }
-    if let Some((provider_id, candidates)) = question {
-        return Gathered::Ambiguous { provider_id, candidates };
-    }
     if answered.is_empty() {
-        return Gathered::Unanswered { reasons, matched };
+        return match question {
+            Some((provider_id, candidates)) => Gathered::Ambiguous { provider_id, candidates },
+            None => Gathered::Unanswered { reasons, matched },
+        };
+    }
+    if let Some((passed, candidates)) = &question {
+        tracing::info!(
+            passed_over = %passed,
+            candidates = candidates.len(),
+            answered = %answered[0].provider_id,
+            "ambiguous source passed over for one that answered"
+        );
     }
     Gathered::Answered(answered)
 }
@@ -1255,26 +1258,85 @@ mod tests {
         assert!(began.elapsed() < std::time::Duration::from_secs(5), "{:?}", began.elapsed());
     }
 
+    /// What a source offers for the title when all it has are the seasons after it: near-titles
+    /// from other years, each ruled out, so it cannot choose.
+    fn sequels(provider: &str) -> Vec<SearchHit> {
+        [("second", "Second Voyage", 2026), ("final", "Final Voyage", 2027)]
+            .into_iter()
+            .map(|(key, subtitle, year)| SearchHit {
+                episode_count: Some(12),
+                year: Some(year),
+                format: Some(MediaFormat::Tv),
+                ..SearchHit::new(
+                    ProviderKey::new(format!("{provider}-{key}")),
+                    format!("Hoshikuzu no Tabibito: {subtitle}"),
+                )
+            })
+            .collect()
+    }
+
     #[tokio::test(start_paused = true)]
-    async fn a_source_that_cannot_choose_is_the_question_even_if_a_later_one_answers() {
+    async fn a_source_that_cannot_choose_is_passed_over_for_a_later_one_that_lists_the_title() {
         let store = Store::open_in_memory().unwrap();
-        let unsure = SearchHit {
-            episode_count: None,
-            year: None,
-            format: None,
-            ..SearchHit::new(ProviderKey::new("alpha-x"), "Tabibito")
-        };
         let registry = ProviderRegistry::new(vec![
-            MockProvider::new("alpha").with_hits(vec![unsure]).arc(),
-            MockProvider::new("beta")
-                .with_hits(vec![wanderer_hit("beta-1")])
+            MockProvider::new("alpha").with_hits(vec![]).arc(),
+            MockProvider::new("beta").with_hits(sequels("beta")).arc(),
+            MockProvider::new("gamma")
+                .with_hits(vec![wanderer_hit("gamma-1")])
                 .with_episodes(numbered(1..=12))
                 .arc(),
         ]);
         let got = gathered(&store, &registry, 12).await;
+        let Gathered::Answered(answers) = got else {
+            panic!("gamma lists it and nothing is asked, got {got:?}")
+        };
+        let who: Vec<_> = answers.iter().map(|a| a.provider_id.as_str()).collect();
+        assert_eq!(who, ["gamma"]);
         assert!(
-            matches!(&got, Gathered::Ambiguous { provider_id, .. } if provider_id == "alpha")
+            store.lookup_mapping(WANDERER, "beta").unwrap().is_none(),
+            "beta stays unmatched"
         );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_that_cannot_choose_is_the_question_only_when_none_lists_the_title() {
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha").with_hits(vec![]).arc(),
+            MockProvider::new("beta").with_hits(sequels("beta")).arc(),
+            MockProvider::new("gamma").with_hits(sequels("gamma")).arc(),
+        ]);
+        match gathered(&store, &registry, 12).await {
+            Gathered::Ambiguous { provider_id, candidates } => {
+                assert_eq!(provider_id, "beta", "the first in the order that cannot choose");
+                assert_eq!(candidates.len(), 2);
+                assert!(candidates.iter().all(|c| c.rejected == Some(Rejection::Year)));
+            }
+            other => panic!("expected beta to ask, got {other:?}"),
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_match_the_viewer_chose_wins_over_a_later_source_that_is_sure() {
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("beta")
+                .with_hits(sequels("beta"))
+                .with_episodes_for("beta-kept", numbered(1..=12))
+                .arc(),
+            MockProvider::new("gamma")
+                .with_hits(vec![wanderer_hit("gamma-1")])
+                .with_episodes(numbered(1..=12))
+                .arc(),
+        ]);
+        let chosen = ProviderKey::new("beta-kept");
+        let _ = confirm(&store, WANDERER, "beta", &chosen, 0);
+        let got = gathered(&store, &registry, 12).await;
+        let Gathered::Answered(answers) = got else {
+            panic!("beta answers under the viewer's match, got {got:?}")
+        };
+        assert_eq!(answers[0].provider_id, "beta", "the viewer's match ranks first");
+        assert_eq!(answers[0].key, chosen);
     }
 
     #[tokio::test(start_paused = true)]

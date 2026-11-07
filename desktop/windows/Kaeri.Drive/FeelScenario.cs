@@ -54,6 +54,8 @@ static class FeelScenario
         {
             for (var i = 0; i < Math.Abs(notches); i++)
             {
+                if (!run.InFront)
+                    break;
                 Native.Wheel(notches < 0 ? -1 : 1);
                 await Task.Delay(40);
             }
@@ -69,6 +71,8 @@ static class FeelScenario
             {
                 for (var i = 0; i < Math.Abs(notches); i++)
                 {
+                    if (!run.InFront)
+                        break;
                     Native.Wheel(notches < 0 ? -1 : 1);
                     await Task.Delay(300);
                 }

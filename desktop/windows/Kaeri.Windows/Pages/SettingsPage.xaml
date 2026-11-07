@@ -3,6 +3,7 @@
     x:Class="Kaeri.Windows.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:k="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
     xmlns:app="using:Kaeri.App"
     Background="{ThemeResource GroundBrush}">
@@ -35,7 +36,7 @@
       </Grid.ColumnDefinitions>
       <ListView x:Name="Panes" TabIndex="0" SelectionMode="Single" SelectionChanged="OnPaneChanged" ItemClick="OnPaneClicked" IsItemClickEnabled="True"
                 Margin="-12,0,0,0" AutomationProperties.Name="{x:Bind app:T.SettingsPanesLabel}" />
-      <ScrollViewer x:Name="CardScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer x:Name="CardScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" k:SmoothWheel.On="True">
         <!-- One width for every pane, up to 760, so the cards never change width between panes or
              as what they say changes. -->
         <Grid>

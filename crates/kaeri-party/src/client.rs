@@ -596,9 +596,10 @@ impl Membership {
         if self.file.is_some() {
             self.outbox.push(wire::set_file(self.file.as_ref()));
         }
-        if self.ready {
-            self.outbox.push(wire::set_ready(true, true));
-        }
+        // Said ready or not: until a member says, the server has no readiness for them, and the
+        // others take that as a client without Ready, which counts as ready. A member who had
+        // not said yet would let the first of the others to say ready start the room.
+        self.outbox.push(wire::set_ready(self.ready, self.ready));
         self.outbox.push(wire::list());
         for line in &early {
             if let Some(end) = self.on_line(line) {

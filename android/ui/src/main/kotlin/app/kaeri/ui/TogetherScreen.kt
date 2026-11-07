@@ -237,8 +237,7 @@ internal fun TogetherScreen() {
                         glimpse = glimpses[key],
                         onLook = { store.lookIntoRoom(room.server, room.room) },
                         onRejoin = {
-                            store.openParty(PartyTarget(room.server, room.room, null, room.title, room.episode, room.id, false))
-                            store.joinParty(room.server, room.room)
+                            store.rejoinParty(PartyTarget(room.server, room.room, null, room.title, room.episode, room.id, false))
                             navigator.open(LOBBY_ROUTE)
                         },
                         onCopy = {
