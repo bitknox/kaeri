@@ -423,6 +423,15 @@ sealed class ReaderChrome
             previewImage.Visibility = Visibility.Collapsed;
     }
 
+#if KAERI_TESTING
+    /// <summary>Shots: the preview as a drag to <paramref name="value"/> shows it, with no pointer.</summary>
+    internal void ShotPreview(int value)
+    {
+        scrubbing = true;
+        ShowPreview(value);
+    }
+#endif
+
     /// <summary>A page landed while the preview was up: it shows it.</summary>
     public void RefreshPreview()
     {

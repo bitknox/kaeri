@@ -519,6 +519,12 @@ public sealed partial class MainWindow : Window
             {
                 await Task.Delay(400);
                 OpenReader(parts[0], parts.Length > 1 ? parts[1] : null);
+                // --show=reader-aa, reader-chapters, reader-scrub or reader-end, once pages are in.
+                if (options.Show is { } show && show.StartsWith("reader-", StringComparison.Ordinal))
+                {
+                    await Task.Delay(3000);
+                    ReaderLayer.Shot(show);
+                }
             });
         }
 #endif

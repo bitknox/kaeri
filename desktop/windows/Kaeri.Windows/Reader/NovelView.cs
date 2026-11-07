@@ -380,6 +380,11 @@ sealed class NovelView : Grid
             Load(book.Spine[(int)pos.Spine].Url, "kaeri:pos=" + PosText(pos));
     }
 
+#if KAERI_TESTING
+    /// <summary>Shots: the end page, as passing the last page shows it.</summary>
+    internal void ShotEnd() => ShowEnd();
+#endif
+
     void ShowEnd()
     {
         endLayer.Children.Clear();

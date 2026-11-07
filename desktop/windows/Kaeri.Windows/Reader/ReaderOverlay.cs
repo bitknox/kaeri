@@ -156,6 +156,37 @@ public sealed partial class ReaderOverlay : UserControl
         DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => Focus(FocusState.Programmatic));
     }
 
+#if KAERI_TESTING
+    /// <summary>
+    /// Shots with no keys pressed: <c>reader-aa</c> opens the Aa flyout, <c>reader-chapters</c>
+    /// the chapter list, <c>reader-scrub</c> the scrub preview two thirds in, and
+    /// <c>reader-end</c> the end page.
+    /// </summary>
+    internal void Shot(string what)
+    {
+        ShowChrome(stay: true);
+        switch (what)
+        {
+            case "reader-aa":
+                settingsFlyout.ShowAt(chrome.Settings);
+                break;
+            case "reader-chapters":
+                chaptersFlyout.ShowAt(chrome.Chapters);
+                break;
+            case "reader-scrub":
+                var count = kind == Kind.Novel ? novel?.Pages ?? 1 : Math.Max(Reader.ReadingLeaves, 1);
+                chrome.ShotPreview(Math.Max(1, count * 2 / 3));
+                break;
+            case "reader-end":
+                if (paged is not null)
+                    paged.Jump(Math.Max(0, Reader.Leaves.Length - 1));
+                strip?.Ends(true);
+                novel?.ShotEnd();
+                break;
+        }
+    }
+#endif
+
     /// <summary>Closes the reader and gives the window back.</summary>
     public void Close()
     {
