@@ -306,31 +306,10 @@ impl NovelView {
                 None
             }
         });
-        // Nothing leaves the book.
-        view.connect_local("decide-policy", false, move |values| {
-            let decision = values.get(1)?.get::<glib::Object>().ok()?;
-            let kind = values.get(2)?.get::<i32>().ok()?;
-            // WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION is 0.
-            if kind != 0 {
-                return Some(false.to_value());
-            }
-            let api = self::api()?;
-            // SAFETY: the decision is alive for the signal; the action and request are borrowed.
-            let uri = unsafe {
-                let action = (api.decision_action)(decision.as_ptr());
-                let request = (api.action_request)(action);
-                let uri = (api.request_get_uri)(request);
-                if uri.is_null() {
-                    String::new()
-                } else {
-                    CStr::from_ptr(uri).to_string_lossy().into_owned()
-                }
-            };
-            if !uri.starts_with("kaeri-book://") && uri != "about:blank" {
-                unsafe { (api.decision_ignore)(decision.as_ptr()) };
-                return Some(true.to_value());
-            }
-            Some(false.to_value())
+        // Nothing leaves the book. The signal wants a gboolean on every path: true when the
+        // handler decided (here, ignored the navigation), false to leave WebKit's default.
+        view.connect_local("decide-policy", false, |values| {
+            Some(decide_policy(values).to_value())
         });
         view.connect_local("context-menu", false, |_| Some(true.to_value()));
         let mut url = open.entry.clone();
@@ -473,5 +452,81 @@ impl NovelView {
         // SAFETY: the view is alive; the returned string is borrowed.
         let uri = unsafe { (api.uri_of_view)(self.view.as_ptr()) };
         (!uri.is_null()).then(|| unsafe { CStr::from_ptr(uri) }.to_string_lossy().into_owned())
+    }
+}
+
+/// WebKitPolicyDecisionType's navigation and new-window actions, which both carry a URI.
+const NAVIGATION_ACTION: i32 = 0;
+const NEW_WINDOW_ACTION: i32 = 1;
+
+/// The `decide-policy` handler: ignores a navigation that would leave the book and says it
+/// decided; anything else is WebKit's to decide.
+fn decide_policy(values: &[glib::Value]) -> bool {
+    let Some(decision) = values.get(1).and_then(|v| v.get::<glib::Object>().ok()) else {
+        return false;
+    };
+    // The decision type is a GEnum, which a typed get as i32 refuses.
+    let kind = values.get(2).filter(|v| v.type_().is_a(glib::Type::ENUM)).map(|v| {
+        // SAFETY: the value holds an enum, checked above.
+        unsafe { gobject_ffi::g_value_get_enum(v.to_glib_none().0) }
+    });
+    let Some(kind) = kind else { return false };
+    if !is_navigation(kind) {
+        return false;
+    }
+    let Some(api) = self::api() else { return false };
+    // SAFETY: the decision is alive for the signal; the action and request are borrowed.
+    let uri = unsafe {
+        let action = (api.decision_action)(decision.as_ptr());
+        let request =
+            if action.is_null() { std::ptr::null_mut() } else { (api.action_request)(action) };
+        let uri =
+            if request.is_null() { std::ptr::null() } else { (api.request_get_uri)(request) };
+        (!uri.is_null()).then(|| CStr::from_ptr(uri).to_string_lossy().into_owned())
+    };
+    if stays_in_book(uri.as_deref()) {
+        return false;
+    }
+    // SAFETY: the decision is alive for the signal.
+    unsafe { (api.decision_ignore)(decision.as_ptr()) };
+    true
+}
+
+fn is_navigation(kind: i32) -> bool {
+    matches!(kind, NAVIGATION_ACTION | NEW_WINDOW_ACTION)
+}
+
+/// Whether a navigation stays inside the book: its own scheme or the blank page. A navigation
+/// whose URI can't be read leaves.
+fn stays_in_book(uri: Option<&str>) -> bool {
+    uri.is_some_and(|uri| uri.starts_with("kaeri-book://") || uri == "about:blank")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_the_book_and_the_blank_page_stay() {
+        assert!(stays_in_book(Some("kaeri-book://w/ch/3.xhtml#kaeri:pos=1")));
+        assert!(stays_in_book(Some("about:blank")));
+        assert!(!stays_in_book(Some("https://elsewhere.example/")));
+        assert!(!stays_in_book(Some("file:///etc/passwd")));
+        assert!(!stays_in_book(None));
+    }
+
+    #[test]
+    fn navigations_and_new_windows_are_decided_responses_are_not() {
+        assert!(is_navigation(NAVIGATION_ACTION));
+        assert!(is_navigation(NEW_WINDOW_ACTION));
+        assert!(!is_navigation(2));
+    }
+
+    #[test]
+    fn decide_policy_answers_false_for_what_it_cannot_read() {
+        // A missing decision, or a type that isn't an enum, leaves the default: never None.
+        assert!(!decide_policy(&[]));
+        let view = glib::Object::new::<glib::Object>();
+        assert!(!decide_policy(&[view.to_value(), view.to_value(), 0i32.to_value()]));
     }
 }
