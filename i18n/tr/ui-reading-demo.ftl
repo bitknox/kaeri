@@ -9,6 +9,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title }, { $author }. Lisans: { $licence }. Wikimedia Commons üzerinden okunur.
 demo-credit-story = { $title }, { $author }. Kamu malı. Uygulamayla birlikte gelir.
+demo-credit-cover = Kapak: “{ $title }”, { $artist }, { $year }. Kamu malı. Uygulamayla birlikte gelir.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Şimdi okunabilir
 search-demo-only-books = Yalnızca demo açık. Başka başlıklar bir { -source } eklediğinizde görünür.

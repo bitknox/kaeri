@@ -2356,6 +2356,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s, %2$s. Lisans: %3$s. Wikimedia Commons üzerinden okunur.</string>
     <string name="demo_credit_story">%1$s, %2$s. Kamu malı. Uygulamayla birlikte gelir.</string>
+    <string name="demo_credit_cover">Kapak: “%1$s”, %2$s, %3$s. Kamu malı. Uygulamayla birlikte gelir.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Şimdi okunabilir</string>
     <string name="search_demo_only_books">Yalnızca demo açık. Başka başlıklar bir kaynak eklediğinizde görünür.</string>

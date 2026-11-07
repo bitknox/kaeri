@@ -1090,13 +1090,27 @@ pub(crate) fn dispatch(
         Command::ClearSkipMarks => crate::skip_marks::clear(services, tx),
 
         // Off the loop, with no job: covers report back on their own.
-        Command::FetchArtwork { url } => artwork::spawn_fetch(
-            url,
-            services.paths.image_cache(),
-            services.http.clone(),
-            services.artwork.clone(),
-            tx.clone(),
-        ),
+        // The reading demo's covers come from the demo: the comic's pinned first page, and the
+        // story's cover as the app bundles it, never fetched.
+        Command::FetchArtwork { url } => match kaeri_core::reading_demo::cover(&url) {
+            Some(kaeri_core::reading_demo::DemoCover::Bundled(bytes)) => {
+                let _ = tx.send(Event::ArtworkReady { url, bytes: bytes.to_vec() });
+            }
+            Some(kaeri_core::reading_demo::DemoCover::Page(page)) => artwork::spawn_demo_cover(
+                url,
+                page,
+                services.paths.image_cache(),
+                services.book_sources.demo.clone(),
+                tx.clone(),
+            ),
+            None => artwork::spawn_fetch(
+                url,
+                services.paths.image_cache(),
+                services.http.clone(),
+                services.artwork.clone(),
+                tx.clone(),
+            ),
+        },
 
         // What a native app shows outside itself: notifications, and its widgets. Off the loop,
         // with no job, each answered with one event.

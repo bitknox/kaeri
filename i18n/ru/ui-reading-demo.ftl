@@ -11,6 +11,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title }, автор: { $author }. Лицензия: { $licence }. Читается с Wikimedia Commons.
 demo-credit-story = { $title }, автор: { $author }. Общественное достояние. Входит в приложение.
+demo-credit-cover = Обложка: «{ $title }», автор: { $artist }, { $year }. Общественное достояние. Входит в приложение.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Демо · Можно читать сейчас
 search-demo-only-books = Включено только демо. Другие названия появятся, когда вы добавите { -source }.

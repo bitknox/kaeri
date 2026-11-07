@@ -93,11 +93,19 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                     .into_iter()
                     .next()
                     .map_or((Vec::new(), false), |p| (p.items, p.has_next));
-                let tiles: Vec<_> = items
+                let mut tiles: Vec<_> = items
                     .iter()
                     .filter(|b| ask.adult || !b.adult())
                     .map(|b| tiles::reading(&kit.meta, &kit.store, &kit.sources, b))
                     .collect();
+                // AniList has no word of the demo: its works follow AniList's on the first page,
+                // while it is on.
+                if page == 0 {
+                    for mut tile in kit.sources.demo_tiles(&query) {
+                        tiles::mark(&mut tile, &kit.store, &kit.sources);
+                        tiles.push(tile);
+                    }
+                }
                 let total = total(page, tiles.len(), has_more);
                 send(
                     &tx,
@@ -168,16 +176,17 @@ fn list(kit: &Kit, ask: Ask, segment: LibrarySegmentRead) -> Vec<WorkTile> {
     works
         .iter()
         .filter_map(|work| {
-            let mut tile =
-                match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
-                    Some(k) if !ask.adult && k.book.adult() => return None,
-                    Some(k) => tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book),
-                    None => {
-                        let series =
-                            local.iter().find(|s| s.work.as_deref() == Some(work.as_str()))?;
-                        local_tile(kit, work, &series.name, &series.medium)
-                    }
-                };
+            let mut tile = match kept
+                .iter()
+                .find(|k| tiles::work_of(k.book.id).as_str() == work)
+            {
+                Some(k) if !ask.adult && k.book.adult() => return None,
+                Some(k) => tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book),
+                None => match local.iter().find(|s| s.work.as_deref() == Some(work.as_str())) {
+                    Some(series) => local_tile(kit, work, &series.name, &series.medium),
+                    None => tiles::demo(work, &kit.store, &kit.sources)?,
+                },
+            };
             tiles::library_line(&mut tile, &kit.store, &kit.sources);
             Some(tile)
         })
@@ -213,6 +222,7 @@ fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
         new_chapter: false,
         adult: false,
         facts: vec![words::kind_words(None, medium, None)],
+        demo: false,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     tile
