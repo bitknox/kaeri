@@ -374,6 +374,7 @@ extension ReadingMsg {
         case .exportDeviceColourEink: L.exportDeviceColourEink
         case .exportDeviceTablet: L.exportDeviceTablet
         case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
+        case .exportWaitsForWifi(let n): L.exportWaitsForWifi(n: Int(n))
         }
     }
 }

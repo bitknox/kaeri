@@ -896,6 +896,11 @@ public enum L {
         Self.format("export-chapter", fallback: "Chapter %1$@", chapter)
     }
 
+    /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+    public static func exportWaitsForWifi(n: Int) -> String {
+        Self.format("export-waits-for-wifi", fallback: "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.", n)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)

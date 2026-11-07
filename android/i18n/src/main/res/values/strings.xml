@@ -481,6 +481,11 @@
     <string name="export_device_tablet">Tablet</string>
     <!-- A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5. -->
     <string name="export_chapter">Chapter %1$s</string>
+    <!-- Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch. -->
+    <plurals name="export_waits_for_wifi">
+        <item quantity="one">One chapter isn\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
+        <item quantity="other">%1$d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
+    </plurals>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->

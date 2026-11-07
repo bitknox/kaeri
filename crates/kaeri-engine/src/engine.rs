@@ -1132,6 +1132,15 @@ impl Actor {
                 let tx = self.inbox.sender();
                 let said = handle_internal(message, &mut self.state, &self.services, &tx).await;
                 said.into_iter().for_each(|said| self.pass_on(said));
+                // Sends left waiting for Wi-Fi when the engine last stopped start again, each
+                // as a job of its own, as queued chapter downloads do.
+                if message == Internal::LetGo {
+                    for again in crate::export::held_sends(&self.state, &self.services) {
+                        let again = Command::Reading(again);
+                        let job = again.activity().map(|activity| (self.jobs.next(), activity));
+                        self.route(job, again);
+                    }
+                }
                 #[cfg(feature = "testing")]
                 if self.trace {
                     let _ = self.out.send(Out::Handled(message));
@@ -3301,7 +3310,8 @@ mod tests {
             traits::{BookSource, PageError},
         };
         use kaeri_model::reading::{
-            BookDownloadsView, ChapterDownloadState, DownloadPick, ReadingCommand, ReadingEvent,
+            BookDownloadsView, ChapterDownloadState, DownloadPick, ReadingCommand,
+            ReadingEvent, ReadingFailure,
         };
 
         use super::*;
@@ -3892,118 +3902,218 @@ mod tests {
             engine.shutdown().await;
         }
 
-        #[tokio::test]
-        async fn on_cellular_a_send_takes_only_downloads_and_fetches_again_on_wifi() {
-            let dir = tempfile::tempdir().unwrap();
-            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        /// An engine for sending, with chapter 1 downloaded the first time it stands up on
+        /// `store`, and that store to look into.
+        async fn send_engine(
+            dir: &std::path::Path,
+            store: Option<kaeri_store::Store>,
+        ) -> (Engine, EventStream, kaeri_store::Store) {
+            let host = Arc::new(QuietHost::in_dir(&dir.join("tokens")));
             let mut kept = None;
-            let (engine, mut events) = engine_with(dir.path(), host, |o| {
-                let now = kaeri_store::now();
+            let (engine, events) = engine_with(dir, host, |o| {
+                // Launch takes the sends left waiting as the app's launch does.
+                o.background.keep_next = true;
                 o.reading = true;
-                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
-                o.store
-                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
-                    .unwrap();
-                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
-                // Chapter 1 is one the person downloaded.
-                let path = dir.path().join("downloaded-1.cbz");
-                comic_file(&path, 2);
-                let ask = kaeri_store::book_downloads::BookDownloadAsk {
-                    work: WORK,
-                    chapter: "1",
-                    source_id: "shelf",
-                    version_label: None,
-                    keep_ready: false,
-                };
-                o.store.queue_book_download(&ask, now).unwrap();
-                let id = o.store.book_downloads(Some(WORK)).unwrap()[0].id;
-                o.store
-                    .book_download_done(id, &path.display().to_string(), Some(2), 10, now)
-                    .unwrap();
                 o.book_source = Some(pages_source(false));
+                if let Some(store) = store {
+                    o.store = store;
+                } else {
+                    let now = kaeri_store::now();
+                    o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                    o.store
+                        .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                        .unwrap();
+                    o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                    let path = dir.join("downloaded-1.cbz");
+                    comic_file(&path, 2);
+                    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                        work: WORK,
+                        chapter: "1",
+                        source_id: "shelf",
+                        version_label: None,
+                        keep_ready: false,
+                    };
+                    o.store.queue_book_download(&ask, now).unwrap();
+                    let id = o.store.book_downloads(Some(WORK)).unwrap()[0].id;
+                    o.store
+                        .book_download_done(id, &path.display().to_string(), Some(2), 10, now)
+                        .unwrap();
+                }
                 kept = Some(o.store.clone());
             })
             .await;
-            let store = kept.unwrap();
-            events.launch().await;
-            let work = WorkId::new(WORK);
-            let prepare = |list: &[&str]| {
-                Command::Reading(ReadingCommand::Prepare {
-                    work: work.clone(),
-                    pick: DownloadPick::Chapters {
-                        ids: list.iter().map(|c| ChapterId::new(*c)).collect(),
-                    },
-                    target: "kobo".into(),
-                    format: kaeri_model::reading::ExportFormat::Cbz,
-                })
-            };
-            let ended = |e: &Event| {
-                matches!(
-                    e,
-                    Event::Reading(
-                        ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. }
-                    )
-                )
-            };
-            let pages_sent = |seen: &[Event]| {
-                seen.iter().find_map(|e| match e {
-                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
-                        let book = kaeri_books::open(
-                            std::path::Path::new(&files[0].path),
-                            &kaeri_books::Limits::default(),
-                        )
-                        .unwrap();
-                        let kaeri_books::Book::Comic(comic) = book else {
-                            panic!("not a comic")
-                        };
-                        Some(comic.pages().len())
-                    }
-                    _ => None,
-                })
-            };
+            (engine, events, kept.unwrap())
+        }
 
-            // On cellular, with downloads kept to Wi-Fi (the default), a downloaded chapter is
-            // still sent: it needs no network.
-            engine.send(Command::NetworkPath {
-                cellular: true,
-                constrained: false,
-                offline: false,
-            });
-            engine.send(prepare(&["1"]));
-            let seen = seen_until(&mut events, ended).await;
-            assert_eq!(pages_sent(&seen), Some(2), "{seen:?}");
+        fn send_of(list: &[&str]) -> Command {
+            Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters {
+                    ids: list.iter().map(|c| ChapterId::new(*c)).collect(),
+                },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            })
+        }
 
-            // One that needs fetching waits for Wi-Fi: the send stops before any page is
-            // fetched, says so, and leaves nothing behind.
-            engine.send(prepare(&["1", "2"]));
-            let seen = seen_until(&mut events, ended).await;
-            assert!(
-                seen.iter().any(|e| matches!(
-                    e,
-                    Event::Reading(ReadingEvent::Failed {
-                        failure: kaeri_model::reading::ReadingFailure::Offline,
-                        ..
-                    })
-                )),
-                "{seen:?}"
-            );
-            assert!(!seen.iter().any(|e| matches!(
+        fn network(cellular: bool, offline: bool) -> Command {
+            Command::NetworkPath { cellular, constrained: false, offline }
+        }
+
+        fn send_ended(e: &Event) -> bool {
+            matches!(
                 e,
-                Event::Reading(ReadingEvent::ExportProgress { total, .. }) if *total > 0
-            )));
-            assert_eq!(store.book_downloads(Some(WORK)).unwrap().len(), 1);
+                Event::Reading(ReadingEvent::ExportReady { .. } | ReadingEvent::Failed { .. })
+            )
+        }
+
+        /// The send that waits, and what it said, once it says so.
+        async fn waiting(events: &mut EventStream) -> (JobId, Vec<Event>) {
+            let seen = seen_until(events, |e| {
+                send_ended(e) || matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. }))
+            })
+            .await;
+            let job = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line }) => {
+                    assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+                    assert_eq!(
+                        *line,
+                        Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 })
+                    );
+                    Some(*job)
+                }
+                _ => None,
+            });
+            (job.unwrap_or_else(|| panic!("the send did not wait: {seen:?}")), seen)
+        }
+
+        /// How many pages the files of a finished send hold, by its job.
+        fn pages_sent(seen: &[Event]) -> Option<(JobId, usize)> {
+            seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                    let book = kaeri_books::open(
+                        std::path::Path::new(&files[0].path),
+                        &kaeri_books::Limits::default(),
+                    )
+                    .unwrap();
+                    let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+                    Some((*job, comic.pages().len()))
+                }
+                _ => None,
+            })
+        }
+
+        fn kept_waiting(store: &kaeri_store::Store) -> bool {
+            store.get_meta_text("export:held").unwrap().is_some()
+        }
+
+        #[tokio::test]
+        async fn on_cellular_a_send_with_chapters_to_fetch_waits_for_wifi_and_goes_on() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // Downloaded chapters need no network: they go at once.
+            engine.send(network(true, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+
+            // One to fetch: the whole send waits for Wi-Fi, says so, and fails in no way.
+            engine.send(send_of(&["1", "2"]));
+            let (job, seen) = waiting(&mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert!(kept_waiting(&store), "kept, in case the engine stops");
+
+            // On Wi-Fi it goes on by itself, and is sent whole.
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen), Some((job, 4)), "{seen:?}");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn a_send_waiting_for_wifi_is_cancelled_and_leaves_nothing() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            let (job, _) = waiting(&mut events).await;
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            let seen =
+                seen_until(&mut events, |e| matches!(e, Event::JobDone(j) if *j == job)).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert!(!kept_waiting(&store));
             let left = leftovers(dir.path());
             assert!(left.iter().all(|l| !l.ends_with("-fetch")), "{left:?}");
+            assert_eq!(store.book_downloads(Some(WORK)).unwrap().len(), 1, "no download added");
 
-            // Back on Wi-Fi, the same send fetches what it lacks.
-            engine.send(Command::NetworkPath {
-                cellular: false,
-                constrained: false,
-                offline: false,
+            // Wi-Fi coming back starts nothing.
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(seen.iter().filter(|e| send_ended(e)).count(), 1, "{seen:?}");
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn with_no_network_at_all_a_send_with_chapters_to_fetch_fails_as_offline() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            let offline = |seen: &[Event]| {
+                seen.iter().any(|e| {
+                    matches!(
+                        e,
+                        Event::Reading(ReadingEvent::Failed {
+                            failure: ReadingFailure::Offline,
+                            ..
+                        })
+                    )
+                })
+            };
+
+            engine.send(network(false, true));
+            engine.send(send_of(&["1", "2"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(offline(&seen), "{seen:?}");
+
+            // A send waiting for Wi-Fi fails the same way once the network is gone.
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.send(network(false, true));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(offline(&seen), "{seen:?}");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn a_send_left_waiting_starts_again_at_the_next_launch() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.shutdown().await;
+            assert!(kept_waiting(&store), "still kept after the engine stopped");
+
+            // The next launch asks for it again, as a job of its own, and on Wi-Fi it is sent.
+            let (engine, mut events, store) = send_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, send_ended).await;
+            let started = seen.iter().find_map(|e| match e {
+                Event::JobStarted { job, .. } => Some(*job),
+                _ => None,
             });
-            engine.send(prepare(&["1", "2"]));
-            let seen = seen_until(&mut events, ended).await;
-            assert_eq!(pages_sent(&seen), Some(4), "{seen:?}");
+            let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));
+            assert_eq!((Some(job), pages), (started, 4));
+            assert!(!kept_waiting(&store));
             engine.shutdown().await;
         }
 

@@ -971,6 +971,14 @@
     <value>[Çĥàþţéŕ {chapter}~~~~]</value>
     <comment>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</comment>
   </data>
+  <data name="ExportWaitsForWifi_one" xml:space="preserve">
+    <value>[Öñé çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>[{n} çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

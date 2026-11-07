@@ -684,6 +684,9 @@ public static partial class T
     /// <summary>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</summary>
     public static string ExportChapter(string chapter) => Fill(Get("ExportChapter"), ("chapter", chapter));
 
+    /// <summary>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</summary>
+    public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -9355,6 +9358,8 @@ public static partial class T
         ["ExportDeviceColourEink"] = "Colour e-ink, 7 inch",
         ["ExportDeviceTablet"] = "Tablet",
         ["ExportChapter"] = "Chapter {chapter}",
+        ["ExportWaitsForWifi_one"] = "One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
+        ["ExportWaitsForWifi_other"] = "{n} chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",

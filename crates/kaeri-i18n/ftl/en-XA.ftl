@@ -713,6 +713,13 @@ export-device-tablet = [Ţàƀļéţ~~]
 # A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
 export-chapter = [Çĥàþţéŕ { $chapter }~~~~]
 
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+        [one] [Öñé çĥàþţéŕ îšñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $n } çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 

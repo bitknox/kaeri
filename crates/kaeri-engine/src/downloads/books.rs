@@ -92,6 +92,8 @@ pub struct Setup {
     pub hold: bool,
     /// The hold is for Wi-Fi: rows show it.
     pub wifi: bool,
+    /// There is no network at all.
+    pub offline: bool,
     pub keep_ready: bool,
     pub delete_after: bool,
 }
@@ -104,6 +106,7 @@ impl Setup {
         Self {
             hold: wifi || network.offline || away,
             wifi,
+            offline: network.offline,
             keep_ready: reading
                 .keep_chapters_ready
                 .unwrap_or(matches!(edition, AppEdition::ReadOnly)),
@@ -121,6 +124,8 @@ struct Inner {
     pace: Duration,
     running: Mutex<bool>,
     setup: Mutex<Setup>,
+    /// Told each time the setup changes, for a send that waits on it.
+    changed: tokio::sync::watch::Sender<Setup>,
     /// What a test takes to be free on the device, in place of asking the disk.
     free: Mutex<Option<u64>>,
     told: Mutex<Option<Instant>>,
@@ -166,6 +171,7 @@ impl BookDownloads {
             pace,
             running: Mutex::new(false),
             setup: Mutex::new(Setup::default()),
+            changed: tokio::sync::watch::channel(Setup::default()).0,
             free: Mutex::new(None),
             told: Mutex::new(None),
         }))
@@ -182,7 +188,13 @@ impl BookDownloads {
     /// Take in the config, the network and the phase. Says whether the queue may run now.
     pub fn configure(&self, setup: Setup) -> bool {
         *self.0.setup.lock().unwrap_or_else(|e| e.into_inner()) = setup;
+        self.0.changed.send_if_modified(|was| std::mem::replace(was, setup) != setup);
         !setup.hold
+    }
+
+    /// Changes to the setup, as [`Self::configure`] takes them in.
+    pub(crate) fn changes(&self) -> tokio::sync::watch::Receiver<Setup> {
+        self.0.changed.subscribe()
     }
 
     /// Fetches the last run left half done go back in the queue, and half-written files go.

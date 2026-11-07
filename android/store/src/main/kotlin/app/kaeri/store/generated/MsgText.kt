@@ -375,6 +375,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ExportDeviceColourEink -> Strings.exportDeviceColourEink(context)
         is ReadingMsg.ExportDeviceTablet -> Strings.exportDeviceTablet(context)
         is ReadingMsg.ExportChapter -> Strings.exportChapter(context, this.chapter)
+        is ReadingMsg.ExportWaitsForWifi -> Strings.exportWaitsForWifi(context, this.n.toInt())
     }
 
 /** A reason in the person's language, inside a message or on its own. */
