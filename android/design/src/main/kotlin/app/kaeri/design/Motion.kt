@@ -35,6 +35,12 @@ object Motion {
      */
     fun <T> reveal(): TweenSpec<T> = tween(durationMillis = 300, easing = LinearOutSlowInEasing)
 
+    /**
+     * The system's zoom: the reader growing out of the cover it was opened from and shrinking back
+     * into it. About 0.42 s, critically damped.
+     */
+    fun <T> zoom(): SpringSpec<T> = spring(dampingRatio = 1f, stiffness = 250f)
+
     /** Player controls hiding, a page's content leaving. */
     fun <T> fadeOut(): TweenSpec<T> = tween(durationMillis = 300, easing = FastOutLinearInEasing)
 

@@ -239,7 +239,7 @@ class MainActivity : ComponentActivity() {
         }
         traced("setContent") { setContent {
             KaeriTheme {
-                AppRoot(
+                ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
                     actions = actions,
@@ -251,8 +251,7 @@ class MainActivity : ComponentActivity() {
                     links = linkFlow,
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
-                )
-                ReaderOverlay(app.store, app.eink)
+                ) }
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()
