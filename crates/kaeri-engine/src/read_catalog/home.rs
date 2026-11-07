@@ -723,10 +723,23 @@ impl Home {
         action: Option<SeriesAction>,
     ) -> (WorkTile, ReadSpotlight) {
         let tile = self.tile(kept);
+        // The same facts as the series' page, with how often chapters come out after them.
+        let mut facts = tiles::facts(&kept.book);
+        let work = tiles::work_of(kept.book.id);
+        if let Some(rhythm) = self
+            .store
+            .book_rhythm(work.as_str())
+            .ok()
+            .flatten()
+            .as_ref()
+            .and_then(chapters::rhythm_words)
+        {
+            facts.push(rhythm);
+        }
         let spot = ReadSpotlight {
             case,
             label: Msg::Reading(label),
-            facts: tiles::facts(&kept.book),
+            facts,
             synopsis: kept.book.synopsis(),
             line,
             action,
