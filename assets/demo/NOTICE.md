@@ -24,3 +24,16 @@ Things* by Lafcadio Hearn (1904), which is in the public domain. The text comes 
 Gutenberg ebook 1210. The Project Gutenberg header, footer and licence, the illustration line,
 the footnote markers and the notes are removed, so the file is the story's text alone and carries
 no Project Gutenberg trademark. The paragraphs are as Hearn wrote them.
+
+## Kwaidan cover
+
+`kwaidan-yuki-onna-cover.jpg` is the frontispiece of the same 1904 book, "Blowing her breath upon
+him" by Keishū Takénouchi, which is in the public domain. It comes from Wikimedia Commons:
+
+- https://commons.wikimedia.org/wiki/File:Kwaidan,_Stories_and_Studies_of_Strange_Things_-_Frontispiece.png
+
+The source file has SHA-1 `3ef6a3b5d0878e01fa70b6d2b9b2a40031bfbb0c` (2,679,990 bytes, 1788 by
+2078 pixels). Changes: scaled to 900 pixels tall (774 by 900) and saved as a JPEG at quality 85,
+the size the demo's comic cover is shown at. The bundled file has SHA-1
+`3ca8076ad8eb97419838eb2f71baf7979240da91`, which `crates/kaeri-core/build.rs` checks when the
+engine builds. The app never fetches it; About the demo credits it.

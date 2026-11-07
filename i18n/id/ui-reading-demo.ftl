@@ -8,6 +8,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title } oleh { $author }. Berlisensi { $licence }. Dibaca dari Wikimedia Commons.
 demo-credit-story = { $title } oleh { $author }. Domain publik. Sudah ada di dalam aplikasi.
+demo-credit-cover = Sampul: “{ $title }” oleh { $artist }, { $year }. Domain publik. Sudah ada di dalam aplikasi.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Dapat dibaca sekarang
 search-demo-only-books = Hanya demo yang aktif. Judul lain muncul setelah Anda menambahkan { -source }.

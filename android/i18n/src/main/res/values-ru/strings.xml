@@ -2510,6 +2510,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s, автор: %2$s. Лицензия: %3$s. Читается с Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s, автор: %2$s. Общественное достояние. Входит в приложение.</string>
+    <string name="demo_credit_cover">Обложка: «%1$s», автор: %2$s, %3$s. Общественное достояние. Входит в приложение.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Демо · Можно читать сейчас</string>
     <string name="search_demo_only_books">Включено только демо. Другие названия появятся, когда вы добавите источник.</string>

@@ -2279,6 +2279,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s của %2$s. Giấy phép %3$s. Đọc từ Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s của %2$s. Phạm vi công cộng. Đi kèm trong ứng dụng.</string>
+    <string name="demo_credit_cover">Bìa: “%1$s” của %2$s, %3$s. Phạm vi công cộng. Đi kèm trong ứng dụng.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Đọc được ngay</string>
     <string name="search_demo_only_books">Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.</string>

@@ -47709,6 +47709,90 @@
         }
       }
     },
+    "demo-credit-cover" : {
+      "comment" : "The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, \"Blowing her breath upon him\", and the year is 1904. Argument 1: title (Text). Argument 2: artist (Text). Argument 3: year (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover: „%1$@“ von %2$@, %3$@. Gemeinfrei. Es ist in der App enthalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover: “%1$@” by %2$@, %3$@. Public domain. It comes with the app."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portada: «%1$@» de %2$@, %3$@. Dominio público. Viene con la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couverture : « %1$@ » de %2$@, %3$@. Domaine public. Fournie avec l’application."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sampul: “%1$@” oleh %2$@, %3$@. Domain publik. Sudah ada di dalam aplikasi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copertina: «%1$@» di %2$@, %3$@. Pubblico dominio. È inclusa nell’app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表紙：%2$@「%1$@」（%3$@年）。パブリックドメイン。アプリに付属しています。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okładka: „%1$@”, autor: %2$@, %3$@. Domena publiczna. Jest w zestawie z aplikacją."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capa: “%1$@” por %2$@, %3$@. Domínio público. Vem com o app."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обложка: «%1$@», автор: %2$@, %3$@. Общественное достояние. Входит в приложение."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omslag: ”%1$@” av %2$@, %3$@. Allmän egendom. Det följer med appen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapak: “%1$@”, %2$@, %3$@. Kamu malı. Uygulamayla birlikte gelir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bìa: “%1$@” của %2$@, %3$@. Phạm vi công cộng. Đi kèm trong ứng dụng."
+          }
+        }
+      }
+    },
     "demo-credit-story" : {
       "comment" : "The story's credit in About the demo. Argument 1: title (Text). Argument 2: author (Text).",
       "extractionState" : "manual",

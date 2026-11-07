@@ -6,7 +6,9 @@
 //!   Commons, whole, as Commons holds them, and each is pinned by its SHA-1. A page whose bytes
 //!   differ from the pin is not shown under this credit.
 //! - One public-domain story, bundled with the app from a copy with the Project Gutenberg header,
-//!   footer and notes stripped (see `assets/demo/NOTICE.md`).
+//!   footer and notes stripped (see `assets/demo/NOTICE.md`). Its cover is the book's 1904
+//!   frontispiece, also public domain and also bundled, made 900 pixels tall and checked by its
+//!   SHA-1 when the crate builds. Nothing of the story is fetched.
 //!
 //! Nothing here can be changed from outside: no manifest, no store record, no setting. The only
 //! hosts the comic reaches are [`crate::demo::DEMO_HOSTS`].
@@ -71,6 +73,44 @@ pub const COMIC_PAGES: [DemoPage; 3] = [
 /// How many pages are fetched ahead when the books page shows: all three.
 pub const PREFETCH_PAGES: usize = 3;
 
+/// A cover the demo bundles: the art, where it was taken from and who made it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DemoCoverArt {
+    /// The source file on Commons. It is the cover's address and its key in the image cache;
+    /// the engine answers it from the bundled bytes and never fetches it.
+    pub file_url: &'static str,
+    /// The Commons file page, which names its licence and its maker.
+    pub page_url: &'static str,
+    /// The art's own caption.
+    pub title: &'static str,
+    pub artist: &'static str,
+    pub year: u16,
+    /// "Public domain".
+    pub licence: &'static str,
+    /// The bundled file: the source file made 900 pixels tall, as a JPEG.
+    pub bytes: &'static [u8],
+    pub width: u32,
+    pub height: u32,
+}
+
+/// The story's cover: the frontispiece of the 1904 book.
+pub const STORY_COVER: DemoCoverArt = DemoCoverArt {
+    file_url: "https://upload.wikimedia.org/wikipedia/commons/5/51/\
+Kwaidan%2C_Stories_and_Studies_of_Strange_Things_-_Frontispiece.png",
+    page_url: "https://commons.wikimedia.org/wiki/\
+File:Kwaidan,_Stories_and_Studies_of_Strange_Things_-_Frontispiece.png",
+    title: "Blowing her breath upon him",
+    artist: "Keishū Takénouchi",
+    year: 1904,
+    licence: "Public domain",
+    bytes: include_bytes!("../../../assets/demo/kwaidan-yuki-onna-cover.jpg"),
+    width: 774,
+    height: 900,
+};
+
+/// The SHA-1 the build checked [`STORY_COVER`]'s bytes against (see `build.rs`).
+pub const STORY_COVER_SHA1: &str = env!("KAERI_DEMO_STORY_COVER_SHA1");
+
 /// One work of the demo and its credit, as the licence asks for it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DemoWork {
@@ -94,6 +134,8 @@ pub struct DemoWork {
     pub synopsis: &'static str,
     /// A novel, read as text; else a comic, read as pages.
     pub novel: bool,
+    /// A cover bundled with the app, with its own credit. The comic's cover is its first page.
+    pub cover_art: Option<DemoCoverArt>,
 }
 
 pub const COMIC: DemoWork = DemoWork {
@@ -109,6 +151,7 @@ pub const COMIC: DemoWork = DemoWork {
     synopsis: "A young witch and her cat try a potion. Its maker shares the comic under CC BY \
 4.0, and the demo reads it from Wikimedia Commons.",
     novel: false,
+    cover_art: None,
 };
 
 pub const STORY: DemoWork = DemoWork {
@@ -124,6 +167,7 @@ pub const STORY: DemoWork = DemoWork {
     synopsis: "A woodcutter caught in a snowstorm. The story is in the public domain and comes \
 with the app.",
     novel: true,
+    cover_art: Some(STORY_COVER),
 };
 
 /// Both works, the comic first.
@@ -146,10 +190,14 @@ impl DemoWork {
         WorkKey::local(self.medium(), self.series).id()
     }
 
-    /// Its cover: the comic's first page, as Commons holds it and as pinned. The story has
-    /// none, so the apps draw its plate.
+    /// Its cover's address: the comic's first page, as Commons holds it and as pinned, or the
+    /// story's bundled frontispiece.
     pub const fn cover(&self) -> Option<&'static str> {
-        if self.novel { None } else { Some(COMIC_PAGES[0].file_url) }
+        match self.cover_art {
+            Some(art) => Some(art.file_url),
+            None if self.novel => None,
+            None => Some(COMIC_PAGES[0].file_url),
+        }
     }
 
     /// Whether a search for `query` finds it: by its series, its chapter, its author, or the
@@ -163,9 +211,27 @@ impl DemoWork {
     }
 }
 
-/// The work a demo cover's address is the cover of: only the comic's pinned first page.
-pub fn cover_page(url: &str) -> Option<&'static DemoPage> {
-    COMIC.cover().filter(|cover| *cover == url).map(|_| &COMIC_PAGES[0])
+/// Where a demo cover's bytes come from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DemoCover {
+    /// The comic's pinned first page, read from Commons and made small.
+    Page(&'static DemoPage),
+    /// A cover bundled with the app, sent as it is.
+    Bundled(&'static [u8]),
+}
+
+/// What a demo cover's address is: the comic's first page or the story's bundled cover. Any
+/// other address is not the demo's.
+pub fn cover(url: &str) -> Option<DemoCover> {
+    if COMIC.cover() == Some(url) {
+        Some(DemoCover::Page(&COMIC_PAGES[0]))
+    } else {
+        WORKS
+            .iter()
+            .filter_map(|w| w.cover_art)
+            .find(|art| art.file_url == url)
+            .map(|art| DemoCover::Bundled(art.bytes))
+    }
 }
 
 /// The work a demo series id names.
@@ -181,9 +247,13 @@ pub fn story_paragraphs() -> impl Iterator<Item = &'static str> {
     STORY_TEXT.split("\n\n").map(str::trim).filter(|p| !p.is_empty())
 }
 
-/// Every address the comic holds, for the checks that walk them.
+/// Every address the demo holds, for the checks that walk them.
 pub fn urls() -> Vec<&'static str> {
-    COMIC_PAGES.iter().flat_map(|p| [p.file_url, p.page_url]).collect()
+    COMIC_PAGES
+        .iter()
+        .flat_map(|p| [p.file_url, p.page_url])
+        .chain([STORY_COVER.file_url, STORY_COVER.page_url])
+        .collect()
 }
 
 #[cfg(test)]
@@ -219,15 +289,32 @@ mod tests {
     }
 
     #[test]
-    fn each_work_has_its_own_key_and_only_the_comic_a_cover() {
+    fn each_work_has_its_own_key_and_its_own_cover() {
         assert_ne!(COMIC.work_id(), STORY.work_id());
         assert!(COMIC.work_id().key().is_some_and(|k| k.is_local()));
         assert_eq!(COMIC.work_id(), WorkKey::local(Medium::Manga, "pepper&carrot").id());
         assert_eq!(STORY.work_id(), WorkKey::local(Medium::Novel, "Kwaidan").id());
         assert_eq!(COMIC.cover(), Some(COMIC_PAGES[0].file_url));
-        assert_eq!(STORY.cover(), None);
-        assert_eq!(cover_page(COMIC_PAGES[0].file_url), Some(&COMIC_PAGES[0]));
-        assert_eq!(cover_page(COMIC_PAGES[1].file_url), None);
+        assert_eq!(STORY.cover(), Some(STORY_COVER.file_url));
+        assert_eq!(cover(COMIC_PAGES[0].file_url), Some(DemoCover::Page(&COMIC_PAGES[0])));
+        assert_eq!(cover(STORY_COVER.file_url), Some(DemoCover::Bundled(STORY_COVER.bytes)));
+        assert_eq!(cover(COMIC_PAGES[1].file_url), None);
+        assert_eq!(cover(STORY_COVER.page_url), None);
+        assert_eq!(cover(""), None);
+    }
+
+    #[test]
+    fn the_story_cover_is_the_pinned_frontispiece_and_credits_its_artist() {
+        use sha1::{Digest, Sha1};
+        let found: String =
+            Sha1::digest(STORY_COVER.bytes).iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(found, STORY_COVER_SHA1);
+        assert_eq!(STORY_COVER_SHA1, "3ca8076ad8eb97419838eb2f71baf7979240da91");
+        assert!(STORY_COVER.bytes.starts_with(&[0xff, 0xd8, 0xff]), "a JPEG");
+        assert_eq!(STORY_COVER.height, 900);
+        assert_eq!((STORY_COVER.artist, STORY_COVER.year), ("Keishū Takénouchi", 1904));
+        assert_eq!(STORY_COVER.licence, "Public domain");
+        assert_eq!(COMIC.cover_art, None);
     }
 
     #[test]

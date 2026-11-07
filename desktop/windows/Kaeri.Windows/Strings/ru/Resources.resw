@@ -6053,6 +6053,9 @@
   <data name="DemoCreditStory" xml:space="preserve">
     <value>{title}, автор: {author}. Общественное достояние. Входит в приложение.</value>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>Обложка: «{title}», автор: {artist}, {year}. Общественное достояние. Входит в приложение.</value>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
   </data>

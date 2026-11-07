@@ -8180,6 +8180,9 @@ demo-credit-book = { $author }「{ $title }」。ライセンス: { $licence }�
 # The story's credit in About the demo.
 demo-credit-story = { $author }「{ $title }」。パブリックドメイン。アプリに付属しています。
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = 表紙：{ $artist }「{ $title }」（{ $year }年）。パブリックドメイン。アプリに付属しています。
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 

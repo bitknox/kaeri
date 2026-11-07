@@ -8354,6 +8354,9 @@ demo-credit-book = { $title } de { $author }. Sous licence { $licence }. À lire
 # The story's credit in About the demo.
 demo-credit-story = { $title } de { $author }. Domaine public. Fourni avec l’application.
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Couverture : « { $title } » de { $artist }, { $year }. Domaine public. Fournie avec l’application.
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 
