@@ -42,6 +42,11 @@ use super::settings::Layers;
 /// The path a source's text chapter is served at.
 pub const TEXT_CHAPTER: &str = "chapter.xhtml";
 use kaeri_books::novel::READER_CSS;
+/// The page's foot on a desktop: room for the reader's floating bottom group (about 90 px
+/// with 20 under it on the Mac, 80 and 20 on Linux, 80 and 16 on Windows) and a gap, so the
+/// text stops above the group whether it shows or not, as the reader board's desktop frames
+/// have it.
+const DESKTOP_FOOT: f64 = 124.0;
 /// Cleaned documents kept per book; a chapter read through holds a few.
 const KEPT_DOCUMENTS: usize = 24;
 
@@ -780,7 +785,7 @@ pub(crate) fn style(
         "line": (layers.amount(Key::LineSpacing).clamp(1.0, 3.0) * 100.0).round() / 100.0,
         "margin": margin,
         "top": top,
-        "bottom": top + 8.0,
+        "bottom": if handheld { top + 8.0 } else { DESKTOP_FOOT },
         "justify": layers.on(Key::Justify),
         "hyphens": true,
         "mode": if scrolled { "scrolled" } else { "paged" },
@@ -806,6 +811,32 @@ pub(crate) fn count_key(identity: &str, style: &str, surface: &ReaderSurface) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn desktop_text_stops_above_the_bottom_group() {
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let config = kaeri_core::config::ReadingConfig::default();
+        let surface = ReaderSurface {
+            width_px: 1280,
+            height_px: 800,
+            scale: 1.0,
+            eink: false,
+            two_pages: false,
+            dark: true,
+        };
+        let foot = |handheld: bool| {
+            let screen = super::super::settings::Screen { handheld, ..Default::default() };
+            let layers =
+                Layers::read(&store, &config, kaeri_core::media::Medium::Novel, None, screen);
+            let style = style(&layers, &surface, handheld, NovelSupport::Full, false, false);
+            serde_json::from_str::<serde_json::Value>(&style).unwrap()["bottom"]
+                .as_f64()
+                .unwrap()
+        };
+        // The tallest group, the Mac's, is 110 px with the space under it.
+        assert!(foot(false) >= 120.0, "{}", foot(false));
+        assert!(foot(true) < 100.0, "phones keep their own foot");
+    }
 
     #[test]
     fn words_are_the_body_s_with_two_cjk_characters_as_one() {

@@ -45,13 +45,76 @@ pub struct BookWorkKind {
     pub format: Option<String>,
     /// AniList's country of origin: `JP`, `KR`, `CN`, `TW`.
     pub origin: Option<String>,
-    /// The first of the titles kept.
+    /// The title as it shows when no language is chosen: [`Self::title_in`] with English.
     pub title: Option<String>,
+    /// Every form of the title kept, for [`Self::title_in`].
+    pub titles: BookTitles,
     /// AniList's publishing status: `RELEASING`, `FINISHED`, `CANCELLED`.
     pub status: Option<String>,
 }
 
+/// Which form of a title to show first, as the title language setting resolves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TitleForm {
+    #[default]
+    English,
+    Romaji,
+    Native,
+}
+
+/// A work's titles as the catalogue keeps them: AniList's forms, or a plain list.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct BookTitles {
+    pub english: Option<String>,
+    pub romaji: Option<String>,
+    pub native: Option<String>,
+    /// The first of a plain list, or a `display` title, kept where no form is known.
+    pub other: Option<String>,
+}
+
+impl BookTitles {
+    /// Read a `titles` column: a JSON list of strings or of objects with a `title`, or an
+    /// object of AniList's forms.
+    pub fn parse(titles: &str) -> Self {
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(titles) else {
+            return Self::default();
+        };
+        let text = |v: Option<&serde_json::Value>| {
+            v.and_then(|t| t.as_str()).filter(|t| !t.is_empty()).map(str::to_owned)
+        };
+        if let Some(list) = value.as_array() {
+            let first = list.first();
+            let other = text(first).or_else(|| text(first.and_then(|f| f.get("title"))));
+            return Self { other, ..Self::default() };
+        }
+        Self {
+            english: text(value.get("english")),
+            romaji: text(value.get("romaji")),
+            native: text(value.get("native")),
+            other: text(value.get("display")),
+        }
+    }
+
+    /// The form to show: `first` when kept, then English, romaji and native, as anime
+    /// titles fall back.
+    pub fn pick(&self, first: TitleForm) -> Option<&str> {
+        let chosen = match first {
+            TitleForm::English => &self.english,
+            TitleForm::Romaji => &self.romaji,
+            TitleForm::Native => &self.native,
+        };
+        [chosen, &self.english, &self.romaji, &self.native, &self.other]
+            .into_iter()
+            .find_map(|form| form.as_deref())
+    }
+}
+
 impl BookWorkKind {
+    /// The title in `first`, falling back as [`BookTitles::pick`] does.
+    pub fn title_in(&self, first: TitleForm) -> Option<String> {
+        self.titles.pick(first).map(str::to_owned)
+    }
+
     /// A webtoon: tagged as a long strip, or from Korea, China or Taiwan, where comics are
     /// made as strips.
     pub fn webtoon(&self) -> bool {
@@ -212,12 +275,13 @@ impl Store {
                 "SELECT medium, format, origin, titles, status FROM book_work WHERE work = ?1",
                 [work],
                 |r| {
-                    let titles: String = r.get(3)?;
+                    let titles = BookTitles::parse(&r.get::<_, String>(3)?);
                     Ok(BookWorkKind {
                         medium: r.get(0)?,
                         format: r.get(1)?,
                         origin: r.get(2)?,
-                        title: first_title(&titles),
+                        title: titles.pick(TitleForm::English).map(str::to_owned),
+                        titles,
                         status: r.get(4)?,
                     })
                 },
@@ -225,13 +289,6 @@ impl Store {
             .optional()?)
         })
     }
-}
-
-/// The first title of a `titles` column: a JSON list of strings, or of objects with a `title`.
-fn first_title(titles: &str) -> Option<String> {
-    let value: serde_json::Value = serde_json::from_str(titles).ok()?;
-    let first = value.as_array()?.first()?;
-    first.as_str().or_else(|| first.get("title").and_then(|t| t.as_str())).map(str::to_owned)
 }
 
 #[cfg(test)]
@@ -279,7 +336,43 @@ mod tests {
         assert_eq!(shelf[0], file);
         assert_eq!((shelf[1].chapter.as_deref(), shelf[1].format.as_str()), (Some("3"), "cbz"));
         assert!(store.shelf("l:0ther").unwrap().is_empty());
-        assert_eq!(first_title(r#"["Lantern Street"]"#).as_deref(), Some("Lantern Street"));
-        assert_eq!(first_title(r#"[{"title":"Moth Garden"}]"#).as_deref(), Some("Moth Garden"));
+    }
+
+    #[test]
+    fn a_title_shows_in_the_chosen_language_and_falls_back() {
+        let list = |t: &str| BookTitles::parse(t).pick(TitleForm::Romaji).map(str::to_owned);
+        assert_eq!(list(r#"["Lantern Street"]"#).as_deref(), Some("Lantern Street"));
+        assert_eq!(list(r#"[{"title":"Moth Garden"}]"#).as_deref(), Some("Moth Garden"));
+        assert_eq!(
+            list(r#"{"display":"The Lantern Ferry"}"#).as_deref(),
+            Some("The Lantern Ferry")
+        );
+
+        let all = BookTitles::parse(
+            r#"{"romaji":"Touro no Watashibune","english":"The Lantern Ferry","native":"灯籠の渡し舟","synonyms":[]}"#,
+        );
+        assert_eq!(all.pick(TitleForm::English), Some("The Lantern Ferry"));
+        assert_eq!(all.pick(TitleForm::Romaji), Some("Touro no Watashibune"));
+        assert_eq!(all.pick(TitleForm::Native), Some("灯籠の渡し舟"));
+
+        // A missing or empty form falls back English, then romaji, then native.
+        let some =
+            BookTitles::parse(r#"{"romaji":"Garasu no Kajuen","english":"","native":null}"#);
+        assert_eq!(some.pick(TitleForm::English), Some("Garasu no Kajuen"));
+        assert_eq!(some.pick(TitleForm::Native), Some("Garasu no Kajuen"));
+        let native =
+            BookTitles::parse(r#"{"romaji":null,"english":null,"native":"硝子の果樹園"}"#);
+        assert_eq!(native.pick(TitleForm::Romaji), Some("硝子の果樹園"));
+        assert_eq!(BookTitles::parse(r#"{"romaji":null}"#).pick(TitleForm::English), None);
+        assert_eq!(BookTitles::parse("not json").pick(TitleForm::English), None);
+    }
+
+    #[test]
+    fn a_work_kind_reads_the_catalogue_titles() {
+        let store = Store::open_in_memory().unwrap();
+        store.seed_book_work("a:1", "novel", None, None, "Seeded", 0).unwrap();
+        let kind = store.book_work_kind("a:1").unwrap().unwrap();
+        assert_eq!(kind.title.as_deref(), Some("Seeded"));
+        assert_eq!(kind.title_in(TitleForm::Native).as_deref(), Some("Seeded"));
     }
 }
