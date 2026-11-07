@@ -1076,10 +1076,23 @@ fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: 
     scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
 }
 
-/// The reading history of [`FfiScene::ReadingHome`] and its kin.
+/// Set once a home has its reading scene, so a later start on the same home keeps what the
+/// person changed since: the reader's settings for a series and the places reached.
+const READING_SEEDED: &str = "fixtures:reading:seeded";
+
+/// The reading history of [`FfiScene::ReadingHome`] and its kin, written on a home's first start
+/// only. The Fixtures apps start each launch in an empty home, so a launch shows the scene as
+/// it is drawn; an engine started again on the same home, after a restart or on a kept home,
+/// goes on from where the person left it.
 fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
     use kaeri_store::reading::ReadEvent;
     const DAY: i64 = 24 * 3_600;
+    if store.get_meta_i64(READING_SEEDED).ok().flatten().is_some() {
+        return;
+    }
+    if let Err(e) = store.set_meta_i64(READING_SEEDED, now) {
+        tracing::warn!(error = %e, "a reading scene's home was not marked as seeded");
+    }
     let read = |work: &str, chapter: &str, at: i64, fill: &dyn Fn(&mut ReadEvent)| {
         let mut event = ReadEvent::new(work, chapter, at);
         fill(&mut event);
